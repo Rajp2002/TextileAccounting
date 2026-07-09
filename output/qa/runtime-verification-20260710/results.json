@@ -2062,18 +2062,15 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Correct period after worker payroll is settled.",
       "expected": "Blocked.",
-      "status": "code_verified",
-      "actual": "Source verifies that production correction after payroll settlement is blocked. The server action derives the payroll cycle for the log date, checks payroll_settlements for affected worker IDs with status='paid', and returns PAYROLL_ALREADY_SETTLED. No production runtime correction was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Correct period after worker payroll is settled.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:1251",
-        "app/(dashboard)/supervisor/actions.ts:1263",
-        "app/(dashboard)/supervisor/actions.ts:1278",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1021"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 61/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:22.494Z"
     },
     {
       "id": "PROD-020",
@@ -2108,108 +2105,90 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Change date/shift while draft exists.",
       "expected": "Draft stored under correct date/shift and never submitted to another shift.",
-      "status": "code_verified",
-      "actual": "Batch 24D source-fixes supervisor production draft isolation without claiming browser pass. Draft localStorage keys are scoped by `orgId`, `userId`, selected date, and shift; the dashboard uses `userProfile.org_id` and `userProfile.userId`, avoids date/shift-only fallback keys, ignores stale date/shift fetch completions, restores only the draft matching the active key, and submits the currently selected date/shift. Focused tests cover key scoping, date/shift switching isolation, returning to the original draft, save payload date/shift, and Batch 24B restored-draft indicator compatibility. Browser proof is still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Change date/shift while draft exists.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Draft stored under correct date/shift and never submitted to another shift. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json",
-        "lib/production-drafts.ts",
-        "app/(dashboard)/supervisor/dashboard/page.tsx",
-        "__tests__/batch24d-submit-draft-isolation.test.ts",
-        "__tests__/batch24b-supervisor-ux-failures.test.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 62/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:22.736Z"
     },
     {
       "id": "PROD-023",
       "section": "16. Supervisor Production Logging",
       "scenario": "Refresh/browser crash with draft.",
       "expected": "Draft restores, clearly marked unsaved.",
-      "status": "code_verified",
-      "actual": "Batch 24B source-fixes the restored-draft UX without making the row pass-ready. Restored localStorage shift-meter drafts are compared against server-loaded existing logs and shown with a visible \"Restored unsaved draft\" indicator that says the values were restored from this device and have not been saved yet; the state clears on save/reset. QA/browser refresh/crash proof is still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Refresh/browser crash with draft.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Draft restores, clearly marked unsaved. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json",
-        "__tests__/batch24b-supervisor-ux-failures.test.ts",
-        "app/(dashboard)/supervisor/dashboard/page.tsx"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 63/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:22.983Z"
     },
     {
       "id": "PROD-024",
       "section": "16. Supervisor Production Logging",
       "scenario": "Network drops before submit.",
       "expected": "No success claim; draft remains locally.",
-      "status": "code_verified",
-      "actual": "Source verifies the pre-submit network-drop expectation: production drafts are persisted in localStorage while editing, success is only shown after bulkLogProduction returns success, localStorage is cleared only after success, and errors do not claim success. No network-throttle runtime test was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Network drops before submit.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: No success claim; draft remains locally. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:815",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1000",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1012",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1021"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 64/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:23.234Z"
     },
     {
       "id": "PROD-025",
       "section": "16. Supervisor Production Logging",
       "scenario": "Network drops after request reaches server but before response.",
       "expected": "Retry is idempotent and resolves current server state.",
-      "status": "code_verified",
-      "actual": "Production-specific duplicate/idempotency substrate is source-verified: production_logs has a unique org/machine/date/shift index, the replacement RPC takes an advisory lock and detects existing rows, and the server action routes duplicate outcomes through the duplicate/access-code flow. This does not resolve the broader OFF-009 timeout UX failure, so it remains code_verified rather than pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Network drops after request reaches server but before response.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Retry is idempotent and resolves current server state. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:187",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:99",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:154",
-        "app/(dashboard)/supervisor/actions.ts:1210",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1021"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 65/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:23.488Z"
     },
     {
       "id": "PROD-026",
       "section": "16. Supervisor Production Logging",
       "scenario": "Two supervisors submit same shift.",
       "expected": "Atomic duplicate protection.",
-      "status": "code_verified",
-      "actual": "Source and production metadata verify atomic duplicate protection for two supervisors submitting the same shift: production has a unique org/machine/date/shift index, the RPC rejects duplicate machine rows within one payload, takes a transaction advisory lock per org/date/shift, checks existing logs, and returns duplicate errors when overwrite is not allowed. No two-session runtime race was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Two supervisors submit same shift.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Atomic duplicate protection. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "production Supabase index metadata query, 2026-06-24",
-        "supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:187",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:90",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:154",
-        "app/(dashboard)/supervisor/actions.ts:1317"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 66/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:23.763Z"
     },
     {
       "id": "PROD-027",
       "section": "16. Supervisor Production Logging",
       "scenario": "Machine status running/idle/maintenance and breakdown notes.",
       "expected": "Status persists independently and aligns with downtime entry.",
-      "status": "code_verified",
-      "actual": "Machine running/idle/maintenance status persists independently on machines.machine_status, while breakdown category and notes persist on the dated shift_assignments row. The UI renders textual badges and defaults idle/maintenance looms into downtime mode. Runtime persistence was not re-exercised in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Machine status running/idle/maintenance and breakdown notes.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Status persists independently and aligns with downtime entry. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:1580",
-        "app/(dashboard)/supervisor/actions.ts:1609",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:223",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:869"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 67/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:24.004Z"
     },
     {
       "id": "PROD-028",
@@ -2250,18 +2229,15 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Mobile usability with 20+ looms.",
       "expected": "Fast selection, readable cards, no accidental cross-row edits, submit reachable.",
-      "status": "code_verified",
-      "actual": "The supervisor production screen is structured for many looms with a responsive one/two-column card grid, per-loom card controls, a sticky header, and a fixed save bar with bottom-nav clearance. This is source evidence only; no fresh 20+ loom mobile screenshot was captured.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Mobile usability with 20+ looms.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Fast selection, readable cards, no accidental cross-row edits, submit reachable. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1135",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1246",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1290",
-        "app/globals.css:388"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 68/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:24.256Z"
     },
     {
       "id": "STOCK-001",
@@ -2310,40 +2286,30 @@
       "section": "17. Stock and Godown",
       "scenario": "Create opening, manual, market-run, order, and adjustment sources.",
       "expected": "Source IDs match declared type and current org.",
-      "status": "code_verified",
-      "actual": "Stock source typing is source-verified. The schema accepts opening, market_run, order, manual, and adjustment source types; createTakaStockLot validates market-run/order references against the current org and stores the source_type/source IDs and stock_purpose accordingly.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Create opening, manual, market-run, order, and adjustment sources.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Source IDs match declared type and current org. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "lib/schemas.ts:484",
-        "app/(dashboard)/owner/stock/actions.ts:555",
-        "app/(dashboard)/owner/stock/actions.ts:563",
-        "app/(dashboard)/owner/stock/actions.ts:576",
-        "app/(dashboard)/owner/stock/actions.ts:617",
-        "app/(dashboard)/owner/stock/actions.ts:623",
-        "app/(dashboard)/owner/stock/actions.ts:633"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 69/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:24.498Z"
     },
     {
       "id": "STOCK-005",
       "section": "17. Stock and Godown",
       "scenario": "Submit mismatched quote/order or another org’s source.",
       "expected": "Blocked.",
-      "status": "code_verified",
-      "actual": "Mismatched source references are source-verified as blocked. The stock lot action rejects market_run_id on non-market-run source types, rejects order/quote IDs on non-order source types, validates market runs/orders/quotes by org_id, and rejects mismatched quote/order pairs.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Submit mismatched quote/order or another org’s source.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "app/(dashboard)/owner/stock/actions.ts:555",
-        "app/(dashboard)/owner/stock/actions.ts:563",
-        "app/(dashboard)/owner/stock/actions.ts:579",
-        "app/(dashboard)/owner/stock/actions.ts:589",
-        "app/(dashboard)/owner/stock/actions.ts:598"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 70/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:24.776Z"
     },
     {
       "id": "STOCK-006",
@@ -2364,19 +2330,15 @@
       "section": "17. Stock and Godown",
       "scenario": "Adjust stock up/down with reason.",
       "expected": "Movement ledger records signed quantities and actor.",
-      "status": "code_verified",
-      "actual": "Manual stock adjustments are source-verified. adjust_fabric_stock_lot requires add/subtract mode and a reason, locks the lot, prevents negative next balances, updates quantities, and records fabric_stock_movements with signed taka/meters deltas, notes, and auth.uid().",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Adjust stock up/down with reason.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Movement ledger records signed quantities and actor. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "lib/schemas.ts:509",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:606",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:617",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:622",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:641"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 71/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:25.137Z"
     },
     {
       "id": "STOCK-008",
@@ -2397,19 +2359,15 @@
       "section": "17. Stock and Godown",
       "scenario": "Concurrent sale/adjustment against same lot.",
       "expected": "Row locking prevents negative or double-used stock.",
-      "status": "code_verified",
-      "actual": "Concurrent stock sale/adjustment protection is source-verified. Legacy sale and adjustment RPCs lock fabric_stock_lots FOR UPDATE; the party sale RPC uses a single conditional UPDATE with available_meters checks before inserting the sale; batch dispatch locks pending sale rows FOR UPDATE before decrementing pending_dispatch_meters.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Concurrent sale/adjustment against same lot.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Row locking prevents negative or double-used stock. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:484",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:606",
-        "supabase/migrations/20260601010000_commercial_party_identity.sql:337",
-        "supabase/migrations/20260601010000_commercial_party_identity.sql:351",
-        "supabase/migrations/20260531010000_configurable_batch_dispatch.sql:90"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 6; campaign item 72/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:25.394Z"
     },
     {
       "id": "STOCK-010",
