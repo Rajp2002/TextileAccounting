@@ -1,0 +1,33 @@
+{
+  "batchNumber": 8,
+  "issuesCompleted": [
+    "COMM-009",
+    "COMM-013",
+    "COMM-015",
+    "COMM-018",
+    "PAY-002",
+    "PAY-005",
+    "PAY-006",
+    "PAY-010",
+    "PAY-011",
+    "PAY-012",
+    "PAY-014",
+    "PAY-017"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 96,
+  "remainingIssues": 49,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "PAY-017",
+  "nextIssueToProcess": "PAY-019",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 109,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 49,
+    "not_run": 0
+  }
+}

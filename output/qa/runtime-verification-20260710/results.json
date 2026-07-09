@@ -3134,14 +3134,15 @@
       "section": "20. Commercials, Receivables, and Collections",
       "scenario": "Payment mode cash/bank/UPI/cheque/other.",
       "expected": "DB enum and UI label normalize correctly.",
-      "status": "code_verified",
-      "actual": "Production rollback-only RPC probes accepted and staged receipt rows for all normalized DB modes: cash, bank, UPI, cheque, and other, then rollback restored the QA receivable and removed all probe receipts. The production dialog rendered the default Bank Transfer label, and source code maps Bank Transfer/Cash/UPI/Cheque/Other labels to DB enum values. Full in-browser selection of every Radix option was not completed because the picker did not expose option nodes through the available browser API.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Payment mode cash/bank/UPI/cheque/other.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: DB enum and UI label normalize correctly. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/commercials-payment-mode-evidence.json"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 85/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.634Z"
+      "updatedAt": "2026-07-09T23:09:24.941Z"
     },
     {
       "id": "COMM-010",
@@ -3199,19 +3200,15 @@
       "section": "20. Commercials, Receivables, and Collections",
       "scenario": "Collected-this-month boundary at month start/end.",
       "expected": "Correct India calendar month.",
-      "status": "code_verified",
-      "actual": "Collected-this-month uses India calendar-month bounds in the server action: firstOfMonth is derived with formatToSurat(new Date(), 'yyyy-MM') and today from getSuratTodayString(), then commercial_payment_receipts.payment_date is filtered between those date strings. This remains source-verified only; no payment at the exact month boundary was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Collected-this-month boundary at month start/end.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct India calendar month. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/commercials-remaining-source-evidence-20260624.json",
-        "app/(dashboard)/owner/commercials/actions.ts:575",
-        "app/(dashboard)/owner/commercials/actions.ts:579",
-        "app/(dashboard)/owner/commercials/actions.ts:581",
-        "app/(dashboard)/owner/commercials/actions.ts:587",
-        "app/(dashboard)/owner/commercials/CommercialsClient.tsx:1657"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 86/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.634Z"
+      "updatedAt": "2026-07-09T23:09:25.189Z"
     },
     {
       "id": "COMM-014",
@@ -3237,15 +3234,15 @@
       "section": "20. Commercials, Receivables, and Collections",
       "scenario": "Duplicate names with different `party_id`.",
       "expected": "Separate party rows; legacy name fallback only where ID is absent.",
-      "status": "code_verified",
-      "actual": "Commercials party aggregation resolves explicit party_id before falling back to name matching, so duplicate display names should remain separate when sales/receivables carry party_id. The current production QA data does not contain duplicate-name parties, so this was not runtime-passed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Duplicate names with different `party_id`.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Separate party rows; legacy name fallback only where ID is absent. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/commercials-party-adjustments-code-evidence.json",
-        "app/(dashboard)/owner/commercials/actions.ts:400"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 87/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:25.436Z"
     },
     {
       "id": "COMM-016",
@@ -3284,15 +3281,15 @@
       "section": "20. Commercials, Receivables, and Collections",
       "scenario": "Claim, shortage deduction, discount, rate difference, broker commission.",
       "expected": "Unsupported effects are not silently included. Record as product gap if factory needs them.",
-      "status": "code_verified",
-      "actual": "commercial_profit_entries includes stock sales, direct market-run sales, order invoices, and expected order quotes only; it does not include party_adjustments or party_dispatch_claims. QA DB had 0 adjustment/claim rows and 0 adjustment-like profit entries. Unsupported claim, shortage deduction, discount, and rate-difference effects are therefore not silently included by the current read model, but no runtime adjustment-row scenario was exercised.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Claim, shortage deduction, discount, rate difference, broker commission.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Unsupported effects are not silently included. Record as product gap if factory needs them. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/commercials-party-adjustments-code-evidence.json",
-        "supabase/migrations/20260601010000_commercial_party_identity.sql:560"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 88/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:25.695Z"
     },
     {
       "id": "PAY-001",
@@ -3314,16 +3311,15 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Change worker/current loom rate after old production.",
       "expected": "Historical payroll keeps old snapshot.",
-      "status": "code_verified",
-      "actual": "Production logging stores worker_rate_snapshot, and owner payroll settlement calculates gross piece-rate pay from production_logs.meters × worker_rate_snapshot. Production QA rows for Worker A and Worker B carry snapshot rate 2.502 and reconcile to ₹675.54 and ₹402.20 respectively. A true runtime pass still requires changing the current rate after old production and proving the old payroll preview/settlement remains based on the stored snapshot.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Change worker/current loom rate after old production.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Historical payroll keeps old snapshot. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-rate-and-advance-delete-evidence.json",
-        "app/(dashboard)/supervisor/actions.ts:1117",
-        "app/(dashboard)/owner/payroll/actions.ts:88"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 89/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:25.947Z"
     },
     {
       "id": "PAY-003",
@@ -3360,38 +3356,30 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Daily fixed worker with attendance.",
       "expected": "Present days × daily rate, capped as intended.",
-      "status": "code_verified",
-      "actual": "Daily fixed-worker payroll is source-verified: the payroll page counts present attendance rows for daily workers in the cycle and computes earnedPay as min(monthly_salary, monthly_salary / 30 × present days). The server settlement action repeats the attendance count and caps daily pay at monthly_salary. No live daily-worker attendance/payroll settlement was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Daily fixed worker with attendance.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Present days × daily rate, capped as intended. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-remaining-source-evidence-20260624.json",
-        "app/(dashboard)/owner/payroll/page.tsx:390",
-        "app/(dashboard)/owner/payroll/page.tsx:440",
-        "app/(dashboard)/owner/payroll/page.tsx:441",
-        "app/(dashboard)/owner/payroll/actions.ts:112",
-        "app/(dashboard)/owner/payroll/actions.ts:125"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 90/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:26.210Z"
     },
     {
       "id": "PAY-006",
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Past/future attendance.",
       "expected": "Future blocked; protected past edit uses valid access code.",
-      "status": "code_verified",
-      "actual": "Attendance RLS date boundaries are hardened so supervisors can only directly insert/update today's attendance (in Asia/Kolkata timezone context) and owners today or past. Future dates are blocked. Supervisor past-date saves no longer use direct client-side upsert and instead prompt for the owner access code at save time, validating/consuming it server-side. Real database migration exists but was not applied, requiring a runtime QA check.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Past/future attendance.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Future blocked; protected past edit uses valid access code. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-remaining-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/attendance/page.tsx:147",
-        "app/(dashboard)/supervisor/attendance/page.tsx:229",
-        "app/(dashboard)/supervisor/actions.ts:115",
-        "lib/schemas.ts:294",
-        "supabase/migrations/20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 91/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "High",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:26.600Z"
     },
     {
       "id": "PAY-007",
@@ -3442,51 +3430,45 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Delete deducted advance.",
       "expected": "Blocked.",
-      "status": "code_verified",
-      "actual": "Source verifies deducted advances cannot be deleted through the owner action: deleteAdvance is owner-only, org-scoped, fetches worker_advances.status, and returns 'Only pending advances can be deleted' unless status is pending. No destructive runtime delete of a deducted production advance was attempted.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Delete deducted advance.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-kharchi-source-evidence-20260624.json",
-        "app/(dashboard)/owner/advances/actions.ts:123"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 92/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:26.858Z"
     },
     {
       "id": "PAY-011",
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Standard recovery cap.",
       "expected": "Total deductions do not exceed configured/legal cap; remaining debt carries forward.",
-      "status": "code_verified",
-      "actual": "Standard advance recovery is capped at 50% in the preview and latest settlement RPC, with excess debt carried forward as pending worker_advances. The latest production function has 50%-cap, FOR UPDATE, and ON CONFLICT markers, and payroll_settlements has unique worker/month indexes. No live settlement mutation was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Standard recovery cap.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Total deductions do not exceed configured/legal cap; remaining debt carries forward. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-kharchi-source-evidence-20260624.json",
-        "lib/finance.ts:124",
-        "app/(dashboard)/owner/payroll/page.tsx:746",
-        "supabase/migrations/20260516160000_payroll_manual_adjustments.sql:361",
-        "supabase/migrations/20260516160000_payroll_manual_adjustments.sql:476"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 93/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:27.103Z"
     },
     {
       "id": "PAY-012",
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Final settlement.",
       "expected": "Full allowed recovery and remaining debt behavior are explicit.",
-      "status": "code_verified",
-      "actual": "Final settlement switches recovery from 50% to 100%/adjusted-gross in both preview and latest RPC, displays an explicit final-settlement checkbox/warning, and stores final-settlement metadata. Remaining debt is computed explicitly after deduction. No live final settlement was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Final settlement.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Full allowed recovery and remaining debt behavior are explicit. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-kharchi-source-evidence-20260624.json",
-        "app/(dashboard)/owner/payroll/page.tsx:746",
-        "app/(dashboard)/owner/payroll/page.tsx:2068",
-        "supabase/migrations/20260516160000_payroll_manual_adjustments.sql:358",
-        "supabase/migrations/20260516160000_payroll_manual_adjustments.sql:516"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 94/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:27.392Z"
     },
     {
       "id": "PAY-013",
@@ -3511,19 +3493,15 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Inam and kapaat adjustments.",
       "expected": "Itemized; note/reason required; final payout never negative.",
-      "status": "code_verified",
-      "actual": "Inam/kapaat adjustments are itemized and validated in UI, server action, and latest RPC: type, reason, positive amount, and non-empty note are required, totals are included in settlement itemization, and negative final payout is rejected. No live manual-adjustment settlement was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Inam and kapaat adjustments.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Itemized; note/reason required; final payout never negative. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-kharchi-source-evidence-20260624.json",
-        "lib/payroll-manual-adjustments.ts:93",
-        "app/(dashboard)/owner/payroll/page.tsx:1759",
-        "app/(dashboard)/owner/payroll/page.tsx:1787",
-        "supabase/migrations/20260516160000_payroll_manual_adjustments.sql:154",
-        "supabase/migrations/20260516160000_payroll_manual_adjustments.sql:322"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 95/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:27.725Z"
     },
     {
       "id": "PAY-015",
@@ -3562,20 +3540,15 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Settle in reminder window/on pay date/overdue.",
       "expected": "Allowed with correct status.",
-      "status": "code_verified",
-      "actual": "Reminder-window/pay-date/overdue settlement is source-verified. getPayrollCycleStatus sets is_payroll_window_open when the cycle is closed and the pay date is due/overdue or within pay_reminder_days; the UI enables Mark Paid from that state and the server action rejects normal settlements when the window is closed. No time-shifted production settlement was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Settle in reminder window/on pay date/overdue.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Allowed with correct status. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/payroll-remaining-source-evidence-20260624.json",
-        "lib/payroll-cycle.ts:86",
-        "lib/payroll-cycle.ts:104",
-        "lib/payroll-cycle.ts:105",
-        "app/(dashboard)/owner/payroll/actions.ts:78",
-        "app/(dashboard)/owner/payroll/page.tsx:3509",
-        "app/(dashboard)/owner/payroll/page.tsx:2473"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 8; campaign item 96/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:09:27.974Z"
     },
     {
       "id": "PAY-018",
