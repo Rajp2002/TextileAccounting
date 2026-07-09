@@ -1007,95 +1007,75 @@
       "section": "12. Estimator and Costing",
       "scenario": "Outsourced sizing versus in-house sizing.",
       "expected": "Sizing cost toggles exactly once.",
-      "status": "code_verified",
-      "actual": "Sizing mode is source-verified: in-house sets effective sizing rate to 0 and outsourced uses sizingRatePerKg, so sizing contributes exactly once through the warping/sizing layer. The UI labels in-house as already included in overhead and only shows the sizing-rate input for outsourced mode.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Outsourced sizing versus in-house sizing.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Sizing cost toggles exactly once. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "lib/estimator.ts:613",
-        "lib/estimator.ts:616",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2278",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2292",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2304",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2315"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 25/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:07:09.949Z"
     },
     {
       "id": "EST-007",
       "section": "12. Estimator and Costing",
       "scenario": "Optional winding, processing, finishing, commission, and transport.",
       "expected": "Disabled sections contribute zero; enabled sections contribute correctly.",
-      "status": "code_verified",
-      "actual": "Optional sections are source-verified to contribute zero when disabled and their configured costs when enabled: winding, processing, finishing, commission, and transport are gated by enabledSections in calcFullTotals/calcOrderQuote. No production toggle walkthrough was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Optional winding, processing, finishing, commission, and transport.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Disabled sections contribute zero; enabled sections contribute correctly. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "lib/estimator.ts:623",
-        "lib/estimator.ts:628",
-        "lib/estimator.ts:671",
-        "lib/estimator.ts:672",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2687"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 26/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:10.196Z"
     },
     {
       "id": "EST-008",
       "section": "12. Estimator and Costing",
       "scenario": "Overhead items and manual overhead override.",
       "expected": "Override replaces, rather than double-counts, itemized overhead.",
-      "status": "code_verified",
-      "actual": "Overhead override is source-verified to replace, not add to, itemized overhead when set and positive: calcFullTotals chooses overheadOverridePerM over calculatedOverheadPerM and then adds only that overheadPerM to direct cost. The UI also shows a clear action for the override.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Overhead items and manual overhead override.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Override replaces, rather than double-counts, itemized overhead. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "lib/estimator.ts:637",
-        "lib/estimator.ts:647",
-        "lib/estimator.ts:662",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2625",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2640"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 27/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:10.430Z"
     },
     {
       "id": "EST-009",
       "section": "12. Estimator and Costing",
       "scenario": "Capacity utilization and idle-capacity values.",
       "expected": "Correct for loom count, output/day, working days, and monthly output.",
-      "status": "code_verified",
-      "actual": "Capacity and idle-capacity formulas are source-verified: ratedCapacityM = loomCount × avgOutputPerLoomPerDay × monthlyWorkingDays, utilisation = monthlyOutputM / ratedCapacityM, overhead at capacity = overheadTotalMonthly / ratedCapacityM, and idle cost is the unrecovered monthly overhead portion.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Capacity utilization and idle-capacity values.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct for loom count, output/day, working days, and monthly output. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "lib/estimator.ts:654",
-        "lib/estimator.ts:655",
-        "lib/estimator.ts:656",
-        "lib/estimator.ts:657",
-        "lib/estimator.ts:660"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 28/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:10.701Z"
     },
     {
       "id": "EST-010",
       "section": "12. Estimator and Costing",
       "scenario": "Fixed workers added to overhead.",
       "expected": "No duplicate fixed-worker cost after repeated merge/save.",
-      "status": "code_verified",
-      "actual": "Fixed-worker overhead merge is source-verified to avoid duplicates: MERGE_FIXED_WORKERS removes all existing fixed_worker_derived overhead items before re-adding current active fixed workers from DB with stable fw-{id} IDs.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Fixed workers added to overhead.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: No duplicate fixed-worker cost after repeated merge/save. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "app/(dashboard)/owner/estimator/actions.ts:75",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:221",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:223",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:236"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 29/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:10.942Z"
     },
     {
       "id": "EST-011",
@@ -1138,58 +1118,45 @@
       "section": "12. Estimator and Costing",
       "scenario": "Save, rename, update, rate-update, apply, and delete template.",
       "expected": "Template lifecycle is isolated to the org and refresh-stable.",
-      "status": "code_verified",
-      "actual": "Estimator template lifecycle is source-verified as org-isolated and refresh-stable: template reads filter org_id/is_active, save/update/rate-update/rename/delete all scope by org_id, and delete is a soft is_active=false update. No live template lifecycle run was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Save, rename, update, rate-update, apply, and delete template.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Template lifecycle is isolated to the org and refresh-stable. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "app/(dashboard)/owner/estimator/actions.ts:132",
-        "app/(dashboard)/owner/estimator/actions.ts:147",
-        "app/(dashboard)/owner/estimator/actions.ts:213",
-        "app/(dashboard)/owner/estimator/actions.ts:245",
-        "app/(dashboard)/owner/estimator/actions.ts:305",
-        "app/(dashboard)/owner/estimator/actions.ts:322"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 30/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:11.216Z"
     },
     {
       "id": "EST-014",
       "section": "12. Estimator and Costing",
       "scenario": "Autosaved draft after refresh/crash.",
       "expected": "Latest intended draft restores without overwriting another quote.",
-      "status": "code_verified",
-      "actual": "Autosave restoration is source-verified for the single latest draft: useAutosave stores one debounced localStorage draft per org/user key, rejects stale/corrupt drafts, and surfaces a restore banner that restores the saved EstimateState. This is not multi-draft proof; quote/draft collision is tracked separately in QUOTE-010.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Autosaved draft after refresh/crash.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Latest intended draft restores without overwriting another quote. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "hooks/useAutosave.ts:37",
-        "hooks/useAutosave.ts:61",
-        "hooks/useAutosave.ts:86",
-        "hooks/useAutosave.ts:107",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:1455"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 31/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:11.471Z"
     },
     {
       "id": "EST-015",
       "section": "12. Estimator and Costing",
       "scenario": "Restore historical quote after factory profile/template rates change.",
       "expected": "Historical snapshot remains unchanged.",
-      "status": "code_verified",
-      "actual": "Historical quote snapshots are source-verified: saved quotes persist the full recipe, rates, overhead, enabled sections, sizing mode, and result snapshots; Quote History and conversion hydrate from the quote row rather than current factory profile/template rates. No live post-rate-change restore was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Restore historical quote after factory profile/template rates change.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Historical snapshot remains unchanged. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "app/(dashboard)/owner/estimator/actions.ts:370",
-        "app/(dashboard)/owner/estimator/actions.ts:381",
-        "app/(dashboard)/owner/estimator/actions.ts:397",
-        "app/(dashboard)/owner/quotes/QuotesClient.tsx:93",
-        "lib/quotes/convert-accepted-quote-to-order.ts:29"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 32/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:11.720Z"
     },
     {
       "id": "EST-016",
@@ -1210,36 +1177,30 @@
       "section": "12. Estimator and Costing",
       "scenario": "Rapid double-submit.",
       "expected": "One quote/order/run only.",
-      "status": "code_verified",
-      "actual": "Batch 24D source-fixes rapid client double-submit without claiming server/database idempotency. Estimator Save Quote and Save & Create Market Run now use a synchronous `saveQuoteLockRef` guard before `createMarketRunFromEstimator` or `saveEstimatorQuoteV3`, disable save/create controls while saving, and reset the lock in `finally`. Focused tests assert duplicate rapid clicks do not invoke duplicate quote/order/start actions and normal single submit still works. Browser double-click proof and any future server/database idempotency design remain required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Rapid double-submit.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: One quote/order/run only. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx",
-        "__tests__/batch24d-submit-draft-isolation.test.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 33/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "High",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:11.967Z"
     },
     {
       "id": "EST-018",
       "section": "12. Estimator and Costing",
       "scenario": "Market-mode party-name race.",
       "expected": "Fabric label and market run are saved correctly without a fake party.",
-      "status": "code_verified",
-      "actual": "Market-mode label handling is source-verified: the client resolves market party/display name from the fabric/quality label, syncs partyName to qualityLabel in market mode, and createMarketRunFromEstimator persists the label consistently to estimator_quotes.party_name, market_runs.fabric_label, and the backing market-run order without an external party_id. No live race was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Market-mode party-name race.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Fabric label and market run are saved correctly without a fake party. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:1052",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:1327",
-        "app/(dashboard)/owner/estimator/actions.ts:821",
-        "app/(dashboard)/owner/estimator/actions.ts:869",
-        "app/(dashboard)/owner/estimator/actions.ts:901",
-        "app/(dashboard)/owner/estimator/actions.ts:912"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 34/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:12.243Z"
     },
     {
       "id": "EST-019",
@@ -1308,17 +1269,15 @@
       "section": "13. Quote Lifecycle",
       "scenario": "Convert non-accepted quote to order.",
       "expected": "Blocked.",
-      "status": "code_verified",
-      "actual": "Converting a non-accepted quote is source-verified blocked: executeQuoteConversion rejects quote.status !== accepted, the RPC also checks accepted status, and the UI only shows Create Active Order when quote.status is accepted and no linked order exists. No live non-accepted conversion attempt was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Convert non-accepted quote to order.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "lib/quotes/convert-accepted-quote-to-order.ts:116",
-        "supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:49",
-        "app/(dashboard)/owner/quotes/QuotesClient.tsx:268"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 35/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:12.695Z"
     },
     {
       "id": "QUOTE-005",
@@ -1339,19 +1298,15 @@
       "section": "13. Quote Lifecycle",
       "scenario": "Concurrent/double conversion.",
       "expected": "Unique/atomic RPC returns the same or safe duplicate result; never two orders.",
-      "status": "code_verified",
-      "actual": "Accepted-quote double conversion is source-verified safe: the RPC locks the quote FOR UPDATE, checks existing quote.order_id and existing orders.quote_id, updates estimator_quotes only while order_id is null, and unique indexes enforce one order per quote. The wrapper may return an already-converted error, but the schema/RPC prevents two orders. No concurrent production call was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Concurrent/double conversion.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Unique/atomic RPC returns the same or safe duplicate result; never two orders. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:16",
-        "supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:20",
-        "supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:37",
-        "supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:54",
-        "supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:99"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 3; campaign item 36/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:12.969Z"
     },
     {
       "id": "QUOTE-007",
