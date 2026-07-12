@@ -37,7 +37,7 @@ const plans = [
 
 export default function LandingPricing() {
     return (
-        <section className="relative overflow-hidden py-20 sm:py-28 snap-start scroll-mt-28" id="pricing">
+        <section className="landing-section relative overflow-hidden py-20 sm:py-28 lg:py-12" id="pricing">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
                     <div>
@@ -56,9 +56,9 @@ export default function LandingPricing() {
                     </div>
                 </div>
 
-                <div className="mt-12 grid gap-5 lg:grid-cols-3">
+                <div className="mt-12 grid gap-5 lg:mt-8 lg:grid-cols-3">
                     {plans.map((plan, index) => (
-                        <div key={plan.name} className={`flex min-h-[42rem] flex-col border p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur sm:p-8 ${index === 1 ? 'border-zinc-950 bg-zinc-950 text-white shadow-[0_30px_90px_rgba(24,24,27,0.2)]' : 'border-zinc-200 bg-white/92 dark:border-white/10 dark:bg-zinc-950/75'}`}>
+                        <div key={plan.name} className={`flex min-h-[42rem] flex-col border p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur sm:p-8 lg:min-h-[36rem] lg:p-6 ${index === 1 ? 'border-zinc-950 bg-zinc-950 text-white shadow-[0_30px_90px_rgba(24,24,27,0.2)]' : 'border-zinc-200 bg-white/92 dark:border-white/10 dark:bg-zinc-950/75'}`}>
                             <div>
                                 <div className="flex flex-wrap items-center gap-3">
                                     <h3 className={`text-2xl font-black ${index === 1 ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{plan.name}</h3>
@@ -67,21 +67,21 @@ export default function LandingPricing() {
                                     ) : null}
                                 </div>
                                 <p className={`mt-4 text-sm leading-6 ${index === 1 ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>{plan.description}</p>
-                                <p className="mt-8 flex items-baseline gap-1">
+                                <p className="mt-8 flex items-baseline gap-1 lg:mt-5">
                                     <span className={`text-5xl font-black tracking-tight ${index === 1 ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{plan.price}</span>
                                     <span className={`text-sm font-semibold ${index === 1 ? 'text-zinc-400' : 'text-zinc-500'}`}>{plan.suffix}</span>
                                 </p>
                             </div>
 
-                            <div className={`mt-7 border-l-2 px-4 py-3 ${index === 1 ? 'border-orange-300 bg-white/5' : 'border-orange-600 bg-orange-50/70 dark:bg-orange-500/10'}`}>
+                            <div className={`mt-7 border-l-2 px-4 py-3 lg:mt-5 lg:py-2 ${index === 1 ? 'border-orange-300 bg-white/5' : 'border-orange-600 bg-orange-50/70 dark:bg-orange-500/10'}`}>
                                 <p className={`text-sm font-bold leading-6 ${index === 1 ? 'text-zinc-100' : 'text-zinc-800 dark:text-zinc-100'}`}>{plan.guidance}</p>
                             </div>
 
-                            <Button asChild className={`mt-7 w-full rounded-md py-6 font-bold ${index === 1 ? 'bg-white text-zinc-950 hover:bg-orange-50' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
+                            <Button asChild className={`mt-7 w-full rounded-md py-6 font-bold lg:mt-5 ${index === 1 ? 'bg-white text-zinc-950 hover:bg-orange-50' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
                                 <a href="/signup">Request pilot access</a>
                             </Button>
 
-                            <div className={`mt-8 grid gap-4 text-sm leading-6 ${index === 1 ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>
+                            <div className={`mt-8 grid gap-4 text-sm leading-6 lg:mt-5 lg:gap-2.5 lg:leading-5 ${index === 1 ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>
                                 {plan.features.map((feature) => (
                                     <div key={feature} className="flex gap-3">
                                         <Check className={`h-5 w-5 flex-none ${index === 1 ? 'text-orange-300' : 'text-orange-600'}`} aria-hidden="true" />
@@ -98,7 +98,7 @@ export default function LandingPricing() {
                         </div>
                     ))}
 
-                    <div className="flex min-h-[42rem] flex-col justify-between border border-orange-200 bg-orange-50/85 p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur dark:border-orange-500/20 dark:bg-orange-500/10 sm:p-8">
+                    <div className="flex min-h-[42rem] flex-col justify-between border border-orange-200 bg-orange-50/85 p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur dark:border-orange-500/20 dark:bg-orange-500/10 sm:p-8 lg:min-h-[36rem] lg:p-6">
                         <div>
                             <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700 dark:text-orange-400">Setup and training add-on</p>
                             <h3 className="mt-5 text-3xl font-black tracking-tight text-zinc-950 dark:text-white">Get the first factory floor configured with your team.</h3>

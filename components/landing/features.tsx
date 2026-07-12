@@ -58,7 +58,7 @@ const trustItems = [
 export default function LandingFeatures() {
     return (
         <>
-            <section className="relative z-10 py-20 sm:py-28 snap-start scroll-mt-28" id="problem">
+            <section className="landing-section relative z-10 py-20 sm:py-28 lg:py-12" id="problem">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
                         <div className="lg:sticky lg:top-36">
@@ -104,7 +104,7 @@ export default function LandingFeatures() {
                 </div>
             </section>
 
-            <section className="relative z-10 py-20 sm:py-28 snap-start scroll-mt-28" id="workflow">
+            <section className="landing-section relative z-10 py-20 sm:py-28 lg:py-12" id="workflow">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
                         <div>
@@ -144,7 +144,7 @@ export default function LandingFeatures() {
                 </div>
             </section>
 
-            <section className="relative z-10 py-20 sm:py-28 snap-start scroll-mt-28" id="features">
+            <section className="landing-section relative z-10 py-20 sm:py-28 lg:py-12" id="features">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="overflow-hidden border border-zinc-900 bg-zinc-950 text-white shadow-[0_28px_90px_rgba(24,24,27,0.18)]">
                         <div className="grid gap-10 border-b border-white/10 p-6 sm:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:p-12">
