@@ -1,0 +1,13 @@
+id,severity,area,summary,status,resolution_or_condition
+EST-RDY-001,P1,Calculation,Beam crimp and loom dimensional calculations were incorrect,fixed,shared formulas and regressions deployed
+EST-RDY-002,P1,Cotton count,English count input did not reliably persist and convert,fixed,40 Ne equals 132.875D across UI/server/snapshot
+EST-RDY-003,P1,Lifecycle,Saved qualities and quotes could duplicate or overwrite ambiguously,fixed,UUID identity idempotency optimistic concurrency explicit duplicate/delete
+EST-RDY-004,P0,Security,Base/Premium and tenant boundaries required database enforcement,fixed,live membership/subscription checks RLS and RPC hardening
+EST-RDY-005,P1,Billing,Activation needed atomic locking idempotency and one-year cap,fixed,production migration 20260710112640
+EST-RDY-006,P1,Responsive,Applied-quality actions clipped on narrow mobile screens,fixed,wrapping mobile action row in d49ef57
+EST-RDY-007,P2,PWA,Stale clients could retain incompatible server-action bundles,fixed,prompt update check immediately after registration
+EST-RDY-008,P1,Payments,Hosted successful Test Mode payment and webhook proof incomplete,open,Razorpay Checkout must accept controlled test contact and complete success plus replay
+EST-RDY-009,P2,Observability,Sentry production source-map upload failed,open,repair SENTRY_AUTH_TOKEN/CLI release configuration and verify uploaded artifacts
+EST-RDY-010,P2,Dependencies,npm ci reports 12 dependency advisories,open,triage 1 low 9 moderate 2 high without broad audit fix
+EST-RDY-011,P3,Responsive,125 and 150 percent zoom automation unavailable,blocked,manual QA on supported desktop browser
+EST-RDY-012,P2,Recovery,Hosted network-loss and expired-session browser cases incomplete,blocked,run controlled network/session QA without production data risk

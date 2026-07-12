@@ -1,0 +1,35 @@
+area,case,status,evidence,notes
+Build,clean npm ci,pass,clean detached worktree,lockfile reproducibility repaired
+Build,full tests,pass,Vercel production build,531 passed
+Build,TypeScript,pass,npx tsc --noEmit,0 errors
+Build,lint,pass,npm run lint,0 errors; 2 pre-existing warnings
+Build,production build,pass,next build --webpack,41/41 static pages
+Calculation,beam 1000m at 5 percent crimp,pass,focused and full tests,about 952.38m
+Calculation,loom 700 RPM 60 PPI 12h 85 percent,pass,focused and browser proof,about 181.356m/day
+Calculation,40 Ne conversion,pass,hosted browser proof,132.875 denier
+Calculation,formula/manual/mixed/financial validation,pass,automated suite,server-authoritative snapshots
+Saved quality,stable update and count one,pass,production browser plus DB proof,same UUID
+Saved quality,normalized duplicate rejection,pass,production browser proof,inline alert and aria-invalid
+Saved quality,explicit duplicate and delete guard,pass,production browser proof,cancel and confirm paths
+Quote,create reload update persistence,pass,production browser plus DB proof,same UUID and advanced updated_at
+Quote,duplicate cancel delete re-login,pass,production browser proof,original persisted
+Quote,accepted immutability and linked revision,blocked,automation/source proof only,hosted transition not completed
+Authorization,Base navigation and Premium wall,pass,production browser proof,no Premium leakage
+Authorization,Premium routes and Estimator,pass,production browser and direct DB proof,machine and analytics retained
+Authorization,cross-tenant and stale-role denial,pass,production boundary probe,42501/empty results as expected
+Responsive,360 390 768 1024 1366 1440 widths,pass,production-preview DOM metrics,no document or action-row overflow
+Responsive,125 and 150 percent browser zoom,blocked,in-app browser limitation,shortcut did not change metrics
+PWA,stale-client update prompt,pass,public production browser,non-aggressive refresh prompt visible
+PWA,fresh service worker behavior,pass,preview/local smoke,sw.js generated and served
+Billing,price and context binding,pass,production browser and automated tests,8260/2360/29500/8260 values
+Billing,atomic idempotent activation,pass,database migration and automated tests,one-year cap and locking
+Billing,hosted successful test payment,blocked,Razorpay embedded Checkout,test contact rejected before payment form
+Billing,webhook replay on hosted payment,blocked,depends on successful payment,no fabricated callback
+Billing,live payment,not_applicable,test-mode campaign,no real-money authorization
+Monitoring,Vercel runtime errors,pass,Vercel logs,no estimator runtime errors observed
+Monitoring,Sentry readable source maps,blocked,production build log,Sentry CLI/auth upload error
+Recovery,forced offline save and expired session,blocked,not safely completed in hosted browser,automation covers guards
+Data,exact cleanup and zero-row recheck,pass,admin inventory and cleanup,all disposable tenant rows removed
+Data,unrelated migration reversal,not_applicable,scope rule,not Estimator-owned
+Deployment,preview then promotion,pass,Vercel READY deployments,exact committed branch used
+Deployment,public production smoke,pass,authenticated public URL,Estimator and Billing loaded

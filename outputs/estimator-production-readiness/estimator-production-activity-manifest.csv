@@ -1,0 +1,23 @@
+resource_type,id,organization_id,purpose,test_case,created_at,final_state,cleanup_decision,cleanup_result
+organization,0e35016b-b0ba-4a35-a6bf-661ba75f4170,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base tenant,hosted Base lifecycle,2026-07-10T05:11:32Z,deleted,delete,removed
+organization,a25813fd-2d5c-41fd-98bd-81889c35a11d,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium tenant,hosted Premium boundary,2026-07-10T05:13:19Z,deleted,delete,removed
+auth_user,7c5202fa-fc0c-4add-9f93-77b82054d633,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base owner,authentication persistence,2026-07-10T05:11:32Z,deleted,delete,removed
+auth_user,004428dd-0e59-4f13-a2bb-011e1e1bfc14,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium owner,Premium regression,2026-07-10T05:13:19Z,deleted,delete,removed
+subscription,530e44e4-3e8c-490b-97ec-ffcf2b37a620,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base active entitlement,Base boundaries,2026-07-10T05:15:44Z,deleted,delete,removed
+subscription,ca008974-e000-43c5-8385-f46c8cbbff53,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium active entitlement,Premium boundaries,2026-07-10T05:15:44Z,deleted,delete,removed
+subscription,d91a491d-4b24-4cac-b434-f96af62216ed,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Razorpay test renewal order,hosted checkout,2026-07-12T12:26:19Z,created then deleted,delete,removed
+quote,09ccc9d1-0b27-472c-bb22-4fa0fe14ac96,0e35016b-b0ba-4a35-a6bf-661ba75f4170,hosted cotton quote,quote lifecycle,2026-07-12T11:48:18Z,deleted,delete,removed
+quote,e9388c7b-f609-4994-b6dc-f438a8c1379f,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base isolation quote,tenant boundary,2026-07-10T11:07:18Z,deleted,delete,removed
+quote,928f3138-caec-4604-93c4-361808ce9c63,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium quote,tenant boundary,2026-07-10T05:24:28Z,deleted,delete,removed
+quality,f764e74f-9588-4570-abb8-2b47a93460a3,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Cotton 40Ne quality,saved-quality UX,2026-07-10T12:43:03Z,deleted,delete,removed
+quality,c53102d1-c762-4064-a878-c0b416a60ca7,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base isolation quality,tenant boundary,2026-07-10T11:07:18Z,deleted,delete,removed
+quality,fa31354a-2d03-4fa1-9851-38773eafe28f,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium polyester quality,Premium regression,2026-07-10T05:22:37Z,deleted,delete,removed
+quality,5e0f51c3-9077-4701-9d6a-7eb2653c1a7a,a25813fd-2d5c-41fd-98bd-81889c35a11d,Inactive duplicate fixture,duplicate behavior,2026-07-10T05:27:57Z,deleted,delete,removed
+factory_cost_profile,5ec60abf-e78d-4bb4-936c-841d53bdaf05,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base costing,calculation proof,,deleted,delete,removed
+factory_cost_profile,29fb088e-6e36-42c7-90ed-7555640bd1e0,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium costing,Premium regression,,deleted,delete,removed
+referral_code,c748e3ff-429f-4209-a492-ee87707b97a4,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base billing fixture,billing UI,2026-07-10T06:20:18Z,deleted,delete,removed
+referral_code,c649c6e0-987b-4a63-b760-08d25fe9fe2d,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium billing fixture,billing UI,2026-07-10T05:14:28Z,deleted,delete,removed
+machine,a1010000-0000-4000-8000-000000000001,0e35016b-b0ba-4a35-a6bf-661ba75f4170,Base denial fixture,RLS boundary,,deleted,delete,removed
+machine,b1010000-0000-4000-8000-000000000001,a25813fd-2d5c-41fd-98bd-81889c35a11d,Premium allow fixture,RLS boundary,,deleted,delete,removed
+audit_logs,multiple,both,immutable evidence,security and mutation audit,,retained,retain,retained by policy
+preexisting_checkout,1dee81c8-e3a4-417a-8495-4728e2e0d774,preexisting,abandoned pending row,not audit-created,,retained,retain,untouched
