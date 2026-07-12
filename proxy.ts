@@ -382,6 +382,9 @@ export async function updateSession(request: NextRequest) {
             !resolvedOnboarding &&
             !pathname.startsWith('/api/') &&
             !pathname.startsWith('/onboarding') &&
+            !pathname.startsWith('/owner/billing') &&
+            !pathname.startsWith('/owner/estimator') &&
+            !pathname.startsWith('/owner/quotes') &&
             !pathname.startsWith('/owner/machines') &&
             !pathname.startsWith('/owner/workers') &&
             !pathname.startsWith('/owner/settings')

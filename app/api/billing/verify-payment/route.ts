@@ -3,10 +3,8 @@ import crypto from 'crypto'
 import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { activateInitialPurchase } from '@/lib/billing-activation'
-import {
-    FIRST_YEAR_TOTAL_PAISE,
-    BILLING_MODEL
-} from '@/lib/billing-constants'
+import { BILLING_MODEL } from '@/lib/billing-constants'
+import { readBillingOrderContext } from '@/lib/billing-lifecycle'
 import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +12,8 @@ export const dynamic = 'force-dynamic'
 /**
  * POST /api/billing/verify-payment
  *
- * Verifies Razorpay signature and checks order details from Razorpay server-side before activating full-suite premium entitlement.
+ * Verifies Razorpay signature and canonical order/payment details before
+ * atomically activating or renewing the bound Estimator/Full Suite plan.
  */
 export async function POST(req: NextRequest) {
     // 1. Auth check
@@ -71,7 +70,12 @@ export async function POST(req: NextRequest) {
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest('hex')
 
-    if (generatedSignature !== razorpay_signature) {
+    const expectedSignature = Buffer.from(generatedSignature, 'hex')
+    const providedSignature = Buffer.from(razorpay_signature, 'hex')
+    if (
+        expectedSignature.length !== providedSignature.length ||
+        !crypto.timingSafeEqual(expectedSignature, providedSignature)
+    ) {
         return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 
@@ -85,25 +89,34 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Order not found on Razorpay' }, { status: 400 })
         }
 
-        // Validate amount, currency, billing model, payment type, and org_id matching
-        const notes = order.notes || {}
-        const notesOrgId = notes.org_id
-        const paymentType = notes.payment_type
-        const billingModel = notes.billing_model
-
-        console.log(`[verify-payment] Checking order notes: org_id=${notesOrgId} (expected: ${orgId}), payment_type=${paymentType}, billing_model=${billingModel}`)
-        console.log(`[verify-payment] Checking order properties: amount=${order.amount} (expected: ${FIRST_YEAR_TOTAL_PAISE}), currency=${order.currency} (expected: INR)`)
-
-        if (
-            Number(order.amount) !== FIRST_YEAR_TOTAL_PAISE ||
-            order.currency !== 'INR' ||
-            paymentType !== 'initial_purchase' ||
-            billingModel !== BILLING_MODEL ||
-            notesOrgId !== orgId
-        ) {
+        // Validate the complete commercial context from the canonical Razorpay
+        // order. No amount, tier, or purchase type is accepted from the client.
+        const orderContext = readBillingOrderContext(order)
+        if (!orderContext || orderContext.orgId !== orgId) {
             console.error(`[verify-payment] Context mismatch for order: ${razorpay_order_id}`)
             Sentry.captureMessage(`Razorpay order verification failed. Context mismatch for order: ${razorpay_order_id}`, 'warning')
             return NextResponse.json({ error: 'Payment validation failed' }, { status: 400 })
+        }
+
+        // Bind the Razorpay order to the local server-created checkout row.
+        const { data: trackedOrder, error: trackedOrderError } = await supabase
+            .from('org_subscriptions')
+            .select('org_id, plan_tier, billing_model, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency')
+            .eq('razorpay_order_id', razorpay_order_id)
+            .maybeSingle()
+
+        if (
+            trackedOrderError ||
+            !trackedOrder ||
+            trackedOrder.org_id !== orgId ||
+            trackedOrder.plan_tier !== orderContext.planTier ||
+            trackedOrder.billing_model !== BILLING_MODEL ||
+            trackedOrder.checkout_purchase_type !== orderContext.purchaseType ||
+            Number(trackedOrder.checkout_amount_paise) !== orderContext.amountPaise ||
+            trackedOrder.checkout_currency !== 'INR'
+        ) {
+            Sentry.captureMessage(`Untracked or mismatched Razorpay order rejected: ${razorpay_order_id}`, 'warning')
+            return NextResponse.json({ error: 'Payment order is not recognized.' }, { status: 400 })
         }
 
         console.log(`[verify-payment] Fetching payment from Razorpay: ${razorpay_payment_id}`)
@@ -121,6 +134,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Payment does not belong to this order' }, { status: 400 })
         }
 
+        if (
+            payment.status !== 'captured' ||
+            Number(payment.amount) !== orderContext.amountPaise ||
+            payment.currency !== 'INR'
+        ) {
+            Sentry.captureMessage(`Uncaptured or amount-mismatched payment rejected: ${razorpay_payment_id}`, 'warning')
+            return NextResponse.json({ error: 'Payment has not been captured for the selected plan.' }, { status: 400 })
+        }
+
         // Activate the subscription using the shared helper
         const result = await activateInitialPurchase({
             orgId: orgId,
@@ -128,6 +150,8 @@ export async function POST(req: NextRequest) {
             razorpayPaymentId: razorpay_payment_id,
             amountPaise: Number(payment.amount),
             method: payment.method || null,
+            planTier: orderContext.planTier,
+            purchaseType: orderContext.purchaseType,
         })
 
         console.log(`[verify-payment] Activation successful! Sub end: ${result.subscription?.current_end}`)

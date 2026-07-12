@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import type { BillingPurchaseType, PurchasablePlanTier } from '@/lib/billing-constants'
 
 type RazorpayCheckoutOptions = {
     key: string
@@ -43,6 +44,8 @@ type CreateOrderResponse = {
     amount?: number
     currency?: string
     keyId?: string
+    planName?: string
+    purchaseType?: BillingPurchaseType
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -52,13 +55,15 @@ function getErrorMessage(error: unknown, fallback: string) {
 interface SubscribeButtonProps {
     // Kept optional for backward compatibility
     planId?: string
+    planTier?: PurchasablePlanTier
     tierName?: string
     displayAmount?: string
+    buttonLabel?: string
     onSuccess?: (paymentId: string) => void
     className?: string
 }
 
-export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) {
+export function SubscribeButton({ planTier = 'premium', tierName, displayAmount, buttonLabel, onSuccess, className }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
@@ -114,7 +119,8 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
     async function handleSubscribe() {
         setLoading(true)
         try {
-            console.log('[SubscribeButton] Initializing one-time checkout for Weavly Full Suite')
+            const planName = tierName ?? (planTier === 'base' ? 'Weavly Estimator' : 'Weavly Full Suite')
+            console.log(`[SubscribeButton] Initializing one-time checkout for ${planName}`)
 
             const isLoaded = await loadRazorpayScript()
             if (!isLoaded) {
@@ -129,7 +135,8 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify({ planTier }),
             })
 
             const contentType = res.headers.get('content-type')
@@ -146,10 +153,12 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
                 throw new Error(data.error || 'Failed to create payment order')
             }
 
-            const { orderId, amount, currency, keyId } = data
-            if (!orderId || !keyId || !amount || !currency) {
+            const { orderId, amount, currency, keyId, purchaseType } = data
+            if (!orderId || !keyId || !amount || !currency || !purchaseType) {
                 throw new Error('Payment setup response was incomplete.')
             }
+            const checkoutPlanName = data.planName ?? planName
+            const checkoutPurpose = purchaseType === 'renewal' ? 'Annual Renewal' : 'First Year'
 
             const rzp = new window.Razorpay({
                 key: keyId,
@@ -157,7 +166,7 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
                 currency: currency,
                 order_id: orderId,
                 name: 'Weavly',
-                description: 'Weavly Full Suite - First Year',
+                description: `${checkoutPlanName} - ${checkoutPurpose}`,
                 image: '/images/WeavlyLogo.png',
                 handler: async function (response: {
                     razorpay_payment_id: string
@@ -185,7 +194,11 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
                             throw new Error(verifyData.error || 'Failed to verify payment signature')
                         }
 
-                        toast.success('🎉 Payment successful! Weavly Full Suite is now active.')
+                        toast.success(
+                            purchaseType === 'renewal'
+                                ? `🎉 Payment successful! ${checkoutPlanName} was renewed.`
+                                : `🎉 Payment successful! ${checkoutPlanName} is now active.`
+                        )
                         onSuccess?.(response.razorpay_payment_id)
                         // Refresh server components
                         setTimeout(() => router.refresh(), 1500)
@@ -217,7 +230,7 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
         <div className="space-y-3">
             <Button
                 type="button"
-                id="subscribe-btn-full-suite"
+                id={`subscribe-btn-${planTier}`}
                 onClick={handleSubscribe}
                 disabled={loading}
                 size="lg"
@@ -231,7 +244,7 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
                 ) : (
                     <>
                         <CreditCard className="h-4 w-4" />
-                        Pay ₹17,700 & Activate Weavly
+                        {buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'base' ? '₹8,260' : '₹29,500')} & Activate`}
                     </>
                 )}
             </Button>

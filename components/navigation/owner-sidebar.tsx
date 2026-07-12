@@ -28,6 +28,7 @@ import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
 import { isWorkflowVisible, normalizeProductionMode, type ProductionMode, type WorkflowKey } from "@/lib/production-mode"
+import { tierSatisfies, type SubscriptionTier } from "@/lib/subscription-access"
 
 const navGroups = [
     {
@@ -103,16 +104,22 @@ interface OwnerSidebarProps {
     factoryName?: string
     userName?: string
     productionMode?: ProductionMode | null
+    subscriptionTier?: SubscriptionTier
 }
 
-function NavContent({ factoryName, userName, productionMode: rawProductionMode, onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
+function NavContent({ factoryName, userName, productionMode: rawProductionMode, subscriptionTier = 'none', onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
     const pathname = usePathname()
     const { t } = useTranslation()
     const productionMode = normalizeProductionMode(rawProductionMode)
+    const hasPremium = tierSatisfies(subscriptionTier, 'premium')
+    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/billing'])
     const visibleGroups = navGroups
         .map((group) => ({
             ...group,
-            items: group.items.filter((item) => isWorkflowVisible(productionMode, item.workflow as WorkflowKey)),
+            items: group.items.filter((item) => {
+                if (!hasPremium) return standaloneEstimatorRoutes.has(item.href)
+                return isWorkflowVisible(productionMode, item.workflow as WorkflowKey)
+            }),
         }))
         .filter((group) => group.items.length > 0)
 
@@ -184,20 +191,23 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     )
 }
 
-export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSidebarProps) {
+export function OwnerSidebar({ factoryName, userName, productionMode, subscriptionTier = 'none' }: OwnerSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
     const { t } = useTranslation()
     const normalizedProductionMode = normalizeProductionMode(productionMode)
+    const hasPremium = tierSatisfies(subscriptionTier, 'premium')
     const visibleBottomNavItems = bottomNavItems
-        .filter((item) => isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey))
+        .filter((item) => hasPremium
+            ? isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey)
+            : item.href === '/owner/estimator')
         .slice(0, 5)
 
     return (
         <>
             {/* Desktop sidebar — persistent */}
             <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111] shadow-[var(--shadow-card)]">
-                <NavContent factoryName={factoryName} userName={userName} productionMode={normalizedProductionMode} />
+                <NavContent factoryName={factoryName} userName={userName} productionMode={normalizedProductionMode} subscriptionTier={subscriptionTier} />
             </aside>
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -213,6 +223,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                         factoryName={factoryName}
                         userName={userName}
                         productionMode={normalizedProductionMode}
+                        subscriptionTier={subscriptionTier}
                         onLinkClick={() => setIsOpen(false)}
                     />
                 </SheetContent>

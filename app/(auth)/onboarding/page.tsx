@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getOnboardingStatus } from '@/app/(auth)/actions/auth'
 import { getUserClaims } from '@/lib/auth'
 import OnboardingChecklist from './checklist'
+import { getOrgTier } from '@/lib/subscription'
 
 /**
  * /onboarding — Owner setup checklist (server component)
@@ -29,21 +30,28 @@ export default async function OnboardingPage() {
     // Determine role: prefer JWT claim, fall back to DB (handles JWT race condition
     // where custom_access_token_hook fires before the profile row is visible).
     let role = userClaims.user_role
+    let orgId = userClaims.org_id
 
-    if (!role) {
+    if (!role || !orgId) {
         // JWT is stale (race condition on new signup) — fetch role from DB directly
         const admin = createAdminClient()
         const { data: profile } = await admin
             .from('profiles')
-            .select('role')
+            .select('role, org_id')
             .eq('id', user.id)
             .maybeSingle()
         role = profile?.role ?? undefined
+        orgId = profile?.org_id ?? undefined
     }
 
     // Supervisors don't go through onboarding — send them to their home screen
     if (role === 'supervisor') {
         redirect('/supervisor/production')
+    }
+
+    // Estimator-only customers intentionally skip factory onboarding.
+    if (role === 'owner' && orgId && await getOrgTier(orgId) === 'base') {
+        redirect('/owner/estimator')
     }
 
     // If role is still unknown (very rare edge case), show the checklist safely

@@ -6,6 +6,7 @@ import { processReferralConversion, issueReferralRefund } from '@/lib/referral-w
 import { checkPublicPostRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { razorpay } from '@/lib/razorpay'
 import { activateInitialPurchase } from '@/lib/billing-activation'
+import { readBillingOrderContext } from '@/lib/billing-lifecycle'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,7 @@ type RazorpayPaymentEntity = {
     subscription_id?: string | null
     order_id?: string | null
     amount: number
+    currency?: string | null
     method?: string | null
     notes?: Record<string, string> | null
 }
@@ -175,35 +177,32 @@ export async function POST(req: NextRequest) {
                 const orderId = payment.order_id
                 if (!orderId) break
 
-                let orgId = payment.notes?.org_id
-                let paymentType = payment.notes?.payment_type
+                // Payment notes are not authoritative. Always fetch and validate
+                // the canonical order before activating a one-time purchase.
+                const order = await razorpay.orders.fetch(orderId)
+                const orderContext = readBillingOrderContext(order)
 
-                console.log(`[razorpay-webhook] payment.captured: id=${payment.id}, order_id=${orderId}, org_id=${orgId}, type=${paymentType}`)
+                console.log(`[razorpay-webhook] payment.captured: id=${payment.id}, order_id=${orderId}`)
 
-                if (!orgId || !paymentType) {
-                    try {
-                        const order = await razorpay.orders.fetch(orderId)
-                        orgId = order.notes?.org_id as string
-                        paymentType = order.notes?.payment_type as string
-                        console.log(`[razorpay-webhook] Fetched order details: org_id=${orgId}, type=${paymentType}`)
-                    } catch (fetchErr) {
-                        console.error('[razorpay-webhook] Failed to fetch order details for payment.captured:', fetchErr)
-                        Sentry.captureException(fetchErr, {
-                            tags: { route: 'razorpay_webhook', phase: 'payment_captured_fetch_order' }
-                        })
-                    }
+                if (
+                    !orderContext ||
+                    Number(payment.amount) !== orderContext.amountPaise ||
+                    payment.currency !== 'INR'
+                ) {
+                    Sentry.captureMessage(`Invalid billing context on captured order ${orderId}`, 'warning')
+                    break
                 }
 
-                if (orgId && paymentType === 'initial_purchase') {
-                    console.log(`[razorpay-webhook] Triggering activateInitialPurchase for payment.captured...`)
-                    await activateInitialPurchase({
-                        orgId,
-                        razorpayOrderId: orderId,
-                        razorpayPaymentId: payment.id,
-                        amountPaise: payment.amount,
-                        method: payment.method ?? null,
-                    })
-                }
+                console.log(`[razorpay-webhook] Triggering activateInitialPurchase for payment.captured...`)
+                await activateInitialPurchase({
+                    orgId: orderContext.orgId,
+                    razorpayOrderId: orderId,
+                    razorpayPaymentId: payment.id,
+                    amountPaise: payment.amount,
+                    method: payment.method ?? null,
+                    planTier: orderContext.planTier,
+                    purchaseType: orderContext.purchaseType,
+                })
                 break
             }
 
@@ -211,48 +210,35 @@ export async function POST(req: NextRequest) {
                 const order = event.payload?.order?.entity
                 if (!order?.id) break
 
-                let orgId = order.notes?.org_id
-                let paymentType = order.notes?.payment_type
+                const fetchedOrder = await razorpay.orders.fetch(order.id)
+                const orderContext = readBillingOrderContext(fetchedOrder)
+                console.log(`[razorpay-webhook] order.paid: id=${order.id}`)
 
-                console.log(`[razorpay-webhook] order.paid: id=${order.id}, org_id=${orgId}, type=${paymentType}`)
-
-                if (!orgId || !paymentType) {
-                    try {
-                        const fetchedOrder = await razorpay.orders.fetch(order.id)
-                        orgId = fetchedOrder.notes?.org_id as string
-                        paymentType = fetchedOrder.notes?.payment_type as string
-                        console.log(`[razorpay-webhook] Fetched order details: org_id=${orgId}, type=${paymentType}`)
-                    } catch (fetchErr) {
-                        console.error('[razorpay-webhook] Failed to fetch order details for order.paid:', fetchErr)
-                        Sentry.captureException(fetchErr, {
-                            tags: { route: 'razorpay_webhook', phase: 'order_paid_fetch_order' }
-                        })
-                    }
+                if (!orderContext) {
+                    Sentry.captureMessage(`Invalid billing context on paid order ${order.id}`, 'warning')
+                    break
                 }
 
-                if (orgId && paymentType === 'initial_purchase') {
-                    try {
-                        console.log(`[razorpay-webhook] Fetching payments for order ${order.id}...`)
-                        const paymentsList = await razorpay.orders.fetchPayments(order.id)
-                        const successfulPayment = paymentsList.items?.find((p: { status: string }) => p.status === 'captured')
-                        if (successfulPayment) {
-                            console.log(`[razorpay-webhook] Triggering activateInitialPurchase for order.paid (payment: ${successfulPayment.id})...`)
-                            await activateInitialPurchase({
-                                orgId,
-                                razorpayOrderId: order.id,
-                                razorpayPaymentId: successfulPayment.id,
-                                amountPaise: Number(successfulPayment.amount),
-                                method: successfulPayment.method ?? null,
-                            })
-                        } else {
-                            console.log('[razorpay-webhook] No captured payment found for order.paid')
-                        }
-                    } catch (err) {
-                        console.error('[razorpay-webhook] Failed during order.paid activation:', err)
-                        Sentry.captureException(err, {
-                            tags: { route: 'razorpay_webhook', phase: 'order_paid_fetch_payments' }
-                        })
-                    }
+                console.log(`[razorpay-webhook] Fetching payments for order ${order.id}...`)
+                const paymentsList = await razorpay.orders.fetchPayments(order.id)
+                const successfulPayment = paymentsList.items?.find((p: { status: string; amount: string | number; currency: string }) => (
+                    p.status === 'captured' &&
+                    Number(p.amount) === orderContext.amountPaise &&
+                    p.currency === 'INR'
+                ))
+                if (successfulPayment) {
+                    console.log(`[razorpay-webhook] Triggering activateInitialPurchase for order.paid (payment: ${successfulPayment.id})...`)
+                    await activateInitialPurchase({
+                        orgId: orderContext.orgId,
+                        razorpayOrderId: order.id,
+                        razorpayPaymentId: successfulPayment.id,
+                        amountPaise: Number(successfulPayment.amount),
+                        method: successfulPayment.method ?? null,
+                        planTier: orderContext.planTier,
+                        purchaseType: orderContext.purchaseType,
+                    })
+                } else {
+                    console.log('[razorpay-webhook] No captured payment found for order.paid')
                 }
                 break
             }
@@ -512,4 +498,3 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true })
 }
-

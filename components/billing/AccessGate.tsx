@@ -107,9 +107,9 @@ function UpgradeWall({
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                     <p className="text-sm text-gray-500">Weavly Full Suite</p>
                     <p className="text-3xl font-extrabold text-gray-900 mt-1">
-                        ₹15,000<span className="text-lg font-normal text-gray-400">/year</span>
+                        ₹29,500<span className="text-lg font-normal text-gray-400">/first year</span>
                     </p>
-                    <p className="text-xs text-gray-400">+ 18% GST = ₹17,700 first year</p>
+                    <p className="text-xs text-gray-400">₹25,000 + 18% GST · ₹8,260/year renewal</p>
                 </div>
 
                 {/* CTA */}

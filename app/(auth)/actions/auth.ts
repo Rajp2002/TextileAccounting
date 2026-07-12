@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
+import { getOrgTier } from '@/lib/subscription'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -234,7 +235,9 @@ export async function createOrganizationAndRedirect(input: {
 }) {
     const result = await createOrganization(input)
     if (result && 'error' in result) return result
-    redirect('/onboarding')
+    // Plan selection comes before factory onboarding. Estimator-only owners do
+    // not need machines, workers, payroll, or production-mode setup.
+    redirect('/owner/billing')
 }
 
 // ─── validateJoinCode ──────────────────────────────────────────────────────────
@@ -424,6 +427,20 @@ export async function signIn(input: { email: string; password: string }) {
     }
 
     if (userRole === 'owner') {
+        const admin = createAdminClient()
+        const { data: ownerProfile } = await admin
+            .from('profiles')
+            .select('org_id, organizations(onboarding_complete)')
+            .eq('id', data.session.user.id)
+            .maybeSingle()
+        const orgId = ownerProfile?.org_id
+        if (ownerProfile?.organizations && typeof ownerProfile.organizations === 'object' && !Array.isArray(ownerProfile.organizations)) {
+            onboardingComplete = (ownerProfile.organizations as { onboarding_complete?: boolean | null }).onboarding_complete ?? onboardingComplete
+        }
+
+        const tier = orgId ? await getOrgTier(orgId) : 'none'
+        if (tier === 'base') redirect('/owner/estimator')
+        if (tier === 'none') redirect('/owner/billing')
         if (!onboardingComplete) {
             redirect('/onboarding')
         }

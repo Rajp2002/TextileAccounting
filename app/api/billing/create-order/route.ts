@@ -1,26 +1,31 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import * as Sentry from '@sentry/nextjs'
 import {
-    FIRST_YEAR_TOTAL_PAISE,
-    FIRST_YEAR_BASE_PAISE,
-    FIRST_YEAR_GST_PAISE,
+    getBillingPlan,
+    getBillingPrice,
+    isPurchasablePlanTier,
     BILLING_MODEL,
     ACCESS_DAYS
 } from '@/lib/billing-constants'
+import {
+    resolveBillingPurchase,
+    type BillingPaymentRow,
+    type BillingSubscriptionRow,
+} from '@/lib/billing-lifecycle'
 
 export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/billing/create-order
  *
- * Creates a Razorpay Order for Weavly Full Suite first-year upfront checkout (₹17,700).
+ * Creates a Razorpay order using server-derived first-year or renewal pricing.
  *
  * Returns { orderId, amount, currency, keyId } for the frontend checkout.
  */
-export async function POST() {
+export async function POST(req: NextRequest) {
     const supabase = await createClient()
 
     // 1. Auth check
@@ -49,25 +54,43 @@ export async function POST() {
 
     const orgId = profile.org_id
 
-    // 3. Check for existing active subscription (block if active premium/full-suite, not expired)
-    const { data: existing } = await supabase
-        .from('org_subscriptions')
-        .select('status, current_end, plan_tier')
-        .eq('org_id', orgId)
-        .in('status', ['active', 'authenticated'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-    if (existing) {
-        const isExpired = existing.current_end && new Date(existing.current_end).getTime() <= Date.now()
-        if (!isExpired && existing.plan_tier === 'premium') {
-            return NextResponse.json(
-                { error: 'Weavly Full Suite is already active for this organization.' },
-                { status: 409 }
-            )
-        }
+    const requested = await req.json().catch(() => ({})) as { planTier?: unknown }
+    const planTier = requested.planTier ?? 'premium'
+    if (!isPurchasablePlanTier(planTier)) {
+        return NextResponse.json({ error: 'Select a valid Weavly plan.' }, { status: 400 })
     }
+    const plan = getBillingPlan(planTier)
+
+    // 3. Derive purchase type exclusively from server-owned lifecycle history.
+    // The request deliberately does not accept amount or purchase type.
+    const [subscriptionsResult, paymentsResult] = await Promise.all([
+        supabase
+            .from('org_subscriptions')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, created_at')
+            .eq('org_id', orgId),
+        supabase
+            .from('subscription_payments')
+            .select('subscription_id, status')
+            .eq('org_id', orgId)
+            .eq('status', 'captured'),
+    ])
+
+    if (subscriptionsResult.error || paymentsResult.error) {
+        Sentry.captureException(subscriptionsResult.error ?? paymentsResult.error, {
+            tags: { route: 'billing_create_order', phase: 'resolve_lifecycle' },
+        })
+        return NextResponse.json({ error: 'Unable to determine billing status.' }, { status: 500 })
+    }
+
+    const decision = resolveBillingPurchase(
+        (subscriptionsResult.data ?? []) as BillingSubscriptionRow[],
+        (paymentsResult.data ?? []) as BillingPaymentRow[],
+        planTier
+    )
+    if (!decision.allowed) {
+        return NextResponse.json({ error: decision.reason }, { status: 409 })
+    }
+    const price = getBillingPrice(planTier, decision.purchaseType)
 
     // 4. Create Razorpay order
     // Receipt format must be short (under 40 chars)
@@ -75,16 +98,19 @@ export async function POST() {
 
     try {
         const order = await razorpay.orders.create({
-            amount: FIRST_YEAR_TOTAL_PAISE,
+            amount: price.totalPaise,
             currency: 'INR',
             receipt: receipt,
             notes: {
                 org_id: orgId,
                 billing_model: BILLING_MODEL,
-                payment_type: 'initial_purchase',
-                base_amount_paise: FIRST_YEAR_BASE_PAISE.toString(),
-                gst_paise: FIRST_YEAR_GST_PAISE.toString(),
-                total_paise: FIRST_YEAR_TOTAL_PAISE.toString(),
+                payment_type: decision.purchaseType,
+                purchase_type: decision.purchaseType,
+                plan_tier: planTier,
+                base_amount_paise: price.basePaise.toString(),
+                gst_paise: price.gstPaise.toString(),
+                total_paise: price.totalPaise.toString(),
+                currency: 'INR',
                 access_days: ACCESS_DAYS.toString(),
             },
         })
@@ -97,16 +123,20 @@ export async function POST() {
             .insert({
                 org_id: orgId,
                 plan_id: null,
-                plan_tier: 'premium',
+                plan_tier: planTier,
                 status: 'created',
                 billing_model: BILLING_MODEL,
                 razorpay_order_id: order.id,
+                checkout_purchase_type: decision.purchaseType,
+                checkout_amount_paise: price.totalPaise,
+                checkout_currency: 'INR',
             })
 
         if (insertError) {
             Sentry.captureException(insertError, {
                 tags: { route: 'billing_create_order', phase: 'insert_created_state' }
             })
+            throw new Error('Unable to persist checkout state.')
         }
 
         return NextResponse.json({
@@ -114,6 +144,8 @@ export async function POST() {
             amount: order.amount,
             currency: order.currency,
             keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            planName: plan.name,
+            purchaseType: decision.purchaseType,
         })
     } catch (err) {
         Sentry.captureException(err, {

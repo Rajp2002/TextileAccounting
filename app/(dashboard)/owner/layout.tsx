@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { createPerfTimer } from '@/lib/perf'
+import { getCachedOrgTier } from '@/lib/subscription'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const perf = createPerfTimer('/owner/* layout')
@@ -21,7 +22,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     let productionMode = normalizeProductionMode(null)
 
     const supabase = await createClient()
-    const { data: org } = await perf.measure(
+    const orgPromise = perf.measure(
         'profileOrgTier',
         () => supabase
             .from('organizations')
@@ -30,6 +31,10 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             .single(),
         1
     )
+    const [{ data: org }, subscriptionTier] = await Promise.all([
+        orgPromise,
+        perf.measure('businessData', () => getCachedOrgTier(userOrgId), 1),
+    ])
 
     if (org?.name) factoryName = org.name
     productionMode = normalizeProductionMode(org?.production_mode)
@@ -43,6 +48,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
                 factoryName={factoryName}
                 userName={userFullName || undefined}
                 productionMode={productionMode}
+                subscriptionTier={subscriptionTier}
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}

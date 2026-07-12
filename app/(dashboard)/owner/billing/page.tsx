@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
-import { TrialButton } from '@/components/billing/TrialButton'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
@@ -12,6 +11,17 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
+import {
+    getBillingPlan,
+    getBillingPrice,
+    type PurchasablePlanTier,
+} from '@/lib/billing-constants'
+import {
+    resolveBillingPurchase,
+    type BillingPaymentRow,
+    type BillingPurchaseDecision,
+    type BillingSubscriptionRow,
+} from '@/lib/billing-lifecycle'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -22,6 +32,7 @@ type SubscriptionPaymentRow = {
     razorpay_payment_id?: string | null
     amount_paise: number
     method?: string | null
+    subscription_id: string | null
 }
 
 function formatDate(iso: string | null): string {
@@ -77,68 +88,87 @@ function StatusBadge({ status }: { status: string }) {
     )
 }
 
-function PlanCards({ label }: { label: string }) {
+function PlanCards({
+    label,
+    currentTier,
+    decisions,
+}: {
+    label: string
+    currentTier: string
+    decisions: Record<PurchasablePlanTier, BillingPurchaseDecision>
+}) {
+    const plans = [
+        {
+            tier: 'base' as const,
+            name: 'Weavly Estimator',
+            badge: 'Standalone',
+            renewal: '₹2,000/year + GST (₹2,360/year total)',
+            features: ['Estimator workspace', 'Saved qualities', 'Quote history', 'Draft recovery', 'Independent customer access'],
+            icon: Zap,
+        },
+        {
+            tier: 'premium' as const,
+            name: 'Weavly Full Suite',
+            badge: 'Complete factory',
+            renewal: '₹7,000/year + GST (₹8,260/year total)',
+            features: ['Everything in Estimator', 'Production & order tracking', 'Market runs and godown stock', 'Dispatches', 'Payroll, advances, and analytics'],
+            icon: Star,
+        },
+    ]
+        .filter((plan) => currentTier !== 'base' || plan.tier === 'premium')
+        .filter((plan) => decisions[plan.tier].allowed)
+
     return (
         <div className="space-y-6">
             <div className="border-l-4 border-amber-500 pl-4 py-1">
                 <h2 className="text-xl font-black text-gray-900 tracking-tight">{label}</h2>
                 <p className="text-sm text-gray-500 font-medium">Pricing includes 18% GST.</p>
             </div>
-            <div className="max-w-xl mx-auto md:mx-0">
-                <div className="group relative rounded-3xl border border-amber-400 bg-gradient-to-br from-amber-50/80 to-white shadow-xl shadow-amber-500/5 p-8 flex flex-col gap-6 transition-all duration-300 hover:shadow-2xl hover:translate-y-[-4px]">
-                    <span className="absolute -top-3 right-6 bg-amber-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.1em] shadow-lg shadow-amber-500/20">
-                        Recommended
-                    </span>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-amber-100 text-amber-600">
-                                <Star className="h-6 w-6" />
-                            </div>
-                            <h3 className="font-black text-gray-900 text-xl tracking-tight">Weavly Full Suite</h3>
-                        </div>
-                        <div>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-4xl font-black text-gray-900 tracking-tighter">₹17,700</span>
-                                <span className="text-gray-400 font-bold text-sm">/first year</span>
-                            </div>
-                            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                                ₹15,000 + ₹2,700 GST (18%)
-                            </p>
-                        </div>
-                        <div className="text-sm font-semibold text-gray-700 bg-amber-50 border border-amber-100 rounded-xl p-3">
-                            <p className="text-amber-800">Renewal from year 2:</p>
-                            <p className="text-gray-600 text-xs mt-0.5">₹7,000/year + GST (₹8,260/year total)</p>
-                        </div>
-                    </div>
-                    <ul className="space-y-3 flex-1 overflow-visible">
-                        {[
-                            'Weavly Estimator',
-                            'Production & order tracking',
-                            'Market runs',
-                            'Godown stock',
-                            'Dispatches',
-                            'Payroll & advances',
-                            'Analytics & reports',
-                            'Unlimited machines & workers',
-                            'Priority onboarding support',
-                        ].map((f) => (
-                            <li key={f} className="flex items-start gap-3 text-sm text-gray-600 font-medium leading-tight">
-                                <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-emerald-100 transition-colors">
-                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+            <div className="grid gap-6 lg:grid-cols-2">
+                {plans.map((plan) => {
+                    const Icon = plan.icon
+                    const decision = decisions[plan.tier]
+                    const price = getBillingPrice(plan.tier, decision.purchaseType)
+                    const total = formatAmount(price.totalPaise)
+                    const breakdown = `${formatAmount(price.basePaise)} + ${formatAmount(price.gstPaise)} GST (18%)`
+                    const isRenewal = decision.purchaseType === 'renewal'
+                    return (
+                    <div key={plan.tier} className="group relative rounded-3xl border border-amber-300 bg-gradient-to-br from-amber-50/80 to-white p-8 shadow-xl shadow-amber-500/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                        <span className="absolute -top-3 right-6 rounded-full bg-amber-500 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-amber-500/20">
+                            {plan.badge}
+                        </span>
+                        <div className="flex h-full flex-col gap-6">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600"><Icon className="h-6 w-6" /></div>
+                                    <h3 className="text-xl font-black tracking-tight text-gray-900">{plan.name}</h3>
                                 </div>
-                                {f}
-                            </li>
-                        ))}
-                    </ul>
-                    <div className="pt-2">
-                        <SubscribeButton />
+                                <div>
+                                    <div className="flex items-baseline gap-1"><span className="text-4xl font-black tracking-tighter text-gray-900">{total}</span><span className="text-sm font-bold text-gray-400">/{isRenewal ? 'renewal year' : 'first year'}</span></div>
+                                    <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">{breakdown}</p>
+                                </div>
+                                <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm font-semibold text-gray-700">
+                                    <p className="text-amber-800">Renewal from year 2:</p><p className="mt-0.5 text-xs text-gray-600">{plan.renewal}</p>
+                                </div>
+                            </div>
+                            <ul className="flex-1 space-y-3">
+                                {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm font-medium leading-tight text-gray-600"><span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50"><CheckCircle2 className="h-3 w-3 text-emerald-600" /></span>{feature}</li>)}
+                            </ul>
+                            <SubscribeButton
+                                planTier={plan.tier}
+                                tierName={plan.name}
+                                displayAmount={total}
+                                buttonLabel={`Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
+                            />
+                        </div>
                     </div>
-                </div>
+                    )
+                })}
             </div>
             <div className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 border-dashed">
                 <ShieldCheck className="h-4 w-4 text-gray-400" />
                 <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-                    Payments secured by Razorpay · Data encrypted per DPDP Act 2023
+                    Secure Razorpay checkout · Tenant-scoped data access
                 </p>
             </div>
         </div>
@@ -152,12 +182,35 @@ export default async function BillingPage() {
     const supabase = await createClient()
     const { tier, subscription } = await getSubscriptionDetail(profile.org_id)
 
-    const { data: payments } = await supabase
-        .from('subscription_payments')
-        .select('*')
-        .eq('org_id', profile.org_id)
-        .order('created_at', { ascending: false })
-        .limit(10)
+    const [paymentsResult, subscriptionsResult] = await Promise.all([
+        supabase
+            .from('subscription_payments')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .order('created_at', { ascending: false })
+            .limit(10),
+        supabase
+            .from('org_subscriptions')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, created_at')
+            .eq('org_id', profile.org_id),
+    ])
+    const payments = paymentsResult.data ?? []
+    const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
+    const billingPayments = payments as BillingPaymentRow[]
+
+    // Billing lifecycle is evaluated on the server so expired paid customers
+    // see renewal pricing while trials still see first-year pricing.
+    const billingNow = new Date()
+    const purchaseDecisions: Record<PurchasablePlanTier, BillingPurchaseDecision> = {
+        base: resolveBillingPurchase(billingSubscriptions, billingPayments, 'base', billingNow),
+        premium: resolveBillingPurchase(billingSubscriptions, billingPayments, 'premium', billingNow),
+    }
+    const subscriptionTierById = new Map(
+        billingSubscriptions.map((row) => [row.id, row.plan_tier])
+    )
+    const activePaidTier = tier === 'base' || tier === 'premium' ? tier : null
+    const activePlan = activePaidTier ? getBillingPlan(activePaidTier) : null
+    const activeRenewalPrice = activePaidTier ? getBillingPrice(activePaidTier, 'renewal') : null
 
     const referralStats = await getReferralStatsAction()
 
@@ -165,6 +218,8 @@ export default async function BillingPage() {
                          (subscription?.status === 'created' && 
                           subscription.razorpay_order_id && 
                           subscription.created_at && 
+                          // Server-request clock is intentionally used to expire a stale pending checkout.
+                          // eslint-disable-next-line react-hooks/purity
                           new Date(subscription.created_at).getTime() > Date.now() - 15 * 60 * 1000)
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
@@ -199,7 +254,7 @@ export default async function BillingPage() {
                                         </div>
                                         <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Your factory is coming online.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            We&apos;ve received your payment. Your <strong>Weavly Full Suite</strong> access is being configured. Refresh in a few seconds.
+                                            We&apos;ve received your payment. Your selected <strong>Weavly plan</strong> is being configured. Refresh in a few seconds.
                                         </p>
                                     </>
                                 ) : subscription ? (
@@ -209,7 +264,7 @@ export default async function BillingPage() {
                                         </div>
                                         <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Plan expired.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            Your account access has been paused. Activate Weavly Full Suite to continue managing orders and production records.
+                                            Your account access has been paused. Renew your current plan or choose the plan that matches how you work.
                                         </p>
                                     </>
                                 ) : (
@@ -217,15 +272,10 @@ export default async function BillingPage() {
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-400/20 border border-indigo-400/30 text-xs font-black uppercase tracking-widest">
                                             <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> Limited Access
                                         </div>
-                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Unlock loom management.</h2>
+                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Choose your Weavly workspace.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            Select Weavly Full Suite to start tracking production, automated payroll, and daily WhatsApp briefs.
+                                            Start with the standalone Estimator for costing and quotes, or choose Full Suite for production, stock, dispatch, and payroll.
                                         </p>
-                                        {!subscription && (
-                                            <div className="pt-4">
-                                                <TrialButton className="bg-white text-indigo-600 hover:bg-gray-100 shadow-xl shadow-indigo-900/40" />
-                                            </div>
-                                        )}
                                     </>
                                 )}
                             </div>
@@ -287,10 +337,16 @@ export default async function BillingPage() {
                                         </div>
                                         <div className="space-y-1">
                                             <h2 className="text-4xl font-black tracking-tight text-gray-900 flex items-center gap-3">
-                                                <Star className="w-8 h-8 text-amber-500 fill-amber-400" />
-                                                Weavly Full Suite
+                                                {tier === 'base'
+                                                    ? <Zap className="w-8 h-8 text-amber-500 fill-amber-400" />
+                                                    : <Star className="w-8 h-8 text-amber-500 fill-amber-400" />}
+                                                {activePlan?.name ?? 'Weavly Plan'}
                                             </h2>
-                                            <p className="text-lg text-gray-500 font-medium">Your plan is active and in good standing.</p>
+                                            <p className="text-lg text-gray-500 font-medium">
+                                                {tier === 'base'
+                                                    ? 'Your standalone Estimator plan is active and in good standing.'
+                                                    : 'Your Full Suite plan is active and in good standing.'}
+                                            </p>
                                         </div>
                                         <div className="flex flex-wrap gap-4 pt-2">
                                             <div className="px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm flex flex-col justify-center">
@@ -312,10 +368,21 @@ export default async function BillingPage() {
                                     <div className="flex flex-col items-center justify-center p-8 rounded-[2rem] bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-2xl shadow-gray-400/20 min-w-[220px]">
                                         <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-4">Renewal Rate</p>
                                         <div className="text-4xl font-black tracking-tighter mb-1 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
-                                            ₹8,260
+                                            {activeRenewalPrice ? formatAmount(activeRenewalPrice.totalPaise) : '—'}
                                         </div>
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">/year from year 2</p>
-                                        <p className="text-[9px] text-gray-500 mt-2 font-bold uppercase">₹7,000/yr + GST</p>
+                                        <p className="text-[9px] text-gray-500 mt-2 font-bold uppercase">
+                                            {activeRenewalPrice ? `${formatAmount(activeRenewalPrice.basePaise)}/yr + GST` : ''}
+                                        </p>
+                                        {activePaidTier && activeRenewalPrice && (
+                                            <SubscribeButton
+                                                planTier={activePaidTier}
+                                                tierName={activePlan?.name}
+                                                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
+                                                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
+                                                className="mt-5 shadow-none"
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -325,7 +392,11 @@ export default async function BillingPage() {
                     {/* 2. PLAN CARDS SECTION (If not premium or if base) */}
                     {(tier !== 'premium' && !isActivating) && (
                         <div className="pt-4">
-                            <PlanCards label={tier === 'base' ? 'Upgrade to Weavly Full Suite' : 'Select your Weavly Plan'} />
+                            <PlanCards
+                                label={tier === 'base' ? 'Upgrade to Weavly Full Suite' : 'Select your Weavly Plan'}
+                                currentTier={tier}
+                                decisions={purchaseDecisions}
+                            />
                         </div>
                     )}
 
@@ -350,7 +421,9 @@ export default async function BillingPage() {
                                                 </div>
                                                 <div className="space-y-0.5">
                                                     <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
-                                                        Weavly Full Suite {p.status !== 'captured' && '— Failed'}
+                                                        {subscriptionTierById.get(p.subscription_id ?? '') === 'base'
+                                                            ? 'Weavly Estimator'
+                                                            : 'Weavly Full Suite'} {p.status !== 'captured' && '— Failed'}
                                                     </p>
                                                     <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
                                                         <span>{formatShortDate(p.created_at)}</span>
