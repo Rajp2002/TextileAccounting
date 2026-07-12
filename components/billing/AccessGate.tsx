@@ -2,7 +2,7 @@ import { getCachedSession } from '@/lib/auth'
 import { getCachedOrgTier, tierSatisfies, type SubscriptionTier } from '@/lib/subscription'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Lock, Zap, Star, ArrowRight } from 'lucide-react'
+import { Calculator, Zap, Star, ArrowRight, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createPerfTimer } from '@/lib/perf'
 
@@ -66,25 +66,30 @@ function UpgradeWall({
     return (
         <div className="flex items-center justify-center min-h-[60vh] p-6">
             <div className="max-w-md w-full text-center space-y-6">
-                {/* Icon */}
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center shadow-sm">
-                    <Lock className="h-8 w-8 text-amber-600" />
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center shadow-sm">
+                    <Calculator className="h-8 w-8 text-orange-600" />
                 </div>
 
                 {/* Headline */}
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                        Premium Feature
+                        Continue with Weavly Estimator
                     </h2>
                     <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                        This section is available on the <strong>Premium plan</strong>.
+                        This operational workspace is part of the <strong>Weavly Full Suite</strong>.
                         {currentTier === 'base' && (
-                            <> Your current <strong>Base plan</strong> includes the Estimator. Upgrade to unlock full production tracking, payroll, analytics, and more.</>
+                            <> Your <strong>Estimator Plan</strong> remains complete for calculating, saving, and updating fabric costings.</>
                         )}
                     </p>
                 </div>
 
-                {/* What you get */}
+                <Link href="/owner/estimator" className="block">
+                    <Button variant="outline" size="lg" className="w-full gap-2 rounded-xl">
+                        <ArrowLeft className="h-4 w-4" />
+                        Return to Estimator
+                    </Button>
+                </Link>
+
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-left space-y-3">
                     <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest">Premium unlocks</p>
                     <ul className="space-y-2 text-sm text-gray-700">

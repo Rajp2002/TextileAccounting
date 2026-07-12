@@ -277,11 +277,11 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                         <History className="h-6 w-6 text-indigo-500" />
-                        Quote History
+                        {canUseProduction ? 'Quote History' : 'Saved Costings'}
                     </h1>
-                    <p className="text-sm text-slate-500 font-medium">Move quotes from draft to sent, manually accept them, then create active orders.</p>
+                    <p className="text-sm text-slate-500 font-medium">{canUseProduction ? 'Move quotes from draft to sent, manually accept them, then create active orders.' : 'Reopen, update, duplicate, or remove your previous fabric costings.'}</p>
                 </div>
-                <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-lg shadow-sm w-full sm:w-auto overflow-x-auto">
+                {canUseProduction && <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-lg shadow-sm w-full sm:w-auto overflow-x-auto">
                     {['all', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
                         <button
                             key={s}
@@ -298,7 +298,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             {s}
                         </button>
                     ))}
-                </div>
+                </div>}
             </div>
 
             {filteredQuotes.length === 0 ? (
@@ -307,10 +307,10 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         <div className="p-3 bg-white rounded-full shadow-sm shadow-slate-200/50">
                             <FileText className="h-6 w-6 text-slate-400" />
                         </div>
-                        <p className="text-sm font-bold text-slate-600">No quotes found</p>
+                        <p className="text-sm font-bold text-slate-600">{canUseProduction ? 'No quotes found' : 'No saved costings yet'}</p>
                         <p className="text-xs text-slate-500 max-w-xs">{
                             filterStatus === 'all'
-                                ? "You haven't saved any quotes from the estimator yet."
+                                ? (canUseProduction ? "You haven't saved any quotes from the estimator yet." : "Save a costing from the Estimator and it will appear here.")
                                 : `No quotes with status "${filterStatus}".`
                         }</p>
                         {filterStatus !== 'all' && (
@@ -332,20 +332,20 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="space-y-1 w-full min-w-0 pr-2">
                                             <h3 className="text-lg font-black text-slate-900 truncate tracking-tight">
-                                                {quote.party_name}
+                                                {canUseProduction ? quote.party_name : (quote.quality_label || 'Untitled costing')}
                                             </h3>
                                             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none truncate">
-                                                {quote.quality_label}
+                                                {canUseProduction ? quote.quality_label : `Saved ${format(new Date(quote.created_at), 'MMM d, yyyy')}`}
                                             </p>
                                         </div>
                                         <Badge variant="outline" className={`${STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
-                                            {quote.status}
+                                            {canUseProduction ? quote.status : (quote.id === updatingId ? 'Updating' : 'Saved')}
                                         </Badge>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Quoted Cost</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{canUseProduction ? 'Quoted Cost' : 'Final Cost'}</p>
                                             <p className="text-base font-black font-mono text-indigo-600">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
                                         </div>
                                         <div>
@@ -380,7 +380,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                                     className="h-11 px-3 text-xs font-bold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 lg:h-7 lg:px-2"
                                                     onClick={() => handleRestore(quote, 'edit')}
                                                 >
-                                                    {(quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate'}
+                                                    {canUseProduction ? ((quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate') : 'Open & Update'}
                                                     <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
                                                 </Button>
                                                 <Button
@@ -389,7 +389,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                                     onClick={() => handleRestore(quote, 'duplicate')}
                                                 >
                                                     <Copy className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                                                    Duplicate
+                                                    {canUseProduction ? 'Duplicate' : 'Duplicate Costing'}
                                                 </Button>
                                                 {!linkedOrder && (quote.status === 'draft' || quote.status === 'rejected') && (
                                                     <Button
@@ -405,7 +405,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                             </div>
                                         </div>
 
-                                        {quote.status === 'draft' && !linkedOrder && (
+                                        {canUseProduction && quote.status === 'draft' && !linkedOrder && (
                                             <Button
                                                 size="sm"
                                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold gap-2"
@@ -421,7 +421,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                             </Button>
                                         )}
 
-                                        {quote.status === 'sent' && !linkedOrder && (
+                                        {canUseProduction && quote.status === 'sent' && !linkedOrder && (
                                             <div className="grid grid-cols-2 gap-2">
                                                 <Button
                                                     size="sm"

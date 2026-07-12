@@ -112,7 +112,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     const { t } = useTranslation()
     const productionMode = normalizeProductionMode(rawProductionMode)
     const hasPremium = tierSatisfies(subscriptionTier, 'premium')
-    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/billing'])
+    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/settings'])
     const visibleGroups = navGroups
         .map((group) => ({
             ...group,
@@ -137,7 +137,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
                             <p className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
-                            <p className="text-[11px] font-medium text-zinc-400">Owner control</p>
+                            <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Estimator Plan'}</p>
                         </div>
                     </div>
                 )}
@@ -169,7 +169,9 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                     )}
                                 >
                                     <Icon className="h-[18px] w-[18px]" />
-                                    {getNavLabel(item, productionMode, t)}
+                                    {!hasPremium && item.href === '/owner/quotes'
+                                        ? 'Saved Costings'
+                                        : getNavLabel(item, productionMode, t)}
                                 </Link>
                             )
                         })}
@@ -183,6 +185,12 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                     <p className="mb-3 truncate text-xs font-medium text-zinc-400">{userName}</p>
                 )}
                 <div className="flex flex-col gap-3">
+                    {!hasPremium && (
+                        <Link href="/owner/billing" onClick={onLinkClick} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
+                            <CreditCard className="h-[18px] w-[18px]" />
+                            Subscription & Billing
+                        </Link>
+                    )}
                     <LanguageSwitcher className="text-saffron hover:bg-saffron-deep hover:text-white" />
                     <LogoutButton className="rounded-lg px-2 py-1.5 text-saffron hover:bg-saffron-deep hover:text-white" />
                 </div>

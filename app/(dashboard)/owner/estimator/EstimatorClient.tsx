@@ -1158,6 +1158,7 @@ export default function EstimatorClient({
 
     // Party rate memory — debounced 800ms, 3-char minimum
     useEffect(() => {
+        if (!canUseProduction) { setPartyHint(null); return }
         if (partyLookupTimerRef[0]) clearTimeout(partyLookupTimerRef[0])
         if (partyName.trim().length < 3) { setPartyHint(null); return }
         const timer = setTimeout(async () => {
@@ -1168,7 +1169,7 @@ export default function EstimatorClient({
         partyLookupTimerRef[0] = timer
         return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [partyName])
+    }, [partyName, canUseProduction])
 
     const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
     const scenarios = useMemo(() =>
@@ -1461,12 +1462,14 @@ export default function EstimatorClient({
     const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode, status: 'draft' | 'accepted' = 'draft') => {
         if (saveQuoteLockRef.current || savingQuote) return
 
-        const resolvedPartyName = targetMode === 'market' 
+        const resolvedPartyName = !canUseProduction
+            ? qualityLabel.trim()
+            : targetMode === 'market'
             ? (qualityLabel.trim() || partyName.trim()) 
             : partyName.trim()
 
         if (!resolvedPartyName) {
-            return toast.error(targetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
+            return toast.error(!canUseProduction ? 'Quality name is required' : targetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
@@ -1520,7 +1523,9 @@ export default function EstimatorClient({
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
                     quoteRequestIdRef.current = null
-                    toast.success(status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
+                    toast.success(canUseProduction
+                        ? (status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
+                        : (sourceQuoteId ? 'Costing updated' : 'Costing saved'))
                     router.push('/owner/quotes')
                 } else {
                     toast.error(res.error ?? 'Failed to save quote')
@@ -1626,16 +1631,16 @@ export default function EstimatorClient({
                         <p className="text-sm text-amber-800 flex-1">
                             {draft.sourceQuoteId ? (
                                 <>
-                                    Re-estimating from quote for{' '}
-                                    <span className="font-bold">{draft.partyName || 'Unknown Party'}</span>
+                                    {canUseProduction ? 'Re-estimating from quote for ' : 'Updating saved costing '}
+                                    <span className="font-bold">{canUseProduction ? (draft.partyName || 'Unknown Party') : (draft.qualityLabel || 'Untitled')}</span>
                                     {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
-                                    {' '}— editable quotes update in place; accepted quotes create a linked version
+                                    {canUseProduction && ' — editable quotes update in place; accepted quotes create a linked version'}
                                 </>
                             ) : (
                                 <>
                                     <span className="font-bold">Unsaved draft</span> from{' '}
                                     {new Date(draft.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                                    {draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
+                                    {canUseProduction && draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
                                 </>
                             )}
                         </p>
@@ -1724,19 +1729,19 @@ export default function EstimatorClient({
                                         id="btn-save-accept"
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
-                                        onClick={() => handleSaveQuote('quote', 'accepted')}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
-                                            ? 'Complete party, quality, quantity, and cost result first.'
+                                        onClick={() => handleSaveQuote('quote', canUseProduction ? 'accepted' : 'draft')}
+                                        disabled={savingQuote || !hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        title={(!hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                            ? (canUseProduction ? 'Complete party, quality, quantity, and cost result first.' : 'Complete quality, costing quantity, and cost result first.')
                                             : undefined
                                         }
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">Save & Accept</span>
+                                        <span className="truncate">{canUseProduction ? 'Save & Accept' : (sourceQuoteId ? 'Update Costing' : 'Save Costing')}</span>
                                     </Button>
 
                                     {/* SECONDARY: Save Quote */}
-                                    <Button
+                                    {canUseProduction && <Button
                                         id="btn-save-quote"
                                         size="sm"
                                         variant="outline"
@@ -1746,7 +1751,7 @@ export default function EstimatorClient({
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">Save Quote</span>
-                                    </Button>
+                                    </Button>}
 
                                     {/* TERTIARY: Switch to Market mode */}
                                     {canUseProduction && (
@@ -2007,13 +2012,13 @@ export default function EstimatorClient({
                     </div>
                 )}
 
-                {/* 1. Order Basics */}
+                {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
                     <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
-                            {mode !== 'market' && (
+                            {canUseProduction && mode !== 'market' && (
                                 <div className="space-y-1.5">
                                     <Label className="text-[10px] uppercase font-bold text-slate-500">
                                         {t('estimator.order_basics.party')}
@@ -2037,7 +2042,7 @@ export default function EstimatorClient({
                             )}
 
                             {/* Fabric / Quality Name (visible in both modes) */}
-                            <div className={mode === 'market' ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
+                            <div className={!canUseProduction || mode === 'market' ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
@@ -2046,7 +2051,7 @@ export default function EstimatorClient({
                                     onChange={e => {
                                         const val = e.target.value
                                         setQualityLabel(val)
-                                        if (mode === 'market') {
+                                        if (!canUseProduction || mode === 'market') {
                                             setPartyName(val)
                                         }
                                     }}
