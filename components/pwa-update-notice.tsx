@@ -41,6 +41,12 @@ export function PwaUpdateNotice() {
                 showUpdateToast()
             }
             registration.addEventListener('updatefound', () => watchWorker(registration.installing))
+            // Do not rely on the browser's periodic update cadence. Checking
+            // after listeners are attached lets an active draft tab observe a
+            // newly deployed worker before the user navigates or reloads.
+            void registration.update().catch(() => {
+                // Update checks are best-effort and must not interrupt drafts.
+            })
         }).catch(() => {
             // Service-worker registration is best-effort and should not block app use.
         })
