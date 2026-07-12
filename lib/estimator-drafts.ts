@@ -10,6 +10,7 @@ export interface EstimatorAutosaveData<TState = unknown> {
   weftInstruction: string
   savedAt: number
   sourceQuoteId?: string
+  sourceQuoteUpdatedAt?: string
 }
 
 export function getEstimatorDraftStorageKey(orgId: string, userId: string): string {
@@ -38,6 +39,7 @@ export function parseEstimatorDraft<TState = unknown>(
       weftInstruction: typeof parsed.weftInstruction === 'string' ? parsed.weftInstruction : '',
       savedAt: Number(parsed.savedAt),
       sourceQuoteId: typeof parsed.sourceQuoteId === 'string' ? parsed.sourceQuoteId : undefined,
+      sourceQuoteUpdatedAt: typeof parsed.sourceQuoteUpdatedAt === 'string' ? parsed.sourceQuoteUpdatedAt : undefined,
     }
   } catch {
     return null

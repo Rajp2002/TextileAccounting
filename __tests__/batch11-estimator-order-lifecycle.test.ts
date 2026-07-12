@@ -110,7 +110,9 @@ describe('Batch 11 estimator server-boundary validation', () => {
             if (actionName === 'startPartyOrderFromEstimator') {
                 expect(action.indexOf('validateEstimatorQuoteBoundary')).toBeLessThan(action.indexOf("supabase.rpc("))
             } else {
-                expect(action.indexOf('validateEstimatorQuoteBoundary')).toBeLessThan(action.indexOf(".from('estimator_quotes')"))
+                // Idempotency may read an existing quote before validation, but
+                // every artifact write must remain after server validation.
+                expect(action.indexOf('validateEstimatorQuoteBoundary')).toBeLessThan(action.indexOf('.insert('))
             }
         }
     })

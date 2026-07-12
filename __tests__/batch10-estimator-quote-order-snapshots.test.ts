@@ -28,11 +28,25 @@ describe('Batch 10 estimator quote/order snapshots', () => {
 
         expect(estimatorActions).toContain("import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot")
         expect(estimatorActions).toContain('const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)')
-        expect(estimatorActions).toContain('const workerRatePerM = normalizeCurrencySnapshot(')
+        expect(estimatorActions.match(/const workerRatePerM = calcWorkerRateSnapshot\(/g)?.length).toBeGreaterThanOrEqual(3)
+        expect(functionBody(estimatorActions, 'startPartyOrderFromEstimator')).not.toContain('input.workerRatePerM')
+        expect(functionBody(estimatorActions, 'createMarketRunFromEstimator')).not.toContain('params.workerRatePerM')
         expect(estimatorActions).toContain('worker_rate_per_m:        workerRatePerM')
         expect(estimatorActions).toContain('worker_rate_per_m: workerRatePerM')
         expect(estimatorActions).toContain('worker_rate_per_m:   workerRatePerM')
-        expect(estimatorClient).toContain('calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)')
+        expect(estimatorClient).not.toContain('calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)')
+    })
+
+    it('persists delivered landed cost rather than dropping commission and transport', () => {
+        const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
+        const saveQuote = functionBody(estimatorActions, 'saveEstimatorQuoteV3')
+        const startOrder = functionBody(estimatorActions, 'startPartyOrderFromEstimator')
+
+        expect(estimatorActions).toContain('landedCostPerM: normalizeCurrencySnapshot(')
+        expect(estimatorActions).toContain('totals.orderQuote?.landedCostPerM ?? totals.totalProductionCostPerM')
+        expect(saveQuote).toContain('landed_cost_per_meter:    authoritative.landedCostPerM')
+        expect(startOrder).toContain('p_landed_cost_per_meter: authoritative.landedCostPerM')
+        expect(startOrder).not.toContain('p_landed_cost_per_meter: authoritative.productionCostPerM')
     })
 })
 
@@ -47,12 +61,14 @@ describe('Batch 10 quote restore draft collision', () => {
             weftInstruction: '',
             savedAt: nowMs - 1_000,
             sourceQuoteId: 'quote-a',
+            sourceQuoteUpdatedAt: '2026-07-10T11:00:00.000Z',
         })
 
         const parsed = parseEstimatorDraft(raw, nowMs)
 
         expect(getEstimatorDraftStorageKey('org-1', 'user-1')).toBe('weavly-estimator-draft-org-1-user-1')
         expect(parsed?.partyName).toBe('Mahavir Traders')
+        expect(parsed?.sourceQuoteUpdatedAt).toBe('2026-07-10T11:00:00.000Z')
         expect(shouldWarnBeforeQuoteRestore(parsed, 'quote-b')).toBe(true)
         expect(shouldWarnBeforeQuoteRestore(parsed, 'quote-a')).toBe(false)
         expect(parseEstimatorDraft(raw, nowMs + 25 * 60 * 60 * 1000)).toBeNull()
@@ -63,10 +79,55 @@ describe('Batch 10 quote restore draft collision', () => {
         const quotesClient = readProjectFile('app/(dashboard)/owner/quotes/QuotesClient.tsx')
 
         expect(quotesClient).toContain('parseEstimatorDraft<QuoteDraftState>(localStorage.getItem(draftKey))')
-        expect(quotesClient).toContain('shouldWarnBeforeQuoteRestore(existingDraft, quote.id)')
+        expect(quotesClient).toContain('shouldWarnBeforeQuoteRestore(existingDraft, restoreIdentity)')
         expect(quotesClient).toContain('Replace estimator draft?')
         expect(quotesClient).toContain('Keep draft')
         expect(quotesClient).toContain('Overwrite draft')
+    })
+})
+
+describe('Estimator persistence safety', () => {
+    it('makes quote saves idempotent and protects stale draft updates', () => {
+        const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
+        const saveQuote = functionBody(estimatorActions, 'saveEstimatorQuoteV3')
+        const estimatorClient = readProjectFile('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+
+        expect(saveQuote).toContain(".eq('client_request_id', params.clientRequestId)")
+        expect(saveQuote).toContain('client_request_id:        params.clientRequestId')
+        expect(saveQuote).toContain(".eq('updated_at', params.expectedSourceUpdatedAt!)")
+        expect(saveQuote).toContain('idempotentReplay: true')
+        expect(estimatorClient).toContain('globalThis.crypto.randomUUID()')
+        expect(estimatorClient).toContain('expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined')
+    })
+
+    it('validates template recipes and uses optimistic concurrency on template writes', () => {
+        const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
+
+        expect(estimatorActions).toContain('function validateTemplateRecipe(data: TemplateRecipeInput)')
+        expect(functionBody(estimatorActions, 'saveAsFabricTemplate')).toContain('validateTemplateRecipe(data)')
+        expect(functionBody(estimatorActions, 'updateFabricTemplate')).toContain(".eq('updated_at', data.expectedUpdatedAt)")
+        expect(functionBody(estimatorActions, 'updateTemplateRates')).toContain(".eq('updated_at', data.expectedUpdatedAt)")
+        expect(estimatorActions).toContain('getEffectiveYarnDenier(firstWarp)')
+    })
+
+    it('offers immutable accepted-quote re-estimation plus explicit duplicate and guarded delete', () => {
+        const quotesClient = readProjectFile('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+        const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
+
+        expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'edit')}")
+        expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'duplicate')}")
+        expect(quotesClient).toContain('sourceQuoteId: isDuplicate ? undefined : quote.id')
+        expect(quotesClient).toContain('Delete this quote?')
+        expect(functionBody(estimatorActions, 'deleteEstimatorQuote')).toContain(".in('status', ['draft', 'rejected'])")
+    })
+
+    it('contains browser-storage failures in autosave and quote restore flows', () => {
+        const autosave = readProjectFile('hooks/useAutosave.ts')
+        const quotesClient = readProjectFile('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+
+        expect(autosave).toContain('function safelyRemoveLocalStorageItem(key: string)')
+        expect(autosave).toContain('safelyRemoveLocalStorageItem(keyRef.current)')
+        expect(quotesClient).toContain("toast.error('Browser storage is unavailable. The quote could not be opened in the estimator.')")
     })
 })
 

@@ -1,5 +1,8 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveEffectiveSubscription, type SubscriptionTier } from './subscription-access'
+
+export { resolveEffectiveSubscription, tierSatisfies, type SubscriptionTier } from './subscription-access'
 
 /**
  * Subscription tier hierarchy:
@@ -8,57 +11,23 @@ import { createClient } from '@/lib/supabase/server'
  *   'base'    — paid Base plan (Estimator only)
  *   'premium' — paid Premium plan (full access)
  */
-export type SubscriptionTier = 'none' | 'trial' | 'base' | 'premium'
-
-// ─── Tier helpers ─────────────────────────────────────────────────────────────
-
-/** Returns true if `actual` meets or exceeds `required` access. */
-export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'premium'): boolean {
-    if (actual === 'none') return false
-    if (actual === 'trial' || actual === 'premium') return true  // full access
-    if (actual === 'base') return required === 'base'            // base only satisfies 'base'
-    return false
-}
-
 // ─── getOrgTier ───────────────────────────────────────────────────────────────
 
 /**
  * Returns the current access tier for an org.
- * Always reads the most recently created subscription row.
+ * Resolves every current subscription row so a later failed/cancelled payment
+ * attempt cannot hide an older paid entitlement that has not expired.
  */
 export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
     const supabase = await createClient()
 
     const { data } = await supabase
         .from('org_subscriptions')
-        .select('status, plan_tier, current_end')
+        .select('status, plan_tier, current_end, created_at')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
 
-    if (!data) return 'none'
-
-    // Must be in an active state
-    const isActive = ['active', 'authenticated'].includes(data.status)
-    if (!isActive) return 'none'
-
-    // Check expiry
-    if (data.current_end) {
-        const endMs = new Date(data.current_end).getTime()
-        const now = Date.now()
-
-        if (data.plan_tier === 'trial') {
-            // No grace period for trial — strict expiry
-            if (endMs < now) return 'none'
-        } else {
-            // 24-hour grace period for paid plans (webhook delay buffer)
-            const gracePeriodMs = 24 * 60 * 60 * 1000
-            if (endMs + gracePeriodMs < now) return 'none'
-        }
-    }
-
-    return (data.plan_tier as SubscriptionTier) ?? 'premium'
+    return resolveEffectiveSubscription(data ?? []).tier
 }
 
 /**
@@ -97,28 +66,15 @@ export async function getSubscriptionDetail(orgId: string): Promise<{
         .select('status, plan_tier, plan_id, current_start, current_end, paid_count, total_count, razorpay_subscription_id, razorpay_order_id, billing_model, cancel_at_cycle_end, created_at')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
 
-    if (!data) return { tier: 'none', subscription: null }
-
-    const isActive = ['active', 'authenticated'].includes(data.status)
-    if (!isActive) return { tier: 'none', subscription: data }
-
-    // Check expiry
-    let tier: SubscriptionTier = 'none'
-    if (data.current_end) {
-        const endMs = new Date(data.current_end).getTime()
-        const now = Date.now()
-        const gracePeriodMs = data.plan_tier === 'trial' ? 0 : 24 * 60 * 60 * 1000
-        if (endMs + gracePeriodMs >= now) {
-            tier = (data.plan_tier as SubscriptionTier) ?? 'premium'
-        }
-    } else {
-        tier = (data.plan_tier as SubscriptionTier) ?? 'premium'
+    const rows = data ?? []
+    const effective = resolveEffectiveSubscription(rows)
+    return {
+        tier: effective.tier,
+        // When nothing is active, retain the newest row so billing can explain
+        // the latest payment/cancellation state to the owner.
+        subscription: effective.subscription ?? rows[0] ?? null,
     }
-
-    return { tier, subscription: data }
 }
 
 // ─── Legacy helpers (kept for backwards compat) ───────────────────────────────

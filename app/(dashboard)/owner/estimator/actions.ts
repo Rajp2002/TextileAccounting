@@ -3,11 +3,12 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
-import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary } from '@/lib/estimator-validation'
+import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
+import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary, validateEstimatorSnapshot } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
+import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -16,6 +17,130 @@ import { getMarketRunDisplayStatus } from '@/lib/market-runs'
  */
 function generateTrackingToken(): string {
     return crypto.randomBytes(9).toString('base64url').slice(0, 12)
+}
+
+const ESTIMATOR_NAME_MAX_LENGTH = 120
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+type TemplateRecipeInput = {
+    warpRows: WarpRow[]
+    weftRows: WeftRow[]
+    tapeLengthM?: number
+    warpCrimpPct?: number
+    perPickCostPaisa?: number
+    yarnShortagePct?: number
+    overheadOverridePerM?: number | null
+    loomType?: string | null
+    loomRpm?: number | null
+    loomPowerKw?: number | null
+    sizingMode?: 'in_house' | 'outsourced'
+    hoursPerShift?: number | null
+}
+
+function normalizeTemplateName(value: string): string {
+    return value.trim().replace(/\s+/g, ' ')
+}
+
+function templateWriteError(error: { code?: string; message: string }) {
+    if (error.code === '23505') {
+        return 'A saved quality with this name already exists. Choose Duplicate and give the copy a different name.'
+    }
+    return error.message
+}
+
+function validateTemplateName(value: string): string | null {
+    const name = normalizeTemplateName(value)
+    if (!name) return 'Quality name is required.'
+    if (name.length > ESTIMATOR_NAME_MAX_LENGTH) {
+        return `Quality name must be ${ESTIMATOR_NAME_MAX_LENGTH} characters or fewer.`
+    }
+    return null
+}
+
+function validateOptionalPositiveNumber(
+    value: unknown,
+    label: string,
+    maximum: number
+): string | null {
+    if (value === null || value === undefined) return null
+    const numeric = Number(value)
+    if (!Number.isFinite(numeric) || numeric <= 0) return `${label} must be greater than zero.`
+    if (numeric > maximum) return `${label} is outside the supported range.`
+    return null
+}
+
+function validateTemplateRecipe(data: TemplateRecipeInput): string | null {
+    const base = makeDefaultEstimateState()
+    const snapshot: EstimateState = {
+        ...base,
+        warpRows: data.warpRows,
+        weftRows: data.weftRows,
+        tapeLengthM: data.tapeLengthM ?? 1,
+        warpCrimpPct: data.warpCrimpPct ?? base.warpCrimpPct,
+        perPickCostPaisa: data.perPickCostPaisa ?? 0.01,
+        yarnShortagePct: data.yarnShortagePct ?? base.yarnShortagePct,
+        overheadOverridePerM: data.overheadOverridePerM ?? null,
+        monthlyOutputM: 1,
+    }
+    const recipeError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(snapshot))
+    if (recipeError) return recipeError
+
+    if (data.sizingMode !== undefined && !['in_house', 'outsourced'].includes(data.sizingMode)) {
+        return 'Sizing mode is invalid.'
+    }
+    if (data.loomType !== null && data.loomType !== undefined && !Object.prototype.hasOwnProperty.call(LOOM_TYPE_DEFAULTS, data.loomType)) {
+        return 'Loom type is invalid.'
+    }
+
+    return validateOptionalPositiveNumber(data.loomRpm, 'Loom RPM', 10_000)
+        ?? validateOptionalPositiveNumber(data.loomPowerKw, 'Loom power', 10_000)
+        ?? validateOptionalPositiveNumber(data.hoursPerShift, 'Hours per shift', 24)
+}
+
+function validateExpectedTimestamp(value: string | undefined, label: string): string | null {
+    if (!value || !Number.isFinite(Date.parse(value))) {
+        return `${label} changed or is missing its version. Refresh before saving again.`
+    }
+    return null
+}
+
+function validateClientRequestId(value: string): string | null {
+    return UUID_PATTERN.test(value)
+        ? null
+        : 'The save request identifier is invalid. Refresh the estimator and try again.'
+}
+
+async function requirePremiumTier(orgId: string): Promise<string | null> {
+    const tier = await getOrgTier(orgId)
+    return tierSatisfies(tier, 'premium')
+        ? null
+        : 'This action requires the Weavly Full Suite. Your Estimator plan cannot create production records.'
+}
+
+function getAuthoritativeQuoteTotals(
+    estimate: EstimateState,
+    precomputedTotals?: ReturnType<typeof calcFullTotals>
+) {
+    const totals = precomputedTotals ?? calcFullTotals(estimate)
+    return {
+        totals,
+        productionCostPerM: normalizeCurrencySnapshot(totals.totalProductionCostPerM),
+        landedCostPerM: normalizeCurrencySnapshot(
+            totals.orderQuote?.landedCostPerM ?? totals.totalProductionCostPerM
+        ),
+        quotePricePerM: normalizeCurrencySnapshot(
+            totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM
+        ),
+    }
+}
+
+function totalsMatchAuthoritative(
+    clientProductionCostPerM: number,
+    clientQuotePricePerM: number,
+    authoritative: ReturnType<typeof getAuthoritativeQuoteTotals>
+) {
+    return normalizeCurrencySnapshot(clientProductionCostPerM) === authoritative.productionCostPerM
+        && normalizeCurrencySnapshot(clientQuotePricePerM) === authoritative.quotePricePerM
 }
 
 // ─── Factory Cost Profile ─────────────────────────────────────────────────────
@@ -85,6 +210,9 @@ export async function getFixedWorkersForOverhead(): Promise<{
 }> {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const tierError = await requirePremiumTier(profile.org_id)
+    if (tierError) return { error: tierError }
 
     const { data, error } = await supabase
         .from('fixed_workers')
@@ -175,16 +303,22 @@ export async function saveAsFabricTemplate(data: {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    const recipeError = validateTemplateRecipe(data)
+    if (recipeError) return { error: recipeError }
+
     // Derive legacy flat fields from first row (legacy columns are now nullable,
     // but we still populate them for any older UI that reads them)
     const firstWarp = data.warpRows[0]
     const firstWeft = data.weftRows[0]
 
-    const { error } = await supabase
+    const nameError = validateTemplateName(data.name)
+    if (nameError) return { error: nameError }
+
+    const { data: saved, error } = await supabase
         .from('estimator_templates')
         .insert({
             org_id:              profile.org_id,
-            name:                data.name,
+            name:                normalizeTemplateName(data.name),
             // V3 recipe arrays (primary store)
             warp_rows:           data.warpRows,
             weft_rows:           data.weftRows,
@@ -200,22 +334,24 @@ export async function saveAsFabricTemplate(data: {
             sizing_mode:         data.sizingMode ?? 'in_house',
             hours_per_shift:     data.hoursPerShift ?? 12,
             // Legacy display fields — cast to integer to satisfy old column types
-            yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
-            calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
+            yarn_denier:         Math.round(firstWarp ? getEffectiveYarnDenier(firstWarp) : 75),
+            calculated_yarn_denier: firstWarp ? getEffectiveYarnDenier(firstWarp) : 75,
             beam_ends:           firstWarp?.beamEnds ?? 3200,
             ppi:                 Math.round(firstWeft?.picks ?? 68),
             reed_space:          firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
-            weft_denier:         firstWeft?.calcDenier ?? 75,
+            weft_denier:         firstWeft ? getEffectiveYarnDenier(firstWeft) : 75,
             default_yarn_rate:   firstWarp?.yarnRate ?? 107,
             gsm:                 80,   // legacy placeholder — not used in V3
             is_active:           true,
         })
+        .select('id, updated_at')
+        .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: templateWriteError(error) }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { success: true }
+    return { success: true, templateId: saved.id, updatedAt: saved.updated_at }
 }
 
 /**
@@ -224,31 +360,46 @@ export async function saveAsFabricTemplate(data: {
  * but refresh the rate snapshot stored in the template.
  */
 export async function updateTemplateRates(data: {
-    id:       string
-    warpRows: WarpRow[]
-    weftRows: WeftRow[]
+    id:                string
+    expectedUpdatedAt: string
+    warpRows:          WarpRow[]
+    weftRows:          WeftRow[]
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    const timestampError = validateExpectedTimestamp(data.expectedUpdatedAt, 'This saved quality')
+    if (timestampError) return { error: timestampError }
+    const recipeError = validateTemplateRecipe({
+        warpRows: data.warpRows,
+        weftRows: data.weftRows,
+    })
+    if (recipeError) return { error: recipeError }
+
     const firstWarp = data.warpRows[0]
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
         .from('estimator_templates')
         .update({
             warp_rows:         data.warpRows,
             weft_rows:         data.weftRows,
             // Sync legacy flat field too
             default_yarn_rate: firstWarp?.yarnRate ?? 107,
+            updated_at:        new Date().toISOString(),
         })
         .eq('id', data.id)
         .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+        .eq('updated_at', data.expectedUpdatedAt)
+        .select('id, updated_at')
+        .maybeSingle()
 
     if (error) return { error: error.message }
+    if (!updated) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { success: true }
+    return { success: true, updatedAt: updated.updated_at }
 }
 
 /**
@@ -257,6 +408,7 @@ export async function updateTemplateRates(data: {
  */
 export async function updateFabricTemplate(data: {
     id:               string
+    expectedUpdatedAt: string
     name:             string
     warpRows:         WarpRow[]
     weftRows:         WeftRow[]
@@ -277,10 +429,17 @@ export async function updateFabricTemplate(data: {
     const firstWarp = data.warpRows[0]
     const firstWeft = data.weftRows[0]
 
-    const { error } = await supabase
+    const timestampError = validateExpectedTimestamp(data.expectedUpdatedAt, 'This saved quality')
+    if (timestampError) return { error: timestampError }
+    const nameError = validateTemplateName(data.name)
+    if (nameError) return { error: nameError }
+    const recipeError = validateTemplateRecipe(data)
+    if (recipeError) return { error: recipeError }
+
+    const { data: updated, error } = await supabase
         .from('estimator_templates')
         .update({
-            name:                data.name,
+            name:                normalizeTemplateName(data.name),
             warp_rows:           data.warpRows,
             weft_rows:           data.weftRows,
             per_pick_cost_paise: data.perPickCostPaisa,
@@ -295,54 +454,91 @@ export async function updateFabricTemplate(data: {
             sizing_mode:         data.sizingMode ?? 'in_house',
             hours_per_shift:     data.hoursPerShift ?? 12,
             // Legacy sync
-            yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
-            calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
+            yarn_denier:         Math.round(firstWarp ? getEffectiveYarnDenier(firstWarp) : 75),
+            calculated_yarn_denier: firstWarp ? getEffectiveYarnDenier(firstWarp) : 75,
             beam_ends:           firstWarp?.beamEnds ?? 3200,
             ppi:                 Math.round(firstWeft?.picks ?? 68),
             reed_space:          firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
-            weft_denier:         firstWeft?.calcDenier ?? 75,
+            weft_denier:         firstWeft ? getEffectiveYarnDenier(firstWeft) : 75,
             default_yarn_rate:   firstWarp?.yarnRate ?? 107,
+            updated_at:          new Date().toISOString(),
         })
         .eq('id', data.id)
         .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+        .eq('updated_at', data.expectedUpdatedAt)
+        .select('id, updated_at')
+        .maybeSingle()
 
-    if (error) return { error: error.message }
+    if (error) return { error: templateWriteError(error) }
+    if (!updated) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { success: true }
+    return { success: true, updatedAt: updated.updated_at }
 }
 
 
 /** Rename a template (owner can fix typos without recreating). */
-export async function renameTemplate(id: string, name: string) {
+export async function renameTemplate(id: string, name: string, expectedUpdatedAt: string) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const { error } = await supabase
+    const timestampError = validateExpectedTimestamp(expectedUpdatedAt, 'This saved quality')
+    if (timestampError) return { error: timestampError }
+    const nameError = validateTemplateName(name)
+    if (nameError) return { error: nameError }
+
+    const { data: updated, error } = await supabase
         .from('estimator_templates')
-        .update({ name: name.trim() })
+        .update({ name: normalizeTemplateName(name), updated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+        .eq('updated_at', expectedUpdatedAt)
+        .select('id, updated_at')
+        .maybeSingle()
 
-    if (error) return { error: error.message }
+    if (error) return { error: templateWriteError(error) }
+    if (!updated) return { error: 'This saved quality changed in another tab or was deleted. Refresh before renaming it.' }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { success: true }
+    return { success: true, updatedAt: updated.updated_at }
 }
 
-export async function deleteTemplate(id: string) {
+export async function deleteTemplate(id: string, expectedUpdatedAt?: string) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const { error } = await supabase
+    let resolvedUpdatedAt = expectedUpdatedAt
+    if (!resolvedUpdatedAt) {
+        const { data: current, error: currentError } = await supabase
+            .from('estimator_templates')
+            .select('updated_at')
+            .eq('id', id)
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .maybeSingle()
+        if (currentError) return { error: currentError.message }
+        resolvedUpdatedAt = current?.updated_at
+    }
+
+    const timestampError = validateExpectedTimestamp(resolvedUpdatedAt, 'This saved quality')
+    if (timestampError) return { error: timestampError }
+
+    const { data: deleted, error } = await supabase
         .from('estimator_templates')
-        .update({ is_active: false })
+        .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+        .eq('updated_at', resolvedUpdatedAt!)
+        .select('id')
+        .maybeSingle()
 
     if (error) return { error: error.message }
+    if (!deleted) return { error: 'This saved quality changed in another tab or was already deleted. Refresh before deleting it.' }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
@@ -352,6 +548,7 @@ export async function deleteTemplate(id: string) {
 // ─── Save Quote (V3) ──────────────────────────────────────────────────────────
 
 export async function saveEstimatorQuoteV3(params: {
+    clientRequestId:    string
     partyName:          string
     qualityLabel:       string
     warpInstruction?:   string
@@ -360,37 +557,62 @@ export async function saveEstimatorQuoteV3(params: {
     totalProductionCostPerM: number
     quotePricePerM:     number
     status?:            'draft' | 'sent' | 'accepted' | 'rejected'
+    sourceQuoteId?:     string
+    expectedSourceUpdatedAt?: string
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    const requestIdError = validateClientRequestId(params.clientRequestId)
+    if (requestIdError) return { error: requestIdError }
+
+    // A response can be lost after PostgreSQL commits. Replaying the same
+    // client request returns the original row instead of creating a duplicate.
+    const { data: replay, error: replayError } = await supabase
+        .from('estimator_quotes')
+        .select('id, updated_at')
+        .eq('org_id', profile.org_id)
+        .eq('client_request_id', params.clientRequestId)
+        .maybeSingle()
+    if (replayError) return { error: replayError.message }
+    if (replay) {
+        return { success: true, quoteId: replay.id, updatedAt: replay.updated_at, idempotentReplay: true }
+    }
+
     const { estimate } = params
+    if (!params.partyName.trim()) return { error: 'Party name is required.' }
+    if (!params.qualityLabel.trim()) return { error: 'Quality label is required.' }
+    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate))
+    if (snapshotError) return { error: snapshotError }
+    const authoritative = getAuthoritativeQuoteTotals(estimate)
     const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
         estimate,
-        totalProductionCostPerM: params.totalProductionCostPerM,
-        quotePricePerM: params.quotePricePerM,
+        totalProductionCostPerM: authoritative.productionCostPerM,
+        quotePricePerM: authoritative.quotePricePerM,
         targetMeters: estimate.orderQuantityM,
     }))
     if (validationError) return { error: validationError }
+    if (!totalsMatchAuthoritative(params.totalProductionCostPerM, params.quotePricePerM, authoritative)) {
+        return { error: 'The estimate changed before it was saved. Review the recalculated totals and save again.' }
+    }
 
     // Compute loom-worker wage rate: Σ(picks across all weft rows) × perPickCostPaisa
     // e.g. 58 picks × 0.16 = ₹9.28/m — this is what the weaver earns per metre
     const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)
 
-    const { data: saved, error } = await supabase
-        .from('estimator_quotes')
-        .insert({
+    const quotePayload = {
             org_id:               profile.org_id,
-            party_name:           params.partyName,
-            quality_label:        params.qualityLabel,
-            warp_instruction:     params.warpInstruction,
-            weft_instruction:     params.weftInstruction,
+            party_name:           params.partyName.trim(),
+            quality_label:        params.qualityLabel.trim(),
+            warp_instruction:     params.warpInstruction?.trim() || null,
+            weft_instruction:     params.weftInstruction?.trim() || null,
             // V3 full recipe snapshots
             warp_rows:            estimate.warpRows,
             weft_rows:            estimate.weftRows,
             per_pick_cost_paise:  estimate.perPickCostPaisa,
             tape_length_m:        estimate.tapeLengthM,
             warp_crimp_pct:       estimate.warpCrimpPct ?? 0,
+            yarn_shortage_pct:    estimate.yarnShortagePct ?? 0,
             warping_rate_per_kg:  estimate.warpingRatePerKg,
             sizing_rate_per_kg:   estimate.sizingRatePerKg,
             winding_rate_per_kg:  estimate.windingRatePerKg,
@@ -400,7 +622,7 @@ export async function saveEstimatorQuoteV3(params: {
             overhead_items:       estimate.overheadItems,
             monthly_output_m:     estimate.monthlyOutputM,
             overhead_override_per_m: estimate.overheadOverridePerM ?? null,
-            overhead_pct:         estimate.overheadPct,   // effective % computed by engine
+            overhead_pct:         authoritative.totals.effectiveOverheadPct,
             commission_pct:       estimate.commissionPct,
             transport_per_m:      estimate.transportPerM,
             order_quantity_m:     estimate.orderQuantityM,
@@ -412,24 +634,86 @@ export async function saveEstimatorQuoteV3(params: {
             estimator_power_kw:   estimate.loomPowerKw ?? null,
             hours_per_shift:      estimate.hoursPerShift,
             sizing_mode:          estimate.sizingMode,
+            loom_count:           estimate.loomCount,
+            monthly_working_days: estimate.monthlyWorkingDays,
+            avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,
             // Result snapshots
-            landed_cost_per_meter:    params.totalProductionCostPerM,
-            quote_price_per_meter:    params.quotePricePerM,
+            landed_cost_per_meter:    authoritative.landedCostPerM,
+            quote_price_per_meter:    authoritative.quotePricePerM,
             intended_margin_percent:  estimate.profitPct,
             meters:                   estimate.orderQuantityM ?? 0,
             status:                   params.status ?? 'draft',
+            client_request_id:        params.clientRequestId,
             // Weaver wage rate snapshot — flows downstream to shift_assignments
             worker_rate_per_m:    workerRatePerM,
             // Legacy required fields with sane defaults
             ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
-            yarn_denier: Math.round(estimate.warpRows[0]?.calcDenier ?? 75),
+            yarn_denier: Math.round(estimate.warpRows[0] ? getEffectiveYarnDenier(estimate.warpRows[0]) : 75),
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
+    }
+
+    if (params.sourceQuoteId) {
+        const timestampError = validateExpectedTimestamp(params.expectedSourceUpdatedAt, 'The quote being edited')
+        if (timestampError) return { error: timestampError }
+
+        const { data: source, error: sourceError } = await supabase
+            .from('estimator_quotes')
+            .select('id, status, order_id, updated_at')
+            .eq('id', params.sourceQuoteId)
+            .eq('org_id', profile.org_id)
+            .maybeSingle()
+
+        if (sourceError) return { error: sourceError.message }
+        if (!source) return { error: 'The quote being edited no longer exists.' }
+        if (Date.parse(source.updated_at) !== Date.parse(params.expectedSourceUpdatedAt!)) {
+            return { error: 'This quote changed in another tab. Reload it from Quote History before saving again.' }
+        }
+
+        // Draft/sent/rejected quotes remain the same business record. Accepted
+        // or converted quotes are immutable audit history, so re-estimation
+        // creates a linked new version instead.
+        if (!source.order_id && ['draft', 'sent', 'rejected'].includes(source.status)) {
+            const { data: updated, error: updateError } = await supabase
+                .from('estimator_quotes')
+                .update(quotePayload)
+                .eq('id', source.id)
+                .eq('org_id', profile.org_id)
+                .is('order_id', null)
+                .in('status', ['draft', 'sent', 'rejected'])
+                .eq('updated_at', params.expectedSourceUpdatedAt!)
+                .select('id, updated_at')
+                .maybeSingle()
+
+            if (updateError) return { error: updateError.message }
+            if (!updated) return { error: 'This quote changed in another tab. Refresh Quote History before saving again.' }
+            return { success: true, quoteId: updated.id, updatedAt: updated.updated_at, updated: true }
+        }
+    }
+
+    const { data: saved, error } = await supabase
+        .from('estimator_quotes')
+        .insert({
+            ...quotePayload,
+            source_quote_id: params.sourceQuoteId ?? null,
         })
-        .select('id')
+        .select('id, updated_at')
         .single()
 
-    if (error) return { error: error.message }
-    return { success: true, quoteId: saved.id }
+    if (error) {
+        if (error.code === '23505') {
+            const { data: existing } = await supabase
+                .from('estimator_quotes')
+                .select('id, updated_at')
+                .eq('org_id', profile.org_id)
+                .eq('client_request_id', params.clientRequestId)
+                .maybeSingle()
+            if (existing) {
+                return { success: true, quoteId: existing.id, updatedAt: existing.updated_at, idempotentReplay: true }
+            }
+        }
+        return { error: error.message }
+    }
+    return { success: true, quoteId: saved.id, updatedAt: saved.updated_at }
 }
 
 // ─── Convert Quote to Order ───────────────────────────────────────────────────
@@ -460,6 +744,9 @@ export async function convertAcceptedQuoteToOrder(data: {
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const tierError = await requirePremiumTier(profile.org_id)
+    if (tierError) return { error: tierError }
 
     const targetMeters = Number(data.total_target_meters)
     if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
@@ -497,7 +784,6 @@ export type StartPartyOrderInput = {
     weftInstruction?:     string | null
     targetMeters:         number
     deadline:             string | null
-    workerRatePerM?:      number | null
     quotePricePerM:       number
     costPerM:             number
     instructions?:        string | null
@@ -519,8 +805,11 @@ export type StartPartyOrderInput = {
  * are rolled back by PostgreSQL.
  */
 export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) {
-    await requireRole(['owner'])
+    const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const tierError = await requirePremiumTier(profile.org_id)
+    if (tierError) return { error: tierError }
 
     // ── Input validation ─────────────────────────────────────────────────────
     if (!input.partyName?.trim())         return { error: 'Add a party name before starting an order.' }
@@ -530,35 +819,42 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
     if (!Number.isFinite(targetMeters) || targetMeters <= 0)
         return { error: 'Target meters must be greater than zero.' }
 
-    const costPerM = Number(input.costPerM)
-    if (!Number.isFinite(costPerM) || costPerM < 0)
+    const clientCostPerM = Number(input.costPerM)
+    if (!Number.isFinite(clientCostPerM) || clientCostPerM < 0)
         return { error: 'Complete the estimate before starting an order.' }
 
-    const quotePricePerM = Number(input.quotePricePerM)
-    if (!Number.isFinite(quotePricePerM) || quotePricePerM <= 0)
+    const clientQuotePricePerM = Number(input.quotePricePerM)
+    if (!Number.isFinite(clientQuotePricePerM) || clientQuotePricePerM <= 0)
         return { error: 'Quote price is missing. Complete the estimate first.' }
 
     // Deadline is optional — accept null/empty
     const deadline = input.deadline?.trim() || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
 
+    const estimateForOrder = { ...input.estimatorState, orderQuantityM: targetMeters }
+    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimateForOrder))
+    if (snapshotError) return { error: snapshotError }
+    const totals = calcFullTotals(estimateForOrder)
+    const authoritative = getAuthoritativeQuoteTotals(estimateForOrder, totals)
     const { estimatorState } = input
     const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
-        estimate: estimatorState,
-        totalProductionCostPerM: costPerM,
-        quotePricePerM,
+        estimate: estimateForOrder,
+        totalProductionCostPerM: authoritative.productionCostPerM,
+        quotePricePerM: authoritative.quotePricePerM,
         targetMeters,
     }))
     if (validationError) return { error: validationError }
+    if (!totalsMatchAuthoritative(input.costPerM, input.quotePricePerM, authoritative)) {
+        return { error: 'The estimate changed before the order was created. Review the recalculated totals and try again.' }
+    }
 
-    // ── Compute worker rate from estimator state if not explicitly provided ──
-    const workerRatePerM = normalizeCurrencySnapshot(
-        input.workerRatePerM ??
-        calcWorkerRateSnapshot(estimatorState.weftRows, estimatorState.perPickCostPaisa ?? 0)
+    // Worker pay is an authoritative snapshot derived from the validated
+    // recipe. Never accept a client-provided rate for downstream payroll.
+    const workerRatePerM = calcWorkerRateSnapshot(
+        estimatorState.weftRows,
+        estimatorState.perPickCostPaisa ?? 0
     )
 
     // ── Pre-compute yarn requirements (same logic as executeQuoteConversion) ──
-    const estimateForOrder = { ...estimatorState, orderQuantityM: targetMeters }
-    const totals = calcFullTotals(estimateForOrder)
     const warpRequiredKg  = (totals.totalWarpKgPer100m / 100) * targetMeters
     const weftRequiredKg  = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * targetMeters
     const totalRequiredKg = warpRequiredKg + weftRequiredKg
@@ -588,7 +884,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
             p_overhead_items:        estimatorState.overheadItems,
             p_monthly_output_m:      estimatorState.monthlyOutputM,
             p_overhead_override_per_m: estimatorState.overheadOverridePerM ?? null,
-            p_overhead_pct:          estimatorState.overheadPct,
+            p_overhead_pct:          authoritative.totals.effectiveOverheadPct,
             p_commission_pct:        estimatorState.commissionPct,
             p_transport_per_m:       estimatorState.transportPerM,
             p_order_quantity_m:      targetMeters,
@@ -599,12 +895,12 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
             p_estimator_power_kw:    estimatorState.loomPowerKw ?? null,
             p_hours_per_shift:       estimatorState.hoursPerShift,
             p_sizing_mode:           estimatorState.sizingMode,
-            p_landed_cost_per_meter: costPerM,
-            p_quote_price_per_meter: quotePricePerM,
+            p_landed_cost_per_meter: authoritative.landedCostPerM,
+            p_quote_price_per_meter: authoritative.quotePricePerM,
             p_intended_margin_pct:   estimatorState.profitPct,
             p_worker_rate_per_m:     workerRatePerM,
             p_ppi:                   Math.round(estimatorState.weftRows[0]?.picks ?? 68),
-            p_yarn_denier:           Math.round(estimatorState.warpRows[0]?.calcDenier ?? 75),
+            p_yarn_denier:           Math.round(estimatorState.warpRows[0] ? getEffectiveYarnDenier(estimatorState.warpRows[0]) : 75),
             p_yarn_rate_per_kg:      estimatorState.warpRows[0]?.yarnRate ?? 0,
             // Order fields
             p_target_meters:         targetMeters,
@@ -700,6 +996,9 @@ export async function getMonthlyOutputSuggestion(): Promise<{
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    const tierError = await requirePremiumTier(profile.org_id)
+    if (tierError) return { error: tierError }
+
     const now = new Date()
     const ninetyDaysAgo = new Date()
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
@@ -762,19 +1061,29 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
     return { data }
 }
 
-export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | 'accepted' | 'rejected') {
+export async function updateQuoteStatus(
+    id: string,
+    status: 'draft' | 'sent' | 'accepted' | 'rejected',
+    expectedUpdatedAt: string
+) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    const timestampError = validateExpectedTimestamp(expectedUpdatedAt, 'This quote')
+    if (timestampError) return { error: timestampError }
+
     const { data: current, error: currentError } = await supabase
         .from('estimator_quotes')
-        .select('id, status, order_id')
+        .select('id, status, order_id, updated_at')
         .eq('id', id)
         .eq('org_id', profile.org_id)
         .single()
 
     if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
     if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
+    if (Date.parse(current.updated_at) !== Date.parse(expectedUpdatedAt)) {
+        return { error: 'This quote changed in another tab. Refresh Quote History before changing its status.' }
+    }
 
     const allowedTransitions: Record<string, string[]> = {
         draft: ['sent'],
@@ -792,13 +1101,44 @@ export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | '
         .update({ status })
         .eq('id', id)
         .eq('org_id', profile.org_id)
+        .eq('updated_at', expectedUpdatedAt)
         .select()
-        .single()
+        .maybeSingle()
 
     if (error) return { error: error.message }
+    if (!data) return { error: 'This quote changed in another tab. Refresh Quote History before changing its status.' }
     
     revalidatePath('/owner/quotes')
     return { success: true, data }
+}
+
+export async function deleteEstimatorQuote(id: string, expectedUpdatedAt: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const timestampError = validateExpectedTimestamp(expectedUpdatedAt, 'This quote')
+    if (timestampError) return { error: timestampError }
+
+    // Accepted/sent/converted quotes are commercial audit history. Only an
+    // unconverted draft or rejected quote may be explicitly removed.
+    const { data: deleted, error } = await supabase
+        .from('estimator_quotes')
+        .delete()
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+        .eq('updated_at', expectedUpdatedAt)
+        .is('order_id', null)
+        .in('status', ['draft', 'rejected'])
+        .select('id')
+        .maybeSingle()
+
+    if (error) return { error: error.message }
+    if (!deleted) {
+        return { error: 'This quote changed, is no longer deletable, or was already removed. Refresh Quote History.' }
+    }
+
+    revalidatePath('/owner/quotes')
+    return { success: true }
 }
 
 // ─── Market Run — Create ──────────────────────────────────────────────────────
@@ -820,12 +1160,14 @@ export async function createMarketRunFromEstimator(params: {
     targetMeters:            number
     estimate:                EstimateState
     totalProductionCostPerM: number
-    workerRatePerM:          number
     notes?:                  string
     deadline:                string
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const tierError = await requirePremiumTier(profile.org_id)
+    if (tierError) return { error: tierError }
 
     const targetMeters = Number(params.targetMeters)
     if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
@@ -835,16 +1177,27 @@ export async function createMarketRunFromEstimator(params: {
         return { error: 'Fabric label is required.' }
     }
 
-    const { estimate } = params
+    const estimate = { ...params.estimate, orderQuantityM: targetMeters }
+    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate))
+    if (snapshotError) return { error: snapshotError }
+    const authoritative = getAuthoritativeQuoteTotals(estimate)
     const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
         estimate,
-        totalProductionCostPerM: params.totalProductionCostPerM,
-        quotePricePerM: params.totalProductionCostPerM,
+        totalProductionCostPerM: authoritative.productionCostPerM,
+        quotePricePerM: authoritative.quotePricePerM,
         targetMeters,
     }))
     if (validationError) return { error: validationError }
+    if (normalizeCurrencySnapshot(params.totalProductionCostPerM) !== authoritative.productionCostPerM) {
+        return { error: 'The estimate changed before the market run was created. Review the recalculated totals and try again.' }
+    }
 
-    const workerRatePerM = normalizeCurrencySnapshot(params.workerRatePerM)
+    // Recompute the payroll snapshot after validation. A caller cannot lower
+    // or inflate the downstream worker rate independently of the recipe.
+    const workerRatePerM = calcWorkerRateSnapshot(
+        estimate.weftRows,
+        estimate.perPickCostPaisa ?? 0
+    )
 
     // 1. Save estimator snapshot as a quote (party_name = fabric label for display)
     const { data: savedQuote, error: quoteError } = await supabase
@@ -860,6 +1213,7 @@ export async function createMarketRunFromEstimator(params: {
             per_pick_cost_paise:  estimate.perPickCostPaisa,
             tape_length_m:        estimate.tapeLengthM,
             warp_crimp_pct:       estimate.warpCrimpPct ?? 0,
+            yarn_shortage_pct:    estimate.yarnShortagePct ?? 0,
             warping_rate_per_kg:  estimate.warpingRatePerKg,
             sizing_rate_per_kg:   estimate.sizingRatePerKg,
             winding_rate_per_kg:  estimate.windingRatePerKg,
@@ -868,7 +1222,7 @@ export async function createMarketRunFromEstimator(params: {
             overhead_items:       estimate.overheadItems,
             monthly_output_m:     estimate.monthlyOutputM,
             overhead_override_per_m: estimate.overheadOverridePerM ?? null,
-            overhead_pct:         estimate.overheadPct,
+            overhead_pct:         authoritative.totals.effectiveOverheadPct,
             commission_pct:       estimate.commissionPct,
             transport_per_m:      estimate.transportPerM,
             order_quantity_m:     targetMeters,
@@ -879,14 +1233,17 @@ export async function createMarketRunFromEstimator(params: {
             estimator_power_kw:   estimate.loomPowerKw ?? null,
             hours_per_shift:      estimate.hoursPerShift,
             sizing_mode:          estimate.sizingMode,
-            landed_cost_per_meter:    params.totalProductionCostPerM,
-            quote_price_per_meter:    params.totalProductionCostPerM,  // cost price = quote price for market runs
+            loom_count:           estimate.loomCount,
+            monthly_working_days: estimate.monthlyWorkingDays,
+            avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,
+            landed_cost_per_meter:    authoritative.landedCostPerM,
+            quote_price_per_meter:    authoritative.quotePricePerM,
             intended_margin_percent:  estimate.profitPct,
             meters:                   targetMeters,
             status:                   'accepted',       // auto-accept — no party negotiation needed
             worker_rate_per_m:        workerRatePerM,
             ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
-            yarn_denier: Math.round(estimate.warpRows[0]?.calcDenier ?? 75),
+            yarn_denier: Math.round(estimate.warpRows[0] ? getEffectiveYarnDenier(estimate.warpRows[0]) : 75),
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
         })
         .select('id')
@@ -904,7 +1261,7 @@ export async function createMarketRunFromEstimator(params: {
             warp_instruction: params.warpInstruction?.trim() || null,
             weft_instruction: params.weftInstruction?.trim() || null,
             target_meters:    targetMeters,
-            cost_per_meter:   params.totalProductionCostPerM,
+            cost_per_meter:   authoritative.landedCostPerM,
             worker_rate_per_m: workerRatePerM,
             quote_id:         savedQuote.id,
             status:           'production',

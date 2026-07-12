@@ -23,7 +23,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { convertAcceptedQuoteToOrder, updateQuoteStatus } from '../estimator/actions'
+import { convertAcceptedQuoteToOrder, deleteEstimatorQuote, updateQuoteStatus } from '../estimator/actions'
 import { toast } from 'sonner'
 import { addDays, format } from 'date-fns'
 import { getCurrentTimestampMs } from '@/lib/time'
@@ -35,6 +35,8 @@ import {
     Loader2,
     Package,
     AlertTriangle,
+    Copy,
+    Trash2,
     XCircle,
 } from 'lucide-react'
 
@@ -63,6 +65,7 @@ type QuoteRow = {
     landed_cost_per_meter: number
     intended_margin_percent: number
     created_at: string
+    updated_at: string
     meters: number
     snapshot_data?: QuoteDraftState
     warp_instruction?: string | null
@@ -91,6 +94,9 @@ type QuoteRow = {
     estimator_power_kw?: number | null
     hours_per_shift?: number | null
     sizing_mode?: QuoteDraftState['sizingMode']
+    loom_count?: number | null
+    monthly_working_days?: number | null
+    avg_output_per_loom_per_day?: number | null
     orders?: QuoteLinkedOrder | QuoteLinkedOrder[] | null
 }
 
@@ -131,11 +137,14 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         loomPowerKwIsCustomised: quote.estimator_power_kw != null,
         hoursPerShift: Number(quote.hours_per_shift ?? base.hoursPerShift),
         sizingMode: quote.sizing_mode ?? base.sizingMode,
+        loomCount: Number(quote.loom_count ?? base.loomCount),
+        monthlyWorkingDays: Number(quote.monthly_working_days ?? base.monthlyWorkingDays),
+        avgOutputPerLoomPerDay: Number(quote.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
         isConfigured: true,
     }
 }
 
-export default function QuotesClient({ initialQuotes, initialStatus, orgId, userId }: { initialQuotes: QuoteRow[], initialStatus?: string, orgId: string, userId: string }) {
+export default function QuotesClient({ initialQuotes, initialStatus, orgId, userId, canUseProduction }: { initialQuotes: QuoteRow[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean }) {
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -143,6 +152,8 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
     const [quoteToConvert, setQuoteToConvert] = useState<QuoteRow | null>(null)
     const [quoteToAccept, setQuoteToAccept] = useState<QuoteRow | null>(null)
     const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
+    const [restoreMode, setRestoreMode] = useState<'edit' | 'duplicate'>('edit')
+    const [quoteToDelete, setQuoteToDelete] = useState<QuoteRow | null>(null)
     const [existingDraftForRestore, setExistingDraftForRestore] = useState<EstimatorAutosaveData<QuoteDraftState> | null>(null)
     const [convertMeters, setConvertMeters] = useState('')
     const [convertDeadline, setConvertDeadline] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
@@ -153,14 +164,16 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         : quotes.filter(q => q.status === filterStatus)
 
     const handleStatusChange = async (id: string, newStatus: 'draft' | 'sent' | 'accepted' | 'rejected') => {
+        const quote = quotes.find(item => item.id === id)
+        if (!quote) return
         setUpdatingId(id)
-        const res = await updateQuoteStatus(id, newStatus)
+        const res = await updateQuoteStatus(id, newStatus, quote.updated_at)
         setUpdatingId(null)
         if (res.error) {
             toast.error(res.error)
         } else {
             toast.success(`Quote marked as ${newStatus}`)
-            setQuotes(prev => prev.map(q => q.id === id ? { ...q, status: newStatus } : q))
+            setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...res.data, status: newStatus } : q))
         }
     }
 
@@ -200,39 +213,62 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         router.push(`/owner/orders?orderId=${res.orderId}`)
     }
 
-    const restoreQuoteToEstimator = (quote: QuoteRow) => {
-        const draftKey = getEstimatorDraftStorageKey(orgId, userId)
-        const linkedOrder = getLinkedOrder(quote)
-        const newDraft = {
-            state: buildDraftStateFromQuote(quote),
-            partyName: quote.party_name || '',
-            qualityLabel: quote.quality_label || '',
-            warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
-            weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
-            savedAt: getCurrentTimestampMs(),
-            sourceQuoteId: quote.id,
+    const restoreQuoteToEstimator = (quote: QuoteRow, mode: 'edit' | 'duplicate' = 'edit') => {
+        try {
+            const draftKey = getEstimatorDraftStorageKey(orgId, userId)
+            const linkedOrder = getLinkedOrder(quote)
+            const isDuplicate = mode === 'duplicate'
+            const newDraft = {
+                state: buildDraftStateFromQuote(quote),
+                partyName: quote.party_name || '',
+                qualityLabel: isDuplicate ? `${quote.quality_label || 'Untitled'} Copy` : quote.quality_label || '',
+                warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
+                weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
+                savedAt: getCurrentTimestampMs(),
+                sourceQuoteId: isDuplicate ? undefined : quote.id,
+                sourceQuoteUpdatedAt: isDuplicate ? undefined : quote.updated_at,
+            }
+            localStorage.setItem(draftKey, JSON.stringify(newDraft))
+            setQuoteToRestore(null)
+            setExistingDraftForRestore(null)
+            toast.success(isDuplicate ? 'Quote copied into a new estimator draft' : 'Quote snapshot restored')
+            router.push('/owner/estimator')
+        } catch (error) {
+            toast.error('Browser storage is unavailable. The quote could not be opened in the estimator.')
+            console.error(error)
         }
-        localStorage.setItem(draftKey, JSON.stringify(newDraft))
-        setQuoteToRestore(null)
-        setExistingDraftForRestore(null)
-        toast.success('Quote snapshot restored')
-        router.push('/owner/estimator')
     }
 
-    const handleReEstimate = (quote: QuoteRow) => {
+    const handleRestore = (quote: QuoteRow, mode: 'edit' | 'duplicate') => {
         try {
             const draftKey = getEstimatorDraftStorageKey(orgId, userId)
             const existingDraft = parseEstimatorDraft<QuoteDraftState>(localStorage.getItem(draftKey))
-            if (shouldWarnBeforeQuoteRestore(existingDraft, quote.id)) {
+            const restoreIdentity = mode === 'duplicate' ? `duplicate:${quote.id}` : quote.id
+            if (shouldWarnBeforeQuoteRestore(existingDraft, restoreIdentity)) {
                 setExistingDraftForRestore(existingDraft)
+                setRestoreMode(mode)
                 setQuoteToRestore(quote)
                 return
             }
-            restoreQuoteToEstimator(quote)
+            restoreQuoteToEstimator(quote, mode)
         } catch (e) {
             toast.error('Failed to restore snapshot')
             console.error(e)
         }
+    }
+
+    const handleDeleteQuote = async () => {
+        if (!quoteToDelete) return
+        setUpdatingId(quoteToDelete.id)
+        const res = await deleteEstimatorQuote(quoteToDelete.id, quoteToDelete.updated_at)
+        setUpdatingId(null)
+        if (res.error) {
+            toast.error(res.error)
+            return
+        }
+        setQuotes(previous => previous.filter(quote => quote.id !== quoteToDelete.id))
+        setQuoteToDelete(null)
+        toast.success('Quote deleted')
     }
 
     return (
@@ -288,7 +324,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredQuotes.map(quote => {
                         const linkedOrder = getLinkedOrder(quote)
-                        const canCreateOrder = quote.status === 'accepted' && !linkedOrder
+                        const canCreateOrder = canUseProduction && quote.status === 'accepted' && !linkedOrder
 
                         return (
                             <Card key={quote.id} className="border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative group">
@@ -329,7 +365,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                     </div>
 
                                     <div className="mt-auto pt-4 border-t border-slate-100 space-y-3">
-                                        <div className="flex items-center justify-between gap-3">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
                                             <div className="flex items-center gap-1">
                                                 {linkedOrder && (
                                                     <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 font-bold">
@@ -338,16 +374,35 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                                     </Badge>
                                                 )}
                                             </div>
-                                            {(quote.status === 'draft' || quote.status === 'sent' || quote.status === 'rejected') && (
+                                            <div className="ml-auto flex flex-wrap justify-end gap-1">
                                                 <Button
                                                     variant="ghost"
-                                                    className="h-11 lg:h-7 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-3 lg:px-2 ml-auto"
-                                                    onClick={() => handleReEstimate(quote)}
+                                                    className="h-11 px-3 text-xs font-bold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 lg:h-7 lg:px-2"
+                                                    onClick={() => handleRestore(quote, 'edit')}
                                                 >
                                                     {(quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate'}
                                                     <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
                                                 </Button>
-                                            )}
+                                                <Button
+                                                    variant="ghost"
+                                                    className="h-11 px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:h-7 lg:px-2"
+                                                    onClick={() => handleRestore(quote, 'duplicate')}
+                                                >
+                                                    <Copy className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+                                                    Duplicate
+                                                </Button>
+                                                {!linkedOrder && (quote.status === 'draft' || quote.status === 'rejected') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="h-11 px-3 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 lg:h-7 lg:px-2"
+                                                        onClick={() => setQuoteToDelete(quote)}
+                                                        disabled={updatingId === quote.id}
+                                                    >
+                                                        <Trash2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+                                                        Delete
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {quote.status === 'draft' && !linkedOrder && (
@@ -508,7 +563,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             Accept this quote?
                         </DialogTitle>
                         <DialogDescription className="text-slate-500 text-sm leading-relaxed">
-                            Yarn rates and price will be locked — this cannot be edited.
+                            Yarn rates and price will be locked. A later re-estimate creates a linked new quote without changing this record.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex gap-2 justify-end pt-2">
@@ -573,10 +628,47 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         </Button>
                         <Button
                             className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
-                            onClick={() => quoteToRestore && restoreQuoteToEstimator(quoteToRestore)}
+                            onClick={() => quoteToRestore && restoreQuoteToEstimator(quoteToRestore, restoreMode)}
                         >
                             Overwrite draft
                             <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!quoteToDelete} onOpenChange={(open) => !open && setQuoteToDelete(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Trash2 className="h-5 w-5 text-red-600" />
+                            Delete this quote?
+                        </DialogTitle>
+                        <DialogDescription className="text-sm leading-relaxed text-slate-500">
+                            This permanently removes the unconverted draft or rejected quote. Accepted, sent, and converted records remain protected.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {quoteToDelete && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-3">
+                            <p className="font-black text-red-950">{quoteToDelete.party_name}</p>
+                            <p className="mt-1 text-xs font-bold uppercase tracking-widest text-red-700">
+                                {quoteToDelete.quality_label || 'No quality label'}
+                            </p>
+                        </div>
+                    )}
+                    <DialogFooter className="flex gap-2 justify-end pt-2">
+                        <Button variant="ghost" onClick={() => setQuoteToDelete(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteQuote}
+                            disabled={!quoteToDelete || updatingId === quoteToDelete.id}
+                        >
+                            {quoteToDelete && updatingId === quoteToDelete.id
+                                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                : <Trash2 className="mr-2 h-4 w-4" />}
+                            Delete quote
                         </Button>
                     </DialogFooter>
                 </DialogContent>

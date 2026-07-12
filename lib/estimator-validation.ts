@@ -1,4 +1,10 @@
-import { getEffectiveCostingWidthCm, type EstimateState, type WarpRow, type WeftRow } from './estimator'
+import {
+  getEffectiveCostingWidthCm,
+  getEffectiveYarnDenier,
+  type EstimateState,
+  type WarpRow,
+  type WeftRow,
+} from './estimator'
 
 export type EstimatorValidationIssue = {
   field: string
@@ -11,6 +17,7 @@ export type EstimatorValidationResult =
 
 const MAX_ROWS = 20
 const MAX_DENIER = 100_000
+const MAX_COTTON_COUNT_NE = 1_000
 const MAX_BEAM_ENDS = 1_000_000
 const MAX_PICKS = 2_000
 const MAX_WIDTH_CM = 1_000
@@ -22,6 +29,9 @@ const MAX_PICK_COST = 1_000
 const MAX_TARGET_METERS = 100_000_000
 const MAX_COST_PER_M = 10_000_000
 const MAX_MONTHLY_AMOUNT = 1_000_000_000
+const MAX_LOOMS = 100_000
+const MAX_WORKING_DAYS = 366
+const MAX_OUTPUT_PER_LOOM_PER_DAY = 1_000_000
 
 function resultFromIssues(issues: EstimatorValidationIssue[]): EstimatorValidationResult {
   return issues.length > 0 ? { valid: false, issues } : { valid: true, issues: [] }
@@ -67,8 +77,18 @@ function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidatio
   const prefix = `warpRows.${index}`
   const label = `Warp row ${index + 1}`
 
-  addNumberIssue(issues, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { max: MAX_DENIER })
-  addNumberIssue(issues, `${prefix}.beamEnds`, `${label} beam ends`, row.beamEnds, { max: MAX_BEAM_ENDS })
+  if (row.calculationMode !== 'manual') {
+    if (row.linearDensityUnit === 'cotton_count_ne') {
+      addNumberIssue(issues, `${prefix}.cottonCountNe`, `${label} English cotton count`, row.cottonCountNe, {
+        max: MAX_COTTON_COUNT_NE,
+        required: true,
+      })
+      addNumberIssue(issues, `${prefix}.effectiveDenier`, `${label} converted denier`, getEffectiveYarnDenier(row), { max: MAX_DENIER })
+    } else {
+      addNumberIssue(issues, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { max: MAX_DENIER })
+    }
+    addNumberIssue(issues, `${prefix}.beamEnds`, `${label} beam ends`, row.beamEnds, { max: MAX_BEAM_ENDS })
+  }
   addNumberIssue(issues, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG })
   addNumberIssue(issues, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true })
 
@@ -88,9 +108,21 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
   const prefix = `weftRows.${index}`
   const label = `Weft row ${index + 1}`
 
+  // Picks remain required in manual-yarn mode because loom wages are still
+  // calculated per pick. Manual mode overrides yarn kg, not weaving labour.
   addNumberIssue(issues, `${prefix}.picks`, `${label} picks`, row.picks, { max: MAX_PICKS })
-  addNumberIssue(issues, `${prefix}.effectiveCostingWidthCm`, `${label} effective costing width`, getEffectiveCostingWidthCm(row), { max: MAX_WIDTH_CM })
-  addNumberIssue(issues, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { max: MAX_DENIER })
+  if (row.calculationMode !== 'manual') {
+    addNumberIssue(issues, `${prefix}.effectiveCostingWidthCm`, `${label} effective costing width`, getEffectiveCostingWidthCm(row), { max: MAX_WIDTH_CM })
+    if (row.linearDensityUnit === 'cotton_count_ne') {
+      addNumberIssue(issues, `${prefix}.cottonCountNe`, `${label} English cotton count`, row.cottonCountNe, {
+        max: MAX_COTTON_COUNT_NE,
+        required: true,
+      })
+      addNumberIssue(issues, `${prefix}.effectiveDenier`, `${label} converted denier`, getEffectiveYarnDenier(row), { max: MAX_DENIER })
+    } else {
+      addNumberIssue(issues, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { max: MAX_DENIER })
+    }
+  }
   addNumberIssue(issues, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG })
   addNumberIssue(issues, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true })
 
@@ -132,8 +164,20 @@ export function validateEstimatorSnapshot(estimate: EstimateState): EstimatorVal
     issues.push({ field: 'overheadItems', message: 'Overhead items must be a list.' })
   }
 
-  warpRows.forEach((row, index) => validateWarpRow(row, index, issues))
-  weftRows.forEach((row, index) => validateWeftRow(row, index, issues))
+  warpRows.forEach((row, index) => {
+    if (!row || typeof row !== 'object') {
+      issues.push({ field: `warpRows.${index}`, message: `Warp row ${index + 1} is invalid.` })
+      return
+    }
+    validateWarpRow(row, index, issues)
+  })
+  weftRows.forEach((row, index) => {
+    if (!row || typeof row !== 'object') {
+      issues.push({ field: `weftRows.${index}`, message: `Weft row ${index + 1} is invalid.` })
+      return
+    }
+    validateWeftRow(row, index, issues)
+  })
 
   addNumberIssue(issues, 'tapeLengthM', 'Tape length', estimate.tapeLengthM, { max: MAX_TAPE_LENGTH_M })
   addNumberIssue(issues, 'perPickCostPaisa', 'Weaving rate per pick', estimate.perPickCostPaisa, { max: MAX_PICK_COST })
@@ -144,7 +188,20 @@ export function validateEstimatorSnapshot(estimate: EstimateState): EstimatorVal
   addNumberIssue(issues, 'finishingRatePerM', 'Finishing rate', estimate.finishingRatePerM, { max: MAX_COST_PER_M, allowZero: true })
   addNumberIssue(issues, 'yarnShortagePct', 'Default yarn waste %', estimate.yarnShortagePct, { max: MAX_WASTE_PERCENT, allowZero: true })
   addNumberIssue(issues, 'warpCrimpPct', 'Warp crimp %', estimate.warpCrimpPct, { max: MAX_PERCENT, allowZero: true })
-  addNumberIssue(issues, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, { max: MAX_TARGET_METERS, allowZero: true })
+  addNumberIssue(issues, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, { max: MAX_TARGET_METERS })
+  addNumberIssue(issues, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
+  addNumberIssue(issues, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
+  addNumberIssue(issues, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true })
+  addNumberIssue(issues, 'loomCount', 'Loom count', estimate.loomCount, { max: MAX_LOOMS, allowZero: true })
+  addNumberIssue(issues, 'monthlyWorkingDays', 'Monthly working days', estimate.monthlyWorkingDays, { max: MAX_WORKING_DAYS })
+  addNumberIssue(issues, 'avgOutputPerLoomPerDay', 'Average output per loom per day', estimate.avgOutputPerLoomPerDay, {
+    max: MAX_OUTPUT_PER_LOOM_PER_DAY,
+    allowZero: estimate.loomCount === 0,
+  })
+
+  if (Number(estimate.commissionPct) + Number(estimate.profitPct) >= 100) {
+    issues.push({ field: 'profitPct', message: 'Commission and profit margin together must be less than 100%.' })
+  }
 
   if (estimate.overheadOverridePerM !== null && estimate.overheadOverridePerM !== undefined) {
     addNumberIssue(issues, 'overheadOverridePerM', 'Overhead override', estimate.overheadOverridePerM, { max: MAX_COST_PER_M, allowZero: true })

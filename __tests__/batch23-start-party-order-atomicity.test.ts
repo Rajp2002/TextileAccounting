@@ -156,9 +156,11 @@ describe('Batch 23 Start Party Order atomicity (QUOTE-007)', () => {
         expect(action).not.toContain("Do NOT delete the accepted quote")
     })
 
-    it('computes worker rate with normalizeCurrencySnapshot', () => {
-        expect(action).toContain('normalizeCurrencySnapshot')
+    it('computes the normalized worker rate from the validated estimator recipe', () => {
         expect(action).toContain('calcWorkerRateSnapshot')
+        expect(action).toContain('estimatorState.weftRows')
+        expect(action).toContain('estimatorState.perPickCostPaisa')
+        expect(action).not.toContain('input.workerRatePerM')
     })
 })
 

@@ -30,6 +30,14 @@ interface UseAutosaveReturn<TState = unknown> {
   saveDraft: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => void
 }
 
+function safelyRemoveLocalStorageItem(key: string) {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // Storage can be blocked (private mode, policy, quota implementation).
+  }
+}
+
 /**
  * Custom hook for autosaving estimator state to localStorage.
  * 
@@ -49,6 +57,7 @@ export function useAutosave<TState = unknown>({
   const [draft, setDraft] = useState<EstimatorAutosaveData<TState> | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const keyRef = useRef(getEstimatorDraftStorageKey(orgId, userId))
+  const draftDecisionPendingRef = useRef(false)
 
   // Check for existing draft on mount
   useEffect(() => {
@@ -64,11 +73,12 @@ export function useAutosave<TState = unknown>({
       }
 
       // Valid draft found — surface it
+      draftDecisionPendingRef.current = true
       setDraft(parsed)
       setHasDraft(true)
     } catch {
       // Corrupt data — clear it
-      localStorage.removeItem(keyRef.current)
+      safelyRemoveLocalStorageItem(keyRef.current)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -78,6 +88,9 @@ export function useAutosave<TState = unknown>({
     if (timerRef.current) clearTimeout(timerRef.current)
 
     timerRef.current = setTimeout(() => {
+      // Never overwrite a recoverable draft with the blank initial screen while
+      // the restore/dismiss banner is waiting for the user's decision.
+      if (draftDecisionPendingRef.current) return
       try {
         const payload: EstimatorAutosaveData<TState> = { ...data, savedAt: Date.now() }
         localStorage.setItem(keyRef.current, JSON.stringify(payload))
@@ -89,20 +102,23 @@ export function useAutosave<TState = unknown>({
 
   const clearDraft = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    localStorage.removeItem(keyRef.current)
+    draftDecisionPendingRef.current = false
+    safelyRemoveLocalStorageItem(keyRef.current)
     setHasDraft(false)
     setDraft(null)
   }, [])
 
   const restoreDraft = useCallback((): EstimatorAutosaveData<TState> | null => {
     const current = draft
+    draftDecisionPendingRef.current = false
     setHasDraft(false)
     // Don't clear from localStorage — keep it until next save or explicit dismiss
     return current
   }, [draft])
 
   const dismissDraft = useCallback(() => {
-    localStorage.removeItem(keyRef.current)
+    draftDecisionPendingRef.current = false
+    safelyRemoveLocalStorageItem(keyRef.current)
     setHasDraft(false)
     setDraft(null)
   }, [])

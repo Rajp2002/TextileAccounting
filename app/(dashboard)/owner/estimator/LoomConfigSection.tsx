@@ -20,6 +20,9 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Cpu, Zap, RotateCcw, ArrowRight } from 'lucide-react'
 import { LOOM_TYPE_DEFAULTS, type LoomType, type EstimateState } from '@/lib/estimator'
+import { calcDailyOutputM } from '@/lib/estimator-capacity'
+
+export { calcDailyOutputM } from '@/lib/estimator-capacity'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -38,22 +41,6 @@ interface LoomConfigSectionProps {
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-
-/** 
- * Calculate estimated daily output in metres.
- * Formula: (rpm / picks) × 60 min × hoursPerShift × (efficiency/100)
- * This matches the industry paper calculation used by Surat mills.
- */
-export function calcDailyOutputM(
-    rpm: number | null,
-    picks: number,
-    hoursPerShift: number | null,
-    efficiencyPct: number
-): number | null {
-    const hrs = hoursPerShift ?? 12
-    if (!rpm || !picks || !hrs || rpm <= 0 || picks <= 0) return null
-    return (rpm / picks) * 60 * hrs * (efficiencyPct / 100)
-}
 
 // Ordered list for the dropdown — most common Surat loom types first
 const LOOM_TYPE_OPTIONS: { value: LoomType | ''; label: string }[] = [

@@ -50,12 +50,15 @@ import {
     DEFAULT_OVERHEAD_ITEMS,
     DEFAULT_FACTORY_SECTIONS,
     ensureOverheadIntegrity,
-    calcWorkerRateSnapshot,
+    cottonCountNeToDenier,
+    denierToCottonCountNe,
+    getEffectiveYarnDenier,
     getEffectiveCostingWidthCm,
     getWidthWarnings,
     LOOM_TYPE_DEFAULTS,
     type LoomType,
     type YarnCalculationMode,
+    type YarnLinearDensityUnit,
     type EstimateState,
     type WarpRow,
     type WeftRow,
@@ -117,6 +120,7 @@ type FactoryCostProfile = Partial<{
 type EstimatorTemplate = {
     id: string
     name: string
+    updated_at: string
     warp_rows?: WarpRow[] | null
     weft_rows?: WeftRow[] | null
     loom_type?: LoomType | null
@@ -138,14 +142,6 @@ type EstimatorTemplate = {
     default_yarn_rate?: number | string | null
     is_active?: boolean
     content_text?: string
-}
-
-type QualityOption = {
-    id: string
-    name: string
-    target_yield: number
-    avg_sale_price_per_m: number
-    default_worker_rate_per_m: number
 }
 
 type EstimateStatePatch = Partial<EstimateState>
@@ -642,6 +638,72 @@ function NumField({
     )
 }
 
+type YarnDensityRow = Pick<WarpRow | WeftRow, 'id' | 'linearDensityUnit' | 'cottonCountNe' | 'calcDenier'>
+type YarnDensityField = 'linearDensityUnit' | 'cottonCountNe' | 'calcDenier'
+
+function YarnDensityFields({
+    row,
+    onChange,
+}: {
+    row: YarnDensityRow
+    onChange: (field: YarnDensityField, value: YarnLinearDensityUnit | number | null) => void
+}) {
+    const unit = row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier'
+    const countNe = Number(row.cottonCountNe ?? 0)
+    const effectiveDenier = getEffectiveYarnDenier(row)
+
+    const changeUnit = (nextUnit: YarnLinearDensityUnit) => {
+        if (nextUnit === 'cotton_count_ne') {
+            const nextCount = countNe > 0 ? countNe : denierToCottonCountNe(Number(row.calcDenier ?? 0))
+            onChange('cottonCountNe', nextCount > 0 ? nextCount : null)
+            onChange('calcDenier', nextCount > 0 ? cottonCountNeToDenier(nextCount) : 0)
+        } else {
+            onChange('calcDenier', effectiveDenier)
+        }
+        onChange('linearDensityUnit', nextUnit)
+    }
+
+    return (
+        <>
+            <div className="min-w-0 space-y-1.5">
+                <Label
+                    htmlFor={`yarn-density-unit-${row.id}`}
+                    className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]"
+                >
+                    Yarn numbering
+                </Label>
+                <select
+                    id={`yarn-density-unit-${row.id}`}
+                    value={unit}
+                    onChange={event => changeUnit(event.target.value as YarnLinearDensityUnit)}
+                    className="h-11 w-full rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-3 text-xs font-semibold text-[var(--color-ink)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all hover:border-[var(--color-hairline-strong)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 sm:text-sm"
+                >
+                    <option value="denier">Denier (D)</option>
+                    <option value="cotton_count_ne">English cotton count (Ne)</option>
+                </select>
+            </div>
+            <NumField
+                label={unit === 'cotton_count_ne' ? 'English cotton count' : 'Effective denier'}
+                value={unit === 'cotton_count_ne' ? (countNe || null) : row.calcDenier}
+                onChange={value => {
+                    if (unit === 'cotton_count_ne') {
+                        onChange('cottonCountNe', value)
+                        onChange('calcDenier', value && value > 0 ? cottonCountNeToDenier(value) : 0)
+                    } else {
+                        onChange('calcDenier', value ?? 0)
+                    }
+                }}
+                unit={unit === 'cotton_count_ne' ? 'Ne' : 'D'}
+                step={0.1}
+                hint={unit === 'cotton_count_ne' && effectiveDenier > 0
+                    ? `Converted for costing: ${effectiveDenier.toFixed(3)} D (5315 ÷ Ne)`
+                    : 'Enter total linear density after any ply or doubling'}
+                attentionWhenEmpty
+            />
+        </>
+    )
+}
+
 function WidthField({
     label,
     value,
@@ -902,17 +964,22 @@ export default function EstimatorClient({
     initialProfile,
     initialTemplates,
     initialWorkers,
+    userId,
+    orgId,
+    canUseProduction,
 }: {
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
     initialWorkers?: FixedWorkerOverhead[]
-    initialQualities?: QualityOption[]
+    userId: string
+    orgId: string
+    canUseProduction: boolean
 }) {
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
     
-    const [mode, setMode] = useState<'quote' | 'market'>(searchParams.get('mode') === 'market' ? 'market' : 'quote')
+    const [mode, setMode] = useState<'quote' | 'market'>(canUseProduction && searchParams.get('mode') === 'market' ? 'market' : 'quote')
 
     const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
     const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
@@ -996,9 +1063,13 @@ export default function EstimatorClient({
     const [qualityLabel,    setQualityLabel]    = useState('')
     const [warpInstruction, setWarpInstruction] = useState('')
     const [weftInstruction, setWeftInstruction] = useState('')
+    const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null)
+    const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
+    const quoteRequestIdRef = useRef<string | null>(null)
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
     const [templateName,     setTemplateName]     = useState('')
+    const [templateSaveError, setTemplateSaveError] = useState<string | null>(null)
 
     // Template management — "edit rates" sheet
     const [editRatesTpl,     setEditRatesTpl]     = useState<EstimatorTemplate | null>(null)
@@ -1025,10 +1096,6 @@ export default function EstimatorClient({
     const partyLookupTimerRef = useState<ReturnType<typeof setTimeout> | null>(null)
 
     // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
-    const orgId  = initialProfile?.factory_id ?? ''
-    const userId = typeof window !== 'undefined'
-        ? (() => { try { return localStorage.getItem('weavly-uid') ?? '' } catch { return '' } })()
-        : ''
     const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave<EstimateState>({
         orgId, userId, debounceMs: 2000,
     })
@@ -1070,9 +1137,17 @@ export default function EstimatorClient({
     // Autosave: persist on every state change (debounced)
     useEffect(() => {
         if (!orgId) return
-        saveDraft({ state, partyName, qualityLabel, warpInstruction, weftInstruction })
+        saveDraft({
+            state,
+            partyName,
+            qualityLabel,
+            warpInstruction,
+            weftInstruction,
+            sourceQuoteId: sourceQuoteId ?? undefined,
+            sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+        })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction])
+    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction, sourceQuoteId, sourceQuoteUpdatedAt])
 
     // Sync partyName with qualityLabel in market mode for database/draft compatibility
     useEffect(() => {
@@ -1135,6 +1210,7 @@ export default function EstimatorClient({
             || appliedTemplate?.name
             || (mode === 'market' ? partyName.trim() : '')
         )
+        setTemplateSaveError(null)
         setShowSaveTemplate(true)
     }, [appliedTemplate?.name, mode, partyName, qualityLabel])
 
@@ -1172,7 +1248,12 @@ export default function EstimatorClient({
     }
 
     const handleSaveTemplate = async () => {
-        if (!templateName.trim()) return toast.error(t('estimator.quality.nameRequired'))
+        if (!templateName.trim()) {
+            const message = t('estimator.quality.nameRequired')
+            setTemplateSaveError(message)
+            toast.error(message)
+            return
+        }
         const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
@@ -1181,38 +1262,49 @@ export default function EstimatorClient({
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
 
+        const savedName = templateName.trim().replace(/\s+/g, ' ')
+        setTemplateSaveError(null)
         setSavingTemplate(true)
-        const savedName = templateName.trim()
-        const res = await saveAsFabricTemplate({
-            name:             savedName,
-            warpRows,
-            weftRows,
-            tapeLengthM:      state.tapeLengthM,
-            warpCrimpPct:     state.warpCrimpPct,
-            perPickCostPaisa: state.perPickCostPaisa,
-            yarnShortagePct:  state.yarnShortagePct,
-            overheadOverridePerM: state.overheadOverridePerM,
-            loomType:         state.loomType,
-            loomRpm:          state.loomRpm,
-            loomPowerKw:      state.loomPowerKw,
-            sizingMode:       state.sizingMode,
-            hoursPerShift:    state.hoursPerShift,
-        })
-        setSavingTemplate(false)
-        if (res.success) {
-            const tRes = await getEstimatorTemplates()
-            if (tRes.data) {
-                setTemplates(tRes.data)
-                const savedTemplate = tRes.data.find(t => t.name === savedName)
-                if (savedTemplate) setAppliedTemplate(savedTemplate)
+        try {
+            const res = await saveAsFabricTemplate({
+                name:             savedName,
+                warpRows,
+                weftRows,
+                tapeLengthM:      state.tapeLengthM,
+                warpCrimpPct:     state.warpCrimpPct,
+                perPickCostPaisa: state.perPickCostPaisa,
+                yarnShortagePct:  state.yarnShortagePct,
+                overheadOverridePerM: state.overheadOverridePerM,
+                loomType:         state.loomType,
+                loomRpm:          state.loomRpm,
+                loomPowerKw:      state.loomPowerKw,
+                sizingMode:       state.sizingMode,
+                hoursPerShift:    state.hoursPerShift,
+            })
+            if (res.success) {
+                const tRes = await getEstimatorTemplates()
+                if (tRes.data) {
+                    setTemplates(tRes.data)
+                    const savedTemplate = tRes.data.find(t => t.name === savedName)
+                    if (savedTemplate) setAppliedTemplate(savedTemplate)
+                }
+                setQualityLabel(savedName)
+                setShowSaveTemplate(false)
+                setTemplateName('')
+                setTemplateSaveError(null)
+                clearDraft()
+                toast.success(t('estimator.quality.saved'))
+            } else {
+                const message = res.error ?? t('estimator.quality.saveFailed')
+                setTemplateSaveError(message)
+                toast.error(message)
             }
-            setQualityLabel(savedName)
-            setShowSaveTemplate(false)
-            setTemplateName('')
-            clearDraft()
-            toast.success(t('estimator.quality.saved'))
-        } else {
-            toast.error(res.error ?? t('estimator.quality.saveFailed'))
+        } catch {
+            const message = t('estimator.quality.saveFailed')
+            setTemplateSaveError(message)
+            toast.error(message)
+        } finally {
+            setSavingTemplate(false)
         }
     }
 
@@ -1230,6 +1322,7 @@ export default function EstimatorClient({
         const updatedName = qualityLabel.trim() || appliedTemplate.name
         const res = await updateFabricTemplate({
             id:               appliedTemplate.id,
+            expectedUpdatedAt: appliedTemplate.updated_at,
             name:             updatedName,
             warpRows,
             weftRows,
@@ -1248,8 +1341,13 @@ export default function EstimatorClient({
         
         if (res.success) {
             const tRes = await getEstimatorTemplates()
+            const refreshed = tRes.data?.find(template => template.id === appliedTemplate.id)
             if (tRes.data) setTemplates(tRes.data)
-            setAppliedTemplate({ ...appliedTemplate, name: updatedName })
+            setAppliedTemplate(refreshed ?? {
+                ...appliedTemplate,
+                name: updatedName,
+                updated_at: res.updatedAt ?? appliedTemplate.updated_at,
+            })
             toast.success(t('estimator.toast.updated_applied'))
         } else {
             toast.error(res.error ?? t('estimator.quality.updateFailed'))
@@ -1270,6 +1368,9 @@ export default function EstimatorClient({
         setPartyName('')
         setWarpInstruction('')
         setWeftInstruction('')
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        quoteRequestIdRef.current = null
         setCustomTargetPrice('')
         clearDraft()
         setShowConfirmNewQuality(false)
@@ -1290,15 +1391,17 @@ export default function EstimatorClient({
     const handleSaveRatesAndApply = async () => {
         if (!editRatesTpl) return
         setSavingRates(true)
+        let expectedUpdatedAt = editRatesTpl.updated_at
 
         // 1. Rename if changed
         if (editingTplName.trim() && editingTplName.trim() !== editRatesTpl.name) {
-            const renameRes = await renameTemplate(editRatesTpl.id, editingTplName.trim())
+            const renameRes = await renameTemplate(editRatesTpl.id, editingTplName.trim(), expectedUpdatedAt)
             if (renameRes.error) {
                 setSavingRates(false)
                 toast.error(`${t('estimator.toast.rename_failed')} ${renameRes.error}`)
                 return
             }
+            expectedUpdatedAt = renameRes.updatedAt ?? expectedUpdatedAt
         }
 
         // 2. Update rates
@@ -1311,19 +1414,25 @@ export default function EstimatorClient({
             yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
         }))
         
-        const res = await updateTemplateRates({ id: editRatesTpl.id, warpRows: updatedWarp, weftRows: updatedWeft })
+        const res = await updateTemplateRates({
+            id: editRatesTpl.id,
+            expectedUpdatedAt,
+            warpRows: updatedWarp,
+            weftRows: updatedWeft,
+        })
         setSavingRates(false)
         if (res.error) { toast.error(res.error); return }
 
         // Success: refresh and apply
         const tRes = await getEstimatorTemplates()
+        const refreshed = tRes.data?.find(template => template.id === editRatesTpl.id)
         if (tRes.data) setTemplates(tRes.data)
         
         dispatch({
             type: 'APPLY_TEMPLATE',
-            template: { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft }
+            template: refreshed ?? { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
         })
-        setAppliedTemplate({ ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft })
+        setAppliedTemplate(refreshed ?? { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt })
         setQualityLabel(editingTplName.trim())
         setEditRatesTpl(null)
         toast.success(t('estimator.toast.updated_applied'))
@@ -1339,12 +1448,13 @@ export default function EstimatorClient({
         toast.success(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`)
     }
 
-    const handleDeleteTemplate = async (id: string) => {
-        setDeletingTpl(id)
-        const res = await deleteTemplate(id)
+    const handleDeleteTemplate = async (template: EstimatorTemplate) => {
+        setDeletingTpl(template.id)
+        const res = await deleteTemplate(template.id, template.updated_at)
         setDeletingTpl(null)
         if (res.error) { toast.error(res.error); return }
-        setTemplates(prev => prev.filter(t => t.id !== id))
+        setTemplates(prev => prev.filter(t => t.id !== template.id))
+        if (appliedTemplate?.id === template.id) setAppliedTemplate(null)
         toast.success(t('estimator.quality.deleted'))
     }
 
@@ -1368,7 +1478,6 @@ export default function EstimatorClient({
 
         try {
             if (targetMode === 'market') {
-                const workerRatePerM = calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)
                 const res = await createMarketRunFromEstimator({
                     fabricLabel:             resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
@@ -1377,18 +1486,24 @@ export default function EstimatorClient({
                     targetMeters:            state.orderQuantityM,
                     estimate:                state,
                     totalProductionCostPerM: totals.totalProductionCostPerM,
-                    workerRatePerM:          workerRatePerM,
                     notes:                   '',
                     deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0] // 30 days default
                 })
                 if (res.error) {
                     toast.error(res.error)
                 } else {
+                    clearDraft()
+                    setSourceQuoteId(null)
+                    setSourceQuoteUpdatedAt(null)
+                    quoteRequestIdRef.current = null
                     toast.success('Market Run created successfully')
                     router.push(`/owner/market-runs/${res.marketRunId}`)
                 }
             } else {
+                const clientRequestId = quoteRequestIdRef.current ?? globalThis.crypto.randomUUID()
+                quoteRequestIdRef.current = clientRequestId
                 const res = await saveEstimatorQuoteV3({
+                    clientRequestId,
                     partyName:               resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
                     warpInstruction:         warpInstruction.trim() || undefined,
@@ -1397,8 +1512,14 @@ export default function EstimatorClient({
                     quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
                     totalProductionCostPerM: totals.totalProductionCostPerM,
                     status:                  status,
+                    sourceQuoteId:           sourceQuoteId ?? undefined,
+                    expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
                 })
                 if (res.success) {
+                    clearDraft()
+                    setSourceQuoteId(null)
+                    setSourceQuoteUpdatedAt(null)
+                    quoteRequestIdRef.current = null
                     toast.success(status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
                     router.push('/owner/quotes')
                 } else {
@@ -1456,7 +1577,7 @@ export default function EstimatorClient({
     ].filter(line => line.value > 0)
     return (
         <div className="space-y-5 pb-floating-button md:pb-20 relative">
-            {!state.isConfigured && (
+            {!state.isConfigured && canUseProduction && (
                 <FactoryCostWizard 
                     initialState={state}
                     saving={saving}
@@ -1508,7 +1629,7 @@ export default function EstimatorClient({
                                     Re-estimating from quote for{' '}
                                     <span className="font-bold">{draft.partyName || 'Unknown Party'}</span>
                                     {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
-                                    {' '}— Save Quote to create a new version
+                                    {' '}— editable quotes update in place; accepted quotes create a linked version
                                 </>
                             ) : (
                                 <>
@@ -1527,6 +1648,9 @@ export default function EstimatorClient({
                                 setQualityLabel(d.qualityLabel)
                                 setWarpInstruction(d.warpInstruction)
                                 setWeftInstruction(d.weftInstruction)
+                                setSourceQuoteId(d.sourceQuoteId ?? null)
+                                setSourceQuoteUpdatedAt(d.sourceQuoteUpdatedAt ?? null)
+                                quoteRequestIdRef.current = null
                                 toast.success(draft.sourceQuoteId ? 'Quote specs loaded' : 'Draft restored')
                             }}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
@@ -1625,16 +1749,18 @@ export default function EstimatorClient({
                                     </Button>
 
                                     {/* TERTIARY: Switch to Market mode */}
-                                    <Button
-                                        id="btn-switch-market"
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
-                                        onClick={() => setMode('market')}
-                                    >
-                                        <Gauge className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">Market Maal</span>
-                                    </Button>
+                                    {canUseProduction && (
+                                        <Button
+                                            id="btn-switch-market"
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                                            onClick={() => setMode('market')}
+                                        >
+                                            <Gauge className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">Market Maal</span>
+                                        </Button>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -1698,6 +1824,21 @@ export default function EstimatorClient({
                                     <Button
                                         variant="ghost"
                                         size="sm"
+                                        onClick={() => {
+                                            setTemplateName(`${appliedTemplate.name} Copy`)
+                                            setTemplateSaveError(null)
+                                            setShowSaveTemplate(true)
+                                        }}
+                                        className="ml-1 h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                        title="Create an intentional copy with a new name"
+                                        aria-label={`Duplicate ${appliedTemplate.name}`}
+                                    >
+                                        <BookmarkPlus className="mr-1.5 h-4 w-4" />
+                                        Duplicate
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
                                         onClick={() => setAppliedTemplate(null)}
                                         className="ml-1 h-12 px-2 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
                                         title={t('estimator.quality.detachTooltip')}
@@ -1712,11 +1853,12 @@ export default function EstimatorClient({
                                     className="hidden h-12 flex-none rounded-[10px] px-4 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] sm:flex"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
+                                        setTemplateSaveError(null)
                                         setShowSaveTemplate(true)
                                     }}
                                 >
                                     <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="truncate hidden sm:inline">{t('estimator.quality.saveQuality')}</span>
+                                    <span className="truncate hidden sm:inline">Save as New Quality</span>
                                 </Button>
                             )}
                         </div>
@@ -1841,7 +1983,7 @@ export default function EstimatorClient({
                                                 onClick={e => {
                                                     e.stopPropagation();
                                                     if (window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', tpl.name))) {
-                                                        handleDeleteTemplate(tpl.id)
+                                                        handleDeleteTemplate(tpl)
                                                     }
                                                 }}
                                                 disabled={deletingTpl === tpl.id}
@@ -2014,7 +2156,10 @@ export default function EstimatorClient({
                                         <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
                                     ) : (
                                         <>
-                                            <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
+                                            <YarnDensityFields
+                                                row={row}
+                                                onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })}
+                                            />
                                             <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
                                         </>
                                     )}
@@ -2231,7 +2376,10 @@ export default function EstimatorClient({
                                         {row.calculationMode === 'manual' ? (
                                             <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
                                         ) : (
-                                            <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
+                                            <YarnDensityFields
+                                                row={row}
+                                                onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })}
+                                            />
                                         )}
                                         <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                         {(() => {
@@ -2648,16 +2796,18 @@ export default function EstimatorClient({
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-[10px] font-medium uppercase text-[var(--color-muted)]">Monthly Output (Actual/Target)</Label>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                onClick={handleAutoSuggestOutput}
-                                                disabled={isSuggestingOutput}
-                                                className="h-5 px-2 text-[10px] font-medium text-[var(--color-yarn-orange)] hover:bg-[var(--color-surface-soft)]"
-                                            >
-                                                {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                                                Suggest
-                                            </Button>
+                                            {canUseProduction && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleAutoSuggestOutput}
+                                                    disabled={isSuggestingOutput}
+                                                    className="h-5 px-2 text-[10px] font-medium text-[var(--color-yarn-orange)] hover:bg-[var(--color-surface-soft)]"
+                                                >
+                                                    {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                                    Suggest
+                                                </Button>
+                                            )}
                                         </div>
                                         <div className="relative">
                                             <Input
@@ -3046,22 +3196,39 @@ export default function EstimatorClient({
             </Dialog>
 
             {/* Save Quality Dialog */}
-            <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
+            <Dialog
+                open={showSaveTemplate}
+                onOpenChange={open => {
+                    setShowSaveTemplate(open)
+                    if (!open) setTemplateSaveError(null)
+                }}
+            >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>{t('estimator.quality.saveDialogTitle')}</DialogTitle>
-                        <DialogDescription>Save the current warp and weft setup as a reusable quality.</DialogDescription>
+                        <DialogTitle>Save as New Quality</DialogTitle>
+                        <DialogDescription>Create a separate reusable quality. To change the open quality, close this dialog and use Update.</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
+                            <Label htmlFor="save-quality-name" className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
+                                id="save-quality-name"
                                 placeholder="Japan Satin, Canvas Shine"
                                 value={templateName}
-                                onChange={e => setTemplateName(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
+                                onChange={e => {
+                                    setTemplateName(e.target.value)
+                                    if (templateSaveError) setTemplateSaveError(null)
+                                }}
+                                onKeyDown={e => e.key === 'Enter' && !savingTemplate && handleSaveTemplate()}
+                                aria-invalid={Boolean(templateSaveError)}
+                                aria-describedby={templateSaveError ? 'save-quality-name-error' : undefined}
                                 autoFocus
                             />
+                            {templateSaveError && (
+                                <p id="save-quality-name-error" role="alert" className="text-xs font-medium text-destructive">
+                                    {templateSaveError}
+                                </p>
+                            )}
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed space-y-1">
                             <p>{t('estimator.quality.savesNotePrefix')} {state.warpRows.length} {t('estimator.quality.savesNoteWarp')} {state.weftRows.length} {t('estimator.quality.savesNoteWeft')}</p>
@@ -3069,7 +3236,10 @@ export default function EstimatorClient({
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowSaveTemplate(false)}>{t('estimator.quality.cancel')}</Button>
+                        <Button variant="ghost" onClick={() => {
+                            setShowSaveTemplate(false)
+                            setTemplateSaveError(null)
+                        }}>{t('estimator.quality.cancel')}</Button>
                         <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             {t('estimator.quality.confirmSave')}
@@ -3164,7 +3334,7 @@ export default function EstimatorClient({
                             <button
                                 onClick={() => {
                                     if (editRatesTpl && window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', editRatesTpl.name))) {
-                                        handleDeleteTemplate(editRatesTpl.id)
+                                        handleDeleteTemplate(editRatesTpl)
                                         setEditRatesTpl(null)
                                     }
                                 }}

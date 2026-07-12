@@ -21,9 +21,11 @@
  *   ─────────────────────────────────────────────────────
  *   totalProductionCostPerM = directCost + overhead
  *
- * ORDER QUOTE (applied after production cost is known):
- *   landedCostPerM  = totalProductionCostPerM × (1 + commissionPct/100) + transportPerM
- *   quotePricePerM  = landedCostPerM × (1 + profitMarginPct/100)
+ * ORDER QUOTE (commission and margin are percentages of selling price):
+ *   quotePricePerM = (productionCostPerM + transportPerM)
+ *                    ÷ (1 - commissionPct/100 - profitMarginPct/100)
+ *   landedCostPerM = productionCostPerM + transportPerM
+ *                    + (quotePricePerM × commissionPct/100)
  */
 
 import { nanoid } from 'nanoid'
@@ -60,7 +62,26 @@ export const LOOM_TYPE_DEFAULTS = {
 
 export type LoomType = keyof typeof LOOM_TYPE_DEFAULTS
 export type YarnCalculationMode = 'formula' | 'manual'
+export type YarnLinearDensityUnit = 'denier' | 'cotton_count_ne'
 export type WidthUnit = 'cm' | 'inch'
+
+/**
+ * English cotton count (Ne) is an indirect system: higher counts are finer.
+ * The Government of India textile-training conversion is D = 5315 / Ne.
+ * Keep this conversion centralized so client previews, server persistence, and
+ * audit snapshots all use the same effective linear density.
+ */
+const COTTON_COUNT_DENIER_FACTOR = new Decimal(5315)
+
+export function cottonCountNeToDenier(countNe: number): number {
+  const count = new Decimal(Number(countNe) || 0)
+  return count.gt(0) ? COTTON_COUNT_DENIER_FACTOR.div(count).toNumber() : 0
+}
+
+export function denierToCottonCountNe(denier: number): number {
+  const density = new Decimal(Number(denier) || 0)
+  return density.gt(0) ? COTTON_COUNT_DENIER_FACTOR.div(density).toNumber() : 0
+}
 
 // Configure Decimal for financial calculations — matches lib/finance.ts
 // 20-digit precision is hardened for textile manufacturing land-cost analysis
@@ -76,7 +97,9 @@ export interface WarpRow {
   label?: string        // optional display label e.g. "Main", "Selvedge"
   calculationMode?: YarnCalculationMode // formula by default; manual bypasses formula kg
   manualKgPer100m?: number | null // base kg/100m before waste/crimp when mode is manual
-  calcDenier: number    // effective denier after doubling (e.g. 75/2 → 37.5)
+  linearDensityUnit?: YarnLinearDensityUnit // legacy rows default to denier
+  cottonCountNe?: number | null // English cotton count when unit is cotton_count_ne
+  calcDenier: number    // effective total denier; for plied yarn, include every ply
   beamEnds: number      // ends for THIS row only — discrete per component
   yarnRate: number      // ₹/kg market rate for this yarn
   gstPct: number        // GST % on this specific yarn (different materials = different brackets)
@@ -93,10 +116,20 @@ export interface WeftRow {
   reedSpace: number     // legacy effective costing width in cm; use effectiveCostingWidthCm when present
   finishedWidthCm?: number | null // market pano / finished width in cm
   effectiveCostingWidthCm?: number | null // loom/costing width in cm; used for weft formula
+  linearDensityUnit?: YarnLinearDensityUnit
+  cottonCountNe?: number | null
   calcDenier: number    // effective weft yarn denier
   yarnRate: number      // ₹/kg
   gstPct: number
   shortagePct: number | null
+}
+
+export function getEffectiveYarnDenier(
+  row: Pick<WarpRow | WeftRow, 'linearDensityUnit' | 'cottonCountNe' | 'calcDenier'>
+): number {
+  return row.linearDensityUnit === 'cotton_count_ne'
+    ? cottonCountNeToDenier(Number(row.cottonCountNe ?? 0))
+    : Number(row.calcDenier ?? 0)
 }
 
 export function normalizeCurrencySnapshot(value: unknown, scale = 2): number {
@@ -186,7 +219,7 @@ export interface EstimateState {
   warpRows:            WarpRow[]
   weftRows:            WeftRow[]
   tapeLengthM:         number          // metres per beam tape (for beam capacity preview)
-  perPickCostPaisa:    number          // loom charge in paise per pick (e.g. 0.16)
+  perPickCostPaisa:    number          // legacy name; internal ₹/pick (0.16 = 16 paise)
   warpingRatePerKg:    number          // ₹/kg charged by warping unit
   sizingRatePerKg:     number          // ₹/kg charged by sizing unit (only used when sizingMode === 'outsourced')
   windingRatePerKg:    number          // ₹/kg charged for rewinding (0 if not applicable)
@@ -502,11 +535,11 @@ export function calcYarnCost(
  * The confirmed Surat formula — NO reed space multiplication.
  * The per-pick rate inherently accounts for the standard machine width.
  *
- * Formula: picks (PPI) × perPickCostPaisa
- *   e.g. 68 picks × 0.16 paise = ₹10.88 / m
+ * Formula: picks (PPI) × internal rupees-per-pick value
+ *   e.g. 68 picks × ₹0.16 (16 paise) = ₹10.88 / m
  *
  * @param picks            - picks per inch (PPI)
- * @param perPickCostPaisa - loom charge in paise per pick (₹ × 100)
+ * @param perPickCostPaisa - legacy name; loom charge stored internally in ₹/pick
  * @returns ₹ per metre
  */
 export function calcWeaveCostPerMeter(picks: number, perPickCostPaisa: number): number {
@@ -616,8 +649,8 @@ export function calcOverheadCostPerMeter(
  * Order-level quote calculations.
  * Only called when the owner has entered an order quantity.
  *
- * landedCostPerM  = production × (1 + commission%) + transport
- * quotePricePerM  = landedCost × (1 + margin%)
+ * quotePricePerM  = (production + transport) ÷ (1 - commission% - margin%)
+ * landedCostPerM  = production + transport + (quote price × commission%)
  * grossProfit     = (quotePrice − landedCost) × qty
  * actualMarginPct = grossProfit / totalOrderValue × 100
  */
@@ -708,7 +741,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   // explicit 0 means no waste. Total adjustment is crimp + effective waste.
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
     const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
-    const formulaKgPer100m = calcWarpYarnKg(r.beamEnds, r.calcDenier)
+    const effectiveDenier = getEffectiveYarnDenier(r)
+    const formulaKgPer100m = calcWarpYarnKg(r.beamEnds, effectiveDenier)
     const manualKgPer100m = r.manualKgPer100m != null && Number.isFinite(Number(r.manualKgPer100m))
       ? Number(r.manualKgPer100m)
       : null
@@ -727,6 +761,9 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     
     return {
       ...r,
+      // Results and downstream legacy snapshot columns always expose effective
+      // denier, even when the user entered an English cotton count.
+      calcDenier: effectiveDenier,
       mode,
       calculationMode: mode,
       manualKgPer100m,
@@ -749,7 +786,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
     const effectiveCostingWidthCm = getEffectiveCostingWidthCm(r)
-    const formulaKgPer100m = calcWeftYarnKg(r.picks, effectiveCostingWidthCm, r.calcDenier)
+    const effectiveDenier = getEffectiveYarnDenier(r)
+    const formulaKgPer100m = calcWeftYarnKg(r.picks, effectiveCostingWidthCm, effectiveDenier)
     const manualKgPer100m = r.manualKgPer100m != null && Number.isFinite(Number(r.manualKgPer100m))
       ? Number(r.manualKgPer100m)
       : null
@@ -768,6 +806,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     
     return {
       ...r,
+      calcDenier: effectiveDenier,
       mode,
       calculationMode: mode,
       manualKgPer100m,
@@ -865,8 +904,14 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const totalProductionCostPerM = directCostPerM.plus(overheadPerM)
 
   // ── Beam Capacity Preview ───────────────────────────────────────────────
-  // Approximate metres a full beam produces (tape_length reduced by take-up)
-  const estimatedBeamCapacityM = new Decimal(estimate.tapeLengthM).times(new Decimal(1).minus(new Decimal(estimate.warpCrimpPct || 0).div(100))).toNumber()
+  // Tape length is the consumed warp length.  With c% take-up, each metre of
+  // finished cloth consumes (1 + c/100) metres of warp, so capacity is a
+  // division. Multiplying by (1 - c/100) increasingly understates capacity as
+  // crimp rises (for example 1,000 m at 5% is 952.381 m, not 950 m).
+  const crimpFactor = new Decimal(1).plus(new Decimal(estimate.warpCrimpPct || 0).div(100))
+  const estimatedBeamCapacityM = crimpFactor.gt(0)
+    ? new Decimal(estimate.tapeLengthM).div(crimpFactor).toNumber()
+    : 0
 
   const orderQuote = calcOrderQuote({
     totalProductionCostPerM: totalProductionCostPerM.toNumber(),
@@ -882,9 +927,13 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       id: row.id,
       name: row.label?.trim() || fallbackName,
       mode: row.mode,
-      formulaDescription: isWarp
-        ? 'denier × beam ends / 90000'
-        : 'denier × PPI × effective width inches / 90000',
+      formulaDescription: row.linearDensityUnit === 'cotton_count_ne'
+        ? (isWarp
+            ? '(5315 ÷ Ne) × beam ends / 90000'
+            : '(5315 ÷ Ne) × PPI × effective width inches / 90000')
+        : (isWarp
+            ? 'denier × beam ends / 90000'
+            : 'denier × PPI × effective width inches / 90000'),
       calcDenier: row.calcDenier,
       beamEnds: isWarp ? row.beamEnds : null,
       picks: 'picks' in row ? row.picks : null,
@@ -962,6 +1011,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
 export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
   calculationMode: 'formula',
   manualKgPer100m: null,
+  linearDensityUnit: 'denier',
+  cottonCountNe: null,
   calcDenier:  0,
   beamEnds:    0,
   yarnRate:    0,
@@ -972,6 +1023,8 @@ export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
 export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
   calculationMode: 'formula',
   manualKgPer100m: null,
+  linearDensityUnit: 'denier',
+  cottonCountNe: null,
   picks:       0,
   reedSpace:   0,   // legacy effective costing width in cm
   finishedWidthCm: null,
