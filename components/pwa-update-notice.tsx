@@ -11,7 +11,7 @@ export function PwaUpdateNotice() {
 
         let disposed = false
 
-        const showUpdateToast = () => {
+        const showUpdateToast = (registration: ServiceWorkerRegistration) => {
             if (disposed) return
             toast.info('App update ready', {
                 description: 'Save any drafts, then refresh to load the latest version.',
@@ -20,17 +20,31 @@ export function PwaUpdateNotice() {
                     label: 'Refresh',
                     onClick: () => {
                         sessionStorage.setItem(UPDATE_REFRESH_FLAG, '1')
-                        window.location.reload()
+                        const waitingWorker = registration.waiting
+                        if (!waitingWorker) {
+                            window.location.reload()
+                            return
+                        }
+
+                        let reloading = false
+                        const reloadWithNewController = () => {
+                            if (reloading) return
+                            reloading = true
+                            window.location.reload()
+                        }
+                        navigator.serviceWorker.addEventListener('controllerchange', reloadWithNewController, { once: true })
+                        waitingWorker.postMessage({ type: 'SKIP_WAITING' })
+                        window.setTimeout(reloadWithNewController, 3000)
                     },
                 },
             })
         }
 
-        const watchWorker = (worker: ServiceWorker | null) => {
+        const watchWorker = (registration: ServiceWorkerRegistration, worker: ServiceWorker | null) => {
             if (!worker) return
             worker.addEventListener('statechange', () => {
                 if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                    showUpdateToast()
+                    showUpdateToast(registration)
                 }
             })
         }
@@ -38,9 +52,9 @@ export function PwaUpdateNotice() {
         navigator.serviceWorker.ready.then((registration) => {
             if (disposed) return
             if (registration.waiting && navigator.serviceWorker.controller) {
-                showUpdateToast()
+                showUpdateToast(registration)
             }
-            registration.addEventListener('updatefound', () => watchWorker(registration.installing))
+            registration.addEventListener('updatefound', () => watchWorker(registration, registration.installing))
             // Do not rely on the browser's periodic update cadence. Checking
             // after listeners are attached lets an active draft tab observe a
             // newly deployed worker before the user navigates or reloads.
@@ -56,7 +70,7 @@ export function PwaUpdateNotice() {
                 sessionStorage.removeItem(UPDATE_REFRESH_FLAG)
                 return
             }
-            showUpdateToast()
+            void navigator.serviceWorker.ready.then(showUpdateToast)
         }
 
         navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
