@@ -11,7 +11,9 @@ import {
 import {
     AlertTriangle,
     CheckCircle2,
+    Calculator,
     Copy,
+    CreditCard,
     Download,
     Factory,
     KeyRound,
@@ -42,6 +44,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
+import { tierSatisfies } from '@/lib/subscription-access'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -128,6 +133,8 @@ export default function SettingsPage() {
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
+    const subscriptionTier = useOwnerPlan()
+    const hasPremium = tierSatisfies(subscriptionTier, 'premium')
 
     const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
     const [factoryName, setFactoryName] = useState('')
@@ -289,14 +296,14 @@ export default function SettingsPage() {
 
             <div className="settings-layout-grid">
                 <div className="min-w-0 space-y-5">
-                    <SettingsSection id="factory-identity" title="Factory & Identity" icon={Factory}>
+                    <SettingsSection id="factory-identity" title={hasPremium ? 'Factory & Identity' : 'Business & Profile'} icon={Factory}>
                         <SettingsPanel className="overflow-hidden">
                             <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr]">
                                 <div className="space-y-5 border-b border-hairline p-5 lg:border-b-0 lg:border-r sm:p-6">
                                     <PanelHeading
                                         icon={Factory}
-                                        title={t('settings.factory.title')}
-                                        description={t('settings.factory.desc')}
+                                        title={hasPremium ? t('settings.factory.title') : 'Business details'}
+                                        description={hasPremium ? t('settings.factory.desc') : 'Used to identify and brand your saved costings.'}
                                     />
 
                                     <div className="space-y-2">
@@ -322,7 +329,7 @@ export default function SettingsPage() {
                                                     setFactoryName(e.target.value)
                                                 }}
                                                 className="flex-1 border-hairline bg-canvas/80"
-                                                placeholder="Enter factory name"
+                                                placeholder="Enter business name"
                                                 disabled={updateNameMutation.isPending}
                                             />
                                             {currentFactoryName !== org?.name && (
@@ -338,7 +345,7 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    {hasPremium && <div className="space-y-3">
                                         <Label>Factory join code</Label>
                                         <div className="rounded-lg border border-info/20 bg-info-soft/55 p-4">
                                             <div className="flex flex-wrap items-center gap-3">
@@ -398,7 +405,7 @@ export default function SettingsPage() {
                                                 Expires: {formatDate(org?.join_code_expires_at)}
                                             </p>
                                         </div>
-                                    </div>
+                                    </div>}
                                 </div>
 
                                 <div className="space-y-5 p-5 sm:p-6">
@@ -428,7 +435,7 @@ export default function SettingsPage() {
                         </SettingsPanel>
                     </SettingsSection>
 
-                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    {hasPremium && <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                         <SettingsSection id="production-mode" title="Production Mode" icon={SlidersHorizontal}>
                             <SettingsPanel className="h-full p-5 sm:p-6">
                                 <PanelHeading
@@ -470,9 +477,9 @@ export default function SettingsPage() {
                         <SettingsSection id="security-team" title="Account Security & Team" icon={ShieldCheck}>
                             <AccessCodeGenerator className="h-full" />
                         </SettingsSection>
-                    </div>
+                    </div>}
 
-                    <SettingsSection id="automations" title="Communications & Automation" icon={MessageSquare}>
+                    {hasPremium && <SettingsSection id="automations" title="Communications & Automation" icon={MessageSquare}>
                         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                             <WhatsAppOptIn className="h-full" />
                             <SettingsPanel className="flex min-h-[260px] flex-col items-center justify-center p-6 text-center">
@@ -485,9 +492,9 @@ export default function SettingsPage() {
                                 </p>
                             </SettingsPanel>
                         </div>
-                    </SettingsSection>
+                    </SettingsSection>}
 
-                    <SettingsSection id="cost-profile" title="Production Costing & Templates" icon={Factory}>
+                    <SettingsSection id="cost-profile" title={hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'} icon={Factory}>
                         <FactoryCostProfile />
                     </SettingsSection>
 
@@ -496,7 +503,7 @@ export default function SettingsPage() {
                     </SettingsSection>
                 </div>
 
-                <aside className="settings-right-rail sticky top-6 space-y-4">
+                {hasPremium ? <aside className="settings-right-rail sticky top-6 space-y-4">
                     <SettingsPanel className="p-5">
                         <div className="flex items-center gap-2">
                             <Factory className="h-4 w-4 text-info" />
@@ -578,7 +585,25 @@ export default function SettingsPage() {
                             </Button>
                         </div>
                     </SettingsPanel>
-                </aside>
+                </aside> : <aside className="settings-right-rail sticky top-6 space-y-4">
+                    <SettingsPanel className="p-5">
+                        <div className="flex items-center gap-2">
+                            <Calculator className="h-4 w-4 text-saffron" />
+                            <h3 className="text-base font-semibold text-ink">Weavly Estimator</h3>
+                        </div>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your Estimator Plan includes reusable qualities, saved costings, and configurable costing defaults.</p>
+                        <div className="mt-4 space-y-2">
+                            <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                                <CreditCard className="h-4 w-4" />
+                                Subscription & Billing
+                            </Link>
+                            <Link href="/owner/quotes" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                                <ShieldCheck className="h-4 w-4" />
+                                Saved Costings
+                            </Link>
+                        </div>
+                    </SettingsPanel>
+                </aside>}
             </div>
         </div>
     )

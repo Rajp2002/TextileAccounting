@@ -5,6 +5,7 @@ import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { createPerfTimer } from '@/lib/perf'
 import { getCachedOrgTier } from '@/lib/subscription'
+import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const perf = createPerfTimer('/owner/* layout')
@@ -54,7 +55,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
                 <main className="mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
-                    {children}
+                    <OwnerPlanProvider tier={subscriptionTier}>{children}</OwnerPlanProvider>
                 </main>
             </div>
 
