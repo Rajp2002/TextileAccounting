@@ -1810,11 +1810,11 @@ export default function EstimatorClient({
 
                             {/* Save / Update Quality template button */}
                             {appliedTemplate ? (
-                                <div className="col-span-2 flex items-center sm:col-span-1">
+                                <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1 sm:col-span-1 sm:flex-nowrap">
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                                        className="h-12 min-w-0 max-w-full flex-1 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)] sm:flex-none"
                                         onClick={handleUpdateTemplate}
                                         disabled={savingTemplate}
                                     >
@@ -1829,7 +1829,7 @@ export default function EstimatorClient({
                                             setTemplateSaveError(null)
                                             setShowSaveTemplate(true)
                                         }}
-                                        className="ml-1 h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                        className="h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
                                         title="Create an intentional copy with a new name"
                                         aria-label={`Duplicate ${appliedTemplate.name}`}
                                     >
@@ -1840,7 +1840,7 @@ export default function EstimatorClient({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setAppliedTemplate(null)}
-                                        className="ml-1 h-12 px-2 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                        className="h-12 px-2 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
                                         title={t('estimator.quality.detachTooltip')}
                                     >
                                         <X className="h-4 w-4" />

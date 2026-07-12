@@ -150,4 +150,9 @@ describe('Estimator production-readiness regressions', () => {
     expect(estimatorClientSource).toContain('id="save-quality-name-error" role="alert"')
     expect(estimatorClientSource).toContain('setTemplateSaveError(message)')
   })
+
+  it('keeps applied-quality actions inside narrow mobile viewports', () => {
+    expect(estimatorClientSource).toContain('col-span-2 flex min-w-0 flex-wrap items-center gap-1')
+    expect(estimatorClientSource).toContain('h-12 min-w-0 max-w-full flex-1 rounded-[10px]')
+  })
 })
