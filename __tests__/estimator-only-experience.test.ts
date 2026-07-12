@@ -12,6 +12,7 @@ describe('Estimator-only product presentation', () => {
     const settings = read('app/(dashboard)/owner/settings/page.tsx')
     const settingsLayout = read('app/(dashboard)/owner/settings/layout.tsx')
     const gate = read('components/billing/AccessGate.tsx')
+    const costProfile = read('components/settings/factory-cost-profile.tsx')
 
     it('limits Base navigation to estimator destinations and account billing', () => {
         expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/settings'])")
@@ -23,6 +24,9 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('!canUseProduction || mode === \'market\'')
         expect(estimator).toContain("? qualityLabel.trim()")
         expect(estimator).toContain("'Update Costing' : 'Save Costing'")
+        expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Final Price / m'")
+        expect(estimator).toContain("canUseProduction ? t('estimator.order_basics.title') : 'Costing Details'")
+        expect(estimator).toContain("!canUseProduction ? 'Costing Quantity'")
         expect(estimator).toContain('{canUseProduction && <Button')
     })
 
@@ -39,6 +43,9 @@ describe('Estimator-only product presentation', () => {
         expect(settings).toContain('{hasPremium && <SettingsSection id="automations"')
         expect(settings).toContain("hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'")
         expect(settings).toContain('Weavly Estimator')
+        expect(settings).toContain('<FactoryCostProfile standaloneEstimator={!hasPremium} />')
+        expect(settings).toContain('Password & Security')
+        expect(costProfile).toContain("standaloneEstimator ? 'Save Estimator Defaults' : 'Save Factory Profile'")
     })
 
     it('keeps Base updates on the same editable persistence record', () => {

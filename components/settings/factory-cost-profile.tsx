@@ -124,7 +124,7 @@ function SectionToggle({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function FactoryCostProfile({ className }: { className?: string }) {
+export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
     const [loading, setLoading]   = useState(true)
     const [saving, setSaving]     = useState(false)
     const [activePreset, setActivePreset] = useState<string | null>(null)
@@ -181,7 +181,7 @@ export function FactoryCostProfile({ className }: { className?: string }) {
             enabled_sections: sections,
         })
         if (res.success) {
-            toast.success('Factory cost profile saved')
+            toast.success(standaloneEstimator ? 'Estimator defaults saved' : 'Factory cost profile saved')
         } else {
             toast.error(res.error ?? 'Failed to save profile')
         }
@@ -209,10 +209,12 @@ export function FactoryCostProfile({ className }: { className?: string }) {
             <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-saffron" />
-                    <CardTitle className="text-base">Factory Cost Profile</CardTitle>
+                    <CardTitle className="text-base">{standaloneEstimator ? 'Costing Defaults' : 'Factory Cost Profile'}</CardTitle>
                 </div>
                 <CardDescription>
-                    Default rates that pre-fill every new estimate. Change them once here, all new quotes pick up the new values automatically.
+                    {standaloneEstimator
+                        ? 'Default rates and costing sections that pre-fill every new costing.'
+                        : 'Default rates that pre-fill every new estimate. Change them once here, all new quotes pick up the new values automatically.'}
                 </CardDescription>
             </CardHeader>
 
@@ -221,8 +223,8 @@ export function FactoryCostProfile({ className }: { className?: string }) {
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-sm font-semibold text-body">Factory Type</Label>
-                        <p className="mt-1 text-xs text-muted-foreground">Select your factory type to configure which cost sections apply. Fine-tune with the toggles below.</p>
+                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Costing Profile' : 'Factory Type'}</Label>
+                        <p className="mt-1 text-xs text-muted-foreground">{standaloneEstimator ? 'Choose the closest costing profile, then fine-tune the enabled charges below.' : 'Select your factory type to configure which cost sections apply. Fine-tune with the toggles below.'}</p>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
                         {FACTORY_PRESETS.map(preset => (
@@ -340,7 +342,7 @@ export function FactoryCostProfile({ className }: { className?: string }) {
                         <Label className="text-sm font-semibold text-body">Optional Cost Sections</Label>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Enabled sections appear in the estimator for every new quote. Disabled sections are hidden, keeping the form clean for factories that do not use them.
+                        {standaloneEstimator ? 'Enabled sections appear in every new costing. Disabled sections stay out of the form.' : 'Enabled sections appear in the estimator for every new quote. Disabled sections are hidden, keeping the form clean for factories that do not use them.'}
                     </p>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
                         <SectionToggle
@@ -363,13 +365,13 @@ export function FactoryCostProfile({ className }: { className?: string }) {
                         />
                         <SectionToggle
                             label="Commission"
-                            description="Broker or agent commission included in the buyer quote."
+                            description={standaloneEstimator ? 'Broker or agent commission included in the final price.' : 'Broker or agent commission included in the buyer quote.'}
                             checked={sections.commission}
                             onChange={updateSection('commission')}
                         />
                         <SectionToggle
                             label="Transport"
-                            description="Factory delivers fabric directly rather than buyer collecting."
+                            description={standaloneEstimator ? 'Include delivery cost in the costing when transport applies.' : 'Factory delivers fabric directly rather than buyer collecting.'}
                             checked={sections.transport}
                             onChange={updateSection('transport')}
                         />
@@ -384,7 +386,7 @@ export function FactoryCostProfile({ className }: { className?: string }) {
                         disabled={saving}
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Save Factory Profile
+                        {standaloneEstimator ? 'Save Estimator Defaults' : 'Save Factory Profile'}
                     </Button>
                 </div>
             </CardContent>

@@ -1684,7 +1684,7 @@ export default function EstimatorClient({
                                 </div>
                                 <ArrowRight className="hidden h-7 w-7 self-center text-[var(--color-subtle)] sm:block" />
                                 <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{canUseProduction ? t('estimator.hud.quote_per_m') : 'Final Price / m'}</p>
                                     <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[40px]">
                                         ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
                                     </p>
@@ -2014,7 +2014,7 @@ export default function EstimatorClient({
 
                 {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
-                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
+                    <SectionHeader title={canUseProduction ? t('estimator.order_basics.title') : 'Costing Details'} icon={Layers} accent="neutral" step={1} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
@@ -3072,11 +3072,11 @@ export default function EstimatorClient({
 
                 {/* 9. Simulation / Order */}
                 <EstimatorCard accent="weft">
-                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
+                    <SectionHeader title={!canUseProduction ? 'Costing Quantity' : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
-                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')} 
+                                label={!canUseProduction ? 'Costing Quantity' : mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
                                 value={state.orderQuantityM} 
                                 onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })} 
                                 unit="m" 

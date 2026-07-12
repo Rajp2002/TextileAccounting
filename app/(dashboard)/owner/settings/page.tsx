@@ -286,7 +286,7 @@ export default function SettingsPage() {
             <div id="overview" className="mb-5 flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
                     <h1 className="text-3xl font-bold tracking-tight text-ink">{t('settings.title')}</h1>
-                    <p className="mt-1 text-base text-muted-foreground">{t('settings.subtitle')}</p>
+                    <p className="mt-1 text-base text-muted-foreground">{hasPremium ? t('settings.subtitle') : 'Business profile, costing defaults, saved qualities, and account access.'}</p>
                 </div>
                 <Button variant="outline" size="sm" className="w-fit gap-2" onClick={refreshSettings}>
                     <RefreshCw className="h-3.5 w-3.5" />
@@ -308,7 +308,7 @@ export default function SettingsPage() {
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-3">
-                                            <Label>{t('settings.factory.name')}</Label>
+                                            <Label>{hasPremium ? t('settings.factory.name') : 'Business Name'}</Label>
                                             {currentFactoryName !== org?.name && !isEditingName && (
                                                 <Button
                                                     variant="link"
@@ -495,7 +495,7 @@ export default function SettingsPage() {
                     </SettingsSection>}
 
                     <SettingsSection id="cost-profile" title={hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'} icon={Factory}>
-                        <FactoryCostProfile />
+                        <FactoryCostProfile standaloneEstimator={!hasPremium} />
                     </SettingsSection>
 
                     <SettingsSection id="qualities" title="Saved Fabric Qualities" icon={ShieldCheck}>
@@ -600,6 +600,10 @@ export default function SettingsPage() {
                             <Link href="/owner/quotes" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <ShieldCheck className="h-4 w-4" />
                                 Saved Costings
+                            </Link>
+                            <Link href="/forgot-password" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                                <KeyRound className="h-4 w-4" />
+                                Password & Security
                             </Link>
                         </div>
                     </SettingsPanel>
