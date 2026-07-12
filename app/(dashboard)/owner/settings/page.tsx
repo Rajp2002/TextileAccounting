@@ -585,7 +585,7 @@ export default function SettingsPage() {
                             </Button>
                         </div>
                     </SettingsPanel>
-                </aside> : <aside className="settings-right-rail sticky top-6 space-y-4">
+                </aside> : <aside className="sticky top-6 space-y-4">
                     <SettingsPanel className="p-5">
                         <div className="flex items-center gap-2">
                             <Calculator className="h-4 w-4 text-saffron" />
