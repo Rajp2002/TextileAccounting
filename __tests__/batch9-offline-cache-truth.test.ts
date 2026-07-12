@@ -159,6 +159,8 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(updateNotice).toContain('navigator.serviceWorker.ready')
         expect(updateNotice).toContain('registration.update()')
         expect(updateNotice).toContain('controllerchange')
+        expect(updateNotice).toContain("waitingWorker.postMessage({ type: 'SKIP_WAITING' })")
+        expect(updateNotice).toContain("addEventListener('controllerchange', reloadWithNewController, { once: true })")
         expect(providers).toContain('<PwaUpdateNotice />')
     })
 
