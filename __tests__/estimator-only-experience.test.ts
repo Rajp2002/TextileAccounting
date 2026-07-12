@@ -23,6 +23,9 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('!canUseProduction || mode === \'market\'')
         expect(estimator).toContain("? qualityLabel.trim()")
         expect(estimator).toContain("'Update Costing' : 'Save Costing'")
+        expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Final Price / m'")
+        expect(estimator).toContain("canUseProduction ? t('estimator.order_basics.title') : 'Costing Details'")
+        expect(estimator).toContain("!canUseProduction ? 'Costing Quantity'")
         expect(estimator).toContain('{canUseProduction && <Button')
     })
 
