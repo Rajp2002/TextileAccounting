@@ -42,6 +42,7 @@ serve(async (req) => {
 
     try {
         const supabase = createSupabaseAdminClient()
+        const body = await req.json().catch(() => ({})) as { org_id?: string; simulation_mode?: string }
 
         // Calculate report month (default: previous month, or override with ?month=2026-02)
         const now = new Date()
@@ -61,12 +62,15 @@ serve(async (req) => {
         const endDate = `${reportMonth}-${String(daysInMonth).padStart(2, '0')}`
 
         // Fetch all opted-in owners
-        const { data: owners, error: ownersError } = await supabase
+        let ownersQuery = supabase
             .from('profiles')
             .select(`id, whatsapp_number, org_id, organizations ( name )`)
             .eq('role', 'owner')
             .eq('whatsapp_opted_in', true)
             .not('whatsapp_number', 'is', null)
+
+        if (body.org_id) ownersQuery = ownersQuery.eq('org_id', body.org_id)
+        const { data: owners, error: ownersError } = await ownersQuery
 
         if (ownersError) throw new Error(`Owners fetch failed: ${ownersError.message}`)
         if (!owners?.length) {
@@ -88,7 +92,8 @@ serve(async (req) => {
                 .select('id')
                 .eq('org_id', orgId)
                 .eq('report_date', `${reportMonth}-01`)
-                .eq('status', 'monthly_sent')
+                .eq('brief_type', 'monthly')
+                .eq('status', 'success')
                 .maybeSingle()
 
             if (existingLog) {
@@ -158,6 +163,7 @@ serve(async (req) => {
                 'en',
                 bodyValues,
                 callbackData,
+                body.simulation_mode,
             )
 
             // ── F. Log delivery ───────────────────────────────────────────────
@@ -175,10 +181,11 @@ serve(async (req) => {
             })
 
             // ── G. Idempotency marker ─────────────────────────────────────────
-            const briefStatus = result.success ? 'monthly_sent' : 'monthly_failed'
+            const briefStatus = result.success ? 'success' : 'failed'
             await supabase.from('daily_brief_logs').insert({
                 org_id: orgId,
                 report_date: `${reportMonth}-01`,
+                brief_type: 'monthly',
                 status: briefStatus,
                 details: { type: 'monthly', month: reportMonth, totalMeters, settledCount },
             })

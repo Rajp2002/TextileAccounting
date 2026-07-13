@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { org_id, worker_id, worker_type, settlement_id } = body;
+    const { org_id, worker_id, worker_type, settlement_id, simulation_mode, freeform_simulation_mode } = body;
 
     if (!org_id || !worker_id || !worker_type || !settlement_id) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
@@ -93,9 +93,23 @@ Deno.serve(async (req) => {
       .eq("org_id", org_id)
       .single();
 
-    if (workerError || !worker?.whatsapp_number) {
+    if (workerError || !worker) {
+      return new Response(JSON.stringify({ error: "Worker not found" }), { status: 404 });
+    }
+
+    if (!worker.whatsapp_number) {
+      await logDelivery(supabase, {
+        orgId: org_id,
+        recipientPhone: `missing:${worker_type}:${worker_id}`,
+        templateName: TEMPLATES[worker.whatsapp_language ?? "en"] ?? TEMPLATES["en"],
+        notificationType: "payslip",
+        callbackData: makeCallbackData("payslip", org_id),
+        status: "skipped_missing_phone",
+        errorMessage: "Skipped: missing_phone",
+        payloadSnapshot: { worker_id, settlement_id },
+      });
       return new Response(
-        JSON.stringify({ skipped: true, reason: "worker has no WhatsApp number" }),
+        JSON.stringify({ skipped: true, reason: "missing_phone" }),
         { status: 200 },
       );
     }
@@ -117,7 +131,7 @@ Deno.serve(async (req) => {
         templateName: TEMPLATES[worker.whatsapp_language ?? "en"] ?? TEMPLATES["en"],
         notificationType: "payslip",
         callbackData: makeCallbackData("payslip", org_id),
-        status: `skipped_${consentResult.reason}` as "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone",
+        status: `skipped_${consentResult.reason}` as "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone" | "skipped_phone_mismatch",
         errorMessage: `Skipped: ${consentResult.reason}`,
         payloadSnapshot: { worker_id, settlement_id },
       });
@@ -215,6 +229,7 @@ Deno.serve(async (req) => {
       langCode,
       bodyValues,
       callbackData,
+      simulation_mode,
     );
 
     // 7. Send Part 2: Itemized Free-form (Success of #1 is not a hard gate, but logical)
@@ -223,7 +238,7 @@ Deno.serve(async (req) => {
       // Small delay to ensure order in the app
       await new Promise(r => setTimeout(r, 500));
       freeformResult = await import("../_shared/whatsapp.ts").then(m => 
-        m.sendWhatsAppFreeform(metaAccessToken, metaPhoneNumberId, worker.whatsapp_number, detailMessage)
+        m.sendWhatsAppFreeform(metaAccessToken, metaPhoneNumberId, worker.whatsapp_number, detailMessage, freeform_simulation_mode ?? simulation_mode)
       );
     }
 

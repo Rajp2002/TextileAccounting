@@ -28,18 +28,33 @@ Deno.serve(async (req) => {
     const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
     const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
+    const body = await req.json().catch(() => ({})) as {
+      log_id?: string;
+      org_id?: string;
+      simulation_mode?: string;
+    };
+
+    if ((body.log_id && !body.org_id) || (!body.log_id && body.org_id)) {
+      return new Response(JSON.stringify({ error: "log_id and org_id must be supplied together" }), { status: 400 });
+    }
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     // 1. Find retryable failed rows
-    const { data: failures, error: fetchError } = await supabase
+    let failureQuery = supabase
       .from("whatsapp_delivery_log")
-      .select("id, recipient_phone, template_name, meta_callback_data, payload_snapshot, retry_count")
+      .select("id, org_id, recipient_phone, template_name, meta_callback_data, payload_snapshot, retry_count")
       .eq("status", "failed")
       .gt("sent_at", cutoff)
       .lt("retry_count", 3)
       .order("sent_at", { ascending: true })
       .limit(50); // Safety cap: max 50 retries per run
+
+    if (body.log_id && body.org_id) {
+      failureQuery = failureQuery.eq("id", body.log_id).eq("org_id", body.org_id);
+    }
+
+    const { data: failures, error: fetchError } = await failureQuery;
 
     if (fetchError) {
       throw new Error(`Failed to fetch retryable rows: ${fetchError.message}`);
@@ -55,18 +70,33 @@ Deno.serve(async (req) => {
     const outcomes: { id: string; outcome: "recovered" | "failed_again" | "error" }[] = [];
 
     for (const row of failures) {
-      const snapshot = row.payload_snapshot as {
+      const nextRetryCount = (row.retry_count ?? 0) + 1;
+      const { data: claimed, error: claimError } = await supabase
+        .from("whatsapp_delivery_log")
+        .update({ retry_count: nextRetryCount, last_retry_at: new Date().toISOString() })
+        .eq("id", row.id)
+        .eq("org_id", row.org_id)
+        .eq("status", "failed")
+        .eq("retry_count", row.retry_count ?? 0)
+        .gt("sent_at", cutoff)
+        .select("id, recipient_phone, template_name, meta_callback_data, payload_snapshot, retry_count")
+        .maybeSingle();
+
+      if (claimError || !claimed) {
+        outcomes.push({ id: row.id, outcome: "error" });
+        continue;
+      }
+
+      const snapshot = claimed.payload_snapshot as {
         bodyValues?: string[];
         languageCode?: string;
       } | null;
 
       if (!snapshot?.bodyValues) {
-        // Payload snapshot missing — cannot retry, bump count so we don't keep trying
+        // Payload snapshot missing — the claimed retry still counts toward the hard cap.
         await supabase
           .from("whatsapp_delivery_log")
           .update({
-            retry_count: (row.retry_count ?? 0) + 1,
-            last_retry_at: new Date().toISOString(),
             error_message: "retry_skipped: no bodyValues in payload_snapshot",
           })
           .eq("id", row.id);
@@ -79,19 +109,18 @@ Deno.serve(async (req) => {
         result = await sendWhatsAppTemplate(
           metaAccessToken,
           metaPhoneNumberId,
-          row.recipient_phone,
-          row.template_name,
+          claimed.recipient_phone,
+          claimed.template_name,
           snapshot.languageCode ?? "en",
           snapshot.bodyValues,
-          row.meta_callback_data ?? `retry_${row.id}`,
+          claimed.meta_callback_data ?? `retry_${row.id}`,
+          body.simulation_mode,
         );
       } catch (sendErr) {
         // Network-level failure — still increment retry_count
         await supabase
           .from("whatsapp_delivery_log")
           .update({
-            retry_count: (row.retry_count ?? 0) + 1,
-            last_retry_at: new Date().toISOString(),
             error_message: `retry fetch error: ${String(sendErr)}`,
           })
           .eq("id", row.id);
@@ -104,12 +133,10 @@ Deno.serve(async (req) => {
         .from("whatsapp_delivery_log")
         .update({
           status: result.success ? "sent" : "failed",
-          retry_count: (row.retry_count ?? 0) + 1,
-          last_retry_at: new Date().toISOString(),
           meta_message_id: result.messageId ?? undefined,
           error_message: result.success
             ? null
-            : `retry_${(row.retry_count ?? 0) + 1}: ${JSON.stringify(result.responseBody)}`,
+            : `retry_${claimed.retry_count}: ${JSON.stringify(result.responseBody)}`,
         })
         .eq("id", row.id);
 

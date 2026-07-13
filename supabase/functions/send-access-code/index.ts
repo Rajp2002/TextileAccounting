@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { org_id, code, expires_at } = body;
+    const { org_id, code, expires_at, simulation_mode } = body;
 
     if (!org_id || !code) {
       return new Response(JSON.stringify({ error: "Missing org_id or code" }), { status: 400 });
@@ -37,15 +37,13 @@ Deno.serve(async (req) => {
     const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
     const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 
-    // 1. Fetch owner's details
-    // We explicitly filter for whatsapp_opted_in = true to ensure we pick the right record
+    // 1. Fetch this organization's owner, then evaluate consent explicitly so every
+    // skip is logged with a stable operational reason.
     const { data: owner, error: fetchError } = await supabase
       .from("profiles")
       .select("id, full_name, whatsapp_number, whatsapp_opted_in")
       .eq("org_id", org_id)
       .eq("role", "owner")
-      .eq("whatsapp_opted_in", true)
-      .not("whatsapp_number", "is", null)
       .limit(1)
       .maybeSingle();
 
@@ -55,12 +53,41 @@ Deno.serve(async (req) => {
     }
 
     if (!owner) {
-      console.warn(`[send-access-code] Skip: No opted-in owner found for org ${org_id}`);
+      return new Response(JSON.stringify({ error: "Owner not found" }), { status: 404 });
+    }
+
+    const { checkWhatsAppConsent } = await import("../_shared/whatsapp.ts");
+    const consentResult = await checkWhatsAppConsent(
+      supabase,
+      org_id,
+      "owner",
+      owner.id,
+      owner.whatsapp_number,
+    );
+    if (!consentResult.allowed) {
+      const status = consentResult.reason === "missing_phone"
+        ? "skipped_missing_phone"
+        : consentResult.reason === "missing_consent"
+        ? "skipped_missing_consent"
+        : "skipped_opted_out";
+      await logDelivery(supabase, {
+        orgId: org_id,
+        ownerProfileId: owner.id,
+        recipientPhone: owner.whatsapp_number ?? `missing:owner:${owner.id}`,
+        templateName: TEMPLATE_NAME,
+        notificationType: "access_code",
+        callbackData: makeCallbackData("accesscode", org_id),
+        status,
+        errorMessage: `Skipped: ${consentResult.reason}`,
+        payloadSnapshot: { org_id, expires_at, requested_by: body.requested_by ?? null },
+      });
+      console.warn(`[send-access-code] Skip: ${consentResult.reason} for org ${org_id}`);
       return new Response(
-        JSON.stringify({ skipped: true, reason: "no opted-in owner with WhatsApp" }),
+        JSON.stringify({ skipped: true, reason: consentResult.reason }),
         { status: 200 },
       );
     }
+    const ownerPhone = owner.whatsapp_number as string;
 
     console.log(`[send-access-code] Sending owner access-code template for org ${org_id}`);
 
@@ -99,18 +126,19 @@ Deno.serve(async (req) => {
     const result = await sendWhatsAppTemplate(
       metaAccessToken,
       metaPhoneNumberId,
-      owner.whatsapp_number,
+      ownerPhone,
       TEMPLATE_NAME,
       "en",
       bodyValues,
       callbackData,
+      simulation_mode,
     );
 
     // 6. Log
     await logDelivery(supabase, {
       orgId: org_id,
       ownerProfileId: owner.id,
-      recipientPhone: owner.whatsapp_number,
+      recipientPhone: ownerPhone,
       templateName: TEMPLATE_NAME,
       notificationType: "access_code",
       callbackData,
