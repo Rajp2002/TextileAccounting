@@ -83,6 +83,7 @@ import {
     getMonthlyOutputSuggestion,
     upsertFactoryCostProfile,
     createMarketRunFromEstimator,
+    startPartyOrderFromEstimator,
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
 import { toast } from 'sonner'
@@ -1546,6 +1547,55 @@ export default function EstimatorClient({
         }
     }
 
+    const handleStartPartyOrder = async () => {
+        if (saveQuoteLockRef.current || savingQuote) return
+        if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
+        if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
+        if (!state.orderQuantityM || state.orderQuantityM <= 0) {
+            return toast.error('Set a quantity before starting the order')
+        }
+
+        const quotePricePerM = totals.orderQuote?.quotePricePerM
+        if (!quotePricePerM || quotePricePerM <= 0 || totals.totalProductionCostPerM <= 0) {
+            return toast.error('Complete the estimate before starting the order')
+        }
+
+        saveQuoteLockRef.current = true
+        setSavingQuote(true)
+
+        try {
+            const result = await startPartyOrderFromEstimator({
+                estimatorState: state,
+                partyName: partyName.trim(),
+                qualityLabel: qualityLabel.trim(),
+                warpInstruction: warpInstruction.trim() || undefined,
+                weftInstruction: weftInstruction.trim() || undefined,
+                targetMeters: state.orderQuantityM,
+                deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                quotePricePerM,
+                costPerM: totals.totalProductionCostPerM,
+            })
+
+            if ('error' in result) {
+                toast.error(result.error ?? 'Failed to start party order')
+                return
+            }
+
+            clearDraft()
+            setSourceQuoteId(null)
+            setSourceQuoteUpdatedAt(null)
+            quoteRequestIdRef.current = null
+            toast.success('Party order started')
+            router.push(`/owner/orders?orderId=${result.orderId}`)
+        } catch (error) {
+            console.error('Failed to start party order:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to start party order')
+        } finally {
+            setSavingQuote(false)
+            saveQuoteLockRef.current = false
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-20">
@@ -1730,11 +1780,28 @@ export default function EstimatorClient({
 
                             {mode === 'quote' ? (
                                 <>
-                                    {/* PRIMARY: Save & Accept */}
+                                    {/* PRIMARY: atomically create the accepted quote and live order */}
+                                    <Button
+                                        id="btn-start-party-order"
+                                        size="sm"
+                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        onClick={handleStartPartyOrder}
+                                        disabled={savingQuote || !canUseProduction || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                            ? 'Complete party, quality, quantity, and cost result first.'
+                                            : undefined
+                                        }
+                                    >
+                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
+                                        <span className="truncate">Start Party Order</span>
+                                    </Button>
+
+                                    {/* SECONDARY: retain an accepted quote without starting production */}
                                     <Button
                                         id="btn-save-accept"
                                         size="sm"
-                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        variant="outline"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote', canUseProduction ? 'accepted' : 'draft')}
                                         disabled={savingQuote || !hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
@@ -1746,7 +1813,7 @@ export default function EstimatorClient({
                                         <span className="truncate">{canUseProduction ? 'Save & Accept' : (sourceQuoteId ? 'Update Costing' : 'Save Costing')}</span>
                                     </Button>
 
-                                    {/* SECONDARY: Save Quote */}
+                                    {/* TERTIARY: Save Quote */}
                                     {canUseProduction && <Button
                                         id="btn-save-quote"
                                         size="sm"
