@@ -1,0 +1,93 @@
+{
+  "run_id": "B14-QA-BROWSER-20260714",
+  "environment": "qa",
+  "project_ref": "eutycrtzzxmlkcpipgod",
+  "routes": [
+    "/owner/analytics",
+    "/offline"
+  ],
+  "error_state_proof": {
+    "reproduced_error": "worker breakdown failed because production_logs.created_at does not exist",
+    "rendered_heading": "Dashboard could not load",
+    "rendered_action": "Retry dashboard",
+    "data_safety_copy": "No totals were replaced",
+    "repair": "20260714053000_b14_repair_worker_breakdown_timestamp.sql",
+    "retry_after_repair_loaded": true
+  },
+  "large_range": {
+    "range": "2026-04-16..2026-07-14",
+    "production_logs": 1800,
+    "backend_elapsed_ms": 822.3,
+    "active_orders": 2,
+    "client_freeze_observed": false
+  },
+  "pace": {
+    "large_order": {
+      "meters_produced_before_events": 1800,
+      "meters_remaining": 3200,
+      "days_remaining": 5,
+      "trailing_daily_average": 20,
+      "required_daily_pace": 640,
+      "pace_index": 0.03,
+      "rendered_bucket": "Critical"
+    },
+    "waiting_order": {
+      "meters_produced": 0,
+      "meters_remaining": 1000,
+      "days_remaining": 10,
+      "pace_index": 0,
+      "rendered_bucket": "At Risk"
+    },
+    "summary_counts": {
+      "active": 0,
+      "at_risk": 1,
+      "critical": 1
+    }
+  },
+  "realtime_insert": {
+    "baseline": {
+      "meters": 20,
+      "wages": 80
+    },
+    "insert": {
+      "meters": 25,
+      "wages": 100
+    },
+    "rendered_without_reload": {
+      "meters": 45,
+      "wages": 180
+    },
+    "duplicate_total_70m_observed": false,
+    "subscription_status": "SUBSCRIBED"
+  },
+  "disconnect_reconnect": {
+    "disconnect_method": "analytics subscription unmounted by navigating to the offline route",
+    "offline_heading": "You are offline",
+    "offline_action": "Retry",
+    "mutation_while_disconnected_meters": 15,
+    "reconnect_method": "fresh analytics navigation and unique subscription generation",
+    "authoritative_refetch_meters": 60,
+    "authoritative_refetch_wages": 240,
+    "connection_error_after_retry": false
+  },
+  "state_coverage": {
+    "empty": "Historical 2026-04-01 rendered no current-only order/machine slices and No production logged on selected date",
+    "loading": "Route loading skeleton and live refresh status are distinct from persisted data",
+    "error": "Actionable Dashboard could not load / Retry dashboard boundary rendered for the real RPC failure",
+    "offline": "You are offline route explains cached-read limits and provides Retry",
+    "live": "Production Overview rendered the Live state with authoritative totals"
+  },
+  "post_fix_browser_warning_error_logs": [],
+  "passed": true,
+  "cleanup": "complete",
+  "cleanup_result": {
+    "errors": [],
+    "organizations": 0,
+    "profiles": 0,
+    "production_logs": 0,
+    "auth_users_exist": 0,
+    "credential_file_removed": true,
+    "browser_tabs_closed": true,
+    "local_server_stopped": true
+  }
+}

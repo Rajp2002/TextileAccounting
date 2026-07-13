@@ -95,6 +95,23 @@ function getResponseData<T>(value: unknown): T | null {
   return (value as { data: T | null }).data ?? null
 }
 
+function unwrapDashboardResult(
+  result: PromiseSettledResult<unknown>,
+  label: string
+): unknown {
+  if (result.status === 'rejected') {
+    throw new Error(`${label} failed: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`)
+  }
+
+  const value = result.value
+  if (value && typeof value === 'object' && 'error' in value && value.error) {
+    const error = value.error as { message?: string }
+    throw new Error(`${label} failed: ${error.message ?? 'unknown dashboard query error'}`)
+  }
+
+  return value
+}
+
 function normalizeKpiSnapshot(data: unknown): KpiSnapshot | null {
   if (!data || typeof data !== 'object') return null
   const row = data as Record<string, unknown>
@@ -230,8 +247,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     getDailyMeterTrend(supabase, org_id, today),
   ])
 
-  const [kpiYesterdayResult, kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, trendResult] = results.map(r =>
-    r.status === 'fulfilled' ? r.value : null
+  const [kpiYesterdayResult, kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, trendResult] = results.map((result, index) =>
+    unwrapDashboardResult(result, ['yesterday KPI', 'today KPI', 'order pace', 'worker breakdown', 'machine utilization', 'production trend'][index])
   )
   const kpiYesterday = kpiYesterdayResult as KpiSnapshot | null
   const kpiToday = getResponseData<TodayKpiSnapshot>(kpiTodayResult)
@@ -263,8 +280,8 @@ export async function refreshLiveDashboard() {
     getDailyMeterTrend(supabase, org_id, today),
   ])
 
-  const [kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, trendResult] = results.map(r =>
-    r.status === 'fulfilled' ? r.value : null
+  const [kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, trendResult] = results.map((result, index) =>
+    unwrapDashboardResult(result, ['today KPI', 'order pace', 'worker breakdown', 'machine utilization', 'production trend'][index])
   )
   const kpiToday = getResponseData<TodayKpiSnapshot>(kpiTodayResult)
   const orders = getResponseData<Order[]>(ordersResult)
@@ -291,8 +308,8 @@ export async function fetchHistoricalData(targetDate: string) {
     getDailyMeterTrend(supabase, org_id, targetDate),
   ])
 
-  const [kpiResult, workerBreakdownResult, trendResult] = results.map(r =>
-    r.status === 'fulfilled' ? r.value : null
+  const [kpiResult, workerBreakdownResult, trendResult] = results.map((result, index) =>
+    unwrapDashboardResult(result, ['historical KPI', 'historical worker breakdown', 'historical production trend'][index])
   )
   const kpi = kpiResult as KpiSnapshot | null
   const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)

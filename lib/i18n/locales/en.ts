@@ -237,6 +237,7 @@ export const en = {
         link_machines: "Link Machines",
         left: "m left",
         overdue: "Overdue",
+        critical: "Critical",
         at_risk: "At Risk",
         finished: "Finished",
         active: "Active",

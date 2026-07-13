@@ -237,6 +237,7 @@ export const hi = {
         link_machines: "मशीनें लिंक करें",
         left: "m बाकी",
         overdue: "लेट (Overdue)",
+        critical: "गंभीर (Critical)",
         at_risk: "खतरे में (At Risk)",
         finished: "पूरा हुआ (Finished)",
         active: "सक्रिय (Active)",

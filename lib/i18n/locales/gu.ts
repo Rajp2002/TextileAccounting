@@ -237,6 +237,7 @@ export const gu = {
         link_machines: "મશીન લિંક કરો",
         left: "m બાકી",
         overdue: "લેટ (Overdue)",
+        critical: "ગંભીર (Critical)",
         at_risk: "જોખમમાં (At Risk)",
         finished: "પૂર્ણ (Finished)",
         active: "એક્ટિવ (Active)",
