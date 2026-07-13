@@ -1004,6 +1004,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             : operatorAssignment
         const workerId = datedWorkerId ?? matchingOperatorAssignment?.worker_id ?? standingAssignments?.[shift] ?? null
         const orderId = machine.current_order_id ?? null
+        const datedRate = existing?.rate_per_m == null ? null : Number(existing.rate_per_m)
         const operatorPayload = matchingOperatorAssignment ?? (
             workerId
                 ? {
@@ -1014,7 +1015,8 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                     worker_id: workerId,
                     operator_name: meterWorkerNameById.get(workerId) ?? 'Meter worker',
                     operator_pay_mode: 'per_meter' as OperatorPayMode,
-                    operator_rate: orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5),
+                    operator_rate: datedRate
+                        ?? (orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
                     machine_type: normalizeMachineType(machine.loom_type),
                 }
                 : {

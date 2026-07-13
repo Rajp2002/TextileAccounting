@@ -152,6 +152,8 @@ describe('Batch 24F production worker assignment policy', () => {
     it('MASTER-011 treats the persisted dated worker as the effective worker for that one shift', () => {
         expect(getShiftSetupDataBody).toContain('const datedWorkerId = existing?.worker_id')
         expect(getShiftSetupDataBody).toContain('const workerId = datedWorkerId ?? matchingOperatorAssignment?.worker_id')
+        expect(getShiftSetupDataBody).toContain('const datedRate = existing?.rate_per_m == null ? null : Number(existing.rate_per_m)')
+        expect(getShiftSetupDataBody).toContain('operator_rate: datedRate')
         expect(getShiftSetupDataBody).toContain('worker_id: operatorPayload.worker_id')
 
         expect(bulkLogProductionBody).toContain(".from('shift_assignments')")
