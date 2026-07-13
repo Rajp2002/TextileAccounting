@@ -369,3 +369,13 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Supervisor Kharchi is one coherent operation: supervisor float decreases by the same amount that one worker advance increases, or neither mutation persists.
 - Factory Today must read current production/market summary fields that exist, and its meters, shift state, work-at-risk, advance, and payroll signals must reconcile to persisted source data without duplicate updates.
 - Golden A and Golden B payroll use the same immutable production-backed settlement/payslip history; customer/order/market origin does not permit a second payroll basis for the same production.
+
+## B14 realtime dashboard invariants
+
+- A fulfilled Supabase response that contains an `error` is a failed dashboard source, not empty data. It must reach an actionable error state and retry boundary.
+- Realtime events are invalidation signals: refreshed authoritative slices replace current totals. Client code must not add the event payload to a value that the server query already includes.
+- A reconnect uses a new channel topic/epoch after the previous channel leaves. Data written while disconnected must appear through an authoritative refetch without duplicate or stale-channel totals.
+- Worker breakdowns order by the canonical `production_logs.submitted_at` timestamp and resolve the meter-worker identity consistently; removed columns cannot remain in deployed RPCs.
+- Order health derives produced, remaining, days, required pace, and pace index from persisted production. Zero production remains visibly at risk, and a future critical deadline is not labeled overdue.
+- Loading/reconnecting, source error, offline, historical empty, and live connected states are distinct and actionable.
+- The dashboard must return the complete exercised 90-day/1,800-log range in under two seconds without truncation or UI freeze.

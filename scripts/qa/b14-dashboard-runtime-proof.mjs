@@ -8,12 +8,17 @@ import { createClient } from '@supabase/supabase-js'
 
 const workspace = process.cwd()
 const QA_REF = 'eutycrtzzxmlkcpipgod'
+const PROD_REF = 'vzhwahudircrpgtitwzd'
+const productionMode = process.argv.includes('--production')
+const environmentName = productionMode ? 'production' : 'qa'
+const expectedProjectRef = productionMode ? PROD_REF : QA_REF
 const preserveFixture = process.argv.includes('--preserve')
 const cleanupOnly = process.argv.includes('--cleanup-secret')
 const emitRealtime = process.argv.includes('--emit-realtime')
 const emitReconnect = process.argv.includes('--emit-reconnect')
-const secretPath = path.join(workspace, '.codex', 'b14-qa-runtime-secret.json')
-const outputPath = path.join(workspace, 'output/qa/blocked-row-campaign/B14-qa-dashboard.json')
+const secretPath = path.join(workspace, '.codex', `b14-${environmentName}-runtime-secret.json`)
+const outputPath = path.join(workspace, `output/qa/blocked-row-campaign/B14-${environmentName}-dashboard.json`)
+const envPath = path.join(workspace, productionMode ? '.env.production.local' : '.env.qa.local')
 
 function parseEnv(contents) {
     return Object.fromEntries(contents.split(/\r?\n/).flatMap((raw) => {
@@ -327,8 +332,10 @@ async function emitRealtimeLog(env, stored, reconnect = false) {
 }
 
 async function main() {
-    const env = { ...process.env, ...parseEnv(await fs.readFile(path.join(workspace, '.env.qa.local'), 'utf8')) }
-    if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(QA_REF)) throw new Error('B14 refused: QA project target was not proven.')
+    const env = { ...process.env, ...parseEnv(await fs.readFile(envPath, 'utf8')) }
+    if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(expectedProjectRef)) {
+        throw new Error(`B14 refused: ${environmentName} project target was not proven.`)
+    }
     const admin = clientFor(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
     if (emitRealtime || emitReconnect) {
         const stored = JSON.parse(await fs.readFile(secretPath, 'utf8'))
@@ -346,9 +353,13 @@ async function main() {
 
     const assertions = []
     const evidence = {
-        run_id: `B14-QA-${Date.now()}`,
-        environment: 'qa',
-        project_ref: QA_REF,
+        run_id: `B14-${environmentName.toUpperCase()}-${Date.now()}`,
+        environment: environmentName,
+        project_ref: expectedProjectRef,
+        deployment: productionMode ? {
+            id: process.env.B14_DEPLOYMENT_ID ?? null,
+            commit: process.env.B14_DEPLOYMENT_COMMIT ?? null,
+        } : undefined,
         scope: 'B14 realtime, reconnect, pace, large-range, and dashboard-state runtime proof',
         assertions,
         cleanup: 'pending',

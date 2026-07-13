@@ -1,15 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **333 PASS, 3 FAIL, 40 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **338 PASS, 3 FAIL, 35 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B13 — payroll, advances, kharchi, dashboard wages, and worker money lifecycle (16/16 PASS)**.
-- Active batch: **B14 — realtime dashboard recovery and large-range states**.
-- Validation gate: local and Vercel gates passed 87 files / 621 tests, TypeScript, lint, and a successful optimized Next.js build.
-- Production deployment: `dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD`, Ready and aliased, exact commit `d42d5138fba22758f1d11218c59deb6c3ad876a3`.
-- Migrations: B13 payroll settlement locking, protected advance lifecycle, reversal bypass, and atomic final-exit migration is deployed and exercised in QA and production.
-- Cleanup: the prefixed B13 QA and production tenants, profiles/auth users, and all payroll/advance/production dependencies were removed and reconciled.
-- B13 evidence: `output/qa/blocked-row-campaign/B13-boundary-probe.json`, `B13-qa-browser.json`, and `B13-production-payroll.json`.
+- Completed batch: **B14 — realtime dashboard recovery and large-range states (5/5 PASS)**.
+- Active batch: **B15 — authentication, privacy, audit, adversarial UX, and PWA device proof**.
+- Validation gate: local and Vercel gates passed 88 files / 625 passed plus 1 intentional skip, TypeScript, lint, and a successful optimized Next.js build.
+- Production deployment: `dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq`, Ready and aliased, exact commit `6f80eac94d950460bf559583dbb18ef434afde00`.
+- Migrations: B14 worker-breakdown timestamp repair is deployed and exercised in QA and production without rewriting existing production logs.
+- Cleanup: the prefixed B14 QA and production tenants, profiles/auth users, 1,800-log fixtures, and dashboard dependencies were removed and reconciled.
+- B14 evidence: `output/qa/blocked-row-campaign/B14-qa-dashboard.json`, `B14-qa-browser.json`, and `B14-production-dashboard.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -29,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B13 closeout
+## B14 closeout
 
-B13 directly proved decimal and historical payroll snapshots, capped advance recovery, protected deducted advances, serialized settlement, authorized reversal, itemized adjustments, cycle status, atomic final exit, supervisor Kharchi, Factory Today wages, and the shared Golden A/B payslip path. The four runtime defects were repaired, the exact implementation commit was deployed, and disposable data reconciled to zero.
+B14 directly proved no-reload realtime refresh without double counting, disconnect/reconnect recovery from authoritative data, independent pace arithmetic, zero-production risk, a 90-day/1,800-log range below two seconds, and distinct actionable dashboard states. The fulfilled-error, timestamp, reconnect-topic, order-health, and state-rendering defects were repaired, the exact implementation commit was deployed, and disposable data reconciled to zero.
 
 ## Exact next action
 
-Start B14 by auditing realtime subscription/refetch behavior, disconnect/reconnect recovery, independent pace calculations, large-range timing, and distinct empty/loading/error/offline dashboard states.
+Start B15 with isolated QA accounts and execute recovery-token lifecycle, timed session expiry, proxy-isolated rate limiting, export/audit/privacy erasure, adversarial input, keyboard/zoom, and installable PWA proof.

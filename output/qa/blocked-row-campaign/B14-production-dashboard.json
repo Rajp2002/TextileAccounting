@@ -1,0 +1,161 @@
+{
+  "run_id": "B14-PRODUCTION-1783981788876",
+  "environment": "production",
+  "project_ref": "vzhwahudircrpgtitwzd",
+  "deployment": {
+    "id": "dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq",
+    "commit": "6f80eac94d950460bf559583dbb18ef434afde00"
+  },
+  "scope": "B14 realtime, reconnect, pace, large-range, and dashboard-state runtime proof",
+  "assertions": [
+    {
+      "name": "large dated dashboard source loads within two seconds without truncation",
+      "passed": true,
+      "elapsed_ms": 585,
+      "production_log_count": 1800,
+      "active_order_count": 2,
+      "range_start": "2026-04-16",
+      "range_end": "2026-07-14"
+    },
+    {
+      "name": "order pace matches independent remaining-meter and deadline arithmetic",
+      "passed": true,
+      "meters_produced": 1800,
+      "meters_remaining": 3200,
+      "days_remaining": 5,
+      "trailing_daily_average": 20,
+      "required_daily_pace": 640,
+      "expected_pace_index": 0.03,
+      "actual_pace_index": 0.03
+    },
+    {
+      "name": "zero-production active order remains an explicit waiting risk rather than produced progress",
+      "passed": true,
+      "waiting_order": {
+        "id": "92ac6268-a870-41d0-aca7-06e1b8d79932",
+        "deadline": "2026-07-24",
+        "pace_index": 0,
+        "party_name": "B14 Waiting For Logs",
+        "progress_pct": 0,
+        "quality_name": "B14 Waiting Quality",
+        "days_remaining": 10,
+        "meters_produced": 0,
+        "meters_remaining": 1000,
+        "assigned_machines": [],
+        "total_target_meters": 1000,
+        "projected_finish_date": null
+      }
+    },
+    {
+      "name": "today KPI is the exact twenty-meter pre-realtime baseline",
+      "passed": true,
+      "kpi": {
+        "total_meters": 20,
+        "active_machines": 11,
+        "piece_rate_wages": 80
+      }
+    }
+  ],
+  "cleanup": "complete",
+  "disposable_tenant": "42a50bc0...2270",
+  "fixture": {
+    "range": "2026-04-16..2026-07-14",
+    "seeded_logs": 1800,
+    "active_order": "213f4d9f...481e",
+    "waiting_order": "92ac6268...9932"
+  },
+  "observations": {
+    "elapsedMs": 585,
+    "orders": [
+      {
+        "id": "213f4d9f-43df-4f38-ba3b-ad85d77d481e",
+        "deadline": "2026-07-19",
+        "pace_index": 0.03,
+        "party_name": "B14 Large Range At Risk",
+        "progress_pct": 36,
+        "quality_name": "B14 Dashboard Quality",
+        "days_remaining": 5,
+        "meters_produced": 1800,
+        "meters_remaining": 3200,
+        "assigned_machines": [
+          {
+            "id": "f46b3c83-bc7f-4c4d-a270-1867bebbd03f",
+            "name": "B14 Loom 01"
+          },
+          {
+            "id": "6cddbcb7-674e-4d0f-b30f-3f6da2b416bc",
+            "name": "B14 Loom 02"
+          },
+          {
+            "id": "5526b896-4425-485d-b418-2cbee37a254f",
+            "name": "B14 Loom 03"
+          },
+          {
+            "id": "9a760441-c810-4b7a-b11e-44e028021cbe",
+            "name": "B14 Loom 04"
+          },
+          {
+            "id": "bbadd5ac-0663-4c51-9833-9a92958ab5e0",
+            "name": "B14 Loom 05"
+          },
+          {
+            "id": "83194180-9565-4038-916d-8e5eac8557e5",
+            "name": "B14 Loom 06"
+          },
+          {
+            "id": "837ccbe6-fcea-4ff7-ad45-06574aacd384",
+            "name": "B14 Loom 07"
+          },
+          {
+            "id": "6194b88f-fbcb-42a6-ba4e-db8ef7fb7c51",
+            "name": "B14 Loom 08"
+          },
+          {
+            "id": "03069ef8-d460-4b5f-858a-cde21ca53b96",
+            "name": "B14 Loom 09"
+          },
+          {
+            "id": "3c9c2502-e7bc-477e-bcef-7e22a9ec7442",
+            "name": "B14 Loom 10"
+          },
+          {
+            "id": "a9f939e1-57ce-4fea-a4d2-59f5bca67453",
+            "name": "B14 Loom 11"
+          }
+        ],
+        "total_target_meters": 5000,
+        "projected_finish_date": "2026-12-21"
+      },
+      {
+        "id": "92ac6268-a870-41d0-aca7-06e1b8d79932",
+        "deadline": "2026-07-24",
+        "pace_index": 0,
+        "party_name": "B14 Waiting For Logs",
+        "progress_pct": 0,
+        "quality_name": "B14 Waiting Quality",
+        "days_remaining": 10,
+        "meters_produced": 0,
+        "meters_remaining": 1000,
+        "assigned_machines": [],
+        "total_target_meters": 1000,
+        "projected_finish_date": null
+      }
+    ],
+    "kpi": {
+      "total_meters": 20,
+      "active_machines": 11,
+      "piece_rate_wages": 80
+    }
+  },
+  "passed": true,
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "production_logs": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  }
+}

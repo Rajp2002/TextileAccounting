@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T21:53:59.509Z",
+  "updated_at": "2026-07-13T22:33:45.647Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 333,
-    "blocked": 40,
+    "pass": 338,
+    "blocked": 35,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -25,10 +25,11 @@
     "B10",
     "B11",
     "B12",
-    "B13"
+    "B13",
+    "B14"
   ],
-  "active_batch": "B14",
-  "active_batch_state": "B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active",
+  "active_batch": "B15",
+  "active_batch_state": "B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -296,7 +297,12 @@
     "DASH-003",
     "GOLDEN-A-21",
     "GOLDEN-A-22",
-    "GOLDEN-B-18"
+    "GOLDEN-B-18",
+    "DASH-005",
+    "DASH-006",
+    "DASH-008",
+    "DASH-010",
+    "UX-010"
   ],
   "rows_moved_to_fail": [],
   "rows_remaining_blocked": [
@@ -305,10 +311,6 @@
     "AUTH-005",
     "AUTH-014",
     "AUTH-018",
-    "DASH-005",
-    "DASH-006",
-    "DASH-008",
-    "DASH-010",
     "WA-001",
     "WA-002",
     "WA-003",
@@ -336,7 +338,6 @@
     "SEC-018",
     "UX-006",
     "UX-009",
-    "UX-010",
     "UX-012",
     "GOLDEN-A-03",
     "SIGNOFF-04"
@@ -357,7 +358,11 @@
     "Payroll settlement now serializes each worker/cycle grain, rejects an already-settled race, and protects deducted or settlement-linked advances from direct deletion.",
     "Final-exit payroll and worker deactivation now commit atomically, while authorized reversal alone can restore the exact prior advance debt.",
     "Factory Today now reads the current market summary total_meters_produced field instead of the nonexistent meters_produced field.",
-    "One production-backed fixture proves decimal rate snapshots, caps, adjustments, reversal, exit, Kharchi, dashboard wages, and Golden A/B payroll equations in QA and production."
+    "One production-backed fixture proves decimal rate snapshots, caps, adjustments, reversal, exit, Kharchi, dashboard wages, and Golden A/B payroll equations in QA and production.",
+    "Dashboard actions now reject fulfilled Supabase results that contain errors instead of silently collapsing them to empty data.",
+    "Worker-breakdown RPCs use the canonical submitted_at timestamp and meter-worker identity fallback in QA and production.",
+    "Realtime reconnects create unique channel topics and replace authoritative dashboard slices, preventing stale-channel timeouts and double-counted totals.",
+    "Order health distinguishes critical future deadlines and treats zero-production orders as at risk; dashboard loading, error, offline, empty, reconnecting, and live states are distinct and actionable."
   ],
   "commits": [
     {
@@ -383,6 +388,10 @@
     {
       "sha": "d42d5138fba22758f1d11218c59deb6c3ad876a3",
       "subject": "fix(qa): harden B13 payroll lifecycle"
+    },
+    {
+      "sha": "6f80eac94d950460bf559583dbb18ef434afde00",
+      "subject": "fix(qa): harden B14 realtime dashboard recovery"
     }
   ],
   "production_deployments": [
@@ -425,6 +434,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq",
+      "commit": "6f80eac94d950460bf559583dbb18ef434afde00",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -461,6 +477,12 @@
       "file": "20260714043000_b13_harden_payroll_settlement_lifecycle.sql",
       "production_history_version": "20260713214539",
       "alignment": "verified by function/trigger catalog plus authenticated QA and production runtime proof"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714053000_b14_repair_worker_breakdown_timestamp.sql",
+      "production_history_version": "20260713222345",
+      "alignment": "verified by function catalog plus QA browser/runtime and production large-range proof; existing production rows were not rewritten"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -488,6 +510,11 @@
       "batch": "B13",
       "type": "prefixed disposable QA and production payroll tenants with owner/supervisor auth users",
       "state": "removed; organizations/profiles/auth/settlements/advances/production/payroll and all dependent rows reconciled to zero"
+    },
+    {
+      "batch": "B14",
+      "type": "prefixed disposable QA and production dashboard tenants with owner auth users",
+      "state": "removed; organizations/profiles/auth/1,800-log production fixtures and all dashboard dependencies reconciled to zero in both environments"
     }
   ],
   "outstanding_external_dependencies": [
@@ -540,6 +567,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B13 production deployment dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD Ready at exact commit d42d513; local and remote gates passed 87 files / 621 tests; QA runtime and browser proof plus production runtime passed all payroll lifecycle assertions; cleanup reconciled to zero.",
-  "exact_next_action": "Start B14 by auditing realtime subscription/refetch behavior, disconnect/reconnect recovery, independent pace calculations, large-range timing, and distinct empty/loading/error/offline dashboard states."
+  "last_successful_validation": "B14 production deployment dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq Ready at exact commit 6f80eac; local and remote gates passed 88 files / 625 passed plus 1 intentional skip; QA realtime/browser proof and production 1,800-log range proof passed; cleanup reconciled to zero.",
+  "exact_next_action": "Start B15 with isolated QA accounts and execute recovery-token lifecycle, timed session expiry, proxy-isolated rate limiting, export/audit/privacy erasure, adversarial input, keyboard/zoom, and installable PWA proof."
 }

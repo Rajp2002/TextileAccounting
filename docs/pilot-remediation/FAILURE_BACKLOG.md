@@ -6,7 +6,7 @@ This backlog is grouped by root cause and ordered by the required pilot priority
 
 The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. The active remediation campaign has since moved 18 confirmed failures and 13 previously blocked rows to pass, and reclassified `MASTER-006` as a precise schema-parity blocker. `AUTH-012` is closed by production migration and isolated runtime proof. The only remaining formal failures are `WA-008`, `OFF-009`, and `OFF-010`. Historical row-level actuals remain in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/`, and blocked rows remain evidence debt rather than failures.
 
-Current remediation note (2026-07-14): the historical runtime-rerun counts above remain the immutable 2026-07-10 campaign result; the active formal matrix has 333 pass, 3 fail, 40 blocked, and 1 not applicable after blocked-row Batch 13. B13 closed the 16-row payroll/advance/Kharchi/dashboard/Golden worker-money cluster with QA runtime/browser and exact-deployment production proof. `NEEDS-AUDIT-002` separately records legacy pass rows whose Actual text conflicts with their expectation, so these mechanical totals are not final pilot-readiness truth.
+Current remediation note (2026-07-14): the historical runtime-rerun counts above remain the immutable 2026-07-10 campaign result; the active formal matrix has 338 pass, 3 fail, 35 blocked, and 1 not applicable after blocked-row Batch 14. B14 closed the five-row realtime/reconnect/pace/large-range/dashboard-state cluster with QA runtime/browser and exact-deployment production proof. `NEEDS-AUDIT-002` separately records legacy pass rows whose Actual text conflicts with their expectation, so these mechanical totals are not final pilot-readiness truth.
 
 ## Coverage Ledger
 
@@ -581,3 +581,9 @@ The backlog now has 56 blocked rows. B13 is active with 16 worker-money rows. Ex
 Remove all sixteen B13 IDs from the blocked backlog: `MASTER-006`, `PAY-002`, `PAY-010`, `PAY-011`, `PAY-012`, `PAY-014`, `PAY-017`, `PAY-019`, `PAY-021`, `PAY-025`, `PAY-026`, `PAY-027`, `DASH-003`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-B-18`. Exact QA runtime/browser and production runtime proof covers decimal and historical assignment-rate snapshots, capped debt recovery, protected deducted advances, serialized settlement, authorized reversal, itemized adjustments, cycle boundaries/status, atomic final exit, supervisor Kharchi, Factory Today wage signals, and shared immutable Golden A/B payroll history.
 
 The backlog now has 40 blocked rows. B14 is active with five realtime/dashboard rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B13 does not reclassify them or relax the No-Go gate.
+
+### B14 realtime dashboard cluster resolved
+
+Remove all five B14 IDs from the blocked backlog: `DASH-005`, `DASH-006`, `DASH-008`, `DASH-010`, and `UX-010`. Exact QA runtime/browser and production runtime proof covers no-reload realtime refresh without double counting, disconnect/reconnect recovery from authoritative data, independent pace arithmetic, explicit zero-production risk, the complete 90-day/1,800-log range below two seconds, and distinct actionable loading/error/offline/empty/live states.
+
+The backlog now has 35 blocked rows. B15 is active with eleven authentication, privacy, audit, adversarial UX, and PWA rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B14 does not reclassify them or relax the No-Go gate.

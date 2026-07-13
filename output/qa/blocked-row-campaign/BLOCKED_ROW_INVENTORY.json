@@ -3888,10 +3888,12 @@
     "feature": "22. Factory Today and Analytics",
     "scenario": "Realtime insert.",
     "expected": "Owner sees update without duplicate totals.",
-    "current_status": "blocked",
-    "current_outcome": "Realtime production insert cannot be created while activation/submission is broken.",
+    "current_status": "pass",
+    "current_outcome": "An authenticated second-session insert changed the live dashboard from 20 m / ₹80 to 45 m / ₹180 without reload; authoritative slice replacement prevented the event from being counted twice.",
     "existing_evidence": [
-      "evidence/batch-11-dashboard-worker-money.json"
+      "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+      "output/qa/blocked-row-campaign/B14-qa-browser.json",
+      "output/qa/blocked-row-campaign/B14-production-dashboard.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3937,10 +3939,12 @@
     "feature": "22. Factory Today and Analytics",
     "scenario": "Realtime disconnect/reconnect.",
     "expected": "Status visible; refetch recovers truth.",
-    "current_status": "blocked",
-    "current_outcome": "Live status remained Attempting to reconnect; controlled disconnect/reconnect and recovery could not complete.",
+    "current_status": "pass",
+    "current_outcome": "After a controlled subscription teardown, a 15 m mutation made while disconnected was recovered on return as the authoritative 60 m / ₹240 total; the reconnected channel was unique and warning/error logs stayed empty.",
     "existing_evidence": [
-      "evidence/batch-11-dashboard-worker-money.json"
+      "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+      "output/qa/blocked-row-campaign/B14-qa-browser.json",
+      "output/qa/blocked-row-campaign/B14-production-dashboard.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3986,10 +3990,12 @@
     "feature": "22. Factory Today and Analytics",
     "scenario": "Work-at-risk and pace.",
     "expected": "Correct deadline/remaining meter logic.",
-    "current_status": "blocked",
-    "current_outcome": "No active loom/production pace exists for authoritative remaining-meter/deadline comparison.",
+    "current_status": "pass",
+    "current_outcome": "The 1,800 m order showed 3,200 m remaining, five days remaining, a trailing average of 20 m/day, required pace of 640 m/day, and pace index 0.03; the zero-production order remained an explicit waiting/at-risk state.",
     "existing_evidence": [
-      "evidence/batch-11-dashboard-worker-money.json"
+      "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+      "output/qa/blocked-row-campaign/B14-qa-browser.json",
+      "output/qa/blocked-row-campaign/B14-production-dashboard.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -4035,10 +4041,12 @@
     "feature": "22. Factory Today and Analytics",
     "scenario": "Large data range.",
     "expected": "Acceptable load time and no client freeze.",
-    "current_status": "blocked",
-    "current_outcome": "Current QA tenant has a small dataset and no safe large-range generator.",
+    "current_status": "pass",
+    "current_outcome": "A 90-day, 1,800-log dashboard fixture returned the complete range and two active orders in 822.3 ms in QA and 585 ms in production, below the two-second acceptance threshold without truncation or UI freeze.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+      "output/qa/blocked-row-campaign/B14-qa-browser.json",
+      "output/qa/blocked-row-campaign/B14-production-dashboard.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -5949,10 +5957,12 @@
     "feature": "28. UX, Accessibility, and Operational Fit",
     "scenario": "Empty/loading/error/offline states.",
     "expected": "Distinct and actionable.",
-    "current_status": "blocked",
-    "current_outcome": "Empty, loading, and reconnecting states were observed, but controlled server-error and offline states were unavailable for full comparison.",
+    "current_status": "pass",
+    "current_outcome": "The dashboard exposed distinct actionable loading/reconnecting, error with retry, offline with retry, historical empty, and live connected states; injected RPC failure reached the error boundary and recovered after repair.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+      "output/qa/blocked-row-campaign/B14-qa-browser.json",
+      "output/qa/blocked-row-campaign/B14-production-dashboard.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",

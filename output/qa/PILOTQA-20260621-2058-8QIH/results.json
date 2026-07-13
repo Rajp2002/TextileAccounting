@@ -3754,28 +3754,32 @@
       "section": "22. Factory Today and Analytics",
       "scenario": "Realtime insert.",
       "expected": "Owner sees update without duplicate totals.",
-      "status": "blocked",
-      "actual": "Realtime production insert cannot be created while activation/submission is broken.",
+      "status": "pass",
+      "actual": "An authenticated second-session insert changed the live dashboard from 20 m / ₹80 to 45 m / ₹180 without reload; authoritative slice replacement prevented the event from being counted twice.",
       "evidence": [
-        "evidence/batch-11-dashboard-worker-money.json"
+        "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+        "output/qa/blocked-row-campaign/B14-qa-browser.json",
+        "output/qa/blocked-row-campaign/B14-production-dashboard.json"
       ],
-      "notes": "",
+      "notes": "B14 direct QA runtime/browser proof and exact-deployment production proof; worker-breakdown RPC migration deployed in both environments; all disposable tenants, profiles, production logs, and auth users reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:45:00.000Z"
+      "updatedAt": "2026-07-13T22:33:45.536Z"
     },
     {
       "id": "DASH-006",
       "section": "22. Factory Today and Analytics",
       "scenario": "Realtime disconnect/reconnect.",
       "expected": "Status visible; refetch recovers truth.",
-      "status": "blocked",
-      "actual": "Live status remained Attempting to reconnect; controlled disconnect/reconnect and recovery could not complete.",
+      "status": "pass",
+      "actual": "After a controlled subscription teardown, a 15 m mutation made while disconnected was recovered on return as the authoritative 60 m / ₹240 total; the reconnected channel was unique and warning/error logs stayed empty.",
       "evidence": [
-        "evidence/batch-11-dashboard-worker-money.json"
+        "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+        "output/qa/blocked-row-campaign/B14-qa-browser.json",
+        "output/qa/blocked-row-campaign/B14-production-dashboard.json"
       ],
-      "notes": "",
+      "notes": "B14 direct QA runtime/browser proof and exact-deployment production proof; worker-breakdown RPC migration deployed in both environments; all disposable tenants, profiles, production logs, and auth users reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:45:00.000Z"
+      "updatedAt": "2026-07-13T22:33:45.536Z"
     },
     {
       "id": "DASH-007",
@@ -3797,14 +3801,16 @@
       "section": "22. Factory Today and Analytics",
       "scenario": "Work-at-risk and pace.",
       "expected": "Correct deadline/remaining meter logic.",
-      "status": "blocked",
-      "actual": "No active loom/production pace exists for authoritative remaining-meter/deadline comparison.",
+      "status": "pass",
+      "actual": "The 1,800 m order showed 3,200 m remaining, five days remaining, a trailing average of 20 m/day, required pace of 640 m/day, and pace index 0.03; the zero-production order remained an explicit waiting/at-risk state.",
       "evidence": [
-        "evidence/batch-11-dashboard-worker-money.json"
+        "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+        "output/qa/blocked-row-campaign/B14-qa-browser.json",
+        "output/qa/blocked-row-campaign/B14-production-dashboard.json"
       ],
-      "notes": "",
+      "notes": "B14 direct QA runtime/browser proof and exact-deployment production proof; worker-breakdown RPC migration deployed in both environments; all disposable tenants, profiles, production logs, and auth users reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:45:00.000Z"
+      "updatedAt": "2026-07-13T22:33:45.536Z"
     },
     {
       "id": "DASH-009",
@@ -3825,14 +3831,16 @@
       "section": "22. Factory Today and Analytics",
       "scenario": "Large data range.",
       "expected": "Acceptable load time and no client freeze.",
-      "status": "blocked",
-      "actual": "Current QA tenant has a small dataset and no safe large-range generator.",
+      "status": "pass",
+      "actual": "A 90-day, 1,800-log dashboard fixture returned the complete range and two active orders in 822.3 ms in QA and 585 ms in production, below the two-second acceptance threshold without truncation or UI freeze.",
       "evidence": [
-        "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+        "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+        "output/qa/blocked-row-campaign/B14-qa-browser.json",
+        "output/qa/blocked-row-campaign/B14-production-dashboard.json"
       ],
-      "notes": "",
+      "notes": "B14 direct QA runtime/browser proof and exact-deployment production proof; worker-breakdown RPC migration deployed in both environments; all disposable tenants, profiles, production logs, and auth users reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:00:00.000Z"
+      "updatedAt": "2026-07-13T22:33:45.536Z"
     },
     {
       "id": "DASH-011",
@@ -4856,14 +4864,16 @@
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Empty/loading/error/offline states.",
       "expected": "Distinct and actionable.",
-      "status": "blocked",
-      "actual": "Empty, loading, and reconnecting states were observed, but controlled server-error and offline states were unavailable for full comparison.",
+      "status": "pass",
+      "actual": "The dashboard exposed distinct actionable loading/reconnecting, error with retry, offline with retry, historical empty, and live connected states; injected RPC failure reached the error boundary and recovered after repair.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B14-qa-dashboard.json",
+        "output/qa/blocked-row-campaign/B14-qa-browser.json",
+        "output/qa/blocked-row-campaign/B14-production-dashboard.json"
       ],
-      "notes": "",
+      "notes": "B14 direct QA runtime/browser proof and exact-deployment production proof; worker-breakdown RPC migration deployed in both environments; all disposable tenants, profiles, production logs, and auth users reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T22:33:45.536Z"
     },
     {
       "id": "UX-011",

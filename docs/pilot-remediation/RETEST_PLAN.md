@@ -631,3 +631,16 @@ Acceptance:
 - Focused regression commands: `npx vitest run __tests__/b13-payroll-settlement-boundaries.test.ts __tests__/payroll-cycle.test.ts __tests__/b10-india-calendar-boundaries.test.ts __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts`; run `node scripts/qa/b13-payroll-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when payroll settlement, advances, reversal, exit, Kharchi, operator snapshots, or Factory Today sources change.
 - Canonical evidence is `output/qa/blocked-row-campaign/B13-boundary-probe.json`, `B13-qa-browser.json`, and `B13-production-payroll.json` on production deployment `dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD`.
 - Canonical counts after B13: 333 pass, 3 fail, 40 blocked, and 1 not applicable. Begin B14; do not rerun B13 unless one of these boundaries changes.
+
+### B14 realtime dashboard regression guard — 2026-07-14
+
+- Preserve error unwrapping for every dashboard source: fulfilled responses containing Supabase errors must reach an actionable retry state, never empty success data.
+- Preserve unique channel epochs on reconnect and authoritative slice replacement after realtime invalidation; the 20m/₹80 baseline plus a 25m event must resolve to 45m/₹180, never 70m.
+- Preserve disconnected-mutation recovery: returning live must refetch the 60m/₹240 truth without reload, stale channel, or duplicate totals.
+- Preserve worker-breakdown ordering on `submitted_at`, meter-worker identity fallback, and Realtime publication of `production_logs`.
+- Preserve independent order-health arithmetic, explicit zero-production risk, and distinct future-critical versus overdue labels.
+- Preserve distinct actionable loading/reconnecting, error, offline, historical empty, and live connected states.
+- Preserve the formal two-second budget and complete-result requirement for the exercised 90-day/1,800-log dashboard fixture.
+- Focused regression command: `npx vitest run __tests__/b14-realtime-dashboard-states.test.ts`; run `node scripts/qa/b14-dashboard-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when realtime topics, dashboard actions/states, pace RPCs, worker breakdowns, or large-range queries change.
+- Canonical evidence is `output/qa/blocked-row-campaign/B14-qa-dashboard.json`, `B14-qa-browser.json`, and `B14-production-dashboard.json` on production deployment `dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq`.
+- Canonical counts after B14: 338 pass, 3 fail, 35 blocked, and 1 not applicable. Begin B15; do not rerun B14 unless one of these boundaries changes.
