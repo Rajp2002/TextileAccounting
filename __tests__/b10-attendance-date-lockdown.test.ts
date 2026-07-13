@@ -37,4 +37,15 @@ describe('B10 attendance date and lockdown boundary', () => {
         expect(migration).not.toMatch(/\b(?:DELETE|UPDATE|INSERT)\s+(?:FROM|INTO)?\s*public\.attendance\b/i)
         expect(migration).not.toMatch(/\b(?:TRUNCATE|DROP TABLE)\b/i)
     })
+
+    it('exposes bounded, accessible attendance-day navigation', () => {
+        const page = readFileSync(
+            join(process.cwd(), 'app/(dashboard)/supervisor/attendance/page.tsx'),
+            'utf8'
+        )
+        expect(page).toContain('aria-label="Previous attendance day"')
+        expect(page).toContain('aria-label="Attendance date"')
+        expect(page).toContain('aria-label="Next attendance day"')
+        expect(page).toContain('disabled={selectedDate >= getSuratTodayString()}')
+    })
 })

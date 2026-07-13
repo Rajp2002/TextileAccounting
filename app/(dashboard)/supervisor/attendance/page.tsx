@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
-import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2, Lock } from 'lucide-react'
+import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { savePastAttendance } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
@@ -26,6 +26,12 @@ import { Label } from '@/components/ui/label'
 
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
+}
+
+function moveDateByDays(date: string, days: number) {
+    const [year, month, day] = date.split('-').map(Number)
+    const next = new Date(Date.UTC(year, month - 1, day + days))
+    return next.toISOString().slice(0, 10)
 }
 
 interface DailyWorker {
@@ -202,13 +208,35 @@ export default function AttendancePage() {
                             <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                             {t('attendance.today')}
                         </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label="Previous attendance day"
+                            className="h-10 w-10 shrink-0"
+                            onClick={() => setSelectedDate(moveDateByDays(selectedDate, -1))}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
                         <Input
+                            aria-label="Attendance date"
                             type="date"
                             value={selectedDate}
                             max={getSuratTodayString()} // Prevent future dates
                             onChange={(e) => setSelectedDate(e.target.value)}
                             className="h-10 flex-1 rounded-lg text-sm font-semibold sm:w-[150px]"
                         />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label="Next attendance day"
+                            className="h-10 w-10 shrink-0"
+                            disabled={selectedDate >= getSuratTodayString()}
+                            onClick={() => setSelectedDate(moveDateByDays(selectedDate, 1))}
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
             </div>

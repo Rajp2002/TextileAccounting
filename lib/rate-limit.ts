@@ -30,6 +30,10 @@ export interface RateLimitResult {
     remaining: number
 }
 
+export function getRateLimitRetrySeconds(resetAtMs: number, nowMs = Date.now()): number {
+    return Math.max(1, Math.ceil((resetAtMs - nowMs) / 1000))
+}
+
 // ─── Redis Connection (lazy) ──────────────────────────────────────────────────
 
 let redis: Redis | null = null

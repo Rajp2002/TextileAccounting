@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { createClient } from '@supabase/supabase-js'
+import { Redis } from '@upstash/redis'
 
 const QA_REF = 'eutycrtzzxmlkcpipgod'
 const PROD_REF = 'vzhwahudircrpgtitwzd'
@@ -181,7 +182,7 @@ async function cleanupFixture(fixture, removeSecret = true) {
         }
     }
 
-    const userIds = [fixture.ownerUserId, fixture.supervisorUserId].filter(Boolean)
+    const userIds = [fixture.ownerUserId, fixture.supervisorUserId, ...(fixture.retiredSupervisorUserIds ?? [])].filter(Boolean)
     for (const [table, column, values] of [
         ['profiles', 'id', userIds],
         ['organizations', 'id', [fixture.orgId]],
@@ -430,6 +431,30 @@ if (command === 'setup') {
         }
         throw error
     }
+} else if (command === 'rotate-supervisor') {
+    const fixture = await readFixture()
+    const suffix = `${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
+    const email = `formal.b10.${environment}.supervisor.proof.${suffix}@example.test`
+    const password = randomPassword()
+    const auth = await admin.auth.admin.createUser({ email, password, email_confirm: true })
+    if (auth.error || !auth.data.user) throw auth.error ?? new Error('Proof supervisor auth creation failed.')
+    const profile = await admin.from('profiles').insert({
+        id: auth.data.user.id,
+        org_id: fixture.orgId,
+        role: 'supervisor',
+        full_name: `QA Supervisor Proof ${fixture.runId}`,
+        email,
+    })
+    if (profile.error) {
+        await admin.auth.admin.deleteUser(auth.data.user.id)
+        throw profile.error
+    }
+    fixture.retiredSupervisorUserIds = [...(fixture.retiredSupervisorUserIds ?? []), fixture.supervisorUserId]
+    fixture.supervisorUserId = auth.data.user.id
+    fixture.supervisorEmail = email
+    fixture.supervisorPassword = password
+    await saveFixture(fixture)
+    process.stdout.write(`${JSON.stringify({ runId: fixture.runId, environment, supervisorRotated: true, supervisorUserId: safeId(fixture.supervisorUserId) })}\n`)
 } else if (command === 'seed-valid-code' || command === 'seed-expired-code') {
     const fixture = await readFixture()
     const code = makeCode()
@@ -450,9 +475,31 @@ if (command === 'setup') {
     const fixture = await readFixture()
     const result = await admin.from('production_logs').update({
         submitted_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    }).eq('id', fixture.correctionLogId).eq('org_id', fixture.orgId)
+    }).eq('org_id', fixture.orgId)
+        .eq('machine_id', fixture.correctionMachineId)
+        .eq('date', fixture.productionDate)
+        .eq('shift', 'day')
+        .select('id')
     if (result.error) throw result.error
+    if (result.data?.length !== 1) throw new Error(`Expected one correction log to age; found ${result.data?.length ?? 0}`)
+    fixture.correctionLogId = result.data[0].id
+    await saveFixture(fixture)
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, environment, correctionLogAged: true })}\n`)
+} else if (command === 'reset-code-rate-limit') {
+    const fixture = await readFixture()
+    if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
+        throw new Error('B10 requires Upstash credentials to reset the disposable supervisor limiter.')
+    }
+    const redis = new Redis({ url: env.UPSTASH_REDIS_REST_URL, token: env.UPSTASH_REDIS_REST_TOKEN })
+    let cursor = '0'
+    const keys = []
+    do {
+        const [nextCursor, matches] = await redis.scan(cursor, { match: `*${fixture.supervisorUserId}*`, count: 100 })
+        cursor = nextCursor
+        keys.push(...matches)
+    } while (cursor !== '0')
+    if (keys.length > 0) await redis.del(...keys)
+    process.stdout.write(`${JSON.stringify({ runId: fixture.runId, environment, disposableRateLimitKeysDeleted: keys.length })}\n`)
 } else if (command === 'probe') {
     const fixture = await readFixture()
     const ownerSession = await signIn(fixture, 'owner')
@@ -564,6 +611,7 @@ if (command === 'setup') {
             currentMonthTotal,
             paymentDates: [...paymentDates],
             productionLogCount: logs.data?.length ?? 0,
+            productionMetersType: logs.data?.[0] ? typeof logs.data[0].meters : null,
             settlementStatus: settlement.data?.status ?? null,
         },
         assertions,
@@ -573,6 +621,29 @@ if (command === 'setup') {
     await fs.writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`)
     process.stdout.write(`${JSON.stringify({ path: evidencePath, ...evidence }, null, 2)}\n`)
     if (!evidence.pass) process.exitCode = 1
+} else if (command === 'auth-snapshot') {
+    const fixture = await readFixture()
+    const supervisorSession = await signIn(fixture, 'supervisor')
+    const fixtureMachineIds = [fixture.correctionMachineId, fixture.settledMachineId]
+    const [logs, machines, assignments] = await Promise.all([
+        supervisorSession.client.from('production_logs').select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at, zero_meter_reason')
+            .eq('org_id', fixture.orgId).eq('date', fixture.productionDate).eq('shift', 'day').in('machine_id', fixtureMachineIds),
+        supervisorSession.client.from('machines').select('id, name, status').eq('org_id', fixture.orgId),
+        supervisorSession.client.from('shift_assignments').select('id, machine_id, date, shift').eq('org_id', fixture.orgId),
+    ])
+    process.stdout.write(`${JSON.stringify({
+        runId: fixture.runId,
+        environment,
+        authenticatedSupervisor: {
+            productionLogCount: logs.data?.length ?? 0,
+            productionLogError: logs.error?.message ?? null,
+            productionMetersType: logs.data?.[0] ? typeof logs.data[0].meters : null,
+            machineCount: machines.data?.length ?? 0,
+            machineError: machines.error?.message ?? null,
+            shiftAssignmentCount: assignments.data?.length ?? 0,
+            shiftAssignmentError: assignments.error?.message ?? null,
+        },
+    }, null, 2)}\n`)
 } else if (command === 'snapshot') {
     const fixture = await readFixture()
     const [logs, settlement, attendance, payments, org] = await Promise.all([
@@ -603,5 +674,5 @@ if (command === 'setup') {
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, projectRef, environment, ...result }, null, 2)}\n`)
     if (!result.reconciled) process.exitCode = 1
 } else {
-    throw new Error('Usage: formal-b10-boundary-fixture.mjs setup|probe|seed-valid-code|seed-expired-code|age-correction-log|snapshot|cleanup [--production]')
+    throw new Error('Usage: formal-b10-boundary-fixture.mjs setup|probe|rotate-supervisor|seed-valid-code|seed-expired-code|age-correction-log|reset-code-rate-limit|auth-snapshot|snapshot|cleanup [--production]')
 }
