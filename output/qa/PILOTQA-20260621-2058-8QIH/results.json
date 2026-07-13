@@ -827,19 +827,21 @@
       "severity": "",
       "updatedAt": "2026-07-10T17:01:53.763Z"
     },
-    {
-      "id": "MASTER-012",
+  {
+    "id": "MASTER-012",
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Assign order/run to loom, then replace it.",
       "expected": "New logs use the new context; historical logs retain old context.",
-      "status": "blocked",
-      "actual": "Two active QA production contexts were prepared and the first was linked to the loom, but Save shift logs failed twice with UPDATE requires a WHERE clause and created zero baseline logs. Historical-versus-new context attribution after replacement could not be exercised.",
-      "evidence": [
-        "evidence/MASTER-012-replace-context-blocker-production.json"
-      ],
+    "status": "pass",
+    "actual": "In isolated production tenant FORMAL-B7-1783944614148-779128, the supervisor saved a 40m day log against Context A with Worker A and a ₹2.50/m operator snapshot. The owner then linked Context B and assigned Worker B to night shift at ₹3.25/m; the supervisor saved a 55m night log. Database reconciliation proved the original day log retained Context A, Worker A, rate ₹2.50, and its assignment ID, while the new night log used Context B, Worker B, rate ₹3.25, and the new assignment ID. Two matching order-reserved stock grains persisted, and refresh retained the original day log.",
+    "evidence": [
+      "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.json",
+      "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.png",
+      "scripts/qa/formal-batch7-production-prerequisites.mjs"
+    ],
       "notes": "",
       "severity": "",
-      "updatedAt": "2026-07-10T17:01:53.763Z"
+    "updatedAt": "2026-07-13T12:17:28.000Z"
     },
     {
       "id": "MASTER-013",
@@ -1745,19 +1747,22 @@
       "severity": "Critical",
       "updatedAt": "2026-06-23T16:11:30.083Z"
     },
-    {
-      "id": "PROD-002",
+  {
+    "id": "PROD-002",
       "section": "16. Supervisor Production Logging",
       "scenario": "Day-only factory with no night worker.",
       "expected": "Must match the pilot’s operating decision; if valid production is blocked, pilot is No-Go unless night assignment is genuinely mandatory.",
-      "status": "blocked",
-      "actual": "Supervisor runtime has 0/0 assigned looms; activation/submission defects prevent proving day-only production without a night worker.",
-      "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
-      ],
+    "status": "pass",
+    "actual": "Production first reproduced the database mismatch: a day-only active loom was rejected because the legacy activation function required both shifts. Migration 20260713124500 changed activation to require an active order plus at least one active day/night worker, while selected-shift validation still requires that shift's worker. After deployment, an isolated loom with exactly one day assignment and zero night assignments activated and the supervisor saved 40m. Database proof showed one day log, Worker A and ₹2.50/m snapshots, one 40m order-reserved stock lot, ₹100 gross payroll basis, and zero console errors; refresh preserved the log.",
+    "evidence": [
+      "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.json",
+      "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.png",
+      "supabase/migrations/20260713124500_allow_single_shift_machine_activation.sql",
+      "__tests__/prod-002-single-shift-activation.test.ts"
+    ],
       "notes": "",
       "severity": "High",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+    "updatedAt": "2026-07-13T12:17:28.000Z"
     },
     {
       "id": "PROD-003",
@@ -1773,19 +1778,21 @@
       "severity": "",
       "updatedAt": "2026-06-23T16:11:30.083Z"
     },
-    {
-      "id": "PROD-004",
+  {
+    "id": "PROD-004",
       "section": "16. Supervisor Production Logging",
       "scenario": "Substitute worker.",
       "expected": "Supervisor can intentionally select/log the actual worker or receives a workable owner-remapping flow.",
-      "status": "blocked",
-      "actual": "Activation did not persist and the supervisor had no loom row on which to exercise substitute-worker behavior.",
-      "evidence": [
-        "evidence/batch-06-supervisor-production-activation-blocker.json"
-      ],
+    "status": "pass",
+    "actual": "The isolated owner used the explicit loom operator editor to assign Worker B to night shift at ₹3.25/m after linking Context B. The supervisor night form then showed Worker B and Context B before submission and saved 55m. Database reconciliation proved the log, operator assignment, worker ID, ₹3.25 rate snapshot, Context B stock grain, and payroll basis all used Worker B; the exercised owner and supervisor browser flows produced zero console warnings/errors.",
+    "evidence": [
+      "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.json",
+      "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.png",
+      "scripts/qa/formal-batch7-production-prerequisites.mjs"
+    ],
       "notes": "",
       "severity": "Medium",
-      "updatedAt": "2026-07-10T20:00:00.000Z"
+    "updatedAt": "2026-07-13T12:17:28.000Z"
     },
     {
       "id": "PROD-005",

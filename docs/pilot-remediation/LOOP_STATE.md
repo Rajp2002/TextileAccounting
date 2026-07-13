@@ -18,14 +18,14 @@ Current classification after Batch 1 security foundation closeout, Batch 2 docum
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 266 | Formal ledger records pass; legacy pass/Actual semantic reconciliation remains an explicit audit item. |
+| `pass` | 269 | Formal ledger records pass; legacy pass/Actual semantic reconciliation remains an explicit audit item. |
 | `fail` | 3 | `WA-008`, `OFF-009`, and `OFF-010` remain open. |
-| `blocked` | 107 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
+| `blocked` | 104 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 0 | The active formal ledger has no rows in this state. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Current formal totals are 377 rows. The verdict remains No-Go because three failures and 107 blockers remain, and `NEEDS-AUDIT-002` requires semantic reconciliation of legacy pass rows whose Actual text conflicts with their expectation.
+Current formal totals are 377 rows. The verdict remains No-Go because three failures and 104 blockers remain, and `NEEDS-AUDIT-002` requires semantic reconciliation of legacy pass rows whose Actual text conflicts with their expectation.
 
 Formal blocked-row Batch 2 (2026-07-13) moved `SETUP-012`, `DASH-001`, `BILL-002`, `UX-004`, and `UX-011` from blocked to pass using isolated active Base/Premium tenants, a Premium supervisor, mobile browser proof, join-code boundary proof, exact service-role reconciliation, and complete fixture cleanup. The Premium Settings blank-content observation did not receive pass credit; `SEC-009` remains blocked under formal audit/debugging.
 
@@ -1974,3 +1974,14 @@ Date/time: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710
 - Public-route and auth-boundary smoke passed. Full tests, lint, TypeScript, production build, remote build, source-map upload, and diff checks passed.
 - Six legacy stored functions remain in `Needs formal audit/debugging`; no pass credit was claimed for them.
 - Current formal matrix remains total 377, pass 266, fail 3, blocked 107, not applicable 1. Next action is user live testing, followed by the next blocked-row batch.
+
+## Formal blocked-row Batch 7 closeout
+
+Date/time: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
+
+- Passed: `PROD-002`, `PROD-004`, and `MASTER-012`.
+- Fix/deployment: production migration `20260713124500` replaced the two-shift activation requirement with active order plus at least one active shift worker; dry-run and apply each contained only this migration, and production now aligns through that head.
+- Runtime: one day-only loom submitted 40m with Worker A/Context A/₹2.50. The owner then linked Context B and assigned Worker B to night at ₹3.25; the supervisor submitted 55m. Refresh, two independent logs, two matching reserved stock grains, and ₹278.75 payroll basis all reconciled.
+- Safety: exact prefixed production tenant, rows, credentials, and browser tabs were removed or closed; organization/profile/machine/log/auth counts returned to zero.
+- Audit/debugging: `NEEDS-AUDIT-004` captures the historical-date reset. `MASTER-011` and other dated-shift/correction rows remain blocked until that state overwrite is repaired and re-proven.
+- Current formal matrix: total 377, pass 269, fail 3, blocked 104, not applicable 1. Next action is a focused historical-date/draft-state repair batch; readiness remains No-Go.

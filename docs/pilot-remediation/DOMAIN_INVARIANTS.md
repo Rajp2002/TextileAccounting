@@ -314,3 +314,11 @@ Batch 7 proof note: `TECH-013` is satisfied at source level by `test: vitest run
 ## Production checkpoint invariant note — 2026-07-13
 
 The production migration head is aligned through `20260711180000`, and the checkpoint release is live at `https://textile-accounting.vercel.app`. Deployment alignment alone is not runtime proof for a formal row. In particular, production schema lint still detects six legacy stored functions whose compiled bodies reference incompatible or removed schema contracts. Until isolated audit/debugging proves repair or safe retirement, no workflow depending on those functions may receive pass credit solely from this deployment.
+
+## Single-shift activation and context history — Batch 7
+
+A loom is operationally active when it has an active production target and at least one active assigned shift worker. A factory does not need both day and night assignments merely to run one valid shift; production for an unassigned selected shift remains blocked. Migration `20260713124500` enforces this rule at the database boundary, matching the application setup and selected-shift policy.
+
+Replacing a loom's current production context or assigning another shift operator must affect only new logs. Existing logs retain their order/context ID, worker/operator ID, assignment ID, and rate snapshots. Batch 7 proved this with a 40m day Context A/Worker A/₹2.50 grain and a later 55m night Context B/Worker B/₹3.25 grain, including matching reserved stock and ₹278.75 aggregate payroll basis.
+
+A chosen production date is part of the mutation identity and must not be overwritten by mode, meter, draft-restore, or loading-state changes. `NEEDS-AUDIT-004` records a current violation of this invariant; dated-flow rows remain blocked until repaired.

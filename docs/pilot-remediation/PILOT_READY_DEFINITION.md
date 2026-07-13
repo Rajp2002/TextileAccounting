@@ -144,4 +144,6 @@ Final sign-off must include:
 - Production database migration head: `20260711180000`, aligned with the repository at deployment time.
 - Production web release: Vercel deployment `dpl_4pP8ovMPoS1tCwAcp9RZQL5gNfnY`, Ready at `https://textile-accounting.vercel.app` with successful Sentry source-map upload.
 - Production webhook: `whatsapp-webhook` active at version 16.
-- This checkpoint enables live testing but does not satisfy final Pilot Ready criteria: 3 failures, 107 blocked rows, six legacy schema-lint findings, restore proof, and rollback/forward-fix proof remain open.
+- This checkpoint and Batch 7 production proof enable live testing but do not satisfy final Pilot Ready criteria: 3 failures, 104 blocked rows, six legacy schema-lint findings, restore proof, and rollback/forward-fix proof remain open.
+
+Batch 7 additionally proves that day-only operation is a supported production rule, owner-controlled operator remapping preserves payroll attribution, and production context replacement preserves historical snapshots. These are verified invariants, not relaxations of the remaining pilot gates. Dated production remains excluded from pass claims under `NEEDS-AUDIT-004` until its selected-date state is stable.

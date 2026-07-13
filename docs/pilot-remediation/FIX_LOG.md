@@ -2270,3 +2270,18 @@ Date: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
 - Live smoke: `/`, `/login`, `/privacy`, `/terms`, and `/manifest.webmanifest` returned HTTP 200. Unauthenticated `/owner/today` and `/supervisor/dashboard` returned HTTP 307 to `/login`.
 - Formal audit/debugging follow-up: production schema lint still reports six legacy stored-function errors in `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert`. These were not represented as deployment passes and require isolated formal audit/debugging before remediation.
 - Matrix state is unchanged by deployment: total 377, pass 266, fail 3, blocked 107, not applicable 1. Readiness remains No-Go while live testing proceeds.
+
+## Formal blocked-row Batch 7 closeout (2026-07-13)
+
+- Status changes: `PROD-002`, `PROD-004`, and `MASTER-012` moved from `blocked` to `pass` after isolated production browser and database proof.
+- Reproduced defect: a loom with one active day worker and no night worker was rejected by the legacy database activation function, contradicting the selected-shift application policy.
+- Fix: migration `20260713124500_allow_single_shift_machine_activation.sql` changes loom readiness to require an active order plus at least one active day/night meter-worker assignment. The selected-shift production boundary still requires the chosen shift's worker. The migration only replaces functions; it rewrites no business rows.
+- Migration evidence: production dry-run listed exactly `20260713124500`; apply succeeded; local and remote migration histories align through `20260713124500`. The migration was applied before this batch's source commit, so the repository was intentionally mid-flight only during runtime proof.
+- `PROD-002`: isolated production first had exactly one day assignment and zero night assignments. The loom activated, the supervisor submitted 40m, and refresh restored the log. Readback proved Worker A, ₹2.50/m snapshots, one 40m order-reserved stock grain, and ₹100 payroll basis.
+- `PROD-004`: the owner linked Context B and used the explicit operator editor to assign Worker B to night shift at ₹3.25/m. The supervisor saw Worker B and Context B and saved 55m with matching assignment, worker, rate, stock, and payroll attribution.
+- `MASTER-012`: the day log retained Context A, Worker A, ₹2.50, and its assignment ID after the loom moved to Context B. The new night log used Context B, Worker B, ₹3.25, and the new assignment ID. Total production was 95m and snapshot-derived gross was ₹278.75.
+- Browser proof: owner/supervisor production flows produced zero console warnings/errors. Evidence: `output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.json` and `.png`.
+- Regression proof: `npx vitest run __tests__/prod-002-single-shift-activation.test.ts __tests__/batch24f-production-worker-assignment-policy.test.ts __tests__/master-009-worker-deactivation-readiness.test.ts` passed 3 files / 12 tests; targeted ESLint, TypeScript, script syntax, JSON validation, and `git diff --check` passed.
+- Safety: production fixture `FORMAL-B7-1783944614148-779128` used only prefixed QA records. Cleanup returned organizations, profiles, machines, production logs, and both auth users to zero; the private credential file was removed and browser tabs were closed.
+- New finding: `NEEDS-AUDIT-004` records that a selected historical production date reverted to today when entry state changed. Dated assignment/correction/time rows remain blocked pending a focused repair; no pass credit was claimed for them.
+- Formal matrix: total 377, pass 269, fail 3, blocked 104, not applicable 1. Readiness remains No-Go.

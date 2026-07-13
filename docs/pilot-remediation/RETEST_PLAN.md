@@ -558,3 +558,12 @@ Acceptance:
 - Start live validation with authenticated owner and supervisor smoke, then rerun the remaining shift-write/unknown-outcome prerequisites before production-history-dependent rows.
 - Do not mark the six schema-lint functions pass-ready. Audit `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert` independently and reconcile each to a formal row or retirement decision.
 - Preserve the current formal counts until new runtime evidence is reconciled: 266 pass, 3 fail, 107 blocked, and 1 not applicable.
+
+### Formal Batch 7 superseding production prerequisite proof — 2026-07-13
+
+- `PROD-002`, `PROD-004`, and `MASTER-012` are `PASS` from isolated production browser/database proof; do not rerun them unless activation, operator assignment, shift submission, generated stock, or payroll snapshot code changes.
+- Production migration head is `20260713124500`. The day-only activation contract now requires one active shift worker plus an active order; the selected shift still requires its own worker.
+- Preserve the Batch 7 two-grain regression: Context A/Worker A/day/40m/₹2.50 and Context B/Worker B/night/55m/₹3.25 must remain independent across refresh, stock generation, and payroll calculations.
+- Next focused repair: reproduce why selecting a historical production date is overwritten when mode/meter state changes. Inspect the dashboard effects and tenant/user/date/shift draft restoration before changing behavior.
+- After the repair, rerun `MASTER-011` with a dated Worker B substitution, persist the historical date and worker/rate/order snapshots, refresh, and reconcile payroll to the substituted worker. Then reassess `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` individually.
+- Current formal counts: 269 pass, 3 fail, 104 blocked, and 1 not applicable. Readiness remains No-Go.
