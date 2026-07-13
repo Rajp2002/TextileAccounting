@@ -161,6 +161,9 @@ describe('Batch 24F production worker assignment policy', () => {
         expect(bulkLogProductionBody.indexOf('current[logShift] = assignment.worker_id')).toBeLessThan(
             bulkLogProductionBody.indexOf('evaluateProductionWorkerAssignmentPolicy')
         )
+        expect(bulkLogProductionBody).toContain(".select('id, start_date')")
+        expect(bulkLogProductionBody).toContain("(orders ?? []).map((o) => [o.id, o.start_date])")
+        expect(bulkLogProductionBody).not.toContain("o.created_at.split('T')[0]")
     })
 
     it('does not add migration or RPC work for Batch 24F', () => {

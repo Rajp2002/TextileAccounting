@@ -1529,7 +1529,7 @@ export async function bulkLogProduction(entries: {
     if (orderIds.length > 0) {
         const { data: orders, error: ordersError } = await supabase
             .from('orders')
-            .select('id, created_at')
+            .select('id, start_date')
             .in('id', orderIds)
             .eq('org_id', orgId)
 
@@ -1539,7 +1539,7 @@ export async function bulkLogProduction(entries: {
         }
 
         const orderStartMap = new Map(
-            (orders ?? []).map((o) => [o.id, o.created_at.split('T')[0]])
+            (orders ?? []).map((o) => [o.id, o.start_date])
         )
 
         for (const log of logs) {
