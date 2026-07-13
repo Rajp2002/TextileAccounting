@@ -332,10 +332,11 @@
     "feature": "13. Quote Lifecycle",
     "scenario": "Start Party Order fast path.",
     "expected": "Accepted quote and order form one consistent transaction.",
-    "current_status": "blocked",
-    "current_outcome": "Deployed estimator has no Start Party Order fast-path UI; Save & Accept only creates an accepted quote.",
+    "current_status": "pass",
+    "current_outcome": "Production Start Party Order created one accepted quote, one active 100 m order, and one yarn requirement atomically; quote and order were backlinked in both directions and the UI routed to the created order.",
     "existing_evidence": [
-      "evidence/batch-04-estimator-quote-order-production.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor + public receipt",
@@ -405,10 +406,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Produce beyond target.",
     "expected": "Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent.",
-    "current_status": "blocked",
-    "current_outcome": "Shared shift-log submission defect prevents creation of authoritative production needed for beyond-target testing.",
+    "current_status": "pass",
+    "current_outcome": "QA rejected an over-target production write explicitly and preserved the existing 230.75 m production and stock totals without downstream mutation.",
     "existing_evidence": [
-      "evidence/batch-04-estimator-quote-order-production.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": "High",
     "user_role": "owner + supervisor + public receipt",
@@ -478,10 +480,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Complete with target met.",
     "expected": "Status changes, looms unlink, history and reserved stock remain correct.",
-    "current_status": "blocked",
-    "current_outcome": "Shared shift-log submission defect prevents reaching the target with authoritative production.",
+    "current_status": "pass",
+    "current_outcome": "Corrected production reached the 235.75 m target, completed the order, unlinked both looms, retained the order-linked stock lot, and kept payroll/source history intact.",
     "existing_evidence": [
-      "evidence/batch-04-estimator-quote-order-production.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -551,10 +554,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Cancel after some production.",
     "expected": "Produced stock/history retained; no new logs accepted; loom unlinks.",
-    "current_status": "blocked",
-    "current_outcome": "Shared shift-log submission defect prevents creating the prerequisite partial production history.",
+    "current_status": "pass",
+    "current_outcome": "Cancelling after 40 m retained the production log and order-reserved stock, unlinked only the affected loom, and rejected every later production attempt.",
     "existing_evidence": [
-      "evidence/batch-04-estimator-quote-order-production.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": "High",
     "user_role": "owner + supervisor + public receipt",
@@ -624,10 +628,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Attempt delete with production/dispatch/payment history.",
     "expected": "Safe restriction or documented archival behavior; no orphan records.",
-    "current_status": "blocked",
-    "current_outcome": "No QA order has production, dispatch, or payment history; the shared production defect prevents creating the protected-history fixture.",
+    "current_status": "pass",
+    "current_outcome": "The protected cancelled order rejected physical deletion and remained archived with its production log and source-linked stock; no orphaned record was created.",
     "existing_evidence": [
-      "evidence/batch-05-order-market-production-prerequisites.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -697,10 +702,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Order stock appears as reserved, not freely saleable market stock.",
     "expected": "Correct stock classification.",
-    "current_status": "blocked",
-    "current_outcome": "No order-backed stock exists because authoritative production cannot be created.",
+    "current_status": "pass",
+    "current_outcome": "Production-generated lots remained classified as order_reserved and source-linked to their orders across active, completed, and cancelled states.",
     "existing_evidence": [
-      "evidence/batch-05-order-market-production-prerequisites.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -770,10 +776,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Sell/dispatch order-linked stock.",
     "expected": "Party/order/source links remain available in dispatch and Commercials.",
-    "current_status": "blocked",
-    "current_outcome": "No order-linked stock exists to sell or dispatch.",
+    "current_status": "pass",
+    "current_outcome": "The completed-order stock sale retained the order link through the sale, two dispatches, receivable, receipts, discrepancy, and claim.",
     "existing_evidence": [
-      "evidence/batch-05-order-market-production-prerequisites.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -843,10 +850,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Partial dispatch against order.",
     "expected": "Remaining order sale/dispatch quantity remains actionable.",
-    "current_status": "blocked",
-    "current_outcome": "No order-linked sale exists for partial dispatch.",
+    "current_status": "pass",
+    "current_outcome": "A 120 m order-linked sale dispatched 70 m first with 50 m still actionable, then dispatched the remaining 50 m and reached zero pending meters.",
     "existing_evidence": [
-      "evidence/batch-05-order-market-production-prerequisites.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -916,10 +924,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Receipt shortage/excess.",
     "expected": "Dispatch and discrepancy update without rewriting original production.",
-    "current_status": "blocked",
-    "current_outcome": "No dispatch exists for receipt shortage/excess testing.",
+    "current_status": "pass",
+    "current_outcome": "A matched 70 m receipt created no discrepancy; a 45 m receipt against 50 m sent recorded the exact 5 m shortage, one discrepancy, and one claim without changing the 235.75 m production lot.",
     "existing_evidence": [
-      "evidence/batch-05-order-market-production-prerequisites.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -989,10 +998,11 @@
     "feature": "14. Order-Centric End-to-End Tests",
     "scenario": "Close money and payroll.",
     "expected": "Collection and worker settlement reconcile independently to the same production.",
-    "current_status": "blocked",
-    "current_outcome": "No production, receivable, or payroll settlement chain exists to reconcile.",
+    "current_status": "pass",
+    "current_outcome": "Commercial collection progressed from unpaid to partial to paid at exactly ₹7,200 while production-backed payroll independently settled the authoritative ₹589.375 gross.",
     "existing_evidence": [
-      "evidence/batch-05-order-market-production-prerequisites.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -2587,10 +2597,11 @@
     "feature": "17. Stock and Godown",
     "scenario": "Order lot while order active/completed/cancelled.",
     "expected": "Reserved/actionable/archive behavior matches policy.",
-    "current_status": "blocked",
-    "current_outcome": "Active order-reserved stock was visible, but completed/cancelled policy requires production lifecycle transitions blocked by the production defect.",
+    "current_status": "pass",
+    "current_outcome": "Order-reserved stock stayed source-linked and mathematically consistent while active, after completion and partial sale, and after cancellation with retained production history.",
     "existing_evidence": [
-      "evidence/batch-08-stock-sale-dispatch.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + public receipt",
@@ -6201,10 +6212,12 @@
     "feature": "30. Golden Journey A: Customer Order",
     "scenario": "Try correcting settled production and verify it is blocked.",
     "expected": "Complete the step and preserve all stated downstream invariants.",
-    "current_status": "blocked",
-    "current_outcome": "Settled-production correction cannot be tested without a production log and settlement.",
+    "current_status": "pass",
+    "current_outcome": "After the production-backed payroll was paid and the order completed, correction was rejected and production, stock, settlement, dispatch, receipt, and commercial history remained unchanged.",
     "existing_evidence": [
-      "logs/clock-and-deployment-evidence.json"
+      "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "output/qa/blocked-row-campaign/B11-production-runtime.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": "Critical",
     "user_role": "owner + supervisor + public receipt",

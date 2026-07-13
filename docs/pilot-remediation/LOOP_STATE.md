@@ -2001,3 +2001,9 @@ The active batch is B10: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022
 B10 is closed at 8/8 pass on exact production deployment `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6` / commit `fd1c367665455ca2bc66ca54d81a9cc259147284`. Migration `20260714005500_b10_enforce_attendance_date_lockdown.sql` is applied in QA and production, with production history version `20260713193455`. Runtime proof covers expired-window correction, invalid/expired/used/fresh code behavior, settled-payroll protection, past attendance with owner authorization, future-date denial, India month endpoints, year rollover, leap day, and corrected retry wording. Exact fixture cleanup reconciled organizations, profiles, logs, attendance, payments, and auth users to zero.
 
 Current counts are 295 pass, 3 fail, 78 blocked, and 1 not applicable. The active batch is B11. Use the canonical inventory/checkpoint to execute its 12 rows with fresh isolated fixtures and promote only exact runtime-proven outcomes; B10 pass credit must not be inherited.
+
+### Blocked-row campaign B11 complete; B12 active
+
+B11 is closed at 12/12 pass on exact production deployment `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV` / commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda5`. Production proved the exposed atomic Start Party Order UI plus reciprocal quote/order and yarn-requirement persistence. The isolated QA chain passed 34 lifecycle assertions spanning target enforcement, completion, cancellation, protected deletion, reserved stock, dispatch/receipt discrepancy, commercial settlement, payroll, and reload/session reconciliation. Cleanup removed and reconciled both disposable environments.
+
+Current counts are 307 pass, 3 fail, 66 blocked, and 1 not applicable. B12 is active with 10 stock concurrency, market closure, dispatch compliance, and commercial identity rows; B11 pass credit must not be inherited by those scenarios.

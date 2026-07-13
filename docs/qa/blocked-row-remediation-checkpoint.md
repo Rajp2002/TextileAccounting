@@ -1,15 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **295 PASS, 3 FAIL, 78 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **307 PASS, 3 FAIL, 66 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B10 — historical correction, access-code, and calendar boundaries (8/8 PASS)**.
-- Active batch: **B11 — quote and order lifecycle through protected history**.
-- Validation gate: local optimized build passed 85 files / 610 tests with 1 intentional skip; Vercel repeated 85 files / 611 tests and a successful Next.js build.
-- Production deployment: `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6`, Ready and aliased, exact commit `fd1c367665455ca2bc66ca54d81a9cc259147284`.
-- Migration: repository `20260714005500_b10_enforce_attendance_date_lockdown.sql`; production history `20260713193455`; QA and production policy catalogs plus runtime proof verified.
-- Cleanup: the prefixed QA and production tenants, profiles/auth users, production logs, attendance, and commercial payments reconciled to zero.
-- B10 evidence: `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json`.
+- Completed batch: **B11 — quote and order lifecycle through protected history (12/12 PASS)**.
+- Active batch: **B12 — stock concurrency, market closure, dispatch compliance, and commercial identity**.
+- Validation gate: local and Vercel gates passed 85 files / 611 tests with 1 intentional skip, TypeScript, lint, and a successful optimized Next.js build.
+- Production deployment: `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV`, Ready and aliased, exact commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda5`.
+- Migration: atomic Start Party Order `20260702131500` and all dependent order/dispatch boundaries verified in production.
+- Cleanup: the prefixed B11 QA and production tenants, profiles/auth users, and scoped quote/order/yarn/production/stock/dispatch/commercial/payroll rows were removed and reconciled.
+- B11 evidence: `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -29,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B10 closeout
+## B11 closeout
 
-B10 directly proved expired-window production correction, invalid/expired/valid/consumed owner-code behavior, paid-payroll rejection, future attendance blocking, protected past attendance persistence, exact India month-to-date collection boundaries, year-crossing payroll cycles, and leap-day behavior. The production policy repair removes the broad permissive attendance bypass, and the UI now exposes bounded accessible attendance-day navigation.
+B11 directly proved atomic quote/order/yarn creation in production and the full protected order lifecycle in QA: target enforcement, completion and cancellation archival behavior, reserved-stock lineage, partial dispatch, exact and shortage receipts, discrepancy and claim creation, independent receivable/payroll settlement, and paid-history correction rejection.
 
 ## Exact next action
 
-Start B11 with a fresh disposable quote/order fixture and execute quote conversion, target/over-target, cancellation/completion/deletion protection, stock-history, and Golden A protected-history scenarios before changing any of its twelve rows.
+Start B12 by auditing the market-run, stock-sale, dispatch-receipt, compliance-warning, concurrency, and party-identity paths; build one isolated QA fixture that proves all ten rows before any promotion.

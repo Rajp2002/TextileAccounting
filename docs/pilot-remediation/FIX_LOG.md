@@ -2325,3 +2325,16 @@ Date: 2026-07-14 IST. Production commit `fd1c367665455ca2bc66ca54d81a9cc25914728
 - Safety: the prefixed production tenant, both correction grains, attendance, payments, profiles, and auth users reconciled to zero; the private production credential file was removed.
 - Evidence: `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json`.
 - Formal matrix: 295 pass, 3 fail, 78 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B11 closeout — quote/order protected history
+
+Date: 2026-07-14 IST. Production commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda5`.
+
+- Status changes: `QUOTE-007`, `ORDER-005`, `ORDER-007`, `ORDER-009`, `ORDER-010`, `ORDER-011`, `ORDER-012`, `ORDER-013`, `ORDER-014`, `ORDER-015`, `STOCK-011`, and `GOLDEN-A-23` moved from `blocked` to `pass` after direct QA lifecycle and production Estimator proof.
+- Defect fixed: the atomic `start_party_order_from_estimator` boundary existed but Estimator exposed only quote saving. A primary Start Party Order action now creates the accepted quote, active order, and yarn requirement together and routes to the created order.
+- QA lifecycle: 34 assertions proved over-target rejection without mutation, target completion and loom unlinking, paid-payroll correction protection, cancellation with retained history, physical-delete restriction, order-reserved stock lineage, partial dispatches, exact/short receipts, discrepancy/claim creation, independent receivable settlement, and a second-session reconciliation.
+- Production proof: deployment `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV` is Ready and aliased. The UI created and opened a 100m B11 order; database readback proved exactly one accepted quote and active order, reciprocal links, and one yarn requirement linked to both.
+- Release gates: local and Vercel gates passed 85 files / 611 tests with 1 intentional skip, TypeScript, targeted ESLint, and the optimized Next.js build. Required order/dispatch migrations were verified deployed.
+- Safety: disposable QA and production tenants and their scoped quote/order/yarn/production/stock/dispatch/commercial/payroll records, profiles, auth users, and private credential file were removed and reconciled.
+- Evidence: `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json`.
+- Formal matrix: 307 pass, 3 fail, 66 blocked, 1 not applicable. Readiness remains No-Go.

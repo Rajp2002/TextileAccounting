@@ -1267,14 +1267,15 @@
       "section": "13. Quote Lifecycle",
       "scenario": "Start Party Order fast path.",
       "expected": "Accepted quote and order form one consistent transaction.",
-      "status": "blocked",
-      "actual": "Deployed estimator has no Start Party Order fast-path UI; Save & Accept only creates an accepted quote.",
+      "status": "pass",
+      "actual": "Production Start Party Order created one accepted quote, one active 100 m order, and one yarn requirement atomically; quote and order were backlinked in both directions and the UI routed to the created order.",
       "evidence": [
-        "evidence/batch-04-estimator-quote-order-production.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "Medium",
-      "updatedAt": "2026-07-10T19:34:19.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "QUOTE-008",
@@ -1386,14 +1387,15 @@
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Produce beyond target.",
       "expected": "Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent.",
-      "status": "blocked",
-      "actual": "Shared shift-log submission defect prevents creation of authoritative production needed for beyond-target testing.",
+      "status": "pass",
+      "actual": "QA rejected an over-target production write explicitly and preserved the existing 230.75 m production and stock totals without downstream mutation.",
       "evidence": [
-        "evidence/batch-04-estimator-quote-order-production.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "High",
-      "updatedAt": "2026-07-10T19:34:19.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-006",
@@ -1420,14 +1422,15 @@
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Complete with target met.",
       "expected": "Status changes, looms unlink, history and reserved stock remain correct.",
-      "status": "blocked",
-      "actual": "Shared shift-log submission defect prevents reaching the target with authoritative production.",
+      "status": "pass",
+      "actual": "Corrected production reached the 235.75 m target, completed the order, unlinked both looms, retained the order-linked stock lot, and kept payroll/source history intact.",
       "evidence": [
-        "evidence/batch-04-estimator-quote-order-production.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:34:19.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-008",
@@ -1453,98 +1456,105 @@
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Cancel after some production.",
       "expected": "Produced stock/history retained; no new logs accepted; loom unlinks.",
-      "status": "blocked",
-      "actual": "Shared shift-log submission defect prevents creating the prerequisite partial production history.",
+      "status": "pass",
+      "actual": "Cancelling after 40 m retained the production log and order-reserved stock, unlinked only the affected loom, and rejected every later production attempt.",
       "evidence": [
-        "evidence/batch-04-estimator-quote-order-production.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "High",
-      "updatedAt": "2026-07-10T19:34:19.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-010",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Attempt delete with production/dispatch/payment history.",
       "expected": "Safe restriction or documented archival behavior; no orphan records.",
-      "status": "blocked",
-      "actual": "No QA order has production, dispatch, or payment history; the shared production defect prevents creating the protected-history fixture.",
+      "status": "pass",
+      "actual": "The protected cancelled order rejected physical deletion and remained archived with its production log and source-linked stock; no orphaned record was created.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-011",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Order stock appears as reserved, not freely saleable market stock.",
       "expected": "Correct stock classification.",
-      "status": "blocked",
-      "actual": "No order-backed stock exists because authoritative production cannot be created.",
+      "status": "pass",
+      "actual": "Production-generated lots remained classified as order_reserved and source-linked to their orders across active, completed, and cancelled states.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-012",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Sell/dispatch order-linked stock.",
       "expected": "Party/order/source links remain available in dispatch and Commercials.",
-      "status": "blocked",
-      "actual": "No order-linked stock exists to sell or dispatch.",
+      "status": "pass",
+      "actual": "The completed-order stock sale retained the order link through the sale, two dispatches, receivable, receipts, discrepancy, and claim.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-013",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Partial dispatch against order.",
       "expected": "Remaining order sale/dispatch quantity remains actionable.",
-      "status": "blocked",
-      "actual": "No order-linked sale exists for partial dispatch.",
+      "status": "pass",
+      "actual": "A 120 m order-linked sale dispatched 70 m first with 50 m still actionable, then dispatched the remaining 50 m and reached zero pending meters.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-014",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Receipt shortage/excess.",
       "expected": "Dispatch and discrepancy update without rewriting original production.",
-      "status": "blocked",
-      "actual": "No dispatch exists for receipt shortage/excess testing.",
+      "status": "pass",
+      "actual": "A matched 70 m receipt created no discrepancy; a 45 m receipt against 50 m sent recorded the exact 5 m shortage, one discrepancy, and one claim without changing the 235.75 m production lot.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "ORDER-015",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Close money and payroll.",
       "expected": "Collection and worker settlement reconcile independently to the same production.",
-      "status": "blocked",
-      "actual": "No production, receivable, or payroll settlement chain exists to reconcile.",
+      "status": "pass",
+      "actual": "Commercial collection progressed from unpaid to partial to paid at exactly ₹7,200 while production-backed payroll independently settled the authoritative ₹589.375 gross.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "MARKET-001",
@@ -2327,14 +2337,15 @@
       "section": "17. Stock and Godown",
       "scenario": "Order lot while order active/completed/cancelled.",
       "expected": "Reserved/actionable/archive behavior matches policy.",
-      "status": "blocked",
-      "actual": "Active order-reserved stock was visible, but completed/cancelled policy requires production lifecycle transitions blocked by the production defect.",
+      "status": "pass",
+      "actual": "Order-reserved stock stayed source-linked and mathematically consistent while active, after completion and partial sale, and after cancellation with retained production history.",
       "evidence": [
-        "evidence/batch-08-stock-sale-dispatch.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T20:45:00.000Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "STOCK-012",
@@ -5191,14 +5202,16 @@
       "section": "30. Golden Journey A: Customer Order",
       "scenario": "Try correcting settled production and verify it is blocked.",
       "expected": "Complete the step and preserve all stated downstream invariants.",
-      "status": "blocked",
-      "actual": "Settled-production correction cannot be tested without a production log and settlement.",
+      "status": "pass",
+      "actual": "After the production-backed payroll was paid and the order completed, correction was rejected and production, stock, settlement, dispatch, receipt, and commercial history remained unchanged.",
       "evidence": [
-        "logs/clock-and-deployment-evidence.json"
+        "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+        "output/qa/blocked-row-campaign/B11-production-runtime.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B11 direct QA lifecycle and production Start Party Order proof; disposable QA and production tenants and credentials were cleaned and reconciled.",
       "severity": "Critical",
-      "updatedAt": "2026-06-22T03:14:03.569Z"
+      "updatedAt": "2026-07-13T20:54:51.461Z"
     },
     {
       "id": "GOLDEN-A-24",

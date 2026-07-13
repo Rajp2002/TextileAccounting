@@ -159,6 +159,7 @@ async function cleanupFixture(fixture, removeSecret = true) {
         'fabric_stock_movements',
         'fabric_stock_inward_drafts',
         'fabric_stock_lots',
+        'order_yarn_requirements',
         'production_logs',
         'payroll_settlements',
         'attendance',
@@ -170,6 +171,8 @@ async function cleanupFixture(fixture, removeSecret = true) {
         'fixed_workers',
         'workers',
         'orders',
+        'estimator_quotes',
+        'qualities',
         'org_subscriptions',
         'audit_log',
     ]
@@ -181,6 +184,8 @@ async function cleanupFixture(fixture, removeSecret = true) {
             errors.push(`${table}: ${String(error?.message ?? error)}`)
         }
     }
+    const factoryProfile = await admin.from('factory_cost_profile').delete().eq('factory_id', fixture.orgId)
+    if (factoryProfile.error) errors.push(`factory_cost_profile: ${factoryProfile.error.message}`)
 
     const userIds = [fixture.ownerUserId, fixture.supervisorUserId, ...(fixture.retiredSupervisorUserIds ?? [])].filter(Boolean)
     for (const [table, column, values] of [
@@ -644,6 +649,43 @@ if (command === 'setup') {
             shiftAssignmentError: assignments.error?.message ?? null,
         },
     }, null, 2)}\n`)
+} else if (command === 'b11-snapshot') {
+    const fixture = await readFixture()
+    const [orders, quotes, requirements] = await Promise.all([
+        admin.from('orders')
+            .select('id, quote_id, party_name, quality_label, total_target_meters, status')
+            .eq('org_id', fixture.orgId)
+            .eq('party_name', 'B11 Production Buyer'),
+        admin.from('estimator_quotes')
+            .select('id, order_id, party_name, quality_label, meters, status')
+            .eq('org_id', fixture.orgId)
+            .eq('party_name', 'B11 Production Buyer'),
+        admin.from('order_yarn_requirements')
+            .select('order_id, quote_id, warp_required_kg, weft_required_kg, total_required_kg')
+            .eq('org_id', fixture.orgId),
+    ])
+    const firstError = [orders, quotes, requirements].find((result) => result.error)?.error
+    if (firstError) throw firstError
+    const order = orders.data?.[0] ?? null
+    const quote = quotes.data?.[0] ?? null
+    const requirement = requirements.data?.find((row) => row.order_id === order?.id) ?? null
+    const assertions = {
+        exactly_one_order: orders.data?.length === 1,
+        exactly_one_accepted_quote: quotes.data?.length === 1 && quote?.status === 'accepted',
+        order_and_quote_backlinked: Boolean(order && quote && order.quote_id === quote.id && quote.order_id === order.id),
+        yarn_requirement_linked: Boolean(requirement && requirement.order_id === order?.id && requirement.quote_id === quote?.id),
+        order_active_for_100m: order?.status === 'active' && Number(order?.total_target_meters) === 100,
+    }
+    process.stdout.write(`${JSON.stringify({
+        runId: fixture.runId,
+        environment,
+        order: order && { ...order, id: safeId(order.id), quote_id: safeId(order.quote_id) },
+        quote: quote && { ...quote, id: safeId(quote.id), order_id: safeId(quote.order_id) },
+        requirement: requirement && { ...requirement, order_id: safeId(requirement.order_id), quote_id: safeId(requirement.quote_id) },
+        assertions,
+        pass: Object.values(assertions).every(Boolean),
+    }, null, 2)}\n`)
+    if (!Object.values(assertions).every(Boolean)) process.exitCode = 1
 } else if (command === 'snapshot') {
     const fixture = await readFixture()
     const [logs, settlement, attendance, payments, org] = await Promise.all([
@@ -674,5 +716,5 @@ if (command === 'setup') {
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, projectRef, environment, ...result }, null, 2)}\n`)
     if (!result.reconciled) process.exitCode = 1
 } else {
-    throw new Error('Usage: formal-b10-boundary-fixture.mjs setup|probe|rotate-supervisor|seed-valid-code|seed-expired-code|age-correction-log|reset-code-rate-limit|auth-snapshot|snapshot|cleanup [--production]')
+    throw new Error('Usage: formal-b10-boundary-fixture.mjs setup|probe|rotate-supervisor|seed-valid-code|seed-expired-code|age-correction-log|reset-code-rate-limit|auth-snapshot|b11-snapshot|snapshot|cleanup [--production]')
 }

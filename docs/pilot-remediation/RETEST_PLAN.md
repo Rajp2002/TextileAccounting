@@ -595,3 +595,15 @@ Acceptance:
 - Focused regression commands: `npx vitest run __tests__/b10-attendance-date-lockdown.test.ts __tests__/b10-india-calendar-boundaries.test.ts __tests__/b10-rate-limit-retry.test.ts __tests__/p1-commercial-payments.test.ts`; re-run the production fixture if correction, settlement, attendance RLS, access-code, or India date-boundary code changes.
 - Canonical evidence is `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json` on production deployment `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6`.
 - Canonical counts after B10: 295 pass, 3 fail, 78 blocked, and 1 not applicable. Begin B11; do not rerun B10 unless one of these boundaries changes.
+
+### B11 quote/order protected-history regression guard — 2026-07-14
+
+- Preserve atomic Start Party Order behavior: one accepted quote, one active order, reciprocal links, one yarn requirement, and navigation to the created order; any failure must leave no partial chain.
+- Preserve explicit over-target rejection with no production, stock, progress, or payroll mutation.
+- Preserve completion/cancellation loom unlinking while retaining production and order-reserved stock history; physical deletion must not orphan protected records.
+- Preserve order/party/source links across sale, multiple partial dispatches, receipts, discrepancies, claims, receivables, and payment history.
+- Preserve exact and shortage receipt arithmetic without rewriting production-backed stock, and preserve independent customer collection and worker payroll settlement.
+- Preserve paid/completed correction rejection and second-session reconciliation of order progress, stock, dispatches, receipts, discrepancy, and zero receivable balance.
+- Focused regression commands: `npx vitest run __tests__/batch23-start-party-order-atomicity.test.ts`; run `node scripts/qa/batch6-golden-a-runtime-proof.mjs` in an isolated QA tenant when quote/order, production, stock, dispatch, receipt, commercials, payroll, cancellation, or archive boundaries change.
+- Canonical evidence is `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json` on production deployment `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV`.
+- Canonical counts after B11: 307 pass, 3 fail, 66 blocked, and 1 not applicable. Begin B12; do not rerun B11 unless one of these boundaries changes.

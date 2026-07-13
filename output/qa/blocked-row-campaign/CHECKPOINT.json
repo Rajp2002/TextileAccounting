@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T20:23:16.798Z",
+  "updated_at": "2026-07-13T20:54:51.577Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 295,
-    "blocked": 78,
+    "pass": 307,
+    "blocked": 66,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -22,10 +22,11 @@
   "completed_batches": [
     "B08",
     "B09",
-    "B10"
+    "B10",
+    "B11"
   ],
-  "active_batch": "B11",
-  "active_batch_state": "B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued",
+  "active_batch": "B12",
+  "active_batch_state": "B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued",
   "planned_batches": [
     {
       "id": "B09",
@@ -255,16 +256,7 @@
     "PAY-022",
     "COMM-013",
     "TIME-003",
-    "TIME-004"
-  ],
-  "rows_moved_to_fail": [],
-  "rows_remaining_blocked": [
-    "TECH-011",
-    "TECH-012",
-    "AUTH-005",
-    "AUTH-014",
-    "AUTH-018",
-    "MASTER-006",
+    "TIME-004",
     "QUOTE-007",
     "ORDER-005",
     "ORDER-007",
@@ -275,12 +267,22 @@
     "ORDER-013",
     "ORDER-014",
     "ORDER-015",
+    "STOCK-011",
+    "GOLDEN-A-23"
+  ],
+  "rows_moved_to_fail": [],
+  "rows_remaining_blocked": [
+    "TECH-011",
+    "TECH-012",
+    "AUTH-005",
+    "AUTH-014",
+    "AUTH-018",
+    "MASTER-006",
     "MARKET-009",
     "MARKET-010",
     "MARKET-013",
     "STOCK-005",
     "STOCK-009",
-    "STOCK-011",
     "DISP-017",
     "DISP-018",
     "COMM-015",
@@ -332,7 +334,6 @@
     "GOLDEN-A-03",
     "GOLDEN-A-21",
     "GOLDEN-A-22",
-    "GOLDEN-A-23",
     "GOLDEN-B-12",
     "GOLDEN-B-17",
     "GOLDEN-B-18",
@@ -345,7 +346,9 @@
     "The loom details sheet lacked the required accessible title.",
     "Broad permissive attendance policies bypassed date boundaries; production now retains only the authoritative supervisor-today and owner-past/today policies plus tenant lockdown checks.",
     "Commercial month-to-date bounds are derived from one India-time instant, including month/year and leap-day boundaries.",
-    "Rate-limit retry messages now convert the absolute reset timestamp to remaining seconds, and attendance exposes explicit bounded day navigation."
+    "Rate-limit retry messages now convert the absolute reset timestamp to remaining seconds, and attendance exposes explicit bounded day navigation.",
+    "The atomic Start Party Order server boundary existed but was not exposed in Estimator; the primary action now creates the accepted quote, active order, and yarn requirement together and routes to that order.",
+    "The order lifecycle harness now proves target enforcement, completion/cancellation archival behavior, reserved stock lineage, dispatch receipts and discrepancy, independent commercial settlement, and paid-payroll correction protection."
   ],
   "commits": [
     {
@@ -359,6 +362,10 @@
     {
       "sha": "fd1c367665455ca2bc66ca54d81a9cc259147284",
       "subject": "fix(qa): complete B10 protected boundary proof"
+    },
+    {
+      "sha": "dc76b17f38eb111ef3dad0a5a9f809b17168cda5",
+      "subject": "fix(qa): expose atomic B11 party order path"
     }
   ],
   "production_deployments": [
@@ -380,6 +387,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV",
+      "commit": "dc76b17f38eb111ef3dad0a5a9f809b17168cda5",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -393,6 +407,11 @@
       "file": "20260714005500_b10_enforce_attendance_date_lockdown.sql",
       "production_history_version": "20260713193455",
       "alignment": "verified by policy catalog and runtime proof"
+    },
+    {
+      "environment": "production",
+      "file": "20260702131500_batch_23_start_party_order_transaction_boundary.sql",
+      "alignment": "verified deployed and exercised by production UI plus persisted linkage proof"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -405,6 +424,11 @@
       "batch": "B10",
       "type": "prefixed disposable QA and production tenants with owner and supervisor proof users",
       "state": "removed; organizations/profiles/production logs/attendance/commercial payments/auth all reconciled to zero"
+    },
+    {
+      "batch": "B11",
+      "type": "prefixed disposable QA lifecycle tenant and production Estimator tenant",
+      "state": "removed; organizations/profiles/auth and scoped quote/order/yarn/production/stock/dispatch/commercial/payroll rows reconciled"
     }
   ],
   "outstanding_external_dependencies": [
@@ -457,6 +481,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B10 production deployment dpl_5rKpnNLwszpfgfzkn8VBh291wyS6 Ready at exact commit fd1c367; remote gate 85 files / 611 tests; production correction/access-code/settlement, attendance, India-month, calendar, policy-catalog, persistence, and zero-fixture cleanup all passed.",
-  "exact_next_action": "Start B11 with a fresh disposable quote/order fixture and execute quote conversion, target/over-target, cancellation/completion/deletion protection, stock-history, and Golden A protected-history scenarios before changing any of its twelve rows."
+  "last_successful_validation": "B11 production deployment dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV Ready at exact commit dc76b17; local and remote gates passed 85 files / 611 tests with 1 intentional skip; production Estimator created and opened a backlinked quote/order/yarn chain; QA lifecycle passed 34 assertions; cleanup reconciled to zero.",
+  "exact_next_action": "Start B12 by auditing the market-run, stock-sale, dispatch-receipt, compliance-warning, concurrency, and party-identity paths; build one isolated QA fixture that proves all ten rows before any promotion."
 }

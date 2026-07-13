@@ -342,3 +342,9 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - India month/year boundaries must be derived from one authoritative instant and expressed as a half-open interval. The first and last in-month instants are included; adjacent-month instants are excluded without host-timezone drift.
 - Year rollover and leap day are valid calendar/payroll boundaries and must not be approximated with fixed day counts.
 - A rate-limit reset timestamp is absolute epoch time; user-facing retry text must display remaining duration computed against the current clock, never the epoch value itself.
+- Start Party Order is one atomic boundary: the accepted quote, active order, reciprocal links, and yarn requirement either all persist or none do.
+- Over-target production must reject before mutating production logs, order progress, generated stock, or payroll basis.
+- Completion and cancellation unlink looms without erasing production or source-linked order-reserved stock; protected history must not be physically deleted.
+- Order-linked sales and partial dispatches retain party, order, quote, stock-lot, receivable, receipt, discrepancy, and claim lineage.
+- Receipt shortage/excess updates dispatch reconciliation and discrepancy state without rewriting original production or generated stock history.
+- Customer collections and worker payroll settle independently against the same immutable production history; a paid payroll grain remains correction-protected.

@@ -563,3 +563,9 @@ The backlog now has 86 blocked rows. B10 is next with eight independent historic
 Remove all eight B10 IDs from the blocked backlog: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022`, `COMM-013`, `TIME-003`, and `TIME-004`. Exact deployed proof covers correction-window enforcement, single-use owner authorization and negative cases, settled-payroll immutability, past/future attendance policy boundaries, India month inclusion/exclusion, year rollover, and leap day. Migration `20260714005500_b10_enforce_attendance_date_lockdown.sql` is applied in QA and production.
 
 The backlog now has 78 blocked rows. B11 is active with 12 rows from the canonical campaign inventory. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B10 does not reclassify them or relax the No-Go gate.
+
+### B11 quote/order protected-history cluster resolved
+
+Remove all twelve B11 IDs from the blocked backlog: `QUOTE-007`, `ORDER-005`, `ORDER-007`, `ORDER-009`, `ORDER-010`, `ORDER-011`, `ORDER-012`, `ORDER-013`, `ORDER-014`, `ORDER-015`, `STOCK-011`, and `GOLDEN-A-23`. Exact proof covers atomic quote/order/yarn creation, over-target immutability, completion/cancellation/deletion boundaries, reserved-stock lineage, partial dispatch, shortage discrepancy/claim creation, receivable settlement, payroll settlement, and paid-history correction rejection.
+
+The backlog now has 66 blocked rows. B12 is active with 10 rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B11 does not reclassify them or relax the No-Go gate.

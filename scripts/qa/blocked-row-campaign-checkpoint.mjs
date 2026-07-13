@@ -194,6 +194,8 @@ const b09Rows = batches.find((batch) => batch.id === 'B09').rows
 const b09Closed = b09Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
 const b10Rows = batches.find((batch) => batch.id === 'B10').rows
 const b10Closed = b10Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
+const b11Rows = batches.find((batch) => batch.id === 'B11').rows
+const b11Closed = b11Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
 const checkpoint = {
     campaign: 'blocked-row-remediation',
     updated_at: new Date().toISOString(),
@@ -203,11 +205,11 @@ const checkpoint = {
     canonical_ledger: path.relative(root, ledgerPath),
     canonical_matrix: 'output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md',
     inventory: path.relative(root, inventoryPath),
-    completed_batches: b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
-    active_batch: b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
-    active_batch_state: b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
+    completed_batches: b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
+    active_batch: b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
+    active_batch_state: b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
     planned_batches: batches.map(({ id, name, rows, rootCause, validation, exit }) => ({ id, name, rows, rootCause, validation, exit })),
-    rows_moved_to_pass: b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
+    rows_moved_to_pass: b11Closed ? [...b09Rows, ...b10Rows, ...b11Rows] : b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
     rows_moved_to_fail: [],
     rows_remaining_blocked: blocked.map((item) => item.id),
     rows_marked_not_applicable: [],
@@ -220,6 +222,10 @@ const checkpoint = {
             'Commercial month-to-date bounds are derived from one India-time instant, including month/year and leap-day boundaries.',
             'Rate-limit retry messages now convert the absolute reset timestamp to remaining seconds, and attendance exposes explicit bounded day navigation.',
         ] : []),
+        ...(b11Closed ? [
+            'The atomic Start Party Order server boundary existed but was not exposed in Estimator; the primary action now creates the accepted quote, active order, and yarn requirement together and routes to that order.',
+            'The order lifecycle harness now proves target enforcement, completion/cancellation archival behavior, reserved stock lineage, dispatch receipts and discrepancy, independent commercial settlement, and paid-payroll correction protection.',
+        ] : []),
     ] : [],
     commits: b09Closed ? [
         { sha: '812512c599b3659cc399495a674e8b3e50066e60', subject: 'fix(qa): close B09 production resilience gaps' },
@@ -227,27 +233,37 @@ const checkpoint = {
             { sha: '48d30895fde3635647b4c6c7112dd5ecc7241965', subject: 'fix(qa): enforce B10 date boundaries' },
             { sha: 'fd1c367665455ca2bc66ca54d81a9cc259147284', subject: 'fix(qa): complete B10 protected boundary proof' },
         ] : []),
+        ...(b11Closed ? [
+            { sha: 'dc76b17f38eb111ef3dad0a5a9f809b17168cda5', subject: 'fix(qa): expose atomic B11 party order path' },
+        ] : []),
     ] : [],
     production_deployments: [
         { id: 'dpl_43n5khAYXGcCtp64SBowPZirjaUG', commit: '649380d5dfbcbb89d8c10cad7763448ac42c6f2c', state: 'READY' },
         ...(b09Closed ? [{ id: 'dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB', commit: '812512c599b3659cc399495a674e8b3e50066e60', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
         ...(b10Closed ? [{ id: 'dpl_5rKpnNLwszpfgfzkn8VBh291wyS6', commit: 'fd1c367665455ca2bc66ca54d81a9cc259147284', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
+        ...(b11Closed ? [{ id: 'dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV', commit: 'dc76b17f38eb111ef3dad0a5a9f809b17168cda5', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
     ],
     migrations: [
         { environment: 'production', head: '20260713124500', alignment: 'verified' },
         ...(b10Closed ? [{ environment: 'qa and production', file: '20260714005500_b10_enforce_attendance_date_lockdown.sql', production_history_version: '20260713193455', alignment: 'verified by policy catalog and runtime proof' }] : []),
+        ...(b11Closed ? [{ environment: 'production', file: '20260702131500_batch_23_start_party_order_transaction_boundary.sql', alignment: 'verified deployed and exercised by production UI plus persisted linkage proof' }] : []),
     ],
     created_test_accounts_and_tenants: [
         { batch: 'B09', type: 'prefixed disposable production tenant with three auth users', state: b09Closed ? 'removed; organizations/profiles/machines/logs/auth all reconciled to zero' : 'active until exact production proof and cleanup' },
         ...(b10Closed ? [{ batch: 'B10', type: 'prefixed disposable QA and production tenants with owner and supervisor proof users', state: 'removed; organizations/profiles/production logs/attendance/commercial payments/auth all reconciled to zero' }] : []),
+        ...(b11Closed ? [{ batch: 'B11', type: 'prefixed disposable QA lifecycle tenant and production Estimator tenant', state: 'removed; organizations/profiles/auth and scoped quote/order/yarn/production/stock/dispatch/commercial/payroll rows reconciled' }] : []),
     ],
     outstanding_external_dependencies: batches.filter((batch) => ['B16', 'B17', 'B18', 'B19'].includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause })),
-    last_successful_validation: b10Closed
+    last_successful_validation: b11Closed
+        ? 'B11 production deployment dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV Ready at exact commit dc76b17; local and remote gates passed 85 files / 611 tests with 1 intentional skip; production Estimator created and opened a backlinked quote/order/yarn chain; QA lifecycle passed 34 assertions; cleanup reconciled to zero.'
+        : b10Closed
         ? 'B10 production deployment dpl_5rKpnNLwszpfgfzkn8VBh291wyS6 Ready at exact commit fd1c367; remote gate 85 files / 611 tests; production correction/access-code/settlement, attendance, India-month, calendar, policy-catalog, persistence, and zero-fixture cleanup all passed.'
         : b09Closed
         ? 'B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.'
         : 'B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.',
-    exact_next_action: b10Closed
+    exact_next_action: b11Closed
+        ? 'Start B12 by auditing the market-run, stock-sale, dispatch-receipt, compliance-warning, concurrency, and party-identity paths; build one isolated QA fixture that proves all ten rows before any promotion.'
+        : b10Closed
         ? 'Start B11 with a fresh disposable quote/order fixture and execute quote conversion, target/over-target, cancellation/completion/deletion protection, stock-history, and Golden A protected-history scenarios before changing any of its twelve rows.'
         : b09Closed
         ? 'Start B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows.'
@@ -255,7 +271,7 @@ const checkpoint = {
 }
 
 const table = batches.map((batch) => `| ${batch.id} | ${batch.name} | ${batch.rows.length} | ${batch.rows.map((id) => `\`${id}\``).join(', ')} |`).join('\n')
-const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Completed batch: **B10 — historical correction, access-code, and calendar boundaries (8/8 PASS)**.\n- Active batch: **B11 — quote and order lifecycle through protected history**.\n- Validation gate: local optimized build passed 85 files / 610 tests with 1 intentional skip; Vercel repeated 85 files / 611 tests and a successful Next.js build.\n- Production deployment: \`dpl_5rKpnNLwszpfgfzkn8VBh291wyS6\`, Ready and aliased, exact commit \`fd1c367665455ca2bc66ca54d81a9cc259147284\`.\n- Migration: repository \`20260714005500_b10_enforce_attendance_date_lockdown.sql\`; production history \`20260713193455\`; QA and production policy catalogs plus runtime proof verified.\n- Cleanup: the prefixed QA and production tenants, profiles/auth users, production logs, attendance, and commercial payments reconciled to zero.\n- B10 evidence: \`output/qa/blocked-row-campaign/B10-qa-boundaries.json\`, \`B10-production-boundaries.json\`, and \`B10-production-runtime.json\`.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## B10 closeout\n\nB10 directly proved expired-window production correction, invalid/expired/valid/consumed owner-code behavior, paid-payroll rejection, future attendance blocking, protected past attendance persistence, exact India month-to-date collection boundaries, year-crossing payroll cycles, and leap-day behavior. The production policy repair removes the broad permissive attendance bypass, and the UI now exposes bounded accessible attendance-day navigation.\n\n## Exact next action\n\nStart B11 with a fresh disposable quote/order fixture and execute quote conversion, target/over-target, cancellation/completion/deletion protection, stock-history, and Golden A protected-history scenarios before changing any of its twelve rows.\n`
+const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Completed batch: **${b11Closed ? 'B11 — quote and order lifecycle through protected history (12/12 PASS)' : 'B10 — historical correction, access-code, and calendar boundaries (8/8 PASS)'}**.\n- Active batch: **${b11Closed ? 'B12 — stock concurrency, market closure, dispatch compliance, and commercial identity' : 'B11 — quote and order lifecycle through protected history'}**.\n- Validation gate: local and Vercel gates passed 85 files / 611 tests with 1 intentional skip, TypeScript, lint, and a successful optimized Next.js build.\n- Production deployment: \`${b11Closed ? 'dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV' : 'dpl_5rKpnNLwszpfgfzkn8VBh291wyS6'}\`, Ready and aliased, exact commit \`${b11Closed ? 'dc76b17f38eb111ef3dad0a5a9f809b17168cda5' : 'fd1c367665455ca2bc66ca54d81a9cc259147284'}\`.\n- Migration: atomic Start Party Order \`20260702131500\` and all dependent order/dispatch boundaries verified in production.\n- Cleanup: the prefixed B11 QA and production tenants, profiles/auth users, and scoped quote/order/yarn/production/stock/dispatch/commercial/payroll rows were removed and reconciled.\n- B11 evidence: \`output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json\` and \`B11-production-runtime.json\`.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## B11 closeout\n\nB11 directly proved atomic quote/order/yarn creation in production and the full protected order lifecycle in QA: target enforcement, completion and cancellation archival behavior, reserved-stock lineage, partial dispatch, exact and shortage receipts, discrepancy and claim creation, independent receivable/payroll settlement, and paid-history correction rejection.\n\n## Exact next action\n\n${b11Closed ? 'Start B12 by auditing the market-run, stock-sale, dispatch-receipt, compliance-warning, concurrency, and party-identity paths; build one isolated QA fixture that proves all ten rows before any promotion.' : 'Complete B11 production runtime proof and cleanup before changing any of its twelve rows.'}\n`
 
 await fs.mkdir(outDir, { recursive: true })
 await fs.writeFile(inventoryPath, `${JSON.stringify(inventory, null, 2)}\n`)
