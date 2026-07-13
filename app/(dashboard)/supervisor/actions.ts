@@ -996,9 +996,15 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         const existing = datedAssignmentByMachineId.get(machine.id)
         const operatorAssignment = operatorAssignmentsByMachineId.get(machine.id)?.[shift]
         const standingAssignments = standingAssignmentsByMachineId.get(machine.id)
-        const workerId = operatorAssignment?.worker_id ?? standingAssignments?.[shift] ?? null
+        const datedWorkerId = existing?.worker_id && activeWorkerIds.has(Number(existing.worker_id))
+            ? Number(existing.worker_id)
+            : null
+        const matchingOperatorAssignment = datedWorkerId && operatorAssignment?.worker_id !== datedWorkerId
+            ? undefined
+            : operatorAssignment
+        const workerId = datedWorkerId ?? matchingOperatorAssignment?.worker_id ?? standingAssignments?.[shift] ?? null
         const orderId = machine.current_order_id ?? null
-        const operatorPayload = operatorAssignment ?? (
+        const operatorPayload = matchingOperatorAssignment ?? (
             workerId
                 ? {
                     operator_assignment_id: null,
@@ -1286,7 +1292,7 @@ export async function bulkLogProduction(entries: {
     const logShift = logs[0].shift
 
     // ── Guard: production can only be saved for looms that are fully active ──
-    const [machinesRes, standingAssignmentsRes, operatorAssignmentsRes] = await Promise.all([
+    const [machinesRes, standingAssignmentsRes, operatorAssignmentsRes, datedAssignmentsRes] = await Promise.all([
         supabase
             .from('machines')
             .select('id, name, status, current_order_id, orders(status)')
@@ -1305,6 +1311,13 @@ export async function bulkLogProduction(entries: {
             .eq('active', true)
             .in('machine_id', machineIds)
             .in('shift', ['day', 'night']),
+        supabase
+            .from('shift_assignments')
+            .select('machine_id, worker_id')
+            .eq('org_id', orgId)
+            .eq('date', logDate)
+            .eq('shift', logShift)
+            .in('machine_id', machineIds),
     ])
 
     if (machinesRes.error) {
@@ -1312,12 +1325,18 @@ export async function bulkLogProduction(entries: {
         return { error: 'Failed to validate loom setup. Please try again.' }
     }
 
-    if (standingAssignmentsRes.error || operatorAssignmentsRes.error) {
-        console.error('bulkLogProduction – standing assignment lookup error:', standingAssignmentsRes.error || operatorAssignmentsRes.error)
+    if (standingAssignmentsRes.error || operatorAssignmentsRes.error || datedAssignmentsRes.error) {
+        console.error(
+            'bulkLogProduction – worker assignment lookup error:',
+            standingAssignmentsRes.error || operatorAssignmentsRes.error || datedAssignmentsRes.error
+        )
         return { error: 'Failed to validate worker assignments. Please try again.' }
     }
 
-    const workerIds = [...new Set((standingAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id))]
+    const workerIds = [...new Set([
+        ...(standingAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id),
+        ...(datedAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id),
+    ].filter((id): id is number => id != null))]
     const operatorMeterWorkerIds = [...new Set((operatorAssignmentsRes.data ?? [])
         .map((assignment) => assignment.meter_worker_id)
         .filter((id): id is number => id != null))]
@@ -1374,6 +1393,12 @@ export async function bulkLogProduction(entries: {
         if (!activeWorkerIds.has(assignment.worker_id)) continue
         const current = standingByMachineId.get(assignment.machine_id) ?? {}
         current[assignment.shift as 'day' | 'night'] = assignment.worker_id
+        standingByMachineId.set(assignment.machine_id, current)
+    }
+    for (const assignment of datedAssignmentsRes.data ?? []) {
+        if (!assignment.worker_id || !activeWorkerIds.has(assignment.worker_id)) continue
+        const current = standingByMachineId.get(assignment.machine_id) ?? {}
+        current[logShift] = assignment.worker_id
         standingByMachineId.set(assignment.machine_id, current)
     }
 

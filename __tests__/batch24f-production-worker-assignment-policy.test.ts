@@ -149,6 +149,20 @@ describe('Batch 24F production worker assignment policy', () => {
         expect(supervisorActions).not.toContain('assigned_worker_id')
     })
 
+    it('MASTER-011 treats the persisted dated worker as the effective worker for that one shift', () => {
+        expect(getShiftSetupDataBody).toContain('const datedWorkerId = existing?.worker_id')
+        expect(getShiftSetupDataBody).toContain('const workerId = datedWorkerId ?? matchingOperatorAssignment?.worker_id')
+        expect(getShiftSetupDataBody).toContain('worker_id: operatorPayload.worker_id')
+
+        expect(bulkLogProductionBody).toContain(".from('shift_assignments')")
+        expect(bulkLogProductionBody).toContain(".eq('date', logDate)")
+        expect(bulkLogProductionBody).toContain(".eq('shift', logShift)")
+        expect(bulkLogProductionBody).toContain('current[logShift] = assignment.worker_id')
+        expect(bulkLogProductionBody.indexOf('current[logShift] = assignment.worker_id')).toBeLessThan(
+            bulkLogProductionBody.indexOf('evaluateProductionWorkerAssignmentPolicy')
+        )
+    })
+
     it('does not add migration or RPC work for Batch 24F', () => {
         const migrationNames = readdirSync(join(root, 'supabase/migrations'))
         expect(migrationNames.some((name) => name.toLowerCase().includes('batch_24f'))).toBe(false)
