@@ -41,7 +41,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
-import { setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
 import { getPayrollCycleBounds, getPayrollCycleStatus, getPayrollMonthForDate } from '@/lib/payroll-cycle'
 import { formatToSurat } from '@/lib/time'
 import {
@@ -3184,7 +3183,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
 
     // ── Toggle paid with Optimistic UI ──────────────────────────────────────
     const mutation = useMutation({
-        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride, paymentMode, manualAdjustments, verifiedByOwner, accessCode }: {
+        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride, paymentMode, manualAdjustments, verifiedByOwner, accessCode, deactivateAfterExit }: {
             workerType: 'meter' | 'fixed',
             workerId: number,
             currentPaid: boolean,
@@ -3194,7 +3193,8 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
             paymentMode?: PaymentMode | null,
             manualAdjustments?: PayrollManualAdjustment[],
             verifiedByOwner?: boolean,
-            accessCode?: string
+            accessCode?: string,
+            deactivateAfterExit?: boolean
         }) => {
             return await toggleWorkerPaid(
                 workerType,
@@ -3207,7 +3207,8 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                 paymentMode ?? null,
                 manualAdjustments ?? [],
                 verifiedByOwner ?? false,
-                accessCode
+                accessCode,
+                deactivateAfterExit ?? false
             )
         },
         onMutate: async (variables) => {
@@ -3311,18 +3312,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                 toast.error(data.error)
             } else {
                 if (pendingSettleWorker?.deactivateAfterExit) {
-                    const deactivateResult = await setWorkerActiveStatus(
-                        pendingSettleWorker.type,
-                        pendingSettleWorker.id,
-                        false
-                    )
-
-                    if (deactivateResult.error) {
-                        toast.error(deactivateResult.error)
-                    } else {
-                        toast.success('Worker moved to inactive after final settlement.')
-                    }
-
+                    toast.success('Worker moved to inactive after final settlement.')
                     router.replace('/owner/payroll')
                 }
                 toast.success('✓ Payroll updated', { duration: 2000 })
@@ -3922,6 +3912,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                             paymentMode,
                             manualAdjustments,
                             verifiedByOwner,
+                            deactivateAfterExit: !!pendingSettleWorker.deactivateAfterExit,
                         })
                     }}
                 />

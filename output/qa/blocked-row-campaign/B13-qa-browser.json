@@ -1,0 +1,69 @@
+{
+  "run_id": "B13-QA-BROWSER-20260714",
+  "environment": "qa",
+  "project_ref": "eutycrtzzxmlkcpipgod",
+  "fixtures": [
+    "47728910...a11b",
+    "5839aace...4c06"
+  ],
+  "routes": [
+    "/owner/today",
+    "/owner/payroll?cycle=2026-06"
+  ],
+  "factory_today": {
+    "date": "2026-07-14",
+    "meters": 50,
+    "active_looms": "4 / 4",
+    "production_status": "Shifts partially logged",
+    "day_shift": "Logged",
+    "night_shift": "Pending",
+    "work_at_risk_items": 2,
+    "inactive_market_run": "B13 Golden B Fabric",
+    "market_summary_query": "success",
+    "pending_advances": "₹1.2k",
+    "payroll_status": "Overdue since 10 Jul",
+    "screenshot": "output/qa/blocked-row-campaign/B13-qa-factory-today.png"
+  },
+  "payroll": {
+    "cycle": "1 Jun to 30 Jun 2026",
+    "status": "Payroll overdue since 10 Jul 2026",
+    "pending_workers": 1,
+    "paid_workers": 2,
+    "historical_worker": {
+      "meters": 230,
+      "machines": 3,
+      "earnings": [
+        { "meters": 100, "rate": 2.75, "total": 275 },
+        { "meters": 80, "rate": 3.125, "total": 250 },
+        { "meters": 50, "rate": 3, "total": 150 }
+      ],
+      "gross": 675,
+      "advance_recovered": 375,
+      "net_payout": 375,
+      "carry_forward_debt": 125,
+      "payment_mode": "UPI",
+      "payslip_action_visible": true
+    },
+    "exiting_worker": {
+      "gross_meters": 40,
+      "net_payout": 0,
+      "carry_forward_debt": 200,
+      "final_badge_visible": true,
+      "payment_mode": "Cash"
+    },
+    "screenshot": "output/qa/blocked-row-campaign/B13-qa-payroll.png"
+  },
+  "browser_warning_error_logs": [],
+  "passed": true,
+  "cleanup": "complete",
+  "cleanup_result": {
+    "errors": [],
+    "organizations": 0,
+    "profiles": 0,
+    "settlements": 0,
+    "auth_users_exist": 0,
+    "credential_file_removed": true,
+    "browser_tabs_closed": true,
+    "local_server_stopped": true
+  }
+}

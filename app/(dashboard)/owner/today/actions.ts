@@ -309,7 +309,7 @@ async function loadFactoryTodayDashboardPayload(
             // 4. Active market runs (production or in_godown status)
             traceFactoryTodayQuery('active_market_runs', () => supabase
                 .from('market_run_summary')
-                .select('market_run_id, fabric_label, quality_label, target_meters, meters_produced, status')
+                .select('market_run_id, fabric_label, quality_label, target_meters, total_meters_produced, status')
                 .eq('org_id', orgId)
                 .in('status', ['production', 'in_godown'])),
 
@@ -489,7 +489,7 @@ async function loadFactoryTodayDashboardPayload(
             id: run.market_run_id,
             label: (run.fabric_label || run.quality_label) as string,
             targetMeters: toNum(run.target_meters),
-            producedMeters: toNum(run.meters_produced),
+            producedMeters: toNum(run.total_meters_produced),
             lastProductionDate: null,
         }))
 

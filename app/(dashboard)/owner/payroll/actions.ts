@@ -53,7 +53,8 @@ export async function toggleWorkerPaid(
     paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque' | null = null,
     manualAdjustments: PayrollManualAdjustment[] = [],
     verifiedByOwner: boolean = false,
-    accessCode?: string
+    accessCode?: string,
+    deactivateAfterExit: boolean = false
 ) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -235,7 +236,7 @@ export async function toggleWorkerPaid(
             return { error: 'Kapaat cannot make the final payout negative.' }
         }
 
-        const { data, error } = await supabase.rpc('settle_worker_payroll_hardened', {
+        const settlementParams = {
             p_org_id: profile.org_id,
             p_worker_type: workerType,
             p_worker_id: workerId,
@@ -247,7 +248,10 @@ export async function toggleWorkerPaid(
             p_payment_mode: paymentMode,
             p_manual_adjustments: parsedAdjustments.data,
             p_verified_by_owner: verifiedByOwner,
-        })
+        }
+        const { data, error } = deactivateAfterExit
+            ? await supabase.rpc('settle_exiting_worker_payroll_hardened', settlementParams)
+            : await supabase.rpc('settle_worker_payroll_hardened', settlementParams)
 
         if (error) {
             console.error('Settlement failed:', error)
