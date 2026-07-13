@@ -61,6 +61,7 @@ import {
     SheetHeader,
     SheetFooter,
     SheetDescription,
+    SheetTitle,
 } from '@/components/ui/sheet'
 import {
     Dialog,
@@ -655,7 +656,9 @@ function MachineDetailSheet({
         <>
             <SheetHeader>
                 <div className="flex items-center gap-3">
-                    <p className="text-2xl font-semibold text-ink">{formatLoomName(machine.name)}</p>
+                    <SheetTitle className="text-2xl font-semibold text-ink">
+                        {formatLoomName(machine.name)}
+                    </SheetTitle>
                     <MachineStatusBadge status={machine.machine_status || 'idle'} />
                 </div>
                 <SheetDescription>
@@ -1281,7 +1284,7 @@ export default function UnifiedDashboard() {
     const correctionBannerText = remainingCorrectionMinutes > 0
         ? t('floor.correction.windowOpen').replace('{minutes}', remainingCorrectionMinutes.toString())
         : t('floor.correction.windowClosed')
-    const hasShiftSetup = assignments.length > 0
+    const hasShiftSetup = assignedCount > 0
     const pendingEntryCount = Math.max(machines.length - validEntryCount, 0)
     const saveHelperText = loading
         ? 'Loading shift data...'

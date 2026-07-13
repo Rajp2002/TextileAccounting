@@ -1799,26 +1799,88 @@ export async function updateMachineBreakdown(params: {
     category: string | null
     notes: string
 }) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const machineParsed = safeParse(UuidSchema, params.machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
 
-    const { error } = await supabase
-        .from('shift_assignments')
-        .update({
-            breakdown_category: params.category,
-            breakdown_notes: params.notes
-        })
-        .eq('machine_id', machineParsed.data)
-        .eq('date', params.date)
-        .eq('shift', params.shift)
-        .eq('org_id', profile.org_id)
+    const shiftParsed = safeParse(ShiftSchema, params.shift)
+    if ('error' in shiftParsed) return { error: shiftParsed.error }
 
-    if (error) {
-        console.error('Failed to update machine breakdown:', error)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(params.date)) return { error: 'Invalid production date.' }
+
+    const category = params.category?.trim() || null
+    if (category && !['warp', 'mech', 'elec'].includes(category)) {
+        return { error: 'Invalid breakdown category.' }
+    }
+
+    const notes = params.notes.trim()
+    if (notes.length > 500) return { error: 'Breakdown notes must be 500 characters or fewer.' }
+
+    const grain = {
+        org_id: profile.org_id,
+        machine_id: machineParsed.data,
+        date: params.date,
+        shift: shiftParsed.data,
+    }
+
+    const existing = await supabase
+        .from('shift_assignments')
+        .select('id')
+        .match(grain)
+        .maybeSingle()
+
+    if (existing.error) {
+        console.error('Failed to find machine breakdown row:', existing.error)
         return { error: 'Failed to save breakdown details.' }
+    }
+
+    const breakdown = {
+        breakdown_category: category,
+        breakdown_notes: notes || null,
+    }
+
+    if (existing.data) {
+        const updated = await supabase
+            .from('shift_assignments')
+            .update(breakdown)
+            .eq('id', existing.data.id)
+            .eq('org_id', profile.org_id)
+            .select('id')
+            .single()
+
+        if (updated.error || !updated.data) {
+            console.error('Failed to update machine breakdown:', updated.error)
+            return { error: 'Failed to save breakdown details.' }
+        }
+    } else {
+        const inserted = await supabase
+            .from('shift_assignments')
+            .insert({
+                ...grain,
+                ...breakdown,
+                created_by: user.id,
+            })
+            .select('id')
+            .single()
+
+        if (inserted.error?.code === '23505') {
+            const racedUpdate = await supabase
+                .from('shift_assignments')
+                .update(breakdown)
+                .match(grain)
+                .select('id')
+                .single()
+
+            if (racedUpdate.error || !racedUpdate.data) {
+                console.error('Failed to reconcile concurrent machine breakdown:', racedUpdate.error)
+                return { error: 'Failed to save breakdown details.' }
+            }
+        } else if (inserted.error || !inserted.data) {
+            console.error('Failed to insert machine breakdown:', inserted.error)
+            return { error: 'Failed to save breakdown details.' }
+        }
     }
 
     revalidatePath('/supervisor/dashboard')

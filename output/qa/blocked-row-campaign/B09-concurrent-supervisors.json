@@ -1,0 +1,31 @@
+{
+  "runId": "FORMAL-B7-1783966040856-E28C56",
+  "projectRef": "vzhwahudircrpgtitwzd",
+  "target": {
+    "date": "2026-07-14",
+    "shift": "day",
+    "machine_id": "351d6f5e...d9e5"
+  },
+  "outcomes": [
+    {
+      "success": false,
+      "duplicate_rejected": true,
+      "error_code": "P0001"
+    },
+    {
+      "success": true,
+      "duplicate_rejected": false,
+      "error_code": null
+    }
+  ],
+  "log_count": 1,
+  "stock_lot_count": 1,
+  "assertions": {
+    "two_distinct_supervisor_sessions": true,
+    "exactly_one_success": true,
+    "exactly_one_duplicate_rejection": true,
+    "exactly_one_log": true,
+    "exactly_one_stock_lot": true
+  },
+  "pass": true
+}

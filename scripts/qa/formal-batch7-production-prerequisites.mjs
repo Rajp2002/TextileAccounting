@@ -15,6 +15,14 @@ const MASTER_011_EVIDENCE_PATH = path.join(
     process.cwd(),
     'output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.json'
 )
+const B09_CONCURRENCY_EVIDENCE_PATH = path.join(
+    process.cwd(),
+    'output/qa/blocked-row-campaign/B09-concurrent-supervisors.json'
+)
+const B09_EVIDENCE_PATH = path.join(
+    process.cwd(),
+    'output/qa/blocked-row-campaign/B09-production-resilience.json'
+)
 const command = process.argv[2]
 
 function parseEnv(contents) {
@@ -61,8 +69,34 @@ async function readFixture() {
     return JSON.parse(await fs.readFile(SECRET_PATH, 'utf8'))
 }
 
+async function ensureSecondSupervisor(fixture) {
+    if (fixture.supervisor2UserId && fixture.supervisor2Email && fixture.supervisor2Password) return
+    const suffix = `${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
+    const email = `formal.b09.supervisor2.${suffix}@example.test`
+    const password = `${crypto.randomBytes(18).toString('base64url')}A1!`
+    const user = await admin.auth.admin.createUser({ email, password, email_confirm: true })
+    if (user.error || !user.data.user) throw user.error ?? new Error('B09 second supervisor auth user was not created.')
+    const profile = await admin.from('profiles').insert({
+        id: user.data.user.id,
+        org_id: fixture.orgId,
+        role: 'supervisor',
+        full_name: `QA Supervisor 2 ${fixture.runId}`,
+        email,
+    })
+    if (profile.error) {
+        await admin.auth.admin.deleteUser(user.data.user.id)
+        throw profile.error
+    }
+    fixture.supervisor2UserId = user.data.user.id
+    fixture.supervisor2Email = email
+    fixture.supervisor2Password = password
+    await fs.writeFile(SECRET_PATH, JSON.stringify(fixture), { mode: 0o600 })
+    await fs.chmod(SECRET_PATH, 0o600)
+}
+
 async function cleanupFixture(fixture, { removeSecret = true } = {}) {
     const errors = []
+    const userIds = [fixture.ownerUserId, fixture.supervisorUserId, fixture.supervisor2UserId].filter(Boolean)
     const deleteByOrg = [
         'fabric_stock_movements',
         'fabric_stock_inward_drafts',
@@ -89,25 +123,24 @@ async function cleanupFixture(fixture, { removeSecret = true } = {}) {
     }
 
     for (const [table, column, values] of [
-        ['profiles', 'id', [fixture.ownerUserId, fixture.supervisorUserId]],
+        ['profiles', 'id', userIds],
         ['organizations', 'id', [fixture.orgId]],
     ]) {
         const { error } = await admin.from(table).delete().in(column, values)
         if (error) errors.push(`${table}: ${error.message}`)
     }
 
-    for (const userId of [fixture.ownerUserId, fixture.supervisorUserId]) {
+    for (const userId of userIds) {
         const { error } = await admin.auth.admin.deleteUser(userId)
         if (error && error.code !== 'user_not_found') errors.push(`auth user ${safeId(userId)}: ${error.message}`)
     }
 
-    const [orgCount, profileCount, machineCount, logCount, ownerAuth, supervisorAuth] = await Promise.all([
+    const [orgCount, profileCount, machineCount, logCount, ...authChecks] = await Promise.all([
         admin.from('organizations').select('id', { count: 'exact', head: true }).eq('id', fixture.orgId),
-        admin.from('profiles').select('id', { count: 'exact', head: true }).in('id', [fixture.ownerUserId, fixture.supervisorUserId]),
+        admin.from('profiles').select('id', { count: 'exact', head: true }).in('id', userIds),
         admin.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId),
         admin.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId),
-        admin.auth.admin.getUserById(fixture.ownerUserId),
-        admin.auth.admin.getUserById(fixture.supervisorUserId),
+        ...userIds.map((userId) => admin.auth.admin.getUserById(userId)),
     ])
 
     const reconciliation = {
@@ -115,8 +148,7 @@ async function cleanupFixture(fixture, { removeSecret = true } = {}) {
         profiles: profileCount.count,
         machines: machineCount.count,
         production_logs: logCount.count,
-        owner_auth_exists: Boolean(ownerAuth.data.user),
-        supervisor_auth_exists: Boolean(supervisorAuth.data.user),
+        auth_users_exist: authChecks.filter((result) => Boolean(result.data.user)).length,
     }
     const reconciled = !errors.length
         && Object.values(reconciliation).every((value) => value === 0 || value === false)
@@ -423,6 +455,307 @@ if (command === 'setup') {
         throw new Error(`MASTER-011 fixture preparation failed: ${orderUpdate.error?.message || machineUpdate.error?.message}`)
     }
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, prepared: true, productionDate: fixture.yesterday }, null, 2)}\n`)
+} else if (command === 'prepare-b09') {
+    const fixture = await readFixture()
+    await ensureSecondSupervisor(fixture)
+    const runtimeToday = suratDate()
+    const sourceDate = suratDate(-1)
+    if (fixture.b09Prepared) {
+        const resetStatuses = await admin.from('machines').update({ machine_status: 'running' }).eq('org_id', fixture.orgId)
+        if (resetStatuses.error) throw resetStatuses.error
+        const sourceAssignment = await admin.from('shift_assignments').upsert({
+            org_id: fixture.orgId,
+            date: sourceDate,
+            shift: 'night',
+            machine_id: fixture.machineId,
+            worker_id: fixture.workerBId,
+            order_id: fixture.orderAId,
+            rate_per_m: 3.25,
+            created_by: fixture.ownerUserId,
+        }, { onConflict: 'org_id,date,shift,machine_id' })
+        if (sourceAssignment.error) throw sourceAssignment.error
+        fixture.b09RuntimeToday = runtimeToday
+        fixture.b09SourceDate = sourceDate
+        await fs.writeFile(SECRET_PATH, JSON.stringify(fixture), { mode: 0o600 })
+        await fs.chmod(SECRET_PATH, 0o600)
+        const { count, error } = await admin.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId)
+        if (error) throw error
+        process.stdout.write(`${JSON.stringify({ runId: fixture.runId, prepared: true, reused: true, runtimeToday, sourceDate, machineCount: count }, null, 2)}\n`)
+    } else {
+        const extraMachines = Array.from({ length: 19 }, (_, index) => ({
+            org_id: fixture.orgId,
+            name: `QA ${fixture.runId} Mobile Loom ${String(index + 2).padStart(2, '0')}`,
+            loom_type: index % 2 === 0 ? 'rapier' : 'power_loom',
+            status: 'inactive',
+            machine_status: 'running',
+            current_order_id: fixture.orderAId,
+        }))
+        const insertedMachines = await admin.from('machines').insert(extraMachines).select('id, loom_type')
+        if (insertedMachines.error || insertedMachines.data?.length !== 19) {
+            throw insertedMachines.error ?? new Error('B09 did not create nineteen additional looms.')
+        }
+
+        const machineIds = insertedMachines.data.map((machine) => machine.id)
+        const standing = await admin.from('machine_assignments').insert(machineIds.map((machineId) => ({
+            org_id: fixture.orgId,
+            machine_id: machineId,
+            worker_id: fixture.workerAId,
+            shift: 'day',
+        })))
+        if (standing.error) throw standing.error
+
+        const operators = await admin.from('machine_operator_assignments').insert(insertedMachines.data.map((machine) => ({
+            org_id: fixture.orgId,
+            machine_id: machine.id,
+            machine_type: machine.loom_type,
+            shift: 'day',
+            worker_type: 'meter_worker',
+            meter_worker_id: fixture.workerAId,
+            fixed_worker_id: null,
+            pay_mode: 'per_meter',
+            rate: 2.5,
+            effective_from: fixture.yesterday,
+            effective_to: null,
+            is_primary_operator: true,
+            active: true,
+        })))
+        if (operators.error) throw operators.error
+
+        const activated = await admin.from('machines')
+            .update({ status: 'active' })
+            .eq('org_id', fixture.orgId)
+            .in('id', machineIds)
+        if (activated.error) throw activated.error
+
+        const previousNight = await admin.from('shift_assignments').insert({
+            org_id: fixture.orgId,
+            date: sourceDate,
+            shift: 'night',
+            machine_id: fixture.machineId,
+            worker_id: fixture.workerBId,
+            order_id: fixture.orderAId,
+            rate_per_m: 3.25,
+            created_by: fixture.ownerUserId,
+        })
+        if (previousNight.error && previousNight.error.code !== '23505') throw previousNight.error
+
+        fixture.b09Prepared = true
+        fixture.b09MachineIds = machineIds
+        fixture.b09RuntimeToday = runtimeToday
+        fixture.b09SourceDate = sourceDate
+        await fs.writeFile(SECRET_PATH, JSON.stringify(fixture), { mode: 0o600 })
+        await fs.chmod(SECRET_PATH, 0o600)
+
+        const [machineCount, activeCount, dayAssignmentCount, previousNightCount] = await Promise.all([
+            admin.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId),
+            admin.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId).eq('status', 'active'),
+            admin.from('machine_assignments').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId).eq('shift', 'day'),
+            admin.from('shift_assignments').select('id', { count: 'exact', head: true })
+                .eq('org_id', fixture.orgId).eq('date', sourceDate).eq('shift', 'night'),
+        ])
+        const firstError = [machineCount, activeCount, dayAssignmentCount, previousNightCount].find((result) => result.error)?.error
+        if (firstError) throw firstError
+        const assertions = {
+            twenty_looms: machineCount.count === 20,
+            twenty_active_looms: activeCount.count === 20,
+            twenty_day_assignments: dayAssignmentCount.count === 20,
+            previous_night_source_exists: previousNightCount.count === 1,
+        }
+        process.stdout.write(`${JSON.stringify({
+            runId: fixture.runId,
+            prepared: Object.values(assertions).every(Boolean),
+            machineCount: machineCount.count,
+            assertions,
+        }, null, 2)}\n`)
+        if (!Object.values(assertions).every(Boolean)) process.exitCode = 1
+    }
+} else if (command === 'b09-concurrency') {
+    const fixture = await readFixture()
+    if (!fixture.supervisor2Email || !fixture.supervisor2Password || !fixture.b09MachineIds?.[0]) {
+        throw new Error('Run prepare-b09 before b09-concurrency.')
+    }
+    const clientOptions = { auth: { persistSession: false, autoRefreshToken: false } }
+    const supervisorA = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, clientOptions)
+    const supervisorB = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, clientOptions)
+    const [loginA, loginB] = await Promise.all([
+        supervisorA.auth.signInWithPassword({ email: fixture.supervisorEmail, password: fixture.supervisorPassword }),
+        supervisorB.auth.signInWithPassword({ email: fixture.supervisor2Email, password: fixture.supervisor2Password }),
+    ])
+    if (loginA.error || loginB.error) throw loginA.error ?? loginB.error
+
+    const targetDate = fixture.b09RuntimeToday ?? suratDate()
+    const targetMachineId = fixture.b09MachineIds[0]
+    const payload = [{
+        machine_id: targetMachineId,
+        worker_id: fixture.workerAId,
+        order_id: fixture.orderAId,
+        meters: 7.77,
+        opening_meter_reading: 0,
+        closing_meter_reading: 7.77,
+        counter_was_reset: false,
+        shift: 'day',
+        date: targetDate,
+        worker_rate_snapshot: 2.5,
+        submitted_at: new Date().toISOString(),
+        client_ip: 'b09-concurrent-supervisors',
+    }]
+    const attempts = await Promise.all([
+        supervisorA.rpc('replace_shift_production_logs', {
+            p_logs: payload,
+            p_allow_overwrite: false,
+            p_access_code_used: false,
+        }),
+        supervisorB.rpc('replace_shift_production_logs', {
+            p_logs: payload,
+            p_allow_overwrite: false,
+            p_access_code_used: false,
+        }),
+    ])
+    const [logs, lots] = await Promise.all([
+        admin.from('production_logs').select('id, meters, date, shift, worker_id, order_id')
+            .eq('org_id', fixture.orgId).eq('machine_id', targetMachineId).eq('date', targetDate).eq('shift', 'day'),
+        admin.from('fabric_stock_lot_summary').select('stock_lot_id, original_meters, available_meters, source_date, source_shift')
+            .eq('org_id', fixture.orgId).eq('order_id', fixture.orderAId).eq('source_date', targetDate).eq('source_shift', 'day'),
+    ])
+    if (logs.error || lots.error) throw logs.error ?? lots.error
+    const outcomes = attempts.map((attempt) => ({
+        success: !attempt.error,
+        duplicate_rejected: Boolean(attempt.error?.message.includes('DUPLICATE_LOG_DETECTED')),
+        error_code: attempt.error?.code ?? null,
+    }))
+    const assertions = {
+        two_distinct_supervisor_sessions: loginA.data.user?.id !== loginB.data.user?.id,
+        exactly_one_success: outcomes.filter((outcome) => outcome.success).length === 1,
+        exactly_one_duplicate_rejection: outcomes.filter((outcome) => outcome.duplicate_rejected).length === 1,
+        exactly_one_log: logs.data?.length === 1 && Number(logs.data[0].meters) === 7.77,
+        exactly_one_stock_lot: lots.data?.length === 1 && Number(lots.data[0].original_meters) === 7.77,
+    }
+    const evidence = {
+        runId: fixture.runId,
+        projectRef: PROD_REF,
+        target: { date: targetDate, shift: 'day', machine_id: safeId(targetMachineId) },
+        outcomes,
+        log_count: logs.data?.length ?? 0,
+        stock_lot_count: lots.data?.length ?? 0,
+        assertions,
+        pass: Object.values(assertions).every(Boolean),
+    }
+    await fs.mkdir(path.dirname(B09_CONCURRENCY_EVIDENCE_PATH), { recursive: true })
+    await fs.writeFile(B09_CONCURRENCY_EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`)
+    process.stdout.write(`${JSON.stringify({ path: B09_CONCURRENCY_EVIDENCE_PATH, ...evidence }, null, 2)}\n`)
+    if (!evidence.pass) process.exitCode = 1
+} else if (command === 'b09-evidence') {
+    const fixture = await readFixture()
+    const targetDate = fixture.b09RuntimeToday ?? suratDate()
+    const probeMachineId = fixture.b09MachineIds?.[1]
+    if (!probeMachineId) throw new Error('Run prepare-b09 before b09-evidence.')
+    const supervisor = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false },
+    })
+    const login = await supervisor.auth.signInWithPassword({ email: fixture.supervisorEmail, password: fixture.supervisorPassword })
+    if (login.error) throw login.error
+    const before = await admin.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId)
+    if (before.error) throw before.error
+    const baseProbe = {
+        machine_id: probeMachineId,
+        worker_id: fixture.workerAId,
+        order_id: fixture.orderAId,
+        meters: 1,
+        opening_meter_reading: 0,
+        closing_meter_reading: 1,
+        counter_was_reset: false,
+        shift: 'night',
+        date: targetDate,
+        worker_rate_snapshot: 2.5,
+        submitted_at: new Date().toISOString(),
+        client_ip: 'b09-invalid-probe',
+    }
+    const invalidCases = [
+        ['PROD-005', { ...baseProbe, order_id: null }],
+        ['PROD-006', { ...baseProbe, worker_id: null }],
+        ['PROD-007', { ...baseProbe, worker_rate_snapshot: 0 }],
+        ['PROD-011', { ...baseProbe, meters: -1, closing_meter_reading: -1 }],
+    ]
+    const probeResults = []
+    for (const [id, payload] of invalidCases) {
+        const result = await supervisor.rpc('replace_shift_production_logs', {
+            p_logs: [payload],
+            p_allow_overwrite: false,
+            p_access_code_used: false,
+        })
+        probeResults.push({ id, rejected: Boolean(result.error), error_code: result.error?.code ?? null })
+    }
+    const [after, machines, dayAssignments, copiedNight, logs, lots, breakdown, concurrencyRaw] = await Promise.all([
+        admin.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId),
+        admin.from('machines').select('id, status, machine_status').eq('org_id', fixture.orgId),
+        admin.from('machine_assignments').select('id').eq('org_id', fixture.orgId).eq('shift', 'day'),
+        admin.from('shift_assignments').select('id, worker_id, order_id, rate_per_m')
+            .eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night').eq('machine_id', fixture.machineId),
+        admin.from('production_logs').select('machine_id, meters, date, shift, worker_id, order_id')
+            .eq('org_id', fixture.orgId).order('date').order('shift'),
+        admin.from('fabric_stock_lot_summary').select('original_meters, available_meters, source_date, source_shift, order_id')
+            .eq('org_id', fixture.orgId).order('source_date').order('source_shift'),
+        admin.from('shift_assignments').select('breakdown_category, breakdown_notes, date, shift')
+            .eq('org_id', fixture.orgId).eq('machine_id', fixture.machineId)
+            .eq('date', fixture.today).eq('shift', 'day').maybeSingle(),
+        fs.readFile(B09_CONCURRENCY_EVIDENCE_PATH, 'utf8'),
+    ])
+    const firstError = [after, machines, dayAssignments, copiedNight, logs, lots, breakdown].find((result) => result.error)?.error
+    if (firstError) throw firstError
+    const concurrency = JSON.parse(concurrencyRaw)
+    const nightLog = logs.data?.find((row) => row.date === targetDate && row.shift === 'night' && row.machine_id === fixture.machineId)
+    const nightLot = lots.data?.find((row) => row.source_date === targetDate && row.source_shift === 'night')
+    const assertions = {
+        invalid_server_payloads_rejected_without_mutation:
+            probeResults.every((result) => result.rejected) && before.count === after.count,
+        copy_previous_created_one_editable_target:
+            copiedNight.data?.length === 1
+            && copiedNight.data[0].worker_id === fixture.workerBId
+            && copiedNight.data[0].order_id === fixture.orderAId
+            && Number(copiedNight.data[0].rate_per_m) === 3.25,
+        delayed_response_reconciled_one_log:
+            Number(nightLog?.meters) === 22.22 && nightLog?.worker_id === fixture.workerBId,
+        delayed_response_reconciled_one_stock_lot:
+            Number(nightLot?.original_meters) === 22.22 && Number(nightLot?.available_meters) === 22.22,
+        breakdown_persisted_independently:
+            breakdown.data?.breakdown_category === 'mech'
+            && breakdown.data?.breakdown_notes === 'B09 patched breakdown persistence',
+        twenty_active_loom_fixture:
+            machines.data?.length === 20
+            && machines.data.every((machine) => machine.status === 'active')
+            && dayAssignments.data?.length === 20,
+        concurrent_duplicate_protection: concurrency.pass === true,
+    }
+    const evidence = {
+        runId: fixture.runId,
+        projectRef: PROD_REF,
+        runtimeDates: { source: fixture.b09SourceDate, target: targetDate },
+        serverValidation: probeResults,
+        browser: {
+            baseUrl: 'local optimized build with production Supabase; production alias used for initial validation cases',
+            prod_010: 'Other downtime without a note kept Save disabled.',
+            prod_013: '10,000 m opened an explicit large-value confirmation dialog before mutation.',
+            prod_014: 'Copy previous changed Night from 0/20 to 1/20 and loaded Worker B; target database grain remained singular.',
+            prod_022_023: 'A 12.34 m Day draft stayed isolated from Night and restored after refresh under a visible unsaved-draft banner.',
+            prod_024_off_003_off_004: 'With the local server stopped, submit made no success claim or database mutation; reconnect restored 1.11, 10.1, and 20.2 as unsaved.',
+            prod_025: 'A 17 s delayed response showed the unknown-outcome warning, reconciled the committed 22.22 m log, and retained one log/stock grain after repeat.',
+            prod_027: 'The optimized build rendered a labelled dialog with an H2 SheetTitle; the breakdown row persisted when no dated row existed.',
+            prod_030_ux_001: '390x844 rendered 20 independently labelled metre inputs, no horizontal overflow, distinct first/middle/last values, and a fixed reachable Save button.',
+            screenshot: 'output/qa/blocked-row-campaign/B09-mobile-20-looms.png',
+        },
+        database: {
+            production_log_count: logs.data?.length ?? 0,
+            stock_lot_count: lots.data?.length ?? 0,
+            machine_count: machines.data?.length ?? 0,
+            day_assignment_count: dayAssignments.data?.length ?? 0,
+        },
+        assertions,
+        pass: Object.values(assertions).every(Boolean),
+    }
+    await fs.mkdir(path.dirname(B09_EVIDENCE_PATH), { recursive: true })
+    await fs.writeFile(B09_EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`)
+    process.stdout.write(`${JSON.stringify({ path: B09_EVIDENCE_PATH, pass: evidence.pass, assertions }, null, 2)}\n`)
+    if (!evidence.pass) process.exitCode = 1
 } else if (command === 'snapshot') {
     process.stdout.write(`${JSON.stringify(await snapshot(await readFixture()), null, 2)}\n`)
 } else if (command === 'evidence') {
@@ -524,5 +857,5 @@ if (command === 'setup') {
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, projectRef: PROD_REF, ...result }, null, 2)}\n`)
     if (!result.reconciled) process.exitCode = 1
 } else {
-    throw new Error('Usage: formal-batch7-production-prerequisites.mjs setup|prepare-master11|snapshot|evidence|master11-evidence|cleanup')
+    throw new Error('Usage: formal-batch7-production-prerequisites.mjs setup|prepare-master11|prepare-b09|b09-concurrency|b09-evidence|snapshot|evidence|master11-evidence|cleanup')
 }

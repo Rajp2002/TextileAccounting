@@ -22,7 +22,11 @@ const server = http.createServer((request, response) => {
         port: targetPort,
         path: request.url,
         method: request.method,
-        headers: { ...request.headers, host: `localhost:${targetPort}` },
+        headers: {
+            ...request.headers,
+            host: `localhost:${listenPort}`,
+            'x-forwarded-host': `localhost:${listenPort}`,
+        },
     }, (upstreamResponse) => {
         const chunks = []
         upstreamResponse.on('data', (chunk) => chunks.push(chunk))
