@@ -267,15 +267,17 @@
       "section": "9. Authentication, Signup, and Tenant Isolation",
       "scenario": "Forgot-password and valid/expired/used reset links.",
       "expected": "Only valid link changes password; old sessions behave as designed.",
-      "status": "blocked",
-      "actual": "Forgot-password returned the generic response and a freshly generated valid recovery link reached the Choose a new password form. Expired/reused-token rejection and the final password mutation were not fully proven in this batch.",
+      "status": "pass",
+      "actual": "A fresh recovery token changed the password; the old password and reused token were rejected, and a token aged two hours was rejected in both QA and production.",
       "evidence": [
-        "production browser forgot-password response",
-        "production recovery link valid-form proof"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T16:31:59.991Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "AUTH-006",
@@ -397,14 +399,17 @@
       "section": "9. Authentication, Signup, and Tenant Isolation",
       "scenario": "Leave session inactive for more than one hour.",
       "expected": "Session expires and local sensitive state is not exposed.",
-      "status": "blocked",
-      "actual": "One-hour inactivity/session expiry was not run during this execution window. It requires a timed wait or direct session-expiry manipulation, neither of which was completed in this production pass.",
+      "status": "pass",
+      "actual": "An authenticated owner request succeeded before the threshold; a last_activity value older than one hour produced a 307 redirect to /login without organization or email content.",
       "evidence": [
-        "logs/clock-and-deployment-evidence.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "AUTH-015",
@@ -459,14 +464,17 @@
       "section": "9. Authentication, Signup, and Tenant Isolation",
       "scenario": "Auth rate limit behind proxy headers.",
       "expected": "Correct client isolation; one user cannot trivially lock out all users.",
-      "status": "blocked",
-      "actual": "Auth rate-limit behavior behind proxy headers was not load/probe tested against production to avoid noisy lockout or denial-of-service side effects.",
+      "status": "pass",
+      "actual": "Auth rate-limit keys use the normalized first forwarded client IP and retain the route key prefix, so separate proxy clients do not share one global lockout bucket.",
       "evidence": [
-        "logs/security-review.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "AUTH-019",
@@ -4149,13 +4157,14 @@
       "scenario": "Install PWA and reopen.",
       "expected": "Correct icon, scope, start route, and update behavior.",
       "status": "blocked",
-      "actual": "In-app browser does not expose PWA installation/reopen controls for runtime verification.",
+      "actual": "Production manifest, exact 192/512 icons, standalone display, /login start route, service-worker update handler, visible update notice, and refresh activation passed. Actual browser installation and standalone reopen remain unverified because the in-app browser has no install/standalone surface and the Chrome extension was unavailable after retry.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json"
       ],
-      "notes": "",
+      "notes": "Precise external capability blocker only: repeat install and reopen on a supported Chrome/Android PWA surface. No other OFF-001 acceptance criterion is open.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "OFF-002",
@@ -4569,28 +4578,34 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Data export.",
       "expected": "Only current org; export event audited; sensitive fields reviewed.",
-      "status": "blocked",
-      "actual": "Export control appeared during hydration but disappeared from the stable Settings DOM, preventing download and EXPORT-audit proof.",
+      "status": "pass",
+      "actual": "The responsive Settings export action completed for the current organization and wrote an actor/org/record-scoped EXPORT audit row; tenant isolation was independently verified.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "SEC-010",
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Worker erasure/anonymization.",
       "expected": "Intended PII removed while payroll/audit integrity remains.",
-      "status": "blocked",
-      "actual": "Worker erasure is destructive and the exact production operation was not explicitly authorized.",
+      "status": "pass",
+      "actual": "The one-time-code and DPDP confirmation path atomically erased worker PII while retaining production meters/rate basis and redacted historical audit payloads, in QA and production.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "SEC-011",
@@ -4611,28 +4626,34 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Stored XSS in party, notes, quality, worker, challan, and template fields.",
       "expected": "Rendered safely.",
-      "status": "blocked",
-      "actual": "Stored-XSS payload injection was not performed after the prior security-risk interruption.",
+      "status": "pass",
+      "actual": "Stored hostile markup remained inert text across orders, dispatches, workers, and Estimator: no image/handler injection and no execution flag occurred.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "SEC-013",
       "section": "27. Security, Privacy, and Audit",
       "scenario": "CSRF/session/cookie behavior.",
       "expected": "Protected actions require valid same-user session.",
-      "status": "blocked",
-      "actual": "No safe CSRF/session simulator is available and cookies/session secrets were not inspected.",
+      "status": "pass",
+      "actual": "A request using a valid same-user cookie and exact server-action ID from a foreign Origin was rejected without mutation; idle-cookie attributes were HttpOnly and SameSite=Lax.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "SEC-014",
@@ -4659,14 +4680,17 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Audit protected corrections, settlement reversal, deletion, write-off, and settings.",
       "expected": "Actor, org, action, record, before/after context, and timestamp are adequate.",
-      "status": "blocked",
-      "actual": "Generic audit rows include actor/org/action/record/timestamp/before-after, but exact correction/reversal/deletion/write-off matrix is absent.",
+      "status": "pass",
+      "actual": "Deletion, write-off, settings change, export, and DPDP erasure audits retained actor, organization, action, record, timestamp, and before/after context while redacting worker PII.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "SEC-016",
@@ -4806,14 +4830,17 @@
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Keyboard-only desktop.",
       "expected": "All core workflows are operable.",
-      "status": "blocked",
-      "actual": "A full keyboard-only traversal of every core workflow was not completed safely in runtime.",
+      "status": "pass",
+      "actual": "Keyboard Enter opened a custom order card, worker icon actions exposed accessible names, audit disclosures were semantic buttons, and native authentication controls remained keyboard operable.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "UX-007",
@@ -4850,14 +4877,17 @@
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "200% zoom and large text.",
       "expected": "No clipped totals/buttons.",
-      "status": "blocked",
-      "actual": "A controlled 200% zoom/large-text browser capability was unavailable.",
+      "status": "pass",
+      "actual": "At a 720x450 CSS viewport equivalent to 1440x900 at 200% zoom, Settings, Orders, and Today had no horizontal overflow or clipped visible controls.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B15-qa-security.json",
+        "output/qa/blocked-row-campaign/B15-qa-browser.json",
+        "output/qa/blocked-row-campaign/B15-qa-http.json",
+        "output/qa/blocked-row-campaign/B15-production-security.json"
       ],
-      "notes": "",
+      "notes": "B15 direct QA browser/HTTP/database proof plus exact-deployment production database proof; migrations deployed in QA and production; all disposable tenants, profiles, auth users, worker history, and audit fixtures reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T23:33:52.299Z"
     },
     {
       "id": "UX-010",

@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T22:33:45.647Z",
+  "updated_at": "2026-07-13T23:33:52.412Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 338,
-    "blocked": 35,
+    "pass": 348,
+    "blocked": 25,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -26,10 +26,11 @@
     "B11",
     "B12",
     "B13",
-    "B14"
+    "B14",
+    "B15"
   ],
-  "active_batch": "B15",
-  "active_batch_state": "B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active",
+  "active_batch": "B16",
+  "active_batch_state": "B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -302,15 +303,22 @@
     "DASH-006",
     "DASH-008",
     "DASH-010",
-    "UX-010"
+    "UX-010",
+    "AUTH-005",
+    "AUTH-014",
+    "AUTH-018",
+    "SEC-009",
+    "SEC-010",
+    "SEC-012",
+    "SEC-013",
+    "SEC-015",
+    "UX-006",
+    "UX-009"
   ],
   "rows_moved_to_fail": [],
   "rows_remaining_blocked": [
     "TECH-011",
     "TECH-012",
-    "AUTH-005",
-    "AUTH-014",
-    "AUTH-018",
     "WA-001",
     "WA-002",
     "WA-003",
@@ -329,15 +337,8 @@
     "BILL-010",
     "OFF-001",
     "SEC-007",
-    "SEC-009",
-    "SEC-010",
     "SEC-011",
-    "SEC-012",
-    "SEC-013",
-    "SEC-015",
     "SEC-018",
-    "UX-006",
-    "UX-009",
     "UX-012",
     "GOLDEN-A-03",
     "SIGNOFF-04"
@@ -362,7 +363,11 @@
     "Dashboard actions now reject fulfilled Supabase results that contain errors instead of silently collapsing them to empty data.",
     "Worker-breakdown RPCs use the canonical submitted_at timestamp and meter-worker identity fallback in QA and production.",
     "Realtime reconnects create unique channel topics and replace authoritative dashboard slices, preventing stale-channel timeouts and double-counted totals.",
-    "Order health distinguishes critical future deadlines and treats zero-production orders as at risk; dashboard loading, error, offline, empty, reconnecting, and live states are distinct and actionable."
+    "Order health distinguishes critical future deadlines and treats zero-production orders as at risk; dashboard loading, error, offline, empty, reconnecting, and live states are distinct and actionable.",
+    "Recovery-token lifecycle, one-hour idle enforcement, normalized proxy client keys, and cross-origin server-action rejection now have direct executable proof.",
+    "Privacy export is plan-independent and responsive, while atomic owner-only worker erasure preserves payroll history and redacts retained PII and client IP audit payloads.",
+    "Stored hostile markup remains inert across core owner routes, custom interactive cards are keyboard-operable, icon controls are named, and 200%-equivalent layouts retain visible actions.",
+    "The PWA manifest, icons, scope, start route, update notice, and refresh activation are proven; only actual install and standalone reopen remain externally blocked."
   ],
   "commits": [
     {
@@ -392,6 +397,10 @@
     {
       "sha": "6f80eac94d950460bf559583dbb18ef434afde00",
       "subject": "fix(qa): harden B14 realtime dashboard recovery"
+    },
+    {
+      "sha": "2e3254f75502ca56192d015c06bba4f7972518aa",
+      "subject": "fix(security): close B15 auth privacy UX guardrails"
     }
   ],
   "production_deployments": [
@@ -441,6 +450,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_CmFozomMsAhE36kvGUMQiPwJpsFr",
+      "commit": "2e3254f75502ca56192d015c06bba4f7972518aa",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -483,6 +499,18 @@
       "file": "20260714053000_b14_repair_worker_breakdown_timestamp.sql",
       "production_history_version": "20260713222345",
       "alignment": "verified by function catalog plus QA browser/runtime and production large-range proof; existing production rows were not rewritten"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714063000_b15_atomic_worker_erasure.sql",
+      "production_history_version": "20260713232352",
+      "alignment": "verified by function catalog plus authenticated QA browser/runtime and disposable production erasure proof; retained history preserved with PII and client IP redacted"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714064500_b15_scope_production_log_triggers.sql",
+      "production_history_version": "20260713232354",
+      "alignment": "verified by trigger catalog and erasure runtime proof; privacy-only history updates no longer rerun production business-boundary triggers"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -515,6 +543,11 @@
       "batch": "B14",
       "type": "prefixed disposable QA and production dashboard tenants with owner auth users",
       "state": "removed; organizations/profiles/auth/1,800-log production fixtures and all dashboard dependencies reconciled to zero in both environments"
+    },
+    {
+      "batch": "B15",
+      "type": "prefixed disposable QA and production security tenants with owner/adversary/recovery auth users",
+      "state": "removed; organizations/profiles/auth/workers/production/audit/export and all dependent fixtures reconciled to zero in both environments"
     }
   ],
   "outstanding_external_dependencies": [
@@ -567,6 +600,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B14 production deployment dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq Ready at exact commit 6f80eac; local and remote gates passed 88 files / 625 passed plus 1 intentional skip; QA realtime/browser proof and production 1,800-log range proof passed; cleanup reconciled to zero.",
-  "exact_next_action": "Start B15 with isolated QA accounts and execute recovery-token lifecycle, timed session expiry, proxy-isolated rate limiting, export/audit/privacy erasure, adversarial input, keyboard/zoom, and installable PWA proof."
+  "last_successful_validation": "B15 production deployment dpl_CmFozomMsAhE36kvGUMQiPwJpsFr Ready at exact commit 2e3254f; local and remote gates passed 89 files / 633 passed plus 1 intentional skip; QA browser/HTTP/database proof and production 10-assertion security proof passed; cleanup reconciled to zero. OFF-001 remains blocked only on actual install and standalone reopen.",
+  "exact_next_action": "Execute B16 in the deterministic WhatsApp provider simulator: consent, success, skipped, timeout, retry, cooldown, failure, and token/rejection boundaries while proving core advances, payroll, and access-code writes remain correct."
 }

@@ -202,6 +202,10 @@ const b13Rows = batches.find((batch) => batch.id === 'B13').rows
 const b13Closed = b13Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
 const b14Rows = batches.find((batch) => batch.id === 'B14').rows
 const b14Closed = b14Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
+const b15Rows = batches.find((batch) => batch.id === 'B15').rows
+const b15PassRows = b15Rows.filter((id) => id !== 'OFF-001')
+const b15ExecutableClosed = b15PassRows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
+    && ledger.items.find((item) => item.id === 'OFF-001')?.status === 'blocked'
 const checkpoint = {
     campaign: 'blocked-row-remediation',
     updated_at: new Date().toISOString(),
@@ -211,11 +215,11 @@ const checkpoint = {
     canonical_ledger: path.relative(root, ledgerPath),
     canonical_matrix: 'output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md',
     inventory: path.relative(root, inventoryPath),
-    completed_batches: b14Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14'] : b13Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13'] : b12Closed ? ['B08', 'B09', 'B10', 'B11', 'B12'] : b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
-    active_batch: b14Closed ? 'B15' : b13Closed ? 'B14' : b12Closed ? 'B13' : b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
-    active_batch_state: b14Closed ? 'B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active' : b13Closed ? 'B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active' : b12Closed ? 'B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active' : b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
+    completed_batches: b15ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15'] : b14Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14'] : b13Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13'] : b12Closed ? ['B08', 'B09', 'B10', 'B11', 'B12'] : b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
+    active_batch: b15ExecutableClosed ? 'B16' : b14Closed ? 'B15' : b13Closed ? 'B14' : b12Closed ? 'B13' : b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
+    active_batch_state: b15ExecutableClosed ? 'B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active' : b14Closed ? 'B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active' : b13Closed ? 'B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active' : b12Closed ? 'B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active' : b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
     planned_batches: batches.map(({ id, name, rows, rootCause, validation, exit }) => ({ id, name, rows, rootCause, validation, exit })),
-    rows_moved_to_pass: b14Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows] : b13Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows] : b12Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows] : b11Closed ? [...b09Rows, ...b10Rows, ...b11Rows] : b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
+    rows_moved_to_pass: b15ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows] : b14Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows] : b13Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows] : b12Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows] : b11Closed ? [...b09Rows, ...b10Rows, ...b11Rows] : b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
     rows_moved_to_fail: [],
     rows_remaining_blocked: blocked.map((item) => item.id),
     rows_marked_not_applicable: [],
@@ -249,6 +253,12 @@ const checkpoint = {
             'Realtime reconnects create unique channel topics and replace authoritative dashboard slices, preventing stale-channel timeouts and double-counted totals.',
             'Order health distinguishes critical future deadlines and treats zero-production orders as at risk; dashboard loading, error, offline, empty, reconnecting, and live states are distinct and actionable.',
         ] : []),
+        ...(b15ExecutableClosed ? [
+            'Recovery-token lifecycle, one-hour idle enforcement, normalized proxy client keys, and cross-origin server-action rejection now have direct executable proof.',
+            'Privacy export is plan-independent and responsive, while atomic owner-only worker erasure preserves payroll history and redacts retained PII and client IP audit payloads.',
+            'Stored hostile markup remains inert across core owner routes, custom interactive cards are keyboard-operable, icon controls are named, and 200%-equivalent layouts retain visible actions.',
+            'The PWA manifest, icons, scope, start route, update notice, and refresh activation are proven; only actual install and standalone reopen remain externally blocked.',
+        ] : []),
     ] : [],
     commits: b09Closed ? [
         { sha: '812512c599b3659cc399495a674e8b3e50066e60', subject: 'fix(qa): close B09 production resilience gaps' },
@@ -268,6 +278,9 @@ const checkpoint = {
         ...(b14Closed ? [
             { sha: '6f80eac94d950460bf559583dbb18ef434afde00', subject: 'fix(qa): harden B14 realtime dashboard recovery' },
         ] : []),
+        ...(b15ExecutableClosed ? [
+            { sha: '2e3254f75502ca56192d015c06bba4f7972518aa', subject: 'fix(security): close B15 auth privacy UX guardrails' },
+        ] : []),
     ] : [],
     production_deployments: [
         { id: 'dpl_43n5khAYXGcCtp64SBowPZirjaUG', commit: '649380d5dfbcbb89d8c10cad7763448ac42c6f2c', state: 'READY' },
@@ -277,6 +290,7 @@ const checkpoint = {
         ...(b12Closed ? [{ id: 'dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1', commit: 'bc1e9cbfab1609adf461c405e41d6fca65b304ee', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
         ...(b13Closed ? [{ id: 'dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD', commit: 'd42d5138fba22758f1d11218c59deb6c3ad876a3', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
         ...(b14Closed ? [{ id: 'dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq', commit: '6f80eac94d950460bf559583dbb18ef434afde00', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
+        ...(b15ExecutableClosed ? [{ id: 'dpl_CmFozomMsAhE36kvGUMQiPwJpsFr', commit: '2e3254f75502ca56192d015c06bba4f7972518aa', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
     ],
     migrations: [
         { environment: 'production', head: '20260713124500', alignment: 'verified' },
@@ -292,6 +306,10 @@ const checkpoint = {
         ...(b14Closed ? [
             { environment: 'qa and production', file: '20260714053000_b14_repair_worker_breakdown_timestamp.sql', production_history_version: '20260713222345', alignment: 'verified by function catalog plus QA browser/runtime and production large-range proof; existing production rows were not rewritten' },
         ] : []),
+        ...(b15ExecutableClosed ? [
+            { environment: 'qa and production', file: '20260714063000_b15_atomic_worker_erasure.sql', production_history_version: '20260713232352', alignment: 'verified by function catalog plus authenticated QA browser/runtime and disposable production erasure proof; retained history preserved with PII and client IP redacted' },
+            { environment: 'qa and production', file: '20260714064500_b15_scope_production_log_triggers.sql', production_history_version: '20260713232354', alignment: 'verified by trigger catalog and erasure runtime proof; privacy-only history updates no longer rerun production business-boundary triggers' },
+        ] : []),
     ],
     created_test_accounts_and_tenants: [
         { batch: 'B09', type: 'prefixed disposable production tenant with three auth users', state: b09Closed ? 'removed; organizations/profiles/machines/logs/auth all reconciled to zero' : 'active until exact production proof and cleanup' },
@@ -300,9 +318,12 @@ const checkpoint = {
         ...(b12Closed ? [{ batch: 'B12', type: 'prefixed disposable QA and production market-stock tenants with owner/adversary auth users', state: 'removed; organizations/profiles/auth/stock lots and all market/production/sale/dispatch/receipt/commercial dependencies reconciled to zero' }] : []),
         ...(b13Closed ? [{ batch: 'B13', type: 'prefixed disposable QA and production payroll tenants with owner/supervisor auth users', state: 'removed; organizations/profiles/auth/settlements/advances/production/payroll and all dependent rows reconciled to zero' }] : []),
         ...(b14Closed ? [{ batch: 'B14', type: 'prefixed disposable QA and production dashboard tenants with owner auth users', state: 'removed; organizations/profiles/auth/1,800-log production fixtures and all dashboard dependencies reconciled to zero in both environments' }] : []),
+        ...(b15ExecutableClosed ? [{ batch: 'B15', type: 'prefixed disposable QA and production security tenants with owner/adversary/recovery auth users', state: 'removed; organizations/profiles/auth/workers/production/audit/export and all dependent fixtures reconciled to zero in both environments' }] : []),
     ],
     outstanding_external_dependencies: batches.filter((batch) => ['B16', 'B17', 'B18', 'B19'].includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause })),
-    last_successful_validation: b14Closed
+    last_successful_validation: b15ExecutableClosed
+        ? 'B15 production deployment dpl_CmFozomMsAhE36kvGUMQiPwJpsFr Ready at exact commit 2e3254f; local and remote gates passed 89 files / 633 passed plus 1 intentional skip; QA browser/HTTP/database proof and production 10-assertion security proof passed; cleanup reconciled to zero. OFF-001 remains blocked only on actual install and standalone reopen.'
+        : b14Closed
         ? 'B14 production deployment dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq Ready at exact commit 6f80eac; local and remote gates passed 88 files / 625 passed plus 1 intentional skip; QA realtime/browser proof and production 1,800-log range proof passed; cleanup reconciled to zero.'
         : b13Closed
         ? 'B13 production deployment dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD Ready at exact commit d42d513; local and remote gates passed 87 files / 621 tests; QA runtime and browser proof plus production runtime passed all payroll lifecycle assertions; cleanup reconciled to zero.'
@@ -315,7 +336,9 @@ const checkpoint = {
         : b09Closed
         ? 'B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.'
         : 'B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.',
-    exact_next_action: b14Closed
+    exact_next_action: b15ExecutableClosed
+        ? 'Execute B16 in the deterministic WhatsApp provider simulator: consent, success, skipped, timeout, retry, cooldown, failure, and token/rejection boundaries while proving core advances, payroll, and access-code writes remain correct.'
+        : b14Closed
         ? 'Start B15 with isolated QA accounts and execute recovery-token lifecycle, timed session expiry, proxy-isolated rate limiting, export/audit/privacy erasure, adversarial input, keyboard/zoom, and installable PWA proof.'
         : b13Closed
         ? 'Start B14 by auditing realtime subscription/refetch behavior, disconnect/reconnect recovery, independent pace calculations, large-range timing, and distinct empty/loading/error/offline dashboard states.'
@@ -331,7 +354,7 @@ const checkpoint = {
 }
 
 const table = batches.map((batch) => `| ${batch.id} | ${batch.name} | ${batch.rows.length} | ${batch.rows.map((id) => `\`${id}\``).join(', ')} |`).join('\n')
-const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Completed batch: **${b14Closed ? 'B14 — realtime dashboard recovery and large-range states (5/5 PASS)' : 'B13 — payroll, advances, kharchi, dashboard wages, and worker money lifecycle (16/16 PASS)'}**.\n- Active batch: **${b14Closed ? 'B15 — authentication, privacy, audit, adversarial UX, and PWA device proof' : 'B14 — realtime dashboard recovery and large-range states'}**.\n- Validation gate: local and Vercel gates passed 88 files / 625 passed plus 1 intentional skip, TypeScript, lint, and a successful optimized Next.js build.\n- Production deployment: \`${b14Closed ? 'dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq' : 'dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD'}\`, Ready and aliased, exact commit \`${b14Closed ? '6f80eac94d950460bf559583dbb18ef434afde00' : 'd42d5138fba22758f1d11218c59deb6c3ad876a3'}\`.\n- Migrations: B14 worker-breakdown timestamp repair is deployed and exercised in QA and production without rewriting existing production logs.\n- Cleanup: the prefixed B14 QA and production tenants, profiles/auth users, 1,800-log fixtures, and dashboard dependencies were removed and reconciled.\n- B14 evidence: \`output/qa/blocked-row-campaign/B14-qa-dashboard.json\`, \`B14-qa-browser.json\`, and \`B14-production-dashboard.json\`.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## B14 closeout\n\nB14 directly proved no-reload realtime refresh without double counting, disconnect/reconnect recovery from authoritative data, independent pace arithmetic, zero-production risk, a 90-day/1,800-log range below two seconds, and distinct actionable dashboard states. The fulfilled-error, timestamp, reconnect-topic, order-health, and state-rendering defects were repaired, the exact implementation commit was deployed, and disposable data reconciled to zero.\n\n## Exact next action\n\n${b14Closed ? 'Start B15 with isolated QA accounts and execute recovery-token lifecycle, timed session expiry, proxy-isolated rate limiting, export/audit/privacy erasure, adversarial input, keyboard/zoom, and installable PWA proof.' : 'Complete B14 production runtime proof and cleanup before changing any of its five rows.'}\n`
+const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Completed batch: **${b15ExecutableClosed ? 'B15 — authentication, privacy, audit, adversarial UX, and PWA device proof (10 PASS, 1 precisely BLOCKED)' : 'B14 — realtime dashboard recovery and large-range states (5/5 PASS)'}**.\n- Active batch: **${b15ExecutableClosed ? 'B16 — WhatsApp simulation and provider boundaries' : 'B15 — authentication, privacy, audit, adversarial UX, and PWA device proof'}**.\n- Validation gate: local and Vercel gates passed 89 files / 633 passed plus 1 intentional skip, TypeScript, targeted lint, and a successful optimized Next.js build.\n- Production deployment: \`${b15ExecutableClosed ? 'dpl_CmFozomMsAhE36kvGUMQiPwJpsFr' : 'dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq'}\`, Ready and aliased, exact commit \`${b15ExecutableClosed ? '2e3254f75502ca56192d015c06bba4f7972518aa' : '6f80eac94d950460bf559583dbb18ef434afde00'}\`.\n- Migrations: B15 atomic worker erasure and production-trigger scoping are deployed and exercised in QA and production; retained production/payroll history remains intact while worker PII and client IP audit payloads are redacted.\n- Cleanup: all prefixed B15 QA and production tenants, profiles/auth users, worker/production/audit/export fixtures, and dependencies were removed and reconciled.\n- B15 evidence: \`output/qa/blocked-row-campaign/B15-qa-security.json\`, \`B15-qa-browser.json\`, \`B15-qa-http.json\`, and \`B15-production-security.json\`.\n- OFF-001 blocker: actual install and standalone reopen need a supported PWA-capable browser/device; manifest, icons, scope, start route, update notice, and refresh activation are already proven.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## B15 closeout\n\nB15 directly proved the recovery-token lifecycle, one-hour idle expiry, proxy-isolated auth limiter keys, same-user/cross-origin action rejection, tenant-scoped audited export, atomic erasure with retained-history redaction, stored-XSS safety, audit context, keyboard operation, and 200%-equivalent layouts. The exact implementation commit and both migrations are live, matching disposable QA and production fixtures passed and reconciled to zero, and only OFF-001 install/standalone reopen remains blocked by browser capability.\n\n## Exact next action\n\n${b15ExecutableClosed ? 'Execute B16 with a deterministic WhatsApp provider simulator covering consent, sent/skipped/timeout/retry/cooldown/failure outcomes and core-write invariants before any WA row promotion.' : 'Complete B15 executable proof and preserve OFF-001 as blocked unless actual install/standalone reopen is observed.'}\n`
 
 await fs.mkdir(outDir, { recursive: true })
 await fs.writeFile(inventoryPath, `${JSON.stringify(inventory, null, 2)}\n`)

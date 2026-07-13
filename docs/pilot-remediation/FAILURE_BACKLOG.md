@@ -6,7 +6,7 @@ This backlog is grouped by root cause and ordered by the required pilot priority
 
 The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. The active remediation campaign has since moved 18 confirmed failures and 13 previously blocked rows to pass, and reclassified `MASTER-006` as a precise schema-parity blocker. `AUTH-012` is closed by production migration and isolated runtime proof. The only remaining formal failures are `WA-008`, `OFF-009`, and `OFF-010`. Historical row-level actuals remain in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/`, and blocked rows remain evidence debt rather than failures.
 
-Current remediation note (2026-07-14): the historical runtime-rerun counts above remain the immutable 2026-07-10 campaign result; the active formal matrix has 338 pass, 3 fail, 35 blocked, and 1 not applicable after blocked-row Batch 14. B14 closed the five-row realtime/reconnect/pace/large-range/dashboard-state cluster with QA runtime/browser and exact-deployment production proof. `NEEDS-AUDIT-002` separately records legacy pass rows whose Actual text conflicts with their expectation, so these mechanical totals are not final pilot-readiness truth.
+Current remediation note (2026-07-14): the historical runtime-rerun counts above remain the immutable 2026-07-10 campaign result; the active formal matrix has 348 pass, 3 fail, 25 blocked, and 1 not applicable after blocked-row Batch 15. B15 closed ten authentication/privacy/audit/adversarial-UX rows with QA browser/HTTP/database and exact-deployment production proof; `OFF-001` remains precisely blocked on actual PWA install and standalone reopen. `NEEDS-AUDIT-002` separately records legacy pass rows whose Actual text conflicts with their expectation, so these mechanical totals are not final pilot-readiness truth.
 
 ## Coverage Ledger
 
@@ -26,7 +26,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, and `SEC-018`. The Golden payroll/stock rows formerly listed here are closed by B11–B13 direct runtime proof.
 
-Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `AUTH-015` is closed by cross-session revocation proof. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
+Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `OFF-001`, `SIGNOFF-04`, `UX-012`, `WA-010`. `AUTH-014`, `AUTH-015`, and `AUTH-018` are closed by direct B15 or earlier session/rate-limit proof. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
 
 Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed. `SEC-B` is now also closed after `AUTH-008` received fail-closed source coverage and fresh QA Redis proof on 2026-07-11. Batch 20 moved the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`; Batch 21D closes them with disposable QA runtime proof.
 
@@ -587,3 +587,9 @@ The backlog now has 40 blocked rows. B14 is active with five realtime/dashboard 
 Remove all five B14 IDs from the blocked backlog: `DASH-005`, `DASH-006`, `DASH-008`, `DASH-010`, and `UX-010`. Exact QA runtime/browser and production runtime proof covers no-reload realtime refresh without double counting, disconnect/reconnect recovery from authoritative data, independent pace arithmetic, explicit zero-production risk, the complete 90-day/1,800-log range below two seconds, and distinct actionable loading/error/offline/empty/live states.
 
 The backlog now has 35 blocked rows. B15 is active with eleven authentication, privacy, audit, adversarial UX, and PWA rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B14 does not reclassify them or relax the No-Go gate.
+
+### B15 authentication, privacy, audit, and adversarial UX cluster resolved
+
+Remove ten B15 IDs from the blocked backlog: `AUTH-005`, `AUTH-014`, `AUTH-018`, `SEC-009`, `SEC-010`, `SEC-012`, `SEC-013`, `SEC-015`, `UX-006`, and `UX-009`. QA browser/HTTP/database and matching production database proof covers recovery-token lifecycle, idle expiry, proxy client isolation, audited tenant export, atomic retained-history erasure/redaction, stored-XSS safety, cross-origin session/action rejection, destructive/settings audit context, keyboard operation, and 200%-equivalent layout integrity.
+
+Retain `OFF-001` as blocked: manifest, icons, scope, start route, update notice, and refresh activation passed, but actual install and standalone reopen need a supported external PWA browser/device. The backlog now has 25 blocked rows. B16 is active with nine WhatsApp simulation/provider rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B15 does not reclassify them or relax the No-Go gate.

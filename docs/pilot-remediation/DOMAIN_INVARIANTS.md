@@ -379,3 +379,15 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Order health derives produced, remaining, days, required pace, and pace index from persisted production. Zero production remains visibly at risk, and a future critical deadline is not labeled overdue.
 - Loading/reconnecting, source error, offline, historical empty, and live connected states are distinct and actionable.
 - The dashboard must return the complete exercised 90-day/1,800-log range in under two seconds without truncation or UI freeze.
+
+## B15 authentication, privacy, audit, and adversarial UX invariants
+
+- Recovery credentials are single-use and time-bounded: only a fresh unused token may change a password; reused, old-password, and expired paths fail closed.
+- The one-hour inactivity boundary must remain observable after the threshold. Its cookie is HttpOnly and SameSite=Lax, and an expired authenticated request redirects without leaking tenant/user content.
+- Auth limiter identity is the normalized first forwarded client IP plus route key. One proxy client must not create a global lockout bucket for unrelated clients.
+- Owner export is available from the shared responsive Settings flow for every plan, contains only the authenticated organization, and must write its actor/org/record audit before delivery.
+- Worker erasure is one owner/actor/tenant-validated database transaction: direct PII is anonymized, the worker is inactive, immutable production/payroll basis remains, and retained old/new audit payloads cannot preserve worker PII or client IP.
+- A valid session is insufficient for a cross-origin protected mutation. Foreign-Origin server actions fail without mutation or sensitive response content.
+- Stored party, quality, worker, dispatch, note, and template text is rendered as inert data across owner surfaces; markup cannot become an image, event handler, or executable script.
+- Custom interactive cards and disclosures support keyboard activation and state semantics; icon-only actions have accessible names. At 200%-equivalent layout, totals and visible actions remain unclipped without horizontal overflow.
+- PWA readiness claims are split honestly: manifest/icon/scope/start/update proof does not substitute for observing a real install and standalone reopen.

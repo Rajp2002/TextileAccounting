@@ -1,0 +1,107 @@
+{
+  "run_id": "B15-QA-1783984725486",
+  "environment": "qa",
+  "project_ref": "eutycrtzzxmlkcpipgod",
+  "scope": "B15 authentication, tenant session, export/audit, erasure, XSS, keyboard, zoom, and PWA proof",
+  "assertions": [
+    {
+      "name": "only the valid unused recovery token changes the password",
+      "passed": true,
+      "old_password_rejected": true,
+      "new_password_accepted": true,
+      "used_token_rejected": true
+    },
+    {
+      "name": "same-user session remains tenant-scoped and cannot read another organization",
+      "passed": true,
+      "visible_outsider_rows": 0
+    },
+    {
+      "name": "another valid user session cannot erase a worker outside its organization",
+      "passed": true,
+      "rejected": true,
+      "error": "worker not found"
+    },
+    {
+      "name": "stored adversarial text persists as data for browser escaping proof",
+      "passed": true,
+      "marker": "B15-630bfa0c",
+      "literal_payload_preserved": true
+    },
+    {
+      "name": "deletion, write-off, and settings mutations retain actor org record context and before-after payloads",
+      "passed": true,
+      "matching_audit_rows": 4,
+      "tables": [
+        "fixed_workers:INSERT",
+        "fixed_workers:DELETE",
+        "organizations:UPDATE",
+        "worker_advances:UPDATE"
+      ]
+    },
+    {
+      "name": "expired recovery token is rejected after its configured lifetime",
+      "passed": true
+    },
+    {
+      "name": "atomic worker erasure removes intended PII while preserving production and payroll basis",
+      "passed": true,
+      "worker": {
+        "name": "ERASED WORKER",
+        "active": false,
+        "erased_at": "2026-07-13T23:19:35.907447+00:00"
+      },
+      "history": [
+        {
+          "id": 1848,
+          "meters": 25,
+          "worker_rate_snapshot": 4,
+          "client_ip": null
+        }
+      ]
+    },
+    {
+      "name": "erasure audit preserves actor org action record context without retained worker PII",
+      "passed": true,
+      "erasure_rows": 1,
+      "actor": "842876f9...ada9",
+      "pii_absent": true
+    },
+    {
+      "name": "owner data export is audited before browser download",
+      "passed": true,
+      "export_audit_rows": 1
+    },
+    {
+      "name": "browser proof completed executable XSS, keyboard, zoom, session, and export checks and records the PWA install blocker",
+      "passed": true,
+      "browser_assertions": 7,
+      "browser_passed": true,
+      "blocked_rows": [
+        "OFF-001"
+      ]
+    }
+  ],
+  "cleanup": "complete",
+  "disposable_tenants": [
+    "f4e696f5...6c91",
+    "0d636dbe...093a"
+  ],
+  "fixture": {
+    "worker": 73,
+    "order": "beb0fbc1...373c",
+    "xss_marker": "B15-630bfa0c"
+  },
+  "passed": true,
+  "browser_evidence": "output/qa/blocked-row-campaign/B15-qa-browser.json",
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "production_logs": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  }
+}

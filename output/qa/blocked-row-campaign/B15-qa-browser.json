@@ -1,0 +1,169 @@
+{
+  "run_id": "B15-BROWSER-1783984555296",
+  "environment": "qa-local-dev-plus-production-public-pwa",
+  "generated_at": "2026-07-13T23:15:55.296Z",
+  "passed": true,
+  "assertions": [
+    {
+      "id": "SEC-009",
+      "name": "owner data export control is visible at narrow widths and invokes the server action",
+      "status": "pass",
+      "passed": true,
+      "details": {
+        "button_visible": true,
+        "click_completed": true,
+        "server_action_completed": true,
+        "download_event_optional": false,
+        "audit_verification": "finalize"
+      }
+    },
+    {
+      "id": "SEC-010",
+      "name": "DPDP worker erasure requires a one-time code and completes atomically",
+      "status": "pass",
+      "passed": true,
+      "details": {
+        "access_code_required": true,
+        "dpdp_erasure_checked": true,
+        "action_completed": true,
+        "original_name_absent": true,
+        "database_verification": "finalize"
+      }
+    },
+    {
+      "id": "SEC-012",
+      "name": "stored hostile markup renders as inert text across core owner surfaces",
+      "status": "pass",
+      "passed": true,
+      "details": {
+        "routes": {
+          "/owner/orders": {
+            "executionFlag": false,
+            "injectedHandlerCount": 0,
+            "injectedImageCount": 0,
+            "markerRenderedAsText": true
+          },
+          "/owner/dispatches": {
+            "executionFlag": false,
+            "injectedHandlerCount": 0,
+            "injectedImageCount": 0,
+            "markerRenderedAsText": true
+          },
+          "/owner/fixed-workers": {
+            "executionFlag": false,
+            "injectedHandlerCount": 0,
+            "injectedImageCount": 0,
+            "markerRenderedAsText": true
+          },
+          "/owner/estimator": {
+            "executionFlag": false,
+            "injectedHandlerCount": 0,
+            "injectedImageCount": 0,
+            "markerRenderedAsText": true
+          }
+        },
+        "passed": true
+      }
+    },
+    {
+      "id": "UX-006",
+      "name": "custom order cards activate with Enter and icon-only worker actions have accessible names",
+      "status": "pass",
+      "passed": true,
+      "details": {
+        "order_card_enter_opened_details": true,
+        "worker_edit_delete_actions_named": true,
+        "native_auth_buttons_semantic": true
+      }
+    },
+    {
+      "id": "UX-009",
+      "name": "core routes have no horizontal overflow or clipped visible controls at a 200-percent-equivalent viewport",
+      "status": "pass",
+      "passed": true,
+      "details": {
+        "equivalent_viewport": "720x450 CSS px for 1440x900 at 200%",
+        "routes": {
+          "/owner/settings#privacy-data": {
+            "clippedInteractive": [],
+            "documentWidth": 720,
+            "horizontalOverflow": false,
+            "mainRight": 720,
+            "viewport": [
+              720,
+              450
+            ]
+          },
+          "/owner/orders": {
+            "clippedInteractive": [],
+            "documentWidth": 720,
+            "horizontalOverflow": false,
+            "mainRight": 720,
+            "viewport": [
+              720,
+              450
+            ]
+          },
+          "/owner/today": {
+            "clippedInteractive": [],
+            "documentWidth": 720,
+            "horizontalOverflow": false,
+            "mainRight": 720,
+            "viewport": [
+              720,
+              450
+            ]
+          }
+        },
+        "passed": true
+      }
+    },
+    {
+      "id": "AUTH-014_SEC-013",
+      "name": "idle timeout and cross-origin action boundaries pass against an authenticated disposable session",
+      "status": "pass",
+      "passed": true,
+      "details": {
+        "evidence": "B15-qa-http.json",
+        "assertions": [
+          {
+            "name": "authenticated owner request is accepted before idle timeout",
+            "passed": true,
+            "status": 200
+          },
+          {
+            "name": "last-activity cookie persists beyond the one-hour enforcement window with safe attributes",
+            "passed": true
+          },
+          {
+            "name": "authenticated session idle for more than one hour is redirected without sensitive response content",
+            "passed": true,
+            "status": 307
+          },
+          {
+            "name": "cross-origin server action request is rejected without mutation despite a valid same-user cookie",
+            "passed": true,
+            "status": 500
+          }
+        ]
+      }
+    },
+    {
+      "id": "OFF-001",
+      "name": "install PWA and reopen in standalone mode",
+      "status": "blocked",
+      "passed": null,
+      "details": {
+        "production_manifest_icons_service_worker": true,
+        "update_notice_observed": true,
+        "update_refresh_applied": true,
+        "fresh_start_route": "/login",
+        "standalone_mode_observed": false,
+        "blocking_condition": "The in-app browser does not expose install or standalone PWA mode, and the Chrome extension browser is unavailable after the required retry. Actual install-and-reopen cannot be claimed."
+      }
+    }
+  ],
+  "blocked_rows": [
+    "OFF-001"
+  ]
+}

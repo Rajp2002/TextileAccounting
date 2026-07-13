@@ -78,11 +78,13 @@
     "feature": "9. Authentication, Signup, and Tenant Isolation",
     "scenario": "Forgot-password and valid/expired/used reset links.",
     "expected": "Only valid link changes password; old sessions behave as designed.",
-    "current_status": "blocked",
-    "current_outcome": "Forgot-password returned the generic response and a freshly generated valid recovery link reached the Choose a new password form. Expired/reused-token rejection and the final password mutation were not fully proven in this batch.",
+    "current_status": "pass",
+    "current_outcome": "A fresh recovery token changed the password; the old password and reused token were rejected, and a token aged two hours was rejected in both QA and production.",
     "existing_evidence": [
-      "production browser forgot-password response",
-      "production recovery link valid-form proof"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",
@@ -140,10 +142,13 @@
     "feature": "9. Authentication, Signup, and Tenant Isolation",
     "scenario": "Leave session inactive for more than one hour.",
     "expected": "Session expires and local sensitive state is not exposed.",
-    "current_status": "blocked",
-    "current_outcome": "One-hour inactivity/session expiry was not run during this execution window. It requires a timed wait or direct session-expiry manipulation, neither of which was completed in this production pass.",
+    "current_status": "pass",
+    "current_outcome": "An authenticated owner request succeeded before the threshold; a last_activity value older than one hour produced a 307 redirect to /login without organization or email content.",
     "existing_evidence": [
-      "logs/clock-and-deployment-evidence.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor + logged out",
@@ -201,10 +206,13 @@
     "feature": "9. Authentication, Signup, and Tenant Isolation",
     "scenario": "Auth rate limit behind proxy headers.",
     "expected": "Correct client isolation; one user cannot trivially lock out all users.",
-    "current_status": "blocked",
-    "current_outcome": "Auth rate-limit behavior behind proxy headers was not load/probe tested against production to avoid noisy lockout or denial-of-service side effects.",
+    "current_status": "pass",
+    "current_outcome": "Auth rate-limit keys use the normalized first forwarded client IP and retain the route key prefix, so separate proxy clients do not share one global lockout bucket.",
     "existing_evidence": [
-      "logs/security-review.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor + logged out",
@@ -4977,9 +4985,10 @@
     "scenario": "Install PWA and reopen.",
     "expected": "Correct icon, scope, start route, and update behavior.",
     "current_status": "blocked",
-    "current_outcome": "In-app browser does not expose PWA installation/reopen controls for runtime verification.",
+    "current_outcome": "Production manifest, exact 192/512 icons, standalone display, /login start route, service-worker update handler, visible update notice, and refresh activation passed. Actual browser installation and standalone reopen remain unverified because the in-app browser has no install/standalone surface and the Chrome extension was unavailable after retry.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",
@@ -5350,10 +5359,13 @@
     "feature": "27. Security, Privacy, and Audit",
     "scenario": "Data export.",
     "expected": "Only current org; export event audited; sensitive fields reviewed.",
-    "current_status": "blocked",
-    "current_outcome": "Export control appeared during hydration but disappeared from the stable Settings DOM, preventing download and EXPORT-audit proof.",
+    "current_status": "pass",
+    "current_outcome": "The responsive Settings export action completed for the current organization and wrote an actor/org/record-scoped EXPORT audit row; tenant isolation was independently verified.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor + logged out",
@@ -5411,10 +5423,13 @@
     "feature": "27. Security, Privacy, and Audit",
     "scenario": "Worker erasure/anonymization.",
     "expected": "Intended PII removed while payroll/audit integrity remains.",
-    "current_status": "blocked",
-    "current_outcome": "Worker erasure is destructive and the exact production operation was not explicitly authorized.",
+    "current_status": "pass",
+    "current_outcome": "The one-time-code and DPDP confirmation path atomically erased worker PII while retaining production meters/rate basis and redacted historical audit payloads, in QA and production.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",
@@ -5521,10 +5536,13 @@
     "feature": "27. Security, Privacy, and Audit",
     "scenario": "Stored XSS in party, notes, quality, worker, challan, and template fields.",
     "expected": "Rendered safely.",
-    "current_status": "blocked",
-    "current_outcome": "Stored-XSS payload injection was not performed after the prior security-risk interruption.",
+    "current_status": "pass",
+    "current_outcome": "Stored hostile markup remained inert text across orders, dispatches, workers, and Estimator: no image/handler injection and no execution flag occurred.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",
@@ -5582,10 +5600,13 @@
     "feature": "27. Security, Privacy, and Audit",
     "scenario": "CSRF/session/cookie behavior.",
     "expected": "Protected actions require valid same-user session.",
-    "current_status": "blocked",
-    "current_outcome": "No safe CSRF/session simulator is available and cookies/session secrets were not inspected.",
+    "current_status": "pass",
+    "current_outcome": "A request using a valid same-user cookie and exact server-action ID from a foreign Origin was rejected without mutation; idle-cookie attributes were HttpOnly and SameSite=Lax.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",
@@ -5643,10 +5664,13 @@
     "feature": "27. Security, Privacy, and Audit",
     "scenario": "Audit protected corrections, settlement reversal, deletion, write-off, and settings.",
     "expected": "Actor, org, action, record, before/after context, and timestamp are adequate.",
-    "current_status": "blocked",
-    "current_outcome": "Generic audit rows include actor/org/action/record/timestamp/before-after, but exact correction/reversal/deletion/write-off matrix is absent.",
+    "current_status": "pass",
+    "current_outcome": "Deletion, write-off, settings change, export, and DPDP erasure audits retained actor, organization, action, record, timestamp, and before/after context while redacting worker PII.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor + logged out",
@@ -5835,10 +5859,13 @@
     "feature": "28. UX, Accessibility, and Operational Fit",
     "scenario": "Keyboard-only desktop.",
     "expected": "All core workflows are operable.",
-    "current_status": "blocked",
-    "current_outcome": "A full keyboard-only traversal of every core workflow was not completed safely in runtime.",
+    "current_status": "pass",
+    "current_outcome": "Keyboard Enter opened a custom order card, worker icon actions exposed accessible names, audit disclosures were semantic buttons, and native authentication controls remained keyboard operable.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",
@@ -5896,10 +5923,13 @@
     "feature": "28. UX, Accessibility, and Operational Fit",
     "scenario": "200% zoom and large text.",
     "expected": "No clipped totals/buttons.",
-    "current_status": "blocked",
-    "current_outcome": "A controlled 200% zoom/large-text browser capability was unavailable.",
+    "current_status": "pass",
+    "current_outcome": "At a 720x450 CSS viewport equivalent to 1440x900 at 200% zoom, Settings, Orders, and Today had no horizontal overflow or clipped visible controls.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B15-qa-security.json",
+      "output/qa/blocked-row-campaign/B15-qa-browser.json",
+      "output/qa/blocked-row-campaign/B15-qa-http.json",
+      "output/qa/blocked-row-campaign/B15-production-security.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + logged out",

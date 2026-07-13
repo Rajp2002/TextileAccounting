@@ -644,3 +644,16 @@ Acceptance:
 - Focused regression command: `npx vitest run __tests__/b14-realtime-dashboard-states.test.ts`; run `node scripts/qa/b14-dashboard-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when realtime topics, dashboard actions/states, pace RPCs, worker breakdowns, or large-range queries change.
 - Canonical evidence is `output/qa/blocked-row-campaign/B14-qa-dashboard.json`, `B14-qa-browser.json`, and `B14-production-dashboard.json` on production deployment `dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq`.
 - Canonical counts after B14: 338 pass, 3 fail, 35 blocked, and 1 not applicable. Begin B15; do not rerun B14 unless one of these boundaries changes.
+
+### B15 authentication/privacy/adversarial regression guard — 2026-07-14
+
+- Preserve valid/used/expired recovery behavior and the seven-day last-activity cookie used to enforce the one-hour idle boundary; expired responses must redirect without tenant/user content.
+- Preserve normalized first-forwarded-IP auth limiter keys and same-user/foreign-Origin server-action rejection without mutation.
+- Preserve plan-independent, responsive owner export and fail-closed actor/org/record audit creation.
+- Preserve atomic owner-only worker erasure, immutable production/payroll basis, and redaction of DOB, provenance, statutory/contact identifiers, and client IP from retained audit payloads.
+- Preserve inert rendering for stored hostile text across orders, dispatches, workers, and Estimator.
+- Preserve keyboard activation/naming for custom order/worker/audit controls and no overflow/clipped actions at the exercised 200%-equivalent Settings, Orders, and Today layouts.
+- Preserve manifest start `/login`, scope `/`, standalone display, exact 192/512 icons, and `SKIP_WAITING` update handling. Keep `OFF-001` blocked until install and standalone reopen are observed on a supported browser/device.
+- Focused regression command: `npx vitest run __tests__/b15-auth-privacy-pwa-guardrails.test.ts __tests__/auth-reset-flow.test.ts __tests__/batch24g-security-audit-guardrails.test.ts __tests__/sec-017-worker-age-verification.test.ts`; run `node scripts/qa/b15-security-runtime-proof.mjs --preserve` only in isolated QA and complete its expiry/exercise/finalize sequence before cleanup.
+- Canonical evidence is `output/qa/blocked-row-campaign/B15-qa-security.json`, `B15-qa-browser.json`, `B15-qa-http.json`, and `B15-production-security.json` on production deployment `dpl_CmFozomMsAhE36kvGUMQiPwJpsFr`.
+- Canonical counts after B15: 348 pass, 3 fail, 25 blocked, and 1 not applicable. Begin B16; do not rerun B15 unless one of these boundaries changes or a supported PWA install surface becomes available.
