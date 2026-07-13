@@ -137,3 +137,11 @@ Final sign-off must include:
 - Evidence logs for each closed cluster.
 - Release metadata: deployed URL, commit, migration head, Sentry release, CI run, backup restore, rollback/forward-fix exercise.
 - A list of de-scoped features shown to the pilot customer.
+
+## Production checkpoint evidence — 2026-07-13
+
+- Production source checkpoint: `40b414a6ed7b9285048045c118074d8e0d010065`.
+- Production database migration head: `20260711180000`, aligned with the repository at deployment time.
+- Production web release: Vercel deployment `dpl_4pP8ovMPoS1tCwAcp9RZQL5gNfnY`, Ready at `https://textile-accounting.vercel.app` with successful Sentry source-map upload.
+- Production webhook: `whatsapp-webhook` active at version 16.
+- This checkpoint enables live testing but does not satisfy final Pilot Ready criteria: 3 failures, 107 blocked rows, six legacy schema-lint findings, restore proof, and rollback/forward-fix proof remain open.

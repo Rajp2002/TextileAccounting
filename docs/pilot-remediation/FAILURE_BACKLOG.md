@@ -537,3 +537,7 @@ Fresh isolated QA proof on 2026-07-13 supersedes the historical open references 
 ### AUTH-012 superseding production closeout — 2026-07-13
 
 The historical AUTH-012 failure above is closed. Production migration `20260710210828` removed the public permissive organization lookup policy, and the policy catalog now contains only authenticated tenant SELECT and owner tenant UPDATE. A disposable two-tenant production probe passed own read/update and cross-tenant organization/profile/machine denial plus persisted non-mutation. Exact cleanup reconciled all synthetic rows and auth users to zero. Remaining formal failures are `WA-008`, `OFF-009`, and `OFF-010`.
+
+### Needs formal audit/debugging — production schema lint (2026-07-13 checkpoint)
+
+The production checkpoint did not promote any of these findings to pass. Post-migration schema lint reports six legacy stored-function errors requiring isolated ownership and runtime-impact analysis: `lockdown_tenant` mixes bigint and UUID branches in a UNION; `link_batch_to_machine` references removed `machines.rate_per_meter`; `get_daily_brief_stats` references removed `workers.rate_per_meter`; `replace_shift_production_logs` references absent `weavly_shift_logs`; `settle_worker_payroll` references absent constraint `payroll_unique_meter_worker_month`; and `get_yield_alert` references removed `yarn_batches.weight_kg`. Treat this cluster as `Needs formal audit/debugging` before deciding whether each function should be repaired, replaced, or retired.

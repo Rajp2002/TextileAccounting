@@ -1965,3 +1965,12 @@ Date/time: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710
 - Safety: QA-only fixture; referral rows/codes, Redis marker, subscriptions, profiles, organizations, auth users, private credential file, browser tabs, and local server all reconciled to zero/removed.
 - Current formal matrix: total 377, pass 261, fail 3, blocked 112, not applicable 1, code verified 0, not run 0.
 - Next action: select the next isolated-fixture candidates while keeping the Settings render/audit issue and legacy pass-label audit open.
+
+## Production checkpoint — 2026-07-13
+
+- Pushed source commit: `40b414a6ed7b9285048045c118074d8e0d010065` on `codex/estimator-production-readiness-20260710`.
+- Production Supabase is aligned through migration `20260711180000`; the five checkpoint migrations were applied after a zero-affected-row reconciliation check for the broad loom-deactivation migration.
+- Production `whatsapp-webhook` is active at version 16. Vercel deployment `dpl_4pP8ovMPoS1tCwAcp9RZQL5gNfnY` is Ready at `https://textile-accounting.vercel.app`.
+- Public-route and auth-boundary smoke passed. Full tests, lint, TypeScript, production build, remote build, source-map upload, and diff checks passed.
+- Six legacy stored functions remain in `Needs formal audit/debugging`; no pass credit was claimed for them.
+- Current formal matrix remains total 377, pass 266, fail 3, blocked 107, not applicable 1. Next action is user live testing, followed by the next blocked-row batch.

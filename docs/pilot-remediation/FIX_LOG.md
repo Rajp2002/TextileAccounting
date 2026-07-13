@@ -2259,3 +2259,14 @@ Date: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
 - Migration/deployment: none. This batch changed only the client retry boundary, focused regression coverage, the disposable local proxy, and formal evidence/docs.
 - Safety: isolated QA project `eutycrtzzxmlkcpipgod`; the created machine and the complete fixture/auth set were deleted by exact tenant/fixture cleanup, and local servers/browser tabs/private credentials were removed or closed.
 - Formal matrix: total 377, pass 266, fail 3, blocked 107, not applicable 1. Readiness remains No-Go.
+
+## Production checkpoint deployment (2026-07-13)
+
+- Source checkpoint: commit `40b414a6ed7b9285048045c118074d8e0d010065` on `codex/estimator-production-readiness-20260710` was pushed to `origin` before deployment.
+- Release gate: full Vitest passed 80 files with 589 passed and 1 intentional skip; ESLint, TypeScript, `git diff --check`, QA proxy syntax, and the Next.js 16.2.10 production build passed. The Vercel remote build repeated the test/build gate and uploaded Sentry source maps successfully.
+- Production database: preflight dry-run identified exactly five pending migrations. Production impact inspection found 13 active machines, with zero rows and zero organizations affected by the loom-deactivation reconciliation. Migrations `20260710211355`, `20260711061412`, `20260711134000`, `20260711172126`, and `20260711180000` were then applied in order. Post-deployment migration listing shows local and production aligned through `20260711180000`.
+- Edge function: `whatsapp-webhook` was deployed to production as active version 16 with JWT verification disabled as required by its signed Meta webhook boundary.
+- Web deployment: Vercel production deployment `dpl_4pP8ovMPoS1tCwAcp9RZQL5gNfnY` is Ready and aliased to `https://textile-accounting.vercel.app`.
+- Live smoke: `/`, `/login`, `/privacy`, `/terms`, and `/manifest.webmanifest` returned HTTP 200. Unauthenticated `/owner/today` and `/supervisor/dashboard` returned HTTP 307 to `/login`.
+- Formal audit/debugging follow-up: production schema lint still reports six legacy stored-function errors in `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert`. These were not represented as deployment passes and require isolated formal audit/debugging before remediation.
+- Matrix state is unchanged by deployment: total 377, pass 266, fail 3, blocked 107, not applicable 1. Readiness remains No-Go while live testing proceeds.

@@ -310,3 +310,7 @@ Batch 7 proof note: `TECH-013` is satisfied at source level by `test: vitest run
 - A worker phone change requires consent reconfirmation; the worker and single org/person/channel consent row must agree on the latest valid number. Editing contact data must not itself send WhatsApp.
 - Every estimator row contributes once; unit conversion preserves the canonical calculation; optional costs are gated; direct overhead replaces itemized overhead; and capacity/idle cost reconciles from visible inputs.
 - Saved qualities remain org-scoped across save, rename, rate/full update, apply, refresh, and soft delete.
+
+## Production checkpoint invariant note — 2026-07-13
+
+The production migration head is aligned through `20260711180000`, and the checkpoint release is live at `https://textile-accounting.vercel.app`. Deployment alignment alone is not runtime proof for a formal row. In particular, production schema lint still detects six legacy stored functions whose compiled bodies reference incompatible or removed schema contracts. Until isolated audit/debugging proves repair or safe retirement, no workflow depending on those functions may receive pass credit solely from this deployment.

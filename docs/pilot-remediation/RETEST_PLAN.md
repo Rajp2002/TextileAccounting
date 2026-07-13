@@ -550,3 +550,11 @@ Acceptance:
 - Post-deployment catalog contains no public/true organization SELECT policy.
 - Fresh production reproof passed own organization read/update, cross-tenant organization/profile/machine non-disclosure, cross-tenant organization/machine mutation denial, and service-role non-mutation reconciliation.
 - Exact synthetic cleanup passed. `AUTH-012` is now `PASS`; earlier open/retest instructions are retained only as historical batch context.
+
+### Production checkpoint live-test handoff — 2026-07-13
+
+- Test against `https://textile-accounting.vercel.app`; deployment `dpl_4pP8ovMPoS1tCwAcp9RZQL5gNfnY` is the checkpoint release for source commit `40b414a6ed7b9285048045c118074d8e0d010065`.
+- Database migrations are aligned through `20260711180000`; `whatsapp-webhook` is active at version 16.
+- Start live validation with authenticated owner and supervisor smoke, then rerun the remaining shift-write/unknown-outcome prerequisites before production-history-dependent rows.
+- Do not mark the six schema-lint functions pass-ready. Audit `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert` independently and reconcile each to a formal row or retirement decision.
+- Preserve the current formal counts until new runtime evidence is reconciled: 266 pass, 3 fail, 107 blocked, and 1 not applicable.
