@@ -29,6 +29,14 @@ export function getSuratTodayString(): string {
     return formatToSurat(new Date(), 'yyyy-MM-dd')
 }
 
+export function getSuratMonthToDateBounds(now: Date | number | string = new Date()) {
+    const end = formatToSurat(now, 'yyyy-MM-dd')
+    return {
+        start: `${end.slice(0, 7)}-01`,
+        end,
+    }
+}
+
 export function getCurrentSuratHour(): number {
     return Number(formatToSurat(new Date(), 'H'))
 }
