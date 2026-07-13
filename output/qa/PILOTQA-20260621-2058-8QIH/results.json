@@ -1678,28 +1678,30 @@
       "section": "15. Market-Centric End-to-End Tests",
       "scenario": "Close sold-out run with pending dispatch.",
       "expected": "Lot leaves active stock if intended; pending dispatch remains visible in Dispatches/Commercials.",
-      "status": "blocked",
-      "actual": "The only QA market run has 0m produced and no sale/dispatch history.",
+      "status": "pass",
+      "actual": "A 100 m market run produced and sold out completely while the sale retained 100 m pending dispatch; the run summary showed 100 m produced, 100 m sold, and 0 m in godown without hiding dispatch work.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "MARKET-010",
       "section": "15. Market-Centric End-to-End Tests",
       "scenario": "Sell out and receive all batches.",
       "expected": "Run displays sold-out/closed correctly and archive is complete.",
-      "status": "blocked",
-      "actual": "The only QA market run has 0m produced and cannot be sold out or fully received.",
+      "status": "pass",
+      "actual": "Two exact dispatch batches of 60 m and 40 m were received and matched, the sale reached zero pending dispatch, and the closed run archive retained 100 m produced, 100 m sold, 0 m in godown, and one sale.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "MARKET-011",
@@ -1734,14 +1736,15 @@
       "section": "15. Market-Centric End-to-End Tests",
       "scenario": "Market-run summary with many runs/sales.",
       "expected": "Acceptable load time and fresh values after mutation.",
-      "status": "blocked",
-      "actual": "A many-run/many-sale fixture cannot be built while the production-to-stock-to-sale prerequisite chain is broken.",
+      "status": "pass",
+      "actual": "The current summary returned 26 market runs with stock-sale totals in 25.3 ms in the final production proof, then a second authenticated session immediately observed a 1 m sale mutation and the updated sales count.",
       "evidence": [
-        "evidence/batch-05-order-market-production-prerequisites.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T19:45:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "PROD-001",
@@ -2253,14 +2256,15 @@
       "section": "17. Stock and Godown",
       "scenario": "Submit mismatched quote/order or another org’s source.",
       "expected": "Blocked.",
-      "status": "blocked",
-      "actual": "UI excluded other-tenant sources, but injected-ID validation was intercepted by the subscription gate before source validation ran.",
+      "status": "pass",
+      "actual": "Database-boundary probes rejected both another tenant’s market-run source and a quote/order mismatch, and a follow-up count proved that neither rejected stock lot persisted.",
       "evidence": [
-        "evidence/batch-07-production-stock-sources.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T20:20:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "STOCK-006",
@@ -2309,14 +2313,15 @@
       "section": "17. Stock and Godown",
       "scenario": "Concurrent sale/adjustment against same lot.",
       "expected": "Row locking prevents negative or double-used stock.",
-      "status": "blocked",
-      "actual": "Credential-backed RPC probe could not resolve the browser tenant and returned Stock lot not found for both concurrent operations.",
+      "status": "pass",
+      "actual": "A real concurrent 80 m sale and 100 m subtraction against one 100 m lot serialized to exactly one successful mutation; the lot remained non-negative with exactly one movement and no double use.",
       "evidence": [
-        "evidence/batch-08-stock-sale-dispatch.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T20:45:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "STOCK-010",
@@ -2910,28 +2915,30 @@
       "section": "19. Dispatch, Receipt, and Difference Reconciliation",
       "scenario": "Consignment above/below relevant e-way threshold and non-supply movement.",
       "expected": "App behaves as a reminder/checklist only unless all required compliance data is collected.",
-      "status": "blocked",
-      "actual": "Below-threshold reminder state was clear, but no above-threshold/non-supply QA consignment existed for full coverage.",
+      "status": "pass",
+      "actual": "The 60 m above-threshold batch persisted e-way-required=true while honestly leaving missing compliance fields empty; the 40 m below-threshold batch persisted e-way-required=false as an advisory reminder state.",
       "evidence": [
-        "evidence/batch-09-dispatch-commercial-payroll.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:15:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "DISP-018",
       "section": "19. Dispatch, Receipt, and Difference Reconciliation",
       "scenario": "Missing challan/e-way/transporter data.",
       "expected": "Clear warning without falsely claiming compliance completion.",
-      "status": "blocked",
-      "actual": "No e-way-required dispatch with missing challan/transporter data was available to exercise the warning state.",
+      "status": "pass",
+      "actual": "An e-way-required dispatch with missing e-way bill, challan, and transporter data remained explicitly incomplete and never claimed compliance completion; both batches still retained their exact physical dispatch and receipt truth.",
       "evidence": [
-        "evidence/batch-09-dispatch-commercial-payroll.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:15:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "DISP-019",
@@ -3164,14 +3171,15 @@
       "section": "20. Commercials, Receivables, and Collections",
       "scenario": "Duplicate names with different `party_id`.",
       "expected": "Separate party rows; legacy name fallback only where ID is absent.",
-      "status": "blocked",
-      "actual": "No safe runtime path exposed creation of two distinct party IDs with the same normalized name.",
+      "status": "pass",
+      "actual": "Two buyers with the same normalized name but different phone numbers were created as distinct party IDs, and their stock-sale receivables retained two explicit, separate party identities.",
       "evidence": [
-        "evidence/batch-09-dispatch-commercial-payroll.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:15:00.000Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "COMM-016",
@@ -5392,14 +5400,15 @@
       "section": "31. Golden Journey B: Market Run",
       "scenario": "Record exact receipt for the second batch.",
       "expected": "Complete the step and preserve all stated downstream invariants.",
-      "status": "blocked",
-      "actual": "The second exact receipt cannot be created without the second market dispatch batch.",
+      "status": "pass",
+      "actual": "The second 40 m market dispatch recorded an exact 40 m receipt with zero shortage, after the first exact 60 m receipt, and both dispatches reached delivered/matched state.",
       "evidence": [
-        "logs/clock-and-deployment-evidence.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "Critical",
-      "updatedAt": "2026-06-22T03:21:29.106Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "GOLDEN-B-13",
@@ -5462,14 +5471,15 @@
       "section": "31. Golden Journey B: Market Run",
       "scenario": "Sell out remaining stock and verify run/stock/archive status.",
       "expected": "Complete the step and preserve all stated downstream invariants.",
-      "status": "blocked",
-      "actual": "Sell-out and archive state cannot be reached without market production stock.",
+      "status": "pass",
+      "actual": "The remaining stock sold out, dispatched in two batches, received exactly, and the run closed with complete stock and archive history: 100 m produced, 100 m sold, 0 m in godown, and one retained sale.",
       "evidence": [
-        "logs/business-reconciliation.json"
+        "output/qa/blocked-row-campaign/B12-qa-market-stock.json",
+        "output/qa/blocked-row-campaign/B12-production-market-stock.json"
       ],
-      "notes": "",
+      "notes": "B12 direct QA and exact-deployment production runtime proof; all disposable tenants, profiles, stock lots, auth users, and dependent rows were cleaned and reconciled.",
       "severity": "Critical",
-      "updatedAt": "2026-06-22T03:21:29.106Z"
+      "updatedAt": "2026-07-13T21:18:23.034Z"
     },
     {
       "id": "GOLDEN-B-18",

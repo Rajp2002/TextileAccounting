@@ -607,3 +607,15 @@ Acceptance:
 - Focused regression commands: `npx vitest run __tests__/batch23-start-party-order-atomicity.test.ts`; run `node scripts/qa/batch6-golden-a-runtime-proof.mjs` in an isolated QA tenant when quote/order, production, stock, dispatch, receipt, commercials, payroll, cancellation, or archive boundaries change.
 - Canonical evidence is `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json` on production deployment `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV`.
 - Canonical counts after B11: 307 pass, 3 fail, 66 blocked, and 1 not applicable. Begin B12; do not rerun B11 unless one of these boundaries changes.
+
+### B12 market-stock lifecycle regression guard — 2026-07-14
+
+- Preserve database rejection of cross-tenant market-run sources, quote/order mismatches, and relational IDs on manual/opening lots, with no rejected row left behind.
+- Preserve sold-out pending-dispatch truth, two independently actionable dispatch batches, exact receipt arithmetic, closed archive totals, and stock-sale-inclusive `sales_count`.
+- Preserve advisory compliance truth: above-threshold dispatch with missing e-way/challan/transporter data remains visibly incomplete; below-threshold state remains a reminder, not a legal-compliance claim.
+- Preserve explicit `party_id` on new receivables and separation of distinct parties that share a normalized display name.
+- Preserve row-locked lot mutation: a concurrent sale and adjustment that together exceed availability yield one success, one rejection, one movement, and a non-negative lot.
+- Preserve fresh second-session market summaries and the formal under-two-second budget for the exercised 26-run fixture.
+- Focused regression command: `npx vitest run __tests__/b12-stock-source-integrity.test.ts`; run `node scripts/qa/b12-market-stock-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when stock-source, sale, dispatch, receipt, commercial party, or market-summary boundaries change.
+- Canonical evidence is `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json` on production deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1`.
+- Canonical counts after B12: 317 pass, 3 fail, 56 blocked, and 1 not applicable. Begin B13; do not rerun B12 unless one of these boundaries changes.

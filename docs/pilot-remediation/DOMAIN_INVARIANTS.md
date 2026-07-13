@@ -348,3 +348,13 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Order-linked sales and partial dispatches retain party, order, quote, stock-lot, receivable, receipt, discrepancy, and claim lineage.
 - Receipt shortage/excess updates dispatch reconciliation and discrepancy state without rewriting original production or generated stock history.
 - Customer collections and worker payroll settle independently against the same immutable production history; a paid payroll grain remains correction-protected.
+
+## B12 market stock and dispatch invariants
+
+- A relational stock source is valid only when every referenced market run, order, and quote belongs to the lot organization and the quote/order/market-run relationships agree. Manual/opening stock cannot carry relational source IDs. The database must enforce this for every client, not only application actions.
+- Ordinary quantity updates on an already valid lot remain concurrency-safe and are not reinterpreted as source creation; sale and adjustment against the same lot serialize so at most one over-consuming mutation succeeds and stock never becomes negative or double-used.
+- Market summaries include both legacy direct market sales and current fabric-stock sales. Sold-out and archived truth must retain produced, sold, godown, and sale-count history after dispatch and receipt.
+- Sale, dispatch, and receipt are separate states. A sold-out run may legitimately retain pending dispatch; partial dispatch leaves the remainder actionable; exact receipt changes delivery reconciliation without rewriting original production or stock-sale history.
+- E-way, challan, and transporter handling is an advisory checklist unless the required compliance dataset is complete. Above-threshold truth must not falsely claim completion when fields are absent; below-threshold truth must not claim that no legal review is required.
+- Party display names are not identities. New receivables retain explicit `party_id`; normalized duplicate names with distinct parties remain separate, with legacy name fallback only where an ID is genuinely absent.
+- Market-summary reads must be fresh across authenticated sessions after mutations and remain within the formal two-second budget for at least the exercised 26-run dataset.

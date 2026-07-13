@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T20:54:51.577Z",
+  "updated_at": "2026-07-13T21:19:38.421Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 307,
-    "blocked": 66,
+    "pass": 317,
+    "blocked": 56,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -23,10 +23,11 @@
     "B08",
     "B09",
     "B10",
-    "B11"
+    "B11",
+    "B12"
   ],
-  "active_batch": "B12",
-  "active_batch_state": "B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued",
+  "active_batch": "B13",
+  "active_batch_state": "B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -268,7 +269,17 @@
     "ORDER-014",
     "ORDER-015",
     "STOCK-011",
-    "GOLDEN-A-23"
+    "GOLDEN-A-23",
+    "MARKET-009",
+    "MARKET-010",
+    "MARKET-013",
+    "STOCK-005",
+    "STOCK-009",
+    "DISP-017",
+    "DISP-018",
+    "COMM-015",
+    "GOLDEN-B-12",
+    "GOLDEN-B-17"
   ],
   "rows_moved_to_fail": [],
   "rows_remaining_blocked": [
@@ -278,14 +289,6 @@
     "AUTH-014",
     "AUTH-018",
     "MASTER-006",
-    "MARKET-009",
-    "MARKET-010",
-    "MARKET-013",
-    "STOCK-005",
-    "STOCK-009",
-    "DISP-017",
-    "DISP-018",
-    "COMM-015",
     "PAY-002",
     "PAY-010",
     "PAY-011",
@@ -334,8 +337,6 @@
     "GOLDEN-A-03",
     "GOLDEN-A-21",
     "GOLDEN-A-22",
-    "GOLDEN-B-12",
-    "GOLDEN-B-17",
     "GOLDEN-B-18",
     "SIGNOFF-04"
   ],
@@ -348,7 +349,10 @@
     "Commercial month-to-date bounds are derived from one India-time instant, including month/year and leap-day boundaries.",
     "Rate-limit retry messages now convert the absolute reset timestamp to remaining seconds, and attendance exposes explicit bounded day navigation.",
     "The atomic Start Party Order server boundary existed but was not exposed in Estimator; the primary action now creates the accepted quote, active order, and yarn requirement together and routes to that order.",
-    "The order lifecycle harness now proves target enforcement, completion/cancellation archival behavior, reserved stock lineage, dispatch receipts and discrepancy, independent commercial settlement, and paid-payroll correction protection."
+    "The order lifecycle harness now proves target enforcement, completion/cancellation archival behavior, reserved stock lineage, dispatch receipts and discrepancy, independent commercial settlement, and paid-payroll correction protection.",
+    "Stock-lot relational sources are now enforced at the database boundary for organization ownership and quote/order/market-run consistency, including authenticated injected-ID attempts.",
+    "Market-run sales counts now include current fabric-stock sales as well as legacy direct sales, so sold-out and archived summaries remain complete.",
+    "One repeatable lifecycle harness now proves market sell-out, two exact dispatch receipts, advisory compliance states, duplicate party identity, concurrent stock mutation, many-run freshness, and zero cleanup in QA and production."
   ],
   "commits": [
     {
@@ -366,6 +370,10 @@
     {
       "sha": "dc76b17f38eb111ef3dad0a5a9f809b17168cda5",
       "subject": "fix(qa): expose atomic B11 party order path"
+    },
+    {
+      "sha": "bc1e9cbfab1609adf461c405e41d6fca65b304ee",
+      "subject": "fix(qa): harden B12 market stock lifecycle"
     }
   ],
   "production_deployments": [
@@ -394,6 +402,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1",
+      "commit": "bc1e9cbfab1609adf461c405e41d6fca65b304ee",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -412,6 +427,18 @@
       "environment": "production",
       "file": "20260702131500_batch_23_start_party_order_transaction_boundary.sql",
       "alignment": "verified deployed and exercised by production UI plus persisted linkage proof"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714033000_b12_enforce_stock_source_integrity.sql",
+      "production_history_version": "20260713211109",
+      "alignment": "verified by trigger catalog and injected relational-source runtime probes"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714034500_b12_include_stock_sales_in_market_summary.sql",
+      "production_history_version": "20260713211113",
+      "alignment": "verified by view catalog and sold-out/current-sale runtime summaries"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -429,6 +456,11 @@
       "batch": "B11",
       "type": "prefixed disposable QA lifecycle tenant and production Estimator tenant",
       "state": "removed; organizations/profiles/auth and scoped quote/order/yarn/production/stock/dispatch/commercial/payroll rows reconciled"
+    },
+    {
+      "batch": "B12",
+      "type": "prefixed disposable QA and production market-stock tenants with owner/adversary auth users",
+      "state": "removed; organizations/profiles/auth/stock lots and all market/production/sale/dispatch/receipt/commercial dependencies reconciled to zero"
     }
   ],
   "outstanding_external_dependencies": [
@@ -481,6 +513,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B11 production deployment dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV Ready at exact commit dc76b17; local and remote gates passed 85 files / 611 tests with 1 intentional skip; production Estimator created and opened a backlinked quote/order/yarn chain; QA lifecycle passed 34 assertions; cleanup reconciled to zero.",
-  "exact_next_action": "Start B12 by auditing the market-run, stock-sale, dispatch-receipt, compliance-warning, concurrency, and party-identity paths; build one isolated QA fixture that proves all ten rows before any promotion."
+  "last_successful_validation": "B12 production deployment dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1 Ready at exact commit bc1e9cb; local and remote gates passed 86 files / 617 tests; QA and production each passed 17 market/stock/dispatch/commercial assertions; the final 26-run production summary loaded in 25.3 ms; cleanup reconciled to zero.",
+  "exact_next_action": "Execute B13 with one isolated payroll fixture covering decimal operator rates, historical snapshots, advance caps and adjustments, concurrent settlement, reversal, exit/final mode, kharchi atomicity, dashboard wages, and Golden A/B payroll steps."
 }

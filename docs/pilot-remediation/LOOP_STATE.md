@@ -2007,3 +2007,9 @@ Current counts are 295 pass, 3 fail, 78 blocked, and 1 not applicable. The activ
 B11 is closed at 12/12 pass on exact production deployment `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV` / commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda5`. Production proved the exposed atomic Start Party Order UI plus reciprocal quote/order and yarn-requirement persistence. The isolated QA chain passed 34 lifecycle assertions spanning target enforcement, completion, cancellation, protected deletion, reserved stock, dispatch/receipt discrepancy, commercial settlement, payroll, and reload/session reconciliation. Cleanup removed and reconciled both disposable environments.
 
 Current counts are 307 pass, 3 fail, 66 blocked, and 1 not applicable. B12 is active with 10 stock concurrency, market closure, dispatch compliance, and commercial identity rows; B11 pass credit must not be inherited by those scenarios.
+
+### Blocked-row campaign B12 complete; B13 active
+
+B12 is closed at 10/10 pass on exact production deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1` / commit `bc1e9cbfab1609adf461c405e41d6fca65b304ee`. Matching QA and production runs each passed 17 assertions for source integrity, market sell-out/archive, two-batch dispatch and receipt, honest compliance reminders, duplicate party identity, concurrent stock mutation, and many-run freshness. The stock-source trigger and stock-sale-aware market summary are applied in both environments, and all disposable records/auth users reconciled to zero.
+
+Current counts are 317 pass, 3 fail, 56 blocked, and 1 not applicable. B13 is active with 16 payroll, advances, kharchi, dashboard-wage, and Golden A/B worker-money rows. Build a fresh isolated fixture and promote only directly proven B13 outcomes; B12 pass credit must not be inherited.

@@ -1,15 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **307 PASS, 3 FAIL, 66 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **317 PASS, 3 FAIL, 56 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B11 — quote and order lifecycle through protected history (12/12 PASS)**.
-- Active batch: **B12 — stock concurrency, market closure, dispatch compliance, and commercial identity**.
-- Validation gate: local and Vercel gates passed 85 files / 611 tests with 1 intentional skip, TypeScript, lint, and a successful optimized Next.js build.
-- Production deployment: `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV`, Ready and aliased, exact commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda5`.
-- Migration: atomic Start Party Order `20260702131500` and all dependent order/dispatch boundaries verified in production.
-- Cleanup: the prefixed B11 QA and production tenants, profiles/auth users, and scoped quote/order/yarn/production/stock/dispatch/commercial/payroll rows were removed and reconciled.
-- B11 evidence: `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json`.
+- Completed batch: **B12 — stock concurrency, market closure, dispatch compliance, and commercial identity (10/10 PASS)**.
+- Active batch: **B13 — payroll, advances, kharchi, and worker money lifecycle**.
+- Validation gate: local and Vercel gates passed 86 files / 617 tests, TypeScript, lint, and a successful optimized Next.js build.
+- Production deployment: `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1`, Ready and aliased, exact commit `bc1e9cbfab1609adf461c405e41d6fca65b304ee`.
+- Migrations: B12 stock-source integrity and current stock-sale market-summary migrations are deployed and exercised in QA and production.
+- Cleanup: the prefixed B12 QA and production tenants, profiles/auth users, and all market/production/stock/sale/dispatch/receipt/commercial dependencies were removed and reconciled.
+- B12 evidence: `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -29,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B11 closeout
+## B12 closeout
 
-B11 directly proved atomic quote/order/yarn creation in production and the full protected order lifecycle in QA: target enforcement, completion and cancellation archival behavior, reserved-stock lineage, partial dispatch, exact and shortage receipts, discrepancy and claim creation, independent receivable/payroll settlement, and paid-history correction rejection.
+B12 directly proved relational stock-source rejection, sold-out market closure with pending dispatch, two exact dispatch receipts, advisory above/below-threshold compliance states, duplicate-name party separation, a real concurrent stock mutation, and fresh many-run summaries in both QA and production. The two database defects were repaired, the exact implementation commit was deployed, and disposable data reconciled to zero.
 
 ## Exact next action
 
-Start B12 by auditing the market-run, stock-sale, dispatch-receipt, compliance-warning, concurrency, and party-identity paths; build one isolated QA fixture that proves all ten rows before any promotion.
+Execute B13 with one isolated payroll fixture covering decimal operator rates, historical snapshots, advance caps and adjustments, concurrent settlement, reversal, exit/final mode, kharchi atomicity, dashboard wages, and Golden A/B payroll steps.

@@ -2338,3 +2338,16 @@ Date: 2026-07-14 IST. Production commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda
 - Safety: disposable QA and production tenants and their scoped quote/order/yarn/production/stock/dispatch/commercial/payroll records, profiles, auth users, and private credential file were removed and reconciled.
 - Evidence: `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json`.
 - Formal matrix: 307 pass, 3 fail, 66 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B12 closeout — market stock lifecycle
+
+Date: 2026-07-14 IST. Production commit `bc1e9cbfab1609adf461c405e41d6fca65b304ee`.
+
+- Status changes: `MARKET-009`, `MARKET-010`, `MARKET-013`, `STOCK-005`, `STOCK-009`, `DISP-017`, `DISP-018`, `COMM-015`, `GOLDEN-B-12`, and `GOLDEN-B-17` moved from `blocked` to `pass` after matching QA and production lifecycle proof.
+- Defects fixed: stock-lot source IDs were checked only in server actions, leaving direct authenticated writes able to reference another tenant or a mismatched quote/order. Migration `20260714033000_b12_enforce_stock_source_integrity.sql` adds a database trigger for organization and relationship integrity. `market_run_summary.sales_count` counted only legacy direct market sales; migration `20260714034500_b12_include_stock_sales_in_market_summary.sql` now includes current stock-lot sales.
+- Runtime: both environments passed 17 assertions covering rejected cross-tenant/mismatched sources, sold-out pending dispatch, two exact 60m/40m dispatch receipts, closed archive totals, honest above/below-threshold compliance states, distinct duplicate-name party IDs and receivables, real concurrent sale-vs-adjustment serialization, non-negative stock, 26-run performance, and second-session freshness.
+- Release: Vercel deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1` is Ready and aliased to `https://textile-accounting.vercel.app`; the deployment and Sentry release identify the exact commit. Local and remote gates passed 86 files / 617 tests, TypeScript, targeted ESLint, and the optimized Next.js build.
+- Database: both migrations were applied in QA and production. Production history recorded versions `20260713211109` and `20260713211113`; catalog inspection and runtime probes verified the trigger and revised view.
+- Safety: each QA and production run used disposable owner/adversary tenants. Organizations, profiles, stock lots, auth users, and all dependent market/production/sale/dispatch/receipt/commercial rows were removed; reconciliation returned zero with no cleanup errors.
+- Evidence: `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json`.
+- Formal matrix: 317 pass, 3 fail, 56 blocked, 1 not applicable. Readiness remains No-Go; B13 is active.

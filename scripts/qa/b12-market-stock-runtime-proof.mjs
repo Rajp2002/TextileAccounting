@@ -6,6 +6,12 @@ import { createClient } from '@supabase/supabase-js'
 
 const workspace = process.cwd()
 const QA_REF = 'eutycrtzzxmlkcpipgod'
+const PROD_REF = 'vzhwahudircrpgtitwzd'
+const productionMode = process.argv.includes('--production')
+const environment = productionMode ? 'production' : 'qa'
+const projectRef = productionMode ? PROD_REF : QA_REF
+const deploymentId = process.env.B12_DEPLOYMENT_ID ?? null
+const deploymentCommit = process.env.B12_DEPLOYMENT_COMMIT ?? null
 const closureTargets = [
     'MARKET-009', 'MARKET-010', 'MARKET-013', 'STOCK-005', 'STOCK-009',
     'DISP-017', 'DISP-018', 'COMM-015', 'GOLDEN-B-12', 'GOLDEN-B-17',
@@ -123,7 +129,9 @@ async function cleanup(admin, fixture) {
         'commercial_payment_receipts', 'commercial_receivables', 'party_dispatch_claims',
         'dispatch_package_lines', 'fabric_packages', 'stock_discrepancies', 'dispatches',
         'fabric_stock_movements', 'fabric_stock_sales', 'fabric_stock_inward_drafts',
-        'fabric_stock_lots', 'market_run_sales', 'production_logs', 'machine_assignments',
+        'fabric_stock_lots', 'market_run_sales', 'production_logs',
+        ...(productionMode ? ['machine_operator_assignments'] : []),
+        'machine_assignments',
         'machines', 'workers', 'order_yarn_requirements',
         'orders', 'estimator_quotes', 'market_runs', 'org_subscriptions', 'parties', 'audit_log',
     ]
@@ -323,14 +331,45 @@ async function seedMainMarket(admin, fixture) {
         { org_id: fixture.orgId, machine_id: machine.data.id, worker_id: worker.data.id, shift: 'night' },
     ])
     if (assignments.error) throw new Error(`create market assignments failed: ${assignments.error.message}`)
+    let operatorAssignmentId = null
+    if (productionMode) {
+        const operator = await admin.from('machine_operator_assignments').insert({
+            org_id: fixture.orgId,
+            worker_type: 'meter_worker',
+            meter_worker_id: worker.data.id,
+            fixed_worker_id: null,
+            machine_id: machine.data.id,
+            machine_type: 'rapier',
+            shift: 'day',
+            pay_mode: 'per_meter',
+            rate: 2.5,
+            effective_from: today,
+            is_primary_operator: true,
+            active: true,
+        }).select('id').single()
+        if (operator.error || !operator.data) throw new Error(`create market operator assignment failed: ${operator.error?.message}`)
+        operatorAssignmentId = operator.data.id
+    }
     const activation = await admin.from('machines').update({ current_order_id: order.data.id, status: 'active' })
         .eq('id', machine.data.id)
     if (activation.error) throw new Error(`activate market loom failed: ${activation.error.message}`)
-    const log = await admin.from('production_logs').insert({
+    const productionLog = {
         org_id: fixture.orgId, order_id: order.data.id, machine_id: machine.data.id,
         worker_id: worker.data.id, meters: 100, date: today, shift: 'day',
         worker_rate_snapshot: 2.5, created_by: fixture.ownerUserId, client_ip: 'b12-runtime',
-    })
+    }
+    if (productionMode) {
+        Object.assign(productionLog, {
+            operator_assignment_id: operatorAssignmentId,
+            operator_worker_type: 'meter_worker',
+            meter_worker_id: worker.data.id,
+            fixed_worker_id: null,
+            operator_pay_mode_snapshot: 'per_meter',
+            operator_rate_snapshot: 2.5,
+            machine_type_snapshot: 'rapier',
+        })
+    }
+    const log = await admin.from('production_logs').insert(productionLog)
     if (log.error) throw new Error(`create main market production failed: ${log.error.message}`)
     const lot = await fixture.owner.from('fabric_stock_lots').insert(lotRow(fixture.orgId, {
         source_type: 'market_run', market_run_id: run.data.id, order_id: order.data.id,
@@ -536,21 +575,30 @@ async function proveManyRunFreshness(admin, fixture, partyId, assertions) {
 }
 
 async function main() {
-    const env = { ...process.env, ...parseEnv(await fs.readFile(path.join(workspace, '.env.qa.local'), 'utf8')) }
-    if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(QA_REF)) throw new Error('B12 refused: QA project target was not proven.')
-    if (!env.NEXT_PUBLIC_SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('B12 QA keys are missing.')
+    const envFile = productionMode ? '.env.production.local' : '.env.qa.local'
+    const env = { ...process.env, ...parseEnv(await fs.readFile(path.join(workspace, envFile), 'utf8')) }
+    if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(projectRef)) throw new Error(`B12 refused: ${environment} project target was not proven.`)
+    if (!env.NEXT_PUBLIC_SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) throw new Error(`B12 ${environment} keys are missing.`)
     const admin = clientFor(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
     const assertions = []
     const evidence = {
-        run_id: `B12-QA-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}`,
+        run_id: `B12-${environment.toUpperCase()}-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}`,
         scope: 'B12 market, stock, dispatch, compliance, concurrency, and party identity runtime proof',
-        environment: 'qa',
-        project_ref: QA_REF,
+        environment,
+        project_ref: projectRef,
+        deployment: productionMode ? {
+            id: deploymentId,
+            commit: deploymentCommit,
+            state: 'READY',
+            target: 'production',
+            alias: 'https://textile-accounting.vercel.app',
+        } : null,
         closure_targets: closureTargets,
         assertions,
         cleanup: 'pending',
     }
-    const outputPath = path.join(workspace, 'output/qa/blocked-row-campaign/B12-qa-market-stock.json')
+    const outputName = productionMode ? 'B12-production-market-stock.json' : 'B12-qa-market-stock.json'
+    const outputPath = path.join(workspace, 'output/qa/blocked-row-campaign', outputName)
     let fixture = null
     try {
         fixture = await createFixture(admin, env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY)

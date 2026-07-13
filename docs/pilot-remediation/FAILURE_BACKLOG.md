@@ -569,3 +569,9 @@ The backlog now has 78 blocked rows. B11 is active with 12 rows from the canonic
 Remove all twelve B11 IDs from the blocked backlog: `QUOTE-007`, `ORDER-005`, `ORDER-007`, `ORDER-009`, `ORDER-010`, `ORDER-011`, `ORDER-012`, `ORDER-013`, `ORDER-014`, `ORDER-015`, `STOCK-011`, and `GOLDEN-A-23`. Exact proof covers atomic quote/order/yarn creation, over-target immutability, completion/cancellation/deletion boundaries, reserved-stock lineage, partial dispatch, shortage discrepancy/claim creation, receivable settlement, payroll settlement, and paid-history correction rejection.
 
 The backlog now has 66 blocked rows. B12 is active with 10 rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B11 does not reclassify them or relax the No-Go gate.
+
+### B12 market-stock lifecycle cluster resolved
+
+Remove all ten B12 IDs from the blocked backlog: `MARKET-009`, `MARKET-010`, `MARKET-013`, `STOCK-005`, `STOCK-009`, `DISP-017`, `DISP-018`, `COMM-015`, `GOLDEN-B-12`, and `GOLDEN-B-17`. Exact QA and production proof covers tenant-safe relational sources, sold-out and archived market truth, partial/exact dispatch receipts, advisory compliance fields, party-ID separation, serialized concurrent stock mutation, and fresh 26-run summaries.
+
+The backlog now has 56 blocked rows. B13 is active with 16 worker-money rows. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B12 does not reclassify them or relax the No-Go gate.
