@@ -17,6 +17,7 @@ import {
     Save,
     AlertCircle,
     Settings,
+    ChevronLeft,
     ChevronRight,
     MessageSquare,
     AlertTriangle,
@@ -88,6 +89,12 @@ function getCurrentShift(): 'day' | 'night' {
 
 function getTodayString() {
     return getSuratTodayString()
+}
+
+function moveDateByDays(date: string, days: number) {
+    const [year, month, day] = date.split('-').map(Number)
+    const next = new Date(Date.UTC(year, month - 1, day + days))
+    return next.toISOString().slice(0, 10)
 }
 
 function getRemainingCorrectionMinutes(expiresAt: string | null, nowMs: number | null) {
@@ -1369,12 +1376,37 @@ export default function UnifiedDashboard() {
                     </div>
 
                     <div className="grid gap-2 xs:grid-cols-[minmax(0,1fr)_auto]">
-                        <Input
-                            type="date"
-                            value={date}
-                            onChange={(e) => handleDateChange(e.target.value)}
-                            className="h-11 flex-1 rounded-lg bg-surface text-sm font-semibold"
-                        />
+                        <div className="flex min-w-0 items-center gap-1">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                aria-label="Previous production day"
+                                className="h-11 w-11 shrink-0"
+                                onClick={() => handleDateChange(moveDateByDays(date, -1))}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Input
+                                aria-label="Production date"
+                                type="date"
+                                max={getTodayString()}
+                                value={date}
+                                onChange={(e) => handleDateChange(e.target.value)}
+                                className="h-11 min-w-0 flex-1 rounded-lg bg-surface text-sm font-semibold"
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                aria-label="Next production day"
+                                className="h-11 w-11 shrink-0"
+                                disabled={date >= getTodayString()}
+                                onClick={() => handleDateChange(moveDateByDays(date, 1))}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
                         <div className="flex shrink-0 rounded-lg border border-hairline bg-surface-soft p-1">
                             <button
                                 onClick={() => handleShiftChange('day')}
