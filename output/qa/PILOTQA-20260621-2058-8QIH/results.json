@@ -818,14 +818,15 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Substitute worker for one dated shift.",
       "expected": "Shift-specific assignment is clear and payroll follows the actual logged worker.",
-      "status": "blocked",
-      "actual": "A two-worker, two-shift QA fixture was prepared, but Save shift logs failed twice with UPDATE requires a WHERE clause and created zero production_logs rows. Substitute-worker payroll attribution therefore could not be exercised.",
+      "status": "pass",
+      "actual": "In isolated production QA, Worker A remained the standing day worker while Worker B was the persisted 2026-07-12 dated substitute. The supervisor selected the historical date, loaded Worker B, saved 32m, and refreshed to the same dated log. Database reconciliation preserved Worker B and the ₹3.25/m dated rate snapshot with no Worker A log; owner payroll showed Worker B only at 32.0m, Gross ₹104 and Net ₹104.",
       "evidence": [
-        "evidence/MASTER-011-substitute-worker-blocker-production.json"
+        "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.json",
+        "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.png"
       ],
-      "notes": "",
+      "notes": "Production fixes made the dated shift assignment authoritative for worker/rate validation, used orders.start_date for the historical boundary, and added explicit previous/next production-day controls.",
       "severity": "",
-      "updatedAt": "2026-07-10T17:01:53.763Z"
+      "updatedAt": "2026-07-13T16:55:00.000Z"
     },
   {
     "id": "MASTER-012",

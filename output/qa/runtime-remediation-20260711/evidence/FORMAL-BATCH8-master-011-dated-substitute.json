@@ -1,0 +1,134 @@
+{
+  "runId": "FORMAL-B7-1783960232554-52BF61",
+  "projectRef": "vzhwahudircrpgtitwzd",
+  "today": "2026-07-13",
+  "yesterday": "2026-07-12",
+  "organization": {
+    "id": "4cf8a67d...6719",
+    "name": "QA-FORMAL-B7-1783960232554-52BF61",
+    "production_mode": "order_based",
+    "onboarding_complete": true
+  },
+  "machine": {
+    "id": "37d91898...3939",
+    "name": "QA FORMAL-B7-1783960232554-52BF61 Day-only Loom",
+    "status": "active",
+    "current_order_id": "d47666d1...d631",
+    "loom_type": "rapier"
+  },
+  "orders": [
+    {
+      "id": "d47666d1...d631",
+      "quality_label": "QA FORMAL-B7-1783960232554-52BF61 Context A",
+      "status": "active",
+      "worker_rate_per_m": 2.5,
+      "total_target_meters": 500,
+      "start_date": "2026-07-12"
+    },
+    {
+      "id": "3fedc895...75a4",
+      "quality_label": "QA FORMAL-B7-1783960232554-52BF61 Context B",
+      "status": "active",
+      "worker_rate_per_m": 3.25,
+      "total_target_meters": 500,
+      "start_date": "2026-07-12"
+    }
+  ],
+  "standing_assignments": [
+    {
+      "machine_id": "37d91898...3939",
+      "worker_id": 192,
+      "shift": "day"
+    }
+  ],
+  "dated_assignments": [
+    {
+      "id": "a3b55c1a...ffe3",
+      "machine_id": "37d91898...3939",
+      "worker_id": 193,
+      "order_id": "d47666d1...d631",
+      "rate_per_m": 3.25,
+      "date": "2026-07-12",
+      "shift": "day"
+    }
+  ],
+  "operator_assignments": [
+    {
+      "id": "b179d55b...9be3",
+      "machine_id": "37d91898...3939",
+      "meter_worker_id": 192,
+      "shift": "day",
+      "rate": 2.5,
+      "effective_from": "2026-07-12",
+      "effective_to": null,
+      "active": true
+    }
+  ],
+  "production_logs": [
+    {
+      "id": "7e0849b2...74c5",
+      "machine_id": "37d91898...3939",
+      "order_id": "d47666d1...d631",
+      "worker_id": 193,
+      "meter_worker_id": 193,
+      "meters": 32,
+      "date": "2026-07-12",
+      "shift": "day",
+      "worker_rate_snapshot": 3.25,
+      "operator_rate_snapshot": 3.25,
+      "operator_assignment_id": null
+    }
+  ],
+  "stock_lots": [
+    {
+      "stock_lot_id": "c143bf1f...0d4f",
+      "order_id": "d47666d1...d631",
+      "source_date": "2026-07-12",
+      "source_shift": "day",
+      "original_meters": 32,
+      "available_meters": 32,
+      "stock_purpose": "order_reserved"
+    }
+  ],
+  "stock_drafts": [
+    {
+      "id": "cb9738b6...fcbd",
+      "order_id": "d47666d1...d631",
+      "source_date": "2026-07-12",
+      "source_shift": "day",
+      "suggested_meters": 32,
+      "status": "confirmed"
+    }
+  ],
+  "reconciliation": {
+    "production_meters": 32,
+    "piece_rate_gross": 104,
+    "log_count": 1,
+    "day_assignments": 1,
+    "night_assignments": 0
+  },
+  "commit": "649380d5dfbcbb89d8c10cad7763448ac42c6f2c",
+  "deployment": "https://textile-accounting-ipnh5hoew-rajpatel86420-9825s-projects.vercel.app",
+  "browser": {
+    "base_url": "https://textile-accounting.vercel.app",
+    "role_sequence": [
+      "supervisor",
+      "owner"
+    ],
+    "historical_date": "2026-07-12",
+    "supervisor_result": "Worker B loaded for 2026-07-12; 32m saved and restored after refresh inside the correction window.",
+    "payroll_result": "Owner payroll showed Worker B only, 32.0m, Gross ₹104 and Net ₹104.",
+    "screenshot": "output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.png"
+  },
+  "assertions": {
+    "standing_worker_a_preserved": true,
+    "dated_worker_b_persisted": true,
+    "historical_date_persisted": true,
+    "production_attributed_to_worker_b": true,
+    "dated_rate_snapshot_persisted": true,
+    "standing_worker_a_received_no_historical_log": true,
+    "production_and_stock_reconcile": true,
+    "payroll_gross_matches_dated_snapshot": true
+  },
+  "pass": true
+}

@@ -567,3 +567,10 @@ Acceptance:
 - Next focused repair: reproduce why selecting a historical production date is overwritten when mode/meter state changes. Inspect the dashboard effects and tenant/user/date/shift draft restoration before changing behavior.
 - After the repair, rerun `MASTER-011` with a dated Worker B substitution, persist the historical date and worker/rate/order snapshots, refresh, and reconcile payroll to the substituted worker. Then reassess `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` individually.
 - Current formal counts: 269 pass, 3 fail, 104 blocked, and 1 not applicable. Readiness remains No-Go.
+
+### Formal Batch 8 superseding dated-substitution proof — 2026-07-13
+
+- `MASTER-011` is `PASS`; preserve the Worker A standing / Worker B dated-only / 2026-07-12 / 32m / ₹3.25 / ₹104 regression across supervisor refresh, generated stock, and owner payroll.
+- Do not rerun unless production date navigation, shift assignment precedence, order-start validation, snapshot persistence, correction-window replacement, stock generation, or payroll aggregation changes.
+- Reassess `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` separately. Batch 8 did not execute their exact after-window access-code, attendance, month/year, or leap-day scenarios.
+- Current formal counts: 270 pass, 3 fail, 103 blocked, and 1 not applicable. Readiness remains No-Go.

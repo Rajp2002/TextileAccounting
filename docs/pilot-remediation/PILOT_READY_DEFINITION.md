@@ -147,3 +147,5 @@ Final sign-off must include:
 - This checkpoint and Batch 7 production proof enable live testing but do not satisfy final Pilot Ready criteria: 3 failures, 104 blocked rows, six legacy schema-lint findings, restore proof, and rollback/forward-fix proof remain open.
 
 Batch 7 additionally proves that day-only operation is a supported production rule, owner-controlled operator remapping preserves payroll attribution, and production context replacement preserves historical snapshots. These are verified invariants, not relaxations of the remaining pilot gates. Dated production remains excluded from pass claims under `NEEDS-AUDIT-004` until its selected-date state is stable.
+
+Batch 8 closes `MASTER-011` with isolated production dated-substitution proof. Worker A remained standing while Worker B was authoritative only for 2026-07-12; the 32m log, ₹3.25 rate, stock grain, refresh state, and Worker B-only ₹104 payroll reconciled. This raises the formal matrix to 270 pass, 3 fail, 103 blocked, and 1 not applicable. Pilot readiness remains `NO-GO`; no non-negotiable gate was relaxed and the other dated/correction/attendance/calendar rows remain individually open.

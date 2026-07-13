@@ -2285,3 +2285,14 @@ Date: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
 - Safety: production fixture `FORMAL-B7-1783944614148-779128` used only prefixed QA records. Cleanup returned organizations, profiles, machines, production logs, and both auth users to zero; the private credential file was removed and browser tabs were closed.
 - New finding: `NEEDS-AUDIT-004` records that a selected historical production date reverted to today when entry state changed. Dated assignment/correction/time rows remain blocked pending a focused repair; no pass credit was claimed for them.
 - Formal matrix: total 377, pass 269, fail 3, blocked 104, not applicable 1. Readiness remains No-Go.
+
+## Formal blocked-row Batch 8 closeout (2026-07-13)
+
+- `MASTER-011` moved from `blocked` to `pass` after production browser, persistence, refresh, stock, and payroll proof.
+- Fixes: dated `shift_assignments.worker_id` now overrides standing/operator assignment only for its selected date/shift; the server validates that persisted dated worker instead of accepting an arbitrary client substitute; dated `rate_per_m` becomes the operator/payroll snapshot; the historical order boundary uses `orders.start_date`, not `created_at`; and explicit previous/next production-day controls commit date state without relying on a native picker.
+- Runtime: Worker A remained the standing day worker, Worker B loaded only for 2026-07-12, 32m saved and restored after refresh, the correction-window overwrite persisted Worker B at ₹3.25/m, stock reconciled to 32m, and owner payroll showed Worker B only with Gross/Net ₹104.
+- Release: production deployment `dpl_43n5khAYXGcCtp64SBowPZirjaUG` delivered the dated-rate fix for commit `649380d5dfbcbb89d8c10cad7763448ac42c6f2c`; alias `https://textile-accounting.vercel.app` was Ready.
+- Verification: full Vitest/prebuild gate passed 81 files / 595 tests; focused Batch 24D/24F tests, TypeScript, targeted ESLint, and `git diff --check` passed. No migration was required.
+- Safety: isolated `QA-FORMAL-B7-1783960232554-52BF61` production fixture only; exact business rows, profiles, organization, auth users, credential file, and browser tabs were removed and reconciled to zero.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.json` and `.png`.
+- Formal matrix: 270 pass, 3 fail, 103 blocked, 1 not applicable. Readiness remains No-Go.

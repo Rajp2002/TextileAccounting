@@ -11,6 +11,10 @@ const EVIDENCE_PATH = path.join(
     process.cwd(),
     'output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.json'
 )
+const MASTER_011_EVIDENCE_PATH = path.join(
+    process.cwd(),
+    'output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.json'
+)
 const command = process.argv[2]
 
 function parseEnv(contents) {
@@ -122,17 +126,18 @@ async function cleanupFixture(fixture, { removeSecret = true } = {}) {
 }
 
 async function snapshot(fixture) {
-    const [organization, machine, orders, assignments, operatorAssignments, logs, stockLots, stockDrafts] = await Promise.all([
+    const [organization, machine, orders, assignments, datedAssignments, operatorAssignments, logs, stockLots, stockDrafts] = await Promise.all([
         admin.from('organizations').select('id, name, production_mode, onboarding_complete').eq('id', fixture.orgId).single(),
         admin.from('machines').select('id, name, status, current_order_id, loom_type').eq('id', fixture.machineId).single(),
-        admin.from('orders').select('id, quality_label, status, worker_rate_per_m, total_target_meters').eq('org_id', fixture.orgId).order('quality_label'),
+        admin.from('orders').select('id, quality_label, status, worker_rate_per_m, total_target_meters, start_date').eq('org_id', fixture.orgId).order('quality_label'),
         admin.from('machine_assignments').select('machine_id, worker_id, shift').eq('org_id', fixture.orgId).order('shift'),
+        admin.from('shift_assignments').select('id, machine_id, worker_id, order_id, rate_per_m, date, shift').eq('org_id', fixture.orgId).order('date'),
         admin.from('machine_operator_assignments').select('id, machine_id, meter_worker_id, shift, rate, effective_from, effective_to, active').eq('org_id', fixture.orgId).order('effective_from'),
         admin.from('production_logs').select('id, machine_id, order_id, worker_id, meter_worker_id, meters, date, shift, worker_rate_snapshot, operator_rate_snapshot, operator_assignment_id').eq('org_id', fixture.orgId).order('date'),
         admin.from('fabric_stock_lot_summary').select('stock_lot_id, order_id, source_date, source_shift, original_meters, available_meters, stock_purpose').eq('org_id', fixture.orgId).order('source_date'),
         admin.from('fabric_stock_inward_drafts').select('id, order_id, source_date, source_shift, suggested_meters, status').eq('org_id', fixture.orgId).order('source_date'),
     ])
-    const firstError = [organization, machine, orders, assignments, operatorAssignments, logs, stockLots, stockDrafts].find((result) => result.error)?.error
+    const firstError = [organization, machine, orders, assignments, datedAssignments, operatorAssignments, logs, stockLots, stockDrafts].find((result) => result.error)?.error
     if (firstError) throw new Error(`Formal Batch 7 snapshot failed: ${firstError.message}`)
 
     const logRows = logs.data ?? []
@@ -147,6 +152,12 @@ async function snapshot(fixture) {
         standing_assignments: (assignments.data ?? []).map((row) => ({
             ...row,
             machine_id: safeId(row.machine_id),
+        })),
+        dated_assignments: (datedAssignments.data ?? []).map((row) => ({
+            ...row,
+            id: safeId(row.id),
+            machine_id: safeId(row.machine_id),
+            order_id: safeId(row.order_id),
         })),
         operator_assignments: (operatorAssignments.data ?? []).map((row) => ({ ...row, id: safeId(row.id), machine_id: safeId(row.machine_id) })),
         production_logs: logRows.map((row) => ({
@@ -321,6 +332,18 @@ if (command === 'setup') {
         })
         if (operator.error) throw operator.error
 
+        const datedSubstitution = await admin.from('shift_assignments').insert({
+            org_id: fixture.orgId,
+            date: yesterday,
+            shift: 'day',
+            machine_id: fixture.machineId,
+            worker_id: fixture.workerBId,
+            order_id: fixture.orderAId,
+            rate_per_m: 3.25,
+            created_by: fixture.ownerUserId,
+        })
+        if (datedSubstitution.error) throw datedSubstitution.error
+
         const [activeOrderCheck, assignmentCheck, workerCheck, readinessCheck] = await Promise.all([
             admin.from('orders').select('id', { count: 'exact', head: true })
                 .eq('id', fixture.orderAId).eq('org_id', fixture.orgId).eq('status', 'active'),
@@ -390,6 +413,16 @@ if (command === 'setup') {
         }
         throw error
     }
+} else if (command === 'prepare-master11') {
+    const fixture = await readFixture()
+    const [orderUpdate, machineUpdate] = await Promise.all([
+        admin.from('orders').update({ start_date: fixture.yesterday }).eq('id', fixture.orderAId).eq('org_id', fixture.orgId),
+        admin.from('machines').update({ machine_status: 'running' }).eq('id', fixture.machineId).eq('org_id', fixture.orgId),
+    ])
+    if (orderUpdate.error || machineUpdate.error) {
+        throw new Error(`MASTER-011 fixture preparation failed: ${orderUpdate.error?.message || machineUpdate.error?.message}`)
+    }
+    process.stdout.write(`${JSON.stringify({ runId: fixture.runId, prepared: true, productionDate: fixture.yesterday }, null, 2)}\n`)
 } else if (command === 'snapshot') {
     process.stdout.write(`${JSON.stringify(await snapshot(await readFixture()), null, 2)}\n`)
 } else if (command === 'evidence') {
@@ -451,11 +484,45 @@ if (command === 'setup') {
     await fs.writeFile(EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`)
     process.stdout.write(`${JSON.stringify({ path: EVIDENCE_PATH, pass: evidence.pass, assertions }, null, 2)}\n`)
     if (!evidence.pass) process.exitCode = 1
+} else if (command === 'master11-evidence') {
+    const fixture = await readFixture()
+    const data = await snapshot(fixture)
+    const datedAssignment = data.dated_assignments.find((row) => row.date === fixture.yesterday && row.shift === 'day')
+    const historicalLog = data.production_logs.find((row) => row.date === fixture.yesterday && row.shift === 'day')
+    const assertions = {
+        standing_worker_a_preserved: data.standing_assignments.some((row) => row.shift === 'day' && row.worker_id === fixture.workerAId),
+        dated_worker_b_persisted: datedAssignment?.worker_id === fixture.workerBId,
+        historical_date_persisted: historicalLog?.date === fixture.yesterday,
+        production_attributed_to_worker_b: historicalLog?.worker_id === fixture.workerBId && historicalLog?.meter_worker_id === fixture.workerBId,
+        dated_rate_snapshot_persisted: Number(historicalLog?.operator_rate_snapshot) === 3.25,
+        standing_worker_a_received_no_historical_log: !data.production_logs.some((row) => row.date === fixture.yesterday && row.worker_id === fixture.workerAId),
+        production_and_stock_reconcile: data.stock_lots.some((row) => row.source_date === fixture.yesterday && Number(row.original_meters) === Number(historicalLog?.meters)),
+        payroll_gross_matches_dated_snapshot: data.reconciliation.piece_rate_gross === 104,
+    }
+    const evidence = {
+        ...data,
+        commit: '649380d5dfbcbb89d8c10cad7763448ac42c6f2c',
+        deployment: 'https://textile-accounting-ipnh5hoew-rajpatel86420-9825s-projects.vercel.app',
+        browser: {
+            base_url: 'https://textile-accounting.vercel.app',
+            role_sequence: ['supervisor', 'owner'],
+            historical_date: fixture.yesterday,
+            supervisor_result: 'Worker B loaded for 2026-07-12; 32m saved and restored after refresh inside the correction window.',
+            payroll_result: 'Owner payroll showed Worker B only, 32.0m, Gross ₹104 and Net ₹104.',
+            screenshot: 'output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.png',
+        },
+        assertions,
+        pass: Object.values(assertions).every(Boolean),
+    }
+    await fs.mkdir(path.dirname(MASTER_011_EVIDENCE_PATH), { recursive: true })
+    await fs.writeFile(MASTER_011_EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`)
+    process.stdout.write(`${JSON.stringify({ path: MASTER_011_EVIDENCE_PATH, pass: evidence.pass, assertions }, null, 2)}\n`)
+    if (!evidence.pass) process.exitCode = 1
 } else if (command === 'cleanup') {
     const fixture = await readFixture()
     const result = await cleanupFixture(fixture)
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, projectRef: PROD_REF, ...result }, null, 2)}\n`)
     if (!result.reconciled) process.exitCode = 1
 } else {
-    throw new Error('Usage: formal-batch7-production-prerequisites.mjs setup|snapshot|evidence|cleanup')
+    throw new Error('Usage: formal-batch7-production-prerequisites.mjs setup|prepare-master11|snapshot|evidence|master11-evidence|cleanup')
 }

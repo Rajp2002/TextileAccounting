@@ -547,3 +547,7 @@ The production checkpoint did not promote any of these findings to pass. Post-mi
 `PROD-002`, `PROD-004`, and `MASTER-012` are closed. Migration `20260713124500` resolved the day-only activation contract, and isolated production proved separate day/night worker, rate, order, stock, and payroll snapshots after an owner-controlled context/operator remap. The shared safe-update shift-log prerequisite is therefore no longer the blocker for these rows. `MASTER-006` remains a product-contract audit over rate ownership, not schema availability.
 
 `NEEDS-AUDIT-004` is the new dated-flow cluster. The production date field accepted 2026-07-12, but changing Production/Downtime state or entering meter state restored 2026-07-13. Keep `MASTER-011`, `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` blocked until the date/draft effect is debugged and a historical submission persists its chosen date through refresh and payroll/correction checks.
+
+### Batch 8 resolved dated-substitution root
+
+Remove `MASTER-011` from the blocked backlog. The selected historical date, persisted dated worker, order start boundary, worker/rate snapshots, refresh state, generated stock, and owner payroll attribution all passed isolated production proof. `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` are not downstream pass claims; keep them blocked until their exact correction/access-code/attendance/calendar scenarios run. `NEEDS-AUDIT-004` is closed for the production-date root, with those five rows retained as individual work.

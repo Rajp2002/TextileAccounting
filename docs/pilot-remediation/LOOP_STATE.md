@@ -1985,3 +1985,7 @@ Date/time: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710
 - Safety: exact prefixed production tenant, rows, credentials, and browser tabs were removed or closed; organization/profile/machine/log/auth counts returned to zero.
 - Audit/debugging: `NEEDS-AUDIT-004` captures the historical-date reset. `MASTER-011` and other dated-shift/correction rows remain blocked until that state overwrite is repaired and re-proven.
 - Current formal matrix: total 377, pass 269, fail 3, blocked 104, not applicable 1. Next action is a focused historical-date/draft-state repair batch; readiness remains No-Go.
+
+### Formal blocked-row Batch 8 dated substitution closeout
+
+`MASTER-011` is `PASS`. Production now treats a persisted dated shift assignment as the authoritative worker and rate for that one date/shift, validates it server-side, uses the order business start date for historical logging, and exposes deterministic previous/next production-day controls. Isolated proof saved and refreshed a 2026-07-12 32m Worker B log while Worker A remained standing, reconciled the generated stock, and showed Worker B-only payroll at ₹104. `NEEDS-AUDIT-004` is resolved for this root. `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` remain blocked under their own unexecuted scenarios. Current counts: 270 pass, 3 fail, 103 blocked, 1 not applicable; No-Go unchanged.
