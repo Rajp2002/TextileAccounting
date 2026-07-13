@@ -2296,3 +2296,17 @@ Date: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
 - Safety: isolated `QA-FORMAL-B7-1783960232554-52BF61` production fixture only; exact business rows, profiles, organization, auth users, credential file, and browser tabs were removed and reconciled to zero.
 - Evidence: `output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.json` and `.png`.
 - Formal matrix: 270 pass, 3 fail, 103 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B09 closeout — production resilience
+
+Date: 2026-07-14 IST. Deployment commit `812512c599b3659cc399495a674e8b3e50066e60`.
+
+- Status changes: `PROD-005`, `PROD-006`, `PROD-007`, `PROD-010`, `PROD-011`, `PROD-013`, `PROD-014`, `PROD-022`, `PROD-023`, `PROD-024`, `PROD-025`, `PROD-026`, `PROD-027`, `PROD-030`, `OFF-003`, `OFF-004`, and `UX-001` moved from `blocked` to `pass` after direct runtime proof.
+- Defects fixed: breakdown persistence previously returned success after a zero-row update; the action now validates the tenant/date/shift/machine grain and performs a verified update-or-insert with unique-race recovery. Copy previous was hidden by placeholder assignment rows and now follows the actually assigned count. The loom sheet now supplies the required accessible title.
+- Runtime boundaries: invalid missing-order, missing-worker, zero-rate, and negative payloads were rejected without mutation; Other-without-note stayed disabled; 10,000 m required explicit confirmation; date/shift and refresh drafts remained isolated; offline submit made no success claim; a 17-second delayed response reconciled one 22.22 m log and stock lot; and two distinct supervisors produced one success plus one atomic duplicate rejection.
+- Mobile proof: the 390×844 workflow rendered 20 independently labelled metre inputs without horizontal overflow, preserved distinct first/middle/last values, and kept the fixed Save control reachable.
+- Production proof: Vercel deployment `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB` is Ready, production-targeted, aliased to `https://textile-accounting.vercel.app`, and identifies the exact commit. Production Copy previous moved Night from 0/20 to 1/20 with Worker B. The deployed H2-labelled sheet persisted Service + Mechanical + the exact note into a new dated row.
+- Release gates: local optimized build passed 82 files / 598 tests with 1 intentional skip; the Vercel build passed 82 files / 599 tests and uploaded release source maps. Production migration history remains aligned through `20260713124500`; B09 added no migration.
+- Safety: one prefixed production tenant, three auth users, 20 looms, and associated assignments/logs/stock were removed; organizations, profiles, machines, production logs, and auth users all reconciled to zero.
+- Evidence: `output/qa/blocked-row-campaign/B09-production-resilience.json`, `B09-concurrent-supervisors.json`, `B09-production-deploy-proof.json`, and `B09-mobile-20-looms.png`.
+- Formal matrix: 287 pass, 3 fail, 86 blocked, 1 not applicable. Readiness remains No-Go.

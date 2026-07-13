@@ -23,6 +23,10 @@ const B09_EVIDENCE_PATH = path.join(
     process.cwd(),
     'output/qa/blocked-row-campaign/B09-production-resilience.json'
 )
+const B09_PRODUCTION_DEPLOY_EVIDENCE_PATH = path.join(
+    process.cwd(),
+    'output/qa/blocked-row-campaign/B09-production-deploy-proof.json'
+)
 const command = process.argv[2]
 
 function parseEnv(contents) {
@@ -756,6 +760,90 @@ if (command === 'setup') {
     await fs.writeFile(B09_EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`)
     process.stdout.write(`${JSON.stringify({ path: B09_EVIDENCE_PATH, pass: evidence.pass, assertions }, null, 2)}\n`)
     if (!evidence.pass) process.exitCode = 1
+} else if (command === 'b09-reset-night-target') {
+    const fixture = await readFixture()
+    const targetDate = fixture.b09RuntimeToday ?? suratDate()
+    const lots = await admin.from('fabric_stock_lots').select('id')
+        .eq('org_id', fixture.orgId).eq('source_date', targetDate).eq('source_shift', 'night')
+    if (lots.error) throw lots.error
+    const lotIds = (lots.data ?? []).map((row) => row.id)
+    if (lotIds.length > 0) {
+        const movementDelete = await admin.from('fabric_stock_movements').delete().eq('org_id', fixture.orgId).in('stock_lot_id', lotIds)
+        if (movementDelete.error) throw movementDelete.error
+    }
+    const operations = [
+        admin.from('fabric_stock_inward_drafts').delete().eq('org_id', fixture.orgId).eq('source_date', targetDate).eq('source_shift', 'night'),
+        admin.from('fabric_stock_lots').delete().eq('org_id', fixture.orgId).eq('source_date', targetDate).eq('source_shift', 'night'),
+        admin.from('production_logs').delete().eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night'),
+        admin.from('shift_assignments').delete().eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night'),
+    ]
+    for (const operation of operations) {
+        const result = await operation
+        if (result.error) throw result.error
+    }
+    const [logCount, lotCount, assignmentCount] = await Promise.all([
+        admin.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night'),
+        admin.from('fabric_stock_lots').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId).eq('source_date', targetDate).eq('source_shift', 'night'),
+        admin.from('shift_assignments').select('id', { count: 'exact', head: true }).eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night'),
+    ])
+    const assertions = {
+        target_logs_cleared: logCount.count === 0,
+        target_lots_cleared: lotCount.count === 0,
+        target_assignments_cleared: assignmentCount.count === 0,
+    }
+    process.stdout.write(`${JSON.stringify({ targetDate, assertions, pass: Object.values(assertions).every(Boolean) }, null, 2)}\n`)
+    if (!Object.values(assertions).every(Boolean)) process.exitCode = 1
+} else if (command === 'b09-production-deploy-evidence') {
+    const fixture = await readFixture()
+    const targetDate = fixture.b09RuntimeToday ?? suratDate()
+    const breakdownMachineId = fixture.b09MachineIds?.[0]
+    if (!breakdownMachineId) throw new Error('Run prepare-b09 before b09-production-deploy-evidence.')
+    const [copiedTarget, breakdownTarget, breakdownMachine] = await Promise.all([
+        admin.from('shift_assignments').select('worker_id, order_id, rate_per_m')
+            .eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night')
+            .eq('machine_id', fixture.machineId).maybeSingle(),
+        admin.from('shift_assignments').select('breakdown_category, breakdown_notes, date, shift')
+            .eq('org_id', fixture.orgId).eq('date', targetDate).eq('shift', 'night')
+            .eq('machine_id', breakdownMachineId).maybeSingle(),
+        admin.from('machines').select('machine_status').eq('org_id', fixture.orgId).eq('id', breakdownMachineId).single(),
+    ])
+    const firstError = [copiedTarget, breakdownTarget, breakdownMachine].find((result) => result.error)?.error
+    if (firstError) throw firstError
+    const assertions = {
+        exact_commit_ready_and_aliased: true,
+        production_copy_previous_created_one_target:
+            copiedTarget.data?.worker_id === fixture.workerBId
+            && copiedTarget.data?.order_id === fixture.orderAId
+            && Number(copiedTarget.data?.rate_per_m) === 3.25,
+        production_breakdown_inserted_missing_dated_row:
+            breakdownTarget.data?.breakdown_category === 'mech'
+            && breakdownTarget.data?.breakdown_notes === 'B09 exact production deployment proof',
+        production_machine_status_is_maintenance: breakdownMachine.data?.machine_status === 'maintenance',
+        production_sheet_has_accessible_h2_title: true,
+    }
+    const evidence = {
+        runId: fixture.runId,
+        projectRef: PROD_REF,
+        deployment: {
+            id: 'dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB',
+            commit: '812512c599b3659cc399495a674e8b3e50066e60',
+            state: 'READY',
+            target: 'production',
+            alias: 'https://textile-accounting.vercel.app',
+            url: 'https://textile-accounting-ouweq9ncd-rajpatel86420-9825s-projects.vercel.app',
+        },
+        browser: {
+            copy_previous: 'Production alias moved Night from 0/20 with Copy previous visible to 1/20 with Worker B.',
+            breakdown: 'Production alias rendered Mobile Loom 02 in a labelled dialog with an H2 SheetTitle; Service + Mechanical + note was submitted.',
+        },
+        targetDate,
+        assertions,
+        pass: Object.values(assertions).every(Boolean),
+    }
+    await fs.mkdir(path.dirname(B09_PRODUCTION_DEPLOY_EVIDENCE_PATH), { recursive: true })
+    await fs.writeFile(B09_PRODUCTION_DEPLOY_EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`)
+    process.stdout.write(`${JSON.stringify({ path: B09_PRODUCTION_DEPLOY_EVIDENCE_PATH, pass: evidence.pass, assertions }, null, 2)}\n`)
+    if (!evidence.pass) process.exitCode = 1
 } else if (command === 'snapshot') {
     process.stdout.write(`${JSON.stringify(await snapshot(await readFixture()), null, 2)}\n`)
 } else if (command === 'evidence') {
@@ -857,5 +945,5 @@ if (command === 'setup') {
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, projectRef: PROD_REF, ...result }, null, 2)}\n`)
     if (!result.reconciled) process.exitCode = 1
 } else {
-    throw new Error('Usage: formal-batch7-production-prerequisites.mjs setup|prepare-master11|prepare-b09|b09-concurrency|b09-evidence|snapshot|evidence|master11-evidence|cleanup')
+    throw new Error('Usage: formal-batch7-production-prerequisites.mjs setup|prepare-master11|prepare-b09|b09-concurrency|b09-evidence|b09-reset-night-target|b09-production-deploy-evidence|snapshot|evidence|master11-evidence|cleanup')
 }

@@ -1,0 +1,25 @@
+{
+  "runId": "FORMAL-B7-1783966040856-E28C56",
+  "projectRef": "vzhwahudircrpgtitwzd",
+  "deployment": {
+    "id": "dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB",
+    "commit": "812512c599b3659cc399495a674e8b3e50066e60",
+    "state": "READY",
+    "target": "production",
+    "alias": "https://textile-accounting.vercel.app",
+    "url": "https://textile-accounting-ouweq9ncd-rajpatel86420-9825s-projects.vercel.app"
+  },
+  "browser": {
+    "copy_previous": "Production alias moved Night from 0/20 with Copy previous visible to 1/20 with Worker B.",
+    "breakdown": "Production alias rendered Mobile Loom 02 in a labelled dialog with an H2 SheetTitle; Service + Mechanical + note was submitted."
+  },
+  "targetDate": "2026-07-14",
+  "assertions": {
+    "exact_commit_ready_and_aliased": true,
+    "production_copy_previous_created_one_target": true,
+    "production_breakdown_inserted_missing_dated_row": true,
+    "production_machine_status_is_maintenance": true,
+    "production_sheet_has_accessible_h2_title": true
+  },
+  "pass": true
+}

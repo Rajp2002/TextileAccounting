@@ -1989,3 +1989,9 @@ Date/time: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710
 ### Formal blocked-row Batch 8 dated substitution closeout
 
 `MASTER-011` is `PASS`. Production now treats a persisted dated shift assignment as the authoritative worker and rate for that one date/shift, validates it server-side, uses the order business start date for historical logging, and exposes deterministic previous/next production-day controls. Isolated proof saved and refreshed a 2026-07-12 32m Worker B log while Worker A remained standing, reconciled the generated stock, and showed Worker B-only payroll at ₹104. `NEEDS-AUDIT-004` is resolved for this root. `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` remain blocked under their own unexecuted scenarios. Current counts: 270 pass, 3 fail, 103 blocked, 1 not applicable; No-Go unchanged.
+
+### Blocked-row campaign B09 complete; B10 active
+
+B09 is closed at 17/17 pass on exact production deployment `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB` / commit `812512c599b3659cc399495a674e8b3e50066e60`. The production fixture and all three auth users reconciled to zero. Current counts are 287 pass, 3 fail, 86 blocked, and 1 not applicable.
+
+The active batch is B10: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022`, `COMM-013`, `TIME-003`, and `TIME-004`. Create a fresh disposable fixture and directly execute correction-window open/closed behavior, access-code use/consume/expiry, settled-period protection, and India month/year/leap-day boundaries. Do not inherit B09 pass credit into any B10 row.

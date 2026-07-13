@@ -551,3 +551,9 @@ The production checkpoint did not promote any of these findings to pass. Post-mi
 ### Batch 8 resolved dated-substitution root
 
 Remove `MASTER-011` from the blocked backlog. The selected historical date, persisted dated worker, order start boundary, worker/rate snapshots, refresh state, generated stock, and owner payroll attribution all passed isolated production proof. `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` are not downstream pass claims; keep them blocked until their exact correction/access-code/attendance/calendar scenarios run. `NEEDS-AUDIT-004` is closed for the production-date root, with those five rows retained as individual work.
+
+### B09 production-resilience cluster resolved
+
+Remove all 17 B09 IDs from the blocked backlog: `PROD-005`, `PROD-006`, `PROD-007`, `PROD-010`, `PROD-011`, `PROD-013`, `PROD-014`, `PROD-022`, `PROD-023`, `PROD-024`, `PROD-025`, `PROD-026`, `PROD-027`, `PROD-030`, `OFF-003`, `OFF-004`, and `UX-001`. Runtime evidence covers the client/server validation boundaries, copy, scoped draft recovery, pre/post-request network outcomes, atomic concurrency, verified status/breakdown persistence, and 20-loom phone workflow on the exact production commit.
+
+The backlog now has 86 blocked rows. B10 is next with eight independent historical/access/calendar scenarios; B11–B18 remain internally executable clusters, while B19 retains the five genuine external/human dependencies. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B09 does not reclassify them.

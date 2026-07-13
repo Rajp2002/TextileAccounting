@@ -1260,10 +1260,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Loom missing active order/run.",
     "expected": "Clear blocked or review-queue behavior; entered draft is not silently lost.",
-    "current_status": "blocked",
-    "current_outcome": "Activation did not persist, so a visible loom row could not be placed into the missing-run state.",
+    "current_status": "pass",
+    "current_outcome": "An authenticated production supervisor RPC rejected positive metres with no order/run; the production-log count stayed unchanged and the visible draft remained available for correction.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1332,10 +1333,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Loom missing worker.",
     "expected": "Clear blocked or review-queue behavior.",
-    "current_status": "blocked",
-    "current_outcome": "Activation did not persist, so a visible loom row could not be placed into the missing-worker state.",
+    "current_status": "pass",
+    "current_outcome": "An authenticated production supervisor RPC rejected positive metres with no worker; the production-log count stayed unchanged.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1404,10 +1406,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Worker rate missing/zero.",
     "expected": "Positive meters blocked; no fallback ₹1.50 rate.",
-    "current_status": "blocked",
-    "current_outcome": "Activation did not persist, so positive-meter validation with a missing/zero worker rate was unreachable.",
+    "current_status": "pass",
+    "current_outcome": "An authenticated production supervisor RPC rejected the zero-rate positive-metre payload; no fallback ₹1.50 rate or production mutation appeared.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1476,10 +1479,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Zero meters with “Other” and no note.",
     "expected": "Blocked.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row was reachable to select Other downtime with an empty note.",
+    "current_status": "pass",
+    "current_outcome": "On the production-backed supervisor form, selecting Other downtime without a note exposed the note field and kept Save disabled.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1548,10 +1552,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Negative meters.",
     "expected": "Blocked on client and server.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row was reachable to exercise client/server negative-meter rejection.",
+    "current_status": "pass",
+    "current_outcome": "The supervisor form kept Save disabled for -1 m, and the authenticated server RPC independently rejected negative metres without mutation.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": "High",
     "user_role": "owner + supervisor",
@@ -1620,10 +1625,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Very large but plausible meters.",
     "expected": "Suspicious-value behavior is explicit.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row was reachable to exercise suspicious large-meter confirmation.",
+    "current_status": "pass",
+    "current_outcome": "Entering 10,000 m opened an explicit confirmation naming the loom and exact value before mutation; the safe draft was restored afterward.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor",
@@ -1692,10 +1698,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Copy previous shift.",
     "expected": "Correct source shift, no duplicate, editable before submit.",
-    "current_status": "blocked",
-    "current_outcome": "No prior production exists and activation did not persist, so Copy previous could not be tested with an authoritative source shift.",
+    "current_status": "pass",
+    "current_outcome": "On production deployment 812512c, Night initially showed 0/20 with Copy previous. The action produced exactly 1/20 with Worker B and one dated target assignment at the source rate, remaining editable before submit.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1929,10 +1936,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Change date/shift while draft exists.",
     "expected": "Draft stored under correct date/shift and never submitted to another shift.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row is reachable, so date/shift draft isolation cannot be exercised.",
+    "current_status": "pass",
+    "current_outcome": "A Day draft remained isolated when switching to Night and returned only under the original date/shift grain; no cross-shift submission occurred.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor",
@@ -2001,10 +2009,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Refresh/browser crash with draft.",
     "expected": "Draft restores, clearly marked unsaved.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row is reachable, so production draft refresh restoration cannot be exercised.",
+    "current_status": "pass",
+    "current_outcome": "Refreshing restored the exact 12.34 m draft under a visible Restored unsaved draft banner and identified it as not saved.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor",
@@ -2073,10 +2082,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Network drops before submit.",
     "expected": "No success claim; draft remains locally.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row is reachable, so the pre-submit network-drop path cannot be exercised.",
+    "current_status": "pass",
+    "current_outcome": "Stopping the same-origin server before submit produced no success claim and no production/stock mutation; reconnect restored all three local draft values.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2145,10 +2155,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Network drops after request reaches server but before response.",
     "expected": "Retry is idempotent and resolves current server state.",
-    "current_status": "blocked",
-    "current_outcome": "No supervisor loom row or successful submit is reachable, so unknown-outcome retry idempotency cannot be exercised.",
+    "current_status": "pass",
+    "current_outcome": "A controlled 17-second post-request delay showed the unknown-outcome warning, reconciled the committed 22.22 m server state, and retained exactly one log and one stock lot after the repeated delayed save.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2217,10 +2228,12 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Two supervisors submit same shift.",
     "expected": "Atomic duplicate protection.",
-    "current_status": "blocked",
-    "current_outcome": "No active supervisor loom row exists, so concurrent same-shift submission cannot be initiated.",
+    "current_status": "pass",
+    "current_outcome": "Two independently authenticated production supervisors raced the same shift payload: exactly one succeeded, one received atomic DUPLICATE_LOG_DETECTED, and one 7.77 m log plus one stock lot persisted.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json",
+      "output/qa/blocked-row-campaign/B09-concurrent-supervisors.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2289,10 +2302,11 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Machine status running/idle/maintenance and breakdown notes.",
     "expected": "Status persists independently and aligns with downtime entry.",
-    "current_status": "blocked",
-    "current_outcome": "The configured loom does not persist as active, so supervisor status/downtime controls are not rendered.",
+    "current_status": "pass",
+    "current_outcome": "Production deployment 812512c rendered the loom sheet with a labelled H2 title. Service status persisted, and Mechanical plus the exact note inserted a tenant-scoped dated breakdown row when none existed.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2361,10 +2375,12 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Mobile usability with 20+ looms.",
     "expected": "Fast selection, readable cards, no accidental cross-row edits, submit reachable.",
-    "current_status": "blocked",
-    "current_outcome": "The supervisor has 0/0 looms; a 20+ loom mobile interaction fixture cannot be created while activation is broken.",
+    "current_status": "pass",
+    "current_outcome": "At 390×844, 20 independently labelled metre inputs rendered without horizontal overflow; distinct first/middle/last values stayed in their own rows and the fixed Save control remained reachable.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json",
+      "output/qa/blocked-row-campaign/B09-mobile-20-looms.png"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -4958,10 +4974,11 @@
     "feature": "25. Offline, PWA, Cache, and Network Resilience",
     "scenario": "Production draft while online, then offline.",
     "expected": "Draft remains local and clearly unsent.",
-    "current_status": "blocked",
-    "current_outcome": "Production form has no active loom row, so an online draft cannot be created before going offline.",
+    "current_status": "pass",
+    "current_outcome": "The online Day draft survived a controlled offline interval and reappeared after reconnect with all three exact values under the clearly unsent draft banner.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -5030,10 +5047,11 @@
     "feature": "25. Offline, PWA, Cache, and Network Resilience",
     "scenario": "Submit production offline.",
     "expected": "Must not claim success; no duplicate on reconnect.",
-    "current_status": "blocked",
-    "current_outcome": "Production form has no active loom row and controlled offline submission is unavailable.",
+    "current_status": "pass",
+    "current_outcome": "Submitting while the same-origin server was unavailable made no success claim and created no production or stock row; reconnect restored the draft without a duplicate.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -5676,10 +5694,12 @@
     "feature": "28. UX, Accessibility, and Operational Fit",
     "scenario": "Supervisor logs 20 looms on a phone.",
     "expected": "No excessive scrolling/error-prone row confusion.",
-    "current_status": "blocked",
-    "current_outcome": "Supervisor runtime has 0/0 looms; a 20-loom phone workflow cannot be rendered.",
+    "current_status": "pass",
+    "current_outcome": "The 390×844 production-backed phone workflow rendered 20 readable, independently named loom rows, preserved distinct row values, had no horizontal overflow, and kept the fixed submit control reachable.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B09-production-resilience.json",
+      "output/qa/blocked-row-campaign/B09-production-deploy-proof.json",
+      "output/qa/blocked-row-campaign/B09-mobile-20-looms.png"
     ],
     "severity": null,
     "user_role": "owner + supervisor",

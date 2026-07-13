@@ -1,13 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
+- Current ledger: **287 PASS, 3 FAIL, 86 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Active batch: **B09 — production-entry validation and resilience**.
-- B09 state: runtime proof complete; exact production deployment and alias proof pending.
-- Validation gate: optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, delayed-response, invalid-payload, breakdown-persistence, and two-supervisor concurrency proof green.
-- Production migration head: `20260713124500`.
-- Latest production-target application deployment: `dpl_43n5khAYXGcCtp64SBowPZirjaUG`, Ready, application commit `649380d5dfbcbb89d8c10cad7763448ac42c6f2c`.
-- B09 evidence: `output/qa/blocked-row-campaign/B09-production-resilience.json`, `B09-concurrent-supervisors.json`, and `B09-mobile-20-looms.png`.
+- Completed batch: **B09 — production-entry validation and resilience (17/17 PASS)**.
+- Active batch: **B10 — historical correction, access-code, and calendar boundaries**.
+- Validation gate: local optimized build passed 82 files / 598 tests with 1 intentional skip; Vercel repeated 82 files / 599 tests and a successful Next.js build.
+- Production deployment: `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB`, Ready and aliased, exact commit `812512c599b3659cc399495a674e8b3e50066e60`.
+- Production migration head: `20260713124500`, aligned; B09 added no migration.
+- Cleanup: the prefixed production tenant, three profiles/auth users, 20 looms, and all logs/stock reconciled to zero.
+- B09 evidence: `output/qa/blocked-row-campaign/B09-production-resilience.json`, `B09-concurrent-supervisors.json`, `B09-production-deploy-proof.json`, and `B09-mobile-20-looms.png`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -27,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## Priority rationale
+## B09 closeout
 
-B09 is first because 17 rows still cite the production activation/submission defect that Batches 7–8 repaired and proved in production. One isolated owner/supervisor fixture now directly re-executes validation, draft, retry, concurrency, status, offline, and mobile behavior. B10–B14 then reuse the repaired upstream chain for dated correction, order/stock/dispatch, payroll, and dashboard proof. Provider, recovery-infrastructure, and human-review dependencies are isolated in B16–B19 so they cannot prevent completion of independent internal batches.
+B09 directly proved invalid-payload rejection, Other-note and large-value client boundaries, date/shift and refresh draft isolation, pre-request disconnect behavior, post-request timeout reconciliation, two-supervisor atomic duplication, verified status/breakdown persistence, Copy previous, and the 20-loom phone workflow. The deployed fixes replace zero-row breakdown success with verified update-or-insert, expose Copy previous when placeholder rows have no worker, and add the required accessible sheet title.
 
 ## Exact next action
 
-Commit and push the B09 implementation/evidence, deploy that exact commit to production, re-run the affected production alias paths, then promote only the 17 proven B09 rows and clean the exact disposable fixture.
+Start B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows.

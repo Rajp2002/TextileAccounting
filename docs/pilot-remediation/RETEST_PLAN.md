@@ -574,3 +574,13 @@ Acceptance:
 - Do not rerun unless production date navigation, shift assignment precedence, order-start validation, snapshot persistence, correction-window replacement, stock generation, or payroll aggregation changes.
 - Reassess `PROD-017`, `PROD-018`, `PAY-006`, `TIME-003`, and `TIME-004` separately. Batch 8 did not execute their exact after-window access-code, attendance, month/year, or leap-day scenarios.
 - Current formal counts: 270 pass, 3 fail, 103 blocked, and 1 not applicable. Readiness remains No-Go.
+
+### B09 production-resilience regression guard — 2026-07-14
+
+- Preserve rejection of positive metres without order, worker, or positive rate and rejection of negative metres at both client/server boundaries.
+- Preserve tenant/user/date/shift draft keys, visible unsaved restoration, no success claim before a request reaches the server, and authoritative reconciliation after an unknown response timeout.
+- Preserve one result for concurrent same-grain submissions: one success, one duplicate rejection, one production log, and one generated stock lot.
+- Preserve Copy previous visibility when placeholder rows exist but no worker is assigned, and copy only the selected prior date/shift into one editable target grain.
+- Preserve verified breakdown update-or-insert behavior when the dated row is absent, plus an H2-labelled dialog and independent machine status.
+- Re-run the 390×844 20-loom workflow if card layout, fixed action footer, metre input naming, or shift-submit state changes.
+- Canonical counts after B09: 287 pass, 3 fail, 86 blocked, and 1 not applicable. Begin B10; do not rerun B09 unless one of these boundaries changes.

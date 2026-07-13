@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T18:56:13.578Z",
+  "updated_at": "2026-07-13T19:19:53.078Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 270,
-    "blocked": 103,
+    "pass": 287,
+    "blocked": 86,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -20,10 +20,11 @@
   "canonical_matrix": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
   "inventory": "output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json",
   "completed_batches": [
-    "B08"
+    "B08",
+    "B09"
   ],
-  "active_batch": "B09",
-  "active_batch_state": "runtime proof complete; exact production deployment and alias proof pending",
+  "active_batch": "B10",
+  "active_batch_state": "B09 closed with exact production proof and cleanup; B10 queued",
   "planned_batches": [
     {
       "id": "B09",
@@ -228,7 +229,25 @@
       "exit": "Rows pass with external evidence or remain genuinely blocked with the smallest exact requested input."
     }
   ],
-  "rows_moved_to_pass": [],
+  "rows_moved_to_pass": [
+    "PROD-005",
+    "PROD-006",
+    "PROD-007",
+    "PROD-010",
+    "PROD-011",
+    "PROD-013",
+    "PROD-014",
+    "PROD-022",
+    "PROD-023",
+    "PROD-024",
+    "PROD-025",
+    "PROD-026",
+    "PROD-027",
+    "PROD-030",
+    "OFF-003",
+    "OFF-004",
+    "UX-001"
+  ],
   "rows_moved_to_fail": [],
   "rows_remaining_blocked": [
     "TECH-011",
@@ -250,23 +269,9 @@
     "MARKET-009",
     "MARKET-010",
     "MARKET-013",
-    "PROD-005",
-    "PROD-006",
-    "PROD-007",
-    "PROD-010",
-    "PROD-011",
-    "PROD-013",
-    "PROD-014",
     "PROD-017",
     "PROD-018",
     "PROD-019",
-    "PROD-022",
-    "PROD-023",
-    "PROD-024",
-    "PROD-025",
-    "PROD-026",
-    "PROD-027",
-    "PROD-030",
     "STOCK-005",
     "STOCK-009",
     "STOCK-011",
@@ -309,8 +314,6 @@
     "BILL-009",
     "BILL-010",
     "OFF-001",
-    "OFF-003",
-    "OFF-004",
     "TIME-003",
     "TIME-004",
     "SEC-007",
@@ -321,7 +324,6 @@
     "SEC-013",
     "SEC-015",
     "SEC-018",
-    "UX-001",
     "UX-006",
     "UX-009",
     "UX-010",
@@ -336,13 +338,29 @@
     "SIGNOFF-04"
   ],
   "rows_marked_not_applicable": [],
-  "root_causes_fixed_this_campaign": [],
-  "commits": [],
+  "root_causes_fixed_this_campaign": [
+    "Breakdown updates could report success after a zero-row update; the action now validates the grain and performs verified update-or-insert with race recovery.",
+    "Copy previous was hidden by placeholder assignment rows; visibility now follows the count of actually assigned looms.",
+    "The loom details sheet lacked the required accessible title."
+  ],
+  "commits": [
+    {
+      "sha": "812512c599b3659cc399495a674e8b3e50066e60",
+      "subject": "fix(qa): close B09 production resilience gaps"
+    }
+  ],
   "production_deployments": [
     {
       "id": "dpl_43n5khAYXGcCtp64SBowPZirjaUG",
       "commit": "649380d5dfbcbb89d8c10cad7763448ac42c6f2c",
       "state": "READY"
+    },
+    {
+      "id": "dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB",
+      "commit": "812512c599b3659cc399495a674e8b3e50066e60",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -355,8 +373,8 @@
   "created_test_accounts_and_tenants": [
     {
       "batch": "B09",
-      "type": "prefixed disposable production tenant",
-      "state": "active until exact production proof and cleanup"
+      "type": "prefixed disposable production tenant with three auth users",
+      "state": "removed; organizations/profiles/machines/logs/auth all reconciled to zero"
     }
   ],
   "outstanding_external_dependencies": [
@@ -409,6 +427,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.",
-  "exact_next_action": "Commit and push the B09 implementation/evidence, deploy that exact commit to production, re-run the affected production alias paths, then promote only the 17 proven B09 rows."
+  "last_successful_validation": "B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.",
+  "exact_next_action": "Start B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows."
 }

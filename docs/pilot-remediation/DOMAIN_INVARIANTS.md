@@ -324,3 +324,12 @@ Replacing a loom's current production context or assigning another shift operato
 A chosen production date is part of the mutation identity and must not be overwritten by mode, meter, draft-restore, or loading-state changes. `NEEDS-AUDIT-004` records a current violation of this invariant; dated-flow rows remain blocked until repaired.
 
 Batch 8 proof supersedes that violation for production logging. A dated shift assignment is authoritative only for its selected date and shift; it may override the standing worker and rate without mutating the standing assignment. The server must derive this authority from persisted tenant-scoped data, not a client-supplied substitute. Historical production is valid on or after `orders.start_date` regardless of when the order row was created. The dated worker, rate, order, date, shift, production metres, and generated stock must survive refresh and produce payroll for the dated worker only. The 2026-07-12 Worker B / 32m / ₹3.25 / ₹104 proof satisfies this invariant for `MASTER-011`.
+
+## B09 production resilience invariants
+
+- A production row with positive metres requires an authoritative order/run, worker/operator, and positive rate. Missing context and negative metres mutate nothing; zero-metre Other downtime requires a non-empty note.
+- A shift draft belongs to one organization, user, date, and shift. Refresh may restore it only under that grain and must visibly label it unsaved. Offline or pre-request failure cannot claim success. Post-request timeout is an unknown outcome until authoritative server state matches the complete submitted set.
+- Same-grain submissions are atomic: concurrent supervisors may produce only one accepted initial result, one production grain, and one generated stock grain.
+- Copy previous is available when no loom is actually assigned even if placeholder assignment rows exist. It copies only the selected source date/shift and yields one editable target grain without duplicating history.
+- Machine status and dated breakdown detail are independent persisted facts. Breakdown save must verify an affected row; if the tenant/date/shift/machine grain is absent, it must insert it, recover safely from a unique race, and never return success for zero affected rows.
+- A 20-loom phone workflow must retain unique accessible metre-input names, no horizontal overflow or cross-row value leakage, and a reachable fixed submit action. The loom details dialog must have an accessible title.

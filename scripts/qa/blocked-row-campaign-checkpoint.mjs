@@ -190,6 +190,8 @@ const inventory = campaignItems.map((item) => {
 })
 
 const counts = Object.fromEntries(Object.entries(Object.groupBy(ledger.items, (item) => item.status)).map(([status, items]) => [status, items.length]))
+const b09Rows = batches.find((batch) => batch.id === 'B09').rows
+const b09Closed = b09Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
 const checkpoint = {
     campaign: 'blocked-row-remediation',
     updated_at: new Date().toISOString(),
@@ -199,26 +201,37 @@ const checkpoint = {
     canonical_ledger: path.relative(root, ledgerPath),
     canonical_matrix: 'output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md',
     inventory: path.relative(root, inventoryPath),
-    completed_batches: ['B08'],
-    active_batch: 'B09',
-    active_batch_state: 'runtime proof complete; exact production deployment and alias proof pending',
+    completed_batches: b09Closed ? ['B08', 'B09'] : ['B08'],
+    active_batch: b09Closed ? 'B10' : 'B09',
+    active_batch_state: b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
     planned_batches: batches.map(({ id, name, rows, rootCause, validation, exit }) => ({ id, name, rows, rootCause, validation, exit })),
-    rows_moved_to_pass: [],
+    rows_moved_to_pass: b09Closed ? b09Rows : [],
     rows_moved_to_fail: [],
     rows_remaining_blocked: blocked.map((item) => item.id),
     rows_marked_not_applicable: [],
-    root_causes_fixed_this_campaign: [],
-    commits: [],
-    production_deployments: [{ id: 'dpl_43n5khAYXGcCtp64SBowPZirjaUG', commit: '649380d5dfbcbb89d8c10cad7763448ac42c6f2c', state: 'READY' }],
+    root_causes_fixed_this_campaign: b09Closed ? [
+        'Breakdown updates could report success after a zero-row update; the action now validates the grain and performs verified update-or-insert with race recovery.',
+        'Copy previous was hidden by placeholder assignment rows; visibility now follows the count of actually assigned looms.',
+        'The loom details sheet lacked the required accessible title.',
+    ] : [],
+    commits: b09Closed ? [{ sha: '812512c599b3659cc399495a674e8b3e50066e60', subject: 'fix(qa): close B09 production resilience gaps' }] : [],
+    production_deployments: [
+        { id: 'dpl_43n5khAYXGcCtp64SBowPZirjaUG', commit: '649380d5dfbcbb89d8c10cad7763448ac42c6f2c', state: 'READY' },
+        ...(b09Closed ? [{ id: 'dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB', commit: '812512c599b3659cc399495a674e8b3e50066e60', state: 'READY', target: 'production', alias: 'https://textile-accounting.vercel.app' }] : []),
+    ],
     migrations: [{ environment: 'production', head: '20260713124500', alignment: 'verified' }],
-    created_test_accounts_and_tenants: [{ batch: 'B09', type: 'prefixed disposable production tenant', state: 'active until exact production proof and cleanup' }],
+    created_test_accounts_and_tenants: [{ batch: 'B09', type: 'prefixed disposable production tenant with three auth users', state: b09Closed ? 'removed; organizations/profiles/machines/logs/auth all reconciled to zero' : 'active until exact production proof and cleanup' }],
     outstanding_external_dependencies: batches.filter((batch) => ['B16', 'B17', 'B18', 'B19'].includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause })),
-    last_successful_validation: 'B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.',
-    exact_next_action: 'Commit and push the B09 implementation/evidence, deploy that exact commit to production, re-run the affected production alias paths, then promote only the 17 proven B09 rows.',
+    last_successful_validation: b09Closed
+        ? 'B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.'
+        : 'B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.',
+    exact_next_action: b09Closed
+        ? 'Start B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows.'
+        : 'Commit and push the B09 implementation/evidence, deploy that exact commit to production, re-run the affected production alias paths, then promote only the 17 proven B09 rows.',
 }
 
 const table = batches.map((batch) => `| ${batch.id} | ${batch.name} | ${batch.rows.length} | ${batch.rows.map((id) => `\`${id}\``).join(', ')} |`).join('\n')
-const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Active batch: **B09 — production-entry validation and resilience**.\n- B09 state: runtime proof complete; exact production deployment and alias proof pending.\n- Validation gate: optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, delayed-response, invalid-payload, breakdown-persistence, and two-supervisor concurrency proof green.\n- Production migration head: \`20260713124500\`.\n- Latest production-target application deployment: \`dpl_43n5khAYXGcCtp64SBowPZirjaUG\`, Ready, application commit \`649380d5dfbcbb89d8c10cad7763448ac42c6f2c\`.\n- B09 evidence: \`output/qa/blocked-row-campaign/B09-production-resilience.json\`, \`B09-concurrent-supervisors.json\`, and \`B09-mobile-20-looms.png\`.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## Priority rationale\n\nB09 is first because 17 rows still cite the production activation/submission defect that Batches 7–8 repaired and proved in production. One isolated owner/supervisor fixture now directly re-executes validation, draft, retry, concurrency, status, offline, and mobile behavior. B10–B14 then reuse the repaired upstream chain for dated correction, order/stock/dispatch, payroll, and dashboard proof. Provider, recovery-infrastructure, and human-review dependencies are isolated in B16–B19 so they cannot prevent completion of independent internal batches.\n\n## Exact next action\n\nCommit and push the B09 implementation/evidence, deploy that exact commit to production, re-run the affected production alias paths, then promote only the 17 proven B09 rows and clean the exact disposable fixture.\n`
+const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Completed batch: **B09 — production-entry validation and resilience (17/17 PASS)**.\n- Active batch: **B10 — historical correction, access-code, and calendar boundaries**.\n- Validation gate: local optimized build passed 82 files / 598 tests with 1 intentional skip; Vercel repeated 82 files / 599 tests and a successful Next.js build.\n- Production deployment: \`dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB\`, Ready and aliased, exact commit \`812512c599b3659cc399495a674e8b3e50066e60\`.\n- Production migration head: \`20260713124500\`, aligned; B09 added no migration.\n- Cleanup: the prefixed production tenant, three profiles/auth users, 20 looms, and all logs/stock reconciled to zero.\n- B09 evidence: \`output/qa/blocked-row-campaign/B09-production-resilience.json\`, \`B09-concurrent-supervisors.json\`, \`B09-production-deploy-proof.json\`, and \`B09-mobile-20-looms.png\`.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## B09 closeout\n\nB09 directly proved invalid-payload rejection, Other-note and large-value client boundaries, date/shift and refresh draft isolation, pre-request disconnect behavior, post-request timeout reconciliation, two-supervisor atomic duplication, verified status/breakdown persistence, Copy previous, and the 20-loom phone workflow. The deployed fixes replace zero-row breakdown success with verified update-or-insert, expose Copy previous when placeholder rows have no worker, and add the required accessible sheet title.\n\n## Exact next action\n\nStart B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows.\n`
 
 await fs.mkdir(outDir, { recursive: true })
 await fs.writeFile(inventoryPath, `${JSON.stringify(inventory, null, 2)}\n`)
