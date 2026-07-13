@@ -1,0 +1,306 @@
+{
+  "run_id": "B13-PRODUCTION-1783979471060",
+  "scope": "B13 payroll, advances, adjustments, reversal, exit, kharchi, and Golden payroll runtime proof",
+  "environment": "production",
+  "project_ref": "vzhwahudircrpgtitwzd",
+  "deployment": {
+    "id": "dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD",
+    "commit": "d42d5138fba22758f1d11218c59deb6c3ad876a3"
+  },
+  "assertions": [
+    {
+      "name": "concurrent settlement creates one settlement and deducts advances once",
+      "passed": true,
+      "concurrent_rpc_successes": 1,
+      "concurrent_rpc_errors": [
+        null,
+        "Payroll is already settled for this worker and cycle."
+      ],
+      "settlements": [
+        {
+          "id": 44,
+          "gross_pay": 1000,
+          "advance_deducted": 500,
+          "net_payout": 500,
+          "carried_forward_debt": 300,
+          "itemization_payload": {
+            "pf": null,
+            "esic": null,
+            "fines": [],
+            "bonuses": [],
+            "inamTotal": 0,
+            "net_payout": 500,
+            "finalPayout": 500,
+            "gross_basis": 1000,
+            "kapaatTotal": 0,
+            "baseEarnings": 1000,
+            "payment_mode": "cash",
+            "paymentMethod": "cash",
+            "remainingDebt": 300,
+            "advanceRecovery": 500,
+            "verifiedByOwner": true,
+            "advances_recovered": [
+              {
+                "id": 35,
+                "date": "2026-07-13T21:51:14.916593+00:00",
+                "type": "upaad",
+                "label": "B13 concurrent advance",
+                "recovered": 500,
+                "carried_forward": 300
+              }
+            ],
+            "manual_adjustments": [],
+            "manualAdjustmentTotal": 0,
+            "gross_after_adjustments": 1000
+          }
+        }
+      ],
+      "advances_before_delete": [
+        {
+          "id": 35,
+          "amount": 500,
+          "status": "deducted",
+          "settlement_id": 44,
+          "origin_settlement_id": null
+        },
+        {
+          "id": 36,
+          "amount": 300,
+          "status": "pending",
+          "settlement_id": 44,
+          "origin_settlement_id": 44
+        }
+      ],
+      "deducted_advance_delete_error": "Deducted or settlement-linked advances cannot be deleted.",
+      "deducted_advance_deleted_rows": 0
+    },
+    {
+      "name": "standard advance recovery cap is exactly fifty percent with explicit carry-forward",
+      "passed": true,
+      "gross_pay": 1000,
+      "advance_deducted": 500,
+      "carried_forward_debt": 300
+    },
+    {
+      "name": "deducted advance deletion is blocked at the database boundary",
+      "passed": true,
+      "error": "Deducted or settlement-linked advances cannot be deleted.",
+      "deleted_rows": 0
+    },
+    {
+      "name": "payroll reversal restores exact prior debt and consumes authorization",
+      "passed": true,
+      "settlement_count": 0,
+      "advances": [
+        {
+          "id": 35,
+          "amount": 800,
+          "status": "pending",
+          "settlement_id": null,
+          "origin_settlement_id": null
+        }
+      ],
+      "reverted_advances": 1
+    },
+    {
+      "name": "decimal operator rate persists and historical production keeps each snapshot",
+      "passed": true,
+      "current_rate": 3.125,
+      "snapshots": [
+        2.75,
+        3.125,
+        3
+      ]
+    },
+    {
+      "name": "server payroll ignores client gross and uses order plus market production snapshots",
+      "passed": true,
+      "gross_pay": 675,
+      "server_gross": 675,
+      "order_count": 2
+    },
+    {
+      "name": "inam and kapaat are itemized with reasons and never produce a negative payout",
+      "passed": true,
+      "settlement": {
+        "gross": 675,
+        "net": 375,
+        "advance": 375,
+        "debt": 125
+      },
+      "adjustments": [
+        {
+          "adjustment_type": "inam",
+          "reason": "Extra work",
+          "amount": 100,
+          "note": "B13 documented extra work",
+          "settlement_id": 45
+        },
+        {
+          "adjustment_type": "kapaat",
+          "reason": "Quality issue",
+          "amount": 25,
+          "note": "B13 documented quality issue",
+          "settlement_id": 45
+        }
+      ],
+      "pending": [
+        {
+          "amount": 125,
+          "status": "pending",
+          "settlement_id": 45,
+          "origin_settlement_id": 45
+        }
+      ]
+    },
+    {
+      "name": "Golden A and Golden B payroll share one immutable production-backed payslip",
+      "passed": true,
+      "settlement_id": 45,
+      "payment_mode": "upi",
+      "order_id": "d88e4f3c...a1ee",
+      "market_order_id": "3c8506d1...ae99"
+    },
+    {
+      "name": "final exit settlement deactivates the worker atomically and preserves explicit remaining debt",
+      "passed": true,
+      "worker_active": false,
+      "settlement": {
+        "gross_pay": 400,
+        "advance_deducted": 400,
+        "net_payout": 0,
+        "carried_forward_debt": 200,
+        "is_final_settlement": true
+      },
+      "pending": [
+        {
+          "amount": 200,
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "name": "supervisor kharchi decreases float and creates one worker advance atomically",
+      "passed": true,
+      "advances": [
+        {
+          "id": 41,
+          "amount": 120,
+          "status": "pending",
+          "type": "kharchi",
+          "cycle_start_date": "2026-07-01"
+        }
+      ],
+      "transactions": [
+        {
+          "type": "refill",
+          "amount": 500,
+          "worker_advance_id": null
+        },
+        {
+          "type": "disbursement",
+          "amount": 120,
+          "worker_advance_id": 41
+        }
+      ],
+      "balance": 380
+    },
+    {
+      "name": "after-shift dashboard source contains one production and wage signal",
+      "passed": true,
+      "date": "2026-07-14",
+      "meters": 50,
+      "rate": 4,
+      "wage_signal": 200,
+      "order_id": "09898072...8dfd"
+    }
+  ],
+  "observations": {
+    "concurrent_rpc_successes": 1,
+    "concurrent_rpc_errors": [
+      null,
+      "Payroll is already settled for this worker and cycle."
+    ],
+    "settlements": [
+      {
+        "id": 44,
+        "gross_pay": 1000,
+        "advance_deducted": 500,
+        "net_payout": 500,
+        "carried_forward_debt": 300,
+        "itemization_payload": {
+          "pf": null,
+          "esic": null,
+          "fines": [],
+          "bonuses": [],
+          "inamTotal": 0,
+          "net_payout": 500,
+          "finalPayout": 500,
+          "gross_basis": 1000,
+          "kapaatTotal": 0,
+          "baseEarnings": 1000,
+          "payment_mode": "cash",
+          "paymentMethod": "cash",
+          "remainingDebt": 300,
+          "advanceRecovery": 500,
+          "verifiedByOwner": true,
+          "advances_recovered": [
+            {
+              "id": 35,
+              "date": "2026-07-13T21:51:14.916593+00:00",
+              "type": "upaad",
+              "label": "B13 concurrent advance",
+              "recovered": 500,
+              "carried_forward": 300
+            }
+          ],
+          "manual_adjustments": [],
+          "manualAdjustmentTotal": 0,
+          "gross_after_adjustments": 1000
+        }
+      }
+    ],
+    "advances_before_delete": [
+      {
+        "id": 35,
+        "amount": 500,
+        "status": "deducted",
+        "settlement_id": 44,
+        "origin_settlement_id": null
+      },
+      {
+        "id": 36,
+        "amount": 300,
+        "status": "pending",
+        "settlement_id": 44,
+        "origin_settlement_id": 44
+      }
+    ],
+    "deducted_advance_delete_error": "Deducted or settlement-linked advances cannot be deleted.",
+    "deducted_advance_deleted_rows": 0
+  },
+  "cleanup": "complete",
+  "disposable_tenant": "bff369ff...0473",
+  "defects_reproduced": {
+    "concurrent_double_success": false,
+    "deducted_advance_direct_delete": false
+  },
+  "dashboard_fixture": {
+    "worker_id": 219,
+    "order_id": "09898072...8dfd",
+    "machine_id": "ebbb5933...2ed8",
+    "operator_assignment_id": "92cf420b...3747",
+    "production_log_id": "96438ea7-ef87-4c20-8b36-129c043885a9"
+  },
+  "passed": true,
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "settlements": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  }
+}

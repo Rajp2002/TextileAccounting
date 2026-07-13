@@ -358,3 +358,14 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - E-way, challan, and transporter handling is an advisory checklist unless the required compliance dataset is complete. Above-threshold truth must not falsely claim completion when fields are absent; below-threshold truth must not claim that no legal review is required.
 - Party display names are not identities. New receivables retain explicit `party_id`; normalized duplicate names with distinct parties remain separate, with legacy name fallback only where an ID is genuinely absent.
 - Market-summary reads must be fresh across authenticated sessions after mutations and remain within the formal two-second budget for at least the exercised 26-run dataset.
+
+## B13 payroll and worker-money invariants
+
+- Payroll gross is server-derived from immutable production meter/rate snapshots. Client-supplied gross is not authoritative, and historical rate changes cannot rewrite prior snapshots.
+- Settlement is unique and serialized by organization, worker, worker type, and cycle. Concurrent first-settlement attempts yield exactly one settlement and deduct each advance at most once.
+- Standard advance recovery is capped at 50% of gross for the exercised policy; unrecovered debt remains explicit. Inam and kapaat require itemized reasons/notes, and net payout never becomes negative.
+- A deducted or settlement-linked advance cannot be deleted directly. Only an authorized reversal transaction may restore it, and the reversal must restore exact prior debt/status while consuming its one-time authorization.
+- Final-exit payroll, permitted recovery, explicit remaining debt, and worker deactivation are one transaction. Failure cannot leave a paid active worker or an inactive unsettled worker.
+- Supervisor Kharchi is one coherent operation: supervisor float decreases by the same amount that one worker advance increases, or neither mutation persists.
+- Factory Today must read current production/market summary fields that exist, and its meters, shift state, work-at-risk, advance, and payroll signals must reconcile to persisted source data without duplicate updates.
+- Golden A and Golden B payroll use the same immutable production-backed settlement/payslip history; customer/order/market origin does not permit a second payroll basis for the same production.

@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T21:19:38.421Z",
+  "updated_at": "2026-07-13T21:53:59.509Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 317,
-    "blocked": 56,
+    "pass": 333,
+    "blocked": 40,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -24,10 +24,11 @@
     "B09",
     "B10",
     "B11",
-    "B12"
+    "B12",
+    "B13"
   ],
-  "active_batch": "B13",
-  "active_batch_state": "B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active",
+  "active_batch": "B14",
+  "active_batch_state": "B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -279,15 +280,7 @@
     "DISP-018",
     "COMM-015",
     "GOLDEN-B-12",
-    "GOLDEN-B-17"
-  ],
-  "rows_moved_to_fail": [],
-  "rows_remaining_blocked": [
-    "TECH-011",
-    "TECH-012",
-    "AUTH-005",
-    "AUTH-014",
-    "AUTH-018",
+    "GOLDEN-B-17",
     "MASTER-006",
     "PAY-002",
     "PAY-010",
@@ -301,6 +294,17 @@
     "PAY-026",
     "PAY-027",
     "DASH-003",
+    "GOLDEN-A-21",
+    "GOLDEN-A-22",
+    "GOLDEN-B-18"
+  ],
+  "rows_moved_to_fail": [],
+  "rows_remaining_blocked": [
+    "TECH-011",
+    "TECH-012",
+    "AUTH-005",
+    "AUTH-014",
+    "AUTH-018",
     "DASH-005",
     "DASH-006",
     "DASH-008",
@@ -335,9 +339,6 @@
     "UX-010",
     "UX-012",
     "GOLDEN-A-03",
-    "GOLDEN-A-21",
-    "GOLDEN-A-22",
-    "GOLDEN-B-18",
     "SIGNOFF-04"
   ],
   "rows_marked_not_applicable": [],
@@ -352,7 +353,11 @@
     "The order lifecycle harness now proves target enforcement, completion/cancellation archival behavior, reserved stock lineage, dispatch receipts and discrepancy, independent commercial settlement, and paid-payroll correction protection.",
     "Stock-lot relational sources are now enforced at the database boundary for organization ownership and quote/order/market-run consistency, including authenticated injected-ID attempts.",
     "Market-run sales counts now include current fabric-stock sales as well as legacy direct sales, so sold-out and archived summaries remain complete.",
-    "One repeatable lifecycle harness now proves market sell-out, two exact dispatch receipts, advisory compliance states, duplicate party identity, concurrent stock mutation, many-run freshness, and zero cleanup in QA and production."
+    "One repeatable lifecycle harness now proves market sell-out, two exact dispatch receipts, advisory compliance states, duplicate party identity, concurrent stock mutation, many-run freshness, and zero cleanup in QA and production.",
+    "Payroll settlement now serializes each worker/cycle grain, rejects an already-settled race, and protects deducted or settlement-linked advances from direct deletion.",
+    "Final-exit payroll and worker deactivation now commit atomically, while authorized reversal alone can restore the exact prior advance debt.",
+    "Factory Today now reads the current market summary total_meters_produced field instead of the nonexistent meters_produced field.",
+    "One production-backed fixture proves decimal rate snapshots, caps, adjustments, reversal, exit, Kharchi, dashboard wages, and Golden A/B payroll equations in QA and production."
   ],
   "commits": [
     {
@@ -374,6 +379,10 @@
     {
       "sha": "bc1e9cbfab1609adf461c405e41d6fca65b304ee",
       "subject": "fix(qa): harden B12 market stock lifecycle"
+    },
+    {
+      "sha": "d42d5138fba22758f1d11218c59deb6c3ad876a3",
+      "subject": "fix(qa): harden B13 payroll lifecycle"
     }
   ],
   "production_deployments": [
@@ -409,6 +418,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD",
+      "commit": "d42d5138fba22758f1d11218c59deb6c3ad876a3",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -439,6 +455,12 @@
       "file": "20260714034500_b12_include_stock_sales_in_market_summary.sql",
       "production_history_version": "20260713211113",
       "alignment": "verified by view catalog and sold-out/current-sale runtime summaries"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714043000_b13_harden_payroll_settlement_lifecycle.sql",
+      "production_history_version": "20260713214539",
+      "alignment": "verified by function/trigger catalog plus authenticated QA and production runtime proof"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -461,6 +483,11 @@
       "batch": "B12",
       "type": "prefixed disposable QA and production market-stock tenants with owner/adversary auth users",
       "state": "removed; organizations/profiles/auth/stock lots and all market/production/sale/dispatch/receipt/commercial dependencies reconciled to zero"
+    },
+    {
+      "batch": "B13",
+      "type": "prefixed disposable QA and production payroll tenants with owner/supervisor auth users",
+      "state": "removed; organizations/profiles/auth/settlements/advances/production/payroll and all dependent rows reconciled to zero"
     }
   ],
   "outstanding_external_dependencies": [
@@ -513,6 +540,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B12 production deployment dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1 Ready at exact commit bc1e9cb; local and remote gates passed 86 files / 617 tests; QA and production each passed 17 market/stock/dispatch/commercial assertions; the final 26-run production summary loaded in 25.3 ms; cleanup reconciled to zero.",
-  "exact_next_action": "Execute B13 with one isolated payroll fixture covering decimal operator rates, historical snapshots, advance caps and adjustments, concurrent settlement, reversal, exit/final mode, kharchi atomicity, dashboard wages, and Golden A/B payroll steps."
+  "last_successful_validation": "B13 production deployment dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD Ready at exact commit d42d513; local and remote gates passed 87 files / 621 tests; QA runtime and browser proof plus production runtime passed all payroll lifecycle assertions; cleanup reconciled to zero.",
+  "exact_next_action": "Start B14 by auditing realtime subscription/refetch behavior, disconnect/reconnect recovery, independent pace calculations, large-range timing, and distinct empty/loading/error/offline dashboard states."
 }

@@ -619,3 +619,15 @@ Acceptance:
 - Focused regression command: `npx vitest run __tests__/b12-stock-source-integrity.test.ts`; run `node scripts/qa/b12-market-stock-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when stock-source, sale, dispatch, receipt, commercial party, or market-summary boundaries change.
 - Canonical evidence is `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json` on production deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1`.
 - Canonical counts after B12: 317 pass, 3 fail, 56 blocked, and 1 not applicable. Begin B13; do not rerun B12 unless one of these boundaries changes.
+
+### B13 payroll lifecycle regression guard — 2026-07-14
+
+- Preserve per-worker/type/cycle settlement serialization: two concurrent first attempts yield one success, one explicit rejection, one settlement, and one advance deduction.
+- Preserve server-derived gross from immutable decimal rate snapshots; assignment-rate changes cannot rewrite historical 2.75, 3.125, or 3.00 production earnings.
+- Preserve capped standard recovery, explicit carry-forward debt, non-negative payout, and reasoned/itemized inam and kapaat.
+- Preserve database rejection of direct deducted/settlement-linked advance deletion and exact, one-time-authorized reversal restoration.
+- Preserve atomic final-exit settlement/deactivation and supervisor Kharchi float/advance equality.
+- Preserve Factory Today market-summary compatibility plus exact meters, shift, work-risk, advance, and payroll signals; preserve the refreshed payroll rate breakdown, final badge, and payslip action.
+- Focused regression commands: `npx vitest run __tests__/b13-payroll-settlement-boundaries.test.ts __tests__/payroll-cycle.test.ts __tests__/b10-india-calendar-boundaries.test.ts __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts`; run `node scripts/qa/b13-payroll-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when payroll settlement, advances, reversal, exit, Kharchi, operator snapshots, or Factory Today sources change.
+- Canonical evidence is `output/qa/blocked-row-campaign/B13-boundary-probe.json`, `B13-qa-browser.json`, and `B13-production-payroll.json` on production deployment `dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD`.
+- Canonical counts after B13: 333 pass, 3 fail, 40 blocked, and 1 not applicable. Begin B14; do not rerun B13 unless one of these boundaries changes.

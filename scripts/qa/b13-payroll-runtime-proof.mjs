@@ -6,10 +6,14 @@ import { createClient } from '@supabase/supabase-js'
 
 const workspace = process.cwd()
 const QA_REF = 'eutycrtzzxmlkcpipgod'
+const PROD_REF = 'vzhwahudircrpgtitwzd'
 const cycleStart = '2026-06-01'
+const productionMode = process.argv.includes('--production')
+const environment = productionMode ? 'production' : 'qa'
+const projectRef = productionMode ? PROD_REF : QA_REF
 const preserveFixture = process.argv.includes('--preserve')
 const cleanupOnly = process.argv.includes('--cleanup-secret')
-const secretPath = path.join(workspace, '.codex', 'b13-runtime-secret.json')
+const secretPath = path.join(workspace, '.codex', `b13-${environment}-runtime-secret.json`)
 
 function parseEnv(contents) {
     return Object.fromEntries(contents.split(/\r?\n/).flatMap((raw) => {
@@ -53,11 +57,11 @@ function assertCondition(assertions, name, passed, details = {}) {
 
 async function createFixture(admin, url, anonKey) {
     const suffix = crypto.randomBytes(5).toString('hex')
-    const email = `b13-owner-${suffix}@qa.weavly.local`
+    const email = `b13-owner-${suffix}@${environment}.weavly.local`
     const password = `B13-${suffix}-${crypto.randomBytes(8).toString('hex')}!`
     const auth = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: 'B13 Owner' } })
     if (auth.error || !auth.data.user) throw new Error(`create auth user failed: ${auth.error?.message}`)
-    const supervisorEmail = `b13-supervisor-${suffix}@qa.weavly.local`
+    const supervisorEmail = `b13-supervisor-${suffix}@${environment}.weavly.local`
     const supervisorPassword = `B13-supervisor-${suffix}-${crypto.randomBytes(8).toString('hex')}!`
     const supervisorAuth = await admin.auth.admin.createUser({
         email: supervisorEmail, password: supervisorPassword, email_confirm: true,
@@ -481,8 +485,11 @@ async function proveDashboardSource(admin, fixture, assertions) {
 }
 
 async function main() {
-    const env = { ...process.env, ...parseEnv(await fs.readFile(path.join(workspace, '.env.qa.local'), 'utf8')) }
-    if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(QA_REF)) throw new Error('B13 refused: QA project target was not proven.')
+    const envFile = productionMode ? '.env.production.local' : '.env.qa.local'
+    const env = { ...process.env, ...parseEnv(await fs.readFile(path.join(workspace, envFile), 'utf8')) }
+    if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(projectRef)) {
+        throw new Error(`B13 refused: ${environment} project target was not proven.`)
+    }
     const admin = clientFor(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
     if (cleanupOnly) {
         const stored = JSON.parse(await fs.readFile(secretPath, 'utf8'))
@@ -492,12 +499,21 @@ async function main() {
         if (!cleanupResult.reconciled) process.exitCode = 1
         return
     }
-    const outputPath = path.join(workspace, 'output/qa/blocked-row-campaign/B13-boundary-probe.json')
+    const outputFile = productionMode ? 'B13-production-payroll.json' : 'B13-boundary-probe.json'
+    const outputPath = path.join(workspace, 'output/qa/blocked-row-campaign', outputFile)
     const assertions = []
     const evidence = {
-        run_id: `B13-QA-${Date.now()}`,
+        run_id: `B13-${environment.toUpperCase()}-${Date.now()}`,
         scope: 'B13 payroll, advances, adjustments, reversal, exit, kharchi, and Golden payroll runtime proof',
-        environment: 'qa', project_ref: QA_REF, assertions, observations: {}, cleanup: 'pending',
+        environment,
+        project_ref: projectRef,
+        deployment: productionMode ? {
+            id: process.env.B13_DEPLOYMENT_ID ?? null,
+            commit: process.env.B13_DEPLOYMENT_COMMIT ?? null,
+        } : null,
+        assertions,
+        observations: {},
+        cleanup: 'pending',
     }
     let fixture = null
     try {

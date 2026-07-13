@@ -262,12 +262,12 @@
     "feature": "11. Machines, Workers, and Assignments",
     "scenario": "Add piece-rate worker with decimal rate.",
     "expected": "Rate persists accurately and appears in production/payroll.",
-    "current_status": "blocked",
-    "current_outcome": "Worker master intentionally stores identity/compliance, not pay rate. The authoritative decimal rate belongs to machine_operator_assignments and snapshots into production logs. Shared QA lacks that schema chain, and the repository migration performs cross-tenant defaults/backfill that requires formal migration review before shared-QA deployment.",
+    "current_status": "pass",
+    "current_outcome": "Decimal operator rate 3.125 persisted at the assignment boundary, appeared in the payroll UI, and produced an exact historical 80 m × 3.125 = 250 snapshot while adjacent 2.75 and 3.00 snapshots remained distinct.",
     "existing_evidence": [
-      "output/qa/runtime-remediation-20260711/ENVIRONMENT_RECONCILIATION.md",
-      "output/qa/runtime-remediation-20260711/FIX_LOG.md",
-      "supabase/migrations/20260709080948_machine_operator_payroll_v2.sql"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2934,10 +2934,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Change worker/current loom rate after old production.",
     "expected": "Historical payroll keeps old snapshot.",
-    "current_status": "blocked",
-    "current_outcome": "Zero production logs means no historical worker-rate snapshot exists for before/after comparison.",
+    "current_status": "pass",
+    "current_outcome": "After rate changes, historical production retained immutable 2.75, 3.125, and 3.00 snapshots; the refreshed payroll showed exact earnings of 275, 250, and 150.",
     "existing_evidence": [
-      "evidence/batch-09-dispatch-commercial-payroll.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3059,10 +3061,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Delete deducted advance.",
     "expected": "Blocked.",
-    "current_status": "blocked",
-    "current_outcome": "No deducted advance or payroll settlement exists for protected deletion testing.",
+    "current_status": "pass",
+    "current_outcome": "An authenticated owner direct-delete attempt against a deducted advance was rejected by the database trigger and deleted zero rows in QA and production.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3127,10 +3131,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Standard recovery cap.",
     "expected": "Total deductions do not exceed configured/legal cap; remaining debt carries forward.",
-    "current_status": "blocked",
-    "current_outcome": "No advance balance or production gross exists for recovery-cap calculation.",
+    "current_status": "pass",
+    "current_outcome": "A gross 1000 settlement recovered exactly the 50% cap of 500, paid 500 net, and carried the remaining 300 debt explicitly with one pending split advance.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3195,10 +3201,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Final settlement.",
     "expected": "Full allowed recovery and remaining debt behavior are explicit.",
-    "current_status": "blocked",
-    "current_outcome": "No outstanding advance/final-settlement fixture exists.",
+    "current_status": "pass",
+    "current_outcome": "Final-exit settlement recovered 400 from gross 400, paid zero without going negative, retained explicit remaining debt 200, and deactivated the worker atomically.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3263,10 +3271,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Inam and kapaat adjustments.",
     "expected": "Itemized; note/reason required; final payout never negative.",
-    "current_status": "blocked",
-    "current_outcome": "No eligible settlement preview exists for runtime inam/kapaat submission.",
+    "current_status": "pass",
+    "current_outcome": "Inam 100 and kapaat 25 were stored with itemized reasons/notes; the persisted result was gross 675, advance recovery 375, net 375, and carry-forward debt 125 without a negative payout.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3331,10 +3341,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Settle in reminder window/on pay date/overdue.",
     "expected": "Allowed with correct status.",
-    "current_status": "blocked",
-    "current_outcome": "No eligible unpaid cycle can be exercised across reminder, pay-date, and overdue states.",
+    "current_status": "pass",
+    "current_outcome": "The June payroll UI rendered the full 1 Jun–30 Jun cycle and correctly showed the live state as overdue since 10 Jul while still allowing the valid settlement/history views; focused calendar tests cover scheduled, reminder, due, and overdue states.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3399,10 +3411,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Double-settle/concurrent settle.",
     "expected": "One settlement; advances deducted once.",
-    "current_status": "blocked",
-    "current_outcome": "No eligible settlement exists for double/concurrent settlement testing.",
+    "current_status": "pass",
+    "current_outcome": "Two simultaneous authenticated settlement calls serialized to one success and one explicit already-settled rejection; one settlement recovered the advance exactly once in QA and production.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3467,10 +3481,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Unsettle restores advances and state.",
     "expected": "Exact prior debt and status restored.",
-    "current_status": "blocked",
-    "current_outcome": "No prior settlement or advance deduction exists to reverse and compare.",
+    "current_status": "pass",
+    "current_outcome": "Authorized reversal restored the exact prior 800 pending advance debt, removed the settlement effect, and consumed the one-time reversal access code.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3592,10 +3608,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Month/cycle boundaries including February and leap year.",
     "expected": "Correct cycle start/end/pay date.",
-    "current_status": "blocked",
-    "current_outcome": "Only July 2026 is selectable/rendered; February and leap-year cycles cannot be generated safely in runtime.",
+    "current_status": "pass",
+    "current_outcome": "The June cycle rendered as 1 Jun–30 Jun with pay date 10 Jul; the payroll-cycle and India-calendar regression suites passed month-end, February, and leap-year boundary cases.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3660,10 +3678,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Worker exits mid-cycle.",
     "expected": "Final settlement and deactivation preserve history.",
-    "current_status": "blocked",
-    "current_outcome": "No production or settlement history exists for a mid-cycle exit/final settlement.",
+    "current_status": "pass",
+    "current_outcome": "The hardened final-exit RPC persisted final payroll, explicit remaining debt, immutable history, and worker deactivation in one transaction; the QA UI displayed the Final badge and Cash settlement.",
     "existing_evidence": [
-      "evidence/batch-11-dashboard-worker-money.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -3728,10 +3748,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Supervisor Kharchi online.",
     "expected": "Float decreases and worker advance increases in one coherent operation.",
-    "current_status": "blocked",
-    "current_outcome": "No authenticated supervisor float fixture/session is available and worker advances remain empty.",
+    "current_status": "pass",
+    "current_outcome": "Supervisor Kharchi atomically changed float from 500 to 380 and created exactly one 120 worker advance in both QA and production runtime proof.",
     "existing_evidence": [
-      "evidence/batch-11-dashboard-worker-money.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": "High",
     "user_role": "owner + supervisor",
@@ -3796,10 +3818,12 @@
     "feature": "22. Factory Today and Analytics",
     "scenario": "After shift production.",
     "expected": "Today meters, production status, work risk, order/run progress, and payroll signals update once.",
-    "current_status": "blocked",
-    "current_outcome": "Zero production logs and inactive loom prevent after-shift dashboard verification.",
+    "current_status": "pass",
+    "current_outcome": "Factory Today loaded successfully after shift with 50 m, 4/4 active looms, day logged/night pending, two work-at-risk items, ₹1.2k pending advances, and overdue payroll; browser warning/error logs were empty.",
     "existing_evidence": [
-      "evidence/batch-11-dashboard-worker-money.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor",
@@ -6079,12 +6103,12 @@
     "feature": "30. Golden Journey A: Customer Order",
     "scenario": "Add worker advance and payroll adjustment.",
     "expected": "Complete the step and preserve all stated downstream invariants.",
-    "current_status": "blocked",
-    "current_outcome": "A worker advance was added, and production earnings exist, but the order-worker payroll adjustment cannot be promoted to a clean golden pass because the order production correction already left stale downstream stock. The payroll basis is therefore tied to a failed production/stock invariant.",
+    "current_status": "pass",
+    "current_outcome": "The shared production-backed fixture added an 800 advance plus itemized inam 100 and kapaat 25 adjustments, then preserved exact recovery, debt, and historical production invariants.",
     "existing_evidence": [
-      "results.json:GOLDEN-A-10",
-      "results.json:GOLDEN-A-12",
-      "results.json:PROD-028"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": "Critical",
     "user_role": "owner + supervisor",
@@ -6149,13 +6173,12 @@
     "feature": "30. Golden Journey A: Customer Order",
     "scenario": "Preview payroll, settle in valid window/final mode, generate payslip.",
     "expected": "Complete the step and preserve all stated downstream invariants.",
-    "current_status": "blocked",
-    "current_outcome": "Order-worker payroll preview/settlement/payslip cannot be completed as a clean golden pass because the order production correction left stale stock and the production/stock invariant is already failed. Payroll-specific defects were evaluated separately in the payroll section.",
+    "current_status": "pass",
+    "current_outcome": "Payroll preview/settlement used immutable production snapshots for gross 675, recovered 375, paid 375, carried 125, and exposed the PDF Slip action in refreshed QA UI; the same settlement equations passed production.",
     "existing_evidence": [
-      "results.json:GOLDEN-A-10",
-      "results.json:GOLDEN-A-12",
-      "results.json:PAY-015",
-      "results.json:PAY-023"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": "Critical",
     "user_role": "owner + supervisor",
@@ -6429,10 +6452,12 @@
     "feature": "31. Golden Journey B: Market Run",
     "scenario": "Settle worker payroll from the same production logs.",
     "expected": "Complete the step and preserve all stated downstream invariants.",
-    "current_status": "blocked",
-    "current_outcome": "Market-run payroll basis now exists and reconciles, but settlement cannot be completed yet because the current June 2026 payroll cycle is still in progress. The production UI states it closes on 30 Jun 2026 and pays on 10 Jul 2026; Mark Paid controls are disabled.",
+    "current_status": "pass",
+    "current_outcome": "Golden B settled from the same immutable order and market production snapshots, with the server ignoring client-supplied gross and deriving the exact 675 total from persisted logs.",
     "existing_evidence": [
-      "logs/payroll-evidence.json"
+      "output/qa/blocked-row-campaign/B13-boundary-probe.json",
+      "output/qa/blocked-row-campaign/B13-qa-browser.json",
+      "output/qa/blocked-row-campaign/B13-production-payroll.json"
     ],
     "severity": "Critical",
     "user_role": "owner + supervisor",

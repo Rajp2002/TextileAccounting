@@ -1,15 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **317 PASS, 3 FAIL, 56 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **333 PASS, 3 FAIL, 40 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B12 — stock concurrency, market closure, dispatch compliance, and commercial identity (10/10 PASS)**.
-- Active batch: **B13 — payroll, advances, kharchi, and worker money lifecycle**.
-- Validation gate: local and Vercel gates passed 86 files / 617 tests, TypeScript, lint, and a successful optimized Next.js build.
-- Production deployment: `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1`, Ready and aliased, exact commit `bc1e9cbfab1609adf461c405e41d6fca65b304ee`.
-- Migrations: B12 stock-source integrity and current stock-sale market-summary migrations are deployed and exercised in QA and production.
-- Cleanup: the prefixed B12 QA and production tenants, profiles/auth users, and all market/production/stock/sale/dispatch/receipt/commercial dependencies were removed and reconciled.
-- B12 evidence: `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json`.
+- Completed batch: **B13 — payroll, advances, kharchi, dashboard wages, and worker money lifecycle (16/16 PASS)**.
+- Active batch: **B14 — realtime dashboard recovery and large-range states**.
+- Validation gate: local and Vercel gates passed 87 files / 621 tests, TypeScript, lint, and a successful optimized Next.js build.
+- Production deployment: `dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD`, Ready and aliased, exact commit `d42d5138fba22758f1d11218c59deb6c3ad876a3`.
+- Migrations: B13 payroll settlement locking, protected advance lifecycle, reversal bypass, and atomic final-exit migration is deployed and exercised in QA and production.
+- Cleanup: the prefixed B13 QA and production tenants, profiles/auth users, and all payroll/advance/production dependencies were removed and reconciled.
+- B13 evidence: `output/qa/blocked-row-campaign/B13-boundary-probe.json`, `B13-qa-browser.json`, and `B13-production-payroll.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -29,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B12 closeout
+## B13 closeout
 
-B12 directly proved relational stock-source rejection, sold-out market closure with pending dispatch, two exact dispatch receipts, advisory above/below-threshold compliance states, duplicate-name party separation, a real concurrent stock mutation, and fresh many-run summaries in both QA and production. The two database defects were repaired, the exact implementation commit was deployed, and disposable data reconciled to zero.
+B13 directly proved decimal and historical payroll snapshots, capped advance recovery, protected deducted advances, serialized settlement, authorized reversal, itemized adjustments, cycle status, atomic final exit, supervisor Kharchi, Factory Today wages, and the shared Golden A/B payslip path. The four runtime defects were repaired, the exact implementation commit was deployed, and disposable data reconciled to zero.
 
 ## Exact next action
 
-Execute B13 with one isolated payroll fixture covering decimal operator rates, historical snapshots, advance caps and adjustments, concurrent settlement, reversal, exit/final mode, kharchi atomicity, dashboard wages, and Golden A/B payroll steps.
+Start B14 by auditing realtime subscription/refetch behavior, disconnect/reconnect recovery, independent pace calculations, large-range timing, and distinct empty/loading/error/offline dashboard states.

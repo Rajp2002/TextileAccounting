@@ -2013,3 +2013,9 @@ Current counts are 307 pass, 3 fail, 66 blocked, and 1 not applicable. B12 is ac
 B12 is closed at 10/10 pass on exact production deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1` / commit `bc1e9cbfab1609adf461c405e41d6fca65b304ee`. Matching QA and production runs each passed 17 assertions for source integrity, market sell-out/archive, two-batch dispatch and receipt, honest compliance reminders, duplicate party identity, concurrent stock mutation, and many-run freshness. The stock-source trigger and stock-sale-aware market summary are applied in both environments, and all disposable records/auth users reconciled to zero.
 
 Current counts are 317 pass, 3 fail, 56 blocked, and 1 not applicable. B13 is active with 16 payroll, advances, kharchi, dashboard-wage, and Golden A/B worker-money rows. Build a fresh isolated fixture and promote only directly proven B13 outcomes; B12 pass credit must not be inherited.
+
+### Blocked-row campaign B13 complete; B14 active
+
+B13 is closed at 16/16 pass on exact production deployment `dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD` / commit `d42d5138fba22758f1d11218c59deb6c3ad876a3`. QA runtime/browser and production runtime proved decimal and historical rate snapshots, recovery caps, direct-delete protection, serialized settlement, exact reversal, itemized adjustments, scheduled/overdue cycle state, atomic final exit, supervisor Kharchi, Factory Today wage signals, and the shared Golden A/B payslip. Migration `20260714043000_b13_harden_payroll_settlement_lifecycle.sql` is applied in both environments; all disposable records and auth users reconciled to zero.
+
+Current counts are 333 pass, 3 fail, 40 blocked, and 1 not applicable. B14 is active with `DASH-005`, `DASH-006`, `DASH-008`, `DASH-010`, and `UX-010`. Audit realtime subscription/refetch behavior, disconnect/reconnect recovery, independent pace calculations, large-range timing, and distinct empty/loading/error/offline states; B13 pass credit must not be inherited.
