@@ -358,12 +358,9 @@
 
   @media (min-width: 1700px) {
     .settings-page-frame {
-      --settings-frame-width: min(calc(100vw - 312px), 1640px);
-      width: var(--settings-frame-width);
-      max-width: 1640px;
-      margin-left: calc(
-        248px + ((100vw - 248px - var(--settings-frame-width)) / 2) - ((100vw - 1120px) / 2) - 28px
-      );
+      width: 100%;
+      max-width: none;
+      margin-left: 0;
     }
 
     .settings-layout-grid {
