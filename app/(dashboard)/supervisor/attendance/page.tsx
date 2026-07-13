@@ -290,13 +290,16 @@ export default function AttendancePage() {
                             const dailyRate = worker.monthly_salary / 30
 
                             return (
-                                <div
+                                <button
+                                    type="button"
                                     key={worker.id}
                                     className={cn(
-                                        'flex justify-between items-center py-4 px-4 min-h-[64px] cursor-pointer transition-all active:bg-muted/10',
+                                        'flex w-full justify-between items-center py-4 px-4 min-h-[64px] cursor-pointer text-left transition-all active:bg-muted/10',
                                         isPresent ? 'hover:bg-success-soft/35' : 'hover:bg-risk-soft/40 opacity-65'
                                     )}
                                     onClick={() => toggleAttendance(worker.id)}
+                                    aria-pressed={isPresent}
+                                    aria-label={`${worker.name}: ${isPresent ? t('attendance.present') : t('attendance.absent')}`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={cn(
@@ -320,7 +323,7 @@ export default function AttendancePage() {
                                     )}>
                                         {isPresent ? t('attendance.present') : t('attendance.absent')}
                                     </span>
-                                </div>
+                                </button>
                             )
                         })}
                     </div>

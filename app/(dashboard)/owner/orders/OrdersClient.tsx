@@ -1102,6 +1102,16 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
         <div
             className="bg-card border border-border shadow-sm rounded-2xl p-4 space-y-3 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group"
             onClick={() => onSelect(order.order_id)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Open order ${order.display_quality_name ?? order.quality_label ?? order.party_name}`}
+            onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onSelect(order.order_id)
+                }
+            }}
         >
             {/* Header */}
             <div className="flex items-start justify-between gap-2">

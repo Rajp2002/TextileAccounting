@@ -494,6 +494,26 @@ export default function SettingsPage() {
                         </div>
                     </SettingsSection>}
 
+                    <SettingsSection id="privacy-data" title="Privacy & Data" icon={ShieldCheck}>
+                        <SettingsPanel className="p-5 sm:p-6">
+                            <PanelHeading
+                                icon={Download}
+                                title="Download your organization data"
+                                description="Create a structured export of the factory records your account is allowed to access. Sensitive authentication fields are excluded or redacted."
+                            />
+                            <Button
+                                data-testid="settings-data-export"
+                                variant="outline"
+                                className="mt-5 w-full justify-center sm:w-auto"
+                                onClick={() => dataExportMutation.mutate()}
+                                disabled={dataExportMutation.isPending}
+                            >
+                                {dataExportMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                {dataExportMutation.isPending ? 'Preparing Export' : 'Download Data Export'}
+                            </Button>
+                        </SettingsPanel>
+                    </SettingsSection>
+
                     <SettingsSection id="cost-profile" title={hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'} icon={Factory}>
                         <FactoryCostProfile standaloneEstimator={!hasPremium} />
                     </SettingsSection>
@@ -574,15 +594,6 @@ export default function SettingsPage() {
                                 <SlidersHorizontal className="h-4 w-4" />
                                 Review Cost Defaults
                             </a>
-                            <Button
-                                variant="outline"
-                                className="w-full justify-start"
-                                onClick={() => dataExportMutation.mutate()}
-                                disabled={dataExportMutation.isPending}
-                            >
-                                {dataExportMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                                {dataExportMutation.isPending ? 'Preparing Export' : 'Download Data Export'}
-                            </Button>
                         </div>
                     </SettingsPanel>
                 </aside> : <aside className="sticky top-6 space-y-4">

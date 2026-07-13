@@ -89,9 +89,12 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
           )}
         >
           {/* Header Area */}
-          <div 
-            className="p-4 cursor-pointer select-none"
+          <button
+            type="button"
+            className="w-full p-4 cursor-pointer select-none text-left"
             onClick={() => setIsExpanded(!isExpanded)}
+            aria-expanded={isExpanded}
+            aria-label={`${summary}. ${isExpanded ? 'Collapse' : 'Expand'} audit details`}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
@@ -156,7 +159,7 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
                   )}
                </div>
             )}
-          </div>
+          </button>
 
           {/* Expanded Content (Technical Diff) */}
           {isExpanded && (

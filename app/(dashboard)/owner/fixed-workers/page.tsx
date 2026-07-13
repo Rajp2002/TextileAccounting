@@ -407,7 +407,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
         try {
             const result = await deleteMeterWorkerWithCode(workerToDelete.id, accessCode, erasePII)
             if (!('success' in result) || !result.success) {
-                toast.error(result.error || t('auth.invalid_code'))
+                toast.error(('error' in result && result.error) || t('auth.invalid_code'))
                 return
             }
             toast.success(t('common.removed'))
@@ -500,7 +500,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                     <div className="flex items-center gap-2 shrink-0">
                                         <Dialog open={editWorker?.id === w.id} onOpenChange={(open) => { if (!open) setEditWorker(null) }}>
                                             <DialogTrigger asChild>
-                                                <Button variant="ghost" size="sm" onClick={() => setEditWorker(w)}>
+                                                <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => setEditWorker(w)}>
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
                                             </DialogTrigger>
@@ -511,6 +511,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                         <Button
                                             variant="ghost"
                                             size="sm"
+                                            aria-label={`Delete ${w.name}`}
                                             className="text-red-500 hover:text-red-700"
                                             onClick={() => handleDelete(w)}
                                             disabled={fetchingDebt}
@@ -566,16 +567,16 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                 onChange={(e) => setErasePII(e.target.checked)}
                                 className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                             />
-                            <div className="space-y-1 cursor-pointer" onClick={() => setErasePII(!erasePII)}>
-                                <Label className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
+                            <label htmlFor={`erase-pii-${workerToDelete?.id}`} className="space-y-1 cursor-pointer">
+                                <span className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
                                     <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
                                     DPDP Right to Erasure
-                                </Label>
+                                </span>
                                 <p className="text-[10px] text-gray-500 leading-snug">
                                     Anonymize worker data instead of hard deleting. 
                                     Preserves audit trail for compliance.
                                 </p>
-                            </div>
+                            </label>
                         </div>
                     </div>
                     <DialogFooter>
@@ -868,7 +869,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         try {
             const result = await deleteFixedWorkerWithCode(workerToDelete.id, accessCode, erasePII)
             if (!('success' in result) || !result.success) {
-                toast.error(result.error || t('auth.invalid_code'))
+                toast.error(('error' in result && result.error) || t('auth.invalid_code'))
                 return
             }
             toast.success(t('common.removed'))
@@ -1171,10 +1172,10 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                     <span className="text-sm text-gray-700">
                                                         <Amount value={w.monthly_salary} />{t('common.per_month')}
                                                     </span>
-                                                    <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
+                                                    <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => openEditDialog(w)}>
                                                         <Pencil className="h-3.5 w-3.5" />
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
+                                                    <Button variant="ghost" size="sm" aria-label={`Delete ${w.name}`} className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </div>
@@ -1225,10 +1226,10 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                         <span className="text-sm text-gray-700">
                                                             <Amount value={w.monthly_salary} />{t('common.per_month')}
                                                         </span>
-                                                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
+                                                        <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => openEditDialog(w)}>
                                                             <Pencil className="h-3.5 w-3.5" />
                                                         </Button>
-                                                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
+                                                        <Button variant="ghost" size="sm" aria-label={`Delete ${w.name}`} className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
@@ -1283,16 +1284,16 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                 onChange={(e) => setErasePII(e.target.checked)}
                                 className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                             />
-                            <div className="space-y-1 cursor-pointer" onClick={() => setErasePII(!erasePII)}>
-                                <Label className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
+                            <label htmlFor={`erase-pii-fixed-${workerToDelete?.id}`} className="space-y-1 cursor-pointer">
+                                <span className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
                                     <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
                                     DPDP Right to Erasure
-                                </Label>
+                                </span>
                                 <p className="text-[10px] text-gray-500 leading-snug">
                                     Anonymize worker data instead of hard deleting. 
                                     Preserves audit trail for compliance.
                                 </p>
-                            </div>
+                            </label>
                         </div>
                     </div>
                     <DialogFooter>
