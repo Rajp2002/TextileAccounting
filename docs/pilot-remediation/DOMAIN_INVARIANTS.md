@@ -333,3 +333,12 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Copy previous is available when no loom is actually assigned even if placeholder assignment rows exist. It copies only the selected source date/shift and yields one editable target grain without duplicating history.
 - Machine status and dated breakdown detail are independent persisted facts. Breakdown save must verify an affected row; if the tenant/date/shift/machine grain is absent, it must insert it, recover safely from a unique race, and never return success for zero affected rows.
 - A 20-loom phone workflow must retain unique accessible metre-input names, no horizontal overflow or cross-row value leakage, and a reachable fixed submit action. The loom details dialog must have an accessible title.
+
+## B10 protected date and India calendar invariants
+
+- Production correction after the open window requires a valid, unexpired, unconsumed owner access code. Invalid, expired, and used codes mutate nothing; a successful correction consumes the code exactly once.
+- A paid payroll settlement freezes its production grain. Even a fresh valid owner code cannot rewrite production that contributes to a settled payroll period.
+- Supervisor attendance writes are date-bound at both application and database policy layers. Future attendance is unavailable; supported past-date changes require owner authorization and must survive refresh as locked history.
+- India month/year boundaries must be derived from one authoritative instant and expressed as a half-open interval. The first and last in-month instants are included; adjacent-month instants are excluded without host-timezone drift.
+- Year rollover and leap day are valid calendar/payroll boundaries and must not be approximated with fixed day counts.
+- A rate-limit reset timestamp is absolute epoch time; user-facing retry text must display remaining duration computed against the current clock, never the epoch value itself.

@@ -1771,10 +1771,12 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Correct after window without code.",
     "expected": "Blocked.",
-    "current_status": "blocked",
-    "current_outcome": "No production history exists for an after-window correction, and activation did not persist to create it.",
+    "current_status": "pass",
+    "current_outcome": "Production showed the expired correction window, blocked overwrite without a code, then accepted a fresh owner code and persisted the correction from 10 m to 12 m.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1826,10 +1828,12 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Correct after window with valid/invalid/used/expired code.",
     "expected": "Only valid one-time code succeeds.",
-    "current_status": "blocked",
-    "current_outcome": "No production history exists for access-code correction testing, and activation did not persist to create it.",
+    "current_status": "pass",
+    "current_outcome": "Production rejected invalid, expired, and consumed owner codes without mutation; one fresh valid code succeeded once, and its reuse was rejected.",
     "existing_evidence": [
-      "evidence/batch-06-supervisor-production-activation-blocker.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -1881,10 +1885,12 @@
     "feature": "16. Supervisor Production Logging",
     "scenario": "Correct period after worker payroll is settled.",
     "expected": "Blocked.",
-    "current_status": "blocked",
-    "current_outcome": "No production or payroll settlement exists, and the configured loom remains inactive after activation.",
+    "current_status": "pass",
+    "current_outcome": "A paid-cycle production correction was rejected with the settled-payroll message; the settled log remained 10 m.",
     "existing_evidence": [
-      "evidence/batch-07-production-stock-sources.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2786,10 +2792,12 @@
     "feature": "20. Commercials, Receivables, and Collections",
     "scenario": "Collected-this-month boundary at month start/end.",
     "expected": "Correct India calendar month.",
-    "current_status": "blocked",
-    "current_outcome": "Entered month-start and month-end dates both persisted as 2026-07-11, preventing boundary aggregation proof.",
+    "current_status": "pass",
+    "current_outcome": "Production Commercials rendered Collected This Month as ₹333 from an exact persisted ₹333.33 total; 2026-07-01 and 2026-07-14 were included while 2026-06-30 and 2026-08-01 were excluded.",
     "existing_evidence": [
-      "evidence/batch-09-dispatch-commercial-payroll.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -2975,10 +2983,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Past/future attendance.",
     "expected": "Future blocked; protected past edit uses valid access code.",
-    "current_status": "blocked",
-    "current_outcome": "Future date is capped at today, but supervisor past-date access-code behavior is unreachable in the owner QA session.",
+    "current_status": "pass",
+    "current_outcome": "Production bounded attendance at today, required an owner code for a supervisor past-date save, persisted absent on 2026-07-12, and showed the same saved record locked after reload. Direct future writes were rejected.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": "High",
     "user_role": "owner + supervisor",
@@ -3506,10 +3516,12 @@
     "feature": "21. Payroll, Advances, Attendance, and Worker Money",
     "scenario": "Correct production after settlement.",
     "expected": "Blocked.",
-    "current_status": "blocked",
-    "current_outcome": "No settled period or production row exists for correction-after-settlement rejection.",
+    "current_status": "pass",
+    "current_outcome": "A fresh valid owner code reached the payroll boundary in production, which rejected modification for the paid worker/cycle and preserved the original production row.",
     "existing_evidence": [
-      "evidence/batch-10-payroll-prerequisite-blockers.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -5120,10 +5132,12 @@
     "feature": "26. Timezone, Date, and Localization",
     "scenario": "Month-end/year-end.",
     "expected": "Commercial collection and payroll cycles classify correctly.",
-    "current_status": "blocked",
-    "current_outcome": "Month/year boundary dates cannot be persisted or selected reliably; payment date inputs were overwritten to current date.",
+    "current_status": "pass",
+    "current_outcome": "India month-to-date and payroll-cycle fixtures classified year-end/year-start dates correctly, including a cycle crossing December to January.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",
@@ -5175,10 +5189,12 @@
     "feature": "26. Timezone, Date, and Localization",
     "scenario": "Leap day.",
     "expected": "Valid date and cycle behavior.",
-    "current_status": "blocked",
-    "current_outcome": "Leap-day runtime cycle/date fixture is unavailable in the deployed UI.",
+    "current_status": "pass",
+    "current_outcome": "The 2024-02-29 payment round-tripped in QA and production, and deterministic payroll-cycle proof covered leap-day behavior.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+      "output/qa/blocked-row-campaign/B10-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor",

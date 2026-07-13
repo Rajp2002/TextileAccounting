@@ -2310,3 +2310,18 @@ Date: 2026-07-14 IST. Deployment commit `812512c599b3659cc399495a674e8b3e50066e6
 - Safety: one prefixed production tenant, three auth users, 20 looms, and associated assignments/logs/stock were removed; organizations, profiles, machines, production logs, and auth users all reconciled to zero.
 - Evidence: `output/qa/blocked-row-campaign/B09-production-resilience.json`, `B09-concurrent-supervisors.json`, `B09-production-deploy-proof.json`, and `B09-mobile-20-looms.png`.
 - Formal matrix: 287 pass, 3 fail, 86 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B10 closeout — protected date and calendar boundaries
+
+Date: 2026-07-14 IST. Production commit `fd1c367665455ca2bc66ca54d81a9cc259147284`.
+
+- Status changes: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022`, `COMM-013`, `TIME-003`, and `TIME-004` moved from `blocked` to `pass` after exact production browser and database proof.
+- Database boundary: migration `20260714005500_b10_enforce_attendance_date_lockdown.sql` removed broad attendance policies that bypassed date restrictions. It was applied in QA and production; production recorded history version `20260713193455`. The migration changes policies/functions only and rewrites no business rows.
+- Application fixes: India month boundaries now derive both endpoints from one instant; attendance has deterministic previous/next-day controls; and access-code retry copy converts an absolute reset epoch into remaining seconds instead of displaying epoch seconds.
+- Correction proof: an expired correction window showed no unguarded edit path. Invalid, expired, and consumed owner codes rejected without mutation; a fresh code changed the eligible historical production value from 10m to 12m and was consumed; a settled payroll grain rejected a fresh valid code and remained 10m.
+- Attendance proof: future attendance remained unavailable, the supervisor navigated to 2026-07-12, a valid owner code saved `absent`, and refresh restored the locked past-date state. The applied policy prevents broad supervisor writes outside the supported date boundary.
+- Calendar/commercial proof: the India-month total was exactly ₹333.33, including 2026-07-01 and 2026-07-14 while excluding 2026-06-30 and 2026-08-01. Deterministic tests covered year rollover and leap-day payroll/calendar boundaries.
+- Release: Vercel deployment `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6` is Ready and aliased to `https://textile-accounting.vercel.app`; the Sentry release identifies the exact production commit. The remote gate passed 85 files / 611 tests and the local gate passed 85 files / 610 tests with 1 intentional skip, focused ESLint, and the optimized production build.
+- Safety: the prefixed production tenant, both correction grains, attendance, payments, profiles, and auth users reconciled to zero; the private production credential file was removed.
+- Evidence: `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json`.
+- Formal matrix: 295 pass, 3 fail, 78 blocked, 1 not applicable. Readiness remains No-Go.

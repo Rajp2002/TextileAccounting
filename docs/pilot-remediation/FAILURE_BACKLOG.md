@@ -557,3 +557,9 @@ Remove `MASTER-011` from the blocked backlog. The selected historical date, pers
 Remove all 17 B09 IDs from the blocked backlog: `PROD-005`, `PROD-006`, `PROD-007`, `PROD-010`, `PROD-011`, `PROD-013`, `PROD-014`, `PROD-022`, `PROD-023`, `PROD-024`, `PROD-025`, `PROD-026`, `PROD-027`, `PROD-030`, `OFF-003`, `OFF-004`, and `UX-001`. Runtime evidence covers the client/server validation boundaries, copy, scoped draft recovery, pre/post-request network outcomes, atomic concurrency, verified status/breakdown persistence, and 20-loom phone workflow on the exact production commit.
 
 The backlog now has 86 blocked rows. B10 is next with eight independent historical/access/calendar scenarios; B11–B18 remain internally executable clusters, while B19 retains the five genuine external/human dependencies. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B09 does not reclassify them.
+
+### B10 protected-date/calendar cluster resolved
+
+Remove all eight B10 IDs from the blocked backlog: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022`, `COMM-013`, `TIME-003`, and `TIME-004`. Exact deployed proof covers correction-window enforcement, single-use owner authorization and negative cases, settled-payroll immutability, past/future attendance policy boundaries, India month inclusion/exclusion, year rollover, and leap day. Migration `20260714005500_b10_enforce_attendance_date_lockdown.sql` is applied in QA and production.
+
+The backlog now has 78 blocked rows. B11 is active with 12 rows from the canonical campaign inventory. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B10 does not reclassify them or relax the No-Go gate.

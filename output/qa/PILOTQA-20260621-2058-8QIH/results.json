@@ -1975,42 +1975,48 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Correct after window without code.",
       "expected": "Blocked.",
-      "status": "blocked",
-      "actual": "No production history exists for an after-window correction, and activation did not persist to create it.",
+      "status": "pass",
+      "actual": "Production showed the expired correction window, blocked overwrite without a code, then accepted a fresh owner code and persisted the correction from 10 m to 12 m.",
       "evidence": [
-        "evidence/batch-06-supervisor-production-activation-blocker.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T20:00:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "PROD-018",
       "section": "16. Supervisor Production Logging",
       "scenario": "Correct after window with valid/invalid/used/expired code.",
       "expected": "Only valid one-time code succeeds.",
-      "status": "blocked",
-      "actual": "No production history exists for access-code correction testing, and activation did not persist to create it.",
+      "status": "pass",
+      "actual": "Production rejected invalid, expired, and consumed owner codes without mutation; one fresh valid code succeeded once, and its reuse was rejected.",
       "evidence": [
-        "evidence/batch-06-supervisor-production-activation-blocker.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T20:00:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "PROD-019",
       "section": "16. Supervisor Production Logging",
       "scenario": "Correct period after worker payroll is settled.",
       "expected": "Blocked.",
-      "status": "blocked",
-      "actual": "No production or payroll settlement exists, and the configured loom remains inactive after activation.",
+      "status": "pass",
+      "actual": "A paid-cycle production correction was rejected with the settled-payroll message; the settled log remained 10 m.",
       "evidence": [
-        "evidence/batch-07-production-stock-sources.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T20:20:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "PROD-020",
@@ -3114,14 +3120,16 @@
       "section": "20. Commercials, Receivables, and Collections",
       "scenario": "Collected-this-month boundary at month start/end.",
       "expected": "Correct India calendar month.",
-      "status": "blocked",
-      "actual": "Entered month-start and month-end dates both persisted as 2026-07-11, preventing boundary aggregation proof.",
+      "status": "pass",
+      "actual": "Production Commercials rendered Collected This Month as ₹333 from an exact persisted ₹333.33 total; 2026-07-01 and 2026-07-14 were included while 2026-06-30 and 2026-08-01 were excluded.",
       "evidence": [
-        "evidence/batch-09-dispatch-commercial-payroll.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:15:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "COMM-014",
@@ -3275,14 +3283,16 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Past/future attendance.",
       "expected": "Future blocked; protected past edit uses valid access code.",
-      "status": "blocked",
-      "actual": "Future date is capped at today, but supervisor past-date access-code behavior is unreachable in the owner QA session.",
+      "status": "pass",
+      "actual": "Production bounded attendance at today, required an owner code for a supervisor past-date save, persisted absent on 2026-07-12, and showed the same saved record locked after reload. Direct future writes were rejected.",
       "evidence": [
-        "evidence/batch-10-payroll-prerequisite-blockers.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "Source-fixed in Batch 24A. Verification script at output/qa/batch24a/BATCH24A-attendance-rls-boundary-proof.json. RLS Update policies include matching WITH CHECK constraints.",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "High",
-      "updatedAt": "2026-07-10T21:30:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "PAY-007",
@@ -3519,14 +3529,16 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Correct production after settlement.",
       "expected": "Blocked.",
-      "status": "blocked",
-      "actual": "No settled period or production row exists for correction-after-settlement rejection.",
+      "status": "pass",
+      "actual": "A fresh valid owner code reached the payroll boundary in production, which rejected modification for the paid worker/cycle and preserved the original production row.",
       "evidence": [
-        "evidence/batch-10-payroll-prerequisite-blockers.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T21:30:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "PAY-023",
@@ -4298,28 +4310,32 @@
       "section": "26. Timezone, Date, and Localization",
       "scenario": "Month-end/year-end.",
       "expected": "Commercial collection and payroll cycles classify correctly.",
-      "status": "blocked",
-      "actual": "Month/year boundary dates cannot be persisted or selected reliably; payment date inputs were overwritten to current date.",
+      "status": "pass",
+      "actual": "India month-to-date and payroll-cycle fixtures classified year-end/year-start dates correctly, including a cycle crossing December to January.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "TIME-004",
       "section": "26. Timezone, Date, and Localization",
       "scenario": "Leap day.",
       "expected": "Valid date and cycle behavior.",
-      "status": "blocked",
-      "actual": "Leap-day runtime cycle/date fixture is unavailable in the deployed UI.",
+      "status": "pass",
+      "actual": "The 2024-02-29 payment round-tripped in QA and production, and deterministic payroll-cycle proof covered leap-day behavior.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B10-qa-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-boundaries.json",
+        "output/qa/blocked-row-campaign/B10-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B10 direct QA and production runtime closeout; disposable tenants, profiles, auth users, and scoped business rows reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-13T20:21:03.495Z"
     },
     {
       "id": "TIME-005",

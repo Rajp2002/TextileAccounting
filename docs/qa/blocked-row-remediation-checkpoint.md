@@ -1,15 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **287 PASS, 3 FAIL, 86 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **295 PASS, 3 FAIL, 78 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B09 — production-entry validation and resilience (17/17 PASS)**.
-- Active batch: **B10 — historical correction, access-code, and calendar boundaries**.
-- Validation gate: local optimized build passed 82 files / 598 tests with 1 intentional skip; Vercel repeated 82 files / 599 tests and a successful Next.js build.
-- Production deployment: `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB`, Ready and aliased, exact commit `812512c599b3659cc399495a674e8b3e50066e60`.
-- Production migration head: `20260713124500`, aligned; B09 added no migration.
-- Cleanup: the prefixed production tenant, three profiles/auth users, 20 looms, and all logs/stock reconciled to zero.
-- B09 evidence: `output/qa/blocked-row-campaign/B09-production-resilience.json`, `B09-concurrent-supervisors.json`, `B09-production-deploy-proof.json`, and `B09-mobile-20-looms.png`.
+- Completed batch: **B10 — historical correction, access-code, and calendar boundaries (8/8 PASS)**.
+- Active batch: **B11 — quote and order lifecycle through protected history**.
+- Validation gate: local optimized build passed 85 files / 610 tests with 1 intentional skip; Vercel repeated 85 files / 611 tests and a successful Next.js build.
+- Production deployment: `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6`, Ready and aliased, exact commit `fd1c367665455ca2bc66ca54d81a9cc259147284`.
+- Migration: repository `20260714005500_b10_enforce_attendance_date_lockdown.sql`; production history `20260713193455`; QA and production policy catalogs plus runtime proof verified.
+- Cleanup: the prefixed QA and production tenants, profiles/auth users, production logs, attendance, and commercial payments reconciled to zero.
+- B10 evidence: `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -29,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B09 closeout
+## B10 closeout
 
-B09 directly proved invalid-payload rejection, Other-note and large-value client boundaries, date/shift and refresh draft isolation, pre-request disconnect behavior, post-request timeout reconciliation, two-supervisor atomic duplication, verified status/breakdown persistence, Copy previous, and the 20-loom phone workflow. The deployed fixes replace zero-row breakdown success with verified update-or-insert, expose Copy previous when placeholder rows have no worker, and add the required accessible sheet title.
+B10 directly proved expired-window production correction, invalid/expired/valid/consumed owner-code behavior, paid-payroll rejection, future attendance blocking, protected past attendance persistence, exact India month-to-date collection boundaries, year-crossing payroll cycles, and leap-day behavior. The production policy repair removes the broad permissive attendance bypass, and the UI now exposes bounded accessible attendance-day navigation.
 
 ## Exact next action
 
-Start B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows.
+Start B11 with a fresh disposable quote/order fixture and execute quote conversion, target/over-target, cancellation/completion/deletion protection, stock-history, and Golden A protected-history scenarios before changing any of its twelve rows.

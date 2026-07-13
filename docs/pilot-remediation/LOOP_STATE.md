@@ -1995,3 +1995,9 @@ Date/time: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710
 B09 is closed at 17/17 pass on exact production deployment `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB` / commit `812512c599b3659cc399495a674e8b3e50066e60`. The production fixture and all three auth users reconciled to zero. Current counts are 287 pass, 3 fail, 86 blocked, and 1 not applicable.
 
 The active batch is B10: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022`, `COMM-013`, `TIME-003`, and `TIME-004`. Create a fresh disposable fixture and directly execute correction-window open/closed behavior, access-code use/consume/expiry, settled-period protection, and India month/year/leap-day boundaries. Do not inherit B09 pass credit into any B10 row.
+
+### Blocked-row campaign B10 complete; B11 active
+
+B10 is closed at 8/8 pass on exact production deployment `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6` / commit `fd1c367665455ca2bc66ca54d81a9cc259147284`. Migration `20260714005500_b10_enforce_attendance_date_lockdown.sql` is applied in QA and production, with production history version `20260713193455`. Runtime proof covers expired-window correction, invalid/expired/used/fresh code behavior, settled-payroll protection, past attendance with owner authorization, future-date denial, India month endpoints, year rollover, leap day, and corrected retry wording. Exact fixture cleanup reconciled organizations, profiles, logs, attendance, payments, and auth users to zero.
+
+Current counts are 295 pass, 3 fail, 78 blocked, and 1 not applicable. The active batch is B11. Use the canonical inventory/checkpoint to execute its 12 rows with fresh isolated fixtures and promote only exact runtime-proven outcomes; B10 pass credit must not be inherited.

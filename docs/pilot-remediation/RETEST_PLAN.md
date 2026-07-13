@@ -584,3 +584,14 @@ Acceptance:
 - Preserve verified breakdown update-or-insert behavior when the dated row is absent, plus an H2-labelled dialog and independent machine status.
 - Re-run the 390×844 20-loom workflow if card layout, fixed action footer, metre input naming, or shift-submit state changes.
 - Canonical counts after B09: 287 pass, 3 fail, 86 blocked, and 1 not applicable. Begin B10; do not rerun B09 unless one of these boundaries changes.
+
+### B10 protected-boundary regression guard — 2026-07-14
+
+- Preserve correction-window behavior: open-window correction remains direct where allowed; closed-window correction requires one valid owner code; invalid, expired, and consumed codes mutate nothing; successful use is single-use.
+- Preserve settled-payroll immutability even when a fresh valid code is supplied.
+- Preserve attendance policy parity with UI navigation: no future write, deterministic prior-day navigation, owner authorization for supported past changes, and refresh-stable locked history.
+- Preserve India half-open month boundaries derived from one instant, plus explicit year-rollover and leap-day coverage.
+- Preserve access-code rate-limit wording as remaining seconds, not an absolute epoch value.
+- Focused regression commands: `npx vitest run __tests__/b10-attendance-date-lockdown.test.ts __tests__/b10-india-calendar-boundaries.test.ts __tests__/b10-rate-limit-retry.test.ts __tests__/p1-commercial-payments.test.ts`; re-run the production fixture if correction, settlement, attendance RLS, access-code, or India date-boundary code changes.
+- Canonical evidence is `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json` on production deployment `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6`.
+- Canonical counts after B10: 295 pass, 3 fail, 78 blocked, and 1 not applicable. Begin B11; do not rerun B10 unless one of these boundaries changes.

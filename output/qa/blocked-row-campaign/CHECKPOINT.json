@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T19:19:53.078Z",
+  "updated_at": "2026-07-13T20:23:16.798Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 287,
-    "blocked": 86,
+    "pass": 295,
+    "blocked": 78,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -21,10 +21,11 @@
   "inventory": "output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json",
   "completed_batches": [
     "B08",
-    "B09"
+    "B09",
+    "B10"
   ],
-  "active_batch": "B10",
-  "active_batch_state": "B09 closed with exact production proof and cleanup; B10 queued",
+  "active_batch": "B11",
+  "active_batch_state": "B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued",
   "planned_batches": [
     {
       "id": "B09",
@@ -246,7 +247,15 @@
     "PROD-030",
     "OFF-003",
     "OFF-004",
-    "UX-001"
+    "UX-001",
+    "PROD-017",
+    "PROD-018",
+    "PROD-019",
+    "PAY-006",
+    "PAY-022",
+    "COMM-013",
+    "TIME-003",
+    "TIME-004"
   ],
   "rows_moved_to_fail": [],
   "rows_remaining_blocked": [
@@ -269,18 +278,13 @@
     "MARKET-009",
     "MARKET-010",
     "MARKET-013",
-    "PROD-017",
-    "PROD-018",
-    "PROD-019",
     "STOCK-005",
     "STOCK-009",
     "STOCK-011",
     "DISP-017",
     "DISP-018",
-    "COMM-013",
     "COMM-015",
     "PAY-002",
-    "PAY-006",
     "PAY-010",
     "PAY-011",
     "PAY-012",
@@ -288,7 +292,6 @@
     "PAY-017",
     "PAY-019",
     "PAY-021",
-    "PAY-022",
     "PAY-025",
     "PAY-026",
     "PAY-027",
@@ -314,8 +317,6 @@
     "BILL-009",
     "BILL-010",
     "OFF-001",
-    "TIME-003",
-    "TIME-004",
     "SEC-007",
     "SEC-009",
     "SEC-010",
@@ -341,12 +342,23 @@
   "root_causes_fixed_this_campaign": [
     "Breakdown updates could report success after a zero-row update; the action now validates the grain and performs verified update-or-insert with race recovery.",
     "Copy previous was hidden by placeholder assignment rows; visibility now follows the count of actually assigned looms.",
-    "The loom details sheet lacked the required accessible title."
+    "The loom details sheet lacked the required accessible title.",
+    "Broad permissive attendance policies bypassed date boundaries; production now retains only the authoritative supervisor-today and owner-past/today policies plus tenant lockdown checks.",
+    "Commercial month-to-date bounds are derived from one India-time instant, including month/year and leap-day boundaries.",
+    "Rate-limit retry messages now convert the absolute reset timestamp to remaining seconds, and attendance exposes explicit bounded day navigation."
   ],
   "commits": [
     {
       "sha": "812512c599b3659cc399495a674e8b3e50066e60",
       "subject": "fix(qa): close B09 production resilience gaps"
+    },
+    {
+      "sha": "48d30895fde3635647b4c6c7112dd5ecc7241965",
+      "subject": "fix(qa): enforce B10 date boundaries"
+    },
+    {
+      "sha": "fd1c367665455ca2bc66ca54d81a9cc259147284",
+      "subject": "fix(qa): complete B10 protected boundary proof"
     }
   ],
   "production_deployments": [
@@ -361,6 +373,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_5rKpnNLwszpfgfzkn8VBh291wyS6",
+      "commit": "fd1c367665455ca2bc66ca54d81a9cc259147284",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -368,6 +387,12 @@
       "environment": "production",
       "head": "20260713124500",
       "alignment": "verified"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714005500_b10_enforce_attendance_date_lockdown.sql",
+      "production_history_version": "20260713193455",
+      "alignment": "verified by policy catalog and runtime proof"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -375,6 +400,11 @@
       "batch": "B09",
       "type": "prefixed disposable production tenant with three auth users",
       "state": "removed; organizations/profiles/machines/logs/auth all reconciled to zero"
+    },
+    {
+      "batch": "B10",
+      "type": "prefixed disposable QA and production tenants with owner and supervisor proof users",
+      "state": "removed; organizations/profiles/production logs/attendance/commercial payments/auth all reconciled to zero"
     }
   ],
   "outstanding_external_dependencies": [
@@ -427,6 +457,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.",
-  "exact_next_action": "Start B10 with a fresh disposable fixture: execute historical correction windows, access-code consumption/expiry, settled-period protection, and India calendar boundaries before changing any of its eight rows."
+  "last_successful_validation": "B10 production deployment dpl_5rKpnNLwszpfgfzkn8VBh291wyS6 Ready at exact commit fd1c367; remote gate 85 files / 611 tests; production correction/access-code/settlement, attendance, India-month, calendar, policy-catalog, persistence, and zero-fixture cleanup all passed.",
+  "exact_next_action": "Start B11 with a fresh disposable quote/order fixture and execute quote conversion, target/over-target, cancellation/completion/deletion protection, stock-history, and Golden A protected-history scenarios before changing any of its twelve rows."
 }
