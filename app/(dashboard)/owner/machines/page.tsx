@@ -1,40 +1,34 @@
-'use client'
-
 import { MachineManagement } from '@/components/MachineManagement'
-import { useUserProfile } from '@/hooks/use-user-profile'
-import { Skeleton } from '@/components/ui/skeleton'
+import { requireRole } from '@/lib/auth'
+import { createPerfTimer } from '@/lib/perf'
+import { loadOwnerMachinesInitialData } from './loaders'
 
-export default function MachinesPage() {
-    const { data: userProfile, isLoading } = useUserProfile('/owner/machines')
+export default async function MachinesPage() {
+    const perf = createPerfTimer('/owner/machines')
+    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
+    const initialData = await perf.measure(
+        'businessData',
+        () => loadOwnerMachinesInitialData(profile.org_id),
+        7
+    )
 
-    if (isLoading) {
-        return (
-            <div className="space-y-6">
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-4 w-64" />
-                </div>
-                <div className="h-[400px] w-full bg-gray-50 rounded-xl animate-pulse" />
-            </div>
-        )
-    }
-
-    if (!userProfile?.org_id) {
-        return (
-            <div className="p-8 text-center border-2 border-dashed rounded-xl">
-                <p className="text-red-500 font-medium">Error loading profile. Please try refreshing.</p>
-            </div>
-        )
-    }
+    perf.log({
+        note: 'business includes machines, workers, fixed workers, production targets, and assignments',
+    })
 
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Machines</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Manage machines and worker shift assignments</p>
+                <p className="mt-0.5 text-sm text-gray-500">Manage machines and worker shift assignments</p>
             </div>
 
-            <MachineManagement orgId={userProfile.org_id} perfRouteName="/owner/machines" />
+            <MachineManagement
+                orgId={profile.org_id}
+                userRole="owner"
+                initialData={initialData}
+                perfRouteName="/owner/machines"
+            />
         </div>
     )
 }

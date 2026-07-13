@@ -839,7 +839,7 @@ export const hi = {
     subtitle: "रियल-टाइम सूरत फैब्रिक लागत कैलकुलेटर",
     hud: {
       prod_cost: "उत्पाद लागत / मी",
-      quote_per_m: "कोट / मी",
+      quote_per_m: "अंतिम कीमत / मी",
       total_order: "कुल ऑर्डर",
       margin: "मार्जिन",
       net_profit: "शुद्ध लाभ",
@@ -895,7 +895,7 @@ export const hi = {
       settingsDeleteConfirm: "क्या इस क्वालिटी को हटाना है?"
     },
     order_basics: {
-      title: "ऑर्डर और फैब्रिक लेबल",
+      title: "लागत विवरण",
       party: "पार्टी / ग्राहक",
       quality_label: "क्वालिटी / फैब्रिक लेबल",
       fabric_quality_name: "फैब्रिक / क्वालिटी का नाम",
@@ -969,11 +969,11 @@ export const hi = {
       finishing_per_m: "फिनिशिंग / मी"
     },
     simulation: {
-      title: "सिमुलेशन और मात्रा",
+      title: "लागत मात्रा",
       market_title: "मार्केट रन और मात्रा",
-      quantity: "सिमुलेशन मात्रा",
+      quantity: "लागत मात्रा",
       market_target: "लक्ष्य उत्पादन (Target Production)",
-      quantity_hint: "HUD कोट्स सक्रिय करता है",
+      quantity_hint: "कुल लागत और बिक्री मूल्य की गणना करता है",
       commission: "ब्रोकर कमीशन %",
       transport: "ट्रांसपोर्ट / मी"
     },
@@ -1005,7 +1005,7 @@ export const hi = {
       winding_per_kg: "वाइंडिंग / किलो",
       dyeing_processing: "डाइंग/प्रोसेसिंग",
       finishing_per_m: "फिनिशिंग / मी",
-      simulation_qty: "सिमुलेशन मात्रा",
+      simulation_qty: "लागत मात्रा",
       market_target: "लक्ष्य उत्पादन (Target Production)",
       broker_comm: "ब्रोकर कमीशन %",
       transport_per_m: "ट्रांसपोर्ट / मी"

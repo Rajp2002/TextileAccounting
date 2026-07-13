@@ -172,16 +172,21 @@ function MachineForm({ onDone }: { onDone: () => void }) {
         }
 
         setSaving(true)
-        const res = await addMachinesBulk(machinesToAdd)
-        setSaving(false)
+        try {
+            const res = await addMachinesBulk(machinesToAdd)
 
-        if (res?.error) {
-            toast.error(res.error)
-            return
+            if (res?.error) {
+                toast.error(res.error)
+                return
+            }
+
+            toast.success(`Successfully added ${machinesToAdd.length} machine${machinesToAdd.length > 1 ? 's' : ''}!`)
+            onDone()
+        } catch {
+            toast.error('Unable to save machines. Check your connection and try again.')
+        } finally {
+            setSaving(false)
         }
-
-        toast.success(`Successfully added ${machinesToAdd.length} machine${machinesToAdd.length > 1 ? 's' : ''}!`)
-        onDone()
     }
 
     const totalCount = loomGroups.reduce((acc, curr) => {
@@ -280,8 +285,13 @@ function MachineForm({ onDone }: { onDone: () => void }) {
 
 // ─── Worker Form ─────────────────────────────────────────────────────────────────
 
-interface WorkerRow { name: string; phone: string }
-const emptyWorker = (): WorkerRow => ({ name: '', phone: '' })
+interface WorkerRow { name: string; phone: string; dateOfBirth: string; ageReference: string }
+const emptyWorker = (): WorkerRow => ({ name: '', phone: '', dateOfBirth: '', ageReference: '' })
+const onboardingAdultCutoffDate = () => {
+    const cutoff = new Date()
+    cutoff.setFullYear(cutoff.getFullYear() - 18)
+    return cutoff.toISOString().slice(0, 10)
+}
 
 function WorkerForm({ onDone }: { onDone: () => void }) {
     const [workers, setWorkers] = useState<WorkerRow[]>([emptyWorker()])
@@ -295,13 +305,18 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
     const updateRow = (i: number, field: keyof WorkerRow, val: string) =>
         setWorkers(w => w.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
 
-    // Bulk: each line is either "Name" or "Name, 9876543210"
+    // Bulk: Name, optional phone, verified DOB, and non-sensitive evidence reference.
     const parseBulk = () => {
         const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
         if (lines.length === 0) { toast.error('No worker names found'); return }
         const parsed: WorkerRow[] = lines.map(line => {
             const parts = line.split(/[,\t]/).map(p => p.trim())
-            return { name: parts[0] || '', phone: parts[1] || '' }
+            return {
+                name: parts[0] || '',
+                phone: parts[1] || '',
+                dateOfBirth: parts[2] || '',
+                ageReference: parts[3] || '',
+            }
         })
         setWorkers(parsed)
         setBulkMode(false)
@@ -320,6 +335,16 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
             return
         }
 
+        const incompleteAgeProof = valid.filter(w => (
+            !w.dateOfBirth
+            || w.dateOfBirth > onboardingAdultCutoffDate()
+            || w.ageReference.trim().length < 4
+        ))
+        if (incompleteAgeProof.length > 0) {
+            toast.error(`Verified adult DOB and evidence reference required for: ${incompleteAgeProof.map(w => w.name).join(', ')}`)
+            return
+        }
+
         // Consent is required if ANY phone number is being saved
         if (phoneWorkers.length > 0 && !consentGiven) {
             toast.error('Please confirm consent before saving phone numbers')
@@ -330,7 +355,13 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
 
         // Phase 1: Bulk-insert all workers in a single roundtrip
         const bulkRes = await addMeterWorkersBulk(
-            valid.map(w => ({ name: w.name.trim(), pf_esi_enrolled: false }))
+            valid.map(w => ({
+                name: w.name.trim(),
+                pf_esi_enrolled: false,
+                date_of_birth: w.dateOfBirth,
+                age_verification_method: 'government_id' as const,
+                age_verification_reference: w.ageReference.trim(),
+            }))
         )
 
         if (bulkRes?.error) {
@@ -386,13 +417,13 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                         exit={{ opacity: 0, y: -8 }} className="space-y-3"
                     >
                         <Label className="text-xs text-gray-600">
-                            One per line: <span className="font-mono text-gray-500">Name</span> or <span className="font-mono text-gray-500">Name, PhoneNumber</span>
+                            One per line: <span className="font-mono text-gray-500">Name, Phone (optional), YYYY-MM-DD DOB, evidence ref</span>
                         </Label>
                         <textarea
                             rows={5}
                             value={bulkText}
                             onChange={e => setBulkText(e.target.value)}
-                            placeholder={"Ramesh Kumar, 9876543210\nSuresh Patel\nMahesh Verma, 9123456789"}
+                            placeholder={"Ramesh Kumar, 9876543210, 1990-05-14, Voter ID ••4821\nSuresh Patel, , 1988-10-02, School record SR-27"}
                             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
                         />
                         <Button type="button" size="sm" onClick={parseBulk}
@@ -406,14 +437,16 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                         exit={{ opacity: 0, y: -8 }} className="space-y-2"
                     >
                         {/* Column headers */}
-                        <div className="grid grid-cols-[1fr_140px_20px] gap-2 px-0.5">
+                        <div className="grid grid-cols-[1fr_130px_145px_1fr_20px] gap-2 px-0.5">
                             <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Worker name</span>
                             <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Phone (optional)</span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Verified DOB</span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Evidence ref</span>
                             <span />
                         </div>
 
                         {workers.map((w, i) => (
-                            <div key={i} className="grid grid-cols-[1fr_140px_20px] gap-2 items-center">
+                            <div key={i} className="grid grid-cols-[1fr_130px_145px_1fr_20px] gap-2 items-center">
                                 <Input
                                     value={w.name}
                                     placeholder="Ramesh Kumar"
@@ -427,6 +460,20 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                                     maxLength={10}
                                     onChange={e => updateRow(i, 'phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
                                     className="h-9 text-sm font-mono"
+                                />
+                                <Input
+                                    value={w.dateOfBirth}
+                                    type="date"
+                                    min="1900-01-01"
+                                    max={onboardingAdultCutoffDate()}
+                                    onChange={e => updateRow(i, 'dateOfBirth', e.target.value)}
+                                    className="h-9 text-sm"
+                                />
+                                <Input
+                                    value={w.ageReference}
+                                    placeholder="ID type + last 4"
+                                    onChange={e => updateRow(i, 'ageReference', e.target.value)}
+                                    className="h-9 text-sm"
                                 />
                                 {workers.length > 1 ? (
                                     <button type="button" onClick={() => removeRow(i)}

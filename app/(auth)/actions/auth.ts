@@ -19,6 +19,7 @@ import { requireRole } from '@/lib/auth'
 import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 import { getOrgTier } from '@/lib/subscription'
+import { checkJoinCodeRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -253,6 +254,15 @@ export async function validateJoinCode(code: string): Promise<{
     orgName?: string
     error?: string
 }> {
+    const requestHeaders = await headers()
+    const clientIp = getClientIpFromHeaders(requestHeaders)
+    try {
+        const reset = await checkJoinCodeRateLimit(clientIp, 'validate')
+        if (reset) return { valid: false, error: 'Too many join-code attempts. Try again later.' }
+    } catch {
+        return { valid: false, error: 'Join-code protection is temporarily unavailable. Try again later.' }
+    }
+
     const normalized = code.trim().toUpperCase()
 
     if (!/^[A-Z0-9]{8}$/.test(normalized)) {
@@ -291,6 +301,15 @@ export async function joinOrganization(input: {
     password: string
     phone: string
 }) {
+    const requestHeaders = await headers()
+    const clientIp = getClientIpFromHeaders(requestHeaders)
+    try {
+        const reset = await checkJoinCodeRateLimit(clientIp, 'join')
+        if (reset) return { error: 'Too many join-code attempts. Try again later.' }
+    } catch {
+        return { error: 'Join-code protection is temporarily unavailable. Try again later.' }
+    }
+
     const parsed = safeParse(JoinOrgSchema, input)
     if ('error' in parsed) return { error: parsed.error }
 

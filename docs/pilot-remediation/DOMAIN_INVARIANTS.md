@@ -40,7 +40,7 @@ Required proof:
 - Owner exports are current-org only, audited before payload delivery, and exclude or redact sensitive worker/profile/runtime fields.
 - Runtime secrets, auth headers, cookies, request bodies, service-role keys, Supabase keys, and DB URLs are never emitted in export payloads, logs, docs, or proof artifacts.
 
-Batch 24G production reconciliation note: `SEC-015` and `SEC-009` are source-fixed and `code_verified`, not pass. A production DB push reportedly occurred while linked to production ref `vzhwahudircrpgtitwzd`, applying `20260705100000_batch_24g_security_audit_guardrails.sql` and `20260705182406_harden_settings_audit_function.sql`; no rollback or additional DB command was run during reconciliation. `SEC-015` still needs controlled settings-change audit-row proof with redacted payloads, and `SEC-009` still needs owner export browser/security proof plus audit-log EXPORT proof. `SEC-017` and `AUTH-008` remain open.
+Batch 24G production reconciliation note: `SEC-015` and `SEC-009` are source-fixed and `code_verified`, not pass. A production DB push reportedly occurred while linked to production ref `vzhwahudircrpgtitwzd`, applying `20260705100000_batch_24g_security_audit_guardrails.sql` and `20260705182406_harden_settings_audit_function.sql`; no rollback or additional DB command was run during reconciliation. `SEC-015` still needs controlled settings-change audit-row proof with redacted payloads, and `SEC-009` still needs owner export browser/security proof plus audit-log EXPORT proof. Runtime remediation later closed `SEC-017` and `AUTH-008`; the fresh isolated Premium Settings blank-content observation remains a separate `SEC-009` debugging prerequisite.
 
 ## Production Logs
 
@@ -59,11 +59,13 @@ Batch 22 proof note: `ORDER-005`, `ORDER-009`, and `PROD-011` are source-fixed a
 
 Batch 24B proof note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed and `code_verified`, not pass. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. QA/browser proof is still required before pass. `PROD-022` was outside Batch 24B and is later source-fixed by Batch 24D pending browser proof.
 
-Batch 24C proof note: `SETUP-011` is source-fixed and `code_verified`, not pass. Factory Today setup checklist state now uses persisted source data for costing evidence, active linked loom targets, worker assignment source data, active worker rows, and payroll config bounds. Batch 24F updates the worker-assignment portion to selected-shift/day-only policy. Browser/runtime proof is still required before pass.
+Batch 24C established Factory Today setup checklist source rules using persisted costing evidence, active linked loom targets, worker assignments, active workers, and bounded payroll config values; Batch 24F updated the assignment rule to selected-shift/day-only policy. Formal blocked-row Batch 5 closed `SETUP-011` after repairing the deferred checklist request lifecycle: Strict Mode cleanup must not discard a completed shared request. Isolated browser/database proof rendered exactly 11 of 14 Both-mode steps complete before and after refresh, with the three later operational milestones correctly incomplete and `Log first production` next.
 
-Batch 24E proof note: `MASTER-002` and `MASTER-005` are source-fixed and `code_verified`, not pass. Duplicate loom names are guarded in source for normalized org-scoped add, bulk-add, and rename paths, and migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` now uses a trigger-backed duplicate guard instead of a retroactive unique index. The production DB push incident reportedly applied this guard, preserving existing duplicate rows such as `loom c` / `Loom C` while blocking future normalized duplicates. Controlled QA/browser proof is still required before pass, and `MASTER-005` still needs browser lifecycle proof. `MASTER-014` remains fail/open.
+Formal blocked-row Batch 6 established the setup mutation failure invariant for `SETUP-007`: a rejected machine-save request must not mark the step complete, create a row, or leave the action permanently disabled. It must report a retryable connection error, clear saving state, and allow the same form to succeed once; the successful retry must create one logical machine and remain complete after refresh.
 
-Batch 24F proof note: `PROD-002` and `PROD-004` are source-fixed and `code_verified`, not pass. Selected-shift worker policy now allows day-shift/day-only production without requiring a night worker, blocks night-shift production without a night worker with an actionable accountability error, and keeps day-only setup/checklist/activation from falsely failing for missing night worker. Substitute-worker mismatch now returns explicit reassignment-required behavior; no unsafe substitute persistence was added, and production is not silently attributed to the wrong assigned worker. Browser/runtime proof is still required before pass, and `SIGNOFF-01` remains fail/open pending current-run sign-off proof.
+Batch 24E source note: duplicate loom names are guarded on normalized org-scoped add, bulk-add, and rename paths, and migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` uses a trigger-backed duplicate guard instead of a retroactive unique index. Formal blocked-row Batch 4 later closed `MASTER-002` with isolated browser/database proof: duplicate types generated distinct names, normalized duplicate insert/rename returned 23505, same-name cross-tenant creation remained valid, and same-type different-name creation remained valid. The same batch closed `MASTER-003` and `MASTER-005`: changing a history-bearing loom's name/type preserved its machine ID, active target, two standing assignments, dated assignment, and production log; deactivate/delete remained blocked while unused-loom deletion remained allowed. Runtime remediation separately closed `MASTER-014` with isolated concurrent-editor, rollback, and caller-RLS proof.
+
+Batch 24F proof note: `PROD-002` and `PROD-004` are source-fixed and `code_verified`, not pass. Selected-shift worker policy now allows day-shift/day-only production without requiring a night worker, blocks night-shift production without a night worker with an actionable accountability error, and keeps day-only setup/checklist/activation from falsely failing for missing night worker. Substitute-worker mismatch now returns explicit reassignment-required behavior; no unsafe substitute persistence was added, and production is not silently attributed to the wrong assigned worker. Browser/runtime proof is still required before pass. Runtime remediation later closed `SIGNOFF-01` with current-run loom accountability proof.
 
 Required proof:
 
@@ -76,6 +78,10 @@ Required proof:
 Dashboard and Factory Today read models must not mix selected-date facts with current-only operational state. Historical views must either scope their data to the selected date or hide/clear inherently current-only cards.
 
 Batch 24C proof note: `DASH-004` is source-fixed and `code_verified`, not pass. Historical Analytics now returns full selected-date state, scopes the seven-day trend to the selected date, clears current-only today/orders/machines values for historical dates, and replaces client state instead of merging stale current data. Browser/runtime proof is still required before pass.
+
+Formal blocked-row Batch 2 proof note (2026-07-13): a fresh zero-data Premium tenant confirmed the empty Factory Today invariant; active Base/Premium subscriptions confirmed module gates while Billing remained reachable; mobile navigation/logout and reciprocal role copy remained operable; and regenerated-old join codes failed while the current code resolved only the intended organization. These are runtime-confirmed invariants, not source-only claims.
+
+Formal blocked-row Batch 3 proof note (2026-07-13): validation failures must retain operator input without creating partial identity rows; a referral code may create exactly one cross-org relationship and must reject self/duplicate use; and explicit session revocation must be checked on every new authenticated request because otherwise-valid access JWTs can outlive the revocation event. Isolated QA browser/API/database proof satisfied all three invariants.
 
 ## Generated Stock
 
@@ -258,6 +264,20 @@ Batch 24D proof note: `EST-017` is source-fixed and `code_verified`, not pass. E
 
 Batch 24D production draft note: `PROD-022` is source-fixed and `code_verified`, not pass. Supervisor production drafts are now scoped by org, user, selected date, and shift through `lib/production-drafts.ts`; the dashboard uses `userProfile.org_id` and `userProfile.userId`, avoids unsafe date/shift-only fallback keys, ignores stale date/shift fetch completions, restores only the active draft, and saves with the currently selected date/shift. Batch 24B restored-draft indicator and large-meter warning behavior remain compatible. Browser proof of org/user/date/shift draft isolation and save payload date/shift remains required before pass.
 
+## Runtime Rerun Invariant Clarifications - 2026-07-10
+
+Tenant isolation invariant: an authenticated member of Org A must not read an Org D organization row by guessed ID unless a narrowly documented pre-membership join-code flow explicitly returns a safe projection. Machine-level isolation passing does not compensate for organization metadata exposure. `AUTH-012` now satisfies this invariant: production migration `20260710210828` removed the public permissive organization lookup policy, and isolated production proof passed own read/update plus cross-tenant organization/profile/machine denial and persisted non-mutation.
+
+Piece-rate ownership invariant: the product must have one documented authoritative source for the rate used by production and payroll. The runtime currently derives rate from costing/quality/order context, while `MASTER-006` expects a decimal rate on the worker master. This is an unresolved contract mismatch, not a proven invariant change. No matrix rewrite should occur until product ownership of the rate is decided.
+
+Assignment lifecycle invariant: deactivating a worker must make current standing assignments non-operational and visibly incomplete without rewriting immutable historical production attribution. Server-rendered, client-rendered, Factory Today, Machines, and supervisor readiness must agree on whether an assignment is current.
+
+Production-write invariant: saving a shift must either atomically persist the complete scoped log set or persist nothing with an actionable error. Every update in that path must be constrained by tenant and record identifiers; a generic `UPDATE requires a WHERE clause` is a blocking runtime failure, not a retry-safe outcome.
+
+Unknown-outcome invariant (OFF-009, 2026-07-13): a client response timeout is not proof that a mutation failed. The UI must label the outcome unknown, avoid blind resubmission, and reconcile against authoritative tenant-scoped state. Success may be reported after a timeout only when the persisted replacement state exactly matches the submitted machine, meter, and zero-reason set; otherwise the operator must be told to refresh and check before retrying.
+
+Activation-rule invariant: application validation and deployed database constraints must enforce the same required shift coverage. A UI rule permitting either day or night cannot coexist with a database rule requiring both without creating false-ready and failed-save states.
+
 ## Offline, Cache, and Account Switching
 
 Persisted local data is tenant-bound and session-bound. Logout or account switch clears sensitive persisted cache, local drafts, and mutation queues unless they are cryptographically inaccessible and scoped to the next same user session.
@@ -268,7 +288,7 @@ Required proof:
 - IndexedDB mutation queue cannot replay under a different user/org.
 - Public privacy/PWA text matches actual implementation.
 
-Batch 9 proof note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are satisfied by public `/offline` and `/_offline` route proof, awaited auth-boundary cleanup, persisted user-cache and IndexedDB queue cleanup, truthful online-only kharchi behavior, and privacy/public copy that no longer claims unsupported offline write sync. `OFF-007` still needs production service-worker update proof with an active draft, `OFF-010` still needs throttled slow/intermittent-network runtime proof, and `OFF-009` remains open for unknown-timeout UX.
+Batch 9 proof note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are satisfied by public `/offline` and `/_offline` route proof, awaited auth-boundary cleanup, persisted user-cache and IndexedDB queue cleanup, truthful online-only kharchi behavior, and privacy/public copy that no longer claims unsupported offline write sync. The 2026-07-11 runtime-remediation campaign closes `OFF-007` with production service-worker update proof while an exact draft remained recoverable. `OFF-010` still needs throttled slow/intermittent-network runtime proof, and `OFF-009` remains open for unknown-timeout UX.
 
 ## Release Readiness
 
@@ -283,3 +303,10 @@ Required proof:
 - Backup restore and rollback/forward-fix are exercised in disposable infrastructure.
 
 Batch 7 proof note: `TECH-013` is satisfied at source level by `test: vitest run`, `prebuild: npm run test`, release-runtime config tests, and a passing `npm run build` that executed the prebuild Vitest gate. Batch 8 proof note: `TECH-007` is satisfied for repository migration head `20260628185344` by supplied Supabase migration-list evidence showing local/remote alignment with no pending, failed, or out-of-order migrations. Batch 8B proof note: `TECH-010` is satisfied by fresh production Sentry release `2538da25b2fa` with 529 source-map artifacts. These do not close clean install, audit, live Sentry payload inspection, restore, rollback, deployed WhatsApp, or final clean signoff evidence rows.
+
+## Runtime Rerun Batch 3 Invariants
+
+- Cancelling an order must unlink and inactivate only looms whose `current_order_id` matches it.
+- A worker phone change requires consent reconfirmation; the worker and single org/person/channel consent row must agree on the latest valid number. Editing contact data must not itself send WhatsApp.
+- Every estimator row contributes once; unit conversion preserves the canonical calculation; optional costs are gated; direct overhead replaces itemized overhead; and capacity/idle cost reconciles from visible inputs.
+- Saved qualities remain org-scoped across save, rename, rate/full update, apply, refresh, and soft delete.

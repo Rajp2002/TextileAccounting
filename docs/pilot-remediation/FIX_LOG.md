@@ -14,20 +14,20 @@ Rules for entries:
 | Cluster | Status | Notes |
 | --- | --- | --- |
 | `SEC-A` mutable profile authorization | Closed in Batch 1 / pass | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 21D / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 source-fixed payroll RPC boundary rows `PAY-018` and `PAY-020`; Batch 21D closes them with disposable QA runtime proof. `AUTH-008` remains open. |
-| `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
+| `SEC-B` privileged action/lockdown enforcement | Partially closed through runtime remediation / open remainder | Batch 1 closed `SEC-006` and `AUTH-016`; Batch 21D closed payroll RPC boundary rows `PAY-018` and `PAY-020`; the runtime-remediation campaign closed `AUTH-008` with fail-closed source coverage and fresh QA Redis proof. Other blocked privileged-action evidence remains open. |
+| `SEC-C` webhook/export/compliance fail-closed | Partially closed through runtime remediation / open remainder | Batch 9 closed `SEC-016`; Batch 15 closed `SEC-014`; runtime remediation closed `TECH-009` and `SEC-017`. `WA-008`, owner export/settings audit proof, counsel review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `PROD-B` production boundary validation | Partially source-fixed through Batch 24F / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Batch 24E moves `MASTER-002` and `MASTER-005` to `code_verified` by source-fixing normalized duplicate loom-name checks and protected loom delete/deactivate/unlink guardrails. Batch 24F moves `PROD-002` and `PROD-004` to `code_verified` by source-fixing selected-shift day-only worker assignment policy and explicit substitute-worker reassignment-required behavior. Runtime/API, browser, or migration/DB-boundary proof is still required before these rows can pass. `MASTER-014`, `SIGNOFF-01`, `SIGNOFF-02`, and remaining production-boundary rows stay open. |
+| `PROD-B` production boundary validation | Partially source-fixed through Batch 24F / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified`; Batch 24C source-fixes `SETUP-011`; Batch 24E source-fixes `MASTER-002` and `MASTER-005`; Batch 24F source-fixes `PROD-002` and `PROD-004`. Runtime/API, browser, or migration/DB-boundary proof is still required before those rows can pass. Runtime remediation closed `MASTER-014`, `SIGNOFF-01`, and `SIGNOFF-02` with isolated concurrency/rollback/RLS and current-run dashboard attribution proof. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 24C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Batch 24C moves `DASH-004` to `code_verified` by source-fixing historical selected-date analytics state so stale current values are not mixed into historical views. `SIGNOFF-01`, `SIGNOFF-02`, and remaining dashboard runtime evidence debt stay open. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed through runtime remediation / open remainder | Earlier batches closed dispatch, receipt, commercial, and deployed signoff rows. Runtime remediation closed `DASH-004`, `SIGNOFF-01`, and `SIGNOFF-02`; formal blocked-row Batch 2 closed `DASH-001` with a fresh zero-data tenant and exact database reconciliation. `DASH-003` and other dashboard evidence debt remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 21D / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`. Batch 21C promotes PF/ESI preview and preview-versus-settlement rows `PAY-013` and `PAY-015` to pass with disposable payroll settlement runtime proof. Batch 21D promotes payroll settlement/reversal boundary rows `PAY-018` and `PAY-020` to pass with disposable QA runtime proof. Batch 20 online Kharchi atomicity row `PAY-027` remains `code_verified`, not pass, pending disposable QA runtime proof. Broader settlement correctness remains open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
-| `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
-| `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
+| `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / `OFF-007` closed 2026-07-11 | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`; the runtime-remediation campaign closes `OFF-007` with active-draft production-update proof. `OFF-010` and `OFF-009` remain open or partial. |
+| `REL-A` release gates | Partially remediated through runtime remediation / open remainder | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. Live Sentry payload inspection, restore, and rollback remain open or blocked. |
 
 ## Entry Template
 
@@ -2108,3 +2108,154 @@ Safety:
 Resolution status:
 
 - Matrix movement is pass +1 and `code_verified` -1: total 377, pass 196, fail 13, blocked 22, `code_verified` 145, `not_applicable` 1, `not_run` 0.
+
+## Runtime Rerun Closeout - Rows 1-16
+
+Date/time: 2026-07-10 22:09 IST. Branch `codex/estimator-production-readiness-20260710` at repository commit `cfeca96` with an already-dirty, mid-flight worktree.
+
+Scope:
+
+- Re-executed the first 16 rows from the 145-row setup-cascade queue against QA-prefixed test tenants on production project ref `vzhwahudircrpgtitwzd`, as explicitly authorized because the production database contains test accounts only.
+- Runtime ledger: `output/qa/runtime-rerun-20260710/results.json`.
+- Checkpoint: `output/qa/runtime-rerun-20260710/CHECKPOINT.json`.
+- QA record prefix: `RERUNPRODQA-20260710-13CC5C47AD`.
+
+Rows promoted from `code_verified` to `pass`:
+
+- `AUTH-003`, `AUTH-006`, `AUTH-013`, `SETUP-001`, `SETUP-002`, `SETUP-010`, and `MASTER-001`.
+
+Rows proven `fail`:
+
+- `AUTH-012`: an Org A authenticated client could read the guessed Org D organization row. Cross-org machine reads and updates remained isolated, but the organization metadata read violated the row expectation.
+- `MASTER-006`: the runtime Add Piece Rate Worker form has no decimal-rate field. Current runtime behavior places production rates on costing/quality context, so the matrix scenario cannot be completed through the stated worker path.
+
+Rows recorded `blocked`, not pass:
+
+- `AUTH-005`: generic reset request and a valid recovery form were proven, but expired/reused-token rejection and final password mutation were not fully exercised.
+- `SETUP-007`: no controlled network-failure injection was available in the active browser session.
+- `SETUP-011`: Factory Today was refresh-stable for the partial fixture, but the estimate-created precondition was absent.
+- `SETUP-012`: rename and code regeneration persisted, but the old code was not submitted through a fresh join attempt.
+- `MASTER-002`: manual duplicate protection passed, but the specified bulk-add duplicate path was not executed.
+- `MASTER-003`: name/type edits persisted, but the loom lacked assignment and production history.
+- `MASTER-005`: no active-order/history fixture was available for protected lifecycle proof.
+
+Evidence:
+
+- `output/qa/runtime-rerun-20260710/evidence/AUTH-012-cross-org-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-001-market-onboarding-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-002-order-onboarding-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-010-mode-switch-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-011-factory-today-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-012-factory-identity-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/MASTER-001-add-loom-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/MASTER-002-duplicate-loom-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/MASTER-003-edit-loom-production.json`.
+
+Data safety:
+
+- All created records were strongly QA-prefixed test records. No real client, billing purchase, payment, WhatsApp send, backup/restore, or broad load action was used.
+- QA trial entitlements were fixture-only rows; no Razorpay payment was performed.
+- No Supabase migration, DB push, repair, pull, or schema mutation occurred during this documentation closeout.
+- The QA fixtures remain available for the next runtime batch and require targeted cleanup when the campaign finishes.
+
+Resolution status:
+
+- Runtime checkpoint: pass 7, fail 2, blocked 7, not run 129.
+- Formal matrix movement for these 16 rows: pass +7, fail +2, blocked +7, `code_verified` -16.
+- Updated matrix totals: total 377, pass 203, fail 15, blocked 29, `code_verified` 129, `not_applicable` 1, `not_run` 0.
+
+### Runtime Rerun Batch 2 Continuation - Queue 17-20
+
+- `MASTER-008` moved to `pass`: one present attendance day for a QA Day-to-Day worker with ₹30,000 monthly salary produced ₹1,000 gross/net, matching `min(monthly salary, monthly salary / 30 × present days)` and staying below the monthly cap. Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-008-daily-attendance-payroll-production.json`.
+- `MASTER-009` moved to `fail`: after authenticated tenant-scoped deactivation, Machines still displayed the inactive worker on both shifts and the loom as Active, while Factory Today still marked worker assignment complete. Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-009-deactivate-assigned-worker-production.json`.
+- `MASTER-011` and `MASTER-012` moved to `blocked`: two workers, two active contexts, a linked loom, and standing assignments were prepared, but two Save shift logs attempts returned `UPDATE requires a WHERE clause`; zero `production_logs` rows were created, preventing substitute-payroll and historical-context proof. Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-011-substitute-worker-blocker-production.json` and `output/qa/runtime-rerun-20260710/evidence/MASTER-012-replace-context-blocker-production.json`.
+- Additional deployed-boundary finding: application activation checks allow at least one day or night assignment, while authenticated database activation returned constraint `23514` until both shifts were assigned.
+- Updated runtime checkpoint: pass 8, fail 3, blocked 9, not run 125. Updated formal matrix totals: total 377, pass 204, fail 16, blocked 31, `code_verified` 125, `not_applicable` 1.
+
+### Runtime Rerun Batch 3 - Queue 21-30
+
+- Promoted `MASTER-013`, `MASTER-015`, `EST-002`, `EST-004`, `EST-006`, `EST-007`, `EST-008`, `EST-009`, `EST-010`, and `EST-013` from `code_verified` to `pass` using production-backed, QA-prefixed browser and database proof.
+- Order cancellation unlinked and inactivated only the related loom. Worker phone changes required consent reconfirmation, updated the one consent row to the latest non-routable QA number, and created no WhatsApp delivery rows.
+- Estimator proof covered exact blended-row arithmetic, 254 cm ↔ 100 inch equivalence and draft refresh, sizing, optional-cost gates, override replacement, capacity/idle cost, repeated fixed-worker merge/save, and the full org-scoped template lifecycle through cleanup.
+- The first-run baseline modal was completed before button/radio classification; intercepted clicks before setup completion were discarded as invalid evidence, not failures.
+- Evidence: `output/qa/runtime-rerun-20260710/evidence/batch-03-master-estimator-production.json` and `output/qa/runtime-rerun-20260710/batch-03-summary.json`.
+- Updated runtime checkpoint: pass 18, fail 3, blocked 9, not run 115. Updated formal matrix totals: total 377, pass 214, fail 16, blocked 31, `code_verified` 115, `not_applicable` 1.
+
+## Runtime Remediation — AUTH-012 Production Closeout
+
+Date: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
+
+- Root cause: production `organizations` had a public permissive `Lookup org by join code` SELECT policy with predicate `true`, which OR-composed around tenant isolation.
+- Compatibility/safety: the identified real account's auth user, owner profile, organization, and organization owner ID were internally consistent with the replacement policy. Its tenant was excluded from mutation.
+- Migration: applied only `20260710210828_close_public_organization_join_code_policy.sql`; recorded exact remote migration history `20260710210828`. No other pending migration was deployed.
+- Catalog proof: post-deployment `organizations` policies are exactly authenticated tenant SELECT and authenticated owner tenant UPDATE. The post-deployment advisor returned no finding targeting `organizations`.
+- Runtime proof: fixture `AUTH012-1783901124790-D5DAFB55` passed own organization read/update; cross-tenant organization/profile/machine non-disclosure; cross-tenant organization/machine mutation denial; and service-role persistence checks proving target rows were unchanged.
+- Cleanup: exact production organizations, profiles, machine, and both auth users reconciled to zero. The real tenant was untouched.
+- Validation: focused AUTH tests passed 6/6; targeted ESLint and TypeScript passed; full Vitest passed 75 files with 579 passed and 1 intentional skip; JSON/matrix consistency and `git diff --check` passed.
+- Formal result: `AUTH-012` moved from `fail` to `pass`. Matrix totals are 253 pass, 3 fail, 120 blocked, and 1 not applicable.
+- Remaining failures: `WA-008`, `OFF-009`, `OFF-010`.
+
+## OFF-009 unknown-outcome boundary (2026-07-13)
+
+- Status: `code_verified_but_not_runtime_verified`; the formal matrix remains `fail`.
+- Added `lib/mutation-outcome.ts` so a client response timeout is represented as an unknown mutation outcome rather than a definite failure. Supervisor shift submission now performs an authoritative shift-state lookup before allowing the timeout path to resolve as success, and otherwise tells the operator not to resubmit until the shift is checked.
+- Added focused coverage in `__tests__/off-009-mutation-outcome.test.ts` for normal completion, timeout classification, and exact persisted replacement-state reconciliation. Updated the Batch 24D source assertion for the wrapped submit call.
+- Local proof passed: `npx vitest run __tests__/off-009-mutation-outcome.test.ts __tests__/batch24f-production-worker-assignment-policy.test.ts` (2 files, 10 tests); targeted ESLint; `npx tsc --noEmit`; and the production-environment build gate (77 files, 584 tests, followed by a successful Next.js 16.2.10 build).
+- Production browser proof used disposable tenant `OFF009-1783902723451-ED3AE8` behind a one-shot 17-second response-delay proxy. At the 15-second client boundary, the UI did not report a definite failure and displayed: “We could not confirm whether this shift was saved. Do not submit it again yet; refresh and check the shift first.” Evidence: `output/qa/runtime-remediation-20260711/OFF-009-timeout-reconciled.png`.
+- The committed-state reconciliation branch remains unproven because the existing production shift-log write path returns `UPDATE requires a WHERE clause` even without the delay and creates zero `production_logs` rows. This is the existing production-write blocker, not a timeout-classification failure.
+- Data safety: the exact disposable production fixture and auth user were removed by `node scripts/qa/off-009-browser-fixture.mjs cleanup --production`, which returned `cleaned: true`. The protected `ambob9182@gmail.com` tenant was not used.
+
+## Formal blocked-row Batch 2 closeout (2026-07-13)
+
+- Status changes: `SETUP-012`, `DASH-001`, `BILL-002`, `UX-004`, and `UX-011` moved from `blocked` to `pass`.
+- Fixture/proof: `scripts/qa/formal-batch2-fixture.mjs` created isolated active Premium and Base tenants plus a Premium supervisor against QA project `eutycrtzzxmlkcpipgod`. Browser proof covered empty Factory Today, plan gating with Billing reachable, 390x844 navigation/logout, reciprocal supervisor copy/redirects, and old-versus-current join-code behavior.
+- Database reconciliation: the empty tenant had zero rows across machines, both worker tables, orders, market runs, production, stock, dispatch, receivables, advances, and payroll settlements. Subscription tiers/statuses and role membership matched the rendered access boundaries.
+- Evidence: `output/qa/runtime-remediation-20260711/RUNTIME_EVIDENCE.md` and the five durable screenshot artifacts in that directory.
+- Data safety: no production data was used; both subscriptions, three profiles, two organizations, all three auth users, and the private credential file were deleted and independently reconciled to zero/removed. Browser tabs and the local QA server were closed.
+- Open finding: the fresh Premium Settings route rendered a blank main region without a browser-console error. `SEC-009` remains blocked and is categorized under `Needs formal audit/debugging`; no export pass credit was claimed.
+- Formal matrix after this batch: total 377, pass 258, fail 3, blocked 115, not applicable 1, code verified 0, not run 0.
+
+## Formal blocked-row Batch 3 closeout (2026-07-13)
+
+- `UX-003`: clean isolated join validation retained entered name, email, and phone after an exact phone-length error; no relevant console issue or partial account/tenant row appeared.
+- `BILL-008` defect/fix: `applyReferralCode` attempted an authenticated INSERT where `referral_uses` has no INSERT policy. The module is now explicitly server-only and uses the admin client only after signup/API call sites derive the referee org from trusted owner context. Self-referral remains blocked before insert and the unique referee constraint remains the duplicate-use boundary.
+- `AUTH-015` defect/fix: revocation markers were written but never consulted. `getCachedSession` now checks `isUserRevoked(user.id)` before profile/role authorization is loaded.
+- Runtime: valid referral application returned 200; self and duplicate applications were rejected; database count was exactly one cross-org use and zero self uses. Two independent authenticated sessions returned 200 before revocation and were both denied afterward while their JWTs still validated.
+- Tests: `npx vitest run __tests__/bill-008-referral-boundary.test.ts __tests__/auth-015-session-revocation.test.ts` passed 2 files / 5 tests; targeted ESLint passed.
+- Safety/cleanup: QA-only fixture; referral records, Redis marker, all tenant/auth records, credentials, browser tabs, and server were removed and reconciled.
+- Formal matrix: total 377, pass 261, fail 3, blocked 112, not applicable 1.
+
+## Formal blocked-row Batch 4 closeout (2026-07-13)
+
+- `MASTER-002`, `MASTER-003`, and `MASTER-005` moved from `blocked` to `pass` using isolated QA owner browser proof plus tenant-scoped database reconciliation.
+- `MASTER-002`: two Jacquard groups in one onboarding bulk request persisted as exactly `Jacquard 1` and `Jacquard 2`; trim/case duplicate insert and rename returned the normalized-name 23505 boundary; same-name cross-tenant and same-type different-name controls succeeded; no normalized duplicate remained.
+- `MASTER-003`: one active loom with an active target, two standing assignments, a dated assignment, and 10m production history was renamed and changed to Water Jet. Refresh and database checks preserved the same target and every reference.
+- `MASTER-005`: owner deactivate/delete attempts were rejected and the visible message listed active target, active assignments, dated assignment history, and production history. The loom remained active with all references intact; a separate unused loom delete succeeded.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/MASTER-002-formal-batch4.json` and `output/qa/runtime-remediation-20260711/evidence/MASTER-003-005-formal-batch4.json`.
+- Regression proof: `npx vitest run __tests__/batch24e-master-data-guardrails.test.ts` passed 1 file / 9 tests; targeted ESLint and probe syntax checks passed.
+- Safety: QA project `eutycrtzzxmlkcpipgod` only. Exact production log, assignments, order, worker, machines, subscriptions, profiles, organizations, auth users, private credential file, browser tabs, and local server were removed or closed and reconciled.
+- Formal matrix: total 377, pass 264, fail 3, blocked 109, not applicable 1. Readiness remains No-Go.
+
+## Formal blocked-row Batch 5 closeout (2026-07-13)
+
+- `SETUP-011` moved from `blocked` to `pass` after an isolated complete-setup rerun exposed and verified a real client lifecycle fix.
+- Defect: `FactoryTodayClient` started the deferred 13-query checklist request inside an effect, but Strict Mode cleanup marked its completion inactive while the one-request guard prevented a usable replacement subscription. The server action completed successfully, yet the setup panel could remain absent without a console error.
+- Fix: retain one in-flight checklist promise and do not cancel its state completion during effect cleanup. React safely ignores a state update after a real unmount; repeated Strict Mode callbacks are idempotent because they apply the same payload.
+- Runtime: one persisted estimate, active order, active linked loom, active piece-rate and fixed workers, day/night assignments, supervisor, payroll config, and active Premium plan rendered `11 of 14 steps complete · Order or market-run path`; `Log first production` remained the correct next step before and after refresh, with zero browser console errors/warnings.
+- Database reconciliation: exactly one fixture machine, piece-rate worker, fixed worker, estimate, order, and payroll config; two assignment shifts; one supervisor; one active subscription; linked loom active.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/SETUP-011-formal-batch5.json`.
+- Regression proof: `npx vitest run __tests__/batch3b-factory-today-query-fanout.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts` passed 2 files / 12 tests; targeted ESLint and fixture syntax checks passed.
+- Safety: QA project `eutycrtzzxmlkcpipgod` only. Exact business rows, subscriptions, profiles, organizations, auth users, private credential files, browser tabs, and local server were removed or closed and reconciled.
+- Formal matrix: total 377, pass 265, fail 3, blocked 108, not applicable 1. Readiness remains No-Go.
+
+## Formal blocked-row Batch 6 closeout (2026-07-13)
+
+- `SETUP-007` moved from `blocked` to `pass` after a controlled same-origin failure proxy supplied the missing runtime condition and exposed a real retry-state defect.
+- Defect: a rejected `addMachinesBulk` promise bypassed the original `setSaving(false)` path, leaving the setup save action disabled indefinitely. The machine form now catches rejected requests, shows `Unable to save machines. Check your connection and try again.`, and always clears saving state in `finally`.
+- Runtime: exactly one `POST /onboarding` was intercepted with a controlled 503 before the application mutation. The step stayed incomplete at 2/5, the retry toast appeared, `Save 1 machine` re-enabled, and the tenant still had zero machines.
+- Retry and persistence: the unchanged form was retried through the healthy upstream; the database contained exactly one `Jacquard 1`, and a fresh page load showed 3/5 with `Add your machines` marked `Done ✓`. The final exercised browser window had zero warnings/errors.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/SETUP-007-formal-batch6.json`.
+- Regression proof: `npx vitest run __tests__/setup-007-onboarding-network-retry.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts` passed 2 files / 8 tests; targeted ESLint and proxy syntax checks passed.
+- Migration/deployment: none. This batch changed only the client retry boundary, focused regression coverage, the disposable local proxy, and formal evidence/docs.
+- Safety: isolated QA project `eutycrtzzxmlkcpipgod`; the created machine and the complete fixture/auth set were deleted by exact tenant/fixture cleanup, and local servers/browser tabs/private credentials were removed or closed.
+- Formal matrix: total 377, pass 266, fail 3, blocked 107, not applicable 1. Readiness remains No-Go.

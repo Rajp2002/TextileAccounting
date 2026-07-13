@@ -179,6 +179,14 @@ CREATE INDEX IF NOT EXISTS idx_production_logs_fixed_worker_cycle
   ON public.production_logs(org_id, fixed_worker_id, date)
   WHERE fixed_worker_id IS NOT NULL;
 
+-- This is a metadata-only backfill for historical production logs. The normal
+-- production-order boundary trigger deliberately rejects updates to completed
+-- orders, so suspend that one guard while preserving its enforcement for all
+-- subsequent application writes. Migration execution is transactional: an
+-- error restores the trigger automatically.
+ALTER TABLE public.production_logs
+  DISABLE TRIGGER trg_production_log_order_boundary;
+
 UPDATE public.production_logs
 SET
   operator_worker_type = COALESCE(operator_worker_type, 'meter_worker'),
@@ -188,6 +196,9 @@ SET
   machine_type_snapshot = COALESCE(machine_type_snapshot, 'other')
 WHERE worker_id IS NOT NULL
   AND operator_assignment_id IS NULL;
+
+ALTER TABLE public.production_logs
+  ENABLE TRIGGER trg_production_log_order_boundary;
 
 CREATE OR REPLACE FUNCTION public.calculate_operator_payroll_gross(
   p_org_id UUID,

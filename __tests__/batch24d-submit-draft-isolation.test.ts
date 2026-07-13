@@ -189,7 +189,7 @@ describe('Batch 24D PROD-022 production draft date/shift isolation', () => {
     it('submits production rows with the currently selected date and shift', () => {
         expect(submitHandler).toContain('shift,')
         expect(submitHandler).toContain('date,')
-        expect(submitHandler).toContain('const res = await bulkLogProduction(entries, code)')
+        expect(submitHandler).toContain('runMutationWithTimeout(() => bulkLogProduction(entries, code))')
         expect(submitHandler).toContain('if (selectedDraftKey) localStorage.removeItem(selectedDraftKey)')
     })
 

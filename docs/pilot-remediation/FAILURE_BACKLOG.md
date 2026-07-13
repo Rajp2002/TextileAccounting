@@ -2,27 +2,33 @@
 
 This backlog is grouped by root cause and ordered by the required pilot priority: security, production/stock correctness, dispatch/receipt correctness, payroll/kharchi, idempotency/offline, then release gates. `code_verified` items stay open until runtime or test evidence exists.
 
+## Runtime Rerun 2026-07-10 Terminal Results
+
+The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. The active remediation campaign has since moved 18 confirmed failures and 13 previously blocked rows to pass, and reclassified `MASTER-006` as a precise schema-parity blocker. `AUTH-012` is closed by production migration and isolated runtime proof. The only remaining formal failures are `WA-008`, `OFF-009`, and `OFF-010`. Historical row-level actuals remain in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/`, and blocked rows remain evidence debt rather than failures.
+
+Current remediation note (2026-07-13): the historical runtime-rerun counts above remain the immutable 2026-07-10 campaign result; the active formal matrix has 266 pass, 3 fail, 107 blocked, and 1 not applicable. Formal blocked-row Batch 3 closed `UX-003`, `BILL-008`, and `AUTH-015`; Batch 4 closed `MASTER-002`, `MASTER-003`, and `MASTER-005`; Batch 5 closed `SETUP-011`; Batch 6 closed `SETUP-007` with controlled request-failure, retry, database, and refresh proof. `NEEDS-AUDIT-002` separately records legacy pass rows whose Actual text conflicts with their expectation, so these mechanical totals are not final pilot-readiness truth.
+
 ## Coverage Ledger
 
 All failed matrix rows are represented below. Some IDs also appear in detailed clusters when they block more than one invariant.
 
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
-| P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
-| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-017` |
-| P1 | `PROD-B` production boundary, assignment, and setup validity | `MASTER-014`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P0 | `SEC-B` privileged action and lockdown enforcement | None — `AUTH-008` closed 2026-07-11 |
+| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `WA-008` (`TECH-009` and `SEC-017` closed) |
+| P1 | `PROD-B` production boundary, assignment, and setup validity | None — `MASTER-014`, `SIGNOFF-01`, and `SIGNOFF-02` closed |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `SIGNOFF-01`, `SIGNOFF-02` |
-| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | None — `SIGNOFF-01` and `SIGNOFF-02` closed |
+| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | None — unresolved payroll rows are blocked evidence debt, not formal failures |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `OFF-009` |
-| P4 | `OFF-A` offline, cache, and public claims | `OFF-007`, `OFF-010` |
-| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006` |
+| P4 | `OFF-A` offline, cache, and public claims | `OFF-010` (`OFF-007` closed 2026-07-11) |
+| P5 | `REL-A` release gates and observability | None — `TECH-001`, `TECH-005`, and `TECH-006` closed |
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
-Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-015`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
+Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `AUTH-015` is closed by cross-session revocation proof. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
 
-Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed; `SEC-B` remains open for `AUTH-008`. Batch 20 moved the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`; Batch 21D closes them with disposable QA runtime proof.
+Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed. `SEC-B` is now also closed after `AUTH-008` received fail-closed source coverage and fresh QA Redis proof on 2026-07-11. Batch 20 moved the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`; Batch 21D closes them with disposable QA runtime proof.
 
 Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
 
@@ -38,7 +44,7 @@ Closed in Batch 7 and removed from the open failure coverage rows: date-only tim
 
 Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). Closed in Batch 8B and removed from the open failure coverage rows: Sentry release/source-map evidence (`TECH-010`). Closed in Batch 8C and removed from the open failure coverage rows: clean deployed browser/server/Sentry signoff (`SIGNOFF-10`). `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, and rollback/forward-fix evidence are still unavailable.
 
-Closed in Batch 9 and removed from the open failure coverage rows: offline fallback, auth-boundary cache cleanup, offline kharchi truthful de-scope, and privacy/public offline claim truth (`OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, `PAY-028`). `OFF-007` and `OFF-010` remain partial/open because production service-worker update proof with an active draft and throttled slow/intermittent-network runtime proof across core mobile screens are still unavailable. `OFF-009` remains open under unknown-timeout/idempotency scope and was not touched.
+Closed in Batch 9 and removed from the open failure coverage rows: offline fallback, auth-boundary cache cleanup, offline kharchi truthful de-scope, and privacy/public offline claim truth (`OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, `PAY-028`). `OFF-007` was subsequently closed by the 2026-07-11 two-build production-mode update/draft proof. `OFF-010` remains partial/open because throttled slow/intermittent-network runtime proof across core mobile screens is unavailable. `OFF-009` remains open under unknown-timeout/idempotency scope.
 
 Closed in Batch 10 and removed from the open failure coverage rows: estimator/quote/order worker-rate snapshot drift, quote restore draft collision warning, and quote transition shortcut cleanup (`EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, `QUOTE-003`). `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remained open at Batch 10 closeout because they required distinct server-boundary validation, fast-path atomicity/idempotency, order edit audit/produced-meter guard, and below-target completion confirmation work.
 
@@ -66,9 +72,9 @@ Moved from fail to `code_verified` in Batch 24B but still unresolved evidence de
 
 Moved from fail to `code_verified` in Batch 24D but still unresolved evidence debt: estimator rapid double-submit (`EST-017`) and supervisor production date/shift draft isolation (`PROD-022`). Estimator Save Quote and Save & Create Market Run now have a synchronous client-side submit lock; production drafts are scoped by org, user, selected date, and shift, with stale date/shift fetch results ignored. QA/browser proof has not been collected, and `EST-017` does not claim server/database idempotency.
 
-Moved from fail to `code_verified` in Batch 24E but still unresolved evidence debt: master data loom guardrails (`MASTER-002`, `MASTER-005`). Duplicate loom names are guarded in source. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` was later revised from a retroactive unique index to a trigger-backed duplicate guard and reportedly applied to production during the DB push incident; existing duplicate production rows are preserved and future normalized duplicates are reportedly blocked. Controlled QA/browser proof has not been collected, so `MASTER-002` and `MASTER-005` remain `code_verified`, not pass. `MASTER-014` remains fail/open.
+Batch 24E master-data loom evidence debt is closed for `MASTER-002` and `MASTER-005` by formal blocked-row Batch 4 isolated browser/database proof; `MASTER-003` is also closed by the same history-bearing fixture. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` remains the database boundary for normalized duplicates. `MASTER-014` was closed separately by runtime remediation.
 
-Moved from fail to `code_verified` in Batch 24G production reconciliation but still unresolved evidence debt: security audit/export rows (`SEC-015`, `SEC-009`). A production DB push reportedly applied `20260705100000_batch_24g_security_audit_guardrails.sql` and `20260705182406_harden_settings_audit_function.sql` while linked to production ref `vzhwahudircrpgtitwzd`; no rollback or additional DB command was run during reconciliation. `SEC-015` still needs controlled settings-change audit-row proof with redacted payloads. `SEC-009` still needs owner export browser/security proof and audit-log EXPORT proof. `SEC-017` and `AUTH-008` remain fail/open.
+Moved from fail to `code_verified` in Batch 24G production reconciliation but still unresolved evidence debt: security audit/export rows (`SEC-015`, `SEC-009`). A production DB push reportedly applied `20260705100000_batch_24g_security_audit_guardrails.sql` and `20260705182406_harden_settings_audit_function.sql` while linked to production ref `vzhwahudircrpgtitwzd`; no rollback or additional DB command was run during reconciliation. `SEC-015` still needs controlled settings-change audit-row proof with redacted payloads. `SEC-009` still needs owner export browser/security proof and audit-log EXPORT proof. `SEC-017` remains fail/open; `AUTH-008` closed on 2026-07-11.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -90,9 +96,9 @@ Resolution:
 
 Required proof: satisfied by Batch 1A runtime/test/browser evidence, migration alignment, and active matrix promotion to pass.
 
-## P0 SEC-B - Privileged Action and Lockdown Enforcement Is Inconsistent
+## Closed P0 SEC-B - Privileged Action and Lockdown Enforcement
 
-Failures: `AUTH-008`
+Failures: none. `AUTH-008` closed on 2026-07-11.
 
 Code-verified evidence debt: none for payroll settlement/reversal boundary; `PAY-018` and `PAY-020` are closed by Batch 21D.
 
@@ -106,7 +112,7 @@ Impact: join-code brute-force/rate-limit coverage remains open. Batch 1 closed a
 
 Remediation direction:
 
-- Add join-code attempt tracking/rate limiting without noisy production lockout.
+- Closed in runtime-remediation 2026-07-11: dedicated fail-closed validation/join IP buckets enforce 10 attempts per 10 minutes; fresh QA Redis proof rejected attempt 11 for an isolated synthetic key.
 - Keep Batch 21D payroll RPC revocation and hardened settlement/reversal wrapper proof under regression.
 - Keep Batch 1 access-code and locked-tenant boundaries under regression while closing the remaining SEC-B rows.
 
@@ -114,7 +120,7 @@ Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser 
 
 ## P0 SEC-C - External Webhooks and Compliance Surfaces Do Not Fail Closed
 
-Failures: `TECH-009`, `WA-008`, `SEC-017`
+Failures: `WA-008` (`TECH-009` and `SEC-017` are closed)
 
 Blocked evidence debt: `SEC-011`, `SEC-018`
 
@@ -124,11 +130,11 @@ Evidence: `logs/technical-gates.md`, `logs/security-review.json`, `logs/security
 
 Invariant: externally supplied data and compliance exports must be authenticated, audited, redacted, and consistent with the product's actual behavior.
 
-Impact: unsigned WhatsApp status callbacks can be accepted when `META_APP_SECRET` is absent; owner export and settings audit are source-fixed/code_verified by Batch 24G but still lack controlled browser/security/audit-row proof; public legal/offline claims do not match implementation and require counsel review. Batch 15 closes the payslip filename safety slice (`SEC-014`) with deterministic source/test proof.
+Impact: the deployed QA webhook now fails closed when verification/signing configuration is absent, but `WA-008` still lacks a valid signed delivery-row update because QA has no `META_APP_SECRET`. Owner export and settings audit remain source-fixed/code_verified and still lack controlled browser/security/audit-row proof; the fresh isolated Premium Settings route also rendered blank main content and needs focused debugging. Public legal/offline claims still require counsel review. Batch 15 closes the payslip filename safety slice (`SEC-014`) with deterministic source/test proof.
 
 Remediation direction:
 
-- Fail WhatsApp webhook before DB lookup when signature secret is absent.
+- Configure the approved QA signing secret and prove one valid signed callback updates exactly one intended delivery row while invalid signatures remain rejected.
 - Treat the Batch 24G owner export as source-fixed only until redaction and audit events are proven in controlled QA/browser/security proof.
 - Treat the Batch 24G settings audit migrations as production-reconciled/source-fixed only until settings-change audit rows with redacted payloads are proven in controlled QA.
 - Align privacy/offline wording to implementation or implement the promised behavior.
@@ -183,9 +189,9 @@ Required proof: satisfied by disposable Batch 6 runtime proof with 26 assertions
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
-Failures: `MASTER-014`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: None — `MASTER-014`, `SIGNOFF-01`, and `SIGNOFF-02` are closed by isolated runtime proof.
 
-Code-verified evidence debt: `MASTER-002`, `MASTER-005`, `SETUP-011`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`
+Code-verified evidence debt: `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/production-logging-source-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`, `logs/setup-master-source-evidence-20260624.json`
 
@@ -198,7 +204,7 @@ Remediation direction:
 - Apply the Batch 22 migration in QA after review and run rollback-only/API proof for active order/run, assignment, non-negative meters, and target/cancel constraints.
 - Capture QA/browser proof for day-only day-shift logging, night-shift missing-worker accountability, and substitute/reassignment behavior before pass.
 - Apply or DB-boundary-prove the Batch 24E duplicate loom-name migration in QA after duplicate data review, then prove duplicate add/bulk-add/rename blocking and allowed different-org/different-name behavior.
-- Add atomic assignment updates for `MASTER-014`.
+- Keep the atomic assignment RPC, caller-RLS, rollback, and concurrent last-writer proof under regression while closing the remaining production-boundary evidence debt.
 
 Required proof: Batch 22 source tests are present for `ORDER-005`, `ORDER-009`, and `PROD-011`; pass still requires migration application evidence plus rollback-only/API probes for negative meters, cancelled/completed order, over-target, and assignment mismatch, and valid production/correction runtime proof that generated stock/order progress/payroll basis remain consistent.
 Batch 24B source tests are present for `PROD-013`, `PROD-023`, and `PROD-029`; pass still requires browser proof for large-meter warning/confirmation and restored-draft refresh/crash behavior. `PROD-029` copy review is now satisfied by `output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-PROD-029.json`. Batch 24D source tests are present for `PROD-022`; pass still requires browser proof for org/user/date/shift draft isolation and save payload date/shift. Batch 24E source tests are present for `MASTER-002` and `MASTER-005`; pass still requires migration/DB-boundary proof for normalized duplicate loom names and QA/browser proof for protected delete/deactivate/unlink messaging and unused-loom behavior. Batch 24F source tests are present for `PROD-002` and `PROD-004`; pass still requires browser proof for selected-shift day-only/no-night-worker behavior and substitute/reassignment accountability.
@@ -428,9 +434,11 @@ Remediation direction:
 
 Required proof: rapid double-submit tests, timeout simulation, and runtime reconciliation evidence. Batch 4 supplies payment duplicate-submit proof only. Batch 24D supplies source/test proof for estimator rapid double-submit UI guarding only; browser rapid double-click proof and any future server/database idempotency design remain required before `EST-017` can pass. `OFF-009` remains open for unknown-outcome timeout messaging and reconciliation across high-value mutations.
 
+2026-07-13 OFF-009 update: the supervisor shift-log reference flow now has a tested unknown-outcome timeout boundary and authoritative post-timeout lookup. Production browser evidence proves the UI does not misreport the delayed request as a definite failure and prevents blind retry when state cannot be confirmed. Promotion remains blocked because production's unrelated `UPDATE requires a WHERE clause` shift-log failure creates zero rows, so the commit-succeeded/response-lost reconciliation branch and duplicate-row invariant cannot yet be exercised. Formal status remains `fail`; closeout status is `code_verified_but_not_runtime_verified`.
+
 ## P4 OFF-A - Offline, Cache, and Public Claims Are Not Pilot-Safe
 
-Failures: `OFF-007`, `OFF-010`
+Failures: `OFF-010`. `OFF-007` closed on 2026-07-11.
 
 Evidence: `logs/offline-pwa-evidence.json`, `logs/billing-offline-time-code-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`
 
@@ -444,23 +452,88 @@ Remediation direction:
 - Capture throttled slow/intermittent-network runtime proof across core mobile screens.
 - Keep unsupported offline production/kharchi/payroll/sale/dispatch/payment write promises removed unless a real sync architecture is implemented and retested.
 
-Required proof: Batch 9 satisfies browser offline route, logout/account-switch cache cleanup, IndexedDB queue cleanup, offline kharchi de-scope, and policy wording review for `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`. Remaining proof is production service-worker update runtime evidence for `OFF-007` and throttled slow/intermittent-network runtime evidence for `OFF-010`.
+Required proof: Batch 9 satisfies browser offline route, logout/account-switch cache cleanup, IndexedDB queue cleanup, offline kharchi de-scope, and policy wording review for `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`. The 2026-07-11 runtime-remediation campaign closes `OFF-007` with a two-build production-mode service-worker update and active-draft proof. Remaining proof is throttled slow/intermittent-network runtime evidence for `OFF-010`.
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 
-Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, `TECH-012`
+Open failures/blockers: `TECH-011`, `TECH-012`. Freshly closed: `TECH-001`, `TECH-005`, `TECH-006`.
 
 Evidence: `logs/technical-gates.md`, `logs/clock-and-deployment-evidence.json`
 
 Invariant: a pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready.
 
-Impact: `npm ci` fails, high-severity audit advisories remain, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts. Batch 8C closes clean deployed signoff after the Sentry DSN fix, Vercel runtime log review, and Sentry no-error release inspection.
+Impact: clean install and the high/critical dependency-audit gates are now repeatable. Restore/rollback remain unexercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts. Batch 8C closes clean deployed signoff after the Sentry DSN fix, Vercel runtime log review, and Sentry no-error release inspection.
 
 Remediation direction:
 
-- Repair lockfile and audit advisories.
+- Retain the repaired lockfile and zero-high/critical audit gate; track the two remaining moderate PostCSS/Next advisories separately.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
 - Exercise backup restore into disposable project and document rollback/forward-fix.
 
-Required proof: command output, CI/deployment-provider run where required, migration metadata, clean deployed browser/server/Sentry smoke, restore evidence, and rollback runbook exercise.
+Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. Remaining proof is CI/deployment-provider evidence where required, restore evidence, and rollback runbook exercise.
+
+## Runtime Rerun Findings - 2026-07-10
+
+### `AUTH-012` - Authenticated cross-tenant organization read
+
+Status: `fail`. Severity: high until the exposed organization columns and policy scope are reviewed.
+
+Root cause group: organization-table RLS/policy boundary. An Org A authenticated client queried a guessed Org D organization ID and received the row. The same client received no Org D machine rows and could not mutate the Org D machine, so the failure is narrower than a general tenant-boundary collapse.
+
+Evidence: `output/qa/runtime-rerun-20260710/evidence/AUTH-012-cross-org-production.json`.
+
+Required fix/proof:
+
+- Inspect active `organizations` SELECT policies and any helper functions/views involved in authenticated reads.
+- Define the minimum organization fields, if any, that supervisors joining by code legitimately need before membership.
+- Add an explicit two-tenant regression test for organization guessed-ID reads.
+- Re-run organization, profile, machine, worker, and representative server-action read/mutation probes before promotion.
+
+### `MASTER-006` - Piece-rate worker decimal-rate scenario conflicts with runtime model
+
+Status: `blocked` pending QA schema parity and runtime proof against the authoritative assignment-rate model.
+
+Root cause group: product contract drift. The Add Piece Rate Worker runtime form accepts identity/compliance fields but no decimal rate. Current production/payroll code derives and snapshots rate from order/quality/costing context instead of a worker master rate.
+
+Disposition and required proof:
+
+- The current product contract is authoritative: onboarding explicitly does not collect worker rates; costing/quality provides the work rate, and `machine_operator_assignments.rate` records the effective assignment rate and pay mode.
+- The matrix scenario is rewritten to exercise a decimal per-meter assignment rate, its production-log snapshot, and payroll output without mutating historical logs.
+- QA does not yet contain `machine_operator_assignments` or the complete machine-operator payroll migration chain, and applying that broad backfill to a shared QA database would exceed the isolated-fixture safety boundary. The row therefore becomes blocked rather than being falsely passed or left failed against an obsolete worker-master field.
+- Runtime promotion requires a disposable schema-parity environment with `20260709080948_machine_operator_payroll_v2.sql` and the forward safe-update repair applied, followed by exact decimal assignment → production log → payroll reconciliation.
+
+### Runtime blockers retained
+
+- `AUTH-005`: expired/reused reset token and final password mutation.
+
+Closed 2026-07-13: `SETUP-012` old-code rejection and current-code intended-organization resolution passed in a fresh isolated QA tenant, complementing the existing rename/regeneration persistence proof.
+
+Closed 2026-07-13: `SETUP-007` passed one controlled pre-mutation 503, incomplete/enabled-retry UI proof, zero-row post-failure reconciliation, exactly-one-row retry reconciliation, and refresh-stable completion. No migration or deployment was involved.
+
+### `MASTER-009` - Inactive assigned worker remains visibly complete
+
+Status: `fail`.
+
+An authenticated QA owner deactivated the standing piece-rate worker. The authoritative worker row became inactive, but Machines continued displaying that worker on both shifts and the loom as Active; Factory Today continued marking Assign workers to looms Done. A client hydration mismatch also showed server/client disagreement between Assign Worker and the inactive worker name.
+
+Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-009-deactivate-assigned-worker-production.json`.
+
+Required fix/proof: define how inactive workers terminate or invalidate standing operator and legacy assignments, make SSR/client loaders agree, make Factory Today use the same active-assignment rule, and retain historical production attribution by immutable log snapshots.
+
+### Shift-log submission and activation-rule blockers
+
+- Shift-log Save returned `UPDATE requires a WHERE clause` twice and created zero production rows. This blocks `MASTER-011`, `MASTER-012`, and any later row needing new production history.
+- Application activation logic accepts either a day or night assignment, while the deployed database constraint requires both day and night workers plus an active order. Align source and deployed database rules before reproof.
+
+### Runtime Rerun Batch 3
+
+Batch 3 added no new failure or blocker. `MASTER-013`, `MASTER-015`, `EST-002`, `EST-004`, `EST-006`, `EST-007`, `EST-008`, `EST-009`, `EST-010`, and `EST-013` are runtime-proven pass. Existing shift-log, tenant-read, worker-rate-contract, and inactive-assignment findings remain open.
+
+### Runtime remediation superseding closeout — SIGNOFF-01 / SIGNOFF-02
+
+Fresh isolated QA proof on 2026-07-13 supersedes the historical open references above. Factory Today was repaired to stop selecting nonexistent `production_logs.market_run_id` and `production_logs.created_at`; it now follows the order relationship and uses `submitted_at`. The owner UI displayed 50m and a clear-factory state, while database reconciliation proved one accounted active loom and matching log/loom/dated-assignment order and worker attribution. Both rows are now `PASS`; the remaining failures are `AUTH-012`, `WA-008`, `OFF-009`, and `OFF-010`.
+
+### AUTH-012 superseding production closeout — 2026-07-13
+
+The historical AUTH-012 failure above is closed. Production migration `20260710210828` removed the public permissive organization lookup policy, and the policy catalog now contains only authenticated tenant SELECT and owner tenant UPDATE. A disposable two-tenant production probe passed own read/update and cross-tenant organization/profile/machine denial plus persisted non-mutation. Exact cleanup reconciled all synthetic rows and auth users to zero. Remaining formal failures are `WA-008`, `OFF-009`, and `OFF-010`.

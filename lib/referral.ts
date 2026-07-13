@@ -1,4 +1,6 @@
+import 'server-only'
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import crypto from 'crypto';
 
 type ReferralDiscountWindow = {
@@ -125,7 +127,11 @@ export async function getReferralStats(orgId: string) {
 }
 
 export async function applyReferralCode(code: string, refereeOrgId: string) {
-    const supabase = await createClient();
+    // This function is called only after the server has derived refereeOrgId
+    // from the newly created/authorized owner organization. referral_uses has
+    // intentionally read-only owner RLS, so the guarded server write uses the
+    // service client while preserving self-referral and unique-use checks.
+    const supabase = createAdminClient();
     
     // 1. Find code
     const { data: codeRow, error: codeErr } = await supabase

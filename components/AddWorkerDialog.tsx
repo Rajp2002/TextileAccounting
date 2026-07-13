@@ -38,6 +38,19 @@ const FIXED_ROLES = [
     { value: 'other', defaultSalary: 0 },
 ]
 
+const AGE_VERIFICATION_METHODS = [
+    { value: 'government_id', label: 'Government ID' },
+    { value: 'birth_certificate', label: 'Birth certificate' },
+    { value: 'school_record', label: 'School record' },
+    { value: 'other', label: 'Other verified record' },
+] as const
+
+function adultCutoffDate() {
+    const cutoff = new Date()
+    cutoff.setFullYear(cutoff.getFullYear() - 18)
+    return cutoff.toISOString().slice(0, 10)
+}
+
 // Define Zod Schema for validation
 const workerSchema = z.object({
     workerType: z.enum(['meter', 'fixed']),
@@ -48,7 +61,17 @@ const workerSchema = z.object({
     pf_esi_enrolled: z.boolean().default(false),
     esi_number: z.string().optional(),
     pf_number: z.string().optional(),
+    date_of_birth: z.string().min(1, 'Verified date of birth is required'),
+    age_verification_method: z.enum(['government_id', 'birth_certificate', 'school_record', 'other']),
+    age_verification_reference: z.string().trim().min(4, 'Enter a non-sensitive evidence reference (at least 4 characters)'),
 }).superRefine((data, ctx) => {
+    if (data.date_of_birth && data.date_of_birth > adultCutoffDate()) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Worker must be at least 18 years old',
+            path: ['date_of_birth'],
+        })
+    }
     if (data.workerType === 'fixed') {
         if (!data.role) {
             ctx.addIssue({
@@ -87,7 +110,6 @@ interface AddWorkerDialogProps {
 
 export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
     const [open, setOpen] = useState(false)
-    const [ageConfirmed, setAgeConfirmed] = useState(false)
     const [whatsappPhone, setWhatsappPhone] = useState('')
     const [whatsappLang, setWhatsappLang] = useState<'en' | 'hi' | 'gu'>('en')
     const [whatsappConsent, setWhatsappConsent] = useState(false)
@@ -116,7 +138,10 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
             salary: 0,
             pf_esi_enrolled: false,
             esi_number: '',
-            pf_number: ''
+            pf_number: '',
+            date_of_birth: '',
+            age_verification_method: 'government_id',
+            age_verification_reference: '',
         }
     })
 
@@ -134,6 +159,9 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                     pf_esi_enrolled: data.pf_esi_enrolled,
                     esi_number: data.esi_number?.trim() || null,
                     pf_number: data.pf_number?.trim() || null,
+                    date_of_birth: data.date_of_birth,
+                    age_verification_method: data.age_verification_method,
+                    age_verification_reference: data.age_verification_reference.trim(),
                 })
             } else {
                 result = await addFixedWorker({
@@ -143,6 +171,9 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                     pf_esi_enrolled: data.pf_esi_enrolled,
                     esi_number: data.esi_number?.trim() || null,
                     pf_number: data.pf_number?.trim() || null,
+                    date_of_birth: data.date_of_birth,
+                    age_verification_method: data.age_verification_method,
+                    age_verification_reference: data.age_verification_reference.trim(),
                 })
             }
             if (result.error) throw new Error(result.error)
@@ -173,7 +204,6 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
             setWhatsappPhone('')
             setWhatsappLang('en')
             setWhatsappConsent(false)
-            setAgeConfirmed(false)
             if (onWorkerAdded) {
                 onWorkerAdded()
             }
@@ -199,7 +229,7 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) { reset(); setAgeConfirmed(false) } }}>
+        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) reset() }}>
             <DialogTrigger asChild>
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
@@ -262,6 +292,52 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                             </Label>
                             <Input id="name" placeholder={t('workers.name_placeholder')} {...register('name')} autoFocus />
                             {errors.name && <span className="text-xs text-risk">{errors.name.message}</span>}
+                        </div>
+
+                        <div className="grid gap-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                            <div>
+                                <p className="text-sm font-medium text-body">Adult worker verification</p>
+                                <p className="text-xs text-muted-foreground">Record verified provenance. Do not enter a full Aadhaar or government ID number.</p>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                                <div className="grid gap-1.5">
+                                    <Label htmlFor="worker-date-of-birth">Verified date of birth <span className="text-risk">*</span></Label>
+                                    <Input
+                                        id="worker-date-of-birth"
+                                        type="date"
+                                        min="1900-01-01"
+                                        max={adultCutoffDate()}
+                                        {...register('date_of_birth')}
+                                    />
+                                    {errors.date_of_birth && <span className="text-xs text-risk">{errors.date_of_birth.message}</span>}
+                                </div>
+                                <div className="grid gap-1.5">
+                                    <Label>Verification method <span className="text-risk">*</span></Label>
+                                    <Controller
+                                        name="age_verification_method"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select value={field.value} onValueChange={field.onChange}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    {AGE_VERIFICATION_METHODS.map((method) => (
+                                                        <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="worker-age-reference">Evidence reference <span className="text-risk">*</span></Label>
+                                <Input
+                                    id="worker-age-reference"
+                                    placeholder="Document type + last 4, or internal verification record"
+                                    {...register('age_verification_reference')}
+                                />
+                                {errors.age_verification_reference && <span className="text-xs text-risk">{errors.age_verification_reference.message}</span>}
+                            </div>
                         </div>
 
                         {workerType === 'fixed' && (
@@ -352,17 +428,11 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                             )}
                         </div>
 
-                        <div className="mt-2 border-t border-hairline pt-4">
-                            <div className="flex items-start gap-2.5 px-1">
-                                <input type="checkbox" id="age-confirm" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 cursor-pointer rounded border-hairline text-saffron focus:ring-saffron" />
-                                <label htmlFor="age-confirm" className="cursor-pointer text-xs leading-snug text-muted-foreground">I confirm this worker is 18 years of age or older</label>
-                            </div>
-                        </div>
                     </div>
 
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={mutation.isPending}>{t('common.cancel')}</Button>
-                        <Button type="submit" disabled={mutation.isPending || !ageConfirmed} className="transition-all">
+                        <Button type="submit" disabled={mutation.isPending} className="transition-all">
                             {mutation.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('workers.adding')}</>) : t('workers.add_worker')}
                         </Button>
                     </DialogFooter>

@@ -31,7 +31,7 @@ Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
 
 Security foundation follow-on rows closed in Batch 1B: `SEC-006`, `AUTH-016`
 
-Other follow-on checks that remain open unless separately proven: `AUTH-008`, `AUTH-012`, `AUTH-013`, `SEC-013`. `PAY-018` and `PAY-020` were source-fixed/code_verified by Batch 20 and are closed by Batch 21D disposable QA runtime proof.
+Other follow-on checks that remain open unless separately proven: `AUTH-012`, `AUTH-013`, `SEC-013`. `AUTH-008` is closed by the 2026-07-11 runtime-remediation proof. `PAY-018` and `PAY-020` were source-fixed/code_verified by Batch 20 and are closed by Batch 21D disposable QA runtime proof.
 
 ### Acceptance Criteria
 
@@ -431,7 +431,15 @@ Acceptance:
 - Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, and `SEC-016` with offline route proof, awaited auth-boundary cache cleanup, IndexedDB queue cleanup, and privacy/public copy truth.
 - Batch 3 closes `SALE-015` for rapid duplicate stock-sale submit. Other idempotency/offline/cache rows remain open.
 - Batch 4 closes commercial receivable payment duplicate-submit idempotency as part of `COMM-010` and `SIGNOFF-09`. `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
-- Batch 9 leaves `OFF-007` partial pending production service-worker update proof with an active draft and leaves `OFF-010` partial pending throttled slow/intermittent-network runtime proof across core mobile screens.
+
+### OFF-009 production retest after shift-write repair
+
+1. Provision the isolated OFF-009 supervisor fixture and confirm the target shift has zero production logs.
+2. Submit one 42m shift entry through the one-shot delay proxy so the server commit completes but the response arrives after the 15-second client boundary.
+3. Require the UI to identify the outcome as unknown while checking, then resolve to the reconciled-success message from authoritative state; it must not show a definite failure or invite an immediate retry.
+4. Reconcile exactly one production row for the fixture machine/date/shift with 42m, then verify a second row was not created.
+5. Capture browser/console and database evidence, run exact fixture cleanup, and only then promote the formal `OFF-009` row from `fail` to `pass`.
+- Batch 9 originally left `OFF-007` partial; the 2026-07-11 runtime-remediation campaign now closes it with two-build production-mode proof showing the waiting update notice and exact active draft together. `OFF-010` remains partial pending throttled slow/intermittent-network runtime proof across core mobile screens.
 - Batch 24D moves `EST-017` from fail to `code_verified` by adding a synchronous estimator submit lock and focused source tests. It is not pass until browser rapid double-click proof is collected, and it does not claim server/database idempotency.
 
 ## Batch 24G Security Audit And Export Retest
@@ -441,7 +449,35 @@ Production reconciliation note:
 - A Supabase DB push reportedly occurred before reconciliation while linked to production ref `vzhwahudircrpgtitwzd`, applying migration history `20260704120000`, `20260705100000`, and `20260705182406`.
 - The repo is reconciled to that production-applied reality. No rollback and no additional DB command occurred during reconciliation.
 - This incident does not make any row pass-ready.
-- `MASTER-002` still needs controlled duplicate-flow proof; `MASTER-005` still needs browser lifecycle proof; `SEC-015` still needs settings-change audit-row proof with redacted payloads; `SEC-009` still needs owner export browser/security proof and audit-log EXPORT proof; `SEC-017` and `AUTH-008` remain open.
+- `MASTER-002` still needs controlled duplicate-flow proof; `MASTER-005` still needs browser lifecycle proof; `SEC-015` still needs settings-change audit-row proof with redacted payloads; `SEC-009` still needs owner export browser/security proof and audit-log EXPORT proof, plus focused debugging of the blank Premium Settings content observed in isolated QA. `SEC-017` and `AUTH-008` are closed by runtime-remediation proof.
+
+Formal blocked-row Batch 3 completed 2026-07-13: `UX-003` passed retained-value validation recovery with no partial join rows; `BILL-008` passed valid/self/duplicate authenticated referral API and database proof; `AUTH-015` passed two-independent-session revocation proof after server enforcement was added. Keep the focused 5-test pack and exact cleanup probe under regression.
+
+## Runtime Rerun Reproof Plan - Checkpoint Through Queue 16
+
+Use only strongly QA-prefixed test tenants. Verify project ref before database work, reconcile exact IDs before and after every destructive lifecycle test, and preserve fixtures only while they are required by the next queued row.
+
+- `AUTH-005`: use an isolated browser session for token reuse, verify an expired token, obtain explicit confirmation before submitting the final password change, and verify the resulting session behavior.
+- `AUTH-012`: after policy repair, repeat Org A guessed-ID reads for Org D organization/profile/machine/worker rows and representative server actions; assert no data and no mutation.
+- `SETUP-007` completed 2026-07-13: a same-origin proxy intercepted exactly one setup save with a controlled 503 before mutation. The step remained incomplete, the retry message appeared, the save action re-enabled, and database count stayed zero; retry created exactly one machine and a fresh load retained the completed step. Evidence: `output/qa/runtime-remediation-20260711/evidence/SETUP-007-formal-batch6.json`.
+- `SETUP-011` completed 2026-07-13: an isolated Both-mode fixture supplied an estimate, active order and linked loom, piece-rate and fixed workers, day/night assignments, supervisor, payroll config, and active plan. After repairing the deferred checklist Strict Mode lifecycle, Factory Today rendered 11 of 14 steps with `Log first production` next before and after refresh.
+- `SETUP-012` completed 2026-07-13: a retained prior code failed after rotation, while the current code resolved only the intended isolated QA organization and exposed its join form; no join was submitted and no code value was recorded.
+- `MASTER-002` completed 2026-07-13: isolated bulk UI and database-boundary proof covered duplicate types with distinct generated names, normalized insert/rename rejection, same-type different-name allowance, and same-name cross-tenant allowance.
+- `MASTER-003` completed 2026-07-13: an active history-bearing loom retained the same target, two standing assignments, one dated assignment, and one production log after name/type edit and refresh.
+- `MASTER-005` completed 2026-07-13: owner deactivate/delete were rejected for the protected loom with all reference reasons visible and history intact; a separate unused loom delete persisted. Null-target unlink remains source-regression-covered and was not used to broaden this runtime row beyond its stated deactivate/delete scenario.
+- `MASTER-006`: resolve the worker-rate versus costing-rate contract, then run the decimal value through its authoritative input, production snapshot, payroll preview, settlement, and refresh.
+
+Continue the main queue at `MASTER-008` and do not infer blocked-row success from later dependent workflows.
+
+Batch 2 continuation result:
+
+- `MASTER-008` passed and needs no immediate rerun unless payroll calculation code changes.
+- Repair shift-log submission so the scoped update includes an explicit tenant/record predicate; prove zero partial rows on failure and one exact row per loom/shift on success.
+- Align app and database loom-activation requirements, then prove intended day-only and two-shift configurations.
+- Re-run `MASTER-009` after inactive-worker assignment invalidation is fixed; verify Machines and Factory Today become incomplete while pre-deactivation logs retain worker attribution.
+- Re-run `MASTER-011` with Worker A standing assignment, Worker B dated substitution, a successful log, and payroll attribution to Worker B only for that shift.
+- Re-run `MASTER-012` with context A log, target replacement to context B, context B log, and immutable order/rate snapshots on both historical rows.
+- Main queue continuation starts at queue item 21; production-history-dependent rows remain blocked until the shared log-save prerequisite passes.
 
 Commands:
 
@@ -486,4 +522,31 @@ Release checks:
 
 Acceptance:
 
-- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, and `TECH-012` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`. `TECH-010` is closed by Batch 8B Sentry release/source-map evidence for deployed release `2538da25b2fa`. `SIGNOFF-10` is closed by Batch 8C clean deployed browser/server/Sentry evidence.
+- `TECH-001`, `TECH-005`, and `TECH-006` have fresh command proof: repaired-lockfile `npm ci` succeeds and both runtime-only and full audits contain zero high/critical findings. `TECH-011` and `TECH-012` still require restore/rollback evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`. `TECH-010` is closed by Batch 8B Sentry release/source-map evidence for deployed release `2538da25b2fa`. `SIGNOFF-10` is closed by Batch 8C clean deployed browser/server/Sentry evidence.
+
+## Runtime Rerun Batch 3 Continuation
+
+- Queue items 21-30 all passed with browser/runtime and tenant-scoped DB proof.
+- Continue at `EST-014` (queue item 31), followed by `EST-015`, `EST-017`, `EST-018`, and quote/order lifecycle rows.
+- Do not classify an interaction while a required setup overlay is intercepting the target control.
+- Continue to use disposable, strongly prefixed QA records and reconcile cleanup after each lifecycle.
+
+## Runtime Rerun 2026-07-10 Follow-up
+
+- Repair and directly rerun the remaining confirmed runtime failure: `AUTH-012`. `MASTER-006` is now a schema-parity blocker against the rewritten assignment-rate contract. `UX-007`, `EST-014`, `MASTER-009`, `SALE-010`, `SALE-012`, `SALE-014`, and `DASH-004` passed fresh QA runtime proof in `runtime-remediation-20260711`.
+- Keep the 97 blocked rows blocked until their exact prerequisite is available; do not convert setup, environment, safety, external-provider, destructive, timed, device, or fixture gaps into product failures.
+- For security-sensitive rows, use a disposable tenant/project or purpose-built simulator and obtain explicit scope before replay, invalid-signature, XSS, CSRF, erasure, or destructive audit tests.
+- Reconcile outcomes back into `output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md`; the current runtime campaign has no remaining `code_verified` or `not_run` rows.
+
+### Runtime remediation superseding closeout — SIGNOFF-01 / SIGNOFF-02
+
+- The current-run owner reproof is complete. Factory Today displayed 50m and `Factory is clear today.` after its production query was aligned to the deployed schema.
+- Database readback proved the only active loom was accounted for and that log, loom, dated assignment, active order, and day worker attribution all matched.
+- `SIGNOFF-01` and `SIGNOFF-02` are `PASS`; historical statements above that they remain open are retained only as batch history and are superseded by this closeout.
+
+### AUTH-012 superseding production closeout — 2026-07-13
+
+- Migration `20260710210828` is applied in production and recorded in migration history.
+- Post-deployment catalog contains no public/true organization SELECT policy.
+- Fresh production reproof passed own organization read/update, cross-tenant organization/profile/machine non-disclosure, cross-tenant organization/machine mutation denial, and service-role non-mutation reconciliation.
+- Exact synthetic cleanup passed. `AUTH-012` is now `PASS`; earlier open/retest instructions are retained only as historical batch context.

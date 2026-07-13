@@ -75,7 +75,6 @@ function numericValue(value: unknown): number {
 }
 
 type DbPrimitivePayload = Record<string, string | number | boolean | null>
-type DbMutationError = { code?: string; message?: string; details?: string } | null
 
 type MachineLifecycleSupabase = Awaited<ReturnType<typeof createServerClient>>
 type MachineOrderStatusRelation = { status?: string | null } | Array<{ status?: string | null }> | null
@@ -499,34 +498,26 @@ export async function updateMachineAssignment(
     machineId: string,
     workerId: number,
     shift: 'day' | 'night',
-    isExisting: boolean
+    _isExisting: boolean
 ) {
+    void _isExisting // retained for backwards-compatible callers; never trusted
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const machineParsed = safeParse(UuidSchema, machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
 
-    let error: DbMutationError = null
-    if (isExisting) {
-        const { error: updateError } = await supabase
-            .from('machine_assignments')
-            .update({ worker_id: workerId })
-            .eq('machine_id', machineParsed.data)
-            .eq('shift', shift)
-            .eq('org_id', profile.org_id)
-        error = updateError
-    } else {
-        const { error: insertError } = await supabase
-            .from('machine_assignments')
-            .insert({
-                machine_id: machineParsed.data,
-                worker_id: workerId,
-                shift,
-                org_id: profile.org_id
-            })
-        error = insertError
-    }
+    // Always upsert by the authoritative unique key. A stale client-side
+    // `isExisting` snapshot must not turn a concurrent edit into a zero-row
+    // update that is incorrectly reported as success.
+    const { error } = await supabase
+        .from('machine_assignments')
+        .upsert({
+            machine_id: machineParsed.data,
+            worker_id: workerId,
+            shift,
+            org_id: profile.org_id,
+        }, { onConflict: 'org_id,machine_id,shift' })
 
     if (error) {
         console.error('Failed to update assignment:', error)
@@ -699,6 +690,9 @@ export async function upsertFixedWorker(data: {
     phone?: string
     language?: 'en' | 'hi' | 'gu'
     consentGiven?: boolean
+    date_of_birth?: string
+    age_verification_method?: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+    age_verification_reference?: string
 }) {
     const { profile, user } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -736,7 +730,15 @@ export async function upsertFixedWorker(data: {
             .eq('org_id', profile.org_id)
         if (error) { console.error(error); return { error: 'Failed to update worker.' } }
     } else {
+        if (!data.date_of_birth || !data.age_verification_method || !data.age_verification_reference?.trim()) {
+            return { error: 'Verified adult date of birth and age evidence reference are required.' }
+        }
         updatePayload.org_id = profile.org_id;
+        updatePayload.date_of_birth = data.date_of_birth
+        updatePayload.age_verification_method = data.age_verification_method
+        updatePayload.age_verification_reference = data.age_verification_reference.trim()
+        updatePayload.age_verified_at = new Date().toISOString()
+        updatePayload.age_verified_by = user.id
         const { data: inserted, error } = await supabase
             .from('fixed_workers')
             .insert(updatePayload)

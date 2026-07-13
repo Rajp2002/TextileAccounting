@@ -34,7 +34,12 @@ Deno.serve(async (req) => {
     const challenge = url.searchParams.get("hub.challenge");
 
     // The VERIFY_TOKEN should match what you enter in the Meta Developer Console.
-    const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") ?? Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") ?? "weavly_webhook_verify";
+    const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") ?? Deno.env.get("META_WEBHOOK_VERIFY_TOKEN");
+
+    if (!VERIFY_TOKEN) {
+      console.error("[whatsapp-webhook] Verification token not configured; rejecting verification request");
+      return new Response("Webhook verification token not configured", { status: 500 });
+    }
 
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
       console.log("[whatsapp-webhook] Verification successful");

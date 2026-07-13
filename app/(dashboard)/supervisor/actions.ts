@@ -644,8 +644,11 @@ export async function addMeterWorker(data: {
     pf_esi_enrolled: boolean
     esi_number?: string | null
     pf_number?: string | null
+    date_of_birth: string
+    age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+    age_verification_reference: string
 }) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
     
     // Set actor context so the audit trigger captures the ID instead of NULL since we are using requireRole which sets the user JWT natively
@@ -662,6 +665,11 @@ export async function addMeterWorker(data: {
             pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
+            date_of_birth: data.date_of_birth,
+            age_verification_method: data.age_verification_method,
+            age_verification_reference: data.age_verification_reference.trim(),
+            age_verified_at: new Date().toISOString(),
+            age_verified_by: user.id,
             org_id: profile.org_id
         })
         .select('id')
@@ -677,9 +685,15 @@ export async function addMeterWorker(data: {
  * Returns all inserted worker IDs for subsequent phone-number saves.
  */
 export async function addMeterWorkersBulk(
-    workers: { name: string; pf_esi_enrolled: boolean }[]
+    workers: Array<{
+        name: string
+        pf_esi_enrolled: boolean
+        date_of_birth: string
+        age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+        age_verification_reference: string
+    }>
 ) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     if (!workers.length) return { error: 'No workers to add.' }
@@ -694,6 +708,11 @@ export async function addMeterWorkersBulk(
             is_active: true,
             pf_esi_enrolled: w.pf_esi_enrolled,
             pf_esi_eligible: w.pf_esi_enrolled,
+            date_of_birth: w.date_of_birth,
+            age_verification_method: w.age_verification_method,
+            age_verification_reference: w.age_verification_reference.trim(),
+            age_verified_at: new Date().toISOString(),
+            age_verified_by: user.id,
             org_id: profile.org_id,
         }
     })
@@ -725,8 +744,11 @@ export async function addFixedWorker(data: {
     pf_esi_enrolled: boolean
     esi_number?: string | null
     pf_number?: string | null
+    date_of_birth: string
+    age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+    age_verification_reference: string
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
     
     const { data: inserted, error } = await supabase
@@ -740,6 +762,11 @@ export async function addFixedWorker(data: {
             pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
+            date_of_birth: data.date_of_birth,
+            age_verification_method: data.age_verification_method,
+            age_verification_reference: data.age_verification_reference.trim(),
+            age_verified_at: new Date().toISOString(),
+            age_verified_by: user.id,
             org_id: profile.org_id
         })
         .select('id')
@@ -1081,7 +1108,7 @@ export async function upsertShiftAssignment(data: {
     order_id: string | null
     rate_per_m: number
 }) {
-    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const [machineParsed, shiftParsed] = [
@@ -1091,75 +1118,21 @@ export async function upsertShiftAssignment(data: {
     if ('error' in machineParsed) return { error: machineParsed.error }
     if ('error' in shiftParsed) return { error: shiftParsed.error }
 
-    if (data.order_id !== null) {
-        const orderParsed = safeParse(UuidSchema, data.order_id)
-        if ('error' in orderParsed) return { error: orderParsed.error }
+    const orderParsed = data.order_id === null ? null : safeParse(UuidSchema, data.order_id)
+    if (orderParsed && 'error' in orderParsed) return { error: orderParsed.error }
 
-        const { data: order, error: orderError } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('id', orderParsed.data)
-            .eq('org_id', profile.org_id)
-            .eq('status', 'active')
-            .single()
-
-        if (orderError || !order) {
-            if (orderError) console.error('upsertShiftAssignment active production target check error:', orderError)
-            return { error: 'Only active cost analyses or qualities can be assigned to a loom.' }
-        }
-    }
-
-    const { error } = await supabase
-        .from('shift_assignments')
-        .upsert(
-            {
-                org_id: profile.org_id,
-                date: data.date,
-                shift: data.shift,
-                machine_id: machineParsed.data,
-                worker_id: data.worker_id,
-                order_id: data.order_id,
-                rate_per_m: data.rate_per_m,
-                created_by: user.id,
-            },
-            { onConflict: 'org_id,date,shift,machine_id' }
-        )
+    const { error } = await supabase.rpc('upsert_shift_assignment_context_v1', {
+        p_date: data.date,
+        p_shift: shiftParsed.data,
+        p_machine_id: machineParsed.data,
+        p_worker_id: data.worker_id,
+        p_order_id: orderParsed?.data ?? null,
+        p_rate_per_m: data.rate_per_m,
+    })
 
     if (error) {
         console.error('upsertShiftAssignment error:', error)
         return { error: error.message }
-    }
-
-    if (data.worker_id) {
-        const { error: standingWorkerError } = await supabase
-            .from('machine_assignments')
-            .upsert(
-                {
-                    org_id: profile.org_id,
-                    machine_id: machineParsed.data,
-                    shift: shiftParsed.data,
-                    worker_id: data.worker_id,
-                },
-                { onConflict: 'org_id,machine_id,shift' }
-            )
-
-        if (standingWorkerError) {
-            console.error('standing machine assignment error:', standingWorkerError)
-            return { error: standingWorkerError.message }
-        }
-    }
-
-    if (data.order_id !== null) {
-        const { error: standingOrderError } = await supabase
-            .from('machines')
-            .update({ current_order_id: data.order_id })
-            .eq('id', machineParsed.data)
-            .eq('org_id', profile.org_id)
-
-        if (standingOrderError) {
-            console.error('standing machine order error:', standingOrderError)
-            return { error: standingOrderError.message }
-        }
     }
 
     return { success: true }

@@ -38,6 +38,9 @@ const ACCESS_CODE_LIMIT = 5
 const ACCESS_CODE_WINDOW_SECONDS = 10 * 60
 const ACCESS_CODE_LOCKOUT_SECONDS = 10 * 60
 const ACCESS_CODE_UNAVAILABLE_MESSAGE = 'Access-code protection is temporarily unavailable. Try again later.'
+const JOIN_CODE_LIMIT = 10
+const JOIN_CODE_WINDOW_SECONDS = 10 * 60
+const JOIN_CODE_UNAVAILABLE_MESSAGE = 'Join-code protection is temporarily unavailable. Try again later.'
 
 function getRedis(): Redis | null {
     if (redis) return redis
@@ -101,6 +104,17 @@ let _accessCodeLimiter: Ratelimit | null | undefined = undefined
 export function getAccessCodeLimiter() {
     if (_accessCodeLimiter === undefined) _accessCodeLimiter = createLimiter(ACCESS_CODE_LIMIT, ACCESS_CODE_WINDOW_SECONDS)
     return _accessCodeLimiter
+}
+
+/**
+ * Public factory join-code limiter — 10 attempts per 10 minutes, IP-based.
+ * This boundary uses a service-role lookup, so unlike generic auth throttles it
+ * fails closed when Redis is unavailable.
+ */
+let _joinCodeLimiter: Ratelimit | null | undefined = undefined
+export function getJoinCodeLimiter() {
+    if (_joinCodeLimiter === undefined) _joinCodeLimiter = createLimiter(JOIN_CODE_LIMIT, JOIN_CODE_WINDOW_SECONDS)
+    return _joinCodeLimiter
 }
 
 /**
@@ -191,6 +205,24 @@ export async function checkAccessCodeRateLimit(userId: string): Promise<number |
     } catch (err) {
         console.error('[RateLimit] Redis error — access-code validation blocked:', err)
         throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
+    }
+}
+
+/**
+ * Check public join-code attempts by client IP and action bucket.
+ * Validation and final registration use separate buckets so a legitimate
+ * validation does not consume the final-submit allowance.
+ */
+export async function checkJoinCodeRateLimit(ip: string, action: 'validate' | 'join'): Promise<number | null> {
+    const limiter = getJoinCodeLimiter()
+    if (!limiter) throw new Error(JOIN_CODE_UNAVAILABLE_MESSAGE)
+
+    try {
+        const result = await limiter.limit(`join-code:${action}:${ip}`)
+        return result.success ? null : result.reset
+    } catch (err) {
+        console.error('[RateLimit] Redis error — join-code validation blocked:', err)
+        throw new Error(JOIN_CODE_UNAVAILABLE_MESSAGE)
     }
 }
 

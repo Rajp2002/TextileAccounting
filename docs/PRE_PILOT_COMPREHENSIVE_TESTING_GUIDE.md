@@ -342,7 +342,7 @@ npm audit --audit-level=high
 | MASTER-003 | Edit loom name/type and refresh. | Assignment and historical production links remain intact. |
 | MASTER-004 | Activate loom without required assignments/order. | Behavior matches the documented activation rule with a clear message. |
 | MASTER-005 | Deactivate/delete loom with active order or history. | Protected action; history preserved; downstream UI remains consistent. |
-| MASTER-006 | Add piece-rate worker with decimal rate. | Rate persists accurately and appears in production/payroll. |
+| MASTER-006 | Assign a piece-rate worker to a loom with a decimal per-meter rate. | Assignment rate persists exactly, is snapshotted on production logs, and drives payroll without changing historical logs. |
 | MASTER-007 | Add fixed worker with manually entered salary after selecting role. | Entered salary is not replaced by role default. |
 | MASTER-008 | Add daily worker and record attendance. | Daily payroll uses attendance and never exceeds configured monthly salary. |
 | MASTER-009 | Deactivate worker assigned to a loom. | Loom/setup becomes visibly incomplete; old logs remain attributed. |
@@ -510,7 +510,7 @@ The product’s active stock model is an expected ledger, not guaranteed physica
 | SALE-011 | Credit days zero and positive. | Due date starts from first dispatch date per active product rule. |
 | SALE-012 | Sale recorded today, first dispatch later. | Receivable due date is deferred/rebased correctly. |
 | SALE-013 | Same stock split across parties/rates. | Cost basis and profit calculated per sale. |
-| SALE-014 | Failure after sale but before optional dispatch. | Sale remains recoverable under Pending Dispatch; message is explicit. |
+| SALE-014 | Injected dispatch-stage failure during Sell & Dispatch. | Atomic transaction rolls back sale, dispatch, receivable, and stock changes; operator message explicitly says nothing was saved. |
 | SALE-015 | Rapid duplicate submit. | One sale and one receivable. |
 | SALE-016 | Broker/commission, claim, or rate-difference information. | If unsupported, UI/docs do not imply it is included in net realization. |
 

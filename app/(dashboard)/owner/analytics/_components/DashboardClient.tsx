@@ -13,6 +13,7 @@ import { refreshLiveDashboard, fetchHistoricalData } from '../../actions/dashboa
 import type { DashboardData } from '../../actions/dashboard'
 import { getSuratTodayString } from '@/lib/time'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { CalendarDays, ClipboardList, DollarSign, Store, Wifi, WifiOff } from 'lucide-react'
 
@@ -69,6 +70,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
   const supabase = createClient()
   const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
   const { t } = useTranslation()
 
   const handleRealtimeUpdate = useCallback(() => {
@@ -150,8 +152,8 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
     }
   }, [supabase, handleRealtimeUpdate, orgId, selectedDate])
 
-  const handleDateChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value
+  const loadSelectedDate = async (newDate: string) => {
+    if (!newDate) return
     if (newDate > getSuratTodayString()) return
     setSelectedDate(newDate)
 
@@ -172,6 +174,16 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       const history = await fetchHistoricalData(newDate)
       setData(history)
     }
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    void loadSelectedDate(e.target.value)
+  }
+
+  const applyRenderedDate = () => {
+    const renderedDate = document.querySelector<HTMLInputElement>('[data-testid="dashboard-date-picker"]')?.value
+      || dateInputRef.current?.value
+    if (renderedDate) void loadSelectedDate(renderedDate)
   }
 
   const isToday = selectedDate === getSuratTodayString()
@@ -215,6 +227,8 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-sm">
             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Input
+              ref={dateInputRef}
+              data-testid="dashboard-date-picker"
               id="date-picker"
               type="date"
               max={getSuratTodayString()}
@@ -222,6 +236,9 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
               onChange={handleDateChange}
               className="border-0 shadow-none p-0 h-auto text-sm bg-transparent focus-visible:ring-0 w-[120px] text-foreground"
             />
+            <Button type="button" size="sm" variant="ghost" onClick={applyRenderedDate} className="h-7 px-2 text-xs">
+              View date
+            </Button>
           </div>
         </div>
       </div>
@@ -241,10 +258,10 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           )}
 
           {/* 7-day trend — full width */}
-          <ProductionTrend data={data.trend} />
+          <ProductionTrend data={data.trend} selectedDate={selectedDate} />
 
           {/* Worker breakdown */}
-          <WorkerBreakdown entries={data.workerBreakdown} />
+          <WorkerBreakdown entries={data.workerBreakdown} selectedDate={selectedDate} />
         </div>
 
         {isToday && <QuickActions className="sticky top-6 hidden xl:block" />}

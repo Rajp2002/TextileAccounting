@@ -43,36 +43,36 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
     }
 
     return (
-        <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-emerald-100 overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-br from-emerald-50/80 to-transparent pb-4 border-b border-emerald-50">
+        <Card className="overflow-hidden rounded-2xl border-emerald-200 bg-emerald-950 text-white shadow-[0_8px_30px_rgba(6,78,59,0.12)]">
+            <CardHeader className="border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-                        <Gift className="h-5 w-5 text-emerald-600" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                        <Gift className="h-5 w-5 text-emerald-300" />
                     </div>
                     <div>
-                        <CardTitle className="text-emerald-900 text-lg">Refer & Earn</CardTitle>
-                        <p className="text-xs text-emerald-700/70 mt-0.5">
+                        <CardTitle className="text-lg text-white">Refer & Earn</CardTitle>
+                        <p className="mt-0.5 text-xs text-emerald-200/70">
                             Get 10% off your monthly bill per paid referral.
                         </p>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="p-5 space-y-6 text-emerald-950">
+            <CardContent className="space-y-5 p-5">
                 
                 {/* Stats Grid - more compact and informative */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-emerald-100/50 bg-emerald-50/30 p-3.5 flex flex-col justify-center">
-                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-1">Total Referrals</p>
+                    <div className="flex flex-col justify-center rounded-xl border border-white/10 bg-white/5 p-3.5">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Total referrals</p>
                         <div className="flex items-baseline gap-1.5">
-                            <span className="text-2xl font-black text-emerald-900 leading-none">{stats.total || 0}</span>
-                            <span className="text-xs text-emerald-600/70 font-medium">{stats.converted || 0} converted</span>
+                            <span className="text-2xl font-bold leading-none text-white">{stats.total || 0}</span>
+                            <span className="text-xs font-medium text-emerald-200/70">{stats.converted || 0} converted</span>
                         </div>
                     </div>
-                    <div className="rounded-2xl bg-emerald-600 p-3.5 flex flex-col justify-center shadow-lg shadow-emerald-200">
-                        <p className="text-[10px] text-emerald-100 font-bold uppercase tracking-wider mb-1">Current Reward</p>
+                    <div className="flex flex-col justify-center rounded-xl bg-emerald-400 p-3.5 text-emerald-950">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider">Current reward</p>
                         <div className="flex items-baseline gap-0.5">
-                            <span className="text-2xl font-black text-white leading-none">{stats.currentDiscountPct || 0}%</span>
-                            <span className="text-xs text-emerald-100 font-medium">OFF</span>
+                            <span className="text-2xl font-bold leading-none">{stats.currentDiscountPct || 0}%</span>
+                            <span className="text-xs font-medium">off</span>
                         </div>
                     </div>
                 </div>
@@ -80,14 +80,14 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                 {/* Journey to 100% Free - Simplified progress */}
                 <div className="relative pt-1">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-bold text-emerald-900/80 uppercase tracking-tighter">Journey to 100% Free</span>
-                        <div className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-medium text-emerald-100">Journey to 100% free</span>
+                        <div className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-emerald-200">
                             {stats.currentDiscountPct || 0}% / 100%
                         </div>
                     </div>
-                    <div className="h-3 w-full bg-emerald-50 rounded-full p-0.5 overflow-hidden">
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10 p-0.5">
                         <div 
-                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-1000 ease-out relative shadow-sm"
+                            className="relative h-full rounded-full bg-emerald-400 transition-all duration-1000 ease-out"
                             style={{ width: `${Math.min(100, stats.currentDiscountPct || 0)}%` }}
                         >
                             <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -98,21 +98,21 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                 {/* Code & Share - Compact grouping */}
                 <div className="space-y-4 pt-2">
                     <div className="relative group">
-                        <label className="absolute -top-2.5 left-4 px-2 bg-white text-[10px] font-black text-emerald-600 uppercase tracking-widest z-10">
+                        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-emerald-300">
                             Your Unique Code
                         </label>
-                        <div className="flex items-center gap-2 p-1.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 group-focus-within:border-emerald-400 transition-all shadow-sm">
+                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-1.5 transition-colors focus-within:border-emerald-400">
                             <input 
                                 readOnly 
                                 value={referralCode}
-                                className="flex-1 min-w-0 bg-transparent text-emerald-900 font-black text-sm tracking-[0.25em] outline-none pl-3 uppercase h-10"
+                                className="h-10 min-w-0 flex-1 bg-transparent pl-3 text-sm font-bold uppercase tracking-[0.2em] text-white outline-none"
                                 onClick={(e) => (e.target as HTMLInputElement).select()}
                             />
                             <div className="flex items-center gap-1.5 shrink-0 px-1">
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
-                                    className="h-10 w-10 rounded-xl hover:bg-emerald-100/50 text-emerald-600 transition-colors"
+                                    className="h-10 w-10 rounded-lg text-emerald-300 hover:bg-white/10 hover:text-white"
                                     onClick={copyToClipboard}
                                     title="Copy Code"
                                 >
@@ -120,7 +120,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                 </Button>
                                 <Button 
                                     onClick={shareWhatsApp}
-                                    className="h-10 px-5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-md shadow-emerald-500/10 shrink-0 font-black text-[11px] uppercase tracking-wider flex items-center gap-2"
+                                    className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-emerald-400 px-4 text-[11px] font-bold uppercase tracking-wider text-emerald-950 shadow-none hover:bg-emerald-300"
                                 >
                                     <Share2 className="h-4 w-4" />
                                     Share

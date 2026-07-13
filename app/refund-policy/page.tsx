@@ -4,14 +4,14 @@ import { PolicyContactPanel, PolicyPage, PolicySection } from '@/components/poli
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
-    description: 'Learn about Weavly\'s refund, cancellation, and data export policies for subscription plans.',
+    description: 'Learn about Weavly\'s refund, cancellation, and data export policies for implementation services and annual maintenance.',
 }
 
 const sections = [
     { href: '#free-trial', title: 'Free Trial' },
     { href: '#cancellation', title: 'Cancellation' },
     { href: '#refunds', title: 'Refund Policy' },
-    { href: '#downgrades', title: 'Plan Downgrades' },
+    { href: '#renewals', title: 'Annual Renewals' },
     { href: '#data-export', title: 'Data Export' },
     { href: '#exceptions', title: 'Exceptional Circumstances' },
     { href: '#changes', title: 'Changes' },
@@ -23,25 +23,25 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="Clear rules for trials, cancellations, first-payment refunds, setup services, and data export after a subscription ends."
-            lastUpdated="March 25, 2026"
+            description="Clear rules for trials, implementation work, annual maintenance, cancellations, refunds, and data export when service ends."
+            lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
                 { label: 'Free trial', value: '7 days, no payment required', icon: CalendarDays },
-                { label: 'First payment refund', value: 'Full refund within 7 days', icon: RefreshCw },
+                { label: 'Before work starts', value: 'Setup fee fully refundable', icon: RefreshCw },
                 { label: 'Refund timing', value: '5-7 business days to original method', icon: Clock3 },
                 { label: 'Support', value: 'support@weavly.app', icon: Mail },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                This Refund &amp; Cancellation Policy applies to all paid subscriptions and services offered by Weavly. We aim to make our policies transparent and fair in compliance with the <strong>Consumer Protection Act, 2019</strong> and the <strong>Consumer Protection (E-Commerce) Rules, 2020</strong>.
+                This Refund &amp; Cancellation Policy applies to Weavly&apos;s setup and implementation services and annual platform maintenance. It explains how refund eligibility changes as onboarding work is delivered and the platform enters active use.
             </p>
 
             <PolicySection id="free-trial" title="1. Free Trial">
                 <ul>
                     <li>The 7-day free trial provides full access to all features at no cost.</li>
                     <li>No credit card or payment information is required to start a trial.</li>
-                    <li>The trial does <strong>not</strong> automatically convert to a paid subscription. You must explicitly choose a plan and complete payment to continue using the Service after the trial period.</li>
+                    <li>The trial does <strong>not</strong> automatically convert to a paid service. You must explicitly accept a commercial proposal and complete payment to continue after the trial.</li>
                     <li>No refund applies to the free trial as no charges are made.</li>
                 </ul>
             </PolicySection>
@@ -49,52 +49,54 @@ export default function RefundPolicyPage() {
             <PolicySection id="cancellation" title="2. Subscription Cancellation">
                 <h3>2.1 How to Cancel</h3>
                 <p>
-                    You may cancel your subscription at any time through:
+                    You may cancel your next annual renewal at any time through:
                 </p>
                 <ul>
                     <li>The account settings page within the Weavly dashboard, or</li>
                     <li>By emailing <a href="mailto:support@weavly.app">support@weavly.app</a> with your registered email address</li>
                 </ul>
                 <p>
-                    Cancellation is designed to be at least as easy as the subscription process, in compliance with Consumer Protection rules.
+                    We will provide a clear and accessible cancellation process and confirm when your renewal has been cancelled.
                 </p>
 
                 <h3>2.2 What Happens After Cancellation</h3>
                 <ul>
-                    <li>Your access to paid features will continue until the end of the current billing period.</li>
-                    <li>No further charges will be made after cancellation.</li>
-                    <li>Your data will remain accessible for <strong>30 days</strong> after the billing period ends, during which you may export your data.</li>
+                    <li>Your access will continue until the end of the paid annual service period.</li>
+                    <li>No further annual renewal charge will be made after cancellation is confirmed.</li>
+                    <li>Your data will remain accessible for <strong>30 days</strong> after the paid service period ends, during which you may export your data.</li>
                     <li>After the 30-day export window, your production logs, payroll records, and operational data will be permanently deleted.</li>
                     <li>Account information (name, email) is retained for 180 days per regulatory requirements, then deleted.</li>
                 </ul>
             </PolicySection>
 
             <PolicySection id="refunds" title="3. Refund Policy">
-                <h3>3.1 Monthly Subscriptions (Base &amp; Premium)</h3>
+                <h3>3.1 Setup &amp; Implementation Fee (₹49,999 + GST)</h3>
                 <ul>
-                    <li><strong>Within 7 days of first payment</strong> — Full refund, no questions asked. If you&apos;re not satisfied after upgrading from the free trial, we&apos;ll refund you completely.</li>
-                    <li><strong>After 7 days</strong> — No pro-rata refund for the remaining days of the current billing period. You will continue to have access until the period ends.</li>
-                    <li><strong>Service outage</strong> — If the platform is unavailable for more than 48 consecutive hours (excluding scheduled maintenance), you are entitled to a pro-rata credit for the downtime period.</li>
+                    <li><strong>Before onboarding work starts</strong> — The setup and implementation fee is fully refundable.</li>
+                    <li><strong>After account configuration starts, but before substantive delivery</strong> — A partial refund may be issued after deducting the reasonable value of work already completed and any non-recoverable third-party costs disclosed to you.</li>
+                    <li><strong>After training, data setup, workflow configuration, or production handover is delivered</strong> — The fee is non-refundable because the implementation service has been substantially delivered.</li>
+                    <li>If Weavly cannot complete the agreed implementation, we will refund the undelivered portion after accounting for work you have accepted.</li>
                 </ul>
 
-                <h3>3.2 Setup &amp; Training Add-on (₹4,999 + GST)</h3>
+                <h3>3.2 Annual Maintenance (₹19,999/year + GST)</h3>
                 <ul>
-                    <li><strong>Before the training session</strong> — Full refund if the training session has not yet been conducted.</li>
-                    <li><strong>After the training session</strong> — No refund, as the service has been delivered.</li>
-                    <li><strong>Partial delivery</strong> — If only the account configuration was completed but the training session was not conducted, a partial refund of ₹2,500 will be issued.</li>
+                    <li><strong>First annual payment</strong> — Fully refundable when requested within 7 days of payment if onboarding has not started and the production workspace has not been activated.</li>
+                    <li><strong>After onboarding or active use starts</strong> — No pro-rata refund applies to the remaining annual period, except for a verified billing error, a service Weavly cannot provide, or where a refund is required by law.</li>
+                    <li><strong>Renewal payments</strong> — Refundable if charged after a cancellation confirmed before the renewal date or if charged in error.</li>
+                    <li><strong>Service outage</strong> — For a material outage attributable to Weavly, we may provide a proportionate service credit or other remedy under the applicable order form.</li>
                 </ul>
 
                 <h3>3.3 How Refunds Are Processed</h3>
                 <ul>
                     <li>Refunds are processed to the original payment method within <strong>5-7 business days</strong>.</li>
-                    <li>GST paid on refunded amounts will also be refunded.</li>
+                    <li>Any tax adjustment or credit note will be handled as required by applicable GST rules.</li>
                     <li>To request a refund, email <a href="mailto:support@weavly.app">support@weavly.app</a> with your account details and reason for the request.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="downgrades" title="4. Plan Downgrades">
+            <PolicySection id="renewals" title="4. Annual Renewal Cancellation">
                 <p>
-                    If you downgrade from Premium to Base, the change takes effect at the start of the next billing cycle. You will continue to have Premium access until the current period ends. If your worker count exceeds the Base plan limit (15 workers), you will need to deactivate excess workers before the downgrade takes effect.
+                    You may cancel annual renewal at any time before the next billing date. Cancellation prevents the next renewal charge and does not create a pro-rata refund for the current paid period. Access continues until that period ends unless the account is suspended or terminated under the Terms of Service.
                 </p>
             </PolicySection>
 

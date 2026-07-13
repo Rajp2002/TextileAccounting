@@ -591,6 +591,12 @@ function NumField({
     onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean
 }) {
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
+    // Estimator defaults are stored as numeric zero for calculations, but an
+    // empty control with a zero placeholder is a better editing experience:
+    // the first digit typed replaces the visual default instead of appending
+    // to it (for example, entering 55 must never appear as 055).
+    const displayValue = value === 0 ? '' : (value ?? '')
+    const displayPlaceholder = value === 0 ? (placeholder ?? '0') : placeholder
     return (
         <div className="space-y-1.5 min-w-0">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
@@ -599,8 +605,8 @@ function NumField({
                     type="number"
                     step={step}
                     min={min}
-                    placeholder={placeholder}
-                    value={value ?? ''}
+                    placeholder={displayPlaceholder}
+                    value={displayValue}
                     onChange={e => {
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
@@ -1684,7 +1690,7 @@ export default function EstimatorClient({
                                 </div>
                                 <ArrowRight className="hidden h-7 w-7 self-center text-[var(--color-subtle)] sm:block" />
                                 <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{canUseProduction ? t('estimator.hud.quote_per_m') : 'Final Price / m'}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
                                     <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[40px]">
                                         ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
                                     </p>
@@ -2014,7 +2020,7 @@ export default function EstimatorClient({
 
                 {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
-                    <SectionHeader title={canUseProduction ? t('estimator.order_basics.title') : 'Costing Details'} icon={Layers} accent="neutral" step={1} />
+                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
@@ -3072,11 +3078,11 @@ export default function EstimatorClient({
 
                 {/* 9. Simulation / Order */}
                 <EstimatorCard accent="weft">
-                    <SectionHeader title={!canUseProduction ? 'Costing Quantity' : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
+                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
-                                label={!canUseProduction ? 'Costing Quantity' : mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
+                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
                                 value={state.orderQuantityM} 
                                 onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })} 
                                 unit="m" 

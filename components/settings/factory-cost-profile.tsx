@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -72,14 +72,17 @@ function RateInput({
     step?:    number
     icon?:    React.ElementType
 }) {
+    const inputId = useId()
+
     return (
         <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5 text-xs font-semibold text-body">
+            <Label htmlFor={inputId} className="flex items-center gap-1.5 text-xs font-semibold text-body">
                 {Icon && <Icon className="h-3.5 w-3.5 text-subtle" />}
                 {label}
             </Label>
             <div className="relative">
                 <Input
+                    id={inputId}
                     type="number"
                     step={step}
                     min={0}
@@ -111,13 +114,21 @@ function SectionToggle({
     checked:     boolean
     onChange:    (v: boolean) => void
 }) {
+    const switchId = useId()
+    const descriptionId = `${switchId}-description`
+
     return (
         <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-lg border border-hairline bg-canvas/55 px-4 py-3">
             <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink">{label}</p>
-                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                <Label htmlFor={switchId} className="text-sm font-semibold text-ink">{label}</Label>
+                <p id={descriptionId} className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
             </div>
-            <Switch checked={checked} onCheckedChange={onChange} />
+            <Switch
+                id={switchId}
+                aria-describedby={descriptionId}
+                checked={checked}
+                onCheckedChange={onChange}
+            />
         </div>
     )
 }

@@ -74,6 +74,10 @@ import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { RoleBanner } from '@/components/RoleBanner'
 import { useQueryClient } from '@tanstack/react-query'
+import {
+    productionSubmissionMatchesPersistedState,
+    runMutationWithTimeout,
+} from '@/lib/mutation-outcome'
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -1117,7 +1121,31 @@ export default function UnifiedDashboard() {
         submitLockRef.current = true
         setSubmitting(true)
         try {
-            const res = await bulkLogProduction(entries, code)
+            const outcome = await runMutationWithTimeout(() => bulkLogProduction(entries, code))
+            let res
+
+            if (outcome.status === 'unknown') {
+                toast.warning('Connection timed out. The save outcome is unknown. Checking the server before retrying…')
+                const reconciled = await getShiftSetupData(date, shift)
+                const committed = productionSubmissionMatchesPersistedState(entries, reconciled.existingLogs ?? [])
+
+                if (!committed) {
+                    await fetchData()
+                    toast.warning('We could not confirm whether this shift was saved. Do not submit it again yet; refresh and check the shift first.')
+                    return
+                }
+
+                res = {
+                    success: true as const,
+                    logged: reconciled.existingLogs?.length ?? entries.length,
+                    correctionWindowExpiresAt: reconciled.latestSubmittedAt
+                        ? new Date(new Date(reconciled.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
+                        : null,
+                }
+                toast.success('The response timed out, but the shift was saved. Server state has been reconciled.')
+            } else {
+                res = outcome.value
+            }
 
             if (!res?.success) {
                 const message = res?.message || res?.error || "Could not save production log."
@@ -1126,7 +1154,9 @@ export default function UnifiedDashboard() {
                 throw err
             }
 
-            toast.success(`Shift meters logged (${res.logged} looms)`)
+            if (outcome.status === 'completed') {
+                toast.success(`Shift meters logged (${res.logged} looms)`)
+            }
             setProductionMeters({}) // Reset inputs after success
             setRestoredDraftInfo(null)
             setLargeMeterEntries([])

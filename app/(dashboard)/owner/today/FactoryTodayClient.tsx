@@ -1,6 +1,11 @@
 'use client'
 
-import type { FactoryTodayData } from './actions'
+import { useEffect, useRef, useState } from 'react'
+import {
+    getFactoryTodayChecklist,
+    type FactoryTodayChecklistPayload,
+    type FactoryTodayData,
+} from './actions'
 import { TodayKpiStrip } from '@/components/factory-today/TodayKpiStrip'
 import { ProductionStatusCard } from '@/components/factory-today/ProductionStatusCard'
 import { MachineAttentionCard } from '@/components/factory-today/MachineAttentionCard'
@@ -69,7 +74,35 @@ function AllClearState() {
 
 export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const data = initialData
+    const [checklistPayload, setChecklistPayload] = useState<FactoryTodayChecklistPayload | null>(() => {
+        if (!initialData.setupChecklist || !initialData.activationChecklist) return null
+        return {
+            setupChecklist: initialData.setupChecklist,
+            activationChecklist: initialData.activationChecklist,
+        }
+    })
+    const [checklistFailed, setChecklistFailed] = useState(false)
+    const checklistRequest = useRef<ReturnType<typeof getFactoryTodayChecklist> | null>(null)
     const { actionCounts } = data
+
+    useEffect(() => {
+        if (checklistPayload || checklistFailed) return
+
+        // React Strict Mode re-runs effects in development. Reuse one in-flight
+        // request. The completion callback is intentionally not cancelled during
+        // effect cleanup: Strict Mode cleans up the first effect before the shared
+        // request resolves, and React safely ignores state updates after a real unmount.
+        checklistRequest.current ??= getFactoryTodayChecklist(initialData.setupChecklistSeed)
+
+        checklistRequest.current
+            .then((payload) => {
+                setChecklistPayload(payload)
+            })
+            .catch((error) => {
+                console.error('Factory Today setup checklist failed to load', error)
+                setChecklistFailed(true)
+            })
+    }, [checklistFailed, checklistPayload, initialData.setupChecklistSeed])
 
     const displayDate = getDisplayDate(data.date)
     const dateLabel = displayDate.toLocaleDateString('en-IN', {
@@ -99,10 +132,10 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
     // Setup panel visibility — check if any setup step is incomplete
     // Note: fixed_worker skip is handled client-side in SetupPanel via localStorage
-    const setupChecklist = data.setupChecklist
-    const activationChecklist = data.activationChecklist
+    const setupChecklist = checklistPayload?.setupChecklist
+    const activationChecklist = checklistPayload?.activationChecklist
     const hasFirstRunCosting = !!(
-        setupChecklist.hasQuality &&
+        setupChecklist?.hasQuality &&
         (activationChecklist?.hasEstimate || activationChecklist?.hasOrder || activationChecklist?.hasMarketRun)
     )
     const hasStartedFirstRun = data.productionMode === 'market_run'
@@ -110,7 +143,8 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         : data.productionMode === 'order_based'
             ? !!activationChecklist?.hasOrder
             : !!(activationChecklist?.hasOrder || activationChecklist?.hasMarketRun)
-    const hasAnyIncompleteSetup = !setupChecklist.hasProductionMode ||
+    const hasAnyIncompleteSetup = !!setupChecklist && (
+        !setupChecklist.hasProductionMode ||
         !setupChecklist.hasMachine ||
         !setupChecklist.hasLoomAssignment ||
         !setupChecklist.hasLoomTarget ||
@@ -125,9 +159,10 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         !activationChecklist?.hasProductionLog ||
         !activationChecklist?.hasDispatch ||
         !activationChecklist?.hasCommercial
+    )
     // hasFixedWorker is skippable so we don't include it in the server check —
     // the SetupPanel component handles it via localStorage
-    const showSetupPanel = hasAnyIncompleteSetup || !setupChecklist.hasFixedWorker
+    const showSetupPanel = !!setupChecklist && (hasAnyIncompleteSetup || !setupChecklist.hasFixedWorker)
 
     return (
         <div className="min-w-0 space-y-6">
@@ -211,11 +246,11 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                     </div>
 
                     {/* Right Column — Setup Panel (desktop only) */}
-                    {showSetupPanel && (
+                    {showSetupPanel && setupChecklist && (
                         <div className="min-w-0 xl:col-span-2 min-[1440px]:col-span-1">
                             <SetupPanel
                                 checklist={setupChecklist}
-                                activationChecklist={data.activationChecklist}
+                                activationChecklist={activationChecklist}
                                 productionMode={data.productionMode}
                             />
                         </div>
@@ -224,12 +259,12 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
             )}
 
             {/* Setup panel for all-clear state — still show setup if incomplete */}
-            {isAllClear && showSetupPanel && (
+            {isAllClear && showSetupPanel && setupChecklist && (
                 <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,340px)]">
                     <QuickActionsCard productionMode={data.productionMode} />
                     <SetupPanel
                         checklist={setupChecklist}
-                        activationChecklist={data.activationChecklist}
+                        activationChecklist={activationChecklist}
                         productionMode={data.productionMode}
                     />
                 </div>
@@ -241,10 +276,10 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
             )}
 
             {/* Mobile floating setup button */}
-            {showSetupPanel && (
+            {showSetupPanel && setupChecklist && (
                 <SetupFloatingButton
                     checklist={setupChecklist}
-                    activationChecklist={data.activationChecklist}
+                    activationChecklist={activationChecklist}
                     productionMode={data.productionMode}
                 />
             )}

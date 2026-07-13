@@ -839,7 +839,7 @@ export const en = {
     subtitle: "Real-time Surat fabric cost calculator",
     hud: {
       prod_cost: "Prod. Cost / m",
-      quote_per_m: "Quote / m",
+      quote_per_m: "Final Price / m",
       total_order: "Total Order",
       margin: "Margin",
       net_profit: "Net Profit",
@@ -898,7 +898,7 @@ export const en = {
       settingsDeleteConfirm: "Delete this quality?"
     },
     order_basics: {
-      title: "Order & Fabric Label",
+      title: "Costing Details",
       party: "Party / Customer",
       quality_label: "Quality / Fabric Label",
       fabric_quality_name: "Fabric / Quality Name",
@@ -972,11 +972,11 @@ export const en = {
       finishing_per_m: "Finishing / m"
     },
     simulation: {
-      title: "Simulation & Quantity",
+      title: "Costing Quantity",
       market_title: "Market Run & Quantity",
-      quantity: "Simulation Quantity",
+      quantity: "Costing Quantity",
       market_target: "Target Production",
-      quantity_hint: "Activates HUD quotes",
+      quantity_hint: "Calculates the total costing and selling price",
       commission: "Broker Comm. %",
       transport: "Transport / m"
     },
@@ -1008,7 +1008,7 @@ export const en = {
       winding_per_kg: "Winding / kg",
       dyeing_processing: "Dyeing/Processing",
       finishing_per_m: "Finishing / m",
-      simulation_qty: "Simulation Quantity",
+      simulation_qty: "Costing Quantity",
       market_target: "Target Production",
       broker_comm: "Broker Comm. %",
       transport_per_m: "Transport / m"

@@ -65,6 +65,12 @@ function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
 
+function adultCutoffDate() {
+    const cutoff = new Date()
+    cutoff.setFullYear(cutoff.getFullYear() - 18)
+    return cutoff.toISOString().slice(0, 10)
+}
+
 async function hasMeterWorkerHistory(supabase: ReturnType<typeof createClient>, orgId: string, workerId: number) {
     const [{ data: settlements, error: settlementsError }, { data: advances, error: advancesError }] = await Promise.all([
         supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
@@ -645,6 +651,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formPhone, setFormPhone] = useState('')
     const [formLang, setFormLang] = useState<'en' | 'hi' | 'gu'>('en')
     const [formConsent, setFormConsent] = useState(false)
+    const [formDateOfBirth, setFormDateOfBirth] = useState('')
+    const [formAgeReference, setFormAgeReference] = useState('')
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
     const [exitWorker, setExitWorker] = useState<FixedWorker | null>(null)
@@ -704,6 +712,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormPhone('')
         setFormLang('en')
         setFormConsent(false)
+        setFormDateOfBirth('')
+        setFormAgeReference('')
         setDialogOpen(true)
     }
 
@@ -748,6 +758,14 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
             toast.error(t('common.fill_all'))
             return
         }
+        if (!editingWorker && (
+            !formDateOfBirth
+            || formDateOfBirth > adultCutoffDate()
+            || formAgeReference.trim().length < 4
+        )) {
+            toast.error('Verified adult date of birth and a non-sensitive evidence reference are required.')
+            return
+        }
         setSaving(true)
         try {
             const result = await upsertFixedWorker({
@@ -762,6 +780,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 phone: formPhone || undefined,
                 language: formLang,
                 consentGiven: formConsent,
+                date_of_birth: editingWorker ? undefined : formDateOfBirth,
+                age_verification_method: editingWorker ? undefined : 'government_id',
+                age_verification_reference: editingWorker ? undefined : formAgeReference.trim(),
             })
             if (result.error) throw new Error(result.error)
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
@@ -912,6 +933,35 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                     placeholder={t('fixed_page.name_ph')}
                                 />
                             </div>
+
+                            {!editingWorker && (
+                                <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800">Adult worker verification</p>
+                                        <p className="text-xs text-gray-500">Do not enter a full Aadhaar or government ID number.</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="fixed-worker-date-of-birth">Verified date of birth</Label>
+                                        <Input
+                                            id="fixed-worker-date-of-birth"
+                                            type="date"
+                                            min="1900-01-01"
+                                            max={adultCutoffDate()}
+                                            value={formDateOfBirth}
+                                            onChange={(event) => setFormDateOfBirth(event.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="fixed-worker-age-reference">Evidence reference</Label>
+                                        <Input
+                                            id="fixed-worker-age-reference"
+                                            value={formAgeReference}
+                                            onChange={(event) => setFormAgeReference(event.target.value)}
+                                            placeholder="Document type + last 4, or internal record"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label>{t('fixed_page.role')}</Label>
                                 <Select value={formRole} onValueChange={handleRoleChange}>

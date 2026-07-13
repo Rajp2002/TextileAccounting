@@ -3,6 +3,7 @@ import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isUserRevoked } from '@/lib/rate-limit'
 import type { User } from '@supabase/supabase-js'
 
 type JsonRecord = Record<string, unknown>
@@ -114,6 +115,11 @@ export const getCachedSession = cache(async (): Promise<{
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return null
+
+    // Explicit revocation must invalidate every still-live browser/device JWT.
+    // Supabase access tokens remain valid until expiry, so the server-owned
+    // revocation marker is checked on every new authenticated request.
+    if (await isUserRevoked(user.id)) return null
 
     // Always validate authorization-critical claims against the profile row.
     // JWT app_metadata is useful for routing, but server actions/data loaders must

@@ -17,8 +17,8 @@ describe('Batch 2 — perf utility', () => {
     const perf = read('lib/perf.ts')
 
     it('is development-only unless WEAVLY_PERF_LOGS is explicitly enabled on the server', () => {
-        expect(perf).toContain("env?.NODE_ENV === 'development'")
-        expect(perf).toContain("env?.WEAVLY_PERF_LOGS === 'true'")
+        expect(perf).toContain("process.env.NODE_ENV === 'development'")
+        expect(perf).toContain("process.env.WEAVLY_PERF_LOGS === 'true'")
         expect(perf).toContain("typeof window === 'undefined'")
     })
 
@@ -53,13 +53,23 @@ describe('Batch 2 — server route instrumentation', () => {
         }
     })
 
-    it('measures server data loaders for today, dispatches, and commercials', () => {
+    it('measures server data loaders for today, payroll, advances, dispatches, and commercials', () => {
         const todayActions = read('app/(dashboard)/owner/today/actions.ts')
         expect(todayActions).toContain("createPerfTimer('/owner/today')")
         expect(todayActions).toContain("perf.measure('authSession'")
         expect(todayActions).toContain("'businessData'")
-        expect(todayActions).toContain('24')
-        expect(todayActions).toContain('24-query fanout plus payroll cycle')
+        expect(todayActions).toContain('FIRST_RENDER_DASHBOARD_SUPABASE_CALLS')
+        expect(todayActions).toContain('10-query first-render dashboard plus payroll cycle log query')
+
+        const payrollPage = read('app/(dashboard)/owner/payroll/page.tsx')
+        expect(payrollPage).toContain("createPerfTimer('/owner/payroll')")
+        expect(payrollPage).toContain("perf.measure('authSession'")
+        expect(payrollPage).toContain('loadOwnerPayrollInitialData')
+
+        const advancesPage = read('app/(dashboard)/owner/advances/page.tsx')
+        expect(advancesPage).toContain("createPerfTimer('/owner/advances')")
+        expect(advancesPage).toContain("perf.measure('authSession'")
+        expect(advancesPage).toContain('loadOwnerAdvancesInitialData')
 
         const dispatchesPage = read('app/(dashboard)/owner/dispatches/page.tsx')
         const dispatchesLoader = read('app/(dashboard)/owner/dispatches/loaders.ts')
@@ -91,7 +101,7 @@ describe('Batch 2 — client bootstrap instrumentation', () => {
         const advancesClient = read('app/(dashboard)/owner/advances/AdvancesClient.tsx')
         expect(payrollPage).toContain("requireRole(['owner'])")
         expect(payrollClient).not.toContain('useUserProfile')
-        expect(read('app/(dashboard)/owner/machines/page.tsx')).toContain("useUserProfile('/owner/machines')")
+        expect(read('app/(dashboard)/owner/machines/page.tsx')).not.toContain("useUserProfile('/owner/machines')")
         expect(advancesPage).toContain("requireRole(['owner'])")
         expect(advancesClient).not.toContain('useUserProfile')
     })
