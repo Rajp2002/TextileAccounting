@@ -4,11 +4,11 @@ Prepared: 2026-07-14 IST
 
 Current status: `BLOCKED` (`pilot_core`, gating)
 
-Responsible party: **Weavly owner / Supabase billing owner**
+Backup owner: **Raj Patel**
 
-Restore operator: ____________________
+Restore operator: **Raj Patel**
 
-Independent verifier: ____________________
+Independent verifier: **Named factory-side reviewer (name pending; database credentials are not required)**
 
 ## Canonical requirement
 
@@ -67,26 +67,34 @@ This is an explicitly interim pilot control: repository readers with Actions acc
 
 Paid Supabase managed backups/PITR/branching remain optional defense in depth, not a prerequisite for this pilot.
 
-Suggested policy fields:
+## Owner-approved limited-pilot policy
 
-| Field | Owner decision |
+Documented owner decision: **Raj Patel — 2026-07-14 IST**
+
+| Field | Approved decision |
 | --- | --- |
-| Backup route | Encrypted Supabase CLI logical dump → private GitHub Actions artifact (interim) |
+| Backup method | Daily encrypted Supabase/PostgreSQL logical backup stored as a private GitHub Actions artifact |
 | Schedule/time zone | Daily `20:17 UTC` / `01:47 IST` next day |
-| Retention | 14 days; post-pilot longer/immutable retention tracked separately |
-| Maximum acceptable data loss (RPO) | ____________________ |
-| Maximum acceptable recovery time (RTO) | ____________________ |
-| Off-site provider/destination | Private repository Actions artifact |
-| Encryption public-key fingerprint | ____________________ |
-| Secret store and runner | ____________________ |
-| Alert recipient | ____________________ |
-| Backup owner | ____________________ |
-| Restore owner | ____________________ |
-| Approval/date/time zone | ____________________ |
+| Retention | 14 days during the limited pilot |
+| Recovery Point Objective (RPO) | Maximum 24 hours of data loss |
+| Target Recovery Time Objective (RTO) | 4 hours, subject to confirmation by the first measured restore exercise |
+| Backup owner | Raj Patel |
+| Restore operator | Raj Patel |
+| Independent verification | A named factory-side reviewer who does not require access to database credentials; the individual name must be recorded before closure |
+
+Known limitations accepted for the limited pilot:
+
+- No point-in-time recovery.
+- GitHub artifact storage is off-Supabase but is not a fully independent disaster-recovery platform.
+- Supabase Storage file bytes are not included.
+- The workflow must fail closed if Supabase Storage begins containing objects.
+- This is an interim pilot control and must be hardened post-pilot.
+
+Post-pilot hardening requires moving encrypted backups to separate object storage, increasing retention, adding periodic restore drills, and evaluating Supabase managed backups and PITR.
 
 ## Required closure artifacts
 
-- [ ] Dated owner approval of the interim route, 14-day retention, limitations, RPO/RTO, and responsible people.
+- [x] Dated owner approval of the interim route, 14-day retention, limitations, RPO/RTO, backup owner, and restore operator (recorded in the owner-approved policy above).
 - [ ] GitHub Actions settings evidence showing the four required names exist, with values redacted.
 - [ ] Default-branch workflow/schedule evidence and responsible operator’s failure-notification confirmation.
 - [ ] One completed scheduled production backup artifact created after enablement; manual “run now” alone is insufficient unless the schedule subsequently runs successfully.
@@ -156,7 +164,7 @@ jq -r '.items | group_by(.status) | map({status: .[0].status, count: length})' o
 
 ## Exact human and laptop actions still required
 
-1. **Human:** approve the documented interim private-GitHub artifact route, 14-day retention/limitations, RPO/RTO, backup owner, restore operator and verifier. No paid-plan upgrade is required.
+1. **Human:** owner approval of the interim private-GitHub artifact route, 14-day retention/limitations, RPO/RTO, backup owner and restore operator is recorded above. Record the individual factory-side verifier's name before closure; the verifier does not need database credentials. No paid-plan upgrade is required.
 2. **Owner laptop:** generate one standard `age` identity outside the repository, keep an encrypted/offline recovery copy, and configure the four exact GitHub Actions names from the runbook. Paste the database URL only into the secret form; never send it back in chat.
 3. **Repository owner:** merge the workflow to the default branch and enable Actions failure notifications/Issues.
 4. **Wait for automation:** observe one successful scheduled run (not only manual), then record run ID, artifact name/ID, timestamps, encrypted size/SHA-256 and 14-day expiry.
