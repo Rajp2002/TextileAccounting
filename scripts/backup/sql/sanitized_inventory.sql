@@ -108,9 +108,9 @@ auth_counts AS (
 ),
 storage_counts AS (
     SELECT jsonb_build_object(
-        'buckets', (SELECT count(*) FROM storage.buckets),
-        'objects', (SELECT count(*) FROM storage.objects),
-        'bytes', (
+        'bucket_count', (SELECT count(*) FROM storage.buckets),
+        'object_count', (SELECT count(*) FROM storage.objects),
+        'total_bytes', (
             SELECT coalesce(sum(
                 CASE
                     WHEN coalesce(metadata ->> 'size', '') ~ '^[0-9]+$'
@@ -136,7 +136,7 @@ extension_state AS (
     ) AS value
     FROM pg_extension
 )
-SELECT jsonb_pretty(jsonb_build_object(
+SELECT jsonb_build_object(
     'format_version', 1,
     'domains', (
         SELECT jsonb_object_agg(
@@ -156,4 +156,4 @@ SELECT jsonb_pretty(jsonb_build_object(
     'storage', (SELECT value FROM storage_counts),
     'migrations', (SELECT value FROM migration_state),
     'extensions', (SELECT value FROM extension_state)
-));
+);

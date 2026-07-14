@@ -91,13 +91,11 @@ psql "$restore_db_url" \
     --file "$payload_dir/history-data.sql" \
     >/dev/null
 
-psql "$restore_db_url" \
-    --no-psqlrc \
-    --set ON_ERROR_STOP=1 \
-    --tuples-only \
-    --quiet \
-    --file "$repo_root/scripts/backup/sql/sanitized_inventory.sql" \
-    > "$work_dir/restored-inventory.json"
+SANITIZED_INVENTORY_DB_URL="$restore_db_url" \
+SANITIZED_INVENTORY_SQL_FILE="$repo_root/scripts/backup/sql/sanitized_inventory.sql" \
+SANITIZED_INVENTORY_OUTPUT_FILE="$work_dir/restored-inventory.json" \
+SANITIZED_INVENTORY_STDERR_FILE="$work_dir/restored-inventory.stderr" \
+    "$repo_root/scripts/backup/capture-sanitized-inventory.sh"
 
 jq --sort-keys . "$payload_dir/source-inventory.json" > "$work_dir/source-inventory.normalized.json"
 jq --sort-keys . "$work_dir/restored-inventory.json" > "$work_dir/restored-inventory.normalized.json"

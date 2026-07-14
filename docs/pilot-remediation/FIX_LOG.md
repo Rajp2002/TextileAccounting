@@ -82,6 +82,18 @@ Status: implementation prepared; both canonical rows remain `blocked`.
 - Validation: actionlint, ShellCheck, Bash syntax, YAML/JSON parsing, missing-secret fail-closed test, production read-only inventory SQL, changed-Markdown link validation and `git diff --check` passed. `npm ci`, ESLint, 92 Vitest files/653 passed plus 1 intentional skip, optimized Next build, and both high/critical audit gates passed; two pre-existing moderate advisories remain.
 - Matrix: no row or count changed; formal totals remain 367 pass, 0 fail, 7 blocked, and 3 not applicable.
 
+## TECH-011 scheduled inventory-output remediation — 2026-07-15
+
+Status: `fixed_pending_runtime_proof`; canonical `TECH-011` status remains `blocked`.
+
+- Scheduled evidence: GitHub Actions run `29368765626` was triggered by `schedule` from `main` commit `5c77dd69473cb1a60e924fb591982b2ada03e2c8`. Required configuration validation and the five ordered logical dumps completed. Sanitized inventory parsing then failed with `jq: parse error: Invalid numeric literal at line 2, column 0`; artifact upload and SHA-256/encryption completion were skipped. The run produced zero artifacts and is not restorable.
+- Root cause: `sanitized_inventory.sql` returned multiline `jsonb_pretty` text while `psql` used its default aligned display format. The JSON file therefore received psql display formatting instead of one raw JSON value. The ephemeral candidate was removed by the existing cleanup trap; neither `jq` nor the workflow log printed its database-derived contents.
+- Correction: the SQL now returns one compact `jsonb` object; shared capture runs `psql` with no user psqlrc, tuples-only, unaligned, quiet and `ON_ERROR_STOP`, isolates stderr, requires exactly one JSON document, validates the expected envelope and non-negative integer `bucket_count`, `object_count` and `total_bytes`, and refuses every non-zero Storage inventory before artifact creation.
+- Regression: `npx --no-install vitest run __tests__/backup-sanitized-inventory.test.ts` passed 1 file / 13 tests covering zero Storage, non-zero objects, aligned/malformed output, missing fields, multiple JSON rows, invalid numeric values, stderr isolation and query failure, unusual whitespace/Unicode, required psql flags, source shape and credential non-echo. Bash syntax, ShellCheck, actionlint, workflow YAML parsing, focused ESLint and TypeScript also passed before closeout.
+- Security: no database URL, credential, age identity, JWT, dump content, raw Storage metadata or production record was captured in the remediation evidence. Encryption, checksums, 14-day retention, cleanup and no-partial-artifact behavior remain unchanged.
+- Next proof: merge the focused PR after repository checks, run one `workflow_dispatch` canary as supporting validation only, then wait for the next `event=schedule` run. Only a newly scheduled artifact may enter the formal restore/reconciliation/timing/cleanup/verifier flow.
+- Matrix: no row, status or count changes. `TECH-011` remains `blocked`.
+
 ## Active Entry: BATCH-01A-MUTABLE-PROFILE-AUTHZ
 
 Status: review ready.
