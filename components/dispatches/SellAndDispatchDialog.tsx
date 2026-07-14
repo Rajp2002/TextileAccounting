@@ -355,6 +355,7 @@ export function SellAndDispatchDialog({
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5 sm:col-span-2">
                             <Label>Party</Label>
+                            <p className="text-[11px] text-slate-500">The buyer/customer account for this Sale.</p>
                             <Input
                                 value={partyName}
                                 onChange={(event) => {
@@ -418,7 +419,7 @@ export function SellAndDispatchDialog({
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5 sm:col-span-2">
-                            <Label>Sold meters</Label>
+                            <Label>Metres Sold</Label>
                             <Input
                                 type="number"
                                 min="0"
@@ -437,10 +438,10 @@ export function SellAndDispatchDialog({
                         <div className="hidden">
                             <Label>Sold takas <span className="font-normal text-slate-400">(optional display count)</span></Label>
                             <Input type="number" min="0" step="0.01" value={soldTakas} onChange={(event) => setSoldTakas(event.target.value)} placeholder="Leave blank if unknown" className="h-11 lg:h-9" />
-                            <p className="text-[11px] font-semibold text-slate-500">Meters reserve stock. Taka count is only adjusted when entered.</p>
+                            <p className="text-[11px] font-semibold text-slate-500">Metres Sold reserve Godown Stock. Taka is provisional and changes only when entered.</p>
                         </div>
                         <div className="space-y-1.5">
-                            <Label>Sale rate per meter</Label>
+                            <Label>Sale rate per metre</Label>
                             <div className="relative">
                                 <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <Input type="number" min="0" step="0.01" value={saleRate} onChange={(event) => setSaleRate(event.target.value)} className="h-11 pl-9 lg:h-9" />
@@ -477,13 +478,13 @@ export function SellAndDispatchDialog({
                         />
                         <span>
                             <span className="block text-sm font-bold text-slate-950">Dispatch now</span>
-                            <span className="mt-1 block text-xs font-medium text-slate-600">Create the dispatch in the same operation. Leave unchecked to keep the sale under Sold Pending Dispatch.</span>
+                            <span className="mt-1 block text-xs font-medium text-slate-600">Sale records the commercial commitment. Dispatch records physical movement. Leave unchecked to keep the Sale under Sold Pending Dispatch.</span>
                         </span>
                     </label>
                     {dispatchNow && (
                         <div className="grid gap-3 rounded-lg border border-slate-200 p-4 sm:grid-cols-2">
                             <div className="space-y-1.5">
-                                <Label>Dispatched meters</Label>
+                                <Label>Metres Sent</Label>
                                 <Input type="number" min="0.01" step="0.01" value={actualDispatchedMeters} onChange={(event) => setActualDispatchedMeters(event.target.value)} />
                             </div>
                             <div className="space-y-1.5">
@@ -507,7 +508,8 @@ export function SellAndDispatchDialog({
                                 <Input value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())} placeholder="Optional" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label>Challan number</Label>
+                                <Label>Delivery Challan number</Label>
+                                <p className="text-[11px] text-slate-500">Challan is the document sent with the goods, not an invoice, payment receipt, or Party Receipt Confirmation.</p>
                                 <Input value={challanNumber} onChange={(event) => setChallanNumber(event.target.value)} placeholder="Optional" />
                             </div>
                             <div className="rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 sm:col-span-2">
@@ -527,7 +529,7 @@ export function SellAndDispatchDialog({
             <div className="space-y-4 py-2">
                 <div className="grid gap-2">
                     {renderMetric('Party', partyName || 'Missing')}
-                    {renderMetric('Sold meters', `${soldMetersNum.toFixed(2)} m`)}
+                    {renderMetric('Metres Sold', `${soldMetersNum.toFixed(2)} m`)}
                     {renderMetric('Sale rate', `${money(saleRateNum)} / m`)}
                     {renderMetric('Total sale value', money(totalSaleValue), true)}
                     {renderMetric('Cost per meter', `${money(costPerMeter)} / m`)}
@@ -559,7 +561,7 @@ export function SellAndDispatchDialog({
                         Sell Stock
                     </DialogTitle>
                     <DialogDescription>
-                        Sell stock to a named party. The sale will be saved and can be dispatched later from the Dispatches page.
+                        Sell Godown Stock to a named Party (buyer/customer). Sale, Dispatch, and Party Receipt Confirmation remain separate events.
                     </DialogDescription>
                 </DialogHeader>
 

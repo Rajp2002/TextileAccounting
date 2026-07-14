@@ -116,7 +116,7 @@ export function CreateDispatchModal({
                 return
             }
             if (m > Number(pkg.metres) + 0.01) {
-                toast.error(`Meters to dispatch for ${pkg.package_no} cannot exceed available ${Number(pkg.metres).toFixed(2)} m`)
+                toast.error(`Metres Sent for ${pkg.package_no} cannot exceed available ${Number(pkg.metres).toFixed(2)} m`)
                 return
             }
             if (t <= 0) {
@@ -226,7 +226,7 @@ export function CreateDispatchModal({
                                         {checked && (
                                             <div className="grid grid-cols-1 gap-3 pt-3 border-t border-indigo-100/50">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Meters to Send</Label>
+                                                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Metres Sent</Label>
                                                     <Input
                                                         type="number"
                                                         step="0.01"

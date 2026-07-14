@@ -107,7 +107,7 @@ describe('Batch 4 commercials receivables and payment correctness', () => {
         expect(todayClient).toContain('data.commercial.blockingIssues.length === 0')
         expect(todayClient).toContain('CommercialsAttentionCard')
         expect(attentionCard).toContain('/owner/commercials')
-        expect(attentionCard).toContain('Receivables need review')
+        expect(attentionCard).toContain('Amounts Due need review')
         expect(attentionCard).toContain('payment_mismatch')
     })
 })

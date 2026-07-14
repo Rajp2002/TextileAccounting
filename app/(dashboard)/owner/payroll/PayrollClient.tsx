@@ -861,24 +861,24 @@ function buildSettlementCsv(settlements: SettlementHistoryItem[]) {
         cheque: 'Cheque',
     }
     const headers = [
-        'Settlement ID',
-        'Settlement Date',
-        'Payroll Month',
+        'Worker Hisaab ID',
+        'Hisaab Date',
+        'Hisaab Cycle',
         'Worker Name',
         'Worker Type',
         'Worker Detail',
         'Earnings Lines',
-        'Total Meters',
+        'Total Metres',
         'Payment Mode',
         'Net Revenue Before Deductions',
         'Inam Bonus',
         'Kapaat Deduction',
-        'Advance Recovered',
+        'Upaad Recovered',
         'PF',
         'ESI',
         'Net Paid',
         'Carried Debt',
-        'Final Settlement',
+        'Final Worker Hisaab',
         'Compliance Flag',
         'Manual Adjustments',
     ]
@@ -1122,8 +1122,8 @@ function MeterWorkerRow({
                                         <table className="hidden lg:table w-full text-xs">
                                             <thead className="bg-gray-50 text-gray-500">
                                                 <tr>
-                                                    <th className="px-3 py-2 text-left font-bold">Machine</th>
-                                                    <th className="px-3 py-2 text-right font-bold">Meters</th>
+                                                    <th className="px-3 py-2 text-left font-bold">Loom</th>
+                                                    <th className="px-3 py-2 text-right font-bold">Metres Produced</th>
                                                     <th className="px-3 py-2 text-right font-bold">Total</th>
                                                 </tr>
                                             </thead>
@@ -1163,7 +1163,7 @@ function MeterWorkerRow({
                                                         </div>
                                                     )}
                                                     <div className="text-xs text-gray-500 flex justify-between">
-                                                        <span>Meters</span>
+                                                        <span>Metres Produced</span>
                                                         <span>{m.meters.toFixed(1)} @ ₹{m.rate}</span>
                                                     </div>
                                                 </div>
@@ -1382,7 +1382,7 @@ function FixedWorkerRow({
                             </span>
                             {worker.isMachineOperator && (
                                 <Badge variant="outline" className="border-saffron-soft bg-saffron-soft/45 text-[9px] font-black uppercase tracking-tight text-saffron-deep">
-                                    Machine operator
+                                    Loom Worker
                                 </Badge>
                             )}
                             {isPaid && <Check className="h-3 w-3 text-green-500" />}
@@ -3502,7 +3502,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                         onClick={() => setShowSettlementHistory(true)}
                     >
                         <History className="h-4 w-4" />
-                        Past settlements
+                        Past Worker Hisaab
                     </Button>
                     {/* Month navigator */}
                     <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5">
@@ -3536,7 +3536,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                 <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900" role="alert">
                     <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                     <div>
-                        <p className="text-sm font-black">Payroll data needs attention</p>
+                        <p className="text-sm font-black">Worker Hisaab data needs attention</p>
                         <p className="mt-0.5 text-xs leading-relaxed">{initialData.operatorSchemaWarning}</p>
                     </div>
                 </div>
@@ -3604,7 +3604,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                         <CalendarClock className="mx-auto mb-3 h-9 w-9 text-slate-300" />
                         <p className="font-bold text-slate-800">No wages due for this cycle yet</p>
                         <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-slate-500">
-                            Payroll rows open when the configured pay date is approaching. This keeps in-progress production out of the due-wages list.
+                            Worker Hisaab rows open when the configured pay date is approaching. This keeps in-progress production out of the due-wages list.
                         </p>
                     </CardContent>
                 </Card>
@@ -3712,7 +3712,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                 </div>
             )}
 
-            {/* ── Meter Workers Tab ── */}
+            {/* ── Piece-rate Workers Tab ── */}
             {selectedCycleStatus.status !== 'not_started' && activeTab === 'meter' && (
                 <div className="space-y-3">
                     {meterLoading ? (
@@ -3776,7 +3776,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                 </div>
             )}
 
-            {/* ── Fixed Workers Tab ── */}
+            {/* ── Salaried Workers Tab ── */}
             {selectedCycleStatus.status !== 'not_started' && activeTab === 'fixed' && (
                 <div className="space-y-3">
                     {fixedLoading ? (

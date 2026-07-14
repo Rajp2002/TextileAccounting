@@ -10,7 +10,7 @@ describe('SALE-010/012/014 sale and optional dispatch remediation', () => {
 
     expect(dialog).toContain('Dispatch now')
     expect(dialog).toContain('setDispatchNow(event.target.checked)')
-    expect(dialog).toContain('Dispatched meters')
+    expect(dialog).toContain('Metres Sent')
     expect(dialog).toContain('Dispatch date')
     expect(dialog).toContain('onInput={(event) => setDispatchDate')
     expect(dialog).toContain("document.querySelector<HTMLInputElement>('[data-testid=\"sell-dispatch-date\"]')?.value")

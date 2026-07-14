@@ -16,14 +16,14 @@ describe('Estimator-only product presentation', () => {
 
     it('limits Base navigation to estimator destinations and account billing', () => {
         expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/settings'])")
-        expect(sidebar).toContain("? 'Saved Costings'")
+        expect(sidebar).toContain("? 'Saved Cost Estimates'")
         expect(sidebar).toContain('Subscription & Billing')
     })
 
     it('removes party requirements and quote workflow actions from Base costing', () => {
         expect(estimator).toContain('!canUseProduction || mode === \'market\'')
         expect(estimator).toContain("? qualityLabel.trim()")
-        expect(estimator).toContain("'Update Costing' : 'Save Costing'")
+        expect(estimator).toContain("'Update Cost Estimate' : 'Save Cost Estimate'")
         expect(estimator).toContain("t('estimator.hud.quote_per_m')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("t('estimator.simulation.title')")
@@ -33,18 +33,18 @@ describe('Estimator-only product presentation', () => {
     it('keeps the costing backbone and terminology shared with Full Suite', () => {
         const english = read('lib/i18n/locales/en.ts')
 
-        expect(english).toContain('quote_per_m: "Final Price / m"')
-        expect(english).toContain('title: "Costing Details"')
-        expect(english).toContain('simulation_qty: "Costing Quantity"')
+        expect(english).toContain('quote_per_m: "Quotation Price / m"')
+        expect(english).toContain('title: "Cost Estimate Details"')
+        expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
         expect(estimator).not.toContain("canUseProduction ? t('estimator.hud.quote_per_m')")
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
         expect(estimator).not.toContain("!canUseProduction ? 'Costing Quantity'")
     })
 
     it('presents persisted quote entities as saved costings without forking persistence', () => {
-        expect(quotes).toContain("canUseProduction ? 'Quote History' : 'Saved Costings'")
+        expect(quotes).toContain("canUseProduction ? 'Quotations' : 'Saved Cost Estimates'")
         expect(quotes).toContain("'Open & Update'")
-        expect(quotes).toContain("'Duplicate Costing'")
+        expect(quotes).toContain("'Duplicate Cost Estimate'")
         expect(estimator).toContain('saveEstimatorQuoteV3({')
     })
 
@@ -52,7 +52,7 @@ describe('Estimator-only product presentation', () => {
         expect(settingsLayout).toContain('requiredTier="base"')
         expect(settings).toContain('{hasPremium && <div')
         expect(settings).toContain('{hasPremium && <SettingsSection id="automations"')
-        expect(settings).toContain("hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'")
+        expect(settings).toContain("hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'")
         expect(settings).toContain('Weavly Estimator')
         expect(settings).toContain('<FactoryCostProfile standaloneEstimator={!hasPremium} />')
         expect(settings).toContain('Password & Security')

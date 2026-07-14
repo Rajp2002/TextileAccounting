@@ -124,12 +124,12 @@ export const QualitySchema = z.object({
     avg_sale_price_per_m: z
         .number()
         .nonnegative('Price cannot be negative')
-        .max(100_000, 'Price per meter exceeds expected range'),
+        .max(100_000, 'Price per metre exceeds expected range'),
     /** worker rate per meter in ₹ */
     default_worker_rate_per_m: z
         .number()
         .nonnegative('Rate cannot be negative')
-        .max(100_000, 'Worker rate per meter exceeds expected range'),
+        .max(100_000, 'Worker rate per metre exceeds expected range'),
 })
 
 export const YarnBatchSchema = z.object({
@@ -226,8 +226,8 @@ export const OrderSchema = z
         quality_id: UuidSchema,
         total_target_meters: z
             .number()
-            .positive('Target meters must be positive')
-            .max(10_000_000, 'Target meters exceeds realistic maximum'),
+            .positive('Target metres must be positive')
+            .max(10_000_000, 'Target metres exceed the realistic maximum'),
         start_date: DateSchema,
         deadline: DateSchema,
         status: z.enum(['active', 'completed', 'cancelled']),
@@ -240,7 +240,7 @@ export const OrderSchema = z
 export const AssignOrderSchema = z.object({
     orderId: UuidSchema,
     /** Array of machine UUIDs — empty array to unassign all */
-    machineIds: z.array(UuidSchema).max(100, 'Too many machines in one assignment'),
+    machineIds: z.array(UuidSchema).max(100, 'Too many looms in one assignment'),
 })
 
 // ─── Advance Schemas ──────────────────────────────────────────────────────────
@@ -378,7 +378,7 @@ export const CreatePartyInvoiceSchema = z
         invoice_number: z.string().trim().max(40, 'Invoice number too long').optional().or(z.literal('')),
         invoice_date: DateSchema,
         due_date: DateSchema,
-        total_meters: z.number().nonnegative('Meters cannot be negative').max(10_000_000),
+        total_meters: z.number().nonnegative('Metres cannot be negative').max(10_000_000),
         rate_per_m: z.number().nonnegative('Rate cannot be negative').max(100_000),
         gst_percent: z.number().min(0).max(100).default(0),
         notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
@@ -491,16 +491,16 @@ export const CreateTakaStockLotSchema = z.object({
     order_id: UuidSchema.optional().or(z.literal('')),
     quote_id: UuidSchema.optional().or(z.literal('')),
     taka_count: z.number().positive('Taka count must be greater than zero').max(1_000_000, 'Taka count too high'),
-    meters_per_taka: z.number().positive('Meters per taka must be greater than zero').max(1_000_000, 'Meters per taka too high'),
+    meters_per_taka: z.number().positive('Metres per Taka must be greater than zero').max(1_000_000, 'Metres per Taka too high'),
     unit_label: z.string().trim().min(1, 'Unit label is required').max(40, 'Unit label too long').default('taka'),
-    cost_per_meter: z.number().nonnegative('Cost cannot be negative').max(1_000_000, 'Cost per meter too high'),
+    cost_per_meter: z.number().nonnegative('Cost cannot be negative').max(1_000_000, 'Cost per metre too high'),
     received_date: DateSchema,
     notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
 })
 
 export const RecordTakaStockSaleSchema = z.object({
     stock_lot_id: UuidSchema,
-    taka_sold: z.number().positive('Takas sold must be greater than zero').max(1_000_000, 'Takas sold too high'),
+    taka_sold: z.number().positive('Taka sold must be greater than zero').max(1_000_000, 'Taka sold is too high'),
     price_per_meter: z.number().nonnegative('Sale price cannot be negative').max(1_000_000, 'Sale price too high'),
     sale_date: DateSchema,
     notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),

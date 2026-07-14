@@ -28,7 +28,7 @@ export const ZERO_METER_REASONS = [
 export type ZeroMeterReason = (typeof ZERO_METER_REASONS)[number]
 
 export const ZERO_METER_REASON_LABELS: Record<ZeroMeterReason, string> = {
-    machine_idle: 'Machine idle',
+    machine_idle: 'Loom idle',
     maintenance: 'Maintenance',
     yarn_issue: 'Yarn issue',
     beam_issue: 'Beam issue',
@@ -42,16 +42,16 @@ export const ZERO_METER_REASON_LABELS: Record<ZeroMeterReason, string> = {
 // ─── Supervisor-Friendly Validation Messages ─────────────────────────────────
 
 export const VALIDATION_MESSAGES = {
-    WORKER_REQUIRED: 'Select a worker before saving meters.',
-    QUALITY_REQUIRED: 'Select a quality or run before saving meters.',
+    WORKER_REQUIRED: 'Select a Worker before saving Metres Produced This Shift.',
+    QUALITY_REQUIRED: 'Select a Fabric Quality, Market Run, or Party Order before saving Metres Produced This Shift.',
     RATE_MISSING:
         'No worker rate is set for this quality. Ask the owner to set the rate before saving production.',
     RATE_ZERO: 'Worker rate must be greater than zero for production logs.',
     FIXED_OPERATOR_PER_METER:
-        'Fixed machine operator production can be logged for accountability, but it cannot use per-meter pay.',
+        'Salaried Worker production can be recorded for accountability, but it cannot use piece-rate pay.',
     REASON_REQUIRED: 'Enter a reason for 0m production.',
     NOTE_REQUIRED_OTHER: "Add a note for 'Other' reason.",
-    NEGATIVE_METERS: 'Production meters cannot be negative.',
+    NEGATIVE_METERS: 'Metres Produced This Shift cannot be negative.',
 } as const
 
 // A single loom producing this much in one shift is operationally suspicious,

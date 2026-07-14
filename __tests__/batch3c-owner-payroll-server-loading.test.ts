@@ -60,7 +60,7 @@ describe('Batch 3C — owner payroll server initial load', () => {
 
     it('keeps the operator-schema fallback visible and preserves shared payroll math', () => {
         expect(loader).toContain('operatorSchemaWarning')
-        expect(client).toContain('Payroll data needs attention')
+        expect(client).toContain('Worker Hisaab data needs attention')
         expect(readModel).toContain('calculateMeterOperatorGross')
         expect(readModel).toContain('calculateFixedMachineOperatorGross')
     })

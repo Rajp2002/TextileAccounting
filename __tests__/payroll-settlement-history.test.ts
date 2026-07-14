@@ -33,14 +33,14 @@ describe('payroll settlement history', () => {
         expect(payrollPage).toContain('settlementExportFilename')
         expect(payrollPage).toContain('settlementExportCycleLabel')
         expect(payrollPage).toContain("`${filenamePart(factoryName, 'Factory')}_${cycleLabel}.csv`")
-        expect(payrollPage).toContain('Settlement Date')
+        expect(payrollPage).toContain('Hisaab Date')
     })
 
     it('shows detailed earning lines behind each settlement', () => {
         expect(payrollPage).toContain('Earnings overview')
         expect(payrollPage).toContain('Net revenue before deductions: meters produced x worker rate across machines.')
         expect(payrollPage).toContain('Net Revenue Before Deductions')
-        expect(payrollPage).toContain('Total Meters')
+        expect(payrollPage).toContain('Total Metres')
         expect(payrollPage).toContain("from('production_logs')")
         expect(payrollPage).toContain('worker_rate_snapshot')
         expect(payrollPage).toContain('Earnings Lines')

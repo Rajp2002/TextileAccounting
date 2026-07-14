@@ -286,7 +286,7 @@ function AddStockDialog({
                     )}
 
                     <div className="space-y-1.5">
-                        <Label>Quality</Label>
+                        <Label>Fabric Quality</Label>
                         <Input
                             value={form.quality_label}
                             onChange={(event) => setForm((prev) => ({ ...prev, quality_label: event.target.value }))}
@@ -304,7 +304,7 @@ function AddStockDialog({
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                        <Label>Total Meters</Label>
+                        <Label>Total (m)</Label>
                         <Input
                             type="number"
                             min="0.01"
@@ -318,7 +318,8 @@ function AddStockDialog({
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <Label>Meters per Taka</Label>
+                        <Label>Metres per Taka (m)</Label>
+                        <p className="text-xs text-muted-foreground">Taka is the provisional physical fabric unit; confirm its factory meaning during the pilot.</p>
                         <Input
                             type="number"
                             min="0.01"
@@ -444,13 +445,13 @@ function AdjustDialog({
                         <Select value={mode} onValueChange={(value) => setMode(value as AdjustmentMode)}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="add">Add meters</SelectItem>
-                                <SelectItem value="subtract">Subtract meters</SelectItem>
+                                <SelectItem value="add">Add metres</SelectItem>
+                                <SelectItem value="subtract">Subtract metres</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-1.5">
-                        <Label>Meters</Label>
+                        <Label>Metres (m)</Label>
                         <Input
                             type="number"
                             min="0.01"
@@ -503,7 +504,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
     const [sellAndDispatchLotId, setSellAndDispatchLotId] = useState<string | undefined>()
     const marketRunOnly = isMarketRunOnlyMode(initialData.productionMode)
-    const stockLabel = marketRunOnly ? 'Godown Ledger' : 'Godown Stock'
+    const stockLabel = 'Godown Stock'
     const availableLabel = marketRunOnly ? 'Expected available for sale' : 'Available for sale'
 
     const godowns = useMemo(() => {
@@ -602,8 +603,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                     </p>
                     <p className="mt-1 text-xs text-amber-600 font-semibold">
                         {marketRunOnly
-                            ? 'These meters are not a daily physical confirmation. Shortage or excess found during dispatch is tracked for owner review.'
-                            : 'Use Commercials for revenue, profit, and payment collection.'}
+                            ? 'These metres are not a daily physical confirmation. Shortage or excess found during Dispatch is tracked for owner review.'
+                            : 'Use Party Ledger for revenue, profit, Amount Due, and payment collection.'}
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -745,7 +746,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             className="gap-2 h-11 lg:h-9"
                                         >
                                             <Store className="h-4 w-4" />
-                                            Sell by Meters
+                                            Sell by metres
                                         </Button>
                                         <Button variant="outline" onClick={() => setAdjustLot(lot)} className="gap-2 h-11 lg:h-9">
                                             <PencilLine className="h-4 w-4" />
@@ -799,7 +800,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                 <tr>
                                                                     <th className="px-4 py-3 font-bold">Date</th>
                                                                     <th className="px-4 py-3 font-bold">Entry</th>
-                                                                    <th className="px-4 py-3 text-right font-bold">Meters</th>
+                                                                    <th className="px-4 py-3 text-right font-bold">Metres</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="divide-y divide-border/40">
@@ -901,10 +902,10 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                     <thead className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
                                         <tr>
                                             <th className="px-4 py-3 font-bold">Date</th>
-                                            <th className="px-4 py-3 font-bold">Quality</th>
+                                            <th className="px-4 py-3 font-bold">Fabric Quality</th>
                                             <th className="px-4 py-3 text-right font-bold">Approx Units</th>
-                                            <th className="px-4 py-3 text-right font-bold">Meters</th>
-                                            <th className="px-4 py-3 text-right font-bold">Commercials</th>
+                                            <th className="px-4 py-3 text-right font-bold">Metres Sold</th>
+                                            <th className="px-4 py-3 text-right font-bold">Party Ledger</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/40">
@@ -922,7 +923,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-semibold">{meters(Number(sale.meters_sold))}</td>
                                                 <td className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">
-                                                    Tracked in Commercials
+                                                    Tracked in Party Ledger
                                                 </td>
                                             </tr>
                                         ))}
@@ -947,7 +948,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 <p className="text-xs text-muted-foreground">
                                                     {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' })}
                                                 </p>
-                                                <p className="text-xs font-semibold text-muted-foreground">Commercials</p>
+                                                <p className="text-xs font-semibold text-muted-foreground">Party Ledger</p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-3 gap-2 text-sm pt-1">
@@ -956,12 +957,12 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 <p className="font-semibold">{stockUnits(Number(sale.taka_sold), sale.fabric_stock_lots.unit_label)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-muted-foreground">Meters</p>
+                                                <p className="text-xs text-muted-foreground">Metres Sold</p>
                                                 <p className="font-semibold">{meters(Number(sale.meters_sold))}</p>
                                             </div>
                                             <div>
                                                 <p className="text-xs text-muted-foreground">Money</p>
-                                                <p className="font-semibold">Commercials</p>
+                                                <p className="font-semibold">Party Ledger</p>
                                             </div>
                                         </div>
                                     </div>

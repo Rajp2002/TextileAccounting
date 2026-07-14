@@ -666,7 +666,7 @@ export async function saveEstimatorQuoteV3(params: {
         if (sourceError) return { error: sourceError.message }
         if (!source) return { error: 'The quote being edited no longer exists.' }
         if (Date.parse(source.updated_at) !== Date.parse(params.expectedSourceUpdatedAt!)) {
-            return { error: 'This quote changed in another tab. Reload it from Quote History before saving again.' }
+            return { error: 'This Quotation changed in another tab. Reload it from Quotations before saving again.' }
         }
 
         // Draft/sent/rejected quotes remain the same business record. Accepted
@@ -685,7 +685,7 @@ export async function saveEstimatorQuoteV3(params: {
                 .maybeSingle()
 
             if (updateError) return { error: updateError.message }
-            if (!updated) return { error: 'This quote changed in another tab. Refresh Quote History before saving again.' }
+            if (!updated) return { error: 'This Quotation changed in another tab. Refresh Quotations before saving again.' }
             return { success: true, quoteId: updated.id, updatedAt: updated.updated_at, updated: true }
         }
     }
@@ -732,7 +732,7 @@ export async function convertQuoteToOrder(data: {
 }) {
     void data
     return {
-        error: 'Direct order creation from the estimator has been retired. Save the quote, accept it, then convert it from Quote History.',
+        error: 'Direct Party Order creation from the estimator has been retired. Save the Quotation, accept it, then convert it from Quotations.',
     }
 }
 
@@ -1082,7 +1082,7 @@ export async function updateQuoteStatus(
     if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
     if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
     if (Date.parse(current.updated_at) !== Date.parse(expectedUpdatedAt)) {
-        return { error: 'This quote changed in another tab. Refresh Quote History before changing its status.' }
+        return { error: 'This Quotation changed in another tab. Refresh Quotations before changing its status.' }
     }
 
     const allowedTransitions: Record<string, string[]> = {
@@ -1106,7 +1106,7 @@ export async function updateQuoteStatus(
         .maybeSingle()
 
     if (error) return { error: error.message }
-    if (!data) return { error: 'This quote changed in another tab. Refresh Quote History before changing its status.' }
+    if (!data) return { error: 'This Quotation changed in another tab. Refresh Quotations before changing its status.' }
     
     revalidatePath('/owner/quotes')
     return { success: true, data }
@@ -1134,7 +1134,7 @@ export async function deleteEstimatorQuote(id: string, expectedUpdatedAt: string
 
     if (error) return { error: error.message }
     if (!deleted) {
-        return { error: 'This quote changed, is no longer deletable, or was already removed. Refresh Quote History.' }
+        return { error: 'This Quotation changed, is no longer deletable, or was already removed. Refresh Quotations.' }
     }
 
     revalidatePath('/owner/quotes')

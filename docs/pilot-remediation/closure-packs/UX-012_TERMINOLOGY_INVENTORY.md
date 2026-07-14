@@ -2,7 +2,7 @@
 
 Prepared: 2026-07-14 IST
 
-Status effect: **none**. `UX-012` remains `BLOCKED` until a named pilot-factory supervisor completes and dates the decision pack.
+Status: reconciled inventory for the **product-owner-approved provisional limited-pilot baseline**. No factory supervisor has approved it. Actual pilot-user feedback, corrections, and post-change confirmation remain open.
 
 ## Method and coverage
 
@@ -76,6 +76,6 @@ Locations below are the shortest reproducible route and principal source locatio
 8. **Party ledger versus Commercials:** the same money workflow is exposed under accounting, commercial and factory-floor language.
 9. **UI versus generated output:** PDF payslips and data-export keys use English/developer labels even when Gujarati/Hindi UI is selected.
 
-## Pre-approval change decision
+## Baseline approval and amendment
 
-No product text was changed during this preparation sprint. The observed inconsistencies are intertwined with genuine factory-language choices, financial meanings, or unit conventions; treating them as “obvious typos” would silently make the supervisor’s decision. Internal database/code identifiers are also intentionally unchanged because renaming them would add migration risk without improving the pilot UI.
+On 2026-07-14 the product owner approved the reconciled provisional baseline and amended UX-012 so representative comprehension validation occurs with the actual pilot user during the pilot. Product wording is implemented at UI/output boundaries while internal database/code identifiers remain stable to avoid migration risk. This product-owner decision is not factory-supervisor approval.

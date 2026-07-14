@@ -268,7 +268,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         }
         setQuotes(previous => previous.filter(quote => quote.id !== quoteToDelete.id))
         setQuoteToDelete(null)
-        toast.success('Quote deleted')
+        toast.success('Quotation deleted')
     }
 
     return (
@@ -277,9 +277,9 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                         <History className="h-6 w-6 text-indigo-500" />
-                        {canUseProduction ? 'Quote History' : 'Saved Costings'}
+                        {canUseProduction ? 'Quotations' : 'Saved Cost Estimates'}
                     </h1>
-                    <p className="text-sm text-slate-500 font-medium">{canUseProduction ? 'Move quotes from draft to sent, manually accept them, then create active orders.' : 'Reopen, update, duplicate, or remove your previous fabric costings.'}</p>
+                    <p className="text-sm text-slate-500 font-medium">{canUseProduction ? 'Move Quotations from draft to sent, accept them, then create Party Orders.' : 'Reopen, update, duplicate, or remove previous Cost Estimates.'}</p>
                 </div>
                 {canUseProduction && <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-lg shadow-sm w-full sm:w-auto overflow-x-auto">
                     {['all', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
@@ -307,11 +307,11 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         <div className="p-3 bg-white rounded-full shadow-sm shadow-slate-200/50">
                             <FileText className="h-6 w-6 text-slate-400" />
                         </div>
-                        <p className="text-sm font-bold text-slate-600">{canUseProduction ? 'No quotes found' : 'No saved costings yet'}</p>
+                        <p className="text-sm font-bold text-slate-600">{canUseProduction ? 'No Quotations found' : 'No saved Cost Estimates yet'}</p>
                         <p className="text-xs text-slate-500 max-w-xs">{
                             filterStatus === 'all'
-                                ? (canUseProduction ? "You haven't saved any quotes from the estimator yet." : "Save a costing from the Estimator and it will appear here.")
-                                : `No quotes with status "${filterStatus}".`
+                                ? (canUseProduction ? "You haven't saved any Quotations from Cost Estimate yet." : "Save a Cost Estimate and it will appear here.")
+                                : `No Quotations with status "${filterStatus}".`
                         }</p>
                         {filterStatus !== 'all' && (
                             <Button variant="link" size="sm" onClick={() => setFilterStatus('all')} className="mt-2 text-indigo-600 font-bold">
@@ -389,7 +389,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                                     onClick={() => handleRestore(quote, 'duplicate')}
                                                 >
                                                     <Copy className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                                                    {canUseProduction ? 'Duplicate' : 'Duplicate Costing'}
+                                                    {canUseProduction ? 'Duplicate' : 'Duplicate Cost Estimate'}
                                                 </Button>
                                                 {!linkedOrder && (quote.status === 'draft' || quote.status === 'rejected') && (
                                                     <Button

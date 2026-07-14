@@ -1646,7 +1646,7 @@ export async function confirmPendingSaleDispatch(
         return { success: false, message: 'Dispatch date is required' }
     }
     if (!dispatchMeters || dispatchMeters <= 0) {
-        return { success: false, message: 'Dispatch meters must be greater than 0' }
+        return { success: false, message: 'Metres Sent must be greater than 0' }
     }
 
     const { data, error } = await supabase.rpc('confirm_party_stock_sale_dispatch_v1', {
@@ -1701,7 +1701,7 @@ export async function confirmPendingSaleReceived(
         return { success: false, message: 'Dispatch date is required' }
     }
     if (receivedMeters <= 0) {
-        return { success: false, message: 'Received meters must be greater than 0' }
+        return { success: false, message: 'Metres Received must be greater than 0 for Party Receipt Confirmation' }
     }
 
     const { data, error } = await supabase.rpc('confirm_party_stock_sale_received_v1', {

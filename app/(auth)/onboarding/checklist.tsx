@@ -716,7 +716,7 @@ const STEPS = [
         key: 'hasMachine' as keyof OnboardingStatus,
         icon: Cpu,
         title: 'Add your machines',
-        description: 'Machines are the primary production units. Add all looms/machines in your factory.',
+        description: 'Looms are the primary production units. Add every loom in your factory.',
         accentColor: 'amber',
         form: MachineForm,
     },
@@ -755,15 +755,15 @@ const TOUR_STEPS = [
     },
     {
         icon: Calculator,
-        label: 'Costing',
-        title: 'Create the first fabric costing after setup.',
-        body: 'The estimator turns quality, yarn, wage rate, and overhead into a run the factory can follow.',
+        label: 'Cost Estimate',
+        title: 'Create the first fabric Cost Estimate after setup.',
+        body: 'The estimator turns Fabric Quality, yarn, wage rate, and overhead into a Market Run or Party Order the factory can follow.',
     },
     {
         icon: ClipboardList,
         label: 'First run',
         title: 'Start an order or market run.',
-        body: 'This becomes the live work item that gets linked to looms, workers, and daily meters.',
+        body: 'This becomes the live work item that gets linked to looms, Workers, and daily shift production.',
     },
     {
         icon: Link2,
@@ -773,15 +773,15 @@ const TOUR_STEPS = [
     },
     {
         icon: Activity,
-        label: 'Meters',
+        label: 'Shift production',
         title: 'Log the first shift production.',
-        body: 'Meters update pace, stock movement, payroll hisaab, and Factory Today alerts.',
+        body: 'Metres Produced This Shift update pace, stock movement, Worker Hisaab, and Factory Today alerts.',
     },
     {
         icon: IndianRupee,
         label: 'Dispatch',
         title: 'Finish with dispatch and commercials.',
-        body: 'Once fabric leaves the factory, Weavly helps track receipt, receivables, and profit.',
+        body: 'Once fabric leaves the factory, Weavly keeps Sale, Dispatch, Party Receipt Confirmation, Amount Due, and profit distinct.',
     },
 ]
 

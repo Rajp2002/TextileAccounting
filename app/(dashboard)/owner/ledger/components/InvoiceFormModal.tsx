@@ -98,7 +98,7 @@ export function InvoiceFormModal({
                     <Field label="Due date">
                         <Input value={invoiceForm.due_date} onChange={event => setInvoiceForm(prev => ({ ...prev, due_date: event.target.value }))} type="date" />
                     </Field>
-                    <Field label="Meters">
+                    <Field label="Metres Sold">
                         <Input value={invoiceForm.total_meters} onChange={event => setInvoiceForm(prev => ({ ...prev, total_meters: event.target.value }))} type="number" min="0" step="0.01" placeholder="0" />
                     </Field>
                     <Field label="Rate / meter">

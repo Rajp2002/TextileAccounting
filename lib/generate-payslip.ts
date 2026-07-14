@@ -59,12 +59,12 @@ export function generateMeterPayslip(data: PayslipBaseData & {
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
-    let y = addPayslipHeader(doc, pageWidth, data, 'Meter Worker (Piece Rate)')
+    let y = addPayslipHeader(doc, pageWidth, data, 'Piece-rate Worker')
 
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
-    doc.text('Machine', 20, y)
-    doc.text('Meters', 90, y, { align: 'right' })
+    doc.text('Loom', 20, y)
+    doc.text('Metres', 90, y, { align: 'right' })
     doc.text('Rate/m', 120, y, { align: 'right' })
     doc.text('Amount', pageWidth - 20, y, { align: 'right' })
     y += 2
@@ -116,7 +116,7 @@ export function generateFixedPayslip(data: PayslipBaseData & {
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
-    let y = addPayslipHeader(doc, pageWidth, data, titleCase(data.role))
+    let y = addPayslipHeader(doc, pageWidth, data, `Salaried Worker · ${titleCase(data.role)}`)
 
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
@@ -186,16 +186,16 @@ export function buildPayslipSettlementRows(data: {
     const paymentMode = data.paymentMode ?? itemization?.paymentMode ?? null
 
     const rows: PayslipSettlementRow[] = [
-        { label: 'Gross Pay', value: formatINR(data.grossPay), kind: 'earning' },
+        { label: 'Gross Earnings', value: formatINR(data.grossPay), kind: 'earning' },
     ]
 
-    if (inamTotal > 0) rows.push({ label: 'Inam Bonus', value: formatINR(inamTotal), kind: 'earning' })
-    if (kapaatTotal > 0) rows.push({ label: 'Kapaat Deduction', value: `-${formatINR(kapaatTotal)}`, kind: 'deduction' })
-    if (advanceDeducted > 0) rows.push({ label: 'Advance Recovered', value: `-${formatINR(advanceDeducted)}`, kind: 'deduction' })
+    if (inamTotal > 0) rows.push({ label: 'Inam (bonus)', value: formatINR(inamTotal), kind: 'earning' })
+    if (kapaatTotal > 0) rows.push({ label: 'Kapaat (deduction)', value: `-${formatINR(kapaatTotal)}`, kind: 'deduction' })
+    if (advanceDeducted > 0) rows.push({ label: 'Upaad Recovered', value: `-${formatINR(advanceDeducted)}`, kind: 'deduction' })
     if (pfEmployee > 0) rows.push({ label: 'PF Employee', value: `-${formatINR(pfEmployee)}`, kind: 'deduction' })
     if (esicEmployee > 0) rows.push({ label: 'ESI Employee', value: `-${formatINR(esicEmployee)}`, kind: 'deduction' })
 
-    rows.push({ label: 'Net Pay', value: formatINR(data.netPay), kind: 'net' })
+    rows.push({ label: 'Hisaab Payout', value: formatINR(data.netPay), kind: 'net' })
 
     if (remainingDebt > 0) rows.push({ label: 'Carry-Forward Debt', value: formatINR(remainingDebt), kind: 'info' })
     if (paymentMode) rows.push({ label: 'Payment Mode', value: safePdfText(paymentMode), kind: 'info' })
@@ -219,7 +219,7 @@ function addPayslipHeader(
     doc.setFontSize(11)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(100)
-    doc.text('Monthly Payslip', pageWidth / 2, y, { align: 'center' })
+    doc.text('Worker Hisaab Payslip', pageWidth / 2, y, { align: 'center' })
     y += 12
 
     doc.setTextColor(0)
@@ -277,7 +277,7 @@ function addSettlementRows(
 
     if (typeof data.totalMeters === 'number') {
         doc.setFont('helvetica', 'bold')
-        doc.text('Total Meters', 20, y)
+        doc.text('Total Metres', 20, y)
         doc.text(data.totalMeters.toFixed(1), 90, y, { align: 'right' })
         y += 6
     }

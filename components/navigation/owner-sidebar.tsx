@@ -35,15 +35,15 @@ const navGroups = [
         label: "Control",
         items: [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
-            { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
-            { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "quotes" },
+            { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+            { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "quotes" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
         ]
     },
     {
         label: "Factory flow",
         items: [
-            { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
+            { name: "Party Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
             { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs", workflow: "marketRuns" },
             { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
             { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches", workflow: "dispatches" },
@@ -52,7 +52,7 @@ const navGroups = [
     {
         label: "Money",
         items: [
-            { name: "Commercials", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials", workflow: "commercials" },
+            { name: "Party Ledger", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials", workflow: "commercials" },
             { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing", workflow: "billing" },
         ]
     },
@@ -60,8 +60,8 @@ const navGroups = [
         label: "Workforce",
         items: [
             { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers", workflow: "workers" },
-            { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
-            { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances", workflow: "advances" },
+            { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
+            { name: "Upaad", href: "/owner/advances", icon: HandCoins, translationKey: "advances", workflow: "advances" },
         ]
     },
     {
@@ -81,15 +81,15 @@ const navGroups = [
 
 const bottomNavItems = [
     { name: "Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
-    { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
+    { name: "Party Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
     { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs", workflow: "marketRuns" },
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
-    { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
-    { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
+    { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+    { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
 function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
-    if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Ledger'
+    if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Stock'
     return t(`nav.${item.translationKey}`) || item.name
 }
 
@@ -170,7 +170,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                 >
                                     <Icon className="h-[18px] w-[18px]" />
                                     {!hasPremium && item.href === '/owner/quotes'
-                                        ? 'Saved Costings'
+                                         ? 'Saved Cost Estimates'
                                         : getNavLabel(item, productionMode, t)}
                                 </Link>
                             )

@@ -873,7 +873,7 @@ function OrderDetailDrawer({
                                 {/* Target Meters */}
                                 <div className={cn("border rounded-xl p-3 flex items-center justify-between gap-2", isCompleted ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200")}>
                                     <div className="min-w-0">
-                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Target Meters</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Target Metres</p>
                                         {editingTarget ? (
                                             <div className="flex items-center gap-2 mt-1">
                                                 <Input
@@ -981,7 +981,7 @@ function OrderDetailDrawer({
                             {/* Machine Assignment */}
                             <div className="space-y-2">
                                 <p className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
-                                    <Server className="h-3 w-3" /> Machine Assignment
+                                    <Server className="h-3 w-3" /> Loom Assignment
                                     {currentMachineIds.length > 0 && !isCompleted && (
                                         <span className="text-emerald-400">
                                             · {currentMachineIds.length} running
@@ -1018,7 +1018,7 @@ function OrderDetailDrawer({
                                         <Calculator className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                                         <p className="text-xs text-slate-500 font-medium">No estimator quote linked</p>
                                         <p className="text-xs text-slate-400 mt-1">
-                                            Save the quote in Estimator, accept it in Quote History, then convert it into a live order
+                                            Save the Quotation in Estimator, accept it in Quotations, then convert it into a live Party Order
                                         </p>
                                         <a
                                             href="/owner/estimator"

@@ -387,7 +387,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             help: {
                 intro: 'The first production log proves the setup can run from costing to actual output.',
                 why: [
-                    'Meters drive progress, stock movement, payroll, and daily owner alerts.',
+                    'Metres Produced This Shift drive progress, stock movement, Worker Hisaab, and daily owner alerts.',
                     'The log captures loom, worker, shift, quality, and shift-total meters in one record.',
                     'Commercial and dispatch readiness depends on production being recorded first.',
                 ],
@@ -467,7 +467,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                 intro: 'Commercials is where the owner reviews whether the run made money and what the party still owes.',
                 why: [
                     'Expected and realized profit help catch pricing or costing mistakes early.',
-                    'Receivables show unpaid, partial, and collected amounts by party.',
+                    'Amount Due shows unpaid, partial, and collected amounts by Party.',
                     'The first review confirms that costing, stock, dispatch, and payment data are connected.',
                 ],
                 actions: [
@@ -475,7 +475,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                     'Review the profit snapshot and receivables list.',
                     'Record payment when the party pays so outstanding balance stays current.',
                 ],
-                clickPath: ['Owner sidebar', 'Commercials', 'Profit snapshot / Receivables', 'Record payment'],
+                clickPath: ['Owner sidebar', 'Party Ledger', 'Profit snapshot / Amount Due', 'Record payment'],
                 doneWhen: 'At least one commercial profit entry exists.',
             },
         },

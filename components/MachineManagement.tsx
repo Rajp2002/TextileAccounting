@@ -1100,7 +1100,7 @@ export function MachineManagement({
             <Dialog open={assignmentEditor !== null} onOpenChange={(open) => !open && setAssignmentEditor(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Assign Machine Operator</DialogTitle>
+                        <DialogTitle>Assign Loom Worker</DialogTitle>
                         <DialogDescription>
                             Set the operator, pay mode, and rate snapshot for this loom shift.
                         </DialogDescription>
@@ -1116,7 +1116,7 @@ export function MachineManagement({
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="operator-worker-type">Operator Type</Label>
+                                    <Label htmlFor="operator-worker-type">Worker Type</Label>
                                     <select
                                         id="operator-worker-type"
                                         value={assignmentEditor.workerType}
@@ -1136,8 +1136,8 @@ export function MachineManagement({
                                         }}
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
-                                        <option value="meter_worker">Meter worker</option>
-                                        <option value="fixed_worker">Fixed worker</option>
+                                        <option value="meter_worker">Piece-rate Worker</option>
+                                        <option value="fixed_worker">Salaried Worker</option>
                                     </select>
                                 </div>
 
@@ -1163,7 +1163,7 @@ export function MachineManagement({
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
                                         {assignmentEditor.workerType === 'meter_worker' ? (
-                                            <option value="per_meter">Per meter</option>
+                                            <option value="per_meter">Piece-rate per metre</option>
                                         ) : (
                                             <>
                                                 <option value="fixed_monthly">Fixed monthly</option>
@@ -1177,14 +1177,14 @@ export function MachineManagement({
 
                             {assignmentEditor.workerType === 'meter_worker' ? (
                                 <div className="space-y-2">
-                                    <Label htmlFor="meter-worker">Meter Worker</Label>
+                                    <Label htmlFor="meter-worker">Piece-rate Worker</Label>
                                     <select
                                         id="meter-worker"
                                         value={assignmentEditor.meterWorkerId}
                                         onChange={(e) => setAssignmentEditor((current) => current && { ...current, meterWorkerId: e.target.value })}
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
-                                        <option value="">Select meter worker</option>
+                                        <option value="">Select Piece-rate Worker</option>
                                         {workers?.map((worker) => (
                                             <option key={worker.id} value={worker.id}>{tl(worker.name)}</option>
                                         ))}
@@ -1192,7 +1192,7 @@ export function MachineManagement({
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    <Label htmlFor="fixed-worker">Fixed Worker</Label>
+                                    <Label htmlFor="fixed-worker">Salaried Worker</Label>
                                     <select
                                         id="fixed-worker"
                                         value={assignmentEditor.fixedWorkerId}
@@ -1206,7 +1206,7 @@ export function MachineManagement({
                                         }}
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
-                                        <option value="">Select fixed worker</option>
+                                        <option value="">Select Salaried Worker</option>
                                         {fixedWorkers?.map((worker) => (
                                             <option key={worker.id} value={worker.id}>
                                                 {tl(worker.name)} · {worker.role}

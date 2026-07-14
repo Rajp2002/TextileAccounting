@@ -514,7 +514,7 @@ export default function SettingsPage() {
                         </SettingsPanel>
                     </SettingsSection>
 
-                    <SettingsSection id="cost-profile" title={hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'} icon={Factory}>
+                    <SettingsSection id="cost-profile" title={hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'} icon={Factory}>
                         <FactoryCostProfile standaloneEstimator={!hasPremium} />
                     </SettingsSection>
 
@@ -602,7 +602,7 @@ export default function SettingsPage() {
                             <Calculator className="h-4 w-4 text-saffron" />
                             <h3 className="text-base font-semibold text-ink">Weavly Estimator</h3>
                         </div>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your Estimator Plan includes reusable qualities, saved costings, and configurable costing defaults.</p>
+                         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your Estimator Plan includes reusable Fabric Qualities, saved Cost Estimates, and configurable Cost Estimate defaults.</p>
                         <div className="mt-4 space-y-2">
                             <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <CreditCard className="h-4 w-4" />
@@ -610,7 +610,7 @@ export default function SettingsPage() {
                             </Link>
                             <Link href="/owner/quotes" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <ShieldCheck className="h-4 w-4" />
-                                Saved Costings
+                                 Saved Cost Estimates
                             </Link>
                             <Link href="/forgot-password" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <KeyRound className="h-4 w-4" />

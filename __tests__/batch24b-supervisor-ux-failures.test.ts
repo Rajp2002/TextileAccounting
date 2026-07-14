@@ -64,7 +64,7 @@ describe('Batch 24B supervisor production UX fixes', () => {
         }
 
         expect(validateEntry(validLargeEntry).valid).toBe(true)
-        expect(supervisorPage).toContain('Confirm large shift meters')
+        expect(supervisorPage).toContain('Confirm large shift production')
         expect(supervisorPage).toContain('This is allowed, but confirm the totals before saving.')
         expect(supervisorPage).toContain('confirmedLargeMeters: true')
     })
