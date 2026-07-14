@@ -55,6 +55,7 @@ Status: internal implementation and proof closed; external pilot gates precisely
 - Runtime: `OFF-009` passed one 42 m delayed-response write with authoritative saved-state reconciliation; `OFF-010` passed one 21 m constrained-3G mobile write and four core screens. Both had immediate duplicate-submit guards, exactly one database row, zero browser warnings/errors, and exact fixture-prefix cleanup to zero.
 - Matrix: `OFF-009` and `OFF-010` promoted to pass. `WA-008` and `WA-010` moved to non-gating post-pilot `not_applicable` with named backlog items; no PASS was claimed. Final counts: 367 pass, 0 fail, 7 blocked, 3 not applicable.
 - Evidence: `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`, `output/playwright/prepilot-remaining-gates/`, `docs/pilot-remediation/REMAINING_GATE_REPORT.md`, and `docs/pilot-remediation/POST_PILOT_BACKLOG.md`.
+- Production: commit `5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5` is live on READY deployment `dpl_3yvQ3zWGTpEB6xw1EYgvwbvgRaLL`. Vercel passed 92 files / 654 tests, TypeScript, optimized build, and Sentry release upload. Nine dependent Edge functions are ACTIVE with provider disabled. Deployed supervisor proof showed the manual owner-handoff toast, no access-code hash/expiry, no delivery row, four public-route HTTP 200s, zero post-deploy error/5xx logs, and zero fixture residue.
 
 ## Active Entry: BATCH-01A-MUTABLE-PROFILE-AUTHZ
 

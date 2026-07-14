@@ -28,6 +28,8 @@ Classification key: A = pilot-critical internal defect; B = pilot-critical proof
 
 The pilot provider state is `disabled` unless explicitly configured otherwise. Missing or invalid provider configuration must not call Meta. Core writes must succeed independently of notification delivery. Supervisor access-code requests use owner/manual handoff while disabled, so the system never creates an inaccessible code and never tells the user that WhatsApp delivery occurred. Live account activation, templates, messages, signed status callbacks, and provider failure drills live only in `POST_PILOT_BACKLOG.md`.
 
+Production deployment `dpl_3yvQ3zWGTpEB6xw1EYgvwbvgRaLL` is READY and aliased to the canonical URL at exact commit `5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5`. The remote gate passed 92 files / 654 tests, TypeScript, optimized build, and Sentry release upload. All nine shared WhatsApp-dependent Edge functions are ACTIVE with the production provider secret set to `disabled`. A deployed supervisor duplicate-log flow displayed the exact manual-fallback toast, created no access-code hash/expiry, created no delivery-log row, and cleaned its fixture to zero. `/login`, `/privacy`, `/manifest.webmanifest`, and `/sw.js` returned HTTP 200; the deployment had zero error and zero 5xx log entries in the post-deploy window.
+
 ## Revised projected pilot verdict
 
 The revised verdict is **No-Go pending three genuine pilot gates only**:

@@ -74,5 +74,38 @@
     },
     "credentials_committed": false,
     "result": "pass"
+  },
+  "production_closeout": {
+    "commit": "5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5",
+    "vercel_deployment": "dpl_3yvQ3zWGTpEB6xw1EYgvwbvgRaLL",
+    "production_alias": "https://textile-accounting.vercel.app",
+    "vercel_state": "READY",
+    "remote_gate": {
+      "test_files_passed": 92,
+      "tests_passed": 654,
+      "typescript": "pass",
+      "optimized_build": "pass",
+      "sentry_release": "5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5"
+    },
+    "http_smoke": {
+      "/login": 200,
+      "/privacy": 200,
+      "/manifest.webmanifest": 200,
+      "/sw.js": 200
+    },
+    "vercel_error_logs_last_30m": 0,
+    "vercel_5xx_logs_last_30m": 0,
+    "whatsapp_provider": {
+      "vercel_provider_key_present": false,
+      "application_default": "disabled",
+      "supabase_secret": "disabled",
+      "dependent_edge_functions_active": 9,
+      "supervisor_manual_fallback_toast": "WhatsApp is unavailable. Ask the owner to generate an access code in Settings and share it directly.",
+      "access_code_created": false,
+      "delivery_log_rows_created": 0,
+      "evidence": "output/playwright/prepilot-remaining-gates/WHATSAPP-disabled-manual-access-code.png"
+    },
+    "final_fixture_prefix_rows": 0,
+    "result": "pass"
   }
 }
