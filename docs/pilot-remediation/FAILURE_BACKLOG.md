@@ -4,9 +4,9 @@ This backlog is grouped by root cause and ordered by the required pilot priority
 
 ## Runtime Rerun 2026-07-10 Terminal Results
 
-The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. The active remediation campaign has since moved 18 confirmed failures and 13 previously blocked rows to pass, and reclassified `MASTER-006` as a precise schema-parity blocker. `AUTH-012` is closed by production migration and isolated runtime proof. The only remaining formal failures are `WA-008`, `OFF-009`, and `OFF-010`. Historical row-level actuals remain in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/`, and blocked rows remain evidence debt rather than failures.
+The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. Subsequent remediation closed every formal failure. `OFF-009` and `OFF-010` now have exact delayed/throttled runtime proof; `WA-008` retains its live-provider acceptance test as a named post-pilot requirement without PASS credit. Historical row-level actuals remain immutable in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/` and `output/qa/remaining-gate-campaign/`.
 
-Current remediation note (2026-07-14): the historical runtime-rerun counts above remain the immutable 2026-07-10 campaign result; the active formal matrix has 365 pass, 3 fail, 8 blocked, and 1 not applicable after all blocked-row batches B08–B19 were reviewed. `TECH-012` passed a native disposable Vercel rollback and rollback-only database forward-fix rehearsal. The eight remaining blockers are precise external dependencies: `TECH-011` production backup schedule, `WA-010` controlled live Meta failure, `OFF-001` supported PWA install/standalone reopen, `SEC-011` read-only live Sentry payload access, `SEC-018` qualified counsel, `UX-012` factory terminology approval, `GOLDEN-A-03` a business truth sheet, and `SIGNOFF-04` a supervisor register. `NEEDS-AUDIT-002` separately records legacy pass rows whose Actual text conflicts with their expectation, so these mechanical totals are not final pilot-readiness truth.
+Current remediation note (2026-07-14): the active formal matrix has **367 pass, 0 fail, 7 blocked, and 3 not applicable**. `release_scope` and `pilot_gating` now distinguish verdict gates from optional, deferred, pre-public, pilot-operational, and post-pilot evidence. The three genuine limited-pilot gates are `TECH-011` production backup scheduling, `UX-012` factory terminology approval, and `GOLDEN-A-03` a business truth sheet. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest non-gating evidence debt. `WA-008` and `WA-010` link to specific post-pilot WhatsApp backlog items. `NEEDS-AUDIT-002` remains a separate legacy semantic-reconciliation audit item.
 
 ## Coverage Ledger
 
@@ -15,18 +15,18 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | None — `AUTH-008` closed 2026-07-11 |
-| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `WA-008` (`TECH-009` and `SEC-017` closed) |
+| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | None — `WA-008` is post-pilot `PP-WA-002`, without PASS credit |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | None — `MASTER-014`, `SIGNOFF-01`, and `SIGNOFF-02` closed |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | None — `SIGNOFF-01` and `SIGNOFF-02` closed |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | None — unresolved payroll rows are blocked evidence debt, not formal failures |
-| P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `OFF-009` |
-| P4 | `OFF-A` offline, cache, and public claims | `OFF-010` (`OFF-007` closed 2026-07-11) |
+| P4 | `IDEMP-A` mutation idempotency and unknown outcomes | None — `OFF-009` closed with delayed-response runtime proof |
+| P4 | `OFF-A` offline, cache, and public claims | None — `OFF-010` closed with constrained-3G runtime proof |
 | P5 | `REL-A` release gates and observability | None — `TECH-001`, `TECH-005`, and `TECH-006` closed |
 
-Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011` and `SEC-018`. `TECH-012`, `BILL-003`, and the Golden payroll/stock rows formerly listed here are closed by B11–B18 direct runtime proof.
+Blocked rows also remain unresolved evidence debt. Only `TECH-011`, `UX-012`, and `GOLDEN-A-03` independently gate the limited pilot. `SEC-018` gates public reliance, not the closed supervised pilot. `TECH-012`, `BILL-003`, and the Golden payroll/stock rows formerly listed here are closed by B11–B18 direct runtime proof.
 
-Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high recovery and security work: `GOLDEN-A-03`, `OFF-001`, `SIGNOFF-04`, `UX-012`, and `WA-010`. `BILL-006`, `BILL-007`, `BILL-009`, and `BILL-010` are closed by direct B17 proof. `AUTH-014`, `AUTH-015`, and `AUTH-018` are closed by direct B15 or earlier session/rate-limit proof. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
+Medium blocked rows retain exact closure procedures: `GOLDEN-A-03` and `UX-012` are pilot gates; `OFF-001` is optional device evidence; `SIGNOFF-04` is a mandatory first-shift operating control. `WA-010` is post-pilot `PP-WA-003`. `SEC-011` remains deferred to the owner’s physical laptop for read-only Sentry inspection; its token must never be transferred or exposed.
 
 Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed. `SEC-B` is now also closed after `AUTH-008` received fail-closed source coverage and fresh QA Redis proof on 2026-07-11. Batch 20 moved the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`; Batch 21D closes them with disposable QA runtime proof.
 

@@ -1,14 +1,15 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **365 PASS, 3 FAIL, 8 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **367 PASS, 0 FAIL, 7 BLOCKED, 3 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
 - Completed batches: **B08 through B19**. No independent executable blocked-row batch remains.
-- Campaign outcome: 95 blocked rows moved to evidence-backed PASS; eight rows remain precisely BLOCKED on genuine external dependencies; the three pre-existing formal failures remain unchanged. Pilot readiness is **No-Go**.
-- B19 Sentry review: production DSN, organization, and project keys are configured, but no local read-only `SENTRY_AUTH_TOKEN` or live event-payload artifact exists. Source redaction and clean logs are supporting evidence, not live payload proof.
+- Campaign outcome: all formal failures are resolved or assigned to an explicit non-gating post-pilot scope. Seven rows remain honestly BLOCKED; only `TECH-011`, `UX-012`, and `GOLDEN-A-03` independently gate the limited pilot. Pilot readiness is **No-Go pending those three gates**.
+- B19 Sentry review: production DSN, organization, and project keys are configured, but live event-payload inspection is intentionally deferred to the owner’s physical laptop. Codex must not obtain, expose, fabricate, replace, or request transfer of `SENTRY_AUTH_TOKEN`.
 - B19 human review: no qualified-counsel approval/redline, factory terminology approve/change register, business-accepted real-fabric truth sheet, or dated supervisor shift register was found.
 - B18 recovery: `TECH-012` passed; `TECH-011` remains blocked on an automated retained or approved off-site production backup schedule.
-- Other precise blockers: `WA-010` needs controlled live Meta failure proof and `OFF-001` needs a supported PWA install/standalone-reopen surface.
+- Scope correction: `WA-008` and `WA-010` are named post-pilot requirements with no PASS credit. `OFF-001` remains optional physical-device proof. `SEC-018` gates public reliance and `SIGNOFF-04` is a mandatory first-shift operating control.
+- Current campaign report: `docs/pilot-remediation/REMAINING_GATE_REPORT.md`.
 - B19 evidence: `output/qa/blocked-row-campaign/B19-external-evidence-review.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
@@ -35,4 +36,4 @@ All five B19 rows were reviewed individually. None was promoted from source test
 
 ## Exact next action
 
-To resume the only immediately machine-verifiable row, create a Sentry auth token with `org:read`, `project:read`, and `event:read`, set it locally as `SENTRY_AUTH_TOKEN`, and confirm it is ready. Do not paste or commit the token. Any other remaining row resumes when its named external artifact is supplied.
+Close one of the three genuine pilot gates: approve an automated retained/off-site production backup for `TECH-011`, obtain the named supervisor terminology register for `UX-012`, or supply the independent real-fabric truth sheet for `GOLDEN-A-03`. The owner may close `SEC-011` later on the physical laptop without transferring the token.

@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-14T04:56:20.232Z",
+  "updated_at": "2026-07-14T05:36:45.000Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,10 +10,10 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 365,
-    "blocked": 8,
-    "not_applicable": 1,
-    "fail": 3,
+    "pass": 367,
+    "blocked": 7,
+    "not_applicable": 3,
+    "fail": 0,
     "total": 377
   },
   "canonical_ledger": "output/qa/PILOTQA-20260621-2058-8QIH/results.json",
@@ -34,7 +34,7 @@
     "B19"
   ],
   "active_batch": null,
-  "active_batch_state": "All blocked-row batches reviewed; executable scope is complete. Eight rows remain precisely blocked on genuine external dependencies and three pre-existing formal failures remain unchanged; pilot readiness is No-Go.",
+  "active_batch_state": "All internal remaining-gate work is complete. Seven rows remain honestly blocked; only TECH-011, UX-012, and GOLDEN-A-03 independently gate the limited pilot. WA-008 and WA-010 are named post-pilot requirements with no PASS credit.",
   "planned_batches": [
     {
       "id": "B09",
@@ -710,5 +710,5 @@
     }
   ],
   "last_successful_validation": "B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, four reconciliation assertions, restored owner sign-in, 2,478.4 ms restore time, and zero cleanup. Native Vercel rollback restored exact source commit 57caa6e in 2 provider-reported seconds, /privacy returned 200, and the rollback-only database forward-fix reconciled preserved provenance. No production resource or data was changed. TECH-011 remains blocked only because production exposes no retained backup and PITR is disabled.",
-  "exact_next_action": "No independent executable blocked-row batch remains. Supply any one named external artifact to resume its row: start with a local read-only SENTRY_AUTH_TOKEN (org:read, project:read, event:read) for SEC-011; otherwise provide the counsel review, factory terminology register, real-fabric truth sheet, supervisor meter register, production backup schedule, controlled live Meta proof, or supported PWA install surface."
+  "exact_next_action": "Close one genuine pilot gate: approve an automated retained/off-site production backup for TECH-011, obtain the named supervisor terminology register for UX-012, or supply the independent real-fabric truth sheet for GOLDEN-A-03. SEC-011 remains deferred to the owner's physical laptop without transferring SENTRY_AUTH_TOKEN."
 }

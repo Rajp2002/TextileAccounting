@@ -1202,7 +1202,11 @@ export default function UnifiedDashboard() {
         try {
             const result = await requestAccessCode()
             if (result.error) throw new Error(result.error)
-            toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
+            if (result.delivery === 'manual_owner_handoff') {
+                toast.info(t('auth.code_manual_fallback'))
+            } else {
+                toast.success(t('auth.code_requested_success'))
+            }
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Failed to request code')
         } finally {

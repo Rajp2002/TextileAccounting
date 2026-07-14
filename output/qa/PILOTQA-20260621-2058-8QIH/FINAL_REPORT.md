@@ -5,13 +5,13 @@
 - Matrix: `TEST_MATRIX.md`
 - Results ledger: `results.json`
 - Final rendered count: 377 / 377 classified
-- Current status counts: 287 pass, 3 fail, 86 blocked, 1 not_applicable, 0 code_verified, 0 not_run
+- Current status counts: 367 pass, 0 fail, 7 blocked, 3 not_applicable, 0 code_verified, 0 not_run
 
 ## Current superseding checkpoint — 2026-07-14
 
-The canonical `results.json` and `TEST_MATRIX.md` supersede the original closeout narrative below. Current counts are **287 pass, 3 fail, 86 blocked, and 1 not applicable** across all 377 rows. The remaining failures are `WA-008`, `OFF-009`, and `OFF-010`; all other historical failure labels below are retained as provenance and must not be read as current status.
+The canonical `results.json`, `TEST_MATRIX.md`, and `docs/pilot-remediation/REMAINING_GATE_REPORT.md` supersede the original closeout narrative below. Current counts are **367 pass, 0 fail, 7 blocked, and 3 not applicable** across all 377 rows. Historical failure/blocker language below is retained only as provenance and must not be read as current status.
 
-B09 closed 17 production-resilience rows on exact production deployment `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB` / commit `812512c599b3659cc399495a674e8b3e50066e60`. Production migration history remains aligned through `20260713124500`. The disposable tenant and all three auth users reconciled to zero. Readiness remains No-Go because three failures and 86 blocked rows remain; B10 is active.
+The limited-pilot verdict remains **No-Go pending three genuine gates only**: `TECH-011` automated retained/off-site production backup, `UX-012` named factory-supervisor terminology acceptance, and `GOLDEN-A-03` independent real-fabric truth-sheet reconciliation. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain precise non-gating evidence debt. `WA-008` and `WA-010` are named post-pilot requirements and receive no PASS credit. `OFF-009` and `OFF-010` passed exact delayed-response and constrained-3G runtime/database proof.
 
 ## Verdict
 

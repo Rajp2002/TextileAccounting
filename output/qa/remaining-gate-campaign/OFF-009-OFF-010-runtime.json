@@ -1,0 +1,78 @@
+{
+  "campaign": "remaining-pre-pilot-gates",
+  "captured_at": "2026-07-14T11:06:45+05:30",
+  "baseline_commit": "70ad4d01b372f4994370989703bfc9148507a4b8",
+  "target": {
+    "application": "local optimized production build",
+    "supabase_project_ref": "vzhwahudircrpgtitwzd",
+    "fixture_namespace": "QA-OFF009-*",
+    "customer_data_used": false
+  },
+  "validation_surface": {
+    "preferred_browser_plugin": "unavailable before tab creation: TypeError: Cannot redefine property: process",
+    "fallback": "repository Playwright CLI skill",
+    "fallback_reason": "runtime proof remained required; the preferred browser plugin failed before it could create a browser tab"
+  },
+  "OFF-009": {
+    "requirement": "Mutation request timeout.",
+    "expected": "UI distinguishes unknown outcome from definite failure.",
+    "fixture_run": "OFF009-1784007108208-34C94F",
+    "response_delay_ms": 17000,
+    "client_timeout_ms": 15000,
+    "submitted_meters": 42,
+    "assertions": {
+      "save_disabled_after_click": true,
+      "unknown_outcome_reconciled": true,
+      "user_message": "The response timed out, but the shift was saved after checking the latest server state.",
+      "persisted_rows": 1,
+      "persisted_meters": 42,
+      "duplicate_row": false,
+      "console_errors": 0,
+      "console_warnings": 0
+    },
+    "evidence": [
+      "output/playwright/prepilot-remaining-gates/OFF-009-delayed-response-reconciled.png",
+      "__tests__/off-009-mutation-outcome.test.ts"
+    ],
+    "result": "pass"
+  },
+  "OFF-010": {
+    "requirement": "Slow 2G/3G and intermittent connection.",
+    "expected": "Core mobile screens remain usable and prevent repeated submissions.",
+    "fixture_run": "OFF009-1784006803954-63F8FF",
+    "viewport": "390x844",
+    "network_profile": {
+      "latency_ms": 1200,
+      "download_bytes_per_second": 64000,
+      "upload_bytes_per_second": 24000
+    },
+    "submitted_meters": 21,
+    "assertions": {
+      "save_disabled_after_click": true,
+      "success_message_observed": true,
+      "persisted_rows": 1,
+      "persisted_meters": 21,
+      "duplicate_row": false,
+      "shift_meter_screen_usable": true,
+      "workers_screen_usable": true,
+      "attendance_screen_usable": true,
+      "machines_screen_usable": true,
+      "error_overlay_observed": false,
+      "console_errors": 0,
+      "console_warnings": 0
+    },
+    "evidence": [
+      "output/playwright/prepilot-remaining-gates/OFF-010-mobile-3g-core-flow.png"
+    ],
+    "result": "pass"
+  },
+  "cleanup": {
+    "harness_target_mismatch_guard_added": true,
+    "production_prefix_reconciliation": {
+      "matched_orphaned_fixtures": 1,
+      "remaining_fixture_organizations": 0
+    },
+    "credentials_committed": false,
+    "result": "pass"
+  }
+}

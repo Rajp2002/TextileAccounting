@@ -169,3 +169,15 @@ B17 closes eight Razorpay checkout, webhook, entitlement, referral-refund, and w
 B18 closes `TECH-012` with a sanitized six-ledger QA restore, canonical digest reconciliation, restored-owner authentication, native disposable Vercel rollback to exact source commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`, and a rollback-only provenance-preserving database forward-fix. Production was not mutated and all disposable resources cleaned to zero. `TECH-011` remains blocked because production reports no retained backup and PITR is disabled; an automated retained or approved off-site production backup schedule is still a non-negotiable recovery gate. The formal matrix is now 365 pass, 3 fail, 8 blocked, and 1 not applicable. Pilot readiness remains `NO-GO`; B19 is active and formal failures, backup schedule, PWA, live Meta, Sentry, qualified legal, factory-language, truth-sheet, and supervisor sign-off gates still apply.
 
 B19 reviews all five external-evidence rows without manufacturing PASS evidence. `SEC-011` needs a read-only live Sentry payload inspection; `SEC-018` needs qualified-counsel approval/redline; `UX-012` needs a named factory supervisor's terminology register; `GOLDEN-A-03` needs a business-accepted real-fabric truth sheet; and `SIGNOFF-04` needs a dated supervisor meter register. No qualifying artifact was found. All blocked-row batches B08–B19 are now reviewed, with 95 baseline blockers promoted to direct-evidence PASS and eight remaining as precise genuine external blockers. The formal matrix remains 365 pass, 3 fail, 8 blocked, and 1 not applicable. Pilot readiness remains `NO-GO`; the campaign cannot close these external gates or the three formal failures by inference.
+
+## Current limited-pilot decision — 2026-07-14
+
+The canonical matrix is **367 pass, 0 fail, 7 blocked, and 3 not applicable**. Every row now records `release_scope` and `pilot_gating`; post-pilot `not_applicable` rows link to a named acceptance test and receive no PASS credit.
+
+The verdict is **No-Go pending three gates**:
+
+1. `TECH-011`: an automated retained or approved off-site production backup must exist, and its artifact must pass disposable restore/reconciliation.
+2. `UX-012`: a named factory supervisor must accept or correct the required operating terminology.
+3. `GOLDEN-A-03`: one independent real-fabric truth sheet must reconcile with the estimator and accepted downstream snapshot.
+
+`OFF-001` is optional PWA-install evidence; `SEC-011` is intentionally deferred to a read-only check on the owner’s physical laptop; `SEC-018` gates public legal reliance; and `SIGNOFF-04` is a mandatory first-shift operating control. These four rows retain `BLOCKED` without independently producing a pre-session No-Go. Live WhatsApp provider delivery, signed callbacks, and live failure drills are post-pilot under `PP-WA-001`–`PP-WA-003`; the pilot provider is disabled and no core workflow depends on Meta credentials or delivery.

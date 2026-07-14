@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const QA_REF = 'eutycrtzzxmlkcpipgod'
 const PROD_REF = 'vzhwahudircrpgtitwzd'
-const SECRET_PATH = '/tmp/off-009-runtime.json'
+const SECRET_DIR = '/Users/rajpatel/.codex/secrets'
+const SECRET_PATH = `${SECRET_DIR}/off-009-runtime.json`
 const productionMode = process.argv.includes('--production')
 const expectedRef = productionMode ? PROD_REF : QA_REF
 const envFile = productionMode ? '.env.production.local' : '.env.qa.local'
@@ -27,6 +28,36 @@ const env = { ...process.env, ...parseEnv(await fs.readFile(envFile, 'utf8')) }
 if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes(expectedRef)) throw new Error(`OFF-009 fixture refused: ${expectedRef} target not proven.`)
 const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 const command = process.argv[2]
+
+async function removeFixture(fixture) {
+    if (fixture.orgId) {
+        if (fixture.productionMode) {
+            const operatorCleanup = await admin.from('machine_operator_assignments').delete().eq('org_id', fixture.orgId)
+            if (operatorCleanup.error) throw new Error(`machine_operator_assignments cleanup failed: ${operatorCleanup.error.message}`)
+        }
+        for (const table of [
+            'production_logs',
+            'fabric_stock_movements',
+            'fabric_stock_lots',
+            'shift_assignments',
+            'machine_assignments',
+            'machines',
+            'orders',
+            'workers',
+            'org_subscriptions',
+            'profiles',
+            'organizations',
+        ]) {
+            const result = await admin.from(table).delete().eq(table === 'organizations' ? 'id' : 'org_id', fixture.orgId)
+            if (result.error) throw new Error(`${table} cleanup failed: ${result.error.message}`)
+        }
+    }
+
+    if (fixture.userId) {
+        const userDelete = await admin.auth.admin.deleteUser(fixture.userId)
+        if (userDelete.error && userDelete.error.code !== 'user_not_found') throw userDelete.error
+    }
+}
 
 if (command === 'setup') {
     const runId = `OFF009-${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
@@ -66,7 +97,7 @@ if (command === 'setup') {
         if (subscription.error || !subscription.data) throw subscription.error ?? new Error('Subscription insert returned no row.')
         fixture.subscriptionId = subscription.data.id
 
-        const ageEvidence = (dateOfBirth, reference) => productionMode ? {} : ({
+        const ageEvidence = (dateOfBirth, reference) => ({
             date_of_birth: dateOfBirth,
             age_verification_method: 'government_id',
             age_verification_reference: reference,
@@ -159,34 +190,21 @@ if (command === 'setup') {
         const activation = await admin.from('machines').update({ status: 'active' }).eq('id', fixture.machineId)
         if (activation.error) throw activation.error
 
+        await fs.mkdir(SECRET_DIR, { recursive: true, mode: 0o700 })
+        await fs.chmod(SECRET_DIR, 0o700)
         await fs.writeFile(SECRET_PATH, JSON.stringify(fixture), { mode: 0o600 })
+        await fs.chmod(SECRET_PATH, 0o600)
         process.stdout.write(`${JSON.stringify({ runId, projectRef: expectedRef, fixtureReady: true })}\n`)
     } catch (error) {
-        await admin.auth.admin.deleteUser(userId)
+        await removeFixture(fixture)
         throw error
     }
 } else if (command === 'cleanup') {
     const fixture = JSON.parse(await fs.readFile(SECRET_PATH, 'utf8'))
-    if (fixture.productionMode) {
-        const operatorCleanup = await admin.from('machine_operator_assignments').delete().eq('org_id', fixture.orgId)
-        if (operatorCleanup.error) throw new Error(`machine_operator_assignments cleanup failed: ${operatorCleanup.error.message}`)
+    if (fixture.productionMode !== productionMode) {
+        throw new Error(`OFF-009 fixture target mismatch: rerun cleanup with${fixture.productionMode ? '' : 'out'} --production.`)
     }
-    for (const [table, column, values] of [
-        ['production_logs', 'org_id', [fixture.orgId]],
-        ['shift_assignments', 'org_id', [fixture.orgId]],
-        ['machine_assignments', 'org_id', [fixture.orgId]],
-        ['machines', 'id', [fixture.machineId]],
-        ['orders', 'id', [fixture.orderId]],
-        ['workers', 'id', fixture.workerIds],
-        ['org_subscriptions', 'id', [fixture.subscriptionId]],
-        ['profiles', 'id', [fixture.userId]],
-        ['organizations', 'id', [fixture.orgId]],
-    ]) {
-        const result = await admin.from(table).delete().in(column, values)
-        if (result.error) throw new Error(`${table} cleanup failed: ${result.error.message}`)
-    }
-    const userDelete = await admin.auth.admin.deleteUser(fixture.userId)
-    if (userDelete.error && userDelete.error.code !== 'user_not_found') throw userDelete.error
+    await removeFixture(fixture)
 
     const [orgCount, profileCount, machineCount, logCount, authUser] = await Promise.all([
         admin.from('organizations').select('*', { count: 'exact', head: true }).eq('id', fixture.orgId),
@@ -200,6 +218,18 @@ if (command === 'setup') {
     }
     await fs.rm(SECRET_PATH, { force: true })
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, projectRef: expectedRef, cleaned: true })}\n`)
+} else if (command === 'cleanup-prefix') {
+    if (!productionMode) throw new Error('OFF-009 prefix cleanup is restricted to an explicit --production target.')
+    const fixtures = await admin.from('organizations').select('id,name,owner_id').like('name', 'QA-OFF009-%')
+    if (fixtures.error) throw fixtures.error
+
+    for (const organization of fixtures.data ?? []) {
+        await removeFixture({ orgId: organization.id, userId: organization.owner_id, productionMode: true })
+    }
+
+    const remaining = await admin.from('organizations').select('*', { count: 'exact', head: true }).like('name', 'QA-OFF009-%')
+    if (remaining.error || remaining.count !== 0) throw new Error('OFF-009 production prefix cleanup reconciliation failed.')
+    process.stdout.write(`${JSON.stringify({ projectRef: expectedRef, matched: fixtures.data?.length ?? 0, remaining: 0 })}\n`)
 } else {
-    throw new Error('Usage: off-009-browser-fixture.mjs setup|cleanup')
+    throw new Error('Usage: off-009-browser-fixture.mjs setup|cleanup|cleanup-prefix [--production]')
 }

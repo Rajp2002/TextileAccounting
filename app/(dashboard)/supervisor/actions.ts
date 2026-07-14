@@ -20,6 +20,7 @@ import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
 import { validateEntry, VALIDATION_MESSAGES } from '@/lib/production-log-validation'
 import { evaluateProductionWorkerAssignmentPolicy } from '@/lib/production-worker-assignment-policy'
 import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
+import { isWhatsAppDeliveryEnabled } from '@/lib/whatsapp-provider'
 import {
     buildProtectedLoomActionError,
     getLoomLifecycleProtectionReasons,
@@ -851,6 +852,13 @@ export async function requestAccessCode() {
     const { user, profile } = await requireRole(['supervisor', 'owner'])
     const supabase = await createServerClient()
 
+    // Live WhatsApp is outside pilot scope. Do not create a code that only the
+    // disabled delivery path could reveal; direct the supervisor to the owner
+    // fallback instead. The owner can generate and share a code from Settings.
+    if (!isWhatsAppDeliveryEnabled()) {
+        return { success: true, delivery: 'manual_owner_handoff' as const }
+    }
+
     let generated: Awaited<ReturnType<typeof generateAndStoreAccessCode>>
     try {
         generated = await generateAndStoreAccessCode(profile.org_id)
@@ -886,7 +894,7 @@ export async function requestAccessCode() {
         }).catch((err) => console.error('[request-access-code] Notification failed:', err))
     }
 
-    return { success: true }
+    return { success: true, delivery: 'whatsapp_attempted' as const }
 }
 
 // ─── Shift Assignments (Module 3) ─────────────────────────────────────────────

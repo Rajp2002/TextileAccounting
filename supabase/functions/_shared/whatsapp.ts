@@ -29,6 +29,24 @@ const SIMULATION_MODES = new Set<WhatsAppSimulationMode>([
   "expired_token",
 ]);
 
+type WhatsAppProvider = "disabled" | "simulate" | "meta";
+
+function resolveWhatsAppProvider(value?: string | null): WhatsAppProvider {
+  return value === "simulate" || value === "meta" ? value : "disabled";
+}
+
+function providerUnavailableResult(code: "provider_disabled" | "provider_unconfigured"): WhatsAppResult {
+  const message = code === "provider_disabled"
+    ? "WhatsApp is disabled for this release; retain the business write and use the manual fallback."
+    : "Live WhatsApp credentials are incomplete; retain the business write and use the manual fallback.";
+  return {
+    success: false,
+    responseBody: { error: { code, message } },
+    httpStatus: 0,
+    messageId: null,
+  };
+}
+
 function normalizeSimulationMode(value?: string | null): WhatsAppSimulationMode {
   return value && SIMULATION_MODES.has(value as WhatsAppSimulationMode)
     ? value as WhatsAppSimulationMode
@@ -223,11 +241,17 @@ export async function sendWhatsAppTemplate(
 
   try {
     // Support for provider simulation (testing mode)
-    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
+    const provider = resolveWhatsAppProvider(Deno.env.get("WHATSAPP_PROVIDER"));
+    if (provider === "disabled") {
+      return providerUnavailableResult("provider_disabled");
+    }
     if (provider === "simulate") {
       const mode = normalizeSimulationMode(requestedSimulationMode ?? Deno.env.get("WHATSAPP_SIMULATION_MODE"));
       console.log(`[SIMULATE:${mode}] WhatsApp template: ${templateName}`);
       return simulatedResult(mode, "template");
+    }
+    if (!accessToken || !phoneNumberId) {
+      return providerUnavailableResult("provider_unconfigured");
     }
 
     const res = await fetch(META_API, {
@@ -288,11 +312,17 @@ export async function sendWhatsAppFreeform(
   };
 
   try {
-    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
+    const provider = resolveWhatsAppProvider(Deno.env.get("WHATSAPP_PROVIDER"));
+    if (provider === "disabled") {
+      return providerUnavailableResult("provider_disabled");
+    }
     if (provider === "simulate") {
       const mode = normalizeSimulationMode(requestedSimulationMode ?? Deno.env.get("WHATSAPP_SIMULATION_MODE"));
       console.log(`[SIMULATE FREEFORM:${mode}] WhatsApp freeform message queued`);
       return simulatedResult(mode, "freeform");
+    }
+    if (!accessToken || !phoneNumberId) {
+      return providerUnavailableResult("provider_unconfigured");
     }
 
     const res = await fetch(META_API, {

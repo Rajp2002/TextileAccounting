@@ -21,6 +21,12 @@ This guide is the production-readiness test manual for Weavly. It is designed to
 
 This is not only a UI test. Every critical test must check the user-visible result and the underlying business invariant. A green toast is not proof that a workflow succeeded.
 
+### 1.1 Release scope and pilot gating
+
+The canonical ledger records both `release_scope` and `pilot_gating` for every row. The allowed scope values and the rule for `not_applicable` are defined in `results.json.scopeModel` and `docs/pilot-remediation/POST_PILOT_BACKLOG.md`. An unresolved `pilot_core` row with `pilot_gating=true` independently blocks the limited pilot. A post-pilot row receives no PASS credit; it is `not_applicable` only for the pilot and must link to a named backlog acceptance test.
+
+The limited pilot is a closed, supervised browser workflow. PWA installation is optional; legal wording must be counsel-reviewed before public reliance; independent daily meter reconciliation is a mandatory pilot operating control. Data recovery, factory terminology, and real-fabric costing truth remain pre-pilot gates.
+
 ## 2. Domain Model Used for Testing
 
 ### 2.1 Order-centric production
@@ -612,7 +618,9 @@ The product’s active stock model is an expected ledger, not guaranteed physica
 
 ## 23. WhatsApp
 
-Use `WHATSAPP_PROVIDER=simulate` first, then one controlled live test only after consent and Meta setup are complete.
+Live WhatsApp delivery is post-pilot. During the pilot, `WHATSAPP_PROVIDER` is absent or `disabled`; missing or invalid configuration must remain disabled, must not call Meta, and must not break any core order, production, stock, commercial, payroll, or access-code workflow. Provider integration boundaries, consent, secrets, templates, signed callbacks, and live failure drills remain documented in `docs/pilot-remediation/POST_PILOT_BACKLOG.md`.
+
+Rows `WA-001`–`WA-007` and `WA-009` retain infrastructure-readiness evidence. `WA-008` and `WA-010` retain their exact live-provider requirements but are non-gating `not_applicable` for the pilot under `PP-WA-002` and `PP-WA-003`; neither receives PASS credit. Deterministic simulation is permitted only in isolated non-production proof with explicit `WHATSAPP_PROVIDER=simulate`.
 
 | ID | Scenario | Expected result |
 | --- | --- | --- |

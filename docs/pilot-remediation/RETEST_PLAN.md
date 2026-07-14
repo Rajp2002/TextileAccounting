@@ -700,3 +700,15 @@ Acceptance:
 - For `GOLDEN-A-03`, compare one real fabric estimate against a business-accepted independent truth sheet containing inputs and expected yarn, weave, processing, overhead, landed-cost, and quote totals.
 - For `SIGNOFF-04`, reconcile Today meters against one dated external supervisor shift register and retain both totals and any explained variance.
 - Canonical evidence is `output/qa/blocked-row-campaign/B19-external-evidence-review.json`. Counts remain 365 pass, 3 fail, 8 blocked, and 1 not applicable. Rerun only the row whose named external artifact becomes available.
+
+### Remaining-gate campaign regression guard — 2026-07-14
+
+- Preserve `results.json.scopeModel`, `release_scope`, and `pilot_gating`; every post-pilot `not_applicable` row must retain a specific `post_pilot_backlog_id` and no PASS credit.
+- Preserve disabled WhatsApp as the default for missing, empty, or invalid `WHATSAPP_PROVIDER`. Only explicit `simulate` or `meta` may enable their respective boundary; disabled mode must not issue a provider fetch.
+- Preserve manual owner handoff for supervisor access-code requests while disabled. Do not generate an inaccessible code or show a delivery-success claim.
+- Focused regression: `npx vitest run __tests__/pilot-whatsapp-disabled-readiness.test.ts __tests__/b16-whatsapp-provider-boundaries.test.ts __tests__/off-009-mutation-outcome.test.ts`.
+- For `OFF-009`, delay exactly one shift-log server-action response beyond the 15-second client timeout. Require disabled resubmission, unknown-outcome messaging, authoritative saved-state reconciliation, exactly one matching persisted row, zero console errors/warnings, and exact fixture cleanup.
+- For `OFF-010`, use a mobile viewport and constrained 2G/3G profile. Require one persisted submission, guarded repeat submission, and usable Shift Meters, Workers, Attendance, and Machines screens. Do not add an offline-queue condition not present in the row.
+- Run fixture setup and cleanup against the same explicit target. The harness must reject target mismatch; reconcile `QA-OFF009-*` to zero.
+- Canonical runtime evidence is `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`. Current counts are 367 pass, 0 fail, 7 blocked, and 3 not applicable.
+- Reopen the verdict only for a regression or when one of `TECH-011`, `UX-012`, or `GOLDEN-A-03` receives its exact external artifact. Do not treat `OFF-001`, `SEC-011`, `SEC-018`, `SIGNOFF-04`, `WA-008`, or `WA-010` as an independent limited-pilot No-Go outside their recorded scope.

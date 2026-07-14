@@ -191,7 +191,8 @@ export const hi = {
     verify_delete: "पुष्टि करें और हटाएँ (Verify & Delete)",
     invalid_code: "अमान्य या समाप्त हो चुका एक्सेस कोड",
     code_sent: "सत्यापन कोड मालिक को मोबाइल पर भेज दिया गया है",
-    code_requested_success: "मालिक को व्हाट्सएप के माध्यम से अनुरोध भेजा गया",
+    code_requested_success: "एक्सेस कोड का अनुरोध किया गया है। संदेश न मिले तो मालिक से Settings में कोड बनाने को कहें।",
+    code_manual_fallback: "WhatsApp उपलब्ध नहीं है। मालिक से Settings में एक्सेस कोड बनाकर सीधे साझा करने को कहें।",
   },
   analytics: {
     greeting: {

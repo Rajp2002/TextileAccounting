@@ -12,20 +12,20 @@ Source-of-truth artifacts:
 
 ## Current Verdict
 
-Status: No-Go for pilot.
+Status: No-Go pending three genuine pilot gates: `TECH-011`, `UX-012`, and `GOLDEN-A-03`.
 
 Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, Batch 24C Factory Today setup and historical analytics state closeout, Batch 24D estimator submit and production draft isolation source-fix closeout, and Batch 24E master data loom guardrails source-fix closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 269 | Formal ledger records pass; legacy pass/Actual semantic reconciliation remains an explicit audit item. |
-| `fail` | 3 | `WA-008`, `OFF-009`, and `OFF-010` remain open. |
-| `blocked` | 104 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
+| `pass` | 367 | Formal ledger records pass; legacy pass/Actual semantic reconciliation remains an explicit audit item. |
+| `fail` | 0 | No formal failure remains. |
+| `blocked` | 7 | Three are pilot-gating; four are optional, deferred, pre-public, or pilot-operational evidence. |
 | `code_verified` | 0 | The active formal ledger has no rows in this state. |
-| `not_applicable` | 1 | Excluded by scope. |
+| `not_applicable` | 3 | Exact post-pilot/absent capabilities linked to named backlog items; no PASS credit. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Current formal totals are 377 rows. The verdict remains No-Go because three failures and 104 blockers remain, and `NEEDS-AUDIT-002` requires semantic reconciliation of legacy pass rows whose Actual text conflicts with their expectation.
+Current formal totals are 377 rows. The verdict remains No-Go only because production backup scheduling, factory terminology approval, and a real-fabric estimator truth comparison are genuine limited-pilot gates. Post-pilot WhatsApp rows, optional PWA install proof, deferred live-Sentry inspection, pre-public counsel review, and first-shift register reconciliation do not independently create a No-Go. `NEEDS-AUDIT-002` remains a separate semantic-reconciliation audit item.
 
 Formal blocked-row Batch 2 (2026-07-13) moved `SETUP-012`, `DASH-001`, `BILL-002`, `UX-004`, and `UX-011` from blocked to pass using isolated active Base/Premium tenants, a Premium supervisor, mobile browser proof, join-code boundary proof, exact service-role reconciliation, and complete fixture cleanup. The Premium Settings blank-content observation did not receive pass credit; `SEC-009` remains blocked under formal audit/debugging.
 
@@ -2055,3 +2055,13 @@ Current counts are 364 pass, 3 fail, 9 blocked, and 1 not applicable. B18 is act
 All five B19 rows were reviewed without status promotion. `SEC-011` is blocked on a local read-only Sentry API token and a live production event payload; `SEC-018` on qualified-counsel approval/redline; `UX-012` on a named factory supervisor's terminology register; `GOLDEN-A-03` on a business-accepted real-fabric truth sheet; and `SIGNOFF-04` on a dated supervisor meter register. No qualifying artifact was found in the repository or QA outputs.
 
 Current counts remain 365 pass, 3 fail, 8 blocked, and 1 not applicable. All B08–B19 blocked-row batches are reviewed. The other precise blockers are `TECH-011` (production backup schedule), `WA-010` (controlled live Meta failure), and `OFF-001` (supported PWA install/standalone reopen). No independent executable blocked-row batch remains; readiness stays No-Go until named external evidence is supplied and the three formal failures are separately resolved or de-scoped.
+
+## Remaining-gate campaign closeout — 2026-07-14
+
+The product scope model now records `release_scope` and `pilot_gating` on every canonical row and names every post-pilot `not_applicable` requirement in `POST_PILOT_BACKLOG.md`. Live WhatsApp account activation, approved templates, real messages, signed status callbacks, and live provider failure drills are post-pilot. The pilot runs safely with the provider absent/disabled; missing or invalid provider configuration cannot call Meta, core writes do not depend on secrets or delivery, and supervisor access-code requests use explicit manual owner handoff instead of creating an inaccessible code.
+
+`OFF-009` passed a production-targeted 17-second delayed-response exercise: the client timed out at 15 seconds, disabled resubmission, reconciled authoritative state, showed the saved-after-check message, and persisted exactly one 42 m row. `OFF-010` passed at 390×844 under constrained 3G: one 21 m submission produced one row and the Shift Meters, Workers, Attendance, and Machines screens remained usable without console issues. The fixture harness now refuses target-mismatched cleanup; the exact production `QA-OFF009-*` prefix reconciled to zero.
+
+`WA-008` moved from fail to `not_applicable` as a requirement-definition correction linked to `PP-WA-002`; `WA-010` moved from blocked to `not_applicable` under `PP-WA-003`. Neither receives PASS credit. `SEC-011` remains unchanged except for its precise owner-physical-laptop prerequisite; Codex did not obtain, expose, fabricate, replace, or request transfer of `SENTRY_AUTH_TOKEN`.
+
+Current counts are **367 pass, 0 fail, 7 blocked, and 3 not applicable**. The limited-pilot verdict is No-Go pending only `TECH-011`, `UX-012`, and `GOLDEN-A-03`. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest evidence debt under non-gating scopes; `SIGNOFF-04` becomes a mandatory first-shift operating control.

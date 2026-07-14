@@ -431,3 +431,16 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 5. A Golden Journey truth comparison needs an independent business-accepted reference containing both inputs and expected totals; application-generated output is not its own oracle.
 6. Daily supervisor sign-off needs an independent dated shift register; application totals cannot self-attest.
 7. An unavailable external artifact remains an honest blocker with the smallest closure dependency. No external review row inherits PASS from adjacent technical evidence.
+
+## Remaining-gate scope and disabled-provider invariants
+
+1. Every canonical requirement has a `release_scope`; unresolved rows influence the limited-pilot verdict only when `pilot_gating=true`.
+2. `not_applicable` is not PASS. It is permitted only for an exact requirement outside pilot scope or an absent capability and must link to a named post-pilot backlog acceptance test.
+3. WhatsApp defaults to disabled. Missing, empty, or unrecognized provider configuration cannot call Meta and cannot require provider secrets for a core workflow.
+4. A disabled notification path cannot create an inaccessible supervisor access code or claim message delivery; owner/manual handoff must remain truthful and actionable.
+5. Signed callback proof, approved templates, account activation, real-message evidence, and live provider failure drills are post-pilot and cannot be smuggled into infrastructure-readiness PASS claims.
+6. A timed-out mutation has an unknown outcome until authoritative state is checked. The control remains guarded against blind repeat submission, and a reconciled success requires exactly one matching persisted grain.
+7. Slow-network PASS requires usable core mobile screens and repeat-submit prevention; it does not claim offline write queuing or background sync.
+8. Fixture cleanup must verify the same target used for setup. QA/production target mismatches fail closed, and an exact disposable prefix must reconcile to zero before evidence is accepted.
+9. `TECH-011`, `UX-012`, and `GOLDEN-A-03` remain genuine limited-pilot gates because they protect recovery, operational comprehension, and financial truth respectively.
+10. `SIGNOFF-04` is a mandatory first-shift operating control. An unexplained app/register variance pauses pilot operation even though the row does not block the first supervised session.

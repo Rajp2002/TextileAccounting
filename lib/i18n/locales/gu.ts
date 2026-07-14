@@ -191,7 +191,8 @@ export const gu = {
     verify_delete: "ખાતરી કરો અને ડીલીટ કરો (Verify & Delete)",
     invalid_code: "ખોટો અથવા એક્સપાયર થયેલ એક્સેસ કોડ",
     code_sent: "વેરિફિકેશન કોડ માલિકને મોકલવામાં આવ્યો છે",
-    code_requested_success: "WhatsApp દ્વારા માલિકને વિનંતી મોકલવામાં આવી છે",
+    code_requested_success: "ઍક્સેસ કોડની વિનંતી થઈ છે. સંદેશ ન મળે તો માલિકને Settings માં કોડ બનાવવા કહો.",
+    code_manual_fallback: "WhatsApp ઉપલબ્ધ નથી. માલિકને Settings માં ઍક્સેસ કોડ બનાવી સીધો શેર કરવા કહો.",
   },
   analytics: {
     greeting: {

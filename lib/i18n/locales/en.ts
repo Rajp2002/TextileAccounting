@@ -191,7 +191,8 @@ export const en = {
     verify_delete: "Verify & Delete",
     invalid_code: "Invalid or expired access code",
     code_sent: "Verification code sent to owner",
-    code_requested_success: "Request sent to owner via WhatsApp",
+    code_requested_success: "Access code requested. If no message arrives, ask the owner to generate it in Settings.",
+    code_manual_fallback: "WhatsApp is unavailable. Ask the owner to generate an access code in Settings and share it directly.",
   },
   analytics: {
     greeting: {
