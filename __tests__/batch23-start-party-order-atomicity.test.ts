@@ -24,6 +24,7 @@ describe('Batch 23 Start Party Order atomicity (QUOTE-007)', () => {
         readProjectFile('app/(dashboard)/owner/estimator/actions.ts'),
         'startPartyOrderFromEstimator'
     )
+    const client = readProjectFile('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
     // ── Migration creates atomic RPC ──
 
@@ -107,6 +108,13 @@ describe('Batch 23 Start Party Order atomicity (QUOTE-007)', () => {
         expect(action).not.toContain(".from('estimator_quotes')\n        .insert(")
         // Must NOT call executeQuoteConversion as a function
         expect(action).not.toContain('await executeQuoteConversion(')
+    })
+
+    it('exposes the atomic fast path from the Estimator UI', () => {
+        expect(client).toContain('startPartyOrderFromEstimator')
+        expect(client).toContain('id="btn-start-party-order"')
+        expect(client).toContain('Start Party Order')
+        expect(client).toContain('router.push(`/owner/orders?orderId=${result.orderId}`)')
     })
 
     it('pre-computes yarn requirements before the RPC call', () => {

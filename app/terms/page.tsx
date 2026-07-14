@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const sections = [
     { href: '#service-description', title: 'Service Description' },
     { href: '#account-registration', title: 'Account Registration' },
-    { href: '#subscription-payment', title: 'Subscription & Payment' },
+    { href: '#subscription-payment', title: 'Commercial Terms & Payment' },
     { href: '#data-ownership', title: 'Data Ownership' },
     { href: '#acceptable-use', title: 'Acceptable Use' },
     { href: '#labor-compliance', title: 'Labor Compliance' },
@@ -33,19 +33,14 @@ const plans = [
         details: '7 days, all features, no credit card required',
     },
     {
-        name: 'Base',
-        price: '₹600/month + GST',
-        details: 'Up to 15 workers, basic support',
+        name: 'Factory digitisation & implementation',
+        price: '₹49,999 one-time + GST',
+        details: 'Factory configuration, data setup, workflow mapping, and team training',
     },
     {
-        name: 'Premium',
-        price: '₹1,700/month + GST',
-        details: 'Unlimited workers, WhatsApp briefs, priority support',
-    },
-    {
-        name: 'Setup & Training',
-        price: '₹4,999 one-time + GST',
-        details: 'Configuration, data import, training session',
+        name: 'Annual maintenance',
+        price: '₹19,999/year + GST',
+        details: 'Continued platform access, maintenance, updates, and standard support',
     },
 ]
 
@@ -55,11 +50,11 @@ export default function TermsOfServicePage() {
             activePath="/terms"
             title="Terms of Service"
             description="The operating agreement for using Weavly: what the platform provides, what factory owners remain responsible for, and how billing, data, and disputes are handled."
-            lastUpdated="March 25, 2026"
+            lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
                 { label: 'Trial', value: '7 days with all features', icon: CalendarDays },
-                { label: 'Billing', value: 'Monthly plans plus GST', icon: IndianRupee },
+                { label: 'Commercial model', value: 'Setup plus annual maintenance', icon: IndianRupee },
                 { label: 'Data export', value: '30-day window after termination', icon: Database },
                 { label: 'Jurisdiction', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
@@ -80,7 +75,7 @@ export default function TermsOfServicePage() {
                     <li>Cash advance (Upaad) tracking and auto-deduction</li>
                     <li>Customer order management with progress tracking and forecasting</li>
                     <li>Yarn-to-fabric inventory management and yield analytics</li>
-                    <li>WhatsApp Daily Briefs (Premium tier)</li>
+                    <li>Optional WhatsApp production summaries, where enabled</li>
                 </ul>
             </PolicySection>
 
@@ -94,7 +89,7 @@ export default function TermsOfServicePage() {
                 </ul>
             </PolicySection>
 
-            <PolicySection id="subscription-payment" title="3. Subscription Plans &amp; Payment">
+            <PolicySection id="subscription-payment" title="3. Commercial Terms &amp; Payment">
                 <h3>3.1 Plans</h3>
                 <div className="not-prose my-6 grid gap-3 sm:hidden">
                     {plans.map((plan) => (
@@ -128,16 +123,21 @@ export default function TermsOfServicePage() {
                     </table>
                 </div>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    All prices are exclusive of Goods and Services Tax (GST) at the applicable rate (currently 18%). GST will be added to all invoices.
+                    Listed prices are exclusive of Goods and Services Tax (GST). GST will be added at the rate applicable on the invoice date. Final tax treatment, invoice description, and place of supply may vary as required by law.
                 </p>
 
-                <h3>3.2 Billing</h3>
+                <h3>3.2 Implementation and Billing</h3>
                 <ul>
-                    <li>Subscriptions are billed monthly in advance.</li>
-                    <li>The free trial does not automatically convert to a paid plan. You must explicitly subscribe after the trial ends.</li>
-                    <li>We will send a pre-debit notification at least 24 hours before each recurring charge.</li>
+                    <li>The setup and implementation fee is billed separately from annual maintenance and covers agreed onboarding work, including configuration, data setup, workflow mapping, and training.</li>
+                    <li>Implementation begins only after the scope, delivery plan, and payment terms are confirmed with you.</li>
+                    <li>Annual maintenance is billed in advance for each 12-month service period. Unless otherwise stated in your order form, the first annual period begins when the production workspace is activated.</li>
+                    <li>The free trial does not automatically convert to a paid service. You must explicitly accept the commercial proposal and complete payment.</li>
+                    <li>Renewal may be cancelled before the next annual billing cycle. Cancellation stops the next renewal; it does not shorten an already paid service period.</li>
                     <li>All payments are processed through RBI-authorized payment aggregators.</li>
                 </ul>
+                <p>
+                    Refund eligibility depends on the implementation stage and active use of the platform. See our <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link> for the applicable rules.
+                </p>
             </PolicySection>
 
             <PolicySection id="data-ownership" title="4. Data Ownership">
@@ -187,7 +187,7 @@ export default function TermsOfServicePage() {
                 <ul>
                     <li>The Service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any kind, express or implied.</li>
                     <li>We do not warrant that the Service will be uninterrupted, error-free, or completely secure.</li>
-                    <li>Our total liability for any claims arising from or related to the Service shall not exceed the total subscription fees paid by you in the 12 months preceding the claim.</li>
+                    <li>Our total liability for any claims arising from or related to the Service shall not exceed the total fees paid by you in the 12 months preceding the claim.</li>
                     <li>We shall not be liable for any indirect, incidental, special, consequential, or punitive damages.</li>
                     <li>We are not responsible for losses arising from inaccurate data entered by users, including but not limited to incorrect production figures, machine rates, or quality parameters.</li>
                 </ul>
@@ -195,13 +195,13 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="intellectual-property" title="9. Intellectual Property">
                 <p>
-                    The Weavly platform, including its source code, design, user interface, brand name, logo, and documentation, is the exclusive intellectual property of Weavly. You are granted a limited, non-exclusive, non-transferable license to access and use the Service for the duration of your subscription.
+                    The Weavly platform, including its source code, design, user interface, brand name, logo, and documentation, is the exclusive intellectual property of Weavly. You are granted a limited, non-exclusive, non-transferable license to access and use the Service for the duration of your paid service period.
                 </p>
             </PolicySection>
 
             <PolicySection id="termination" title="10. Termination">
                 <ul>
-                    <li><strong>By you</strong> — You may cancel your subscription at any time. Upon cancellation, your access continues until the end of the current billing period.</li>
+                    <li><strong>By you</strong> — You may cancel annual maintenance before the next renewal. Your access continues until the end of the paid annual service period.</li>
                     <li><strong>By us</strong> — We may suspend or terminate your account for violation of these Terms, non-payment, or any activity that threatens the security or integrity of the platform. We will provide reasonable notice except in cases of severe violations.</li>
                     <li><strong>Post-termination</strong> — You will have 30 days to export your data. After 30 days, data will be deleted per our retention policy. Account information is retained for 180 days per IT Intermediary Guidelines 2021.</li>
                 </ul>
@@ -224,7 +224,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="modifications" title="12. Modifications to Terms">
                 <p>
-                    We may update these Terms from time to time. Material changes will be communicated via the platform or email at least 30 days before they take effect. Continued use of the Service after changes constitutes acceptance. If you do not agree with the updated Terms, you must stop using the Service and cancel your subscription.
+                    We may update these Terms from time to time. Material changes will be communicated via the platform or email at least 30 days before they take effect. Continued use of the Service after changes constitutes acceptance. If you do not agree with the updated Terms, you must stop using the Service and cancel your next renewal.
                 </p>
             </PolicySection>
 

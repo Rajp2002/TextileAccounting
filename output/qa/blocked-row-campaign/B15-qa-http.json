@@ -1,0 +1,51 @@
+{
+  "run_id": "B15-HTTP-1783984444873",
+  "environment": "qa-local-dev",
+  "assertions": [
+    {
+      "name": "authenticated owner request is accepted before idle timeout",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "last-activity cookie persists beyond the one-hour enforcement window with safe attributes",
+      "passed": true,
+      "max_age_seconds": 604800,
+      "http_only": true,
+      "same_site_lax": true
+    },
+    {
+      "name": "authenticated session idle for more than one hour is redirected without sensitive response content",
+      "passed": true,
+      "status": 307,
+      "location": "/login",
+      "sensitive_content_absent": true
+    },
+    {
+      "name": "cross-origin server action request is rejected without mutation despite a valid same-user cookie",
+      "passed": true,
+      "status": 500,
+      "location": null,
+      "export_audit_count_before": 1,
+      "export_audit_count_after": 1
+    },
+    {
+      "name": "production PWA advertises the correct start route scope icons and update-capable worker",
+      "passed": true,
+      "start_url": "/login",
+      "scope": "/",
+      "display": "standalone",
+      "icon_192": {
+        "width": 192,
+        "height": 192
+      },
+      "icon_512": {
+        "width": 512,
+        "height": 512
+      },
+      "service_worker_status": 200,
+      "update_message_handler": true
+    }
+  ],
+  "passed": true
+}

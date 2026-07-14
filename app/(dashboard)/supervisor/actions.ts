@@ -20,6 +20,7 @@ import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
 import { validateEntry, VALIDATION_MESSAGES } from '@/lib/production-log-validation'
 import { evaluateProductionWorkerAssignmentPolicy } from '@/lib/production-worker-assignment-policy'
 import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
+import { isWhatsAppDeliveryEnabled } from '@/lib/whatsapp-provider'
 import {
     buildProtectedLoomActionError,
     getLoomLifecycleProtectionReasons,
@@ -644,8 +645,11 @@ export async function addMeterWorker(data: {
     pf_esi_enrolled: boolean
     esi_number?: string | null
     pf_number?: string | null
+    date_of_birth: string
+    age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+    age_verification_reference: string
 }) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
     
     // Set actor context so the audit trigger captures the ID instead of NULL since we are using requireRole which sets the user JWT natively
@@ -662,6 +666,11 @@ export async function addMeterWorker(data: {
             pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
+            date_of_birth: data.date_of_birth,
+            age_verification_method: data.age_verification_method,
+            age_verification_reference: data.age_verification_reference.trim(),
+            age_verified_at: new Date().toISOString(),
+            age_verified_by: user.id,
             org_id: profile.org_id
         })
         .select('id')
@@ -677,9 +686,15 @@ export async function addMeterWorker(data: {
  * Returns all inserted worker IDs for subsequent phone-number saves.
  */
 export async function addMeterWorkersBulk(
-    workers: { name: string; pf_esi_enrolled: boolean }[]
+    workers: Array<{
+        name: string
+        pf_esi_enrolled: boolean
+        date_of_birth: string
+        age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+        age_verification_reference: string
+    }>
 ) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     if (!workers.length) return { error: 'No workers to add.' }
@@ -694,6 +709,11 @@ export async function addMeterWorkersBulk(
             is_active: true,
             pf_esi_enrolled: w.pf_esi_enrolled,
             pf_esi_eligible: w.pf_esi_enrolled,
+            date_of_birth: w.date_of_birth,
+            age_verification_method: w.age_verification_method,
+            age_verification_reference: w.age_verification_reference.trim(),
+            age_verified_at: new Date().toISOString(),
+            age_verified_by: user.id,
             org_id: profile.org_id,
         }
     })
@@ -725,8 +745,11 @@ export async function addFixedWorker(data: {
     pf_esi_enrolled: boolean
     esi_number?: string | null
     pf_number?: string | null
+    date_of_birth: string
+    age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
+    age_verification_reference: string
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
     
     const { data: inserted, error } = await supabase
@@ -740,6 +763,11 @@ export async function addFixedWorker(data: {
             pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
+            date_of_birth: data.date_of_birth,
+            age_verification_method: data.age_verification_method,
+            age_verification_reference: data.age_verification_reference.trim(),
+            age_verified_at: new Date().toISOString(),
+            age_verified_by: user.id,
             org_id: profile.org_id
         })
         .select('id')
@@ -824,6 +852,13 @@ export async function requestAccessCode() {
     const { user, profile } = await requireRole(['supervisor', 'owner'])
     const supabase = await createServerClient()
 
+    // Live WhatsApp is outside pilot scope. Do not create a code that only the
+    // disabled delivery path could reveal; direct the supervisor to the owner
+    // fallback instead. The owner can generate and share a code from Settings.
+    if (!isWhatsAppDeliveryEnabled()) {
+        return { success: true, delivery: 'manual_owner_handoff' as const }
+    }
+
     let generated: Awaited<ReturnType<typeof generateAndStoreAccessCode>>
     try {
         generated = await generateAndStoreAccessCode(profile.org_id)
@@ -859,7 +894,7 @@ export async function requestAccessCode() {
         }).catch((err) => console.error('[request-access-code] Notification failed:', err))
     }
 
-    return { success: true }
+    return { success: true, delivery: 'whatsapp_attempted' as const }
 }
 
 // ─── Shift Assignments (Module 3) ─────────────────────────────────────────────
@@ -969,9 +1004,16 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         const existing = datedAssignmentByMachineId.get(machine.id)
         const operatorAssignment = operatorAssignmentsByMachineId.get(machine.id)?.[shift]
         const standingAssignments = standingAssignmentsByMachineId.get(machine.id)
-        const workerId = operatorAssignment?.worker_id ?? standingAssignments?.[shift] ?? null
+        const datedWorkerId = existing?.worker_id && activeWorkerIds.has(Number(existing.worker_id))
+            ? Number(existing.worker_id)
+            : null
+        const matchingOperatorAssignment = datedWorkerId && operatorAssignment?.worker_id !== datedWorkerId
+            ? undefined
+            : operatorAssignment
+        const workerId = datedWorkerId ?? matchingOperatorAssignment?.worker_id ?? standingAssignments?.[shift] ?? null
         const orderId = machine.current_order_id ?? null
-        const operatorPayload = operatorAssignment ?? (
+        const datedRate = existing?.rate_per_m == null ? null : Number(existing.rate_per_m)
+        const operatorPayload = matchingOperatorAssignment ?? (
             workerId
                 ? {
                     operator_assignment_id: null,
@@ -981,7 +1023,8 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                     worker_id: workerId,
                     operator_name: meterWorkerNameById.get(workerId) ?? 'Meter worker',
                     operator_pay_mode: 'per_meter' as OperatorPayMode,
-                    operator_rate: orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5),
+                    operator_rate: datedRate
+                        ?? (orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
                     machine_type: normalizeMachineType(machine.loom_type),
                 }
                 : {
@@ -1081,7 +1124,7 @@ export async function upsertShiftAssignment(data: {
     order_id: string | null
     rate_per_m: number
 }) {
-    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const [machineParsed, shiftParsed] = [
@@ -1091,75 +1134,21 @@ export async function upsertShiftAssignment(data: {
     if ('error' in machineParsed) return { error: machineParsed.error }
     if ('error' in shiftParsed) return { error: shiftParsed.error }
 
-    if (data.order_id !== null) {
-        const orderParsed = safeParse(UuidSchema, data.order_id)
-        if ('error' in orderParsed) return { error: orderParsed.error }
+    const orderParsed = data.order_id === null ? null : safeParse(UuidSchema, data.order_id)
+    if (orderParsed && 'error' in orderParsed) return { error: orderParsed.error }
 
-        const { data: order, error: orderError } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('id', orderParsed.data)
-            .eq('org_id', profile.org_id)
-            .eq('status', 'active')
-            .single()
-
-        if (orderError || !order) {
-            if (orderError) console.error('upsertShiftAssignment active production target check error:', orderError)
-            return { error: 'Only active cost analyses or qualities can be assigned to a loom.' }
-        }
-    }
-
-    const { error } = await supabase
-        .from('shift_assignments')
-        .upsert(
-            {
-                org_id: profile.org_id,
-                date: data.date,
-                shift: data.shift,
-                machine_id: machineParsed.data,
-                worker_id: data.worker_id,
-                order_id: data.order_id,
-                rate_per_m: data.rate_per_m,
-                created_by: user.id,
-            },
-            { onConflict: 'org_id,date,shift,machine_id' }
-        )
+    const { error } = await supabase.rpc('upsert_shift_assignment_context_v1', {
+        p_date: data.date,
+        p_shift: shiftParsed.data,
+        p_machine_id: machineParsed.data,
+        p_worker_id: data.worker_id,
+        p_order_id: orderParsed?.data ?? null,
+        p_rate_per_m: data.rate_per_m,
+    })
 
     if (error) {
         console.error('upsertShiftAssignment error:', error)
         return { error: error.message }
-    }
-
-    if (data.worker_id) {
-        const { error: standingWorkerError } = await supabase
-            .from('machine_assignments')
-            .upsert(
-                {
-                    org_id: profile.org_id,
-                    machine_id: machineParsed.data,
-                    shift: shiftParsed.data,
-                    worker_id: data.worker_id,
-                },
-                { onConflict: 'org_id,machine_id,shift' }
-            )
-
-        if (standingWorkerError) {
-            console.error('standing machine assignment error:', standingWorkerError)
-            return { error: standingWorkerError.message }
-        }
-    }
-
-    if (data.order_id !== null) {
-        const { error: standingOrderError } = await supabase
-            .from('machines')
-            .update({ current_order_id: data.order_id })
-            .eq('id', machineParsed.data)
-            .eq('org_id', profile.org_id)
-
-        if (standingOrderError) {
-            console.error('standing machine order error:', standingOrderError)
-            return { error: standingOrderError.message }
-        }
     }
 
     return { success: true }
@@ -1313,7 +1302,7 @@ export async function bulkLogProduction(entries: {
     const logShift = logs[0].shift
 
     // ── Guard: production can only be saved for looms that are fully active ──
-    const [machinesRes, standingAssignmentsRes, operatorAssignmentsRes] = await Promise.all([
+    const [machinesRes, standingAssignmentsRes, operatorAssignmentsRes, datedAssignmentsRes] = await Promise.all([
         supabase
             .from('machines')
             .select('id, name, status, current_order_id, orders(status)')
@@ -1332,6 +1321,13 @@ export async function bulkLogProduction(entries: {
             .eq('active', true)
             .in('machine_id', machineIds)
             .in('shift', ['day', 'night']),
+        supabase
+            .from('shift_assignments')
+            .select('machine_id, worker_id')
+            .eq('org_id', orgId)
+            .eq('date', logDate)
+            .eq('shift', logShift)
+            .in('machine_id', machineIds),
     ])
 
     if (machinesRes.error) {
@@ -1339,12 +1335,18 @@ export async function bulkLogProduction(entries: {
         return { error: 'Failed to validate loom setup. Please try again.' }
     }
 
-    if (standingAssignmentsRes.error || operatorAssignmentsRes.error) {
-        console.error('bulkLogProduction – standing assignment lookup error:', standingAssignmentsRes.error || operatorAssignmentsRes.error)
+    if (standingAssignmentsRes.error || operatorAssignmentsRes.error || datedAssignmentsRes.error) {
+        console.error(
+            'bulkLogProduction – worker assignment lookup error:',
+            standingAssignmentsRes.error || operatorAssignmentsRes.error || datedAssignmentsRes.error
+        )
         return { error: 'Failed to validate worker assignments. Please try again.' }
     }
 
-    const workerIds = [...new Set((standingAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id))]
+    const workerIds = [...new Set([
+        ...(standingAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id),
+        ...(datedAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id),
+    ].filter((id): id is number => id != null))]
     const operatorMeterWorkerIds = [...new Set((operatorAssignmentsRes.data ?? [])
         .map((assignment) => assignment.meter_worker_id)
         .filter((id): id is number => id != null))]
@@ -1401,6 +1403,12 @@ export async function bulkLogProduction(entries: {
         if (!activeWorkerIds.has(assignment.worker_id)) continue
         const current = standingByMachineId.get(assignment.machine_id) ?? {}
         current[assignment.shift as 'day' | 'night'] = assignment.worker_id
+        standingByMachineId.set(assignment.machine_id, current)
+    }
+    for (const assignment of datedAssignmentsRes.data ?? []) {
+        if (!assignment.worker_id || !activeWorkerIds.has(assignment.worker_id)) continue
+        const current = standingByMachineId.get(assignment.machine_id) ?? {}
+        current[logShift] = assignment.worker_id
         standingByMachineId.set(assignment.machine_id, current)
     }
 
@@ -1531,7 +1539,7 @@ export async function bulkLogProduction(entries: {
     if (orderIds.length > 0) {
         const { data: orders, error: ordersError } = await supabase
             .from('orders')
-            .select('id, created_at')
+            .select('id, start_date')
             .in('id', orderIds)
             .eq('org_id', orgId)
 
@@ -1541,7 +1549,7 @@ export async function bulkLogProduction(entries: {
         }
 
         const orderStartMap = new Map(
-            (orders ?? []).map((o) => [o.id, o.created_at.split('T')[0]])
+            (orders ?? []).map((o) => [o.id, o.start_date])
         )
 
         for (const log of logs) {
@@ -1799,26 +1807,88 @@ export async function updateMachineBreakdown(params: {
     category: string | null
     notes: string
 }) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const machineParsed = safeParse(UuidSchema, params.machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
 
-    const { error } = await supabase
-        .from('shift_assignments')
-        .update({
-            breakdown_category: params.category,
-            breakdown_notes: params.notes
-        })
-        .eq('machine_id', machineParsed.data)
-        .eq('date', params.date)
-        .eq('shift', params.shift)
-        .eq('org_id', profile.org_id)
+    const shiftParsed = safeParse(ShiftSchema, params.shift)
+    if ('error' in shiftParsed) return { error: shiftParsed.error }
 
-    if (error) {
-        console.error('Failed to update machine breakdown:', error)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(params.date)) return { error: 'Invalid production date.' }
+
+    const category = params.category?.trim() || null
+    if (category && !['warp', 'mech', 'elec'].includes(category)) {
+        return { error: 'Invalid breakdown category.' }
+    }
+
+    const notes = params.notes.trim()
+    if (notes.length > 500) return { error: 'Breakdown notes must be 500 characters or fewer.' }
+
+    const grain = {
+        org_id: profile.org_id,
+        machine_id: machineParsed.data,
+        date: params.date,
+        shift: shiftParsed.data,
+    }
+
+    const existing = await supabase
+        .from('shift_assignments')
+        .select('id')
+        .match(grain)
+        .maybeSingle()
+
+    if (existing.error) {
+        console.error('Failed to find machine breakdown row:', existing.error)
         return { error: 'Failed to save breakdown details.' }
+    }
+
+    const breakdown = {
+        breakdown_category: category,
+        breakdown_notes: notes || null,
+    }
+
+    if (existing.data) {
+        const updated = await supabase
+            .from('shift_assignments')
+            .update(breakdown)
+            .eq('id', existing.data.id)
+            .eq('org_id', profile.org_id)
+            .select('id')
+            .single()
+
+        if (updated.error || !updated.data) {
+            console.error('Failed to update machine breakdown:', updated.error)
+            return { error: 'Failed to save breakdown details.' }
+        }
+    } else {
+        const inserted = await supabase
+            .from('shift_assignments')
+            .insert({
+                ...grain,
+                ...breakdown,
+                created_by: user.id,
+            })
+            .select('id')
+            .single()
+
+        if (inserted.error?.code === '23505') {
+            const racedUpdate = await supabase
+                .from('shift_assignments')
+                .update(breakdown)
+                .match(grain)
+                .select('id')
+                .single()
+
+            if (racedUpdate.error || !racedUpdate.data) {
+                console.error('Failed to reconcile concurrent machine breakdown:', racedUpdate.error)
+                return { error: 'Failed to save breakdown details.' }
+            }
+        } else if (inserted.error || !inserted.data) {
+            console.error('Failed to insert machine breakdown:', inserted.error)
+            return { error: 'Failed to save breakdown details.' }
+        }
     }
 
     revalidatePath('/supervisor/dashboard')

@@ -14,20 +14,20 @@ Rules for entries:
 | Cluster | Status | Notes |
 | --- | --- | --- |
 | `SEC-A` mutable profile authorization | Closed in Batch 1 / pass | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 21D / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 source-fixed payroll RPC boundary rows `PAY-018` and `PAY-020`; Batch 21D closes them with disposable QA runtime proof. `AUTH-008` remains open. |
-| `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
+| `SEC-B` privileged action/lockdown enforcement | Partially closed through runtime remediation / open remainder | Batch 1 closed `SEC-006` and `AUTH-016`; Batch 21D closed payroll RPC boundary rows `PAY-018` and `PAY-020`; the runtime-remediation campaign closed `AUTH-008` with fail-closed source coverage and fresh QA Redis proof. Other blocked privileged-action evidence remains open. |
+| `SEC-C` webhook/export/compliance fail-closed | Pilot implementation closed / external assurance retained | Batch 9 closed `SEC-016`; Batch 15 closed `SEC-014`; runtime remediation closed `TECH-009` and `SEC-017`. `WA-008` is now a named post-pilot signed-webhook requirement with no PASS credit. Counsel review and live Sentry payload inspection retain their exact external prerequisites. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `PROD-B` production boundary validation | Partially source-fixed through Batch 24F / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Batch 24E moves `MASTER-002` and `MASTER-005` to `code_verified` by source-fixing normalized duplicate loom-name checks and protected loom delete/deactivate/unlink guardrails. Batch 24F moves `PROD-002` and `PROD-004` to `code_verified` by source-fixing selected-shift day-only worker assignment policy and explicit substitute-worker reassignment-required behavior. Runtime/API, browser, or migration/DB-boundary proof is still required before these rows can pass. `MASTER-014`, `SIGNOFF-01`, `SIGNOFF-02`, and remaining production-boundary rows stay open. |
-| `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
+| `PROD-B` production boundary validation | Partially source-fixed through Batch 24F / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified`; Batch 24C source-fixes `SETUP-011`; Batch 24E source-fixes `MASTER-002` and `MASTER-005`; Batch 24F source-fixes `PROD-002` and `PROD-004`. Runtime/API, browser, or migration/DB-boundary proof is still required before those rows can pass. Runtime remediation closed `MASTER-014`, `SIGNOFF-01`, and `SIGNOFF-02` with isolated concurrency/rollback/RLS and current-run dashboard attribution proof. |
+| `STOCK-A` stock lifecycle/archive policy | Closed through blocked-row B12 / pass | Earlier batches closed archive and protected-history rows; B11 closed `STOCK-011`, and blocked-row B12 closed `MARKET-009`, `MARKET-010`, source integrity, concurrent mutation, dispatch/receipt, and Golden B stock lifecycle with QA and production proof. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Closed for current formal rows through blocked-row B13 | Estimator costing and boundary batches closed formula/manual, snapshots, confirmations, and validation. B11 closed Start Party Order atomicity and protected order history. B13 closed decimal operator-rate and historical payroll snapshot rows with QA/production proof. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 24C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Batch 24C moves `DASH-004` to `code_verified` by source-fixing historical selected-date analytics state so stale current values are not mixed into historical views. `SIGNOFF-01`, `SIGNOFF-02`, and remaining dashboard runtime evidence debt stay open. |
-| `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 21D / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`. Batch 21C promotes PF/ESI preview and preview-versus-settlement rows `PAY-013` and `PAY-015` to pass with disposable payroll settlement runtime proof. Batch 21D promotes payroll settlement/reversal boundary rows `PAY-018` and `PAY-020` to pass with disposable QA runtime proof. Batch 20 online Kharchi atomicity row `PAY-027` remains `code_verified`, not pass, pending disposable QA runtime proof. Broader settlement correctness remains open. |
-| `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
-| `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
-| `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
+| `DASH-A` dashboard/sign-off read-model truth | Closed for current formal rows through blocked-row B14 | Earlier batches closed dispatch, receipt, commercial, empty-state, historical, and deployed signoff rows. B13 closed Factory Today source truth; B14 closes realtime refresh, reconnect recovery, independent pace, large-range timing, and distinct dashboard states with QA browser/runtime and production proof. |
+| `PAY-A` payroll/kharchi ledger integrity | Closed for current formal core rows through blocked-row B13 | Earlier batches closed payslip/export, statutory preview equality, settlement authorization/reversal, and online-only boundaries. B13 closes the remaining decimal rate, historical snapshot, cap, final settlement, adjustment, cycle, concurrency, reversal, exit, Kharchi, and Golden payroll rows with QA runtime/browser and production runtime proof. Provider/offline failures remain tracked under their own clusters. |
+| `IDEMP-A` mutation idempotency/unknown outcome | Closed for the formal pilot row | `OFF-009` now has delayed-response runtime proof: unknown outcome, authoritative reconciliation, immediate resubmission guard, and exactly one persisted row. Other domain-specific idempotency rows retain their own existing evidence. |
+| `OFF-A` offline/cache/PWA claims | Pilot-critical rows closed / optional install evidence retained | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`; runtime remediation closes `OFF-007`; B15 proves manifest/icon/scope/start/update readiness. `OFF-009` and `OFF-010` now pass production-targeted delayed/throttled runtime proof. `OFF-001` remains optional, non-gating physical-device install evidence. |
+| `REL-A` release gates | Free-tier backup control implemented / real artifact and restore still blocked | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. B18 closed rollback/forward-fix and proved sanitized restore mechanics. The 2026-07-14 focused sprint adds a daily encrypted Supabase CLI backup and ephemeral restore drill, but `TECH-011` remains blocked until owner configuration produces a scheduled artifact and that exact artifact restores/reconciles. |
 
 ## Entry Template
 
@@ -44,6 +44,33 @@ Rules for entries:
 | Data safety | QA tenant/disposable/rollback-only proof. |
 | Result | `open`, `blocked`, `retest_needed`, or `resolved_with_evidence`. |
 | Matrix update | Rows promoted and evidence references. |
+
+## Remaining-gate campaign — 2026-07-14
+
+Status: internal implementation and proof closed; external pilot gates precisely retained.
+
+- Rows: `WA-008`, `WA-010`, `OFF-009`, `OFF-010`, plus scope/classification review of `TECH-011`, `OFF-001`, `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04`.
+- Root changes: the WhatsApp provider now defaults to `disabled`, only explicit `simulate` or `meta` enables provider behavior, disabled mode never calls Meta, and supervisor access-code requests return truthful manual-owner-handoff state without creating an inaccessible code. The production fixture cleanup now refuses a QA/production target mismatch and supports an exact `QA-OFF009-*` reconciliation path.
+- Regression: `__tests__/pilot-whatsapp-disabled-readiness.test.ts`, `__tests__/b16-whatsapp-provider-boundaries.test.ts`, and `__tests__/off-009-mutation-outcome.test.ts` passed 15 tests; TypeScript and targeted lint passed; the optimized build passed 92 files / 653 tests plus 1 intentional skip.
+- Runtime: `OFF-009` passed one 42 m delayed-response write with authoritative saved-state reconciliation; `OFF-010` passed one 21 m constrained-3G mobile write and four core screens. Both had immediate duplicate-submit guards, exactly one database row, zero browser warnings/errors, and exact fixture-prefix cleanup to zero.
+- Matrix: `OFF-009` and `OFF-010` promoted to pass. `WA-008` and `WA-010` moved to non-gating post-pilot `not_applicable` with named backlog items; no PASS was claimed. Final counts: 367 pass, 0 fail, 7 blocked, 3 not applicable.
+- Evidence: `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`, `output/playwright/prepilot-remaining-gates/`, `docs/pilot-remediation/REMAINING_GATE_REPORT.md`, and `docs/pilot-remediation/POST_PILOT_BACKLOG.md`.
+- Production: commit `5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5` is live on READY deployment `dpl_3yvQ3zWGTpEB6xw1EYgvwbvgRaLL`. Vercel passed 92 files / 654 tests, TypeScript, optimized build, and Sentry release upload. Nine dependent Edge functions are ACTIVE with provider disabled. Deployed supervisor proof showed the manual owner-handoff toast, no access-code hash/expiry, no delivery row, four public-route HTTP 200s, zero post-deploy error/5xx logs, and zero fixture residue.
+
+## Focused TECH-011 / UX-012 preparation sprint — 2026-07-14
+
+Status: implementation prepared; both canonical rows remain `blocked`.
+
+- `TECH-011`: added a scheduled private-repository backup workflow, manual disposable restore workflow, encrypted dump/restore scripts, sanitized inventory SQL, runbook and post-pilot hardening item. The official Supabase sequence covers roles, schema, data including Auth records/Storage metadata, and separate migration history. `age` encrypts before upload; payload/cipher hashes, source project/commit and UTC times are recorded; private Actions retention is 14 days; failures create/update a repository issue.
+- Production read-only inventory: project healthy on Free/Postgres 17; migration history count 211 and head `20260714040018`; installed `pg_cron`/`pg_net` are captured by the extension check; Storage has zero buckets, objects and bytes. No active application Storage client was found. The workflow fails closed if an object appears because metadata is not object-byte recovery.
+- Credential boundary: the private GitHub repository had no Actions workflows, secret names or variable names before this sprint. The linked environment has no database password/URL suitable for non-interactive `supabase db dump`. Required owner names are `SUPABASE_PRODUCTION_DB_URL`, `SUPABASE_PRODUCTION_PROJECT_REF`, `BACKUP_AGE_RECIPIENT`, and `BACKUP_AGE_IDENTITY`; no values were read or printed.
+- Restore proof: not run. No scheduled artifact exists, no dump was retained, and production was never a restore target. `TECH-011` therefore remains `BLOCKED`.
+- `UX-012`: added a 42-concept owner/supervisor/mobile/docs/export inventory, proposed glossary, high-risk decision-only additions, and expanded screenshot instructions. No isolated typo was changed because every observed conflict also chooses factory vocabulary, financial meaning or unit convention. No application deployment was required.
+- Approval boundary: no named factory-supervisor approval or change request exists. `UX-012` remains `BLOCKED`; product-owner preference alone cannot satisfy the exact row unless that person truthfully signs in the required factory-supervisor role.
+- Deferred boundary: `GOLDEN-A-03` was not edited or reclassified.
+- Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json` plus the referenced workflow/script/closure-pack paths.
+- Validation: actionlint, ShellCheck, Bash syntax, YAML/JSON parsing, missing-secret fail-closed test, production read-only inventory SQL, changed-Markdown link validation and `git diff --check` passed. `npm ci`, ESLint, 92 Vitest files/653 passed plus 1 intentional skip, optimized Next build, and both high/critical audit gates passed; two pre-existing moderate advisories remain.
+- Matrix: no row or count changed; formal totals remain 367 pass, 0 fail, 7 blocked, and 3 not applicable.
 
 ## Active Entry: BATCH-01A-MUTABLE-PROFILE-AUTHZ
 
@@ -2108,3 +2135,355 @@ Safety:
 Resolution status:
 
 - Matrix movement is pass +1 and `code_verified` -1: total 377, pass 196, fail 13, blocked 22, `code_verified` 145, `not_applicable` 1, `not_run` 0.
+
+## Runtime Rerun Closeout - Rows 1-16
+
+Date/time: 2026-07-10 22:09 IST. Branch `codex/estimator-production-readiness-20260710` at repository commit `cfeca96` with an already-dirty, mid-flight worktree.
+
+Scope:
+
+- Re-executed the first 16 rows from the 145-row setup-cascade queue against QA-prefixed test tenants on production project ref `vzhwahudircrpgtitwzd`, as explicitly authorized because the production database contains test accounts only.
+- Runtime ledger: `output/qa/runtime-rerun-20260710/results.json`.
+- Checkpoint: `output/qa/runtime-rerun-20260710/CHECKPOINT.json`.
+- QA record prefix: `RERUNPRODQA-20260710-13CC5C47AD`.
+
+Rows promoted from `code_verified` to `pass`:
+
+- `AUTH-003`, `AUTH-006`, `AUTH-013`, `SETUP-001`, `SETUP-002`, `SETUP-010`, and `MASTER-001`.
+
+Rows proven `fail`:
+
+- `AUTH-012`: an Org A authenticated client could read the guessed Org D organization row. Cross-org machine reads and updates remained isolated, but the organization metadata read violated the row expectation.
+- `MASTER-006`: the runtime Add Piece Rate Worker form has no decimal-rate field. Current runtime behavior places production rates on costing/quality context, so the matrix scenario cannot be completed through the stated worker path.
+
+Rows recorded `blocked`, not pass:
+
+- `AUTH-005`: generic reset request and a valid recovery form were proven, but expired/reused-token rejection and final password mutation were not fully exercised.
+- `SETUP-007`: no controlled network-failure injection was available in the active browser session.
+- `SETUP-011`: Factory Today was refresh-stable for the partial fixture, but the estimate-created precondition was absent.
+- `SETUP-012`: rename and code regeneration persisted, but the old code was not submitted through a fresh join attempt.
+- `MASTER-002`: manual duplicate protection passed, but the specified bulk-add duplicate path was not executed.
+- `MASTER-003`: name/type edits persisted, but the loom lacked assignment and production history.
+- `MASTER-005`: no active-order/history fixture was available for protected lifecycle proof.
+
+Evidence:
+
+- `output/qa/runtime-rerun-20260710/evidence/AUTH-012-cross-org-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-001-market-onboarding-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-002-order-onboarding-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-010-mode-switch-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-011-factory-today-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/SETUP-012-factory-identity-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/MASTER-001-add-loom-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/MASTER-002-duplicate-loom-production.json`.
+- `output/qa/runtime-rerun-20260710/evidence/MASTER-003-edit-loom-production.json`.
+
+Data safety:
+
+- All created records were strongly QA-prefixed test records. No real client, billing purchase, payment, WhatsApp send, backup/restore, or broad load action was used.
+- QA trial entitlements were fixture-only rows; no Razorpay payment was performed.
+- No Supabase migration, DB push, repair, pull, or schema mutation occurred during this documentation closeout.
+- The QA fixtures remain available for the next runtime batch and require targeted cleanup when the campaign finishes.
+
+Resolution status:
+
+- Runtime checkpoint: pass 7, fail 2, blocked 7, not run 129.
+- Formal matrix movement for these 16 rows: pass +7, fail +2, blocked +7, `code_verified` -16.
+- Updated matrix totals: total 377, pass 203, fail 15, blocked 29, `code_verified` 129, `not_applicable` 1, `not_run` 0.
+
+### Runtime Rerun Batch 2 Continuation - Queue 17-20
+
+- `MASTER-008` moved to `pass`: one present attendance day for a QA Day-to-Day worker with ₹30,000 monthly salary produced ₹1,000 gross/net, matching `min(monthly salary, monthly salary / 30 × present days)` and staying below the monthly cap. Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-008-daily-attendance-payroll-production.json`.
+- `MASTER-009` moved to `fail`: after authenticated tenant-scoped deactivation, Machines still displayed the inactive worker on both shifts and the loom as Active, while Factory Today still marked worker assignment complete. Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-009-deactivate-assigned-worker-production.json`.
+- `MASTER-011` and `MASTER-012` moved to `blocked`: two workers, two active contexts, a linked loom, and standing assignments were prepared, but two Save shift logs attempts returned `UPDATE requires a WHERE clause`; zero `production_logs` rows were created, preventing substitute-payroll and historical-context proof. Evidence: `output/qa/runtime-rerun-20260710/evidence/MASTER-011-substitute-worker-blocker-production.json` and `output/qa/runtime-rerun-20260710/evidence/MASTER-012-replace-context-blocker-production.json`.
+- Additional deployed-boundary finding: application activation checks allow at least one day or night assignment, while authenticated database activation returned constraint `23514` until both shifts were assigned.
+- Updated runtime checkpoint: pass 8, fail 3, blocked 9, not run 125. Updated formal matrix totals: total 377, pass 204, fail 16, blocked 31, `code_verified` 125, `not_applicable` 1.
+
+### Runtime Rerun Batch 3 - Queue 21-30
+
+- Promoted `MASTER-013`, `MASTER-015`, `EST-002`, `EST-004`, `EST-006`, `EST-007`, `EST-008`, `EST-009`, `EST-010`, and `EST-013` from `code_verified` to `pass` using production-backed, QA-prefixed browser and database proof.
+- Order cancellation unlinked and inactivated only the related loom. Worker phone changes required consent reconfirmation, updated the one consent row to the latest non-routable QA number, and created no WhatsApp delivery rows.
+- Estimator proof covered exact blended-row arithmetic, 254 cm ↔ 100 inch equivalence and draft refresh, sizing, optional-cost gates, override replacement, capacity/idle cost, repeated fixed-worker merge/save, and the full org-scoped template lifecycle through cleanup.
+- The first-run baseline modal was completed before button/radio classification; intercepted clicks before setup completion were discarded as invalid evidence, not failures.
+- Evidence: `output/qa/runtime-rerun-20260710/evidence/batch-03-master-estimator-production.json` and `output/qa/runtime-rerun-20260710/batch-03-summary.json`.
+- Updated runtime checkpoint: pass 18, fail 3, blocked 9, not run 115. Updated formal matrix totals: total 377, pass 214, fail 16, blocked 31, `code_verified` 115, `not_applicable` 1.
+
+## Runtime Remediation — AUTH-012 Production Closeout
+
+Date: 2026-07-13 IST. Branch `codex/estimator-production-readiness-20260710`.
+
+- Root cause: production `organizations` had a public permissive `Lookup org by join code` SELECT policy with predicate `true`, which OR-composed around tenant isolation.
+- Compatibility/safety: the identified real account's auth user, owner profile, organization, and organization owner ID were internally consistent with the replacement policy. Its tenant was excluded from mutation.
+- Migration: applied only `20260710210828_close_public_organization_join_code_policy.sql`; recorded exact remote migration history `20260710210828`. No other pending migration was deployed.
+- Catalog proof: post-deployment `organizations` policies are exactly authenticated tenant SELECT and authenticated owner tenant UPDATE. The post-deployment advisor returned no finding targeting `organizations`.
+- Runtime proof: fixture `AUTH012-1783901124790-D5DAFB55` passed own organization read/update; cross-tenant organization/profile/machine non-disclosure; cross-tenant organization/machine mutation denial; and service-role persistence checks proving target rows were unchanged.
+- Cleanup: exact production organizations, profiles, machine, and both auth users reconciled to zero. The real tenant was untouched.
+- Validation: focused AUTH tests passed 6/6; targeted ESLint and TypeScript passed; full Vitest passed 75 files with 579 passed and 1 intentional skip; JSON/matrix consistency and `git diff --check` passed.
+- Formal result: `AUTH-012` moved from `fail` to `pass`. Matrix totals are 253 pass, 3 fail, 120 blocked, and 1 not applicable.
+- Remaining failures: `WA-008`, `OFF-009`, `OFF-010`.
+
+## OFF-009 unknown-outcome boundary (2026-07-13)
+
+- Status: `code_verified_but_not_runtime_verified`; the formal matrix remains `fail`.
+- Added `lib/mutation-outcome.ts` so a client response timeout is represented as an unknown mutation outcome rather than a definite failure. Supervisor shift submission now performs an authoritative shift-state lookup before allowing the timeout path to resolve as success, and otherwise tells the operator not to resubmit until the shift is checked.
+- Added focused coverage in `__tests__/off-009-mutation-outcome.test.ts` for normal completion, timeout classification, and exact persisted replacement-state reconciliation. Updated the Batch 24D source assertion for the wrapped submit call.
+- Local proof passed: `npx vitest run __tests__/off-009-mutation-outcome.test.ts __tests__/batch24f-production-worker-assignment-policy.test.ts` (2 files, 10 tests); targeted ESLint; `npx tsc --noEmit`; and the production-environment build gate (77 files, 584 tests, followed by a successful Next.js 16.2.10 build).
+- Production browser proof used disposable tenant `OFF009-1783902723451-ED3AE8` behind a one-shot 17-second response-delay proxy. At the 15-second client boundary, the UI did not report a definite failure and displayed: “We could not confirm whether this shift was saved. Do not submit it again yet; refresh and check the shift first.” Evidence: `output/qa/runtime-remediation-20260711/OFF-009-timeout-reconciled.png`.
+- The committed-state reconciliation branch remains unproven because the existing production shift-log write path returns `UPDATE requires a WHERE clause` even without the delay and creates zero `production_logs` rows. This is the existing production-write blocker, not a timeout-classification failure.
+- Data safety: the exact disposable production fixture and auth user were removed by `node scripts/qa/off-009-browser-fixture.mjs cleanup --production`, which returned `cleaned: true`. The protected `ambob9182@gmail.com` tenant was not used.
+
+## Formal blocked-row Batch 2 closeout (2026-07-13)
+
+- Status changes: `SETUP-012`, `DASH-001`, `BILL-002`, `UX-004`, and `UX-011` moved from `blocked` to `pass`.
+- Fixture/proof: `scripts/qa/formal-batch2-fixture.mjs` created isolated active Premium and Base tenants plus a Premium supervisor against QA project `eutycrtzzxmlkcpipgod`. Browser proof covered empty Factory Today, plan gating with Billing reachable, 390x844 navigation/logout, reciprocal supervisor copy/redirects, and old-versus-current join-code behavior.
+- Database reconciliation: the empty tenant had zero rows across machines, both worker tables, orders, market runs, production, stock, dispatch, receivables, advances, and payroll settlements. Subscription tiers/statuses and role membership matched the rendered access boundaries.
+- Evidence: `output/qa/runtime-remediation-20260711/RUNTIME_EVIDENCE.md` and the five durable screenshot artifacts in that directory.
+- Data safety: no production data was used; both subscriptions, three profiles, two organizations, all three auth users, and the private credential file were deleted and independently reconciled to zero/removed. Browser tabs and the local QA server were closed.
+- Open finding: the fresh Premium Settings route rendered a blank main region without a browser-console error. `SEC-009` remains blocked and is categorized under `Needs formal audit/debugging`; no export pass credit was claimed.
+- Formal matrix after this batch: total 377, pass 258, fail 3, blocked 115, not applicable 1, code verified 0, not run 0.
+
+## Formal blocked-row Batch 3 closeout (2026-07-13)
+
+- `UX-003`: clean isolated join validation retained entered name, email, and phone after an exact phone-length error; no relevant console issue or partial account/tenant row appeared.
+- `BILL-008` defect/fix: `applyReferralCode` attempted an authenticated INSERT where `referral_uses` has no INSERT policy. The module is now explicitly server-only and uses the admin client only after signup/API call sites derive the referee org from trusted owner context. Self-referral remains blocked before insert and the unique referee constraint remains the duplicate-use boundary.
+- `AUTH-015` defect/fix: revocation markers were written but never consulted. `getCachedSession` now checks `isUserRevoked(user.id)` before profile/role authorization is loaded.
+- Runtime: valid referral application returned 200; self and duplicate applications were rejected; database count was exactly one cross-org use and zero self uses. Two independent authenticated sessions returned 200 before revocation and were both denied afterward while their JWTs still validated.
+- Tests: `npx vitest run __tests__/bill-008-referral-boundary.test.ts __tests__/auth-015-session-revocation.test.ts` passed 2 files / 5 tests; targeted ESLint passed.
+- Safety/cleanup: QA-only fixture; referral records, Redis marker, all tenant/auth records, credentials, browser tabs, and server were removed and reconciled.
+- Formal matrix: total 377, pass 261, fail 3, blocked 112, not applicable 1.
+
+## Formal blocked-row Batch 4 closeout (2026-07-13)
+
+- `MASTER-002`, `MASTER-003`, and `MASTER-005` moved from `blocked` to `pass` using isolated QA owner browser proof plus tenant-scoped database reconciliation.
+- `MASTER-002`: two Jacquard groups in one onboarding bulk request persisted as exactly `Jacquard 1` and `Jacquard 2`; trim/case duplicate insert and rename returned the normalized-name 23505 boundary; same-name cross-tenant and same-type different-name controls succeeded; no normalized duplicate remained.
+- `MASTER-003`: one active loom with an active target, two standing assignments, a dated assignment, and 10m production history was renamed and changed to Water Jet. Refresh and database checks preserved the same target and every reference.
+- `MASTER-005`: owner deactivate/delete attempts were rejected and the visible message listed active target, active assignments, dated assignment history, and production history. The loom remained active with all references intact; a separate unused loom delete succeeded.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/MASTER-002-formal-batch4.json` and `output/qa/runtime-remediation-20260711/evidence/MASTER-003-005-formal-batch4.json`.
+- Regression proof: `npx vitest run __tests__/batch24e-master-data-guardrails.test.ts` passed 1 file / 9 tests; targeted ESLint and probe syntax checks passed.
+- Safety: QA project `eutycrtzzxmlkcpipgod` only. Exact production log, assignments, order, worker, machines, subscriptions, profiles, organizations, auth users, private credential file, browser tabs, and local server were removed or closed and reconciled.
+- Formal matrix: total 377, pass 264, fail 3, blocked 109, not applicable 1. Readiness remains No-Go.
+
+## Formal blocked-row Batch 5 closeout (2026-07-13)
+
+- `SETUP-011` moved from `blocked` to `pass` after an isolated complete-setup rerun exposed and verified a real client lifecycle fix.
+- Defect: `FactoryTodayClient` started the deferred 13-query checklist request inside an effect, but Strict Mode cleanup marked its completion inactive while the one-request guard prevented a usable replacement subscription. The server action completed successfully, yet the setup panel could remain absent without a console error.
+- Fix: retain one in-flight checklist promise and do not cancel its state completion during effect cleanup. React safely ignores a state update after a real unmount; repeated Strict Mode callbacks are idempotent because they apply the same payload.
+- Runtime: one persisted estimate, active order, active linked loom, active piece-rate and fixed workers, day/night assignments, supervisor, payroll config, and active Premium plan rendered `11 of 14 steps complete · Order or market-run path`; `Log first production` remained the correct next step before and after refresh, with zero browser console errors/warnings.
+- Database reconciliation: exactly one fixture machine, piece-rate worker, fixed worker, estimate, order, and payroll config; two assignment shifts; one supervisor; one active subscription; linked loom active.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/SETUP-011-formal-batch5.json`.
+- Regression proof: `npx vitest run __tests__/batch3b-factory-today-query-fanout.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts` passed 2 files / 12 tests; targeted ESLint and fixture syntax checks passed.
+- Safety: QA project `eutycrtzzxmlkcpipgod` only. Exact business rows, subscriptions, profiles, organizations, auth users, private credential files, browser tabs, and local server were removed or closed and reconciled.
+- Formal matrix: total 377, pass 265, fail 3, blocked 108, not applicable 1. Readiness remains No-Go.
+
+## Formal blocked-row Batch 6 closeout (2026-07-13)
+
+- `SETUP-007` moved from `blocked` to `pass` after a controlled same-origin failure proxy supplied the missing runtime condition and exposed a real retry-state defect.
+- Defect: a rejected `addMachinesBulk` promise bypassed the original `setSaving(false)` path, leaving the setup save action disabled indefinitely. The machine form now catches rejected requests, shows `Unable to save machines. Check your connection and try again.`, and always clears saving state in `finally`.
+- Runtime: exactly one `POST /onboarding` was intercepted with a controlled 503 before the application mutation. The step stayed incomplete at 2/5, the retry toast appeared, `Save 1 machine` re-enabled, and the tenant still had zero machines.
+- Retry and persistence: the unchanged form was retried through the healthy upstream; the database contained exactly one `Jacquard 1`, and a fresh page load showed 3/5 with `Add your machines` marked `Done ✓`. The final exercised browser window had zero warnings/errors.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/SETUP-007-formal-batch6.json`.
+- Regression proof: `npx vitest run __tests__/setup-007-onboarding-network-retry.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts` passed 2 files / 8 tests; targeted ESLint and proxy syntax checks passed.
+- Migration/deployment: none. This batch changed only the client retry boundary, focused regression coverage, the disposable local proxy, and formal evidence/docs.
+- Safety: isolated QA project `eutycrtzzxmlkcpipgod`; the created machine and the complete fixture/auth set were deleted by exact tenant/fixture cleanup, and local servers/browser tabs/private credentials were removed or closed.
+- Formal matrix: total 377, pass 266, fail 3, blocked 107, not applicable 1. Readiness remains No-Go.
+
+## Production checkpoint deployment (2026-07-13)
+
+- Source checkpoint: commit `40b414a6ed7b9285048045c118074d8e0d010065` on `codex/estimator-production-readiness-20260710` was pushed to `origin` before deployment.
+- Release gate: full Vitest passed 80 files with 589 passed and 1 intentional skip; ESLint, TypeScript, `git diff --check`, QA proxy syntax, and the Next.js 16.2.10 production build passed. The Vercel remote build repeated the test/build gate and uploaded Sentry source maps successfully.
+- Production database: preflight dry-run identified exactly five pending migrations. Production impact inspection found 13 active machines, with zero rows and zero organizations affected by the loom-deactivation reconciliation. Migrations `20260710211355`, `20260711061412`, `20260711134000`, `20260711172126`, and `20260711180000` were then applied in order. Post-deployment migration listing shows local and production aligned through `20260711180000`.
+- Edge function: `whatsapp-webhook` was deployed to production as active version 16 with JWT verification disabled as required by its signed Meta webhook boundary.
+- Web deployment: Vercel production deployment `dpl_4pP8ovMPoS1tCwAcp9RZQL5gNfnY` is Ready and aliased to `https://textile-accounting.vercel.app`.
+- Live smoke: `/`, `/login`, `/privacy`, `/terms`, and `/manifest.webmanifest` returned HTTP 200. Unauthenticated `/owner/today` and `/supervisor/dashboard` returned HTTP 307 to `/login`.
+- Formal audit/debugging follow-up: production schema lint still reports six legacy stored-function errors in `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert`. These were not represented as deployment passes and require isolated formal audit/debugging before remediation.
+- Matrix state is unchanged by deployment: total 377, pass 266, fail 3, blocked 107, not applicable 1. Readiness remains No-Go while live testing proceeds.
+
+## Formal blocked-row Batch 7 closeout (2026-07-13)
+
+- Status changes: `PROD-002`, `PROD-004`, and `MASTER-012` moved from `blocked` to `pass` after isolated production browser and database proof.
+- Reproduced defect: a loom with one active day worker and no night worker was rejected by the legacy database activation function, contradicting the selected-shift application policy.
+- Fix: migration `20260713124500_allow_single_shift_machine_activation.sql` changes loom readiness to require an active order plus at least one active day/night meter-worker assignment. The selected-shift production boundary still requires the chosen shift's worker. The migration only replaces functions; it rewrites no business rows.
+- Migration evidence: production dry-run listed exactly `20260713124500`; apply succeeded; local and remote migration histories align through `20260713124500`. The migration was applied before this batch's source commit, so the repository was intentionally mid-flight only during runtime proof.
+- `PROD-002`: isolated production first had exactly one day assignment and zero night assignments. The loom activated, the supervisor submitted 40m, and refresh restored the log. Readback proved Worker A, ₹2.50/m snapshots, one 40m order-reserved stock grain, and ₹100 payroll basis.
+- `PROD-004`: the owner linked Context B and used the explicit operator editor to assign Worker B to night shift at ₹3.25/m. The supervisor saw Worker B and Context B and saved 55m with matching assignment, worker, rate, stock, and payroll attribution.
+- `MASTER-012`: the day log retained Context A, Worker A, ₹2.50, and its assignment ID after the loom moved to Context B. The new night log used Context B, Worker B, ₹3.25, and the new assignment ID. Total production was 95m and snapshot-derived gross was ₹278.75.
+- Browser proof: owner/supervisor production flows produced zero console warnings/errors. Evidence: `output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH7-production-prerequisites.json` and `.png`.
+- Regression proof: `npx vitest run __tests__/prod-002-single-shift-activation.test.ts __tests__/batch24f-production-worker-assignment-policy.test.ts __tests__/master-009-worker-deactivation-readiness.test.ts` passed 3 files / 12 tests; targeted ESLint, TypeScript, script syntax, JSON validation, and `git diff --check` passed.
+- Safety: production fixture `FORMAL-B7-1783944614148-779128` used only prefixed QA records. Cleanup returned organizations, profiles, machines, production logs, and both auth users to zero; the private credential file was removed and browser tabs were closed.
+- New finding: `NEEDS-AUDIT-004` records that a selected historical production date reverted to today when entry state changed. Dated assignment/correction/time rows remain blocked pending a focused repair; no pass credit was claimed for them.
+- Formal matrix: total 377, pass 269, fail 3, blocked 104, not applicable 1. Readiness remains No-Go.
+
+## Formal blocked-row Batch 8 closeout (2026-07-13)
+
+- `MASTER-011` moved from `blocked` to `pass` after production browser, persistence, refresh, stock, and payroll proof.
+- Fixes: dated `shift_assignments.worker_id` now overrides standing/operator assignment only for its selected date/shift; the server validates that persisted dated worker instead of accepting an arbitrary client substitute; dated `rate_per_m` becomes the operator/payroll snapshot; the historical order boundary uses `orders.start_date`, not `created_at`; and explicit previous/next production-day controls commit date state without relying on a native picker.
+- Runtime: Worker A remained the standing day worker, Worker B loaded only for 2026-07-12, 32m saved and restored after refresh, the correction-window overwrite persisted Worker B at ₹3.25/m, stock reconciled to 32m, and owner payroll showed Worker B only with Gross/Net ₹104.
+- Release: production deployment `dpl_43n5khAYXGcCtp64SBowPZirjaUG` delivered the dated-rate fix for commit `649380d5dfbcbb89d8c10cad7763448ac42c6f2c`; alias `https://textile-accounting.vercel.app` was Ready.
+- Verification: full Vitest/prebuild gate passed 81 files / 595 tests; focused Batch 24D/24F tests, TypeScript, targeted ESLint, and `git diff --check` passed. No migration was required.
+- Safety: isolated `QA-FORMAL-B7-1783960232554-52BF61` production fixture only; exact business rows, profiles, organization, auth users, credential file, and browser tabs were removed and reconciled to zero.
+- Evidence: `output/qa/runtime-remediation-20260711/evidence/FORMAL-BATCH8-master-011-dated-substitute.json` and `.png`.
+- Formal matrix: 270 pass, 3 fail, 103 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B09 closeout — production resilience
+
+Date: 2026-07-14 IST. Deployment commit `812512c599b3659cc399495a674e8b3e50066e60`.
+
+- Status changes: `PROD-005`, `PROD-006`, `PROD-007`, `PROD-010`, `PROD-011`, `PROD-013`, `PROD-014`, `PROD-022`, `PROD-023`, `PROD-024`, `PROD-025`, `PROD-026`, `PROD-027`, `PROD-030`, `OFF-003`, `OFF-004`, and `UX-001` moved from `blocked` to `pass` after direct runtime proof.
+- Defects fixed: breakdown persistence previously returned success after a zero-row update; the action now validates the tenant/date/shift/machine grain and performs a verified update-or-insert with unique-race recovery. Copy previous was hidden by placeholder assignment rows and now follows the actually assigned count. The loom sheet now supplies the required accessible title.
+- Runtime boundaries: invalid missing-order, missing-worker, zero-rate, and negative payloads were rejected without mutation; Other-without-note stayed disabled; 10,000 m required explicit confirmation; date/shift and refresh drafts remained isolated; offline submit made no success claim; a 17-second delayed response reconciled one 22.22 m log and stock lot; and two distinct supervisors produced one success plus one atomic duplicate rejection.
+- Mobile proof: the 390×844 workflow rendered 20 independently labelled metre inputs without horizontal overflow, preserved distinct first/middle/last values, and kept the fixed Save control reachable.
+- Production proof: Vercel deployment `dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB` is Ready, production-targeted, aliased to `https://textile-accounting.vercel.app`, and identifies the exact commit. Production Copy previous moved Night from 0/20 to 1/20 with Worker B. The deployed H2-labelled sheet persisted Service + Mechanical + the exact note into a new dated row.
+- Release gates: local optimized build passed 82 files / 598 tests with 1 intentional skip; the Vercel build passed 82 files / 599 tests and uploaded release source maps. Production migration history remains aligned through `20260713124500`; B09 added no migration.
+- Safety: one prefixed production tenant, three auth users, 20 looms, and associated assignments/logs/stock were removed; organizations, profiles, machines, production logs, and auth users all reconciled to zero.
+- Evidence: `output/qa/blocked-row-campaign/B09-production-resilience.json`, `B09-concurrent-supervisors.json`, `B09-production-deploy-proof.json`, and `B09-mobile-20-looms.png`.
+- Formal matrix: 287 pass, 3 fail, 86 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B10 closeout — protected date and calendar boundaries
+
+Date: 2026-07-14 IST. Production commit `fd1c367665455ca2bc66ca54d81a9cc259147284`.
+
+- Status changes: `PROD-017`, `PROD-018`, `PROD-019`, `PAY-006`, `PAY-022`, `COMM-013`, `TIME-003`, and `TIME-004` moved from `blocked` to `pass` after exact production browser and database proof.
+- Database boundary: migration `20260714005500_b10_enforce_attendance_date_lockdown.sql` removed broad attendance policies that bypassed date restrictions. It was applied in QA and production; production recorded history version `20260713193455`. The migration changes policies/functions only and rewrites no business rows.
+- Application fixes: India month boundaries now derive both endpoints from one instant; attendance has deterministic previous/next-day controls; and access-code retry copy converts an absolute reset epoch into remaining seconds instead of displaying epoch seconds.
+- Correction proof: an expired correction window showed no unguarded edit path. Invalid, expired, and consumed owner codes rejected without mutation; a fresh code changed the eligible historical production value from 10m to 12m and was consumed; a settled payroll grain rejected a fresh valid code and remained 10m.
+- Attendance proof: future attendance remained unavailable, the supervisor navigated to 2026-07-12, a valid owner code saved `absent`, and refresh restored the locked past-date state. The applied policy prevents broad supervisor writes outside the supported date boundary.
+- Calendar/commercial proof: the India-month total was exactly ₹333.33, including 2026-07-01 and 2026-07-14 while excluding 2026-06-30 and 2026-08-01. Deterministic tests covered year rollover and leap-day payroll/calendar boundaries.
+- Release: Vercel deployment `dpl_5rKpnNLwszpfgfzkn8VBh291wyS6` is Ready and aliased to `https://textile-accounting.vercel.app`; the Sentry release identifies the exact production commit. The remote gate passed 85 files / 611 tests and the local gate passed 85 files / 610 tests with 1 intentional skip, focused ESLint, and the optimized production build.
+- Safety: the prefixed production tenant, both correction grains, attendance, payments, profiles, and auth users reconciled to zero; the private production credential file was removed.
+- Evidence: `output/qa/blocked-row-campaign/B10-qa-boundaries.json`, `B10-production-boundaries.json`, and `B10-production-runtime.json`.
+- Formal matrix: 295 pass, 3 fail, 78 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B11 closeout — quote/order protected history
+
+Date: 2026-07-14 IST. Production commit `dc76b17f38eb111ef3dad0a5a9f809b17168cda5`.
+
+- Status changes: `QUOTE-007`, `ORDER-005`, `ORDER-007`, `ORDER-009`, `ORDER-010`, `ORDER-011`, `ORDER-012`, `ORDER-013`, `ORDER-014`, `ORDER-015`, `STOCK-011`, and `GOLDEN-A-23` moved from `blocked` to `pass` after direct QA lifecycle and production Estimator proof.
+- Defect fixed: the atomic `start_party_order_from_estimator` boundary existed but Estimator exposed only quote saving. A primary Start Party Order action now creates the accepted quote, active order, and yarn requirement together and routes to the created order.
+- QA lifecycle: 34 assertions proved over-target rejection without mutation, target completion and loom unlinking, paid-payroll correction protection, cancellation with retained history, physical-delete restriction, order-reserved stock lineage, partial dispatches, exact/short receipts, discrepancy/claim creation, independent receivable settlement, and a second-session reconciliation.
+- Production proof: deployment `dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV` is Ready and aliased. The UI created and opened a 100m B11 order; database readback proved exactly one accepted quote and active order, reciprocal links, and one yarn requirement linked to both.
+- Release gates: local and Vercel gates passed 85 files / 611 tests with 1 intentional skip, TypeScript, targeted ESLint, and the optimized Next.js build. Required order/dispatch migrations were verified deployed.
+- Safety: disposable QA and production tenants and their scoped quote/order/yarn/production/stock/dispatch/commercial/payroll records, profiles, auth users, and private credential file were removed and reconciled.
+- Evidence: `output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json` and `B11-production-runtime.json`.
+- Formal matrix: 307 pass, 3 fail, 66 blocked, 1 not applicable. Readiness remains No-Go.
+
+## Blocked-row campaign B12 closeout — market stock lifecycle
+
+Date: 2026-07-14 IST. Production commit `bc1e9cbfab1609adf461c405e41d6fca65b304ee`.
+
+- Status changes: `MARKET-009`, `MARKET-010`, `MARKET-013`, `STOCK-005`, `STOCK-009`, `DISP-017`, `DISP-018`, `COMM-015`, `GOLDEN-B-12`, and `GOLDEN-B-17` moved from `blocked` to `pass` after matching QA and production lifecycle proof.
+- Defects fixed: stock-lot source IDs were checked only in server actions, leaving direct authenticated writes able to reference another tenant or a mismatched quote/order. Migration `20260714033000_b12_enforce_stock_source_integrity.sql` adds a database trigger for organization and relationship integrity. `market_run_summary.sales_count` counted only legacy direct market sales; migration `20260714034500_b12_include_stock_sales_in_market_summary.sql` now includes current stock-lot sales.
+- Runtime: both environments passed 17 assertions covering rejected cross-tenant/mismatched sources, sold-out pending dispatch, two exact 60m/40m dispatch receipts, closed archive totals, honest above/below-threshold compliance states, distinct duplicate-name party IDs and receivables, real concurrent sale-vs-adjustment serialization, non-negative stock, 26-run performance, and second-session freshness.
+- Release: Vercel deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1` is Ready and aliased to `https://textile-accounting.vercel.app`; the deployment and Sentry release identify the exact commit. Local and remote gates passed 86 files / 617 tests, TypeScript, targeted ESLint, and the optimized Next.js build.
+- Database: both migrations were applied in QA and production. Production history recorded versions `20260713211109` and `20260713211113`; catalog inspection and runtime probes verified the trigger and revised view.
+- Safety: each QA and production run used disposable owner/adversary tenants. Organizations, profiles, stock lots, auth users, and all dependent market/production/sale/dispatch/receipt/commercial rows were removed; reconciliation returned zero with no cleanup errors.
+- Evidence: `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json`.
+- Formal matrix: 317 pass, 3 fail, 56 blocked, 1 not applicable. Readiness remains No-Go; B13 is active.
+
+## Blocked-row campaign B13 closeout — payroll and worker-money lifecycle
+
+Date: 2026-07-14 IST. Production commit `d42d5138fba22758f1d11218c59deb6c3ad876a3`.
+
+- Status changes: `MASTER-006`, `PAY-002`, `PAY-010`, `PAY-011`, `PAY-012`, `PAY-014`, `PAY-017`, `PAY-019`, `PAY-021`, `PAY-025`, `PAY-026`, `PAY-027`, `DASH-003`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-B-18` moved from `blocked` to `pass` after direct QA runtime/browser and production runtime proof.
+- Defects fixed: concurrent first settlement calls could both succeed and split/deduct the same advance twice; deducted advances could be deleted directly; exiting-worker settlement and deactivation were separate operations; and Factory Today selected a nonexistent `market_run_summary.meters_produced` column. Migration `20260714043000_b13_harden_payroll_settlement_lifecycle.sql` adds per-grain advisory locking, explicit already-settled rejection, protected advance deletion, authorized reversal scope, and atomic final-exit settlement/deactivation. Factory Today now reads `total_meters_produced`.
+- Runtime: QA and production each passed 11 persisted assertions for one-winner concurrency, a gross ₹1,000 / capped ₹500 recovery / ₹500 net / ₹300 carry result, protected delete, exact ₹800 reversal restoration, historical 2.75/3.125/3.00 rate snapshots, server-derived gross ₹675, itemized inam/kapaat, shared immutable Golden A/B payslip, atomic final exit, Kharchi 500→380 plus ₹120 advance, and a 50m × ₹4 dashboard source.
+- Browser: Factory Today showed 50m, 4/4 active looms, partial shifts, two work-at-risk items, ₹1.2k pending advances, and overdue payroll. Payroll showed the three historical rate snapshots, gross ₹675, recovered/net ₹375, carry ₹125, PDF Slip action, plus the final-exit badge and ₹200 remaining debt. Warning/error logs were empty.
+- Release: Vercel deployment `dpl_EBYTZG33aozbGbPLpYeAWQcF4JJD` is Ready and aliased to `https://textile-accounting.vercel.app`; deployment metadata and Sentry release identify the exact commit. Local and remote gates passed 87 files / 621 tests, TypeScript, targeted ESLint, and the optimized Next.js build.
+- Database: the migration is applied in QA and production. Production history version is `20260713214539`; catalog inspection verified one delete-guard trigger, the exit RPC, settlement advisory lock, and reversal bypass. The migration rewrote no existing business rows.
+- Safety: disposable QA and production payroll tenants, profiles, settlements, advances, production dependencies, auth users, credentials, tabs, and local server were removed or stopped; reconciliation returned zero with no cleanup errors.
+- Evidence: `output/qa/blocked-row-campaign/B13-boundary-probe.json`, `B13-qa-browser.json`, `B13-qa-factory-today.png`, `B13-qa-payroll.png`, and `B13-production-payroll.json`.
+- Formal matrix: 333 pass, 3 fail, 40 blocked, 1 not applicable. Readiness remains No-Go; B14 is active.
+
+## Blocked-row campaign B14 closeout — realtime dashboard recovery
+
+Date: 2026-07-14 IST. Production commit `6f80eac94d950460bf559583dbb18ef434afde00`.
+
+- Status changes: `DASH-005`, `DASH-006`, `DASH-008`, `DASH-010`, and `UX-010` moved from `blocked` to `pass` after direct QA runtime/browser and exact-deployment production proof.
+- Defects fixed: fulfilled Supabase results containing `error` were silently treated as empty data; the worker-breakdown RPC referenced removed `production_logs.created_at`; reconnect reused a topic while its prior channel was leaving; realtime refresh could invite double counting; zero-production orders were treated as on track; future critical deadlines were labeled overdue; and dashboard failure/offline/loading states lacked clear actions. The actions now unwrap result errors, migration `20260714053000_b14_repair_worker_breakdown_timestamp.sql` uses `submitted_at`, reconnect topics carry an epoch, event refresh replaces authoritative slices, order health distinguishes waiting/critical/overdue, and dashboard states expose retry controls.
+- Runtime/browser: QA proved 20m/₹80 → 45m/₹180 from an authenticated second-session insert without reload or duplication, then recovered a disconnected 15m mutation as authoritative 60m/₹240. Injected RPC failure reached the error boundary and recovered. Offline, historical empty, critical, at-risk, reconnecting, and live states were distinct; warning/error logs were empty after repair.
+- Performance/math: the complete 90-day/1,800-log range returned in 822.3 ms in QA and 585 ms in production. Both showed 1,800 produced, 3,200 remaining, five days, required 640m/day, trailing 20m/day, pace 0.03, plus an explicit zero-production waiting risk.
+- Release: Vercel deployment `dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq` is Ready and aliased to `https://textile-accounting.vercel.app`; metadata and Sentry release identify the exact commit. Local and remote gates passed 88 files / 625 passed plus 1 intentional skip, TypeScript, targeted ESLint, and the optimized Next.js build.
+- Database: the migration is applied in QA and production. Production history version is `20260713222345`; catalog inspection verified `submitted_at`, absence of `created_at`, and Realtime publication. Existing production logs remained at 88 across the schema-only change.
+- Safety: disposable QA and production dashboard tenants, profiles, auth users, 1,800-log fixtures, credentials, tab, and local server were removed or stopped; reconciliation returned zero with no cleanup errors.
+- Evidence: `output/qa/blocked-row-campaign/B14-qa-dashboard.json`, `B14-qa-browser.json`, and `B14-production-dashboard.json`.
+- Formal matrix: 338 pass, 3 fail, 35 blocked, 1 not applicable. Readiness remains No-Go; B15 is active.
+
+## Blocked-row campaign B15 closeout — authentication, privacy, audit, adversarial UX, and PWA
+
+Date: 2026-07-14 IST. Production commit `2e3254f75502ca56192d015c06bba4f7972518aa`.
+
+- Status changes: `AUTH-005`, `AUTH-014`, `AUTH-018`, `SEC-009`, `SEC-010`, `SEC-012`, `SEC-013`, `SEC-015`, `UX-006`, and `UX-009` moved from `blocked` to `pass`. `OFF-001` remains `blocked` with the precise install/standalone capability gap.
+- Defects fixed: the last-activity cookie expired before the one-hour enforcement path could observe staleness; proxy IP parsing was duplicated; export was presentation-gated and hidden at narrow widths; worker erasure was not one atomic tenant/actor-validated operation and retained historical PII/client IP; custom cards and icon actions lacked complete keyboard/name semantics; and privacy-only history changes retriggered production boundary logic. The proxy, shared privacy panel, semantic controls, atomic erasure RPC, audit redaction, and column-scoped triggers now enforce those boundaries.
+- Runtime/browser: valid/used/expired recovery links, one-hour idle redirect without sensitive content, foreign-Origin server-action rejection without mutation, tenant isolation, owner-only erasure, audited export, deletion/write-off/settings audit context, inert stored hostile markup, keyboard activation/names, and three core routes at a 200%-equivalent viewport all passed.
+- PWA: production `/login`, manifest scope `/`, standalone display, exact 192/512 icons, update-capable service worker, visible update notice, and refresh activation passed. The in-app browser exposes no install/standalone mode and the Chrome extension was unavailable after retry, so actual install/reopen is not claimed.
+- Release: Vercel deployment `dpl_CmFozomMsAhE36kvGUMQiPwJpsFr` is Ready and aliased to `https://textile-accounting.vercel.app` at the exact implementation commit. Local and remote gates passed 89 files / 633 passed plus 1 intentional skip, TypeScript, targeted ESLint, and the optimized Next.js build.
+- Database: migrations `20260714063000_b15_atomic_worker_erasure.sql` and `20260714064500_b15_scope_production_log_triggers.sql` are applied in QA and production. Production history versions are `20260713232352` and `20260713232354`; catalog inspection verified old/new client-IP redaction and business-column-only triggers. Existing historical production/payroll basis is retained.
+- Advisors: the production linter remains at its pre-existing broad backlog shape. The new authenticated security-definer erasure RPC is intentional and validates `auth.uid()`, actor identity, owner role, and organization internally; it is not granted to anonymous callers. See the [Supabase security linter reference](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable).
+- Safety: all disposable QA and production tenants, profiles, recovery users, worker/production/audit/export fixtures, credentials, temporary harness copy, and local server were removed or reconciled to zero.
+- Evidence: `output/qa/blocked-row-campaign/B15-qa-security.json`, `B15-qa-browser.json`, `B15-qa-http.json`, and `B15-production-security.json`.
+- Formal matrix: 348 pass, 3 fail, 25 blocked, 1 not applicable. Readiness remains No-Go; B16 is active.
+
+## Blocked-row campaign B16 closeout — WhatsApp simulation and provider boundaries
+
+Date: 2026-07-14 IST. Production commit `ee2af23a31e648880bdf3810f9cacb545cefcedd`.
+
+- Status changes: `WA-001`, `WA-002`, `WA-003`, `WA-004`, `WA-005`, `WA-006`, `WA-007`, and `WA-009` moved from `blocked` to `pass` after nine direct disposable-QA runtime assertions. `WA-010` remains `blocked` because its exact expectation requires a controlled live Meta rejection or expired-token event against a consented recipient.
+- Defects fixed: missing-phone skips were not persisted; consent lookup could drift from the exact tenant/person/phone; retry reset historical attempt fields and was not safely targetable; daily, monthly, and deadline cooldowns could interfere; access-code snapshots could retain plaintext; daily skip counts were inaccurate; and provider failure modes lacked deterministic non-production exercise. The simulator is now available only when `WHATSAPP_PROVIDER=simulate`, while shared-secret internal calls accept current and legacy admin keys during rotation.
+- Runtime: the QA harness passed opted-in advance delivery, opted-out/missing-consent/missing-phone skips, provider timeout with the core write intact, worker-and-phone-bound summary/itemized payslips with no mismatch PII leak, owner-only access codes without plaintext snapshots, independent daily/monthly/deadline idempotency, one targeted retry recovery with capped/stale rows untouched, and deterministic rejection/expired-token fallback logging.
+- Release: Vercel deployment `dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y` is Ready and aliased to `https://textile-accounting.vercel.app`; deployment metadata identifies the exact implementation commit. The full local gate passed 90 files / 641 passed plus 1 intentional skip, TypeScript, ESLint, and the optimized Next.js build; the remote gate passed 90 files / 642 tests and build.
+- Database/functions: migration `20260714073000_b16_whatsapp_delivery_boundaries.sql` is applied in QA and production; production history version is `20260713235949`. Production catalog inspection verified canonical delivery/skip states, retry count `0..3`, `daily`/`monthly` brief types, the unique organization/date/type cooldown grain, and zero invalid rows. `send-advance-receipt` v17, `send-payslip` v18, `send-access-code` v18, `retry-failed-messages` v16, `send-daily-brief` v21, and `monthly-brief` v22 are active.
+- Provider safety: production retained its Meta provider configuration. No live Meta message was sent, and simulated rejection was not used to satisfy `WA-010`.
+- Advisors: the production security advisor retained its broad pre-existing backlog shape; no B16-specific finding was introduced.
+- Safety: the disposable QA organization, profile, auth user, consent, core business records, delivery logs, credentials, and fixtures reconciled to zero after the run.
+- Evidence: `output/qa/blocked-row-campaign/B16-qa-whatsapp.json` plus the exact production deployment, migration history, catalog, and function-version checks recorded in the campaign checkpoint.
+- Formal matrix: 356 pass, 3 fail, 17 blocked, 1 not applicable. Readiness remains No-Go; B17 is active.
+
+## Blocked-row campaign B17 closeout — Razorpay lifecycle and entitlement boundaries
+
+Date: 2026-07-14 IST. Production commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
+
+- Status changes: `BILL-003`, `BILL-004`, `BILL-005`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, and `SEC-007` moved from `blocked` to `pass` after hosted Razorpay TEST checkout, 18 QA assertions, and 9 exact-deployment production assertions.
+- Defects fixed: webhook validation and claim were not one fail-closed boundary; same event IDs could not distinguish replay from body conflict; payment/subscription updates could regress on late events; failed renewal and cancellation could incorrectly lose paid-period access; referral conversion/refund work was not claimed before provider activity; and refund requests lacked a stable provider idempotency key. Atomic claims, canonical provider fetch, monotonic lifecycle rules, preserved paid-period access, direct provider refund idempotency, and database-serialized referral claims now enforce those boundaries.
+- Provider runtime: hosted Razorpay TEST checkout used Netbanking and Bank of Baroda. Initial capture, mock-bank renewal failure, later renewal success, two captured payments, one failed payment, and one 10% TEST refund reconciled. No real money moved.
+- Webhook/runtime: valid HMAC, same-body replay, same-ID body conflict, invalid HMAC, order.paid/payment.captured convergence, late failure, cancellation/recovery/expiry, failed-to-captured reconciliation, anchored 365-day renewal, one referral conversion/refund, refund replay, and expiry access loss with account/history preservation passed in QA and at the production alias boundary.
+- Release: Vercel deployment `dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw` is Ready and aliased to `https://textile-accounting.vercel.app` at the exact implementation commit. The full local gate passed 91 files / 649 passed plus 1 intentional skip, TypeScript, ESLint, and optimized build; the remote gate passed 91 files / 650 tests with no runtime error cluster.
+- Database: migration `20260714090000_b17_harden_razorpay_lifecycle.sql` is applied in QA and production; production history version is `20260714040018`. The CLI dry-run correctly refused unrelated remote/local history drift, so no repair or pull was attempted; only B17 was applied through the scoped migration API. Production catalog verification found four RPCs, both activation wrappers, six subscription columns, three indexes, and service-role-only refund claim execution.
+- Safety: the disposable QA tenant and both prefixed production boundary tenants, profiles/auth users, subscriptions, payments, webhook events, refunds, credentials, and temporary environments reconciled to zero or were removed.
+- Evidence: `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json`.
+- Formal matrix: 364 pass, 3 fail, 9 blocked, 1 not applicable. Readiness remains No-Go; B18 is active.
+
+## Blocked-row campaign B18 closeout — recovery restore and rollback
+
+Date: 2026-07-14 IST. Recovery exercise only; production source remains `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
+
+- Status changes: `TECH-012` moved from `blocked` to `pass`. `TECH-011` remains `blocked` solely because production lacks an automated retained or approved off-site backup schedule.
+- Restore runtime: a sanitized logical backup containing one organization, two users, one production record, one stock record, one receivable, and one payroll record restored into isolated QA. Backup and restored canonical digests both equal `257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a`; four reconciliation assertions and restored-owner sign-in passed in 2,478.4 ms.
+- Application rollback: two actual builds of the B17 source were deployed to disposable Vercel project `weavly-b18-rollback-20260714`. Native rollback returned the alias from candidate `dpl_7BQpDXn2pBdXY3Kfm7YCp4GZ5J7o` to marked last-known-good `dpl_4W61veVnHqTyGDU19qC5dUBm2V14` in two provider-reported seconds; the release marker matched the exact source commit and `/privacy` returned 200.
+- Database forward-fix: inside a rollback-only QA transaction, the rehearsal dropped a legacy column, added its canonical replacement, backfilled it from preserved JSON recovery provenance, reconciled the row, rolled back, and verified the temporary contract was absent.
+- Schedule finding: production backup inspection reports WAL-G enabled, PITR disabled, and zero retained backups. Free-plan branching was unavailable and the two-active-project limit rejected a new disposable Supabase project without creating a resource or charge. The isolated restore proves mechanics, not schedule retention.
+- Safety: production data, schema, deployment, and alias were untouched. All prefixed QA database/auth fixtures, private backup material, temporary database work, the disposable Vercel project, and the disposable worktree were removed or reconciled to zero.
+- Evidence: `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
+- Formal matrix: 365 pass, 3 fail, 8 blocked, 1 not applicable. Readiness remains No-Go; B19 is active.
+
+## Blocked-row campaign B19 closeout — external evidence review
+
+Date: 2026-07-14 IST. No production change and no status promotion.
+
+- Rows reviewed: `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04` remain `blocked`, each with an individually named external dependency.
+- Sentry: production DSN, organization, and project keys are present. The current shell and `.env.production.local` contain no read-only `SENTRY_AUTH_TOKEN`, and no live Sentry event-payload artifact exists. Repository/client/log scans and redaction tests are supporting evidence only; direct API payload inspection is still required.
+- Legal: no dated qualified-counsel approval or redline was found for DPDP, breach, grievance, retention, offline-storage, or minor/child wording.
+- Factory acceptance: no named supervisor terminology approve/change register, business-accepted real-fabric truth sheet, or dated supervisor shift register was found.
+- Integrity: no external artifact was invented, no row inherited source-test credit, no secret value was recorded, and no runtime/provider resource was mutated.
+- Evidence: `output/qa/blocked-row-campaign/B19-external-evidence-review.json`.
+- Formal matrix: 365 pass, 3 fail, 8 blocked, 1 not applicable. All blocked-row batches B08–B19 have been reviewed; no independent executable batch remains. Readiness remains No-Go.
+
+## Remaining pilot gate evidence-pack preparation
+
+Date: 2026-07-14 IST. Documentation preparation only; application baseline `5a66eca`, documentation baseline `bb0380f`.
+
+- Added closure-ready packs for `TECH-011`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04` under `docs/pilot-remediation/closure-packs/`.
+- Each pack records the exact canonical requirement, current evidence, responsible-party fields, required artifacts, acceptance criteria, exact row-only matrix procedure, and outstanding human/laptop actions.
+- The UX pack identifies all required terms, source/product locations, plain-language meanings, alternatives, screenshot instructions, and dated approve/change/re-review fields.
+- The Golden A pack freezes the independent reference before Weavly entry and captures every input, formula/method, intermediate, tolerance, line-level variance, downstream snapshot, reviewer identity, and dated approval.
+- The SIGNOFF pack makes limited-pilot authorization conditional on `TECH-011`, `UX-012`, and `GOLDEN-A-03` being formally `PASS`; it retains the canonical first-shift Today/register reconciliation as the only way to close `SIGNOFF-04`.
+- Fresh read-only Supabase evidence still reports organization plan Free, production WAL-G enabled, PITR disabled, and no retained backup. No remote setting, billing plan, secret, schema, data, backup, or restore was changed. No restore proof is claimed.
+- Status changes: none. Formal matrix remains **367 pass, 0 fail, 7 blocked, and 3 not applicable**; all four requested rows remain `blocked`.

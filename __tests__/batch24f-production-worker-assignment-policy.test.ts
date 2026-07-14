@@ -28,7 +28,6 @@ describe('Batch 24F production worker assignment policy', () => {
     const ownerActions = readProjectFile('app/(dashboard)/owner/actions.ts')
     const machineManagement = readProjectFile('components/MachineManagement.tsx')
     const setupPanel = readProjectFile('components/factory-today/SetupPanel.tsx')
-    const matrix = readProjectFile('output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md')
     const bulkLogProductionBody = sourceBlock(
         supervisorActions,
         'export async function bulkLogProduction',
@@ -150,12 +149,26 @@ describe('Batch 24F production worker assignment policy', () => {
         expect(supervisorActions).not.toContain('assigned_worker_id')
     })
 
-    it('keeps SIGNOFF-01 open and does not add migration or RPC work for Batch 24F', () => {
-        const signoffRow = matrix.split('\n').find((line) => line.startsWith('| SIGNOFF-01 |')) ?? ''
-        expect(signoffRow).toContain('| fail |')
-        expect(signoffRow).toContain('Batch 24F improves the `PROD-002` and `PROD-004` source dependencies')
-        expect(signoffRow).toContain('this row is not promoted or closed')
+    it('MASTER-011 treats the persisted dated worker as the effective worker for that one shift', () => {
+        expect(getShiftSetupDataBody).toContain('const datedWorkerId = existing?.worker_id')
+        expect(getShiftSetupDataBody).toContain('const workerId = datedWorkerId ?? matchingOperatorAssignment?.worker_id')
+        expect(getShiftSetupDataBody).toContain('const datedRate = existing?.rate_per_m == null ? null : Number(existing.rate_per_m)')
+        expect(getShiftSetupDataBody).toContain('operator_rate: datedRate')
+        expect(getShiftSetupDataBody).toContain('worker_id: operatorPayload.worker_id')
 
+        expect(bulkLogProductionBody).toContain(".from('shift_assignments')")
+        expect(bulkLogProductionBody).toContain(".eq('date', logDate)")
+        expect(bulkLogProductionBody).toContain(".eq('shift', logShift)")
+        expect(bulkLogProductionBody).toContain('current[logShift] = assignment.worker_id')
+        expect(bulkLogProductionBody.indexOf('current[logShift] = assignment.worker_id')).toBeLessThan(
+            bulkLogProductionBody.indexOf('evaluateProductionWorkerAssignmentPolicy')
+        )
+        expect(bulkLogProductionBody).toContain(".select('id, start_date')")
+        expect(bulkLogProductionBody).toContain("(orders ?? []).map((o) => [o.id, o.start_date])")
+        expect(bulkLogProductionBody).not.toContain("o.created_at.split('T')[0]")
+    })
+
+    it('does not add migration or RPC work for Batch 24F', () => {
         const migrationNames = readdirSync(join(root, 'supabase/migrations'))
         expect(migrationNames.some((name) => name.toLowerCase().includes('batch_24f'))).toBe(false)
         expect(supervisorActions).toContain("supabase.rpc('replace_shift_production_logs'")

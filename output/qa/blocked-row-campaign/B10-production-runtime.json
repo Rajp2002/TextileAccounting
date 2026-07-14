@@ -1,0 +1,77 @@
+{
+  "batch": "B10",
+  "runId": "FORMAL-B10-1783971594613-46989F",
+  "environment": "production",
+  "checkedAt": "2026-07-13T20:18:37Z",
+  "deployment": {
+    "commit": "fd1c367665455ca2bc66ca54d81a9cc259147284",
+    "deploymentId": "dpl_5rKpnNLwszpfgfzkn8VBh291wyS6",
+    "deploymentUrl": "https://textile-accounting-20lkyslhq-rajpatel86420-9825s-projects.vercel.app",
+    "alias": "https://textile-accounting.vercel.app",
+    "readyState": "READY",
+    "sentryRelease": "fd1c367665455ca2bc66ca54d81a9cc259147284",
+    "remoteTests": {
+      "files": 85,
+      "passed": 611
+    }
+  },
+  "runtime": {
+    "productionCorrection": {
+      "expiredWindowVisible": true,
+      "noCodePrompted": true,
+      "invalidCodeRejectedWithoutMutation": true,
+      "expiredCodeRejectedWithoutMutation": true,
+      "validCodeAcceptedOnce": true,
+      "correctedMetersPersisted": 12,
+      "usedCodeRejectedWithoutMutation": true,
+      "settledPayrollMutationRejected": true,
+      "settledMetersRemain": 10
+    },
+    "attendance": {
+      "todayBoundVisible": "2026-07-14",
+      "futureNavigationDisabledAtToday": true,
+      "pastDate": "2026-07-12",
+      "pastSaveRequiredOwnerCode": true,
+      "pastAbsentRecordSaved": true,
+      "reloadPreservedAbsentRecord": true,
+      "reloadLockedSavedRecord": true
+    },
+    "commercials": {
+      "uiCollectedThisMonth": "₹333",
+      "persistedExactTotal": 333.33,
+      "includedDates": [
+        "2026-07-01",
+        "2026-07-14"
+      ],
+      "excludedDates": [
+        "2026-06-30",
+        "2026-08-01"
+      ]
+    },
+    "calendar": {
+      "yearBoundaryDatesRoundTrip": true,
+      "leapDayRoundTrips": true,
+      "payrollCycleCrossesYearBoundary": true,
+      "leapDayPayrollCycle": true
+    }
+  },
+  "rows": {
+    "PROD-017": true,
+    "PROD-018": true,
+    "PROD-019": true,
+    "PAY-006": true,
+    "PAY-022": true,
+    "COMM-013": true,
+    "TIME-003": true,
+    "TIME-004": true
+  },
+  "database": {
+    "productionCorrectionMeters": 12,
+    "settledProductionMeters": 10,
+    "settlementStatus": "paid",
+    "protectedPastAttendancePresent": false,
+    "accessCodeConsumed": true,
+    "currentMonthExactTotal": 333.33
+  },
+  "pass": true
+}

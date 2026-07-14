@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { KpiStrip } from './KpiStrip'
 import { OrderHealthSummary } from './OrderHealthSummary'
@@ -13,8 +12,12 @@ import { refreshLiveDashboard, fetchHistoricalData } from '../../actions/dashboa
 import type { DashboardData } from '../../actions/dashboard'
 import { getSuratTodayString } from '@/lib/time'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { CalendarDays, ClipboardList, DollarSign, Store, Wifi, WifiOff } from 'lucide-react'
+
+type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'error' | 'offline' | 'historical'
+type RefreshStatus = 'idle' | 'loading' | 'error'
 
 const quickActions = [
   {
@@ -64,31 +67,43 @@ function QuickActions({ className = '' }: { className?: string }) {
 
 export function DashboardClient({ initialData, orgId }: { initialData: DashboardData, orgId: string }) {
   const [data, setData] = useState(initialData)
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'reconnecting' | 'error' | 'offline' | 'historical'>('connecting')
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting')
+  const [refreshStatus, setRefreshStatus] = useState<RefreshStatus>('idle')
+  const [subscriptionEpoch, setSubscriptionEpoch] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string>(getSuratTodayString())
   const supabase = createClient()
-  const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
   const { t } = useTranslation()
+
+  const refreshDashboard = useCallback(async () => {
+    setRefreshStatus('loading')
+    try {
+      const liveData = await refreshLiveDashboard()
+      setData((prev: DashboardData) => ({
+        ...prev,
+        today:           liveData.today,
+        orders:          liveData.orders,
+        workerBreakdown: liveData.workerBreakdown,
+        machines:        liveData.machines,
+        trend:           liveData.trend,
+      }))
+      setRefreshStatus('idle')
+      return true
+    } catch (err) {
+      console.error('Failed to sync live dashboard data', err)
+      setRefreshStatus('error')
+      setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'error')
+      return false
+    }
+  }, [])
 
   const handleRealtimeUpdate = useCallback(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current)
-    debounceTimer.current = setTimeout(async () => {
-      try {
-        const liveData = await refreshLiveDashboard()
-        setData((prev: DashboardData) => ({
-          ...prev,
-          today:           liveData.today,
-          orders:          liveData.orders,
-          workerBreakdown: liveData.workerBreakdown,
-          machines:        liveData.machines,
-          trend:           liveData.trend,
-        }))
-      } catch (err) {
-        console.error('Failed to sync live dashboard data', err)
-      }
+    debounceTimer.current = setTimeout(() => {
+      void refreshDashboard()
     }, 2000)
-  }, [])
+  }, [refreshDashboard])
 
   useEffect(() => {
     const isToday = selectedDate === getSuratTodayString()
@@ -101,7 +116,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'connecting')
     })
 
-    const channelName = `org-${orgId || 'no-org'}-production-logs`
+    const channelName = `org-${orgId || 'no-org'}-production-logs-${subscriptionEpoch}`
     const channel = supabase
       .channel(channelName)
       .on(
@@ -110,6 +125,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
         handleRealtimeUpdate
       )
       .subscribe((status: string) => {
+        console.info('[dashboard/realtime]', channelName, status)
         if (status === 'SUBSCRIBED') {
           setConnectionStatus((prev) => {
             if (prev === 'reconnecting' || prev === 'error' || prev === 'offline') {
@@ -117,15 +133,16 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
             }
             return 'connected'
           })
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        } else if (status === 'CLOSED') {
           setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'reconnecting')
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'error')
         }
       })
 
-    channelRef.current = channel
-
     const handleOnline = () => {
       setConnectionStatus('reconnecting')
+      setSubscriptionEpoch((value) => value + 1)
       handleRealtimeUpdate()
     }
     const handleOffline = () => {
@@ -139,39 +156,66 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
 
     return () => {
       disposed = true
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-      }
+      void supabase.removeChannel(channel)
       if (debounceTimer.current) clearTimeout(debounceTimer.current)
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', handleOnline)
         window.removeEventListener('offline', handleOffline)
       }
     }
-  }, [supabase, handleRealtimeUpdate, orgId, selectedDate])
+  }, [supabase, handleRealtimeUpdate, orgId, selectedDate, subscriptionEpoch])
 
-  const handleDateChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value
+  const retryLiveSync = () => {
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      setConnectionStatus('offline')
+      return
+    }
+    setConnectionStatus('reconnecting')
+    setSubscriptionEpoch((value) => value + 1)
+    void refreshDashboard()
+  }
+
+  const loadSelectedDate = async (newDate: string) => {
+    if (!newDate) return
     if (newDate > getSuratTodayString()) return
     setSelectedDate(newDate)
 
     const isToday = newDate === getSuratTodayString()
-    if (isToday) {
-      setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'connecting')
-      const liveData = await refreshLiveDashboard()
-      setData({
-        yesterday: initialData.yesterday,
-        today: liveData.today,
-        orders: liveData.orders,
-        workerBreakdown: liveData.workerBreakdown,
-        machines: liveData.machines,
-        trend: liveData.trend,
-      })
-    } else {
-      setConnectionStatus('historical')
-      const history = await fetchHistoricalData(newDate)
-      setData(history)
+    setRefreshStatus('loading')
+    try {
+      if (isToday) {
+        setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'connecting')
+        setSubscriptionEpoch((value) => value + 1)
+        const liveData = await refreshLiveDashboard()
+        setData({
+          yesterday: initialData.yesterday,
+          today: liveData.today,
+          orders: liveData.orders,
+          workerBreakdown: liveData.workerBreakdown,
+          machines: liveData.machines,
+          trend: liveData.trend,
+        })
+      } else {
+        setConnectionStatus('historical')
+        const history = await fetchHistoricalData(newDate)
+        setData(history)
+      }
+      setRefreshStatus('idle')
+    } catch (err) {
+      console.error('Failed to load dashboard date', err)
+      setRefreshStatus('error')
+      setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'error')
     }
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    void loadSelectedDate(e.target.value)
+  }
+
+  const applyRenderedDate = () => {
+    const renderedDate = document.querySelector<HTMLInputElement>('[data-testid="dashboard-date-picker"]')?.value
+      || dateInputRef.current?.value
+    if (renderedDate) void loadSelectedDate(renderedDate)
   }
 
   const isToday = selectedDate === getSuratTodayString()
@@ -215,6 +259,8 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-sm">
             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Input
+              ref={dateInputRef}
+              data-testid="dashboard-date-picker"
               id="date-picker"
               type="date"
               max={getSuratTodayString()}
@@ -222,9 +268,40 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
               onChange={handleDateChange}
               className="border-0 shadow-none p-0 h-auto text-sm bg-transparent focus-visible:ring-0 w-[120px] text-foreground"
             />
+            <Button type="button" size="sm" variant="ghost" onClick={applyRenderedDate} className="h-7 px-2 text-xs">
+              View date
+            </Button>
           </div>
         </div>
       </div>
+
+      {isToday && (connectionStatus === 'offline' || connectionStatus === 'reconnecting' || connectionStatus === 'error' || refreshStatus === 'loading' || refreshStatus === 'error') && (
+        <div
+          role={connectionStatus === 'error' || refreshStatus === 'error' ? 'alert' : 'status'}
+          className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
+            connectionStatus === 'error' || refreshStatus === 'error'
+              ? 'border-destructive/30 bg-destructive/5 text-destructive'
+              : connectionStatus === 'offline'
+                ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100'
+                : 'border-border bg-muted/40 text-muted-foreground'
+          }`}
+        >
+          <span>
+            {connectionStatus === 'offline'
+              ? 'Offline — showing last synced data. Reconnect to refresh.'
+              : connectionStatus === 'error' || refreshStatus === 'error'
+                ? 'Live dashboard sync failed. The last confirmed totals remain visible.'
+                : refreshStatus === 'loading'
+                  ? 'Refreshing dashboard from the authoritative ledger…'
+                  : 'Reconnecting live updates…'}
+          </span>
+          {(connectionStatus === 'error' || refreshStatus === 'error') && (
+            <Button type="button" size="sm" variant="outline" onClick={retryLiveSync}>
+              Retry live sync
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* KPI Strip */}
       <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={connectionStatus === 'connected'} selectedDate={selectedDate} />
@@ -241,10 +318,10 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           )}
 
           {/* 7-day trend — full width */}
-          <ProductionTrend data={data.trend} />
+          <ProductionTrend data={data.trend} selectedDate={selectedDate} />
 
           {/* Worker breakdown */}
-          <WorkerBreakdown entries={data.workerBreakdown} />
+          <WorkerBreakdown entries={data.workerBreakdown} selectedDate={selectedDate} />
         </div>
 
         {isToday && <QuickActions className="sticky top-6 hidden xl:block" />}

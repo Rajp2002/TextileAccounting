@@ -54,7 +54,6 @@ import {
     getActiveProductionTargets,
 } from '@/app/(dashboard)/owner/actions'
 import type { ProductionTargetOption } from '@/app/(dashboard)/owner/actions'
-import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
@@ -72,13 +71,15 @@ function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
 
-interface Worker {
+export type MachineUserRole = 'owner' | 'supervisor'
+
+export interface Worker {
     id: number
     name: string
     is_active: boolean
 }
 
-interface FixedWorker {
+export interface FixedWorker {
     id: number
     name: string
     role: string
@@ -86,7 +87,7 @@ interface FixedWorker {
     is_active: boolean
 }
 
-interface Machine {
+export interface Machine {
     id: string
     name: string
     status: string
@@ -104,7 +105,7 @@ interface Machine {
     } | null
 }
 
-interface Assignment {
+export interface Assignment {
     machine_id: string
     worker_id: number | null
     shift: 'day' | 'night'
@@ -115,6 +116,14 @@ interface Assignment {
     pay_mode?: OperatorPayMode | null
     rate?: number | null
     machine_type?: string | null
+}
+
+export interface MachineManagementInitialData {
+    machines: Machine[]
+    workers: Worker[]
+    fixedWorkers: FixedWorker[]
+    productionTargets: ProductionTargetOption[]
+    assignments: Assignment[]
 }
 
 type AssignmentEditorState = {
@@ -147,6 +156,8 @@ type LegacyMachineAssignmentRow = {
 
 interface MachineManagementProps {
     orgId: string
+    userRole: MachineUserRole
+    initialData?: MachineManagementInitialData
     canAddMachines?: boolean
     canToggleMachineStatus?: boolean
     canRenameMachines?: boolean
@@ -156,6 +167,8 @@ interface MachineManagementProps {
 
 export function MachineManagement({
     orgId,
+    userRole,
+    initialData,
     canAddMachines = true,
     canToggleMachineStatus = true,
     canRenameMachines = true,
@@ -189,13 +202,15 @@ export function MachineManagement({
     // Request Access Code state
     const [requestingCode, setRequestingCode] = useState(false)
 
-    const { data: userProfile } = useUserProfile()
     const { t } = useTranslation()
     const tl = useTransliterate()
+    const hasServerInitialData = initialData !== undefined
 
     // Fetch Machines
     const { data: machines, isLoading: machinesLoading } = useQuery({
         queryKey: ['machines', orgId],
+        initialData: initialData?.machines,
+        refetchOnMount: hasServerInitialData ? false : undefined,
         queryFn: async () => {
             const loadMachines = async () => {
                 const { data, error } = await supabase
@@ -249,6 +264,8 @@ export function MachineManagement({
     // Fetch Workers
     const { data: workers } = useQuery({
         queryKey: ['workers', orgId],
+        initialData: initialData?.workers,
+        refetchOnMount: hasServerInitialData ? false : undefined,
         queryFn: async () => {
             const loadWorkers = async () => {
                 const { data, error } = await supabase
@@ -278,6 +295,8 @@ export function MachineManagement({
 
     const { data: fixedWorkers } = useQuery({
         queryKey: ['fixed_workers', orgId],
+        initialData: initialData?.fixedWorkers,
+        refetchOnMount: hasServerInitialData ? false : undefined,
         queryFn: async () => {
             const loadFixedWorkers = async () => {
                 const { data, error } = await supabase
@@ -310,6 +329,8 @@ export function MachineManagement({
     // mount or tab switch. The query is invalidated immediately after any assignment change.
     const { data: productionTargets } = useQuery({
         queryKey: ['production_targets', orgId],
+        initialData: initialData?.productionTargets,
+        refetchOnMount: hasServerInitialData ? false : undefined,
         queryFn: async () => {
             const loadProductionTargets = async () => {
                 const res = await getActiveProductionTargets()
@@ -330,13 +351,15 @@ export function MachineManagement({
                 )
                 : loadProductionTargets()
         },
-        enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor'),
+        enabled: !!orgId && (userRole === 'owner' || userRole === 'supervisor'),
         staleTime: 30_000,           // keep fresh for 30 s before background refetch
         placeholderData: keepPreviousData, // show last result while refetching (no blank flash)
     })
 
     const { data: assignments } = useQuery({
         queryKey: ['machine_operator_assignments', orgId],
+        initialData: initialData?.assignments,
+        refetchOnMount: hasServerInitialData ? false : undefined,
         queryFn: async () => {
             const loadAssignments = async () => {
                 return Promise.all([
@@ -445,7 +468,7 @@ export function MachineManagement({
     }
 
     const confirmDelete = async (id: string) => {
-        if (userProfile?.role === 'owner') {
+        if (userRole === 'owner') {
             if (confirm(t('machines.delete_confirm'))) {
                 setDeleting(true)
                 try {
@@ -489,7 +512,11 @@ export function MachineManagement({
         try {
             const result = await requestAccessCode()
             if (result.error) throw new Error(result.error)
-            toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
+            if (result.delivery === 'manual_owner_handoff') {
+                toast.info(t('auth.code_manual_fallback'))
+            } else {
+                toast.success(t('auth.code_requested_success'))
+            }
         } catch (error) {
             toast.error(getErrorMessage(error, 'Failed to request code'))
         } finally {
@@ -879,7 +906,7 @@ export function MachineManagement({
                                                                         <DropdownMenuItem
                                                                             className="text-risk focus:text-risk"
                                                                             onClick={() => {
-                                                                                if (userProfile?.role === 'owner') {
+                                                                                if (userRole === 'owner') {
                                                                                     confirmDelete(machine.id)
                                                                                 } else {
                                                                                     setMachineToDelete(machine.id)
@@ -900,13 +927,13 @@ export function MachineManagement({
                                                 {/* Cost Analysis / Quality Section */}
                                                 <div className="flex-1 space-y-4">
                                                     <Popover>
-                                                        <PopoverTrigger asChild disabled={userProfile?.role !== 'owner' && userProfile?.role !== 'supervisor'}>
+                                                        <PopoverTrigger asChild disabled={userRole !== 'owner' && userRole !== 'supervisor'}>
                                                             <div className={cn(
                                                                 "rounded-lg border p-3 transition-all",
                                                                 hasActiveProductionTarget
                                                                     ? "border-success-soft bg-success-soft/45"
                                                                     : "border-hairline bg-surface-soft/60",
-                                                                (userProfile?.role === 'owner' || userProfile?.role === 'supervisor') && "cursor-pointer hover:border-saffron-soft hover:bg-saffron-soft/30"
+                                                                (userRole === 'owner' || userRole === 'supervisor') && "cursor-pointer hover:border-saffron-soft hover:bg-saffron-soft/30"
                                                             )}>
                                                                 <div className="flex items-center justify-between mb-1">
                                                                     <span className="text-[11px] font-semibold text-muted-foreground">Cost analysis / quality</span>
@@ -1002,7 +1029,7 @@ export function MachineManagement({
                                                                     dayAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
                                                                 )}
                                                                 onClick={() => {
-                                                                    if (userProfile?.role !== 'owner') {
+                                                                    if (userRole !== 'owner') {
                                                                         toast.error('Ask the owner to change machine operator payroll assignments.')
                                                                         return
                                                                     }
@@ -1034,7 +1061,7 @@ export function MachineManagement({
                                                                     nightAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
                                                                 )}
                                                                 onClick={() => {
-                                                                    if (userProfile?.role !== 'owner') {
+                                                                    if (userRole !== 'owner') {
                                                                         toast.error('Ask the owner to change machine operator payroll assignments.')
                                                                         return
                                                                     }
@@ -1313,7 +1340,7 @@ export function MachineManagement({
                         </div>
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                        {userProfile?.role !== 'owner' && (
+                        {userRole !== 'owner' && (
                             <Button
                                 type="button"
                                 variant="ghost"

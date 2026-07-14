@@ -1,0 +1,85 @@
+{
+  "batch": "B11",
+  "runId": "FORMAL-B10-1783975524073-EF0E28",
+  "environment": "production",
+  "checkedAt": "2026-07-13T20:52:23Z",
+  "deployment": {
+    "commit": "dc76b17f38eb111ef3dad0a5a9f809b17168cda5",
+    "deploymentId": "dpl_HQbasVXv3NDZjrtVjoXjpebgtbGV",
+    "deploymentUrl": "https://textile-accounting-4zxbzvx64-rajpatel86420-9825s-projects.vercel.app",
+    "alias": "https://textile-accounting.vercel.app",
+    "readyState": "READY",
+    "sentryRelease": "dc76b17f38eb111ef3dad0a5a9f809b17168cda5",
+    "remoteTests": {
+      "files": 85,
+      "passed": 611,
+      "skipped": 1,
+      "total": 612
+    },
+    "remoteBuild": "successful"
+  },
+  "migrations": {
+    "orderLifecycleBoundary": "20260702121238",
+    "atomicStartPartyOrder": "20260702131500",
+    "completedOrderDispatch": [
+      "20260628183500",
+      "20260628185344"
+    ],
+    "productionState": "verified deployed"
+  },
+  "runtime": {
+    "estimatorUi": {
+      "startPartyOrderVisible": true,
+      "validEstimateEnabledAction": true,
+      "actionCompleted": true,
+      "routedToCreatedOrder": true,
+      "orderDrawerOpened": true,
+      "partyName": "B11 Production Buyer",
+      "qualityLabel": "B11 Production Fabric",
+      "targetMeters": 100,
+      "status": "active",
+      "estimatorCostBreakdownVisible": true
+    },
+    "database": {
+      "exactlyOneOrder": true,
+      "exactlyOneAcceptedQuote": true,
+      "orderAndQuoteBacklinked": true,
+      "yarnRequirementLinkedToBoth": true,
+      "warpRequiredKg": 0.958,
+      "weftRequiredKg": 2.165,
+      "totalRequiredKg": 3.124
+    },
+    "qaLifecycle": {
+      "evidence": "output/qa/blocked-row-campaign/B11-qa-order-lifecycle.json",
+      "assertions": 34,
+      "passed": 34,
+      "cleanup": "complete"
+    }
+  },
+  "rows": {
+    "QUOTE-007": true,
+    "ORDER-005": true,
+    "ORDER-007": true,
+    "ORDER-009": true,
+    "ORDER-010": true,
+    "ORDER-011": true,
+    "ORDER-012": true,
+    "ORDER-013": true,
+    "ORDER-014": true,
+    "ORDER-015": true,
+    "STOCK-011": true,
+    "GOLDEN-A-23": true
+  },
+  "cleanup": {
+    "errors": [],
+    "organizations": 0,
+    "profiles": 0,
+    "productionLogs": 0,
+    "attendance": 0,
+    "commercialPayments": 0,
+    "authUsersExist": 0,
+    "secretRemoved": true,
+    "reconciled": true
+  },
+  "pass": true
+}

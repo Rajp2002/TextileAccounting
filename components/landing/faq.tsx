@@ -27,7 +27,7 @@ const faqs = [
 
 export default function LandingFAQ() {
     return (
-        <section className="py-20 sm:py-28 relative overflow-hidden snap-start scroll-mt-28" id="faq">
+        <section className="landing-section py-20 sm:py-28 lg:py-12 relative overflow-hidden" id="faq">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-3xl text-center">
                     <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.28em] uppercase">FAQ</p>

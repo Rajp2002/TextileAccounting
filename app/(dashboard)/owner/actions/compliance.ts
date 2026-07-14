@@ -106,78 +106,21 @@ export async function requestOtherLanguage(languageCode: string, workerNameHint?
 export async function eraseWorkerPII(workerId: number, workerType: 'meter' | 'fixed') {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
-    const orgId = profile.org_id
-    const table = workerType === 'meter' ? 'workers' : 'fixed_workers'
+    const { data, error } = await supabase.rpc('erase_worker_pii_atomic', {
+        p_worker_id: workerId,
+        p_worker_type: workerType,
+        p_actor_id: user.id,
+    })
 
-    const { data: worker, error: workerLookupError } = await supabase
-        .from(table)
-        .select('id')
-        .eq('id', workerId)
-        .eq('org_id', orgId)
-        .maybeSingle()
-
-    if (workerLookupError) {
-        Sentry.captureException(workerLookupError, { tags: { action: 'erase_worker_pii', phase: 'worker_lookup' } })
-        return { error: 'Failed to process erasure request. Please try again.' }
-    }
-
-    if (!worker) {
-        return { error: 'Worker not found.' }
-    }
-
-    // 1. Anonymize the consent artifacts
-    const { error: artifactError } = await supabase
-        .from('worker_consent_artifacts')
-        .update({
-            worker_id: null,
-            erased_at: new Date().toISOString()
+    if (error) {
+        Sentry.captureException(error, {
+            tags: { action: 'erase_worker_pii', phase: 'atomic_rpc' },
+            extra: { workerType, orgId: profile.org_id },
         })
-        .eq('worker_id', workerId)
-        .eq('org_id', orgId)
-
-    if (artifactError) {
-        Sentry.captureException(artifactError, { tags: { action: 'erase_worker_pii', phase: 'consent_artifacts' } })
-    }
-
-    // 2. Anonymize the worker record
-    const { error: workerError } = await supabase
-        .from(table)
-        .update({
-            name: 'ERASED WORKER',
-            is_active: false,
-            whatsapp_number: null,
-            esi_number: null,
-            pf_number: null,
-        })
-        .eq('id', workerId)
-        .eq('org_id', orgId)
-
-    if (workerError) {
-        Sentry.captureException(workerError, { tags: { action: 'erase_worker_pii', phase: 'worker_update' } })
-        return { error: 'Failed to process erasure request. Please try again.' }
-    }
-
-    const { error: auditError } = await supabase
-        .from('audit_log')
-        .insert({
-            org_id: orgId,
-            table_name: table,
-            record_id: String(workerId),
-            action: 'dpdp.erasure',
-            new_data: {
-                worker_type: workerType,
-                erased_fields: ['name', 'whatsapp_number', 'esi_number', 'pf_number'],
-                erased_at: new Date().toISOString(),
-            },
-            changed_by: user.id,
-        })
-
-    if (auditError) {
-        Sentry.captureException(auditError, { tags: { action: 'erase_worker_pii', phase: 'audit_log' } })
         return { error: 'Failed to process erasure request. Please try again.' }
     }
 
     revalidatePath(workerType === 'meter' ? '/owner/workers' : '/owner/fixed-workers')
     revalidatePath('/owner/payroll')
-    return { success: true }
+    return { success: true, erasure: data }
 }

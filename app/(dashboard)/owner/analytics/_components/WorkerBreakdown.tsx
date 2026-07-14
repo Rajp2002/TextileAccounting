@@ -7,22 +7,26 @@ import { transliterate } from '@/lib/transliterate'
 import { ChevronRight, ChevronDown, Lock, Users } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getSuratTodayString } from '@/lib/time'
 
 type WorkerBreakdownLogEntry = WorkerBreakdownEntry['entries'][number]
 
-export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] | null }) {
+export function WorkerBreakdown({ entries, selectedDate }: { entries: WorkerBreakdownEntry[] | null, selectedDate?: string }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const { language, t } = useTranslation()
+  const isHistorical = Boolean(selectedDate && selectedDate !== getSuratTodayString())
+  const sectionTitle = isHistorical ? `Workers · ${formatDate(selectedDate!)}` : t('worker.title')
+  const emptyMessage = isHistorical ? 'No production logged on selected date' : t('worker.no_logs')
 
   if (!entries || entries.length === 0) {
     return (
       <section>
         <div className="flex items-center gap-2 mb-3">
           <Users className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground">{t('worker.title')}</h2>
+          <h2 className="text-sm font-semibold text-foreground">{sectionTitle}</h2>
         </div>
         <div className="bg-card border border-border rounded-2xl shadow-sm p-8 text-center">
-          <p className="text-sm text-muted-foreground italic">{t('worker.no_logs')}</p>
+          <p className="text-sm text-muted-foreground italic">{emptyMessage}</p>
         </div>
       </section>
     )
@@ -39,7 +43,7 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
     <section>
       <div className="flex items-center gap-2 mb-3">
         <Users className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold text-foreground">{t('worker.title')}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{sectionTitle}</h2>
         <span className="text-xs text-muted-foreground">({entries.length})</span>
       </div>
 

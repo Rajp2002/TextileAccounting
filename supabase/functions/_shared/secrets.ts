@@ -1,33 +1,28 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-function getSupabaseSecretFromDictionary(): string | null {
+function getSupabaseSecretsFromDictionary(): string[] {
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
-  if (!raw) return null;
+  if (!raw) return [];
 
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const defaultKey = parsed.default;
-    if (typeof defaultKey === "string" && defaultKey.length > 0) {
-      return defaultKey;
-    }
-
-    for (const value of Object.values(parsed)) {
-      if (typeof value === "string" && value.length > 0) {
-        return value;
-      }
-    }
+    const values = Object.entries(parsed).filter((entry): entry is [string, string] =>
+      typeof entry[1] === "string" && entry[1].length > 0
+    );
+    values.sort(([left], [right]) => Number(right === "default") - Number(left === "default"));
+    return values.map(([, value]) => value).filter((value): value is string =>
+      typeof value === "string" && value.length > 0
+    );
   } catch {
-    return null;
+    return [];
   }
-
-  return null;
 }
 
 export function getSupabaseServiceKey(): string {
   const key =
     Deno.env.get("SUPABASE_SECRET_KEY") ??
     Deno.env.get("SB_SECRET_KEY") ??
-    getSupabaseSecretFromDictionary() ??
+    getSupabaseSecretsFromDictionary()[0] ??
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!key) {
@@ -55,6 +50,20 @@ function getPresentedSecret(req: Request): string | null {
   return req.headers.get("apikey");
 }
 
+function isAcceptedInternalSecret(presented: string | null): boolean {
+  if (!presented) return false;
+
+  const accepted = new Set([
+    Deno.env.get("INTERNAL_FUNCTION_SECRET"),
+    Deno.env.get("SUPABASE_SECRET_KEY"),
+    Deno.env.get("SB_SECRET_KEY"),
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    ...getSupabaseSecretsFromDictionary(),
+  ].filter((value): value is string => typeof value === "string" && value.length > 0));
+
+  return accepted.has(presented);
+}
+
 function unauthorizedResponse(headers?: HeadersInit): Response {
   return new Response(JSON.stringify({ error: "Unauthorized" }), {
     status: 401,
@@ -67,7 +76,7 @@ function unauthorizedResponse(headers?: HeadersInit): Response {
 
 export function requireInternalAuthorization(req: Request, headers?: HeadersInit): Response | null {
   const presented = getPresentedSecret(req);
-  if (presented && presented === getSupabaseServiceKey()) {
+  if (isAcceptedInternalSecret(presented)) {
     return null;
   }
 
@@ -82,7 +91,7 @@ export function requireCronOrInternalAuthorization(req: Request, headers?: Heade
     return null;
   }
 
-  if (presented && presented === getSupabaseServiceKey()) {
+  if (isAcceptedInternalSecret(presented)) {
     return null;
   }
 

@@ -1,0 +1,1007 @@
+{
+  "passed": true,
+  "run_id": "B11-QA-20260713203654",
+  "scope": "B11 quote/order protected-history runtime closure proof",
+  "closure_targets": [
+    "QUOTE-007",
+    "ORDER-005",
+    "ORDER-007",
+    "ORDER-009",
+    "ORDER-010",
+    "ORDER-011",
+    "ORDER-012",
+    "ORDER-013",
+    "ORDER-014",
+    "ORDER-015",
+    "STOCK-011",
+    "GOLDEN-A-23"
+  ],
+  "out_of_scope_not_closed": [
+    "GOLDEN-A-21",
+    "GOLDEN-A-22",
+    "SIGNOFF-10",
+    "TIME-002",
+    "OFF-009",
+    "SIGNOFF-01",
+    "SIGNOFF-02",
+    "SIGNOFF-04",
+    "TECH-011",
+    "TECH-012"
+  ],
+  "disposable_qa_tenant": true,
+  "org_id": "c3197e6c...b14d",
+  "users": {
+    "owner_id": "bdf62c11...a03f",
+    "supervisor_id": "86648bed...7f16"
+  },
+  "ids": {
+    "quality_id": "247445c6...29fb",
+    "quote_id": "33b5dfd5...a3d3",
+    "order_id": "ea92b57f...0cc3",
+    "worker_ids": [
+      null,
+      null
+    ],
+    "machine_ids": [
+      "0b98b275...f871",
+      "34e1ac5b...21fe"
+    ],
+    "stock_lot_id": "f232053d...79c0",
+    "sale_id": "140f8e51...d2c5",
+    "receivable_id": "1e09b2e2...0edd",
+    "party_id": "4c34ef75...f7c2",
+    "dispatch_1_id": "7b32b4c7...5a5f",
+    "dispatch_2_id": "d3825b3d...c0c4"
+  },
+  "payroll": {
+    "settlement": {
+      "id": 42,
+      "status": "paid",
+      "gross_pay": 589.375,
+      "net_payout": 589.375,
+      "cycle_start_date": "2026-07-01",
+      "meter_worker_id": 209
+    },
+    "over_target_rejection": "Production would exceed order target.",
+    "settled_correction_rejection": "Production can only be logged for the active order currently assigned to this loom."
+  },
+  "production": {
+    "initial": {
+      "log_count": 2,
+      "production_meters": 230.75,
+      "order_progress": {
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "active",
+        "total_meters_produced": 230.75,
+        "progress_percent": 97.87910922587487,
+        "assigned_machines_count": 2
+      },
+      "lots": [
+        {
+          "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+          "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+          "source_type": "order",
+          "stock_purpose": "order_reserved",
+          "original_meters": 230.75,
+          "available_meters": 230.75,
+          "original_taka_count": 4.62,
+          "available_taka_count": 4.62,
+          "sold_meters": 0,
+          "quality_label": "Batch 6 Golden Fabric",
+          "source_date": "2026-07-14",
+          "source_shift": "day"
+        }
+      ],
+      "drafts": [
+        {
+          "id": "4c7761da-6cd9-42bb-9b70-acc3146a5cd9",
+          "suggested_meters": 230.75,
+          "status": "confirmed",
+          "confirmed_stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0"
+        }
+      ],
+      "movements": [
+        {
+          "id": "f8520b74-9dd3-46db-bda8-e05de54627ec",
+          "movement_type": "inward",
+          "meters_delta": 230.75,
+          "reference": "Expected production ledger",
+          "notes": "Production created expected stock in the same transaction as production logs."
+        }
+      ]
+    },
+    "corrected": {
+      "log_count": 2,
+      "production_meters": 235.75,
+      "order_progress": {
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "completed",
+        "total_meters_produced": 235.75,
+        "progress_percent": 100,
+        "assigned_machines_count": 0
+      },
+      "lots": [
+        {
+          "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+          "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+          "source_type": "order",
+          "stock_purpose": "order_reserved",
+          "original_meters": 235.75,
+          "available_meters": 235.75,
+          "original_taka_count": 4.72,
+          "available_taka_count": 4.72,
+          "sold_meters": 0,
+          "quality_label": "Batch 6 Golden Fabric",
+          "source_date": "2026-07-14",
+          "source_shift": "day"
+        }
+      ],
+      "drafts": [
+        {
+          "id": "4c7761da-6cd9-42bb-9b70-acc3146a5cd9",
+          "suggested_meters": 235.75,
+          "status": "confirmed",
+          "confirmed_stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0"
+        }
+      ],
+      "movements": [
+        {
+          "id": "f8520b74-9dd3-46db-bda8-e05de54627ec",
+          "movement_type": "inward",
+          "meters_delta": 230.75,
+          "reference": "Expected production ledger",
+          "notes": "Production created expected stock in the same transaction as production logs."
+        },
+        {
+          "id": "1f7c2653-b571-496b-8127-2654ffe4f46f",
+          "movement_type": "inward",
+          "meters_delta": 5,
+          "reference": "Expected production ledger",
+          "notes": "Production created expected stock in the same transaction as production logs."
+        }
+      ]
+    }
+  },
+  "golden_runtime": {
+    "sale_after_create": {
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+        "party_id": "4c34ef75-a794-4703-a78f-75da1eb5f7c2",
+        "party_name": "Batch 6 Golden Buyer",
+        "meters_sold": 120,
+        "taka_sold": 2.4,
+        "revenue_amount": 7200,
+        "dispatch_status": "not_dispatched",
+        "dispatched_meters": 0,
+        "pending_dispatch_meters": 120,
+        "dispatch_id": null
+      },
+      "receivables": [
+        {
+          "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+          "source_type": "fabric_stock_sale",
+          "source_id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+          "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+          "dispatch_id": null,
+          "party_id": "4c34ef75-a794-4703-a78f-75da1eb5f7c2",
+          "party_name": "Batch 6 Golden Buyer",
+          "quality_label": "Batch 6 Golden Fabric",
+          "total_amount": 7200,
+          "received_amount": 0,
+          "balance_amount": 7200,
+          "payment_status": "unpaid",
+          "credit_days": 7,
+          "due_date": null
+        }
+      ],
+      "sale_movements": [
+        {
+          "id": "bdfbc823-39c0-4047-87ce-c8459ada5db9",
+          "movement_type": "sale",
+          "meters_delta": -120,
+          "sale_id": "140f8e51-6767-4c2c-8209-c169f28bd2c5"
+        }
+      ]
+    },
+    "dispatch_after_first": {
+      "dispatches": [
+        {
+          "id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+          "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+          "stock_sale_id": null,
+          "dispatch_number": 1,
+          "qty_meters_sent": 70,
+          "qty_meters_received": null,
+          "received_meters": null,
+          "receipt_status": "not_confirmed",
+          "status": "in_transit",
+          "receipt_confirmed_by_owner": false
+        }
+      ],
+      "package_lines": [
+        {
+          "id": "0367d361-8f23-4952-b466-2403d7608948",
+          "dispatch_id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+          "package_id": "0c6e23b1-82c2-43bf-8c27-bde7e6e0aa88",
+          "qty_meters_sent": 70,
+          "qty_meters_received": null
+        }
+      ],
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "dispatch_status": "partially_dispatched",
+        "dispatched_meters": 70,
+        "pending_dispatch_meters": 50,
+        "dispatch_id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f"
+      }
+    },
+    "first_receipt": {
+      "dispatch": {
+        "id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+        "status": "delivered",
+        "qty_meters_sent": 70,
+        "qty_meters_received": 70,
+        "received_meters": 70,
+        "receipt_status": "matched",
+        "receipt_confirmed_by_owner": true,
+        "receipt_confirmation_note": "Batch 6 exact receipt"
+      },
+      "discrepancies": [],
+      "claims": [],
+      "package_lines": [
+        {
+          "id": "0367d361-8f23-4952-b466-2403d7608948",
+          "qty_meters_sent": 70,
+          "qty_meters_received": 70
+        }
+      ]
+    },
+    "dispatch_after_second": {
+      "dispatches": [
+        {
+          "id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+          "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+          "stock_sale_id": null,
+          "dispatch_number": 1,
+          "qty_meters_sent": 70,
+          "qty_meters_received": 70,
+          "received_meters": 70,
+          "receipt_status": "matched",
+          "status": "delivered",
+          "receipt_confirmed_by_owner": true
+        },
+        {
+          "id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+          "stock_sale_id": null,
+          "dispatch_number": 2,
+          "qty_meters_sent": 50,
+          "qty_meters_received": null,
+          "received_meters": null,
+          "receipt_status": "not_confirmed",
+          "status": "in_transit",
+          "receipt_confirmed_by_owner": false
+        }
+      ],
+      "package_lines": [
+        {
+          "id": "0367d361-8f23-4952-b466-2403d7608948",
+          "dispatch_id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+          "package_id": "0c6e23b1-82c2-43bf-8c27-bde7e6e0aa88",
+          "qty_meters_sent": 70,
+          "qty_meters_received": 70
+        },
+        {
+          "id": "59892ee2-71e8-4609-abdd-0f6d564c8142",
+          "dispatch_id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "package_id": "18642845-9512-41c7-856f-10635bb1a94e",
+          "qty_meters_sent": 50,
+          "qty_meters_received": null
+        }
+      ],
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "dispatch_status": "dispatched",
+        "dispatched_meters": 120,
+        "pending_dispatch_meters": 0,
+        "dispatch_id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4"
+      }
+    },
+    "second_receipt": {
+      "dispatch": {
+        "id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+        "status": "delivered",
+        "qty_meters_sent": 50,
+        "qty_meters_received": 45,
+        "received_meters": 45,
+        "receipt_status": "difference_reported",
+        "receipt_confirmed_by_owner": true,
+        "receipt_confirmation_note": "Batch 6 shortage receipt"
+      },
+      "discrepancies": [
+        {
+          "id": "64f33697-c2b2-4f0a-8b43-192985e1d88d",
+          "expected_meters": 50,
+          "actual_dispatched_meters": 45,
+          "actual_received_meters": 45,
+          "difference_meters": -5,
+          "discrepancy_type": "shortage",
+          "status": "needs_review",
+          "source_reference": "dispatch_receipt"
+        }
+      ],
+      "claims": [
+        {
+          "id": "1e868be6-a47d-4009-9201-a9fdd080b50a",
+          "claim_type": "shortage",
+          "claim_status": "open",
+          "shortage_meters": 5
+        }
+      ],
+      "package_lines": [
+        {
+          "id": "59892ee2-71e8-4609-abdd-0f6d564c8142",
+          "qty_meters_sent": 50,
+          "qty_meters_received": 45
+        }
+      ]
+    },
+    "partial_payment": {
+      "receivable": {
+        "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+        "total_amount": 7200,
+        "received_amount": 2200,
+        "balance_amount": 5000,
+        "payment_status": "partial"
+      },
+      "receipts": [
+        {
+          "id": "dcbf194b-a825-4770-bf37-73051ece3c1a",
+          "amount": 2200,
+          "payment_mode": "cash",
+          "reference_number": "B6-partial",
+          "payment_date": "2026-07-14"
+        }
+      ]
+    },
+    "final_payment": {
+      "receivable": {
+        "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+        "total_amount": 7200,
+        "received_amount": 7200,
+        "balance_amount": 0,
+        "payment_status": "paid"
+      },
+      "receipts": [
+        {
+          "id": "dcbf194b-a825-4770-bf37-73051ece3c1a",
+          "amount": 2200,
+          "payment_mode": "cash",
+          "reference_number": "B6-partial",
+          "payment_date": "2026-07-14"
+        },
+        {
+          "id": "e5231bc2-9046-421a-b42f-e94dc1da8b90",
+          "amount": 5000,
+          "payment_mode": "bank",
+          "reference_number": "B6-final",
+          "payment_date": "2026-07-14"
+        }
+      ]
+    },
+    "first_session": {
+      "order_progress": {
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "completed",
+        "total_meters_produced": 235.75,
+        "progress_percent": 100,
+        "assigned_machines_count": 0
+      },
+      "lot": {
+        "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+        "original_meters": 235.75,
+        "available_meters": 115.75,
+        "sold_meters": 120
+      },
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "meters_sold": 120,
+        "dispatch_status": "dispatched",
+        "dispatched_meters": 120,
+        "pending_dispatch_meters": 0
+      },
+      "dispatches": [
+        {
+          "id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+          "dispatch_number": 1,
+          "qty_meters_sent": 70,
+          "qty_meters_received": 70,
+          "status": "delivered",
+          "receipt_status": "matched"
+        },
+        {
+          "id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "dispatch_number": 2,
+          "qty_meters_sent": 50,
+          "qty_meters_received": 45,
+          "status": "delivered",
+          "receipt_status": "difference_reported"
+        }
+      ],
+      "receivable": {
+        "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+        "total_amount": 7200,
+        "received_amount": 7200,
+        "balance_amount": 0,
+        "payment_status": "paid"
+      },
+      "payment_receipts": [
+        {
+          "id": "dcbf194b-a825-4770-bf37-73051ece3c1a",
+          "amount": 2200,
+          "payment_mode": "cash"
+        },
+        {
+          "id": "e5231bc2-9046-421a-b42f-e94dc1da8b90",
+          "amount": 5000,
+          "payment_mode": "bank"
+        }
+      ],
+      "discrepancies": [
+        {
+          "id": "64f33697-c2b2-4f0a-8b43-192985e1d88d",
+          "dispatch_id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "difference_meters": -5,
+          "status": "needs_review"
+        }
+      ],
+      "party_claims": [
+        {
+          "id": "1e868be6-a47d-4009-9201-a9fdd080b50a",
+          "dispatch_id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "shortage_meters": 5,
+          "claim_status": "open"
+        }
+      ],
+      "factory_today_source": {
+        "pending_dispatch_rows": 0,
+        "pending_dispatch_meters": 0,
+        "in_transit_dispatches": 0,
+        "unresolved_discrepancies": 1,
+        "receivable_balance": 0
+      }
+    },
+    "second_session": {
+      "order_progress": {
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "completed",
+        "total_meters_produced": 235.75,
+        "progress_percent": 100,
+        "assigned_machines_count": 0
+      },
+      "lot": {
+        "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+        "original_meters": 235.75,
+        "available_meters": 115.75,
+        "sold_meters": 120
+      },
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "meters_sold": 120,
+        "dispatch_status": "dispatched",
+        "dispatched_meters": 120,
+        "pending_dispatch_meters": 0
+      },
+      "dispatches": [
+        {
+          "id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+          "dispatch_number": 1,
+          "qty_meters_sent": 70,
+          "qty_meters_received": 70,
+          "status": "delivered",
+          "receipt_status": "matched"
+        },
+        {
+          "id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "dispatch_number": 2,
+          "qty_meters_sent": 50,
+          "qty_meters_received": 45,
+          "status": "delivered",
+          "receipt_status": "difference_reported"
+        }
+      ],
+      "receivable": {
+        "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+        "total_amount": 7200,
+        "received_amount": 7200,
+        "balance_amount": 0,
+        "payment_status": "paid"
+      },
+      "payment_receipts": [
+        {
+          "id": "dcbf194b-a825-4770-bf37-73051ece3c1a",
+          "amount": 2200,
+          "payment_mode": "cash"
+        },
+        {
+          "id": "e5231bc2-9046-421a-b42f-e94dc1da8b90",
+          "amount": 5000,
+          "payment_mode": "bank"
+        }
+      ],
+      "discrepancies": [
+        {
+          "id": "64f33697-c2b2-4f0a-8b43-192985e1d88d",
+          "dispatch_id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "difference_meters": -5,
+          "status": "needs_review"
+        }
+      ],
+      "party_claims": [
+        {
+          "id": "1e868be6-a47d-4009-9201-a9fdd080b50a",
+          "dispatch_id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+          "shortage_meters": 5,
+          "claim_status": "open"
+        }
+      ],
+      "factory_today_source": {
+        "pending_dispatch_rows": 0,
+        "pending_dispatch_meters": 0,
+        "in_transit_dispatches": 0,
+        "unresolved_discrepancies": 1,
+        "receivable_balance": 0
+      }
+    }
+  },
+  "completion": {
+    "order": {
+      "id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+      "status": "completed"
+    },
+    "machines": [
+      {
+        "id": "0b98b275-c02a-45dc-bac9-16016cf9f871",
+        "status": "inactive",
+        "current_order_id": null
+      },
+      {
+        "id": "34e1ac5b-bb02-4834-9783-730c462321fe",
+        "status": "inactive",
+        "current_order_id": null
+      }
+    ]
+  },
+  "cancelled_order": {
+    "order": {
+      "id": "b37bf3df-c209-4579-9dbb-886b0d1592e0",
+      "status": "cancelled"
+    },
+    "machine": {
+      "id": "5118e9da-6f3b-4207-a942-21f920451248",
+      "status": "inactive",
+      "current_order_id": null
+    },
+    "logs": [
+      {
+        "id": "266fc246-1618-44cd-9eda-70cb9034da28",
+        "meters": 40,
+        "shift": "day",
+        "order_id": "b37bf3df-c209-4579-9dbb-886b0d1592e0"
+      }
+    ],
+    "lots": [
+      {
+        "stock_lot_id": "40b855b7-abd7-409e-ab7c-6f56caa6d0b4",
+        "stock_purpose": "order_reserved",
+        "original_meters": 40,
+        "available_meters": 40,
+        "order_id": "b37bf3df-c209-4579-9dbb-886b0d1592e0"
+      }
+    ],
+    "rejected_new_production": "Production can only be logged for the active order currently assigned to this loom.",
+    "rejected_physical_delete": "Order not found for this organization."
+  },
+  "stock_lifecycle": {
+    "active": {
+      "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+      "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+      "source_type": "order",
+      "stock_purpose": "order_reserved",
+      "original_meters": 230.75,
+      "available_meters": 230.75,
+      "original_taka_count": 4.62,
+      "available_taka_count": 4.62,
+      "sold_meters": 0,
+      "quality_label": "Batch 6 Golden Fabric",
+      "source_date": "2026-07-14",
+      "source_shift": "day"
+    },
+    "completed": {
+      "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+      "stock_purpose": "order_reserved",
+      "original_meters": 235.75,
+      "available_meters": 115.75,
+      "sold_meters": 120,
+      "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3"
+    },
+    "cancelled": {
+      "stock_lot_id": "40b855b7-abd7-409e-ab7c-6f56caa6d0b4",
+      "stock_purpose": "order_reserved",
+      "original_meters": 40,
+      "available_meters": 40,
+      "order_id": "b37bf3df-c209-4579-9dbb-886b0d1592e0"
+    }
+  },
+  "assertions": [
+    {
+      "name": "atomic Start Party Order links accepted quote, order, and yarn requirement",
+      "passed": true,
+      "quote_status": "accepted",
+      "quote_order_match": true,
+      "requirement_quote_match": true,
+      "total_required_kg": 30
+    },
+    {
+      "name": "initial production inserts two logs",
+      "passed": true,
+      "inserted_count": 2,
+      "replaced_count": 0
+    },
+    {
+      "name": "initial order progress reflects produced meters",
+      "passed": true,
+      "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+      "status": "active",
+      "total_meters_produced": 230.75,
+      "progress_percent": 97.87910922587487,
+      "assigned_machines_count": 2
+    },
+    {
+      "name": "initial generated stock lot is order-linked",
+      "passed": true,
+      "lot_count": 1,
+      "source_type": "order",
+      "order_id": "ea92b57f...0cc3"
+    },
+    {
+      "name": "initial generated stock meters match production",
+      "passed": true,
+      "original_meters": 230.75,
+      "available_meters": 230.75
+    },
+    {
+      "name": "over-target production is explicitly rejected without downstream mutation",
+      "passed": true,
+      "error": "Production would exceed order target.",
+      "production_meters": 230.75,
+      "stock_meters": 230.75
+    },
+    {
+      "name": "production correction replaces prior logs atomically",
+      "passed": true,
+      "inserted_count": 2,
+      "replaced_count": 2
+    },
+    {
+      "name": "corrected order progress reaches target meters",
+      "passed": true,
+      "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+      "status": "completed",
+      "total_meters_produced": 235.75,
+      "progress_percent": 100,
+      "assigned_machines_count": 0
+    },
+    {
+      "name": "corrected generated stock lot updates in place",
+      "passed": true,
+      "lot_count": 1,
+      "original_meters": 235.75,
+      "available_meters": 235.75
+    },
+    {
+      "name": "production stock movement history includes initial and correction deltas",
+      "passed": true,
+      "movement_count": 2,
+      "deltas": [
+        230.75,
+        5
+      ]
+    },
+    {
+      "name": "production-backed payroll settles the authoritative worker gross",
+      "passed": true,
+      "status": "paid",
+      "gross_pay": 589.375,
+      "server_calculated_gross": 589.375
+    },
+    {
+      "name": "paid and completed production history rejects correction without mutation",
+      "passed": true,
+      "error": "Production can only be logged for the active order currently assigned to this loom.",
+      "production_meters": 235.75,
+      "stock_meters": 235.75
+    },
+    {
+      "name": "sale-only stock sale returns no dispatch id",
+      "passed": true,
+      "sale_id": "140f8e51...d2c5",
+      "dispatch_id": null
+    },
+    {
+      "name": "sale-only stock sale keeps all sold meters pending dispatch",
+      "passed": true,
+      "pending_dispatch_meters": 120
+    },
+    {
+      "name": "sale-only creates exactly one receivable",
+      "passed": true,
+      "receivable_count": 1
+    },
+    {
+      "name": "sale-only receivable amount and balance are exact",
+      "passed": true,
+      "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+      "source_type": "fabric_stock_sale",
+      "source_id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+      "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+      "dispatch_id": null,
+      "party_id": "4c34ef75-a794-4703-a78f-75da1eb5f7c2",
+      "party_name": "Batch 6 Golden Buyer",
+      "quality_label": "Batch 6 Golden Fabric",
+      "total_amount": 7200,
+      "received_amount": 0,
+      "balance_amount": 7200,
+      "payment_status": "unpaid",
+      "credit_days": 7,
+      "due_date": null
+    },
+    {
+      "name": "sale-only stock movement is recorded once",
+      "passed": true,
+      "sale_movement_count": 1,
+      "meters_delta": -120
+    },
+    {
+      "name": "first order-linked dispatch is numbered and pending sale balance remains",
+      "passed": true,
+      "dispatch_number": 1,
+      "qty_meters_sent": 70,
+      "pending_dispatch_meters": 50
+    },
+    {
+      "name": "first receipt is delivered with exact received meters",
+      "passed": true,
+      "rpc": {
+        "qty_received": 70,
+        "shortage_meters": 0
+      },
+      "dispatch": {
+        "id": "7b32b4c7-3064-47b9-b6c5-a9ae51265a5f",
+        "status": "delivered",
+        "qty_meters_sent": 70,
+        "qty_meters_received": 70,
+        "received_meters": 70,
+        "receipt_status": "matched",
+        "receipt_confirmed_by_owner": true,
+        "receipt_confirmation_note": "Batch 6 exact receipt"
+      }
+    },
+    {
+      "name": "exact receipt creates no discrepancy or claim",
+      "passed": true,
+      "discrepancy_count": 0,
+      "claim_count": 0
+    },
+    {
+      "name": "second order-linked dispatch drains sale pending meters",
+      "passed": true,
+      "dispatch_number": 2,
+      "qty_meters_sent": 50,
+      "pending_dispatch_meters": 0
+    },
+    {
+      "name": "second receipt records shortage accurately",
+      "passed": true,
+      "rpc": {
+        "qty_received": 45,
+        "shortage_meters": 5
+      },
+      "dispatch": {
+        "id": "d3825b3d-c313-495a-a16b-ddf6f6fdc0c4",
+        "status": "delivered",
+        "qty_meters_sent": 50,
+        "qty_meters_received": 45,
+        "received_meters": 45,
+        "receipt_status": "difference_reported",
+        "receipt_confirmed_by_owner": true,
+        "receipt_confirmation_note": "Batch 6 shortage receipt"
+      }
+    },
+    {
+      "name": "short receipt creates one open discrepancy",
+      "passed": true,
+      "discrepancies": [
+        {
+          "id": "64f33697-c2b2-4f0a-8b43-192985e1d88d",
+          "expected_meters": 50,
+          "actual_dispatched_meters": 45,
+          "actual_received_meters": 45,
+          "difference_meters": -5,
+          "discrepancy_type": "shortage",
+          "status": "needs_review",
+          "source_reference": "dispatch_receipt"
+        }
+      ]
+    },
+    {
+      "name": "short receipt creates one open party claim",
+      "passed": true,
+      "claims": [
+        {
+          "id": "1e868be6-a47d-4009-9201-a9fdd080b50a",
+          "claim_type": "shortage",
+          "claim_status": "open",
+          "shortage_meters": 5
+        }
+      ]
+    },
+    {
+      "name": "partial payment leaves exact receivable balance",
+      "passed": true,
+      "receivable": {
+        "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+        "total_amount": 7200,
+        "received_amount": 2200,
+        "balance_amount": 5000,
+        "payment_status": "partial"
+      },
+      "receipt_count": 1
+    },
+    {
+      "name": "final payment zeroes receivable with visible payment history",
+      "passed": true,
+      "receivable": {
+        "id": "1e09b2e2-cc39-4631-b945-95825b8f0edd",
+        "total_amount": 7200,
+        "received_amount": 7200,
+        "balance_amount": 0,
+        "payment_status": "paid"
+      },
+      "receipt_count": 2,
+      "receipt_total": 7200
+    },
+    {
+      "name": "first session shows closed Golden A chain",
+      "passed": true,
+      "order_progress": {
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "completed",
+        "total_meters_produced": 235.75,
+        "progress_percent": 100,
+        "assigned_machines_count": 0
+      },
+      "lot": {
+        "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+        "original_meters": 235.75,
+        "available_meters": 115.75,
+        "sold_meters": 120
+      },
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "meters_sold": 120,
+        "dispatch_status": "dispatched",
+        "dispatched_meters": 120,
+        "pending_dispatch_meters": 0
+      },
+      "dispatch_count": 2,
+      "receipt_count": 2,
+      "discrepancy_count": 1
+    },
+    {
+      "name": "second owner session matches committed Golden A state",
+      "passed": true,
+      "order_progress": {
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "completed",
+        "total_meters_produced": 235.75,
+        "progress_percent": 100,
+        "assigned_machines_count": 0
+      },
+      "lot": {
+        "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+        "original_meters": 235.75,
+        "available_meters": 115.75,
+        "sold_meters": 120
+      },
+      "sale": {
+        "id": "140f8e51-6767-4c2c-8209-c169f28bd2c5",
+        "meters_sold": 120,
+        "dispatch_status": "dispatched",
+        "dispatched_meters": 120,
+        "pending_dispatch_meters": 0
+      },
+      "dispatch_count": 2,
+      "receipt_count": 2,
+      "discrepancy_count": 1
+    },
+    {
+      "name": "Factory Today source rows show no pending dispatch or receivable balance",
+      "passed": true,
+      "pending_dispatch_rows": 0,
+      "pending_dispatch_meters": 0,
+      "in_transit_dispatches": 0,
+      "unresolved_discrepancies": 1,
+      "receivable_balance": 0
+    },
+    {
+      "name": "completed order is archived and machines are unlinked",
+      "passed": true,
+      "order": {
+        "id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3",
+        "status": "completed"
+      },
+      "machines": [
+        {
+          "id": "0b98b275-c02a-45dc-bac9-16016cf9f871",
+          "status": "inactive",
+          "current_order_id": null
+        },
+        {
+          "id": "34e1ac5b-bb02-4834-9783-730c462321fe",
+          "status": "inactive",
+          "current_order_id": null
+        }
+      ]
+    },
+    {
+      "name": "cancel after partial production preserves history and unlinks only its loom",
+      "passed": true,
+      "order_status": "cancelled",
+      "machine": {
+        "id": "5118e9da-6f3b-4207-a942-21f920451248",
+        "status": "inactive",
+        "current_order_id": null
+      },
+      "log_count": 1,
+      "meters": 40
+    },
+    {
+      "name": "cancelled order rejects new production at the database boundary",
+      "passed": true,
+      "error": "Production can only be logged for the active order currently assigned to this loom.",
+      "log_count": 1
+    },
+    {
+      "name": "protected physical delete is restricted and the cancelled archive row remains",
+      "passed": true,
+      "delete_error": "Order not found for this organization.",
+      "order_status": "cancelled",
+      "log_count": 1
+    },
+    {
+      "name": "order stock remains source-linked across completed and cancelled states",
+      "passed": true,
+      "completed_lot": {
+        "stock_lot_id": "f232053d-57d6-4d42-abe8-8728f53c79c0",
+        "stock_purpose": "order_reserved",
+        "original_meters": 235.75,
+        "available_meters": 115.75,
+        "sold_meters": 120,
+        "order_id": "ea92b57f-4a6c-4634-9401-c9b278ba0cc3"
+      },
+      "cancelled_lots": [
+        {
+          "stock_lot_id": "40b855b7-abd7-409e-ab7c-6f56caa6d0b4",
+          "stock_purpose": "order_reserved",
+          "original_meters": 40,
+          "available_meters": 40,
+          "order_id": "b37bf3df-c209-4579-9dbb-886b0d1592e0"
+        }
+      ]
+    }
+  ],
+  "cleanup": "complete",
+  "cleanup_errors": []
+}

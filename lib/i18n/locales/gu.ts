@@ -191,7 +191,8 @@ export const gu = {
     verify_delete: "ખાતરી કરો અને ડીલીટ કરો (Verify & Delete)",
     invalid_code: "ખોટો અથવા એક્સપાયર થયેલ એક્સેસ કોડ",
     code_sent: "વેરિફિકેશન કોડ માલિકને મોકલવામાં આવ્યો છે",
-    code_requested_success: "WhatsApp દ્વારા માલિકને વિનંતી મોકલવામાં આવી છે",
+    code_requested_success: "ઍક્સેસ કોડની વિનંતી થઈ છે. સંદેશ ન મળે તો માલિકને Settings માં કોડ બનાવવા કહો.",
+    code_manual_fallback: "WhatsApp ઉપલબ્ધ નથી. માલિકને Settings માં ઍક્સેસ કોડ બનાવી સીધો શેર કરવા કહો.",
   },
   analytics: {
     greeting: {
@@ -237,6 +238,7 @@ export const gu = {
         link_machines: "મશીન લિંક કરો",
         left: "m બાકી",
         overdue: "લેટ (Overdue)",
+        critical: "ગંભીર (Critical)",
         at_risk: "જોખમમાં (At Risk)",
         finished: "પૂર્ણ (Finished)",
         active: "એક્ટિવ (Active)",
@@ -839,7 +841,7 @@ export const gu = {
     subtitle: "રીયલ-ટાઇમ સુરત ફેબ્રિક ખર્ચ કેલ્ક્યુલેટર",
     hud: {
       prod_cost: "ઉત્પાદન ખર્ચ / મી",
-      quote_per_m: "કોટ / મી",
+      quote_per_m: "અંતિમ કિંમત / મી",
       total_order: "કુલ ઓર્ડર",
       margin: "માર્જિન",
       net_profit: "ચોખ્ખો નફો",
@@ -895,7 +897,7 @@ export const gu = {
       settingsDeleteConfirm: "આ ક્વોલિટી ડિલીટ કરશો?"
     },
     order_basics: {
-      title: "ઓર્ડર અને ફેબ્રિક લેબલ",
+      title: "કોસ્ટિંગ વિગતો",
       party: "પાર્ટી / ગ્રાહક",
       quality_label: "ક્વોલિટી / ફેબ્રિક લેબલ",
       fabric_quality_name: "ફેબ્રિક / ક્વોલિટીનું નામ",
@@ -969,11 +971,11 @@ export const gu = {
       finishing_per_m: "ફિનિશિંગ / મી"
     },
     simulation: {
-      title: "સિમ્યુલેશન અને જથ્થો",
+      title: "કોસ્ટિંગ જથ્થો",
       market_title: "માર્કેટ રન અને જથ્થો",
-      quantity: "સિમ્યુલેશન જથ્થો",
+      quantity: "કોસ્ટિંગ જથ્થો",
       market_target: "લક્ષ્ય ઉત્પાદન (Target Production)",
-      quantity_hint: "HUD કોટ્સ ચાલુ કરે છે",
+      quantity_hint: "કુલ કોસ્ટિંગ અને વેચાણ કિંમતની ગણતરી કરે છે",
       commission: "બ્રોકર કમિશન %",
       transport: "ટ્રાન્સપોર્ટ / મી"
     },
@@ -1005,7 +1007,7 @@ export const gu = {
       winding_per_kg: "વાઇન્ડિંગ / કિલો",
       dyeing_processing: "ડાઇંગ/પ્રોસેસિંગ",
       finishing_per_m: "ફિનિશિંગ / મી",
-      simulation_qty: "સિમ્યુલેશન જથ્થો",
+      simulation_qty: "કોસ્ટિંગ જથ્થો",
       market_target: "લક્ષ્ય ઉત્પાદન (Target Production)",
       broker_comm: "બ્રોકર કમિશન %",
       transport_per_m: "ટ્રાન્સપોર્ટ / મી"

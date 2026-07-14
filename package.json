@@ -8,6 +8,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "qa:provisioning-smoke": "node --env-file=.env.qa.local scripts/qa/provisioning-smoke.mjs --expected-project-ref=eutycrtzzxmlkcpipgod",
     "qa:batch7-release-runtime": "node scripts/qa/batch7-release-runtime-evidence.mjs",
     "test": "vitest run"
   },

@@ -37,11 +37,10 @@ function formatFields(fields: PerfLogExtra) {
 }
 
 export function isPerfLoggingEnabled() {
-    const env = typeof process !== 'undefined' ? process.env : undefined
-    if (env?.NODE_ENV === 'development') return true
+    if (process.env.NODE_ENV === 'development') return true
 
     // The explicit flag is server-only by default. Client bundles still log in dev.
-    if (typeof window === 'undefined' && env?.WEAVLY_PERF_LOGS === 'true') return true
+    if (typeof window === 'undefined' && process.env.WEAVLY_PERF_LOGS === 'true') return true
 
     return false
 }
@@ -66,11 +65,11 @@ export class PerfTimer {
         operation: () => R,
         supabaseCalls = 0
     ): Promise<Awaited<R>> {
-        if (!this.enabled) return operation() as any
+        if (!this.enabled) return await operation()
 
         const start = nowMs()
         try {
-            return await (operation() as any)
+            return await operation()
         } finally {
             this.phaseTimes[phase] += nowMs() - start
             this.supabaseCalls += supabaseCalls

@@ -27,6 +27,7 @@ export default function SupervisorMachinesPage() {
             {/* Supervisors can pause/resume looms without owner-only edit controls. */}
             <MachineManagement
                 orgId={userProfile.org_id}
+                userRole={userProfile.role === 'owner' ? 'owner' : 'supervisor'}
                 canAddMachines={false}
                 canToggleMachineStatus={true}
                 canRenameMachines={false}

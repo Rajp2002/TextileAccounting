@@ -1,0 +1,234 @@
+{
+  "run_id": "B12-PRODUCTION-20260713211746",
+  "scope": "B12 market, stock, dispatch, compliance, concurrency, and party identity runtime proof",
+  "environment": "production",
+  "project_ref": "vzhwahudircrpgtitwzd",
+  "deployment": {
+    "id": "dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1",
+    "commit": "bc1e9cbfab1609adf461c405e41d6fca65b304ee",
+    "state": "READY",
+    "target": "production",
+    "alias": "https://textile-accounting.vercel.app"
+  },
+  "closure_targets": [
+    "MARKET-009",
+    "MARKET-010",
+    "MARKET-013",
+    "STOCK-005",
+    "STOCK-009",
+    "DISP-017",
+    "DISP-018",
+    "COMM-015",
+    "GOLDEN-B-12",
+    "GOLDEN-B-17"
+  ],
+  "assertions": [
+    {
+      "name": "cross-tenant stock source is rejected at the database boundary",
+      "passed": true,
+      "error": "Invalid market run reference for this organization"
+    },
+    {
+      "name": "mismatched quote and order stock source is rejected",
+      "passed": true,
+      "error": "Mismatched quote and order"
+    },
+    {
+      "name": "rejected stock sources leave no lot behind",
+      "passed": true,
+      "count": 0
+    },
+    {
+      "name": "sold-out market run keeps pending dispatch visible",
+      "passed": true,
+      "produced": 100,
+      "sold": 100,
+      "godown": 0,
+      "pending_dispatch_meters": 100
+    },
+    {
+      "name": "above-threshold dispatch is advisory and records missing compliance fields honestly",
+      "passed": true,
+      "id": "ae039c6b-f589-4f3b-99d5-263ef0ce542e",
+      "qty_meters_sent": 60,
+      "eway_bill_required": true,
+      "eway_bill_number": null,
+      "challan_number": null,
+      "transporter_name": null,
+      "status": "in_transit"
+    },
+    {
+      "name": "first Golden B batch records an exact receipt",
+      "passed": true,
+      "qty_received": 60,
+      "shortage_meters": 0
+    },
+    {
+      "name": "first dispatch leaves the second batch actionable",
+      "passed": true,
+      "pending_dispatch_meters": 40,
+      "dispatched_meters": 60
+    },
+    {
+      "name": "below-threshold dispatch remains a reminder rather than a compliance claim",
+      "passed": true,
+      "id": "724c82e6-b786-4f78-90a9-2e54a95fe312",
+      "qty_meters_sent": 40,
+      "eway_bill_required": false,
+      "eway_bill_number": null,
+      "challan_number": null,
+      "transporter_name": null,
+      "status": "in_transit"
+    },
+    {
+      "name": "second Golden B batch records an exact receipt",
+      "passed": true,
+      "qty_received": 40,
+      "shortage_meters": 0
+    },
+    {
+      "name": "all sold stock is dispatched and both batches are received",
+      "passed": true,
+      "dispatches": [
+        {
+          "id": "ae039c6b-f589-4f3b-99d5-263ef0ce542e",
+          "dispatch_number": 1,
+          "status": "delivered",
+          "receipt_status": "matched",
+          "qty_meters_sent": 60,
+          "qty_meters_received": 60
+        },
+        {
+          "id": "724c82e6-b786-4f78-90a9-2e54a95fe312",
+          "dispatch_number": 2,
+          "status": "delivered",
+          "receipt_status": "matched",
+          "qty_meters_sent": 40,
+          "qty_meters_received": 40
+        }
+      ],
+      "sale": {
+        "pending_dispatch_meters": 0,
+        "dispatched_meters": 100,
+        "dispatch_status": "dispatched"
+      }
+    },
+    {
+      "name": "sold-out run closes with complete archive history",
+      "passed": true,
+      "status": "closed",
+      "produced": 100,
+      "sold": 100,
+      "godown": 0,
+      "sales_count": 1
+    },
+    {
+      "name": "duplicate normalized names remain separate by party_id",
+      "passed": true,
+      "parties": [
+        {
+          "id": "14fb4fc0...b2c2",
+          "name": "B12 Duplicate Buyer",
+          "phone": "9000000012"
+        },
+        {
+          "id": "79789ade...3bb4",
+          "name": "b12 duplicate buyer",
+          "phone": "9000000099"
+        }
+      ],
+      "first_party_id": "14fb4fc0...b2c2",
+      "second_party_id": "79789ade...3bb4"
+    },
+    {
+      "name": "new receivables retain explicit distinct party identities",
+      "passed": true,
+      "receivables": [
+        {
+          "id": "1cd44d43...0f55",
+          "source_id": "87926070...c048",
+          "party_id": "14fb4fc0...b2c2",
+          "party_name": "B12 Duplicate Buyer",
+          "balance_amount": 100000
+        },
+        {
+          "id": "b99c39e6...dbc3",
+          "source_id": "9223d5cb...f041",
+          "party_id": "79789ade...3bb4",
+          "party_name": "b12 duplicate buyer",
+          "balance_amount": 500
+        }
+      ]
+    },
+    {
+      "name": "concurrent sale and adjustment serialize to one successful mutation",
+      "passed": true,
+      "sale_error": null,
+      "adjustment_error": "Cannot subtract 2 units — only 2.00 available"
+    },
+    {
+      "name": "concurrent lot never becomes negative or double-used",
+      "passed": true,
+      "lot": {
+        "available_meters": 20,
+        "available_taka_count": 2
+      },
+      "movements": [
+        {
+          "movement_type": "sale",
+          "meters_delta": -80
+        }
+      ]
+    },
+    {
+      "name": "many-run market summary loads within the formal budget",
+      "passed": true,
+      "rows": 26,
+      "elapsed_ms": 31.5
+    },
+    {
+      "name": "second session sees fresh market summary after mutation",
+      "passed": true,
+      "total_meters_sold": 6,
+      "meters_in_godown": 4,
+      "sales_count": 2
+    }
+  ],
+  "cleanup": "complete",
+  "disposable_tenants": [
+    "acb3ffa6...0086",
+    "9b491b27...4d13"
+  ],
+  "ids": {
+    "market_run_id": "31440595...25c3",
+    "order_id": "b4ec3d2a...a368",
+    "stock_lot_id": "2c10488f...f68b"
+  },
+  "market_lifecycle": {
+    "sale_id": "87926070...c048",
+    "party_id": "14fb4fc0...b2c2",
+    "dispatch_ids": [
+      "ae039c6b...542e",
+      "724c82e6...e312"
+    ]
+  },
+  "party_identity": {
+    "second_sale_id": "9223d5cb...f041",
+    "second_party_id": "79789ade...3bb4"
+  },
+  "scale": {
+    "rows": 26,
+    "elapsedMs": 31.5
+  },
+  "passed": true,
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "stock_lots": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  }
+}

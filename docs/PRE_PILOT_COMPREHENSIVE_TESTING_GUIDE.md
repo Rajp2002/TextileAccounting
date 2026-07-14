@@ -21,6 +21,12 @@ This guide is the production-readiness test manual for Weavly. It is designed to
 
 This is not only a UI test. Every critical test must check the user-visible result and the underlying business invariant. A green toast is not proof that a workflow succeeded.
 
+### 1.1 Release scope and pilot gating
+
+The canonical ledger records both `release_scope` and `pilot_gating` for every row. The allowed scope values and the rule for `not_applicable` are defined in `results.json.scopeModel` and `docs/pilot-remediation/POST_PILOT_BACKLOG.md`. An unresolved `pilot_core` row with `pilot_gating=true` independently blocks the limited pilot. A post-pilot row receives no PASS credit; it is `not_applicable` only for the pilot and must link to a named backlog acceptance test.
+
+The limited pilot is a closed, supervised browser workflow. PWA installation is optional; legal wording must be counsel-reviewed before public reliance; independent daily meter reconciliation is a mandatory pilot operating control. Data recovery, factory terminology, and real-fabric costing truth remain pre-pilot gates.
+
 ## 2. Domain Model Used for Testing
 
 ### 2.1 Order-centric production
@@ -342,7 +348,7 @@ npm audit --audit-level=high
 | MASTER-003 | Edit loom name/type and refresh. | Assignment and historical production links remain intact. |
 | MASTER-004 | Activate loom without required assignments/order. | Behavior matches the documented activation rule with a clear message. |
 | MASTER-005 | Deactivate/delete loom with active order or history. | Protected action; history preserved; downstream UI remains consistent. |
-| MASTER-006 | Add piece-rate worker with decimal rate. | Rate persists accurately and appears in production/payroll. |
+| MASTER-006 | Assign a piece-rate worker to a loom with a decimal per-meter rate. | Assignment rate persists exactly, is snapshotted on production logs, and drives payroll without changing historical logs. |
 | MASTER-007 | Add fixed worker with manually entered salary after selecting role. | Entered salary is not replaced by role default. |
 | MASTER-008 | Add daily worker and record attendance. | Daily payroll uses attendance and never exceeds configured monthly salary. |
 | MASTER-009 | Deactivate worker assigned to a loom. | Loom/setup becomes visibly incomplete; old logs remain attributed. |
@@ -510,7 +516,7 @@ The product’s active stock model is an expected ledger, not guaranteed physica
 | SALE-011 | Credit days zero and positive. | Due date starts from first dispatch date per active product rule. |
 | SALE-012 | Sale recorded today, first dispatch later. | Receivable due date is deferred/rebased correctly. |
 | SALE-013 | Same stock split across parties/rates. | Cost basis and profit calculated per sale. |
-| SALE-014 | Failure after sale but before optional dispatch. | Sale remains recoverable under Pending Dispatch; message is explicit. |
+| SALE-014 | Injected dispatch-stage failure during Sell & Dispatch. | Atomic transaction rolls back sale, dispatch, receivable, and stock changes; operator message explicitly says nothing was saved. |
 | SALE-015 | Rapid duplicate submit. | One sale and one receivable. |
 | SALE-016 | Broker/commission, claim, or rate-difference information. | If unsupported, UI/docs do not imply it is included in net realization. |
 
@@ -612,7 +618,9 @@ The product’s active stock model is an expected ledger, not guaranteed physica
 
 ## 23. WhatsApp
 
-Use `WHATSAPP_PROVIDER=simulate` first, then one controlled live test only after consent and Meta setup are complete.
+Live WhatsApp delivery is post-pilot. During the pilot, `WHATSAPP_PROVIDER` is absent or `disabled`; missing or invalid configuration must remain disabled, must not call Meta, and must not break any core order, production, stock, commercial, payroll, or access-code workflow. Provider integration boundaries, consent, secrets, templates, signed callbacks, and live failure drills remain documented in `docs/pilot-remediation/POST_PILOT_BACKLOG.md`.
+
+Rows `WA-001`–`WA-007` and `WA-009` retain infrastructure-readiness evidence. `WA-008` and `WA-010` retain their exact live-provider requirements but are non-gating `not_applicable` for the pilot under `PP-WA-002` and `PP-WA-003`; neither receives PASS credit. Deterministic simulation is permitted only in isolated non-production proof with explicit `WHATSAPP_PROVIDER=simulate`.
 
 | ID | Scenario | Expected result |
 | --- | --- | --- |

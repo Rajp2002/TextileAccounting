@@ -20,20 +20,23 @@ const FINAL_PAYMENT = 5000
 const TOTAL_RECEIVABLE = SOLD_METERS * SALE_RATE
 
 const closureTargets = [
-    'GOLDEN-A-13',
-    'GOLDEN-A-15',
-    'GOLDEN-A-16',
-    'GOLDEN-A-17',
-    'GOLDEN-A-18',
-    'GOLDEN-A-19',
-    'GOLDEN-A-20',
-    'GOLDEN-A-24',
+    'QUOTE-007',
+    'ORDER-005',
+    'ORDER-007',
+    'ORDER-009',
+    'ORDER-010',
+    'ORDER-011',
+    'ORDER-012',
+    'ORDER-013',
+    'ORDER-014',
+    'ORDER-015',
+    'STOCK-011',
+    'GOLDEN-A-23',
 ]
 
 const outOfScopeRows = [
     'GOLDEN-A-21',
     'GOLDEN-A-22',
-    'GOLDEN-A-23',
     'SIGNOFF-10',
     'TIME-002',
     'OFF-009',
@@ -199,6 +202,17 @@ async function createDisposableTenant(admin, anon) {
         ])
     if (profileError) throw new Error(`failed to create disposable profiles: ${profileError.message}`)
 
+    const { error: subscriptionError } = await admin
+        .from('org_subscriptions')
+        .insert({
+            org_id: org.id,
+            plan_id: 'trial',
+            plan_tier: 'premium',
+            status: 'active',
+            current_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        })
+    if (subscriptionError) throw new Error(`failed to create disposable subscription: ${subscriptionError.message}`)
+
     return {
         orgId: org.id,
         ownerUserId: ownerUser.data.user.id,
@@ -227,11 +241,15 @@ async function cleanupDisposable(admin, resource, options = {}) {
         'fabric_stock_sales',
         'fabric_stock_inward_drafts',
         'fabric_stock_lots',
+        'payroll_settlements',
         'production_logs',
         'machine_assignments',
         'machines',
         'workers',
+        'order_yarn_requirements',
         'orders',
+        'estimator_quotes',
+        'org_subscriptions',
         'parties',
         'qualities',
         'audit_log',
@@ -281,6 +299,15 @@ async function cleanupDisposable(admin, resource, options = {}) {
 
 async function seedGoldenASetup(owner, orgId) {
     const today = todayDate()
+    const { data: authData, error: authError } = await owner.auth.getUser()
+    if (authError || !authData.user) throw new Error(`failed to resolve disposable owner: ${authError?.message}`)
+    const ageEvidence = (reference) => ({
+        date_of_birth: '1990-01-01',
+        age_verification_method: 'government_id',
+        age_verification_reference: `batch6-${reference}-${crypto.randomUUID()}`,
+        age_verified_at: new Date().toISOString(),
+        age_verified_by: authData.user.id,
+    })
     const { data: quality, error: qualityError } = await owner
         .from('qualities')
         .insert({
@@ -295,36 +322,53 @@ async function seedGoldenASetup(owner, orgId) {
         .single()
     if (qualityError || !quality) throw new Error(`failed to create quality: ${qualityError?.message}`)
 
+    const trackingToken = `B6-${crypto.randomUUID()}`
+    const { data: startRows, error: startError } = await owner.rpc('start_party_order_from_estimator', {
+        p_party_name: 'Batch 6 Golden Buyer',
+        p_quality_label: 'Batch 6 Golden Fabric',
+        p_warp_instruction: 'Batch 6 Golden warp',
+        p_weft_instruction: 'Batch 6 Golden weft',
+        p_order_quantity_m: TARGET_METERS,
+        p_landed_cost_per_meter: 40,
+        p_quote_price_per_meter: SALE_RATE,
+        p_worker_rate_per_m: WORKER_RATE,
+        p_target_meters: TARGET_METERS,
+        p_deadline: addDays(today, 7),
+        p_notes: 'Batch 6 disposable Golden A runtime proof',
+        p_tracking_token: trackingToken,
+        p_warp_required_kg: 20,
+        p_weft_required_kg: 10,
+        p_total_required_kg: 30,
+        p_estimated_beams: 1,
+        p_requirement_snapshot: { order_quantity_m: TARGET_METERS },
+    })
+    if (startError) throw new Error(`failed to start party order atomically: ${startError.message}`)
+    const started = rowFromRpc(startRows)
+    if (!started?.success || !started.order_id || !started.quote_id) {
+        throw new Error(`failed to start party order atomically: ${started?.error ?? 'missing linked ids'}`)
+    }
+
     const { data: order, error: orderError } = await owner
         .from('orders')
-        .insert({
-            org_id: orgId,
+        .update({
             quality_id: quality.id,
-            party_name: 'Batch 6 Golden Buyer',
             party_phone: '9000000006',
-            total_target_meters: TARGET_METERS,
-            start_date: today,
-            deadline: addDays(today, 7),
-            status: 'active',
-            quality_label: 'Batch 6 Golden Fabric',
-            warp_instruction: 'Batch 6 Golden warp',
-            weft_instruction: 'Batch 6 Golden weft',
-            worker_rate_per_m: WORKER_RATE,
             stock_meters_per_unit: STOCK_METERS_PER_UNIT,
             stock_unit_label: 'taka',
             default_godown: 'Batch 6 QA Godown',
             dispatch_batch_meters: DISPATCH_1_METERS,
-            notes: 'Batch 6 disposable Golden A runtime proof',
         })
-        .select('id, tracking_token')
+        .eq('org_id', orgId)
+        .eq('id', started.order_id)
+        .select('id, quote_id, tracking_token')
         .single()
-    if (orderError || !order) throw new Error(`failed to create order: ${orderError?.message}`)
+    if (orderError || !order) throw new Error(`failed to finish atomic order fixture: ${orderError?.message}`)
 
     const { data: workers, error: workersError } = await owner
         .from('workers')
         .insert([
-            { org_id: orgId, name: 'Batch 6 Golden Day Worker', is_active: true },
-            { org_id: orgId, name: 'Batch 6 Golden Night Worker', is_active: true },
+            { org_id: orgId, name: 'Batch 6 Golden Day Worker', is_active: true, ...ageEvidence('day') },
+            { org_id: orgId, name: 'Batch 6 Golden Night Worker', is_active: true, ...ageEvidence('night') },
         ])
         .select('id, name')
     if (workersError || !workers || workers.length !== 2) {
@@ -360,6 +404,7 @@ async function seedGoldenASetup(owner, orgId) {
         today,
         qualityId: quality.id,
         orderId: order.id,
+        quoteId: started.quote_id,
         trackingToken: order.tracking_token,
         workerIds: workers.map((worker) => worker.id),
         machineIds: machines.map((machine) => machine.id),
@@ -819,8 +864,8 @@ async function main() {
         throw new Error('Missing Supabase URL, anon key, or service-role key in local env files.')
     }
 
-    const runId = `BATCH6-${runTimestamp()}`
-    const outputPath = path.join(workspace, 'output', 'qa', 'batch6', `${runId}-golden-a-runtime-proof.json`)
+    const runId = `B11-QA-${runTimestamp()}`
+    const outputPath = path.join(workspace, 'output', 'qa', 'blocked-row-campaign', 'B11-qa-order-lifecycle.json')
     const admin = createClient(url, serviceKey, {
         auth: { persistSession: false, autoRefreshToken: false },
     })
@@ -828,7 +873,7 @@ async function main() {
     const assertions = []
     const evidence = {
         run_id: runId,
-        scope: 'Batch 6 Golden A runtime closure proof only',
+        scope: 'B11 quote/order protected-history runtime closure proof',
         closure_targets: closureTargets,
         out_of_scope_not_closed: outOfScopeRows,
         disposable_qa_tenant: true,
@@ -847,10 +892,39 @@ async function main() {
         const setup = await seedGoldenASetup(resource.ownerClient, resource.orgId)
         evidence.ids = {
             quality_id: setup.qualityId,
+            quote_id: setup.quoteId,
             order_id: setup.orderId,
             worker_ids: setup.workerIds,
             machine_ids: setup.machineIds,
         }
+
+        const [quoteLink, requirementLink] = await Promise.all([
+            resource.ownerClient
+                .from('estimator_quotes')
+                .select('id, order_id, status')
+                .eq('org_id', resource.orgId)
+                .eq('id', setup.quoteId)
+                .single(),
+            resource.ownerClient
+                .from('order_yarn_requirements')
+                .select('order_id, quote_id, total_required_kg')
+                .eq('org_id', resource.orgId)
+                .eq('order_id', setup.orderId)
+                .single(),
+        ])
+        if (quoteLink.error || requirementLink.error) {
+            throw new Error(`atomic order link read failed: ${quoteLink.error?.message ?? requirementLink.error?.message}`)
+        }
+        assertCondition(assertions, 'atomic Start Party Order links accepted quote, order, and yarn requirement',
+            quoteLink.data.status === 'accepted'
+            && quoteLink.data.order_id === setup.orderId
+            && requirementLink.data.quote_id === setup.quoteId
+            && near(requirementLink.data.total_required_kg, 30), {
+                quote_status: quoteLink.data.status,
+                quote_order_match: quoteLink.data.order_id === setup.orderId,
+                requirement_quote_match: requirementLink.data.quote_id === setup.quoteId,
+                total_required_kg: numberValue(requirementLink.data.total_required_kg),
+            })
 
         const initialReplace = await replaceProduction(resource.supervisorClient, setup, false)
         const initialProduction = await productionSnapshot(resource.ownerClient, resource.orgId, setup)
@@ -866,6 +940,23 @@ async function main() {
             available_meters: numberValue(initialProduction.lots[0]?.available_meters),
         })
 
+        const overTargetPayload = productionPayload(setup, [130.5, 110.25])
+        const overTargetAttempt = await resource.supervisorClient.rpc('replace_shift_production_logs', {
+            p_logs: overTargetPayload,
+            p_allow_overwrite: true,
+            p_access_code_used: false,
+        })
+        const afterOverTarget = await productionSnapshot(resource.ownerClient, resource.orgId, setup)
+        assertCondition(assertions, 'over-target production is explicitly rejected without downstream mutation',
+            Boolean(overTargetAttempt.error)
+            && /target|exceed/i.test(overTargetAttempt.error?.message ?? '')
+            && near(afterOverTarget.production_meters, 230.75)
+            && near(afterOverTarget.lots[0]?.original_meters, 230.75), {
+                error: overTargetAttempt.error?.message ?? null,
+                production_meters: afterOverTarget.production_meters,
+                stock_meters: numberValue(afterOverTarget.lots[0]?.original_meters),
+            })
+
         const correctedReplace = await replaceProduction(resource.supervisorClient, setup, true)
         const correctedProduction = await productionSnapshot(resource.ownerClient, resource.orgId, setup)
         assertCondition(assertions, 'production correction replaces prior logs atomically', Number(correctedReplace?.inserted_count ?? 0) === 2 && Number(correctedReplace?.replaced_count ?? 0) === 2, correctedReplace ?? {})
@@ -879,6 +970,62 @@ async function main() {
             movement_count: correctedProduction.movements.length,
             deltas: correctedProduction.movements.map((row) => numberValue(row.meters_delta)),
         })
+
+        const cycleStart = `${setup.today.slice(0, 7)}-01`
+        const settlementResult = await resource.ownerClient.rpc('settle_worker_payroll_hardened', {
+            p_org_id: resource.orgId,
+            p_worker_type: 'meter',
+            p_worker_id: setup.workerIds[0],
+            p_cycle_start: cycleStart,
+            p_gross_amount: 0,
+            p_is_final_settlement: false,
+            p_manual_deduction_override: null,
+            p_actor_id: resource.ownerUserId,
+            p_payment_mode: 'cash',
+            p_manual_adjustments: [],
+            p_verified_by_owner: true,
+        })
+        if (settlementResult.error) throw new Error(`payroll settlement failed: ${settlementResult.error.message}`)
+        const settlementId = settlementResult.data?.settlement_id
+        const settlementSnapshot = await resource.ownerClient
+            .from('payroll_settlements')
+            .select('id, status, gross_pay, net_payout, cycle_start_date, meter_worker_id')
+            .eq('org_id', resource.orgId)
+            .eq('id', settlementId)
+            .single()
+        if (settlementSnapshot.error) throw new Error(`payroll settlement read failed: ${settlementSnapshot.error.message}`)
+        assertCondition(assertions, 'production-backed payroll settles the authoritative worker gross',
+            settlementSnapshot.data.status === 'paid'
+            && settlementSnapshot.data.meter_worker_id === setup.workerIds[0]
+            && near(settlementSnapshot.data.gross_pay, TARGET_METERS * WORKER_RATE)
+            && near(settlementResult.data?.server_calculated_gross, TARGET_METERS * WORKER_RATE), {
+                status: settlementSnapshot.data.status,
+                gross_pay: numberValue(settlementSnapshot.data.gross_pay),
+                server_calculated_gross: numberValue(settlementResult.data?.server_calculated_gross),
+            })
+
+        const settledCorrectionPayload = productionPayload(setup, [124.5, 111.25])
+        const settledCorrectionAttempt = await resource.supervisorClient.rpc('replace_shift_production_logs', {
+            p_logs: settledCorrectionPayload,
+            p_allow_overwrite: true,
+            p_access_code_used: false,
+        })
+        const afterSettledCorrection = await productionSnapshot(resource.ownerClient, resource.orgId, setup)
+        assertCondition(assertions, 'paid and completed production history rejects correction without mutation',
+            Boolean(settledCorrectionAttempt.error)
+            && /settled|payroll|non-active|active order/i.test(settledCorrectionAttempt.error?.message ?? '')
+            && near(afterSettledCorrection.production_meters, TARGET_METERS)
+            && near(afterSettledCorrection.lots[0]?.original_meters, TARGET_METERS), {
+                error: settledCorrectionAttempt.error?.message ?? null,
+                production_meters: afterSettledCorrection.production_meters,
+                stock_meters: numberValue(afterSettledCorrection.lots[0]?.original_meters),
+            })
+
+        evidence.payroll = {
+            settlement: settlementSnapshot.data,
+            over_target_rejection: overTargetAttempt.error?.message ?? null,
+            settled_correction_rejection: settledCorrectionAttempt.error?.message ?? null,
+        }
 
         setup.stockLotId = correctedProduction.lots[0].stock_lot_id
         evidence.ids.stock_lot_id = setup.stockLotId
@@ -1025,6 +1172,157 @@ async function main() {
         assertCondition(assertions, 'completed order is archived and machines are unlinked', completion.order?.status === 'completed'
             && completion.machines.length === setup.machineIds.length
             && completion.machines.every((machine) => machine.current_order_id === null && machine.status === 'inactive'), completion)
+
+        const { data: cancelOrder, error: cancelOrderError } = await resource.ownerClient
+            .from('orders')
+            .insert({
+                org_id: resource.orgId,
+                quality_id: setup.qualityId,
+                party_name: 'Batch 6 Protected Cancel Buyer',
+                total_target_meters: 100,
+                start_date: setup.today,
+                deadline: addDays(setup.today, 10),
+                status: 'active',
+                quality_label: 'Batch 6 Golden Fabric',
+                worker_rate_per_m: WORKER_RATE,
+                stock_meters_per_unit: STOCK_METERS_PER_UNIT,
+                stock_unit_label: 'taka',
+                default_godown: 'Batch 6 QA Godown',
+            })
+            .select('id')
+            .single()
+        if (cancelOrderError || !cancelOrder) throw new Error(`failed to create cancellation order: ${cancelOrderError?.message}`)
+
+        const { data: cancelMachine, error: cancelMachineError } = await resource.ownerClient
+            .from('machines')
+            .insert({ org_id: resource.orgId, name: 'Batch 6 Protected Cancel Loom', status: 'inactive', loom_type: 'rapier' })
+            .select('id')
+            .single()
+        if (cancelMachineError || !cancelMachine) throw new Error(`failed to create cancellation loom: ${cancelMachineError?.message}`)
+
+        const cancelAssignments = await resource.ownerClient.from('machine_assignments').insert([
+            { org_id: resource.orgId, machine_id: cancelMachine.id, worker_id: setup.workerIds[0], shift: 'day' },
+            { org_id: resource.orgId, machine_id: cancelMachine.id, worker_id: setup.workerIds[1], shift: 'night' },
+        ])
+        if (cancelAssignments.error) throw new Error(`failed to create cancellation assignments: ${cancelAssignments.error.message}`)
+        const cancelActivation = await resource.ownerClient
+            .from('machines')
+            .update({ current_order_id: cancelOrder.id, status: 'active' })
+            .eq('org_id', resource.orgId)
+            .eq('id', cancelMachine.id)
+        if (cancelActivation.error) throw new Error(`failed to activate cancellation loom: ${cancelActivation.error.message}`)
+
+        const partialCancelLog = [{
+            machine_id: cancelMachine.id,
+            worker_id: setup.workerIds[0],
+            order_id: cancelOrder.id,
+            meters: 40,
+            opening_meter_reading: 0,
+            closing_meter_reading: 40,
+            counter_was_reset: false,
+            shift: 'day',
+            date: setup.today,
+            worker_rate_snapshot: WORKER_RATE,
+            submitted_at: new Date().toISOString(),
+            client_ip: 'batch6-cancel-proof',
+        }]
+        const partialCancelResult = await resource.supervisorClient.rpc('replace_shift_production_logs', {
+            p_logs: partialCancelLog,
+            p_allow_overwrite: false,
+            p_access_code_used: false,
+        })
+        if (partialCancelResult.error) throw new Error(`failed to create cancellation history: ${partialCancelResult.error.message}`)
+
+        const cancelWrite = await resource.ownerClient
+            .from('orders')
+            .update({ status: 'cancelled' })
+            .eq('org_id', resource.orgId)
+            .eq('id', cancelOrder.id)
+        if (cancelWrite.error) throw new Error(`failed to cancel protected order: ${cancelWrite.error.message}`)
+        const cancelUnlink = await resource.ownerClient
+            .from('machines')
+            .update({ current_order_id: null, status: 'inactive' })
+            .eq('org_id', resource.orgId)
+            .eq('current_order_id', cancelOrder.id)
+        if (cancelUnlink.error) throw new Error(`failed to unlink cancelled order loom: ${cancelUnlink.error.message}`)
+
+        const postCancelAttempt = await resource.supervisorClient.rpc('replace_shift_production_logs', {
+            p_logs: [{
+                ...partialCancelLog[0],
+                worker_id: setup.workerIds[1],
+                shift: 'night',
+                meters: 10,
+                closing_meter_reading: 10,
+            }],
+            p_allow_overwrite: false,
+            p_access_code_used: false,
+        })
+        const physicalDeleteAttempt = await resource.ownerClient
+            .from('orders')
+            .delete()
+            .eq('org_id', resource.orgId)
+            .eq('id', cancelOrder.id)
+
+        const [cancelOrderState, cancelMachineState, cancelLogs, cancelLots, completedLot] = await Promise.all([
+            resource.ownerClient.from('orders').select('id, status').eq('org_id', resource.orgId).eq('id', cancelOrder.id).single(),
+            resource.ownerClient.from('machines').select('id, status, current_order_id').eq('org_id', resource.orgId).eq('id', cancelMachine.id).single(),
+            resource.ownerClient.from('production_logs').select('id, meters, shift, order_id').eq('org_id', resource.orgId).eq('order_id', cancelOrder.id),
+            resource.ownerClient.from('fabric_stock_lot_summary').select('stock_lot_id, stock_purpose, original_meters, available_meters, order_id').eq('org_id', resource.orgId).eq('order_id', cancelOrder.id),
+            resource.ownerClient.from('fabric_stock_lot_summary').select('stock_lot_id, stock_purpose, original_meters, available_meters, sold_meters, order_id').eq('org_id', resource.orgId).eq('order_id', setup.orderId).single(),
+        ])
+        const cancelReadError = cancelOrderState.error || cancelMachineState.error || cancelLogs.error || cancelLots.error || completedLot.error
+        if (cancelReadError) throw new Error(`cancelled-order readback failed: ${cancelReadError.message}`)
+
+        assertCondition(assertions, 'cancel after partial production preserves history and unlinks only its loom',
+            cancelOrderState.data.status === 'cancelled'
+            && cancelMachineState.data.status === 'inactive'
+            && cancelMachineState.data.current_order_id === null
+            && cancelLogs.data.length === 1
+            && near(cancelLogs.data[0]?.meters, 40), {
+                order_status: cancelOrderState.data.status,
+                machine: cancelMachineState.data,
+                log_count: cancelLogs.data.length,
+                meters: numberValue(cancelLogs.data[0]?.meters),
+            })
+        assertCondition(assertions, 'cancelled order rejects new production at the database boundary',
+            Boolean(postCancelAttempt.error)
+            && /active order|non-active|cancel/i.test(postCancelAttempt.error?.message ?? '')
+            && cancelLogs.data.length === 1, {
+                error: postCancelAttempt.error?.message ?? null,
+                log_count: cancelLogs.data.length,
+            })
+        assertCondition(assertions, 'protected physical delete is restricted and the cancelled archive row remains',
+            Boolean(physicalDeleteAttempt.error)
+            && cancelOrderState.data.status === 'cancelled'
+            && cancelLogs.data.length === 1, {
+                delete_error: physicalDeleteAttempt.error?.message ?? null,
+                order_status: cancelOrderState.data.status,
+                log_count: cancelLogs.data.length,
+            })
+        assertCondition(assertions, 'order stock remains source-linked across completed and cancelled states',
+            completedLot.data.stock_purpose === 'order_reserved'
+            && completedLot.data.order_id === setup.orderId
+            && cancelLots.data.length === 1
+            && cancelLots.data[0].stock_purpose === 'order_reserved'
+            && cancelLots.data[0].order_id === cancelOrder.id
+            && near(cancelLots.data[0].original_meters, 40), {
+                completed_lot: completedLot.data,
+                cancelled_lots: cancelLots.data,
+            })
+
+        evidence.cancelled_order = {
+            order: cancelOrderState.data,
+            machine: cancelMachineState.data,
+            logs: cancelLogs.data,
+            lots: cancelLots.data,
+            rejected_new_production: postCancelAttempt.error?.message ?? null,
+            rejected_physical_delete: physicalDeleteAttempt.error?.message ?? null,
+        }
+        evidence.stock_lifecycle = {
+            active: initialProduction.lots[0],
+            completed: completedLot.data,
+            cancelled: cancelLots.data[0],
+        }
 
         const output = {
             passed: true,

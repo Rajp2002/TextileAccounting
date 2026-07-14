@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "public/fallback-*.js",
     "public/workbox-*.js",
     "public/worker-*.js",
+    // Local diagnostic scratchpads are gitignored and are not application code.
+    "scratch/**",
   ]),
   {
     files: ["**/*.{ts,tsx}"],

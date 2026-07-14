@@ -83,6 +83,7 @@ import {
     getMonthlyOutputSuggestion,
     upsertFactoryCostProfile,
     createMarketRunFromEstimator,
+    startPartyOrderFromEstimator,
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
 import { toast } from 'sonner'
@@ -591,6 +592,12 @@ function NumField({
     onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean
 }) {
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
+    // Estimator defaults are stored as numeric zero for calculations, but an
+    // empty control with a zero placeholder is a better editing experience:
+    // the first digit typed replaces the visual default instead of appending
+    // to it (for example, entering 55 must never appear as 055).
+    const displayValue = value === 0 ? '' : (value ?? '')
+    const displayPlaceholder = value === 0 ? (placeholder ?? '0') : placeholder
     return (
         <div className="space-y-1.5 min-w-0">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
@@ -599,8 +606,8 @@ function NumField({
                     type="number"
                     step={step}
                     min={min}
-                    placeholder={placeholder}
-                    value={value ?? ''}
+                    placeholder={displayPlaceholder}
+                    value={displayValue}
                     onChange={e => {
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
@@ -1540,6 +1547,55 @@ export default function EstimatorClient({
         }
     }
 
+    const handleStartPartyOrder = async () => {
+        if (saveQuoteLockRef.current || savingQuote) return
+        if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
+        if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
+        if (!state.orderQuantityM || state.orderQuantityM <= 0) {
+            return toast.error('Set a quantity before starting the order')
+        }
+
+        const quotePricePerM = totals.orderQuote?.quotePricePerM
+        if (!quotePricePerM || quotePricePerM <= 0 || totals.totalProductionCostPerM <= 0) {
+            return toast.error('Complete the estimate before starting the order')
+        }
+
+        saveQuoteLockRef.current = true
+        setSavingQuote(true)
+
+        try {
+            const result = await startPartyOrderFromEstimator({
+                estimatorState: state,
+                partyName: partyName.trim(),
+                qualityLabel: qualityLabel.trim(),
+                warpInstruction: warpInstruction.trim() || undefined,
+                weftInstruction: weftInstruction.trim() || undefined,
+                targetMeters: state.orderQuantityM,
+                deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                quotePricePerM,
+                costPerM: totals.totalProductionCostPerM,
+            })
+
+            if ('error' in result) {
+                toast.error(result.error ?? 'Failed to start party order')
+                return
+            }
+
+            clearDraft()
+            setSourceQuoteId(null)
+            setSourceQuoteUpdatedAt(null)
+            quoteRequestIdRef.current = null
+            toast.success('Party order started')
+            router.push(`/owner/orders?orderId=${result.orderId}`)
+        } catch (error) {
+            console.error('Failed to start party order:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to start party order')
+        } finally {
+            setSavingQuote(false)
+            saveQuoteLockRef.current = false
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-20">
@@ -1684,7 +1740,7 @@ export default function EstimatorClient({
                                 </div>
                                 <ArrowRight className="hidden h-7 w-7 self-center text-[var(--color-subtle)] sm:block" />
                                 <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{canUseProduction ? t('estimator.hud.quote_per_m') : 'Final Price / m'}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
                                     <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[40px]">
                                         ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
                                     </p>
@@ -1724,11 +1780,28 @@ export default function EstimatorClient({
 
                             {mode === 'quote' ? (
                                 <>
-                                    {/* PRIMARY: Save & Accept */}
+                                    {/* PRIMARY: atomically create the accepted quote and live order */}
+                                    <Button
+                                        id="btn-start-party-order"
+                                        size="sm"
+                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        onClick={handleStartPartyOrder}
+                                        disabled={savingQuote || !canUseProduction || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                            ? 'Complete party, quality, quantity, and cost result first.'
+                                            : undefined
+                                        }
+                                    >
+                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
+                                        <span className="truncate">Start Party Order</span>
+                                    </Button>
+
+                                    {/* SECONDARY: retain an accepted quote without starting production */}
                                     <Button
                                         id="btn-save-accept"
                                         size="sm"
-                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        variant="outline"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote', canUseProduction ? 'accepted' : 'draft')}
                                         disabled={savingQuote || !hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
@@ -1740,7 +1813,7 @@ export default function EstimatorClient({
                                         <span className="truncate">{canUseProduction ? 'Save & Accept' : (sourceQuoteId ? 'Update Costing' : 'Save Costing')}</span>
                                     </Button>
 
-                                    {/* SECONDARY: Save Quote */}
+                                    {/* TERTIARY: Save Quote */}
                                     {canUseProduction && <Button
                                         id="btn-save-quote"
                                         size="sm"
@@ -2014,7 +2087,7 @@ export default function EstimatorClient({
 
                 {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
-                    <SectionHeader title={canUseProduction ? t('estimator.order_basics.title') : 'Costing Details'} icon={Layers} accent="neutral" step={1} />
+                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
@@ -3072,11 +3145,11 @@ export default function EstimatorClient({
 
                 {/* 9. Simulation / Order */}
                 <EstimatorCard accent="weft">
-                    <SectionHeader title={!canUseProduction ? 'Costing Quantity' : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
+                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
-                                label={!canUseProduction ? 'Costing Quantity' : mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
+                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
                                 value={state.orderQuantityM} 
                                 onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })} 
                                 unit="m" 

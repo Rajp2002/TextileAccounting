@@ -8,7 +8,7 @@ import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Pace classification ─────────────────────────────────────────────────────
 
-function classifyOrder(order: Order): 'on-track' | 'at-risk' | 'critical' | 'no-data' {
+export function classifyOrder(order: Order): 'on-track' | 'at-risk' | 'critical' | 'no-data' {
   if (order.meters_produced === 0) return 'no-data'
   if (order.days_remaining <= 0)   return 'critical'
   if (order.pace_index >= 1.0)     return 'on-track'
@@ -83,7 +83,7 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
   const counts = !empty ? orders.reduce(
     (acc, o) => { 
       const s = classifyOrder(o)
-      const key = s === 'no-data' ? 'on-track' : s
+      const key = s === 'no-data' ? 'at-risk' : s
       acc[key]++
       return acc 
     },
@@ -125,7 +125,7 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
             {[
               { label: t('analytics.orders.card.active'),  count: counts!['on-track'], color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/60 dark:bg-emerald-900/10' },
               { label: t('analytics.orders.card.at_risk'),   count: counts!['at-risk'],  color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50/60 dark:bg-amber-900/10'   },
-              { label: t('analytics.orders.card.overdue'), count: counts!['critical'], color: 'text-red-600 dark:text-red-400',         bg: 'bg-red-50/60 dark:bg-red-900/10'       },
+              { label: t('analytics.orders.card.critical'), count: counts!['critical'], color: 'text-red-600 dark:text-red-400',         bg: 'bg-red-50/60 dark:bg-red-900/10'       },
             ].map(({ label, count, color, bg }) => (
               <div key={label} className={`flex flex-col items-center py-3 ${bg}`}>
                 <span className={`text-xl font-bold tabular-nums ${color}`}>{count}</span>

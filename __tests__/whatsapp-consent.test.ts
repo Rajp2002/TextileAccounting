@@ -16,7 +16,7 @@ describe('WhatsApp Consent Guard Tests (Static Analysis)', () => {
 
     it('defines checkWhatsAppConsent with correct return type', () => {
         expect(whatsappShared).toContain('export async function checkWhatsAppConsent')
-        expect(whatsappShared).toContain('reason: "opted_in" | "opted_out" | "missing_consent" | "missing_phone" | "unsupported_person_type"')
+        expect(whatsappShared).toContain('reason: "opted_in" | "opted_out" | "missing_consent" | "missing_phone" | "phone_mismatch" | "unsupported_person_type"')
     })
 
     it('integrates consent check in send-payslip', () => {

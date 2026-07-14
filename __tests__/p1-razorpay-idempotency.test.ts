@@ -47,7 +47,7 @@ describe('P1 Razorpay Webhook Idempotency Guard', () => {
 
     it('handles unique-violation (23505) from subscription_payments insert in subscription.charged', () => {
         // Database-level race safety
-        expect(routeContent).toContain("insertError.code === '23505'")
+        expect(routeContent).toContain("paymentWriteError.code === '23505'")
         // Referral refund must NOT be issued when insert fails
         expect(routeContent).toContain('skipping refund')
     })
@@ -58,7 +58,7 @@ describe('P1 Razorpay Webhook Idempotency Guard', () => {
             routeContent.indexOf("case 'subscription.charged'"),
             routeContent.indexOf("case 'subscription.halted'")
         )
-        const insertErrorIdx = chargedBlock.indexOf("insertError.code === '23505'")
+        const insertErrorIdx = chargedBlock.indexOf("paymentWriteError.code === '23505'")
         const refundIdx      = chargedBlock.indexOf('issueReferralRefund')
         expect(insertErrorIdx).toBeGreaterThan(0)
         expect(refundIdx).toBeGreaterThan(insertErrorIdx)
@@ -77,10 +77,13 @@ describe('P1 Razorpay Webhook Idempotency Guard', () => {
 
 describe('P1 Referral Refund Idempotency Guard', () => {
     const helperContent = readProjectFile('lib/referral-webhook.ts')
+    const migration = readProjectFile('supabase/migrations/20260714090000_b17_harden_razorpay_lifecycle.sql')
 
-    it('app-level pre-check for existing refund in issueReferralRefund', () => {
-        expect(helperContent).toContain('Refund already processed for payment ${paymentId}')
-        expect(helperContent).toContain('maybeSingle()')
+    it('claims the refund before the provider request and uses a stable idempotency key', () => {
+        const issueBlock = helperContent.slice(helperContent.indexOf('export async function issueReferralRefund'))
+        expect(issueBlock).toContain("rpc('claim_referral_refund'")
+        expect(issueBlock.indexOf("rpc('claim_referral_refund'")).toBeLessThan(issueBlock.indexOf('createIdempotentRazorpayRefund'))
+        expect(migration).toContain('idx_referral_refunds_idempotency_key_unique')
     })
 
     it('does not contain live-mode onboarding, KYC, or bank-setup logic', () => {
@@ -93,15 +96,18 @@ describe('P1 Referral Refund Idempotency Guard', () => {
 
 describe('P1 Referral Conversion Idempotency Guard', () => {
     const helperContent = readProjectFile('lib/referral-webhook.ts')
+    const hardeningMigration = readProjectFile('supabase/migrations/20260714090000_b17_harden_razorpay_lifecycle.sql')
 
-    it('app-level pre-check for existing discount window in processReferralConversion', () => {
-        expect(helperContent).toContain('Discount window already exists for referral use')
-        expect(helperContent).toContain('referral_use_id')
+    it('delegates conversion to one atomic database claim', () => {
+        expect(helperContent).toContain("rpc('claim_referral_conversion'")
+        expect(hardeningMigration).toContain('FOR UPDATE')
+        expect(hardeningMigration).toContain("SET status = 'converted'")
     })
 
-    it('handles unique-violation (23505) from referral_discount_windows insert', () => {
-        expect(helperContent).toContain("insertError.code === '23505'")
-        expect(helperContent).toContain('Concurrent insert prevented by unique constraint')
+    it('serializes conversion and reuses the unique referral window', () => {
+        expect(hardeningMigration).toContain('pg_advisory_xact_lock')
+        expect(hardeningMigration).toContain('v_existing_window')
+        expect(hardeningMigration).toContain("'alreadyProcessed', true")
     })
 
     it('confirms existing UNIQUE constraint on referral_use_id in migration', () => {

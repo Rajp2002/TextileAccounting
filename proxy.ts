@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { checkAuthRateLimit } from '@/lib/rate-limit'
+import { checkAuthRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
 import type { User } from '@supabase/supabase-js'
 
@@ -141,10 +141,7 @@ export async function updateSession(request: NextRequest) {
 
     // ── IP-based rate limiting for auth routes ─────────────────────────────
     if (isAuthRoute(pathname)) {
-        const ip =
-            request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-            request.headers.get('x-real-ip') ||
-            '127.0.0.1'
+        const ip = getClientIpFromHeaders(request.headers)
 
         const isSignup = pathname.startsWith('/signup') || pathname.startsWith('/join')
         const resetAt = await checkAuthRateLimit(ip, isSignup)
@@ -215,7 +212,10 @@ export async function updateSession(request: NextRequest) {
     if (user) {
         response.cookies.set('last_activity', now.toString(), {
             path: '/',
-            maxAge: 3600,
+            // Keep the timestamp longer than the inactivity window. If this
+            // cookie expired at one hour, an idle authenticated session would
+            // arrive without a timestamp and be silently treated as active.
+            maxAge: 7 * 24 * 60 * 60,
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true,

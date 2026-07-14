@@ -3,7 +3,7 @@
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { processCommercialPayment, RecordPaymentInput } from '@/lib/commercials/receivables'
-import { getSuratTodayString, formatToSurat } from '@/lib/time'
+import { getSuratMonthToDateBounds, getSuratTodayString } from '@/lib/time'
 import { revalidatePath } from 'next/cache'
 
 export type CommercialStage = 'realized' | 'expected'
@@ -588,9 +588,8 @@ export async function getCollectedThisMonth(): Promise<{ data: number } | { erro
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    // Use IST (Asia/Kolkata) dates to avoid UTC midnight drift on Vercel
-    const today = getSuratTodayString()
-    const firstOfMonth = formatToSurat(new Date(), 'yyyy-MM') + '-01'
+    // Use one IST (Asia/Kolkata) instant for both bounds to avoid UTC midnight drift.
+    const { start: firstOfMonth, end: today } = getSuratMonthToDateBounds()
 
     const { data, error } = await supabase
         .from('commercial_payment_receipts')

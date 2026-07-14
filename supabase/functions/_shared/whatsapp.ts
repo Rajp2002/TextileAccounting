@@ -14,6 +14,91 @@ export interface WhatsAppResult {
   messageId: string | null;
 }
 
+export type WhatsAppSimulationMode =
+  | "success"
+  | "timeout"
+  | "provider_failure"
+  | "template_rejected"
+  | "expired_token";
+
+const SIMULATION_MODES = new Set<WhatsAppSimulationMode>([
+  "success",
+  "timeout",
+  "provider_failure",
+  "template_rejected",
+  "expired_token",
+]);
+
+type WhatsAppProvider = "disabled" | "simulate" | "meta";
+
+function resolveWhatsAppProvider(value?: string | null): WhatsAppProvider {
+  return value === "simulate" || value === "meta" ? value : "disabled";
+}
+
+function providerUnavailableResult(code: "provider_disabled" | "provider_unconfigured"): WhatsAppResult {
+  const message = code === "provider_disabled"
+    ? "WhatsApp is disabled for this release; retain the business write and use the manual fallback."
+    : "Live WhatsApp credentials are incomplete; retain the business write and use the manual fallback.";
+  return {
+    success: false,
+    responseBody: { error: { code, message } },
+    httpStatus: 0,
+    messageId: null,
+  };
+}
+
+function normalizeSimulationMode(value?: string | null): WhatsAppSimulationMode {
+  return value && SIMULATION_MODES.has(value as WhatsAppSimulationMode)
+    ? value as WhatsAppSimulationMode
+    : "success";
+}
+
+function simulatedResult(mode: WhatsAppSimulationMode, kind: "template" | "freeform"): WhatsAppResult {
+  const base = { simulated: true, mode, kind };
+  if (mode === "success") {
+    return {
+      success: true,
+      responseBody: base,
+      httpStatus: 200,
+      messageId: `sim_${kind}_wamid_${crypto.randomUUID()}`,
+    };
+  }
+
+  const failures: Record<Exclude<WhatsAppSimulationMode, "success">, {
+    httpStatus: number;
+    code: string;
+    message: string;
+  }> = {
+    timeout: {
+      httpStatus: 0,
+      code: "provider_timeout",
+      message: "WhatsApp provider timed out; the business write is retained and the message can be retried manually.",
+    },
+    provider_failure: {
+      httpStatus: 503,
+      code: "provider_unavailable",
+      message: "WhatsApp provider is unavailable; use the logged manual fallback.",
+    },
+    template_rejected: {
+      httpStatus: 400,
+      code: "template_rejected",
+      message: "Meta rejected the template; review template approval and use the manual fallback.",
+    },
+    expired_token: {
+      httpStatus: 401,
+      code: "expired_token",
+      message: "Meta access token is expired; rotate the token and use the manual fallback.",
+    },
+  };
+  const failure = failures[mode];
+  return {
+    success: false,
+    responseBody: { ...base, error: { code: failure.code, message: failure.message } },
+    httpStatus: failure.httpStatus,
+    messageId: null,
+  };
+}
+
 export interface LogDeliveryParams {
   orgId: string;
   ownerProfileId?: string | null;
@@ -21,7 +106,7 @@ export interface LogDeliveryParams {
   templateName: string;
   notificationType: string;
   callbackData: string;
-  status: "sent" | "failed" | "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone";
+  status: "sent" | "failed" | "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone" | "skipped_phone_mismatch";
   errorMessage?: string | null;
   payloadSnapshot: Record<string, unknown>;
   /** Meta's message ID from the send response */
@@ -32,7 +117,7 @@ export interface LogDeliveryParams {
 
 export interface ConsentCheckResult {
   allowed: boolean;
-  reason: "opted_in" | "opted_out" | "missing_consent" | "missing_phone" | "unsupported_person_type";
+  reason: "opted_in" | "opted_out" | "missing_consent" | "missing_phone" | "phone_mismatch" | "unsupported_person_type";
 }
 
 export async function checkWhatsAppConsent(
@@ -51,6 +136,7 @@ export async function checkWhatsAppConsent(
       .from('profiles')
       .select('whatsapp_opted_in')
       .eq('id', personId)
+      .eq('org_id', orgId)
       .single();
 
     if (error) {
@@ -68,7 +154,7 @@ export async function checkWhatsAppConsent(
   if (personType === 'worker' || personType === 'party') {
     const { data, error } = await supabase
       .from('notification_consents')
-      .select('consent_status')
+      .select('consent_status, phone')
       .eq('org_id', orgId)
       .eq('person_type', personType)
       .eq('person_id', personId)
@@ -82,6 +168,10 @@ export async function checkWhatsAppConsent(
 
     if (!data) {
       return { allowed: false, reason: "missing_consent" };
+    }
+
+    if (data.consent_status === 'opted_in' && data.phone?.replace(/\D/g, '') !== phone.replace(/\D/g, '')) {
+      return { allowed: false, reason: "phone_mismatch" };
     }
 
     if (data.consent_status === 'opted_in') {
@@ -108,6 +198,7 @@ export async function sendWhatsAppTemplate(
   languageCode: string = "en",
   bodyValues: string[],
   _callbackData: string,
+  requestedSimulationMode?: string,
 ): Promise<WhatsAppResult> {
   void _callbackData;
   // Ensure phone has Indian country code prefix
@@ -150,15 +241,17 @@ export async function sendWhatsAppTemplate(
 
   try {
     // Support for provider simulation (testing mode)
-    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
+    const provider = resolveWhatsAppProvider(Deno.env.get("WHATSAPP_PROVIDER"));
+    if (provider === "disabled") {
+      return providerUnavailableResult("provider_disabled");
+    }
     if (provider === "simulate") {
-      console.log(`[SIMULATE] WhatsApp template: ${templateName}`);
-      return { 
-        success: true, 
-        responseBody: { simulated: true }, 
-        httpStatus: 200, 
-        messageId: `sim_wamid_${Date.now()}` 
-      };
+      const mode = normalizeSimulationMode(requestedSimulationMode ?? Deno.env.get("WHATSAPP_SIMULATION_MODE"));
+      console.log(`[SIMULATE:${mode}] WhatsApp template: ${templateName}`);
+      return simulatedResult(mode, "template");
+    }
+    if (!accessToken || !phoneNumberId) {
+      return providerUnavailableResult("provider_unconfigured");
     }
 
     const res = await fetch(META_API, {
@@ -200,6 +293,7 @@ export async function sendWhatsAppFreeform(
   phoneNumberId: string,
   phone: string,
   message: string,
+  requestedSimulationMode?: string,
 ): Promise<WhatsAppResult> {
   const formattedPhone = phone.startsWith("91") && phone.length === 12 
     ? phone 
@@ -218,15 +312,17 @@ export async function sendWhatsAppFreeform(
   };
 
   try {
-    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
+    const provider = resolveWhatsAppProvider(Deno.env.get("WHATSAPP_PROVIDER"));
+    if (provider === "disabled") {
+      return providerUnavailableResult("provider_disabled");
+    }
     if (provider === "simulate") {
-      console.log("[SIMULATE FREEFORM] WhatsApp freeform message queued");
-      return { 
-        success: true, 
-        responseBody: { simulated: true }, 
-        httpStatus: 200, 
-        messageId: `sim_free_wamid_${Date.now()}` 
-      };
+      const mode = normalizeSimulationMode(requestedSimulationMode ?? Deno.env.get("WHATSAPP_SIMULATION_MODE"));
+      console.log(`[SIMULATE FREEFORM:${mode}] WhatsApp freeform message queued`);
+      return simulatedResult(mode, "freeform");
+    }
+    if (!accessToken || !phoneNumberId) {
+      return providerUnavailableResult("provider_unconfigured");
     }
 
     const res = await fetch(META_API, {

@@ -4,12 +4,13 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { getPayrollCycleDetails, getPayrollCycleStatus, getPayrollMonthForDate, getPreviousPayrollMonth } from '@/lib/payroll-cycle'
-import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
+import { hasExplicitProductionMode, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
 import { formatDateOnly } from '@/lib/format'
 import { calculatePieceRateGrossWages } from '@/lib/payroll-read-models'
-import { buildFactoryTodaySetupChecklist } from '@/lib/factory-today-checklist'
-import { createPerfTimer } from '@/lib/perf'
+import { createPerfTimer, isPerfLoggingEnabled } from '@/lib/perf'
+import { hasLinkedActiveProductionTarget, hasUsablePayrollConfig, type FactoryTodayMachineSetupRow } from '@/lib/factory-today-checklist'
+import { hasAnyShiftLoomAssignment } from '@/lib/production-worker-assignment-policy'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -110,29 +111,45 @@ export type FactoryTodayData = {
         info: number
     }
 
-    activationChecklist?: {
-        hasEstimate: boolean
-        hasQuality: boolean
-        hasOrder: boolean
-        hasProductionLog: boolean
-        hasStockEntry: boolean
-        hasMarketRun: boolean
-        hasDispatch: boolean
-        hasCommercial: boolean
-    }
+    activationChecklist?: FactoryTodayActivationChecklist
 
-    setupChecklist: {
-        hasProductionMode: boolean
-        hasMachine: boolean
-        hasLoomAssignment: boolean
-        hasLoomTarget: boolean
-        hasQuality: boolean
-        hasMeterWorker: boolean
-        hasFixedWorker: boolean
-        hasSupervisor: boolean
-        hasPayrollConfig: boolean
-        hasPlan: boolean
-    }
+    setupChecklist?: FactoryTodaySetupChecklist
+
+    setupChecklistSeed: FactoryTodaySetupChecklistSeed
+}
+
+export type FactoryTodayActivationChecklist = {
+    hasEstimate: boolean
+    hasQuality: boolean
+    hasOrder: boolean
+    hasProductionLog: boolean
+    hasStockEntry: boolean
+    hasMarketRun: boolean
+    hasDispatch: boolean
+    hasCommercial: boolean
+}
+
+export type FactoryTodaySetupChecklist = {
+    hasProductionMode: boolean
+    hasMachine: boolean
+    hasLoomAssignment: boolean
+    hasLoomTarget: boolean
+    hasQuality: boolean
+    hasMeterWorker: boolean
+    hasFixedWorker: boolean
+    hasSupervisor: boolean
+    hasPayrollConfig: boolean
+    hasPlan: boolean
+}
+
+export type FactoryTodaySetupChecklistSeed = Pick<
+    FactoryTodaySetupChecklist,
+    'hasProductionMode' | 'hasMachine' | 'hasLoomTarget' | 'hasPayrollConfig'
+>
+
+export type FactoryTodayChecklistPayload = {
+    activationChecklist: FactoryTodayActivationChecklist
+    setupChecklist: FactoryTodaySetupChecklist
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -147,257 +164,195 @@ function daysBetween(a: string, b: string): number {
     return Math.round((new Date(b).getTime() - new Date(a).getTime()) / msPerDay)
 }
 
-function hasAnyCount(result: unknown): boolean {
-    if (!result || typeof result !== 'object' || !('count' in result)) return false
-    const count = (result as { count?: number | null }).count
-    return typeof count === 'number' && count > 0
+function hasAnyRow(result: unknown): boolean {
+    if (!result || typeof result !== 'object' || !('data' in result)) return false
+    const data = (result as { data?: unknown[] | null }).data
+    return Array.isArray(data) && data.length > 0
+}
+
+function hasActivePlan(result: { data?: { current_end?: string | null } | null }): boolean {
+    const sub = result.data
+    if (!sub) return false
+    if (!sub.current_end) return true
+    return new Date(sub.current_end).getTime() > Date.now()
+}
+
+const FIRST_RENDER_DASHBOARD_SUPABASE_CALLS = 10
+const DEFERRED_CHECKLIST_SUPABASE_CALLS = 13
+const FACTORY_TODAY_DIAGNOSTIC_TIMEOUT_MS = 3_000
+
+type FactoryTodayQueryResult = { data?: unknown; error?: unknown }
+
+function factoryTodayQueryState(result: FactoryTodayQueryResult): 'success' | 'null_data' | 'error' {
+    if (result.error) return 'error'
+    return result.data == null ? 'null_data' : 'success'
+}
+
+/**
+ * Development-only diagnostics for the first-render query fan-out. The timeout
+ * is intentionally never enabled in production: it makes a local query that
+ * never settles visible and keeps the diagnostic page renderable without
+ * changing production error behavior.
+ */
+async function traceFactoryTodayQuery<T extends FactoryTodayQueryResult>(
+    label: string,
+    operation: () => PromiseLike<T>
+): Promise<T> {
+    if (!isPerfLoggingEnabled()) return operation()
+
+    const startedAt = Date.now()
+    console.info(`[factory-today/query] label=${label} state=start start_ms=${startedAt}`)
+
+    const query = Promise.resolve().then(operation)
+    if (process.env.NODE_ENV !== 'development') {
+        try {
+            const result = await query
+            console.info(
+                `[factory-today/query] label=${label} state=${factoryTodayQueryState(result)} end_ms=${Date.now()} duration_ms=${Date.now() - startedAt}`
+            )
+            return result
+        } catch (error) {
+            console.error(`[factory-today/query] label=${label} state=throw duration_ms=${Date.now() - startedAt}`, error)
+            throw error
+        }
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    const timeout = new Promise<{ timedOut: true }>((resolve) => {
+        timeoutId = setTimeout(() => resolve({ timedOut: true }), FACTORY_TODAY_DIAGNOSTIC_TIMEOUT_MS)
+    })
+
+    try {
+        const outcome = await Promise.race([
+            query.then((result) => ({ result })),
+            timeout,
+        ])
+        const durationMs = Date.now() - startedAt
+
+        if ('timedOut' in outcome) {
+            console.warn(
+                `[factory-today/query] label=${label} state=timeout duration_ms=${durationMs} threshold_ms=${FACTORY_TODAY_DIAGNOSTIC_TIMEOUT_MS} never_resolved=true`
+            )
+            void query.then(
+                (lateResult) => console.warn(
+                    `[factory-today/query] label=${label} state=completed_after_timeout duration_ms=${Date.now() - startedAt} result=${factoryTodayQueryState(lateResult)}`
+                ),
+                (error) => console.error(
+                    `[factory-today/query] label=${label} state=error_after_timeout duration_ms=${Date.now() - startedAt}`,
+                    error
+                )
+            )
+            return {
+                data: null,
+                error: { message: `Factory Today query \"${label}\" exceeded the ${FACTORY_TODAY_DIAGNOSTIC_TIMEOUT_MS}ms diagnostic threshold.` },
+            } as T
+        }
+
+        console.info(
+            `[factory-today/query] label=${label} state=${factoryTodayQueryState(outcome.result)} end_ms=${Date.now()} duration_ms=${durationMs}`
+        )
+        return outcome.result
+    } catch (error) {
+        console.error(`[factory-today/query] label=${label} state=throw duration_ms=${Date.now() - startedAt}`, error)
+        throw error
+    } finally {
+        if (timeoutId) clearTimeout(timeoutId)
+    }
 }
 
 // ─── Main Aggregation ─────────────────────────────────────────────────────────
 
-export async function getFactoryToday(): Promise<FactoryTodayData> {
-    const perf = createPerfTimer('/owner/today')
-    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
+async function loadFactoryTodayDashboardPayload(
+    orgId: string,
+    perf: ReturnType<typeof createPerfTimer>
+): Promise<FactoryTodayData> {
     const supabase = await createServerClient()
-    const orgId = profile.org_id
     const today = getSuratTodayString()
     const twoDaysAgo = formatToSurat(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
 
-    // ── All queries run concurrently ──────────────────────────────────────────
+    // ── First-render dashboard queries run concurrently ───────────────────────
     const [
-        productionRes,
+        recentProductionRes,
         machinesRes,
         ordersRes,
         marketRunsRes,
-        recentProdForRunsRes,
         salesRes,
         dispatchesRes,
         payrollConfigRes,
         advancesRes,
-        hasEstimateRes,
-        hasQualityRes,
-        hasOrderRes,
-        hasProductionRes,
-        hasStockRes,
-        hasMarketRunRes,
         orgSettingsRes,
-        hasFixedWorkerRes,
-        hasSupervisorRes,
-        subscriptionRes,
-        hasMeterWorkerRes,
-        machineAssignmentsRes,
-        hasDispatchRes,
-        hasCommercialRes,
         commercialReceivablesRes,
     ] = await perf.measure(
         'businessData',
         () => Promise.all([
-            // 1. Production logs today
-            supabase
+            // 1. Production logs for today + recent market-run activity.
+            traceFactoryTodayQuery('production_recent', () => supabase
                 .from('production_logs')
-                .select('id, shift, meters, created_at, date')
+                .select('id, shift, meters, submitted_at, date, orders!production_logs_order_id_fkey(market_run_id)')
                 .eq('org_id', orgId)
-                .eq('date', today),
+                .gte('date', twoDaysAgo)),
 
             // 2. Active machines with latest assignment info
-            supabase
+            traceFactoryTodayQuery('machines', () => supabase
                 .from('machines')
                 .select('id, name, status, current_order_id, loom_type, orders(status)')
-                .eq('org_id', orgId),
+                .eq('org_id', orgId)),
 
             // 3. Active orders with progress summary for pace calculation
-            supabase
+            traceFactoryTodayQuery('active_order_progress', () => supabase
                 .from('order_progress_summary')
                 .select('order_id, party_name, quality_label, total_target_meters, total_meters_produced, deadline, status')
                 .eq('org_id', orgId)
                 .eq('status', 'active')
-                .not('deadline', 'is', null),
+                .not('deadline', 'is', null)),
 
             // 4. Active market runs (production or in_godown status)
-            supabase
+            traceFactoryTodayQuery('active_market_runs', () => supabase
                 .from('market_run_summary')
-                .select('market_run_id, fabric_label, quality_label, target_meters, meters_produced, status')
+                .select('market_run_id, fabric_label, quality_label, target_meters, total_meters_produced, status')
                 .eq('org_id', orgId)
-                .in('status', ['production', 'in_godown']),
-
-            // 5. Most recent production for each market run (to detect inactive runs)
-            supabase
-                .from('production_logs')
-                .select('market_run_id, date')
-                .eq('org_id', orgId)
-                .gte('date', twoDaysAgo)
-                .not('market_run_id', 'is', null),
+                .in('status', ['production', 'in_godown'])),
 
             // 6. Sold stock not yet dispatched
-            supabase
+            traceFactoryTodayQuery('sold_not_dispatched', () => supabase
                 .from('fabric_stock_sales')
                 .select('id, taka_sold, meters_sold, pending_dispatch_meters, revenue_amount, sale_date, fabric_stock_lots!inner(quality_label)')
                 .eq('org_id', orgId)
                 .gt('pending_dispatch_meters', 0)
                 .order('sale_date', { ascending: false })
-                .limit(20),
+                .limit(20)),
 
             // 7. In-transit dispatches and unresolved receipt differences
-            supabase
+            traceFactoryTodayQuery('pending_receipts', () => supabase
                 .from('dispatches')
                 .select('id, dispatch_number, qty_meters_sent, dispatched_at, party_name, receipt_status, orders(party_name)')
                 .eq('org_id', orgId)
                 .or('status.eq.in_transit,receipt_status.eq.difference_reported')
                 .order('dispatched_at', { ascending: true })
-                .limit(15),
+                .limit(15)),
 
             // 9. Payroll config
-            supabase
+            traceFactoryTodayQuery('payroll_config', () => supabase
                 .from('payroll_configs')
                 .select('cycle_start_day, pay_date_day, pay_reminder_days')
                 .eq('org_id', orgId)
-                .maybeSingle(),
+                .maybeSingle()),
 
             // 10. Pending advances total
-            supabase
+            traceFactoryTodayQuery('pending_advances', () => supabase
                 .from('worker_advances')
                 .select('amount')
                 .eq('org_id', orgId)
                 .eq('status', 'pending')
-                .is('writeoff_at', null),
+                .is('writeoff_at', null)),
 
-            // 12. Activation Checklist: Has Estimate
-            (async () => {
-                try {
-                    const { count } = await supabase.from('estimator_quotes').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-            
-            // 13. Activation Checklist: Has Quality
-            (async () => {
-                try {
-                    const { count } = await supabase.from('qualities').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            // 14. Activation Checklist: Has Order
-            (async () => {
-                try {
-                    const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            // 15. Activation Checklist: Has Production Log
-            (async () => {
-                try {
-                    const { count } = await supabase.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            // 16. Activation Checklist: Has Stock Entry
-            (async () => {
-                try {
-                    const { count } = await supabase.from('fabric_stock_lots').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            (async () => {
-                try {
-                    const { count } = await supabase.from('market_runs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            supabase
+            traceFactoryTodayQuery('organization_settings', () => supabase
                 .from('organizations')
                 .select('production_mode, onboarding_complete')
                 .eq('id', orgId)
-                .maybeSingle(),
+                .maybeSingle()),
 
-            // 17. Setup Checklist: Has Fixed Worker
-            (async () => {
-                try {
-                    const { count } = await supabase.from('fixed_workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            // 18. Setup Checklist: Has Supervisor
-            (async () => {
-                try {
-                    const admin = createAdminClient()
-                    const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('role', 'supervisor').limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            // 19. Setup Checklist: Has Plan (subscription)
-            supabase.from('org_subscriptions')
-                .select('status, plan_tier, current_end')
-                .eq('org_id', orgId)
-                .in('status', ['active', 'authenticated'])
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle(),
-
-            // 20. Setup Checklist: Has Meter Worker
-            (async () => {
-                try {
-                    const { count } = await supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            (async () => {
-                try {
-                    const { data } = await supabase
-                        .from('machine_assignments')
-                        .select('machine_id, shift, worker_id')
-                        .eq('org_id', orgId)
-                        .in('shift', ['day', 'night'])
-                    return { data: data ?? [] }
-                } catch {
-                    return { data: [] }
-                }
-            })(),
-
-            (async () => {
-                try {
-                    const { count } = await supabase.from('dispatches').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            (async () => {
-                try {
-                    const { count } = await supabase.from('commercial_profit_entries').select('source_id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                    return { count }
-                } catch {
-                    return { count: 0 }
-                }
-            })(),
-
-            (async () => {
+            traceFactoryTodayQuery('commercial_receivables', async () => {
                 try {
                     const { data } = await supabase
                         .from('commercial_receivables')
@@ -409,58 +364,20 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
                 } catch {
                     return { data: [] }
                 }
-            })(),
+            }),
         ]),
-        24
+        FIRST_RENDER_DASHBOARD_SUPABASE_CALLS
     )
-
-    const hasEstimate = hasAnyCount(hasEstimateRes)
-    const hasQuality = hasAnyCount(hasQualityRes)
-    const hasOrder = hasAnyCount(hasOrderRes)
-    const hasProductionLog = hasAnyCount(hasProductionRes)
-    const hasStockEntry = hasAnyCount(hasStockRes)
-    const hasMarketRun = hasAnyCount(hasMarketRunRes)
-    const hasFixedWorker = hasAnyCount(hasFixedWorkerRes)
-    const hasSupervisor = hasAnyCount(hasSupervisorRes)
-    const hasMeterWorker = hasAnyCount(hasMeterWorkerRes)
-    const hasDispatch = hasAnyCount(hasDispatchRes)
-    const hasCommercial = hasAnyCount(hasCommercialRes)
     const productionMode = normalizeProductionMode(orgSettingsRes.data?.production_mode)
 
-    // Check subscription validity
-    let setupHasPlan = false
-    if (subscriptionRes.data) {
-        const sub = subscriptionRes.data
-        if (sub.current_end) {
-            setupHasPlan = new Date(sub.current_end).getTime() > Date.now()
-        } else {
-            setupHasPlan = true
-        }
-    }
-
-    const setupChecklist = buildFactoryTodaySetupChecklist({
-        onboardingComplete: orgSettingsRes.data?.onboarding_complete,
-        productionMode: orgSettingsRes.data?.production_mode,
-        machines: machinesRes.data ?? [],
-        machineAssignments: machineAssignmentsRes.data ?? [],
-        hasQuality,
-        hasEstimate,
-        hasOrder,
-        hasMarketRun,
-        hasMeterWorker,
-        hasFixedWorker,
-        hasSupervisor,
-        payrollConfig: payrollConfigRes.data ?? null,
-        hasPlan: setupHasPlan,
-    })
-
     // ── 1. Production ──────────────────────────────────────────────────────────
-    const logs = productionRes.data ?? []
+    const recentProductionLogs = recentProductionRes.data ?? []
+    const logs = recentProductionLogs.filter((l) => l.date === today)
     const dayShiftLogged = logs.some((l) => l.shift === 'day')
     const nightShiftLogged = logs.some((l) => l.shift === 'night')
     const totalMetersToday = logs.reduce((s, l) => s + toNum(l.meters), 0)
     const lastLog = logs.length > 0
-        ? logs.reduce((latest, l) => (l.created_at > latest.created_at ? l : latest), logs[0])
+        ? logs.reduce((latest, l) => (l.submitted_at > latest.submitted_at ? l : latest), logs[0])
         : null
 
     const production: FactoryTodayData['production'] = {
@@ -469,7 +386,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         nightShiftLogged,
         totalMetersToday,
         totalLogsToday: logs.length,
-        lastLogAt: lastLog?.created_at ?? null,
+        lastLogAt: lastLog?.submitted_at ?? null,
     }
 
     // ── 2. Machines ────────────────────────────────────────────────────────────
@@ -564,7 +481,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     // Inactive market runs — active runs with no production in last 2 days
     const recentRunIds = new Set(
-        (recentProdForRunsRes.data ?? []).map((r) => r.market_run_id).filter(Boolean)
+        recentProductionLogs.map((r) => r.orders?.[0]?.market_run_id).filter(Boolean)
     )
     const inactiveMarketRuns = (marketRunsRes.data ?? [])
         .filter((run) => !recentRunIds.has(run.market_run_id))
@@ -572,7 +489,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             id: run.market_run_id,
             label: (run.fabric_label || run.quality_label) as string,
             targetMeters: toNum(run.target_meters),
-            producedMeters: toNum(run.meters_produced),
+            producedMeters: toNum(run.total_meters_produced),
             lastProductionDate: null,
         }))
 
@@ -670,13 +587,13 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     const payrollWorkerLogsRes = await perf.measure(
         'businessData',
-        () => supabase
+        () => traceFactoryTodayQuery('payroll_cycle_worker_logs', () => supabase
             .from('production_logs')
             .select('worker_id, meters, worker_rate_snapshot')
             .eq('org_id', orgId)
             .gte('date', bounds.cycle_start)
             .lte('date', bounds.cycle_end)
-            .not('worker_id', 'is', null),
+            .not('worker_id', 'is', null)),
         1
     )
 
@@ -724,6 +641,15 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         machinesData.assigned > 0 ? 1 : 0,
     ].reduce((a, b) => a + b, 0)
 
+    const setupChecklistSeed: FactoryTodaySetupChecklistSeed = {
+        hasProductionMode: orgSettingsRes.data?.onboarding_complete === true
+            ? true
+            : hasExplicitProductionMode(orgSettingsRes.data?.production_mode),
+        hasMachine: machines.length > 0,
+        hasLoomTarget: hasLinkedActiveProductionTarget(machines as FactoryTodayMachineSetupRow[]),
+        hasPayrollConfig: hasUsablePayrollConfig(payrollConfigRes.data ?? null),
+    }
+
     const result = {
         date: today,
         productionMode,
@@ -734,20 +660,219 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         commercial,
         payroll,
         actionCounts: { critical, warning, info },
-        activationChecklist: {
-            hasEstimate,
-            hasQuality,
-            hasOrder,
-            hasProductionLog,
-            hasStockEntry,
-            hasMarketRun,
-            hasDispatch,
-            hasCommercial,
-        },
-        setupChecklist: {
-            ...setupChecklist,
-        },
+        setupChecklistSeed,
     }
-    perf.log({ note: 'business includes 24-query fanout plus payroll cycle log query' })
+    return result
+}
+
+async function loadFactoryTodayChecklistPayload(
+    orgId: string,
+    seed: FactoryTodaySetupChecklistSeed,
+    perf: ReturnType<typeof createPerfTimer>
+): Promise<FactoryTodayChecklistPayload> {
+    const supabase = await createServerClient()
+    const admin = createAdminClient()
+
+    const [
+        hasEstimateRes,
+        hasQualityRes,
+        hasOrderRes,
+        hasProductionRes,
+        hasStockRes,
+        hasMarketRunRes,
+        hasFixedWorkerRes,
+        hasSupervisorRes,
+        subscriptionRes,
+        hasMeterWorkerRes,
+        machineAssignmentsRes,
+        hasDispatchRes,
+        hasCommercialRes,
+    ] = await perf.measure(
+        'businessData',
+        () => Promise.all([
+            // Activation checklist: first quote/cost estimate.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('estimator_quotes').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any quality/costing master.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('qualities').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any party order.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('orders').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any historical production log.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('production_logs').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any stock lot.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('fabric_stock_lots').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any market run.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('market_runs').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Setup checklist: active fixed/salary worker.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('fixed_workers').select('id').eq('org_id', orgId).eq('is_active', true).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Setup checklist: joined supervisor profile; admin client preserves the existing RLS bypass for owner setup status.
+            (async () => {
+                try {
+                    const { data } = await admin.from('profiles').select('id').eq('org_id', orgId).eq('role', 'supervisor').limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Setup checklist: active plan or trial.
+            supabase.from('org_subscriptions')
+                .select('status, plan_tier, current_end')
+                .eq('org_id', orgId)
+                .in('status', ['active', 'authenticated'])
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+
+            // Setup checklist: active piece-rate worker.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('workers').select('id').eq('org_id', orgId).eq('is_active', true).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Setup checklist: any day/night loom assignment to an active worker.
+            // Historical assignment rows remain after worker deactivation, so the
+            // worker join is part of the readiness predicate.
+            (async () => {
+                try {
+                    const { data } = await supabase
+                        .from('machine_assignments')
+                        .select('machine_id, shift, worker_id, workers!inner(id)')
+                        .eq('org_id', orgId)
+                        .in('shift', ['day', 'night'])
+                        .eq('workers.is_active', true)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any dispatch.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('dispatches').select('id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+
+            // Activation checklist: any commercial profit entry.
+            (async () => {
+                try {
+                    const { data } = await supabase.from('commercial_profit_entries').select('source_id').eq('org_id', orgId).limit(1)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+        ]),
+        DEFERRED_CHECKLIST_SUPABASE_CALLS
+    )
+
+    const activationChecklist: FactoryTodayActivationChecklist = {
+        hasEstimate: hasAnyRow(hasEstimateRes),
+        hasQuality: hasAnyRow(hasQualityRes),
+        hasOrder: hasAnyRow(hasOrderRes),
+        hasProductionLog: hasAnyRow(hasProductionRes),
+        hasStockEntry: hasAnyRow(hasStockRes),
+        hasMarketRun: hasAnyRow(hasMarketRunRes),
+        hasDispatch: hasAnyRow(hasDispatchRes),
+        hasCommercial: hasAnyRow(hasCommercialRes),
+    }
+
+    const setupChecklist: FactoryTodaySetupChecklist = {
+        hasProductionMode: seed.hasProductionMode === true,
+        hasMachine: seed.hasMachine === true,
+        hasLoomAssignment: hasAnyShiftLoomAssignment(machineAssignmentsRes.data ?? []),
+        hasLoomTarget: seed.hasLoomTarget === true,
+        hasQuality: activationChecklist.hasQuality ||
+            activationChecklist.hasEstimate ||
+            activationChecklist.hasOrder ||
+            activationChecklist.hasMarketRun,
+        hasMeterWorker: hasAnyRow(hasMeterWorkerRes),
+        hasFixedWorker: hasAnyRow(hasFixedWorkerRes),
+        hasSupervisor: hasAnyRow(hasSupervisorRes),
+        hasPayrollConfig: seed.hasPayrollConfig === true,
+        hasPlan: hasActivePlan(subscriptionRes),
+    }
+
+    return { activationChecklist, setupChecklist }
+}
+
+export async function getFactoryToday(): Promise<FactoryTodayData> {
+    const perf = createPerfTimer('/owner/today')
+    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
+    const result = await loadFactoryTodayDashboardPayload(profile.org_id, perf)
+    perf.log({ note: 'business includes 10-query first-render dashboard plus payroll cycle log query; setup checklist deferred' })
+    return result
+}
+
+export async function getFactoryTodayChecklist(
+    seed: FactoryTodaySetupChecklistSeed
+): Promise<FactoryTodayChecklistPayload> {
+    const perf = createPerfTimer('/owner/today/checklist')
+    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
+    const result = await loadFactoryTodayChecklistPayload(profile.org_id, seed, perf)
+    perf.log({ note: 'deferred setup and activation checklist status' })
     return result
 }

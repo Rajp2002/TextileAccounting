@@ -191,7 +191,8 @@ export const en = {
     verify_delete: "Verify & Delete",
     invalid_code: "Invalid or expired access code",
     code_sent: "Verification code sent to owner",
-    code_requested_success: "Request sent to owner via WhatsApp",
+    code_requested_success: "Access code requested. If no message arrives, ask the owner to generate it in Settings.",
+    code_manual_fallback: "WhatsApp is unavailable. Ask the owner to generate an access code in Settings and share it directly.",
   },
   analytics: {
     greeting: {
@@ -237,6 +238,7 @@ export const en = {
         link_machines: "Link Machines",
         left: "m left",
         overdue: "Overdue",
+        critical: "Critical",
         at_risk: "At Risk",
         finished: "Finished",
         active: "Active",
@@ -839,7 +841,7 @@ export const en = {
     subtitle: "Real-time Surat fabric cost calculator",
     hud: {
       prod_cost: "Prod. Cost / m",
-      quote_per_m: "Quote / m",
+      quote_per_m: "Final Price / m",
       total_order: "Total Order",
       margin: "Margin",
       net_profit: "Net Profit",
@@ -898,7 +900,7 @@ export const en = {
       settingsDeleteConfirm: "Delete this quality?"
     },
     order_basics: {
-      title: "Order & Fabric Label",
+      title: "Costing Details",
       party: "Party / Customer",
       quality_label: "Quality / Fabric Label",
       fabric_quality_name: "Fabric / Quality Name",
@@ -972,11 +974,11 @@ export const en = {
       finishing_per_m: "Finishing / m"
     },
     simulation: {
-      title: "Simulation & Quantity",
+      title: "Costing Quantity",
       market_title: "Market Run & Quantity",
-      quantity: "Simulation Quantity",
+      quantity: "Costing Quantity",
       market_target: "Target Production",
-      quantity_hint: "Activates HUD quotes",
+      quantity_hint: "Calculates the total costing and selling price",
       commission: "Broker Comm. %",
       transport: "Transport / m"
     },
@@ -1008,7 +1010,7 @@ export const en = {
       winding_per_kg: "Winding / kg",
       dyeing_processing: "Dyeing/Processing",
       finishing_per_m: "Finishing / m",
-      simulation_qty: "Simulation Quantity",
+      simulation_qty: "Costing Quantity",
       market_target: "Target Production",
       broker_comm: "Broker Comm. %",
       transport_per_m: "Transport / m"

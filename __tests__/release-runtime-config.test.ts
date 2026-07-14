@@ -108,5 +108,7 @@ describe('release/runtime configuration', () => {
     expect(webhook).toContain('if (!appSecret)')
     expect(webhook).toContain('Webhook signing secret not configured')
     expect(webhook).not.toContain('signature verification disabled')
+    expect(webhook).not.toContain('?? "weavly_webhook_verify"')
+    expect(webhook).toContain('Webhook verification token not configured')
   })
 })

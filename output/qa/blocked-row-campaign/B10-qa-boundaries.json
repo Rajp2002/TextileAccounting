@@ -1,0 +1,62 @@
+{
+  "runId": "FORMAL-B10-1783971097533-DA2C23",
+  "projectRef": "eutycrtzzxmlkcpipgod",
+  "environment": "qa",
+  "checkedAt": "2026-07-13T19:31:52.281Z",
+  "dates": {
+    "today": "2026-07-14",
+    "production": "2026-07-12",
+    "pastAttendance": "2026-07-13",
+    "futureAttendance": "2026-07-15",
+    "previousMonthEnd": "2026-06-30",
+    "currentMonthStart": "2026-07-01",
+    "nextMonthStart": "2026-08-01",
+    "cycleStart": "2026-07-01"
+  },
+  "database": {
+    "attendanceRows": [
+      {
+        "date": "2026-07-13",
+        "present": true,
+        "marked_by": "144a33e1...d860"
+      },
+      {
+        "date": "2026-07-14",
+        "present": true,
+        "marked_by": "84e98194...1450"
+      }
+    ],
+    "currentMonthPaymentDates": [
+      "2026-07-01",
+      "2026-07-14"
+    ],
+    "currentMonthTotal": 333.33,
+    "paymentDates": [
+      "2024-02-29",
+      "2025-12-31",
+      "2026-01-01",
+      "2026-06-30",
+      "2026-07-01",
+      "2026-07-14",
+      "2026-08-01"
+    ],
+    "productionLogCount": 2,
+    "settlementStatus": "paid"
+  },
+  "assertions": {
+    "supervisor_today_direct_write_allowed": true,
+    "supervisor_past_direct_write_blocked": true,
+    "supervisor_future_direct_write_blocked": true,
+    "owner_past_direct_write_allowed": true,
+    "owner_future_direct_write_blocked": true,
+    "locked_tenant_update_blocked": true,
+    "old_log_without_overwrite_rejected": true,
+    "production_logs_unchanged": true,
+    "settled_period_fixture_present": true,
+    "current_month_uses_india_date_boundaries": true,
+    "previous_and_next_month_excluded": true,
+    "year_boundary_dates_round_trip": true,
+    "leap_day_round_trips": true
+  },
+  "pass": true
+}

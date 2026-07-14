@@ -192,10 +192,10 @@ export async function deleteOrganizationData(confirmationName: string) {
     const orgId = profile.org_id
 
     // Check rate limit for destructive action
-    const { getDestructiveLimiter, checkRateLimit } = await import('@/lib/rate-limit')
+    const { getDestructiveLimiter, checkRateLimit, getRateLimitRetrySeconds } = await import('@/lib/rate-limit')
     const limiter = await checkRateLimit(getDestructiveLimiter, user.id)
     if (!limiter.success) {
-        throw new Error(`Too many attempts. Try again in ${Math.ceil(limiter.reset / 1000)} seconds.`)
+        throw new Error(`Too many attempts. Try again in ${getRateLimitRetrySeconds(limiter.reset)} seconds.`)
     }
 
     // Verify the confirmation name matches the org name

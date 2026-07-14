@@ -71,17 +71,17 @@ function trialProgressPct(currentEnd: string | null): number {
 
 function StatusBadge({ status }: { status: string }) {
     const config: Record<string, { label: string; icon: LucideIcon; classes: string }> = {
-        active:        { label: 'Active',          icon: CheckCircle2, classes: 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-2 ring-emerald-500/10' },
-        authenticated: { label: 'Activating',      icon: Clock,        classes: 'bg-blue-50 text-blue-700 border-blue-100 ring-2 ring-blue-500/10' },
-        created:       { label: 'Pending Payment', icon: Clock,        classes: 'bg-amber-50 text-amber-700 border-amber-100 ring-2 ring-amber-500/10' },
-        halted:        { label: 'Payment Failed',  icon: AlertCircle,  classes: 'bg-red-50 text-red-700 border-red-100 ring-2 ring-red-500/10' },
-        cancelled:     { label: 'Cancelled',       icon: XCircle,      classes: 'bg-gray-50 text-gray-700 border-gray-100 ring-2 ring-gray-500/10' },
-        completed:     { label: 'Completed',       icon: CheckCircle2, classes: 'bg-gray-50 text-gray-700 border-gray-100 ring-2 ring-gray-500/10' },
+        active:        { label: 'Active',          icon: CheckCircle2, classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+        authenticated: { label: 'Activating',      icon: Clock,        classes: 'bg-blue-50 text-blue-700 border-blue-200' },
+        created:       { label: 'Pending Payment', icon: Clock,        classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+        halted:        { label: 'Payment Failed',  icon: AlertCircle,  classes: 'bg-red-50 text-red-700 border-red-200' },
+        cancelled:     { label: 'Cancelled',       icon: XCircle,      classes: 'bg-slate-50 text-slate-700 border-slate-200' },
+        completed:     { label: 'Completed',       icon: CheckCircle2, classes: 'bg-slate-50 text-slate-700 border-slate-200' },
     }
     const cfg = config[status] ?? config.cancelled
     const Icon = cfg.icon
     return (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border shadow-sm transition-all hover:scale-105 ${cfg.classes}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.classes}`}>
             <Icon className="h-3.5 w-3.5" />
             {cfg.label}
         </span>
@@ -119,10 +119,11 @@ function PlanCards({
         .filter((plan) => decisions[plan.tier].allowed)
 
     return (
-        <div className="space-y-6">
-            <div className="border-l-4 border-amber-500 pl-4 py-1">
-                <h2 className="text-xl font-black text-gray-900 tracking-tight">{label}</h2>
-                <p className="text-sm text-gray-500 font-medium">Pricing includes 18% GST.</p>
+        <div className="space-y-5">
+            <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">Plans</p>
+                <h2 className="text-2xl font-bold tracking-tight text-slate-950">{label}</h2>
+                <p className="mt-1 text-sm text-slate-500">Clear annual pricing. 18% GST is included in every total shown.</p>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
                 {plans.map((plan) => {
@@ -133,26 +134,26 @@ function PlanCards({
                     const breakdown = `${formatAmount(price.basePaise)} + ${formatAmount(price.gstPaise)} GST (18%)`
                     const isRenewal = decision.purchaseType === 'renewal'
                     return (
-                    <div key={plan.tier} className="group relative rounded-3xl border border-amber-300 bg-gradient-to-br from-amber-50/80 to-white p-8 shadow-xl shadow-amber-500/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                        <span className="absolute -top-3 right-6 rounded-full bg-amber-500 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-amber-500/20">
+                    <div key={plan.tier} className="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-orange-300">
+                        <span className="absolute right-5 top-5 rounded-full bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700">
                             {plan.badge}
                         </span>
                         <div className="flex h-full flex-col gap-6">
                             <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600"><Icon className="h-6 w-6" /></div>
-                                    <h3 className="text-xl font-black tracking-tight text-gray-900">{plan.name}</h3>
+                                <div className="flex items-center gap-3 pr-24">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-orange-400"><Icon className="h-5 w-5" /></div>
+                                    <h3 className="text-lg font-bold tracking-tight text-slate-950">{plan.name}</h3>
                                 </div>
                                 <div>
-                                    <div className="flex items-baseline gap-1"><span className="text-4xl font-black tracking-tighter text-gray-900">{total}</span><span className="text-sm font-bold text-gray-400">/{isRenewal ? 'renewal year' : 'first year'}</span></div>
-                                    <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">{breakdown}</p>
+                                    <div className="flex items-baseline gap-1"><span className="text-3xl font-bold tracking-tight text-slate-950">{total}</span><span className="text-sm text-slate-500">/{isRenewal ? 'renewal year' : 'first year'}</span></div>
+                                    <p className="mt-1 text-xs text-slate-500">{breakdown}</p>
                                 </div>
-                                <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm font-semibold text-gray-700">
-                                    <p className="text-amber-800">Renewal from year 2:</p><p className="mt-0.5 text-xs text-gray-600">{plan.renewal}</p>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-700">
+                                    <p>Renewal from year 2</p><p className="mt-0.5 text-xs text-slate-500">{plan.renewal}</p>
                                 </div>
                             </div>
                             <ul className="flex-1 space-y-3">
-                                {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm font-medium leading-tight text-gray-600"><span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50"><CheckCircle2 className="h-3 w-3 text-emerald-600" /></span>{feature}</li>)}
+                                {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm leading-tight text-slate-600"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{feature}</li>)}
                             </ul>
                             <SubscribeButton
                                 planTier={plan.tier}
@@ -165,9 +166,9 @@ function PlanCards({
                     )
                 })}
             </div>
-            <div className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 border-dashed">
-                <ShieldCheck className="h-4 w-4 text-gray-400" />
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <ShieldCheck className="h-4 w-4 text-slate-400" />
+                <p className="text-xs font-medium text-slate-500">
                     Secure Razorpay checkout · Tenant-scoped data access
                 </p>
             </div>
@@ -224,21 +225,22 @@ export default async function BillingPage() {
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
-        <div className="space-y-10 max-w-6xl pb-20">
+        <div className="mx-auto max-w-6xl space-y-8 pb-20">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
-                <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Billing & Subscription</h1>
-                    <p className="text-base text-gray-500 font-medium">Manage your Weavly factory operations plan</p>
+            <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end">
+                <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">Account</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">Billing & Subscription</h1>
+                    <p className="mt-2 text-sm text-slate-500">Manage your plan, renewal, rewards, and payment history.</p>
                 </div>
                 {tier !== 'none' && <StatusBadge status={subscription?.status ?? 'active'} />}
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                 
                 {/* Left/Main Column - Context Sensitive */}
-                <div className="lg:col-span-8 space-y-8">
+                <div className="space-y-6 lg:col-span-8">
                     
                     {/* 1. STATE-SPECIFIC HERO CARD */}
                     {tier === 'none' ? (
@@ -327,51 +329,51 @@ export default async function BillingPage() {
                         </Card>
                     ) : (
                         /* PREMIUM/BASE ACTIVE STATE INFO */
-                        <Card className="rounded-[2.5rem] border-gray-100 shadow-xl shadow-gray-200/30 overflow-hidden bg-white">
-                            <div className="h-2 w-full bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
-                            <CardContent className="p-8 md:p-10 space-y-10">
-                                <div className="flex flex-col md:flex-row justify-between gap-10">
-                                    <div className="space-y-6">
-                                        <div className="scale-110 origin-left">
+                        <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+                            <div className="h-1 w-full bg-orange-500" />
+                            <CardContent className="p-6 md:p-8">
+                                <div className="flex flex-col gap-8 md:flex-row md:justify-between">
+                                    <div className="space-y-5">
+                                        <div>
                                             <StatusBadge status={subscription?.status ?? 'active'} />
                                         </div>
                                         <div className="space-y-1">
-                                            <h2 className="text-4xl font-black tracking-tight text-gray-900 flex items-center gap-3">
+                                            <h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-slate-950">
                                                 {tier === 'base'
                                                     ? <Zap className="w-8 h-8 text-amber-500 fill-amber-400" />
                                                     : <Star className="w-8 h-8 text-amber-500 fill-amber-400" />}
                                                 {activePlan?.name ?? 'Weavly Plan'}
                                             </h2>
-                                            <p className="text-lg text-gray-500 font-medium">
+                                            <p className="mt-2 max-w-lg text-base leading-6 text-slate-500">
                                                 {tier === 'base'
                                                     ? 'Your standalone Estimator plan is active and in good standing.'
                                                     : 'Your Full Suite plan is active and in good standing.'}
                                             </p>
                                         </div>
-                                        <div className="flex flex-wrap gap-4 pt-2">
-                                            <div className="px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm flex flex-col justify-center">
-                                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Billing Period</p>
+                                        <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-5">
+                                            <div className="flex flex-col justify-center rounded-xl bg-slate-50 px-4 py-3">
+                                                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Billing Period</p>
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black text-gray-900">Annual</span>
+                                                    <span className="text-lg font-semibold text-slate-950">Annual</span>
                                                 </div>
                                             </div>
                                             {subscription?.current_end && (
-                                                <div className="px-5 py-3 rounded-2xl bg-orange-50 border border-orange-100 shadow-sm flex flex-col justify-center">
-                                                    <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-1">Renewal Due / Active Until</p>
+                                                <div className="flex flex-col justify-center rounded-xl bg-orange-50 px-4 py-3">
+                                                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-orange-700">Active Until</p>
                                                     <div className="flex items-baseline gap-1">
-                                                        <span className="text-2xl font-black text-orange-900 tracking-tighter">{formatShortDate(subscription.current_end)}</span>
+                                                        <span className="text-lg font-semibold text-orange-950">{formatShortDate(subscription.current_end)}</span>
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-center justify-center p-8 rounded-[2rem] bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-2xl shadow-gray-400/20 min-w-[220px]">
-                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-4">Renewal Rate</p>
-                                        <div className="text-4xl font-black tracking-tighter mb-1 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+                                    <div className="flex min-w-[220px] flex-col justify-center rounded-2xl bg-slate-950 p-6 text-white">
+                                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Annual renewal</p>
+                                        <div className="mb-1 text-3xl font-bold tracking-tight">
                                             {activeRenewalPrice ? formatAmount(activeRenewalPrice.totalPaise) : '—'}
                                         </div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">/year from year 2</p>
-                                        <p className="text-[9px] text-gray-500 mt-2 font-bold uppercase">
+                                        <p className="text-xs text-slate-400">per year from year 2</p>
+                                        <p className="mt-2 text-[10px] text-slate-500">
                                             {activeRenewalPrice ? `${formatAmount(activeRenewalPrice.basePaise)}/yr + GST` : ''}
                                         </p>
                                         {activePaidTier && activeRenewalPrice && (
@@ -450,21 +452,21 @@ export default async function BillingPage() {
                 </div>
 
                 {/* Right/Side Column */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="space-y-6 lg:col-span-4">
                     
                     {/* REFERRAL CARD */}
                     <ReferralCard stats={referralStats} />
 
                     {/* QUICK LINKS / HELP */}
-                    <Card className="rounded-[2.5rem] border-gray-100/50 bg-gray-50/50 shadow-sm p-6 space-y-6">
+                    <Card className="space-y-5 rounded-2xl border-slate-200 bg-white p-5 shadow-none">
                         <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-xl bg-gray-200/50 flex items-center justify-center">
+                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
                                 <ShieldCheck className="h-4 w-4 text-gray-600" />
                              </div>
-                             <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Billing Support</p>
+                             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">Billing documents</p>
                         </div>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-gray-100 text-sm font-bold text-gray-700 hover:border-gray-300 transition-all cursor-pointer group">
+                            <div className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300">
                                 <span className="flex items-center gap-2">
                                     <ReceiptText className="w-4 h-4 text-gray-400" />
                                     Download Invoices

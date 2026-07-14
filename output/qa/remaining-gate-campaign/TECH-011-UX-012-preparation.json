@@ -1,0 +1,114 @@
+{
+  "prepared_at": "2026-07-14T10:41:53Z",
+  "branch": "codex/estimator-production-readiness-20260710",
+  "status_effect": "none",
+  "canonical_counts": {
+    "pass": 367,
+    "fail": 0,
+    "blocked": 7,
+    "not_applicable": 3,
+    "total": 377
+  },
+  "tech_011": {
+    "status": "blocked",
+    "production": {
+      "project_ref": "vzhwahudircrpgtitwzd",
+      "region": "ap-south-1",
+      "health": "ACTIVE_HEALTHY",
+      "plan": "free",
+      "postgres_version": "17.6.1.063",
+      "migration_history_count": 211,
+      "migration_head": "20260714040018",
+      "storage": {
+        "bucket_count": 0,
+        "object_count": 0,
+        "object_bytes": 0,
+        "inspection": "read-only aggregate query; no object names or contents read"
+      },
+      "source_storage_client_found": false
+    },
+    "github": {
+      "repository": "Rajp2002/TextileAccounting",
+      "visibility": "private",
+      "existing_actions_workflows_before_sprint": 0,
+      "existing_action_secret_names_before_sprint": [],
+      "existing_action_variable_names_before_sprint": []
+    },
+    "implemented": [
+      ".github/workflows/supabase-production-backup.yml",
+      ".github/workflows/supabase-production-restore-drill.yml",
+      "scripts/backup/create-supabase-logical-backup.sh",
+      "scripts/backup/restore-supabase-logical-backup.sh",
+      "scripts/backup/sql/sanitized_inventory.sql",
+      "docs/pilot-remediation/closure-packs/TECH-011_BACKUP_RESTORE_RUNBOOK.md"
+    ],
+    "interim_destination": "private GitHub Actions artifact outside Supabase",
+    "retention_days": 14,
+    "encryption": "age public-key encryption before upload plus GitHub platform encryption",
+    "required_names_absent": [
+      "SUPABASE_PRODUCTION_DB_URL",
+      "SUPABASE_PRODUCTION_PROJECT_REF",
+      "BACKUP_AGE_RECIPIENT",
+      "BACKUP_AGE_IDENTITY"
+    ],
+    "real_scheduled_artifact": null,
+    "real_restore_result": null,
+    "restore_attempt": "not_run_missing_database_url_and_age_configuration",
+    "pass_claimed": false
+  },
+  "ux_012": {
+    "status": "blocked",
+    "implemented": [
+      "docs/pilot-remediation/closure-packs/UX-012_TERMINOLOGY_INVENTORY.md",
+      "docs/pilot-remediation/closure-packs/UX-012_RECOMMENDED_GLOSSARY.md",
+      "docs/pilot-remediation/closure-packs/UX-012_TERMINOLOGY_DECISION_PACK.md"
+    ],
+    "coverage": [
+      "owner workflows",
+      "supervisor and mobile workflows",
+      "estimator, quotes and orders",
+      "looms, workers, assignments and shifts",
+      "production entry",
+      "yarn and materials",
+      "stock and dispatch",
+      "payroll",
+      "reports, validation, navigation, documentation and generated outputs"
+    ],
+    "unambiguous_product_changes": [],
+    "reason_no_product_copy_changed": "Observed differences require a genuine factory-language, financial-meaning or unit decision; no supervisor choice was inferred.",
+    "named_factory_supervisor_approval": null,
+    "pass_claimed": false
+  },
+  "golden_a_03": {
+    "status": "blocked",
+    "changed": false,
+    "reason": "intentionally deferred by owner"
+  },
+  "validation": {
+    "completed_at": "2026-07-14T10:52:23Z",
+    "actionlint": "pass",
+    "shellcheck": "pass",
+    "bash_syntax": "pass",
+    "yaml_parse": "pass",
+    "json_parse": "pass",
+    "missing_secret_fail_closed_test": "pass",
+    "sanitized_inventory_sql_production_read_only": "pass",
+    "markdown_relative_links": "pass",
+    "git_diff_check": "pass",
+    "npm_ci": "pass, 1088 packages",
+    "eslint": "pass",
+    "vitest": "92 files passed, 653 tests passed, 1 intentional skip",
+    "next_build": "pass",
+    "runtime_audit_high_critical": "pass; two moderate advisories remain",
+    "full_audit_high_critical": "pass; two moderate advisories remain",
+    "matrix_integrity": "367 pass, 0 fail, 7 blocked, 3 not_applicable; target rows unchanged"
+  },
+  "safety": {
+    "secret_values_recorded": false,
+    "production_data_mutated": false,
+    "production_schema_mutated": false,
+    "production_restore_targeted": false,
+    "dump_committed": false,
+    "matrix_status_changed": false
+  }
+}

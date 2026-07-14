@@ -34,7 +34,7 @@ export default async function PrivacyPolicyPage() {
             activePath="/privacy"
             title="Privacy Policy"
             description="A plain-language view of what Weavly collects, why it is needed for factory operations, and how worker and business data is protected under Indian privacy law."
-            lastUpdated="April 26, 2026"
+            lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
                 { label: 'Primary law', value: 'DPDP Act 2023', icon: ShieldCheck },
@@ -80,7 +80,7 @@ export default async function PrivacyPolicyPage() {
 
                 <h3>1.4 Communication Data</h3>
                 <ul>
-                    <li>Owner phone number used for WhatsApp Daily Briefs (Premium feature)</li>
+                    <li>Owner phone number used for optional WhatsApp production summaries</li>
                     <li>Production summaries sent via WhatsApp</li>
                 </ul>
 

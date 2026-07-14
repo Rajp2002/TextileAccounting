@@ -1,0 +1,58 @@
+{
+  "runId": "FORMAL-B7-1783966040856-E28C56",
+  "projectRef": "vzhwahudircrpgtitwzd",
+  "runtimeDates": {
+    "source": "2026-07-13",
+    "target": "2026-07-14"
+  },
+  "serverValidation": [
+    {
+      "id": "PROD-005",
+      "rejected": true,
+      "error_code": "P0001"
+    },
+    {
+      "id": "PROD-006",
+      "rejected": true,
+      "error_code": "P0001"
+    },
+    {
+      "id": "PROD-007",
+      "rejected": true,
+      "error_code": "P0001"
+    },
+    {
+      "id": "PROD-011",
+      "rejected": true,
+      "error_code": "P0001"
+    }
+  ],
+  "browser": {
+    "baseUrl": "local optimized build with production Supabase; production alias used for initial validation cases",
+    "prod_010": "Other downtime without a note kept Save disabled.",
+    "prod_013": "10,000 m opened an explicit large-value confirmation dialog before mutation.",
+    "prod_014": "Copy previous changed Night from 0/20 to 1/20 and loaded Worker B; target database grain remained singular.",
+    "prod_022_023": "A 12.34 m Day draft stayed isolated from Night and restored after refresh under a visible unsaved-draft banner.",
+    "prod_024_off_003_off_004": "With the local server stopped, submit made no success claim or database mutation; reconnect restored 1.11, 10.1, and 20.2 as unsaved.",
+    "prod_025": "A 17 s delayed response showed the unknown-outcome warning, reconciled the committed 22.22 m log, and retained one log/stock grain after repeat.",
+    "prod_027": "The optimized build rendered a labelled dialog with an H2 SheetTitle; the breakdown row persisted when no dated row existed.",
+    "prod_030_ux_001": "390x844 rendered 20 independently labelled metre inputs, no horizontal overflow, distinct first/middle/last values, and a fixed reachable Save button.",
+    "screenshot": "output/qa/blocked-row-campaign/B09-mobile-20-looms.png"
+  },
+  "database": {
+    "production_log_count": 3,
+    "stock_lot_count": 3,
+    "machine_count": 20,
+    "day_assignment_count": 20
+  },
+  "assertions": {
+    "invalid_server_payloads_rejected_without_mutation": true,
+    "copy_previous_created_one_editable_target": true,
+    "delayed_response_reconciled_one_log": true,
+    "delayed_response_reconciled_one_stock_lot": true,
+    "breakdown_persisted_independently": true,
+    "twenty_active_loom_fixture": true,
+    "concurrent_duplicate_protection": true
+  },
+  "pass": true
+}

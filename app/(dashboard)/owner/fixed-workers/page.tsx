@@ -65,6 +65,12 @@ function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
 
+function adultCutoffDate() {
+    const cutoff = new Date()
+    cutoff.setFullYear(cutoff.getFullYear() - 18)
+    return cutoff.toISOString().slice(0, 10)
+}
+
 async function hasMeterWorkerHistory(supabase: ReturnType<typeof createClient>, orgId: string, workerId: number) {
     const [{ data: settlements, error: settlementsError }, { data: advances, error: advancesError }] = await Promise.all([
         supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
@@ -401,7 +407,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
         try {
             const result = await deleteMeterWorkerWithCode(workerToDelete.id, accessCode, erasePII)
             if (!('success' in result) || !result.success) {
-                toast.error(result.error || t('auth.invalid_code'))
+                toast.error(('error' in result && result.error) || t('auth.invalid_code'))
                 return
             }
             toast.success(t('common.removed'))
@@ -494,7 +500,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                     <div className="flex items-center gap-2 shrink-0">
                                         <Dialog open={editWorker?.id === w.id} onOpenChange={(open) => { if (!open) setEditWorker(null) }}>
                                             <DialogTrigger asChild>
-                                                <Button variant="ghost" size="sm" onClick={() => setEditWorker(w)}>
+                                                <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => setEditWorker(w)}>
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
                                             </DialogTrigger>
@@ -505,6 +511,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                         <Button
                                             variant="ghost"
                                             size="sm"
+                                            aria-label={`Delete ${w.name}`}
                                             className="text-red-500 hover:text-red-700"
                                             onClick={() => handleDelete(w)}
                                             disabled={fetchingDebt}
@@ -560,16 +567,16 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                 onChange={(e) => setErasePII(e.target.checked)}
                                 className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                             />
-                            <div className="space-y-1 cursor-pointer" onClick={() => setErasePII(!erasePII)}>
-                                <Label className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
+                            <label htmlFor={`erase-pii-${workerToDelete?.id}`} className="space-y-1 cursor-pointer">
+                                <span className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
                                     <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
                                     DPDP Right to Erasure
-                                </Label>
+                                </span>
                                 <p className="text-[10px] text-gray-500 leading-snug">
                                     Anonymize worker data instead of hard deleting. 
                                     Preserves audit trail for compliance.
                                 </p>
-                            </div>
+                            </label>
                         </div>
                     </div>
                     <DialogFooter>
@@ -645,6 +652,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formPhone, setFormPhone] = useState('')
     const [formLang, setFormLang] = useState<'en' | 'hi' | 'gu'>('en')
     const [formConsent, setFormConsent] = useState(false)
+    const [formDateOfBirth, setFormDateOfBirth] = useState('')
+    const [formAgeReference, setFormAgeReference] = useState('')
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
     const [exitWorker, setExitWorker] = useState<FixedWorker | null>(null)
@@ -704,6 +713,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormPhone('')
         setFormLang('en')
         setFormConsent(false)
+        setFormDateOfBirth('')
+        setFormAgeReference('')
         setDialogOpen(true)
     }
 
@@ -748,6 +759,14 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
             toast.error(t('common.fill_all'))
             return
         }
+        if (!editingWorker && (
+            !formDateOfBirth
+            || formDateOfBirth > adultCutoffDate()
+            || formAgeReference.trim().length < 4
+        )) {
+            toast.error('Verified adult date of birth and a non-sensitive evidence reference are required.')
+            return
+        }
         setSaving(true)
         try {
             const result = await upsertFixedWorker({
@@ -762,6 +781,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 phone: formPhone || undefined,
                 language: formLang,
                 consentGiven: formConsent,
+                date_of_birth: editingWorker ? undefined : formDateOfBirth,
+                age_verification_method: editingWorker ? undefined : 'government_id',
+                age_verification_reference: editingWorker ? undefined : formAgeReference.trim(),
             })
             if (result.error) throw new Error(result.error)
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
@@ -847,7 +869,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         try {
             const result = await deleteFixedWorkerWithCode(workerToDelete.id, accessCode, erasePII)
             if (!('success' in result) || !result.success) {
-                toast.error(result.error || t('auth.invalid_code'))
+                toast.error(('error' in result && result.error) || t('auth.invalid_code'))
                 return
             }
             toast.success(t('common.removed'))
@@ -912,6 +934,35 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                     placeholder={t('fixed_page.name_ph')}
                                 />
                             </div>
+
+                            {!editingWorker && (
+                                <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800">Adult worker verification</p>
+                                        <p className="text-xs text-gray-500">Do not enter a full Aadhaar or government ID number.</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="fixed-worker-date-of-birth">Verified date of birth</Label>
+                                        <Input
+                                            id="fixed-worker-date-of-birth"
+                                            type="date"
+                                            min="1900-01-01"
+                                            max={adultCutoffDate()}
+                                            value={formDateOfBirth}
+                                            onChange={(event) => setFormDateOfBirth(event.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="fixed-worker-age-reference">Evidence reference</Label>
+                                        <Input
+                                            id="fixed-worker-age-reference"
+                                            value={formAgeReference}
+                                            onChange={(event) => setFormAgeReference(event.target.value)}
+                                            placeholder="Document type + last 4, or internal record"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label>{t('fixed_page.role')}</Label>
                                 <Select value={formRole} onValueChange={handleRoleChange}>
@@ -1121,10 +1172,10 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                     <span className="text-sm text-gray-700">
                                                         <Amount value={w.monthly_salary} />{t('common.per_month')}
                                                     </span>
-                                                    <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
+                                                    <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => openEditDialog(w)}>
                                                         <Pencil className="h-3.5 w-3.5" />
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
+                                                    <Button variant="ghost" size="sm" aria-label={`Delete ${w.name}`} className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </div>
@@ -1175,10 +1226,10 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                         <span className="text-sm text-gray-700">
                                                             <Amount value={w.monthly_salary} />{t('common.per_month')}
                                                         </span>
-                                                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
+                                                        <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => openEditDialog(w)}>
                                                             <Pencil className="h-3.5 w-3.5" />
                                                         </Button>
-                                                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
+                                                        <Button variant="ghost" size="sm" aria-label={`Delete ${w.name}`} className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
@@ -1233,16 +1284,16 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                 onChange={(e) => setErasePII(e.target.checked)}
                                 className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                             />
-                            <div className="space-y-1 cursor-pointer" onClick={() => setErasePII(!erasePII)}>
-                                <Label className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
+                            <label htmlFor={`erase-pii-fixed-${workerToDelete?.id}`} className="space-y-1 cursor-pointer">
+                                <span className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
                                     <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
                                     DPDP Right to Erasure
-                                </Label>
+                                </span>
                                 <p className="text-[10px] text-gray-500 leading-snug">
                                     Anonymize worker data instead of hard deleting. 
                                     Preserves audit trail for compliance.
                                 </p>
-                            </div>
+                            </label>
                         </div>
                     </div>
                     <DialogFooter>

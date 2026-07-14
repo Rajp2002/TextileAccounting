@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { CalendarDays, Check, ChevronRight, IndianRupee, Loader2, Package, Plus, Send, UserRound } from 'lucide-react'
 import {
     Dialog,
@@ -62,6 +62,14 @@ function estimateSoldTakas(meters: number, lot: LotOption) {
 
 function todayDate() {
     return getSuratTodayString()
+}
+
+function addDateOnlyDays(date: string, days: number) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+    if (!match) return ''
+    const value = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+    value.setUTCDate(value.getUTCDate() + days)
+    return value.toISOString().slice(0, 10)
 }
 
 function money(value: number) {
@@ -129,6 +137,7 @@ export function SellAndDispatchDialog({
     const [dispatchNow, setDispatchNow] = useState(false)
     const [actualDispatchedMeters, setActualDispatchedMeters] = useState('')
     const [dispatchDate, setDispatchDate] = useState(todayDate())
+    const dispatchDateRef = useRef<HTMLInputElement>(null)
     const [transportName, setTransportName] = useState('')
     const [vehicleNumber, setVehicleNumber] = useState('')
     const [challanNumber, setChallanNumber] = useState('')
@@ -226,6 +235,7 @@ export function SellAndDispatchDialog({
     const saleRateNum = Number(saleRate) || 0
     const creditDaysNum = Math.max(0, Math.trunc(Number(creditDays) || 0))
     const dispatchMetersNum = dispatchNow ? (Number(actualDispatchedMeters) || 0) : 0
+    const projectedDueDate = dispatchNow ? addDateOnlyDays(dispatchDate, creditDaysNum) : ''
     const totalSaleValue = soldMetersNum * saleRateNum
     const costPerMeter = Number(selectedLot?.cost_per_meter || 0)
     const grossCost = soldMetersNum * costPerMeter
@@ -283,6 +293,14 @@ export function SellAndDispatchDialog({
                 if (result.recoverable) onOpenChange(false)
             }
         })
+    }
+
+    const advanceStep = () => {
+        if (step === 3 && dispatchNow) {
+            const renderedDispatchDate = document.querySelector<HTMLInputElement>('[data-testid="sell-dispatch-date"]')?.value
+            setDispatchDate(renderedDispatchDate || dispatchDateRef.current?.value || dispatchDate)
+        }
+        setStep(step + 1)
     }
 
     const renderMetric = (label: string, value: string, accent = false) => (
@@ -450,6 +468,53 @@ export function SellAndDispatchDialog({
         if (step === 3) {
             return (
                 <div className="space-y-4 py-2">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-indigo-200 bg-indigo-50/60 p-4">
+                        <input
+                            type="checkbox"
+                            checked={dispatchNow}
+                            onChange={(event) => setDispatchNow(event.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
+                        />
+                        <span>
+                            <span className="block text-sm font-bold text-slate-950">Dispatch now</span>
+                            <span className="mt-1 block text-xs font-medium text-slate-600">Create the dispatch in the same operation. Leave unchecked to keep the sale under Sold Pending Dispatch.</span>
+                        </span>
+                    </label>
+                    {dispatchNow && (
+                        <div className="grid gap-3 rounded-lg border border-slate-200 p-4 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <Label>Dispatched meters</Label>
+                                <Input type="number" min="0.01" step="0.01" value={actualDispatchedMeters} onChange={(event) => setActualDispatchedMeters(event.target.value)} />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Dispatch date</Label>
+                                <Input
+                                    ref={dispatchDateRef}
+                                    data-testid="sell-dispatch-date"
+                                    type="date"
+                                    min={saleDate}
+                                    value={dispatchDate}
+                                    onInput={(event) => setDispatchDate((event.target as HTMLInputElement).value)}
+                                    onChange={(event) => setDispatchDate(event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1.5 sm:col-span-2">
+                                <Label>Transport name</Label>
+                                <Input value={transportName} onChange={(event) => setTransportName(event.target.value)} placeholder="Optional" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Vehicle number</Label>
+                                <Input value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())} placeholder="Optional" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Challan number</Label>
+                                <Input value={challanNumber} onChange={(event) => setChallanNumber(event.target.value)} placeholder="Optional" />
+                            </div>
+                            <div className="rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 sm:col-span-2">
+                                Receivable due date: {projectedDueDate || 'select a valid dispatch date'}
+                            </div>
+                        </div>
+                    )}
                     <div className="space-y-1.5">
                         <Label>Notes / References</Label>
                         <Input value={notes} onChange={(event) => setNotes(event.target.value)} className="h-11 lg:h-9" placeholder="Optional notes about this sale" />
@@ -469,9 +534,9 @@ export function SellAndDispatchDialog({
                     {renderMetric('Gross cost', money(grossCost))}
                     {renderMetric('Booked gross profit', money(grossProfit), true)}
                     {renderMetric('Gross margin', `${grossMargin.toFixed(1)}%`)}
-                    {renderMetric('Due date', 'Starts from dispatch date')}
-                    {renderMetric('Dispatch status', 'Not dispatched')}
-                    {renderMetric('Sold pending dispatch', `${soldMetersNum.toFixed(2)} m`)}
+                    {renderMetric('Due date', dispatchNow ? projectedDueDate || 'Invalid dispatch date' : 'Starts from dispatch date')}
+                    {renderMetric('Dispatch status', dispatchNow ? (dispatchMetersNum < soldMetersNum ? 'Partially dispatched' : 'Dispatched') : 'Not dispatched')}
+                    {renderMetric('Sold pending dispatch', `${Math.max(0, soldMetersNum - dispatchMetersNum).toFixed(2)} m`)}
                 </div>
             </div>
         )
@@ -482,7 +547,7 @@ export function SellAndDispatchDialog({
         : step === 2
             ? Boolean(partyName.trim()) && !hasAmbiguousPartyName && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.001))
             : step === 3
-                ? !dispatchNow || (dispatchMetersNum > 0 && dispatchMetersNum <= soldMetersNum)
+                ? !dispatchNow || (Boolean(dispatchDate) && dispatchDate >= saleDate && dispatchMetersNum > 0 && dispatchMetersNum <= soldMetersNum)
                 : true
 
     return (
@@ -522,7 +587,7 @@ export function SellAndDispatchDialog({
                         {step === 1 ? 'Cancel' : 'Back'}
                     </Button>
                     {step < 4 ? (
-                        <Button className="h-11 gap-2 bg-indigo-600 text-white hover:bg-indigo-700 lg:h-9" onClick={() => setStep(step + 1)} disabled={!canContinue}>
+                        <Button className="h-11 gap-2 bg-indigo-600 text-white hover:bg-indigo-700 lg:h-9" onClick={advanceStep} disabled={!canContinue}>
                             Next <ChevronRight className="h-4 w-4" />
                         </Button>
                     ) : (

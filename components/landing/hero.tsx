@@ -14,8 +14,9 @@ const proofItems = ['7-day Premium trial', 'No credit card', 'Floor-ready PWA']
 
 export default function LandingHero() {
     return (
-        <section className="relative z-10 isolate overflow-hidden pt-[calc(5.5rem+env(safe-area-inset-top,0px))] snap-start scroll-mt-28 xs:pt-24">
-            <div className="mx-auto max-w-7xl px-3 pb-14 pt-8 xs:px-6 xs:pb-16 xs:pt-14 sm:pb-24 lg:px-8 lg:pb-28 lg:pt-24">
+        <>
+        <section className="landing-section relative z-10 isolate overflow-hidden pt-[calc(5.5rem+env(safe-area-inset-top,0px))] xs:pt-24">
+            <div className="mx-auto w-full max-w-7xl px-3 py-8 xs:px-6 xs:py-14 lg:px-8 lg:pb-12 lg:pt-32">
                 <div className="mx-auto max-w-6xl text-center">
                     <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-700 dark:text-orange-400 xs:text-xs xs:tracking-[0.32em]">
                         Built for grey fabric weaving factories
@@ -74,7 +75,12 @@ export default function LandingHero() {
                     </p>
                 </div>
 
-                <div className="relative mx-auto mt-14 max-w-6xl">
+            </div>
+        </section>
+
+        <section className="landing-section relative z-10 isolate overflow-hidden" aria-label="Owner floor view">
+            <div className="mx-auto w-full max-w-7xl px-3 py-14 xs:px-6 sm:py-20 lg:px-8">
+                <div className="relative mx-auto max-w-6xl">
                     <div className="absolute -inset-x-8 bottom-0 top-12 -z-10 bg-gradient-to-tr from-orange-500/20 via-orange-200/20 to-transparent blur-3xl" />
                     <div className="overflow-hidden rounded-lg border border-zinc-900/10 bg-white/96 shadow-[0_34px_110px_rgba(154,52,18,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/85">
                         <div className="grid lg:grid-cols-[4.5rem_1fr]">
@@ -187,5 +193,6 @@ export default function LandingHero() {
                 </div>
             </div>
         </section>
+        </>
     )
 }

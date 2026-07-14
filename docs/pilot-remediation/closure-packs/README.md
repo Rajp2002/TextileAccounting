@@ -1,0 +1,34 @@
+# Remaining Pilot Gate Closure Packs
+
+Prepared: 2026-07-14 IST
+
+Repository baseline: documentation commit `bb0380f`; application commit `5a66eca`
+
+These packs prepare evidence collection; they do not supply the missing human, business, or restore evidence. The formal matrix remains **367 PASS / 0 FAIL / 7 BLOCKED / 3 NOT APPLICABLE**. All four rows below remain `BLOCKED`.
+
+| Row | Canonical requirement | Current classification | Closure pack |
+| --- | --- | --- | --- |
+| `TECH-011` | Verify backup schedule and restore into a disposable project; restored organization, users, production, stock, receivables, and payroll reconcile. | `pilot_core`, gating | [Backup and restore pack](TECH-011_BACKUP_RESTORE_CLOSURE_PACK.md) · [Free-tier runbook](TECH-011_BACKUP_RESTORE_RUNBOOK.md) |
+| `UX-012` | A brother/factory supervisor reviews the named factory terms and confirms that product labels match actual language. | `pilot_core`, gating | [Decision pack](UX-012_TERMINOLOGY_DECISION_PACK.md) · [Complete inventory](UX-012_TERMINOLOGY_INVENTORY.md) · [Proposed glossary](UX-012_RECOMMENDED_GLOSSARY.md) |
+| `GOLDEN-A-03` | Build one real fabric estimate and compare it with an independent truth sheet while preserving downstream invariants. | `pilot_core`, gating | [Independent truth-sheet pack](GOLDEN-A-03_TRUTH_SHEET.md) |
+| `SIGNOFF-04` | Today meters reconcile with an independent supervisor register for the current run. | `pilot_operations`, non-gating before first use; mandatory first-shift control | [Pilot authorization and first-shift pack](SIGNOFF-04_PILOT_AUTHORIZATION.md) |
+
+## Matrix integrity rule
+
+Do not mark a row `PASS` because its template is complete, its code looks correct, a reviewer meeting was scheduled, a backup feature was purchased, or another row passed. Each pack names the exact closing artifact and acceptance test. Update only the row whose complete evidence has been checked; recalculate matrix counts from `results.json`; then regenerate or edit `TEST_MATRIX.md` without changing unrelated rows.
+
+## Evidence handling
+
+- Store signed forms and redacted evidence under a dated directory such as `output/qa/pilot-gate-closure/YYYY-MM-DD/<ROW>/`.
+- Never commit database passwords, access tokens, service-role keys, raw production dumps, unredacted customer/worker data, or encryption private keys.
+- Prefer counts, canonical digests, timestamps, provider artifact IDs, and redacted screenshots over raw production records.
+- Record the reviewer/owner's full name, role, decision, date, time zone, and signature or traceable electronic approval.
+- Preserve `BLOCKED` if any required artifact, reviewer identity, explanation, or verification is missing.
+
+## Dependency order
+
+1. Close `TECH-011` with a real retained/off-site scheduled artifact restored into disposable infrastructure and reconciled.
+2. Close `UX-012` with a named supervisor's dated decision register; implement and retest every requested change before approval.
+3. Close `GOLDEN-A-03` with an independently prepared real-fabric truth sheet and accepted variance review.
+4. Sign the limited-pilot authorization only after the first three rows are formally `PASS`.
+5. Keep `SIGNOFF-04` `BLOCKED` until the first pilot shift's app total reconciles with the independently maintained supervisor register; unexplained variance pauses the pilot.

@@ -82,6 +82,10 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     if (input.dispatchNow && (requestedDispatchMeters <= 0 || requestedDispatchMeters > soldMeters)) {
         return { success: false, stage: 'validation', message: 'Dispatched meters must be greater than 0 and not more than sold meters' }
     }
+    const dispatchDate = input.dispatchNow ? normalizeDate(input.dispatchDate) : null
+    if (input.dispatchNow && dispatchDate !== null && dispatchDate < saleDate) {
+        return { success: false, stage: 'validation', message: 'Dispatch date cannot be before sale date' }
+    }
     const hasExplicitSoldTakas = input.soldTakas != null && String(input.soldTakas).trim() !== ''
     const soldTakas = hasExplicitSoldTakas ? toFiniteNumber(input.soldTakas) : null
     if (soldTakas != null && soldTakas <= 0) {
@@ -102,7 +106,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
         p_sale_date: saleDate,
         p_dispatch_now: input.dispatchNow,
         p_actual_dispatched_meters: input.dispatchNow ? requestedDispatchMeters : null,
-        p_dispatch_date: input.dispatchNow ? normalizeDate(input.dispatchDate) : null,
+        p_dispatch_date: dispatchDate,
         p_transport_name: cleanText(input.transportName),
         p_vehicle_number: cleanText(input.vehicleNumber),
         p_challan_number: cleanText(input.challanNumber),
@@ -113,13 +117,33 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
 
     if (error) {
         const message = error.message || 'Failed to create stock sale'
-        const stage = /stock|available|sold|party|credit|rate|source|dispatch/i.test(message) ? 'validation' : 'sale'
-        return { success: false, stage, message }
+        const isValidationFailure = /stock|available|sold|party|credit|rate|source|required|greater than|cannot exceed|before sale/i.test(message)
+        if (isValidationFailure) {
+            return { success: false, stage: 'validation', message }
+        }
+        if (input.dispatchNow) {
+            return {
+                success: false,
+                stage: 'dispatch',
+                message: 'Sale and dispatch were not saved. No stock was changed. Review dispatch details and try again.',
+            }
+        }
+        return { success: false, stage: 'sale', message }
     }
 
     const result = Array.isArray(data) ? data[0] : data
     if (!result?.sale_id) {
         return { success: false, stage: 'sale', message: 'Stock sale was not created' }
+    }
+
+    if (input.dispatchNow && (!result.dispatch_id || result.dispatch_status === 'not_dispatched')) {
+        return {
+            success: false,
+            stage: 'dispatch',
+            message: 'Sale was saved, but dispatch was not created. The sale is safe under Sold Pending Dispatch; create the dispatch from Dispatches.',
+            saleIds: [result.sale_id],
+            recoverable: true,
+        }
     }
 
     revalidatePath('/owner/stock')

@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, BarChart2 } from 'lucide-react'
 import { formatDateOnly, formatMeters } from '@/lib/format'
 import { useTranslation } from '@/lib/i18n/context'
+import { getSevenDayTrendWindow } from '@/lib/dashboard-trend'
+import { getSuratTodayString } from '@/lib/time'
 
 export type DailyMeterPoint = {
   date: string       // 'YYYY-MM-DD'
@@ -14,10 +16,17 @@ function shortDate(dateStr: string): string {
   return formatDateOnly(dateStr, { weekday: 'short', day: 'numeric' })
 }
 
-export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
+export function ProductionTrend({ data, selectedDate }: { data: DailyMeterPoint[] | null, selectedDate?: string }) {
   const { t } = useTranslation()
+  const isHistorical = Boolean(selectedDate && selectedDate !== getSuratTodayString())
+  const displayData = selectedDate
+    ? getSevenDayTrendWindow(selectedDate).map((date) => ({
+        date,
+        total_meters: data?.find((point) => point.date === date)?.total_meters ?? 0,
+      }))
+    : data
 
-  if (!data || data.length === 0) {
+  if (!displayData || displayData.length === 0) {
     return (
       <motion.section
         initial={{ opacity: 0, y: 8 }}
@@ -36,7 +45,7 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
     )
   }
 
-  const values  = data.map(d => d.total_meters)
+  const values  = displayData.map(d => d.total_meters)
   const maxVal  = Math.max(...values, 1)
   const avg     = values.reduce((s, v) => s + v, 0) / values.length
 
@@ -61,7 +70,9 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
           <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground">{t('trend.title')}</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {t('trend.title')}{isHistorical ? ` · through ${formatDateOnly(selectedDate!)}` : ''}
+          </h2>
         </div>
         <div className={`flex items-center gap-1.5 text-xs font-semibold ${trendColor}`}>
           <TrendIcon className="h-3.5 w-3.5" />
@@ -74,10 +85,10 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
         <div className="relative h-32 w-full group/chart pt-2">
           {/* Simple Bar Chart */}
           <div className="absolute inset-0 flex items-end gap-2.5">
-            {data.map((point, i) => {
+            {displayData.map((point, i) => {
               const chartMax = maxVal === 0 ? 100 : Math.max(maxVal * 1.15, maxVal + 20)
               const heightPct = chartMax === 0 ? 0 : (point.total_meters / chartMax) * 100
-              const isLast    = i === data.length - 1
+              const isLast    = i === displayData.length - 1
 
               return (
                 <div key={point.date} className="flex-1 flex flex-col items-center gap-0.5 group relative h-full">
@@ -117,10 +128,10 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
 
         {/* X-axis labels */}
         <div className="flex gap-2.5 mt-4">
-          {data.map((point, i) => (
+          {displayData.map((point, i) => (
             <div key={point.date} className="flex-1 text-center">
               <span className={`text-[10px] font-bold tracking-tight ${
-                i === data.length - 1 ? 'text-primary' : 'text-slate-400'
+                i === displayData.length - 1 ? 'text-primary' : 'text-slate-400'
               }`}>
                 {shortDate(point.date).toUpperCase()}
               </span>

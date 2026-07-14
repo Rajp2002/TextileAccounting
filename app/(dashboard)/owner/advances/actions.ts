@@ -81,7 +81,13 @@ export async function createAdvance(
                 
                 if (res.ok) {
                     if (result.skipped) {
-                        notification.reason = result.reason === "worker has no WhatsApp number" ? "no_phone" : "opted_out"
+                        notification.reason = result.reason === "missing_phone"
+                            ? "no_phone"
+                            : result.reason === "phone_mismatch"
+                                ? "phone_mismatch"
+                                : result.reason === "missing_consent"
+                                    ? "missing_consent"
+                                    : "opted_out"
                     } else if (result.success) {
                         notification.sent = true
                         notification.reason = "success"

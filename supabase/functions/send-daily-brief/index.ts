@@ -33,18 +33,22 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = createSupabaseAdminClient();
+    const body = await req.json().catch(() => ({})) as { org_id?: string; simulation_mode?: string };
     const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
     const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
     const todayStr = getSuratTodayString();
     const dateLabel = getSuratDateLabel();
 
     // 1. Fetch all opted-in owners
-    const { data: owners, error: ownersError } = await supabase
+    let ownersQuery = supabase
       .from("profiles")
       .select(`id, whatsapp_number, org_id, organizations ( name )`)
       .eq("role", "owner")
       .eq("whatsapp_opted_in", true)
       .not("whatsapp_number", "is", null);
+
+    if (body.org_id) ownersQuery = ownersQuery.eq("org_id", body.org_id);
+    const { data: owners, error: ownersError } = await ownersQuery;
 
     if (ownersError) throw new Error(`Owners fetch failed: ${ownersError.message}`);
     if (!owners?.length) {
@@ -52,14 +56,15 @@ Deno.serve(async (req) => {
     }
 
     const results = await Promise.allSettled(
-      owners.map((owner) => processOwner(owner, supabase, metaAccessToken, metaPhoneNumberId, todayStr, dateLabel)),
+      owners.map((owner) => processOwner(owner, supabase, metaAccessToken, metaPhoneNumberId, todayStr, dateLabel, body.simulation_mode)),
     );
 
-    const sent = results.filter((r) => r.status === "fulfilled").length;
+    const sent = results.filter((r) => r.status === "fulfilled" && r.value === "sent").length;
+    const skipped = results.filter((r) => r.status === "fulfilled" && r.value === "skipped").length;
     const failed = results.filter((r) => r.status === "rejected").length;
 
-    console.log(`Daily brief done — Sent: ${sent}, Failed: ${failed}`);
-    return new Response(JSON.stringify({ sent, failed }), { status: 200 });
+    console.log(`Daily brief done — Sent: ${sent}, Skipped: ${skipped}, Failed: ${failed}`);
+    return new Response(JSON.stringify({ sent, skipped, failed }), { status: 200 });
   } catch (err) {
     console.error("Fatal error in send-daily-brief:", err);
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
@@ -73,6 +78,7 @@ async function processOwner(
   metaPhoneNumberId: string,
   todayStr: string,
   dateLabel: string,
+  simulationMode?: string,
 ) {
   const orgId = owner.org_id;
   const factoryName = owner.organizations?.name ?? "Your Factory";
@@ -92,7 +98,7 @@ async function processOwner(
   if (lockError) {
     if (lockError.code === "23505") { // 23505 is PostgreSQL unique_violation
       console.log(`[send-daily-brief] Org ${orgId} already processed for ${todayStr}. Skipping to prevent duplicate.`);
-      return;
+      return "skipped" as const;
     }
     console.warn(`[send-daily-brief] Failed to acquire lock for org ${orgId}: ${lockError.message}`);
   }
@@ -130,7 +136,7 @@ async function processOwner(
   ];
 
   // 4. Send daily brief
-  const result = await sendWhatsAppTemplate(metaAccessToken, metaPhoneNumberId, phone, TEMPLATE_PIVOT_BRIEF, "en", bodyValues, callbackData);
+  const result = await sendWhatsAppTemplate(metaAccessToken, metaPhoneNumberId, phone, TEMPLATE_PIVOT_BRIEF, "en", bodyValues, callbackData, simulationMode);
 
   await logDelivery(supabase, {
     orgId,
@@ -150,7 +156,8 @@ async function processOwner(
   }
 
   // 5. Check active orders pace and send deadline risk alerts
-  await checkAndSendDeadlineAlerts(supabase, metaAccessToken, metaPhoneNumberId, orgId, ownerProfileId, phone, factoryName);
+  await checkAndSendDeadlineAlerts(supabase, metaAccessToken, metaPhoneNumberId, orgId, ownerProfileId, phone, factoryName, simulationMode);
+  return "sent" as const;
 }
 
 async function checkAndSendDeadlineAlerts(
@@ -161,6 +168,7 @@ async function checkAndSendDeadlineAlerts(
   ownerProfileId: string,
   phone: string,
   factoryName: string,
+  simulationMode?: string,
 ) {
   const { data: orders } = await supabase
     .from("order_progress_summary")
@@ -199,7 +207,7 @@ async function checkAndSendDeadlineAlerts(
       String(Math.round(Number(order.progress_percent))),
       String(Math.max(0, daysRemaining)),
       String(Number(order.pace_index).toFixed(2)),
-    ], callbackData);
+    ], callbackData, simulationMode);
 
     await supabase.from("whatsapp_cooldowns").upsert({
       org_id: orgId,

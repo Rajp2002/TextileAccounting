@@ -112,7 +112,7 @@ describe('P1 commercial payment recording — completion patch', () => {
         expect(actionsFile).toContain('getCollectedThisMonth')
         expect(actionsFile).toContain('commercial_payment_receipts')
         expect(actionsFile).toContain('getSuratTodayString')
-        expect(actionsFile).toContain('formatToSurat')
+        expect(actionsFile).toContain('getSuratMonthToDateBounds')
         expect(actionsFile).toContain('payment_date')
     })
 

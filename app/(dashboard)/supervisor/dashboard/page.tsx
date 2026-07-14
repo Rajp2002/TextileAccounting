@@ -17,6 +17,7 @@ import {
     Save,
     AlertCircle,
     Settings,
+    ChevronLeft,
     ChevronRight,
     MessageSquare,
     AlertTriangle,
@@ -60,6 +61,7 @@ import {
     SheetHeader,
     SheetFooter,
     SheetDescription,
+    SheetTitle,
 } from '@/components/ui/sheet'
 import {
     Dialog,
@@ -74,6 +76,10 @@ import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { RoleBanner } from '@/components/RoleBanner'
 import { useQueryClient } from '@tanstack/react-query'
+import {
+    productionSubmissionMatchesPersistedState,
+    runMutationWithTimeout,
+} from '@/lib/mutation-outcome'
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -84,6 +90,12 @@ function getCurrentShift(): 'day' | 'night' {
 
 function getTodayString() {
     return getSuratTodayString()
+}
+
+function moveDateByDays(date: string, days: number) {
+    const [year, month, day] = date.split('-').map(Number)
+    const next = new Date(Date.UTC(year, month - 1, day + days))
+    return next.toISOString().slice(0, 10)
 }
 
 function getRemainingCorrectionMinutes(expiresAt: string | null, nowMs: number | null) {
@@ -644,7 +656,9 @@ function MachineDetailSheet({
         <>
             <SheetHeader>
                 <div className="flex items-center gap-3">
-                    <p className="text-2xl font-semibold text-ink">{formatLoomName(machine.name)}</p>
+                    <SheetTitle className="text-2xl font-semibold text-ink">
+                        {formatLoomName(machine.name)}
+                    </SheetTitle>
                     <MachineStatusBadge status={machine.machine_status || 'idle'} />
                 </div>
                 <SheetDescription>
@@ -1117,7 +1131,31 @@ export default function UnifiedDashboard() {
         submitLockRef.current = true
         setSubmitting(true)
         try {
-            const res = await bulkLogProduction(entries, code)
+            const outcome = await runMutationWithTimeout(() => bulkLogProduction(entries, code))
+            let res
+
+            if (outcome.status === 'unknown') {
+                toast.warning('Connection timed out. The save outcome is unknown. Checking the server before retrying…')
+                const reconciled = await getShiftSetupData(date, shift)
+                const committed = productionSubmissionMatchesPersistedState(entries, reconciled.existingLogs ?? [])
+
+                if (!committed) {
+                    await fetchData()
+                    toast.warning('We could not confirm whether this shift was saved. Do not submit it again yet; refresh and check the shift first.')
+                    return
+                }
+
+                res = {
+                    success: true as const,
+                    logged: reconciled.existingLogs?.length ?? entries.length,
+                    correctionWindowExpiresAt: reconciled.latestSubmittedAt
+                        ? new Date(new Date(reconciled.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
+                        : null,
+                }
+                toast.success('The response timed out, but the shift was saved. Server state has been reconciled.')
+            } else {
+                res = outcome.value
+            }
 
             if (!res?.success) {
                 const message = res?.message || res?.error || "Could not save production log."
@@ -1126,7 +1164,9 @@ export default function UnifiedDashboard() {
                 throw err
             }
 
-            toast.success(`Shift meters logged (${res.logged} looms)`)
+            if (outcome.status === 'completed') {
+                toast.success(`Shift meters logged (${res.logged} looms)`)
+            }
             setProductionMeters({}) // Reset inputs after success
             setRestoredDraftInfo(null)
             setLargeMeterEntries([])
@@ -1162,7 +1202,11 @@ export default function UnifiedDashboard() {
         try {
             const result = await requestAccessCode()
             if (result.error) throw new Error(result.error)
-            toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
+            if (result.delivery === 'manual_owner_handoff') {
+                toast.info(t('auth.code_manual_fallback'))
+            } else {
+                toast.success(t('auth.code_requested_success'))
+            }
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Failed to request code')
         } finally {
@@ -1244,7 +1288,7 @@ export default function UnifiedDashboard() {
     const correctionBannerText = remainingCorrectionMinutes > 0
         ? t('floor.correction.windowOpen').replace('{minutes}', remainingCorrectionMinutes.toString())
         : t('floor.correction.windowClosed')
-    const hasShiftSetup = assignments.length > 0
+    const hasShiftSetup = assignedCount > 0
     const pendingEntryCount = Math.max(machines.length - validEntryCount, 0)
     const saveHelperText = loading
         ? 'Loading shift data...'
@@ -1339,12 +1383,37 @@ export default function UnifiedDashboard() {
                     </div>
 
                     <div className="grid gap-2 xs:grid-cols-[minmax(0,1fr)_auto]">
-                        <Input
-                            type="date"
-                            value={date}
-                            onChange={(e) => handleDateChange(e.target.value)}
-                            className="h-11 flex-1 rounded-lg bg-surface text-sm font-semibold"
-                        />
+                        <div className="flex min-w-0 items-center gap-1">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                aria-label="Previous production day"
+                                className="h-11 w-11 shrink-0"
+                                onClick={() => handleDateChange(moveDateByDays(date, -1))}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Input
+                                aria-label="Production date"
+                                type="date"
+                                max={getTodayString()}
+                                value={date}
+                                onChange={(e) => handleDateChange(e.target.value)}
+                                className="h-11 min-w-0 flex-1 rounded-lg bg-surface text-sm font-semibold"
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                aria-label="Next production day"
+                                className="h-11 w-11 shrink-0"
+                                disabled={date >= getTodayString()}
+                                onClick={() => handleDateChange(moveDateByDays(date, 1))}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
                         <div className="flex shrink-0 rounded-lg border border-hairline bg-surface-soft p-1">
                             <button
                                 onClick={() => handleShiftChange('day')}

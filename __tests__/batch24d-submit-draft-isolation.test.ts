@@ -168,6 +168,16 @@ describe('Batch 24D PROD-022 production draft date/shift isolation', () => {
         expect(supervisorPage).toContain('resetShiftDraftState(date, nextShift)')
     })
 
+    it('offers explicit dated-shift navigation without relying on a native calendar interaction', () => {
+        expect(supervisorPage).toContain('function moveDateByDays(date: string, days: number)')
+        expect(supervisorPage).toContain('aria-label="Production date"')
+        expect(supervisorPage).toContain('aria-label="Previous production day"')
+        expect(supervisorPage).toContain('handleDateChange(moveDateByDays(date, -1))')
+        expect(supervisorPage).toContain('aria-label="Next production day"')
+        expect(supervisorPage).toContain('disabled={date >= getTodayString()}')
+        expect(supervisorPage).toContain('handleDateChange(moveDateByDays(date, 1))')
+    })
+
     it('ignores stale date/shift fetch completions before they can hydrate the current screen', () => {
         expect(supervisorPage).toContain('const fetchRequestRef = useRef(0)')
         expect(supervisorPage).toContain('const selectedDraftKeyRef = useRef(selectedDraftKey)')
@@ -189,7 +199,7 @@ describe('Batch 24D PROD-022 production draft date/shift isolation', () => {
     it('submits production rows with the currently selected date and shift', () => {
         expect(submitHandler).toContain('shift,')
         expect(submitHandler).toContain('date,')
-        expect(submitHandler).toContain('const res = await bulkLogProduction(entries, code)')
+        expect(submitHandler).toContain('runMutationWithTimeout(() => bulkLogProduction(entries, code))')
         expect(submitHandler).toContain('if (selectedDraftKey) localStorage.removeItem(selectedDraftKey)')
     })
 

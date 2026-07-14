@@ -1,0 +1,219 @@
+{
+  "run_id": "B17QA-1783997952332-8FBF28",
+  "environment": "qa-razorpay-test-mode",
+  "project_ref": "eutycrtzzxmlkcpipgod",
+  "real_money_charged": false,
+  "provider_mode": "test",
+  "assertions": [
+    {
+      "id": "SETUP-001",
+      "name": "three isolated prefixed QA tenants and owner profiles exist once",
+      "passed": true,
+      "organizations": 3,
+      "profiles": 3
+    },
+    {
+      "id": "BILL-003",
+      "name": "hosted test checkout recorded one active subscription and one captured payment",
+      "passed": true,
+      "subscriptions": 1,
+      "payments": 1,
+      "plan": "base",
+      "purchase_type": "initial_purchase"
+    },
+    {
+      "id": "BILL-003-PROVIDER",
+      "name": "provider confirms the captured payment belongs to the tracked order and amount",
+      "passed": true,
+      "status": "captured",
+      "payment": "pay_TDEl...froK",
+      "order": "order_TD...1pfq",
+      "amount_paise": 826000
+    },
+    {
+      "id": "BILL-009-CONVERSION",
+      "name": "initial activation converted the pending referral exactly once",
+      "passed": true,
+      "status": "converted",
+      "windows": 1
+    },
+    {
+      "id": "BILL-004",
+      "name": "signed replay is acknowledged once without a second billing mutation",
+      "passed": true,
+      "first_status": 200,
+      "replay_status": 200,
+      "duplicate": true
+    },
+    {
+      "id": "SEC-007",
+      "name": "event-ID/body conflict and invalid HMAC are rejected",
+      "passed": true,
+      "conflict_status": 409,
+      "invalid_signature_status": 400
+    },
+    {
+      "id": "BILL-005",
+      "name": "invalid signature caused no webhook-ledger or billing state change",
+      "passed": true,
+      "invalid_event_rows": 0
+    },
+    {
+      "id": "BILL-007-PAYMENT",
+      "name": "late failure snapshot cannot regress the provider-captured payment",
+      "passed": true,
+      "webhook_status": 200,
+      "failed_rows": 0
+    },
+    {
+      "id": "BILL-004-ORDER",
+      "name": "payment.captured and order.paid converge on one captured payment",
+      "passed": true,
+      "webhook_status": 200,
+      "captured_rows": 1
+    },
+    {
+      "id": "BILL-006-CANCEL",
+      "name": "cycle-end cancellation retains the purchased end date while marking renewal off",
+      "passed": true,
+      "status": "cancelled",
+      "current_end_retained": true,
+      "cancel_at_cycle_end": true
+    },
+    {
+      "id": "BILL-007-SUBSCRIPTION",
+      "name": "older activation cannot regress cancellation or expiry",
+      "passed": true,
+      "after_stale": "cancelled",
+      "final_status": "expired"
+    },
+    {
+      "id": "BILL-006-MODEL",
+      "name": "manual annual-renewal purchase exposes no false recurring toggle or access change",
+      "passed": true,
+      "endpoint_status": 404,
+      "active_purchase_rows": 1
+    },
+    {
+      "id": "BILL-006-FAILURE",
+      "name": "canonical test-mode failure is recorded once without revoking the paid period",
+      "passed": true,
+      "webhook_status": 200,
+      "failed_rows": 1,
+      "active_paid_periods": 1
+    },
+    {
+      "id": "BILL-003-RENEWAL",
+      "name": "successful test-mode renewal appends one exact paid year and one captured payment",
+      "passed": true,
+      "captured_payments": 2,
+      "active_purchases": 2,
+      "purchase_type": "renewal",
+      "anchored_to_prior_end": true
+    },
+    {
+      "id": "BILL-009",
+      "name": "renewal issued exactly one provider-idempotent 10% test refund",
+      "passed": true,
+      "refund_rows": 1,
+      "status": "issued",
+      "discount_pct": 10,
+      "attempts": 1,
+      "refund": "rfnd_TDE...QAS5"
+    },
+    {
+      "id": "BILL-009-REPLAY",
+      "name": "refund replay claims remain issued and cannot reserve another provider call",
+      "passed": true,
+      "first_claimed": false,
+      "second_claimed": false,
+      "refund_rows": 1
+    },
+    {
+      "id": "SEC-007-REPLAY",
+      "name": "a second signed renewal event is acknowledged as duplicate without extra capture or refund",
+      "passed": true,
+      "first_status": 200,
+      "replay_duplicate": true,
+      "captured_rows": 2,
+      "refund_rows": 1
+    },
+    {
+      "id": "BILL-010",
+      "name": "the same authenticated session loses gated access after expiry without deleting account or billing history",
+      "passed": true,
+      "before_status": 200,
+      "after_status": 200,
+      "redirect_mode": "next_stream",
+      "location": "/owner/billing",
+      "organizations": 1,
+      "profiles": 1,
+      "payment_history_rows": 3
+    }
+  ],
+  "fixture": {
+    "purchaser": {
+      "email": "b17qa-1783997952332-8fbf28.purchaser.320ac43185@qa.weavly.local",
+      "role": "owner",
+      "factory": "B17QA-1783997952332-8FBF28-PURCHASER",
+      "org": "1d053a77...5572",
+      "profile": "01e72dcd...8197"
+    },
+    "source": {
+      "email": "b17qa-1783997952332-8fbf28.source-referrer.58b315a382@qa.weavly.local",
+      "role": "owner",
+      "factory": "B17QA-1783997952332-8FBF28-SOURCE-REFERRER",
+      "org": "9b789fc4...cded",
+      "profile": "024703f6...a4aa"
+    },
+    "discount_referee": {
+      "email": "b17qa-1783997952332-8fbf28.discount-referee.f3f854ba01@qa.weavly.local",
+      "role": "owner",
+      "factory": "B17QA-1783997952332-8FBF28-DISCOUNT-REFEREE",
+      "org": "709dc259...6808",
+      "profile": "5a5ccbe3...3975"
+    }
+  },
+  "checkout_phases": [
+    {
+      "phase": "initial_success",
+      "payment": "pay_TDEl...froK",
+      "order": "order_TD...1pfq",
+      "passed": true
+    },
+    {
+      "phase": "renewal_failure",
+      "payment": "pay_TDEu...bcXc",
+      "order": "order_TD...OABK",
+      "passed": true
+    },
+    {
+      "phase": "renewal_success_and_refund",
+      "payment": "pay_TDEw...hXAD",
+      "order": "order_TD...OABK",
+      "refund": "rfnd_TDE...QAS5",
+      "passed": true
+    }
+  ],
+  "cleanup": "complete",
+  "passed": true,
+  "provider_artifacts": {
+    "orders": 3,
+    "captured_payments": 2,
+    "failed_payments": 1,
+    "test_refunds": 1
+  },
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "subscriptions": 0,
+      "payments": 0,
+      "webhook_events": 0,
+      "referral_refunds": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  }
+}

@@ -7,6 +7,7 @@ import { AccessCodeSchema, safeParse } from '@/lib/schemas'
 import {
     checkAccessCodeRateLimit,
     checkAccessCodeLockout,
+    getRateLimitRetrySeconds,
     recordAccessCodeFailure,
     resetAccessCodeFailures,
 } from '@/lib/rate-limit'
@@ -50,7 +51,7 @@ export async function validateAndConsumeAccessCode(userId: string, orgId: string
 
     // 2. Check sliding window limit (5 attempts per 10 min)
     const rl = await checkAccessCodeRateLimit(userId)
-    if (rl) throw new Error(`Too many attempts. Try again in ${Math.ceil(rl / 1000)} seconds.`)
+    if (rl) throw new Error(`Too many attempts. Try again in ${getRateLimitRetrySeconds(rl)} seconds.`)
 
     // Validate format before any DB hit
     const codeParsed = safeParse(AccessCodeSchema, inputCode)
