@@ -58,6 +58,15 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).not.toContain('AutoRenewToggle')
     })
 
+    it('keeps public landing pricing aligned with the annual billing catalog', () => {
+        const content = readProjectFile('components/landing/pricing.tsx')
+        expect(content).toContain('BILLING_PLANS')
+        expect(content).toContain('First year')
+        expect(content).toContain('Renewal from year 2')
+        expect(content).not.toContain('/month')
+        expect(content).not.toContain('₹4,999')
+    })
+
     it('verifies SubscribeButton uses order_id and calls new endpoints', () => {
         const content = readProjectFile('components/billing/SubscribeButton.tsx')
         expect(content).toContain('/api/billing/create-order')
