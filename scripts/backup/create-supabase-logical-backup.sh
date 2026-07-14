@@ -74,20 +74,13 @@ supabase db dump \
     --data-only \
     --log-level error
 
-psql "$SUPABASE_PRODUCTION_DB_URL" \
-    --no-psqlrc \
-    --set ON_ERROR_STOP=1 \
-    --tuples-only \
-    --quiet \
-    --file "$repo_root/scripts/backup/sql/sanitized_inventory.sql" \
-    > "$payload_dir/source-inventory.json"
+SANITIZED_INVENTORY_DB_URL="$SUPABASE_PRODUCTION_DB_URL" \
+SANITIZED_INVENTORY_SQL_FILE="$repo_root/scripts/backup/sql/sanitized_inventory.sql" \
+SANITIZED_INVENTORY_OUTPUT_FILE="$payload_dir/source-inventory.json" \
+SANITIZED_INVENTORY_STDERR_FILE="$work_dir/source-inventory.stderr" \
+    "$repo_root/scripts/backup/capture-sanitized-inventory.sh"
 
-storage_object_count="$(jq -er '.storage.objects' "$payload_dir/source-inventory.json")"
-if [[ "$storage_object_count" != "0" ]]; then
-    printf 'Backup stopped: production contains %s Storage object(s), but object-byte export is not configured.\n' "$storage_object_count" >&2
-    printf 'Database metadata is not a recoverable file-object backup. Configure a reviewed object export before retrying.\n' >&2
-    exit 3
-fi
+storage_object_count="$(jq -er '.storage.object_count' "$payload_dir/source-inventory.json")"
 
 (
     cd "$payload_dir"

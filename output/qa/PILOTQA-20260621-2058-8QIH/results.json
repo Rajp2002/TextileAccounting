@@ -174,14 +174,15 @@
       "scenario": "Verify backup schedule and perform restore into a disposable project.",
       "expected": "Restored org, users, production, stock, receivables, and payroll reconcile.",
       "status": "blocked",
-      "actual": "A sanitized isolated-QA logical backup deleted and restored one organization, two users, production, stock, receivable, and payroll in 2478.4 ms with identical SHA-256 summaries, successful restored-owner sign-in, and zero cleanup. Production backup control inspection reports WAL-G enabled, PITR disabled, and zero retained backups; Supabase documents that Free projects must maintain regular off-site CLI dumps. No scheduled off-site production dump is configured, so the schedule half of this row remains unverified.",
+      "actual": "A sanitized isolated-QA logical backup deleted and restored one organization, two users, production, stock, receivable, and payroll in 2478.4 ms with identical SHA-256 summaries, successful restored-owner sign-in, and zero cleanup. The encrypted production-backup workflow is active and its required setting names are configured. Scheduled run 29368765626 completed the five logical dump commands but failed closed during sanitized-inventory parsing; zero artifacts were created. No scheduled production artifact has been restored, reconciled, timed, cleaned up, or independently approved.",
       "evidence": [
         "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
-        "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
+        "output/qa/blocked-row-campaign/B18-recovery-runtime.json",
+        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29368765626"
       ],
-      "notes": "Precise external dependency: upgrade production to Pro for retained daily backups, or approve/provide an off-site destination plus database dump credentials and secret placement for a scheduled logical-backup job. A paid branch was user-approved but Supabase refused it because branches require Pro; a zero-cost project was refused by the two-active-project Free-plan limit. Neither resource was created or charged.",
+      "notes": "Precise remaining dependency: merge the inventory-output correction, validate it with a manual canary that receives no schedule credit, wait for a new scheduled encrypted artifact, restore and reconcile that exact artifact, measure recovery and cleanup, and obtain named-verifier approval.",
       "severity": "High",
-      "updatedAt": "2026-07-14T04:46:34.752Z",
+      "updatedAt": "2026-07-14T23:03:09.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
       "disposition_classification": "C"
