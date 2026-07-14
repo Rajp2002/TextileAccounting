@@ -14,6 +14,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 const captureScript = join(process.cwd(), 'scripts/backup/capture-sanitized-inventory.sh')
 const temporaryDirectories: string[] = []
+const systemJqAvailable =
+  process.env.TEST_FORCE_JQ_SHIM !== '1' && spawnSync('jq', ['--version']).status === 0
 
 type StorageCounts = {
   bucket_count: number
@@ -60,6 +62,46 @@ exit "$MOCK_PSQL_EXIT_CODE"
   )
   chmodSync(psqlPath, 0o755)
 
+  if (!systemJqAvailable) {
+    const jqPath = join(binDirectory, 'jq')
+    writeFileSync(
+      jqPath,
+      `#!/usr/bin/env node
+const { readFileSync } = require('node:fs')
+const args = process.argv.slice(2)
+const input = readFileSync(args.at(-1), 'utf8')
+let value
+try {
+  value = JSON.parse(input)
+} catch {
+  process.exit(1)
+}
+const isObject = (candidate) =>
+  typeof candidate === 'object' && candidate !== null && !Array.isArray(candidate)
+const isCount = (candidate) =>
+  typeof candidate === 'number' && Number.isInteger(candidate) && candidate >= 0
+const schemaValid =
+  isObject(value) &&
+  value.format_version === 1 &&
+  isObject(value.domains) &&
+  isObject(value.auth) &&
+  isObject(value.storage) &&
+  isObject(value.migrations) &&
+  Array.isArray(value.extensions) &&
+  isCount(value.storage.bucket_count) &&
+  isCount(value.storage.object_count) &&
+  isCount(value.storage.total_bytes)
+const storageEmpty =
+  schemaValid &&
+  value.storage.bucket_count === 0 &&
+  value.storage.object_count === 0 &&
+  value.storage.total_bytes === 0
+process.exit(args.includes('-s') ? (schemaValid ? 0 : 1) : (storageEmpty ? 0 : 1))
+`
+    )
+    chmodSync(jqPath, 0o755)
+  }
+
   const result = spawnSync('bash', [captureScript], {
     encoding: 'utf8',
     env: {
@@ -90,11 +132,14 @@ describe('sanitized backup inventory capture', () => {
     const sql = readFileSync('scripts/backup/sql/sanitized_inventory.sql', 'utf8')
     const backup = readFileSync('scripts/backup/create-supabase-logical-backup.sh', 'utf8')
     const restore = readFileSync('scripts/backup/restore-supabase-logical-backup.sh', 'utf8')
+    const capture = readFileSync(captureScript, 'utf8')
 
     expect(sql).toContain('SELECT jsonb_build_object(')
     expect(sql).not.toContain('jsonb_pretty')
     expect(backup).toContain('capture-sanitized-inventory.sh')
     expect(restore).toContain('capture-sanitized-inventory.sh')
+    expect(capture).toContain("jq -e -s '")
+    expect(capture).toContain("jq -e '")
   })
 
   it('emits valid JSON and allows continuation for zero Storage counts', () => {
