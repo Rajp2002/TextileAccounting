@@ -63,6 +63,8 @@ describe('UX-012 terminology baseline', () => {
         expect(en).not.toContain('"mtrs"')
         expect(gu).not.toContain('"mtrs"')
         expect(gu).not.toContain('"machines": "મશીનો"')
+        expect(gu).toContain('shiftProduction: "આ પાળીમાં ઉત્પાદિત મીટર"')
+        expect(gu).toContain('saveHelper: "સાચવવા માટે આ પાળીમાં ઉત્પાદિત મીટર')
     })
 
     it('keeps shift production distinct from Counter Reading on the supervisor surface', () => {
@@ -72,6 +74,7 @@ describe('UX-012 terminology baseline', () => {
         expect(locale).toContain('Metres Produced This Shift')
         expect(locale).toContain('not the loom Counter Reading')
         expect(supervisor).toContain('Metres Produced This Shift')
+        expect(supervisor).toContain("t('floor.meter.shiftProduction')")
         expect(supervisor).not.toContain('Shift Meter Log')
     })
 

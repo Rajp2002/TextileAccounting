@@ -127,6 +127,8 @@ export const en = {
       counterHelper: "Enter shift production, not the loom Counter Reading. Total metres produced on this loom in this shift.",
       openingReading: "Counter Reading (previous shift, if recorded)",
       shiftProduction: "Metres Produced This Shift",
+      saveHelper: "Add Metres Produced This Shift or downtime reasons to save.",
+      noLoomsHelper: "Activate looms in setup before recording Metres Produced This Shift.",
       counterWarning: "Metres cannot be negative. Please verify.",
       counterConfirm: "One or more metre entries look incorrect. Please confirm before saving this shift."
     },
