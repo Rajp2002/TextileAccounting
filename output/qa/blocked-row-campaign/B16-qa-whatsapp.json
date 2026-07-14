@@ -1,0 +1,138 @@
+{
+  "run_id": "B16-QA-1783987107324",
+  "environment": "qa-simulated-provider",
+  "project_ref": "eutycrtzzxmlkcpipgod",
+  "live_provider_contacted": false,
+  "assertions": [
+    {
+      "id": "WA-001",
+      "name": "opted-in simulated advance is sent and the business write persists",
+      "passed": true,
+      "advance_id": 50,
+      "log_status": "sent"
+    },
+    {
+      "id": "WA-002",
+      "name": "opted-out worker is skipped and logged without rolling back the advance",
+      "passed": true,
+      "result": {
+        "skipped": true,
+        "reason": "opted_out"
+      },
+      "log": {
+        "status": "skipped_opted_out",
+        "error_message": "Skipped: opted_out"
+      }
+    },
+    {
+      "id": "WA-003",
+      "name": "missing consent and missing phone produce distinct persisted skip reasons",
+      "passed": true,
+      "results": [
+        "missing_consent",
+        "missing_phone"
+      ],
+      "statuses": [
+        "skipped_missing_phone",
+        "skipped_missing_consent"
+      ]
+    },
+    {
+      "id": "WA-004",
+      "name": "provider timeout is logged while the core advance remains committed",
+      "passed": true,
+      "advance_id": 54,
+      "log_status": "failed"
+    },
+    {
+      "id": "WA-005",
+      "name": "payslip summary and itemized follow-up stay bound to the settled worker consent phone",
+      "passed": true,
+      "settlement_id": 25,
+      "summary_phone": "9000001601",
+      "mismatch_status": "skipped_phone_mismatch"
+    },
+    {
+      "id": "WA-006",
+      "name": "access code reaches only the opted-in tenant owner and plaintext is absent from logs",
+      "passed": true,
+      "recipient": "9000001699",
+      "owner": "3f9ace17...784b"
+    },
+    {
+      "id": "WA-007",
+      "name": "deadline daily and monthly cooldown grains suppress duplicates independently",
+      "passed": true,
+      "dailyFirst": {
+        "sent": 1,
+        "skipped": 0,
+        "failed": 0
+      },
+      "dailySecond": {
+        "sent": 0,
+        "skipped": 1,
+        "failed": 0
+      },
+      "monthlyFirst": [
+        {
+          "org": "B16 WhatsApp a33c42aff9",
+          "phone": "9000001699",
+          "month": "2026-06",
+          "totalMeters": 0,
+          "settledCount": 0,
+          "status": "sent",
+          "messageId": "sim_template_wamid_7aaa2c2d-ac16-49a3-b5b3-28282a368198"
+        }
+      ],
+      "monthlySecond": [
+        {
+          "org": "B16 WhatsApp a33c42aff9",
+          "status": "skipped",
+          "reason": "already_sent"
+        }
+      ]
+    },
+    {
+      "id": "WA-009",
+      "name": "targeted retry recovers once while capped and stale failures remain untouched",
+      "passed": true,
+      "recovered": 1,
+      "retry_count": 1,
+      "capped": {
+        "retried": 0,
+        "message": "No retryable failures found"
+      },
+      "stale": {
+        "retried": 0,
+        "message": "No retryable failures found"
+      }
+    },
+    {
+      "id": "WA-010-PARTIAL",
+      "name": "simulated rejection and expired token create clear operational logs with manual fallback",
+      "passed": true,
+      "simulated_only": true,
+      "live_provider_contacted": false,
+      "blocked": "Live consented Meta rejection/token proof remains unavailable."
+    }
+  ],
+  "blocked_rows": [
+    "WA-010"
+  ],
+  "cleanup": "complete",
+  "fixture": {
+    "org": "a9741d6f...c9f6",
+    "owner": "3f9ace17...784b"
+  },
+  "passed": true,
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "delivery_logs": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  }
+}

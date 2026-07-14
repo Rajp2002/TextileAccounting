@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-13T23:33:52.412Z",
+  "updated_at": "2026-07-14T02:42:46.455Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 348,
-    "blocked": 25,
+    "pass": 356,
+    "blocked": 17,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -27,10 +27,11 @@
     "B12",
     "B13",
     "B14",
-    "B15"
+    "B15",
+    "B16"
   ],
-  "active_batch": "B16",
-  "active_batch_state": "B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active",
+  "active_batch": "B17",
+  "active_batch_state": "B16 executable scope closed with 8 PASS, WA-010 precisely blocked on controlled live Meta failure proof, exact production deployment/schema/function alignment, and zero cleanup; B17 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -313,12 +314,7 @@
     "SEC-013",
     "SEC-015",
     "UX-006",
-    "UX-009"
-  ],
-  "rows_moved_to_fail": [],
-  "rows_remaining_blocked": [
-    "TECH-011",
-    "TECH-012",
+    "UX-009",
     "WA-001",
     "WA-002",
     "WA-003",
@@ -326,7 +322,12 @@
     "WA-005",
     "WA-006",
     "WA-007",
-    "WA-009",
+    "WA-009"
+  ],
+  "rows_moved_to_fail": [],
+  "rows_remaining_blocked": [
+    "TECH-011",
+    "TECH-012",
     "WA-010",
     "BILL-003",
     "BILL-004",
@@ -367,7 +368,11 @@
     "Recovery-token lifecycle, one-hour idle enforcement, normalized proxy client keys, and cross-origin server-action rejection now have direct executable proof.",
     "Privacy export is plan-independent and responsive, while atomic owner-only worker erasure preserves payroll history and redacts retained PII and client IP audit payloads.",
     "Stored hostile markup remains inert across core owner routes, custom interactive cards are keyboard-operable, icon controls are named, and 200%-equivalent layouts retain visible actions.",
-    "The PWA manifest, icons, scope, start route, update notice, and refresh activation are proven; only actual install and standalone reopen remain externally blocked."
+    "The PWA manifest, icons, scope, start route, update notice, and refresh activation are proven; only actual install and standalone reopen remain externally blocked.",
+    "WhatsApp consent is tenant- and exact-phone-bound, including explicit missing-consent, missing-phone, opted-out, and phone-mismatch delivery outcomes.",
+    "Provider success, timeout, failure, template rejection, and expired-token outcomes are deterministic in simulator mode while production remains bound to the configured Meta provider.",
+    "Delivery retries preserve history, enforce a three-attempt and 24-hour ceiling, and target one tenant log through a compare-and-set claim.",
+    "Daily and monthly brief idempotency now use independent grains, and access-code delivery snapshots exclude plaintext codes."
   ],
   "commits": [
     {
@@ -401,6 +406,10 @@
     {
       "sha": "2e3254f75502ca56192d015c06bba4f7972518aa",
       "subject": "fix(security): close B15 auth privacy UX guardrails"
+    },
+    {
+      "sha": "ee2af23a31e648880bdf3810f9cacb545cefcedd",
+      "subject": "fix(whatsapp): enforce B16 delivery boundaries"
     }
   ],
   "production_deployments": [
@@ -454,6 +463,13 @@
     {
       "id": "dpl_CmFozomMsAhE36kvGUMQiPwJpsFr",
       "commit": "2e3254f75502ca56192d015c06bba4f7972518aa",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y",
+      "commit": "ee2af23a31e648880bdf3810f9cacb545cefcedd",
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
@@ -511,6 +527,12 @@
       "file": "20260714064500_b15_scope_production_log_triggers.sql",
       "production_history_version": "20260713232354",
       "alignment": "verified by trigger catalog and erasure runtime proof; privacy-only history updates no longer rerun production business-boundary triggers"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714073000_b16_whatsapp_delivery_boundaries.sql",
+      "production_history_version": "20260713235949",
+      "alignment": "verified by delivery/retry constraints, daily/monthly idempotency catalog, nine-assertion QA simulator proof, and Active production function catalog; no live Meta messages were sent"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -548,23 +570,20 @@
       "batch": "B15",
       "type": "prefixed disposable QA and production security tenants with owner/adversary/recovery auth users",
       "state": "removed; organizations/profiles/auth/workers/production/audit/export and all dependent fixtures reconciled to zero in both environments"
+    },
+    {
+      "batch": "B16",
+      "type": "prefixed disposable QA WhatsApp tenant with owner and five worker consent states",
+      "state": "removed; organization/profile/auth/workers/advances/settlements/consents/delivery logs/cooldowns/brief markers and dependencies reconciled to zero"
     }
   ],
   "outstanding_external_dependencies": [
     {
       "batch": "B16",
       "rows": [
-        "WA-001",
-        "WA-002",
-        "WA-003",
-        "WA-004",
-        "WA-005",
-        "WA-006",
-        "WA-007",
-        "WA-009",
         "WA-010"
       ],
-      "dependency": "Rows share message consent, delivery logging, cooldown/retry, and controlled Meta timeout/rejection prerequisites."
+      "dependency": "Controlled live Meta credentials, a consented recipient, and authorization to induce template rejection or expired-token behavior."
     },
     {
       "batch": "B17",
@@ -600,6 +619,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B15 production deployment dpl_CmFozomMsAhE36kvGUMQiPwJpsFr Ready at exact commit 2e3254f; local and remote gates passed 89 files / 633 passed plus 1 intentional skip; QA browser/HTTP/database proof and production 10-assertion security proof passed; cleanup reconciled to zero. OFF-001 remains blocked only on actual install and standalone reopen.",
-  "exact_next_action": "Execute B16 in the deterministic WhatsApp provider simulator: consent, success, skipped, timeout, retry, cooldown, failure, and token/rejection boundaries while proving core advances, payroll, and access-code writes remain correct."
+  "last_successful_validation": "B16 production deployment dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y Ready at exact commit ee2af23; local gate passed 90 files / 641 passed plus 1 intentional skip and Vercel passed 642 tests; nine deterministic QA WhatsApp assertions and cleanup passed; production migration/functions/catalog and canonical alias are aligned without live Meta contact. WA-010 remains blocked on controlled live-provider proof.",
+  "exact_next_action": "Execute B17 against a disposable tenant and Razorpay test-mode boundary: hosted checkout, signed/invalid/replayed/out-of-order webhooks, failure/cancel/renewal/expiry transitions, and exact entitlement/idempotency reconciliation."
 }

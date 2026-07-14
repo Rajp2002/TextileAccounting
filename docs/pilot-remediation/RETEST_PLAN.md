@@ -657,3 +657,16 @@ Acceptance:
 - Focused regression command: `npx vitest run __tests__/b15-auth-privacy-pwa-guardrails.test.ts __tests__/auth-reset-flow.test.ts __tests__/batch24g-security-audit-guardrails.test.ts __tests__/sec-017-worker-age-verification.test.ts`; run `node scripts/qa/b15-security-runtime-proof.mjs --preserve` only in isolated QA and complete its expiry/exercise/finalize sequence before cleanup.
 - Canonical evidence is `output/qa/blocked-row-campaign/B15-qa-security.json`, `B15-qa-browser.json`, `B15-qa-http.json`, and `B15-production-security.json` on production deployment `dpl_CmFozomMsAhE36kvGUMQiPwJpsFr`.
 - Canonical counts after B15: 348 pass, 3 fail, 25 blocked, and 1 not applicable. Begin B16; do not rerun B15 unless one of these boundaries changes or a supported PWA install surface becomes available.
+
+### B16 WhatsApp delivery regression guard — 2026-07-14
+
+- Preserve exact organization/recipient/normalized-phone consent binding and durable, distinct opt-out, missing-consent, missing-phone, and phone-mismatch skip logs.
+- Preserve the business-write boundary: provider timeout, rejection, or token expiry changes delivery history and fallback state, never the underlying advance, payroll, or access-code mutation.
+- Preserve worker-and-phone-bound payslip content, owner-only access codes, and the absence of plaintext access codes from persisted snapshots.
+- Preserve independent organization/date/type idempotency for daily and monthly briefs and a separate deadline cooldown; repeated execution cannot duplicate one type or suppress another.
+- Preserve targeted tenant-safe retry, compare-and-set claiming, historical attempt fields, the three-attempt cap, and the 24-hour retry window.
+- Keep deterministic failure modes behind explicit `WHATSAPP_PROVIDER=simulate`. Never enable the simulator in production and never use simulated rejection to close `WA-010`.
+- Focused regression command: `npx vitest run __tests__/b16-whatsapp-provider-boundaries.test.ts`; run `node scripts/qa/b16-whatsapp-runtime-proof.mjs` only against an isolated QA project configured for simulation, and reconcile every fixture to zero before exit.
+- Verify migration `20260714073000_b16_whatsapp_delivery_boundaries.sql`, delivery status/retry/brief constraints, the organization/date/type uniqueness grain, and the six active function versions before production claims.
+- Canonical evidence is `output/qa/blocked-row-campaign/B16-qa-whatsapp.json` on production deployment `dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y` and implementation commit `ee2af23a31e648880bdf3810f9cacb545cefcedd`.
+- Canonical counts after B16: 356 pass, 3 fail, 17 blocked, and 1 not applicable. Begin B17; do not rerun B16 unless one of these boundaries changes or a controlled live Meta proof surface becomes available.

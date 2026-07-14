@@ -2394,3 +2394,18 @@ Date: 2026-07-14 IST. Production commit `2e3254f75502ca56192d015c06bba4f7972518a
 - Safety: all disposable QA and production tenants, profiles, recovery users, worker/production/audit/export fixtures, credentials, temporary harness copy, and local server were removed or reconciled to zero.
 - Evidence: `output/qa/blocked-row-campaign/B15-qa-security.json`, `B15-qa-browser.json`, `B15-qa-http.json`, and `B15-production-security.json`.
 - Formal matrix: 348 pass, 3 fail, 25 blocked, 1 not applicable. Readiness remains No-Go; B16 is active.
+
+## Blocked-row campaign B16 closeout — WhatsApp simulation and provider boundaries
+
+Date: 2026-07-14 IST. Production commit `ee2af23a31e648880bdf3810f9cacb545cefcedd`.
+
+- Status changes: `WA-001`, `WA-002`, `WA-003`, `WA-004`, `WA-005`, `WA-006`, `WA-007`, and `WA-009` moved from `blocked` to `pass` after nine direct disposable-QA runtime assertions. `WA-010` remains `blocked` because its exact expectation requires a controlled live Meta rejection or expired-token event against a consented recipient.
+- Defects fixed: missing-phone skips were not persisted; consent lookup could drift from the exact tenant/person/phone; retry reset historical attempt fields and was not safely targetable; daily, monthly, and deadline cooldowns could interfere; access-code snapshots could retain plaintext; daily skip counts were inaccurate; and provider failure modes lacked deterministic non-production exercise. The simulator is now available only when `WHATSAPP_PROVIDER=simulate`, while shared-secret internal calls accept current and legacy admin keys during rotation.
+- Runtime: the QA harness passed opted-in advance delivery, opted-out/missing-consent/missing-phone skips, provider timeout with the core write intact, worker-and-phone-bound summary/itemized payslips with no mismatch PII leak, owner-only access codes without plaintext snapshots, independent daily/monthly/deadline idempotency, one targeted retry recovery with capped/stale rows untouched, and deterministic rejection/expired-token fallback logging.
+- Release: Vercel deployment `dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y` is Ready and aliased to `https://textile-accounting.vercel.app`; deployment metadata identifies the exact implementation commit. The full local gate passed 90 files / 641 passed plus 1 intentional skip, TypeScript, ESLint, and the optimized Next.js build; the remote gate passed 90 files / 642 tests and build.
+- Database/functions: migration `20260714073000_b16_whatsapp_delivery_boundaries.sql` is applied in QA and production; production history version is `20260713235949`. Production catalog inspection verified canonical delivery/skip states, retry count `0..3`, `daily`/`monthly` brief types, the unique organization/date/type cooldown grain, and zero invalid rows. `send-advance-receipt` v17, `send-payslip` v18, `send-access-code` v18, `retry-failed-messages` v16, `send-daily-brief` v21, and `monthly-brief` v22 are active.
+- Provider safety: production retained its Meta provider configuration. No live Meta message was sent, and simulated rejection was not used to satisfy `WA-010`.
+- Advisors: the production security advisor retained its broad pre-existing backlog shape; no B16-specific finding was introduced.
+- Safety: the disposable QA organization, profile, auth user, consent, core business records, delivery logs, credentials, and fixtures reconciled to zero after the run.
+- Evidence: `output/qa/blocked-row-campaign/B16-qa-whatsapp.json` plus the exact production deployment, migration history, catalog, and function-version checks recorded in the campaign checkpoint.
+- Formal matrix: 356 pass, 3 fail, 17 blocked, 1 not applicable. Readiness remains No-Go; B17 is active.

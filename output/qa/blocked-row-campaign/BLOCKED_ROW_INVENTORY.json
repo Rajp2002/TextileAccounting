@@ -4100,10 +4100,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Opted-in worker receives simulated advance receipt.",
     "expected": "Business write succeeds; delivery log says simulated/sent.",
-    "current_status": "blocked",
-    "current_outcome": "No safe WhatsApp simulator or worker-advance fixture is available.",
+    "current_status": "pass",
+    "current_outcome": "An opted-in worker advance remained committed and produced one simulated sent delivery bound to the worker phone and a unique provider message ID.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4157,10 +4157,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Opted-out worker.",
     "expected": "Message skipped and logged; business write succeeds.",
-    "current_status": "blocked",
-    "current_outcome": "No simulated delivery workflow/business write is available for opted-out behavior.",
+    "current_status": "pass",
+    "current_outcome": "An opted-out worker advance remained committed while delivery was skipped and persisted as skipped_opted_out.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4214,10 +4214,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Missing consent or phone.",
     "expected": "Message skipped with correct reason.",
-    "current_status": "blocked",
-    "current_outcome": "No simulated delivery workflow exists for missing consent/phone skip proof.",
+    "current_status": "pass",
+    "current_outcome": "Missing consent and missing phone produced distinct persisted skip reasons without rolling back either advance.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4271,10 +4271,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Provider timeout/failure.",
     "expected": "Core advance/payroll/access-code write is not rolled back.",
-    "current_status": "blocked",
-    "current_outcome": "Provider timeout cannot be safely injected and live provider calls are outside the authorized scope.",
+    "current_status": "pass",
+    "current_outcome": "A deterministic provider timeout produced a failed operational log with manual-fallback context while the core advance remained committed.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4328,10 +4328,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Payslip summary and itemized follow-up.",
     "expected": "Correct worker/settlement, no PII leak to wrong number.",
-    "current_status": "blocked",
-    "current_outcome": "No payroll settlement or safe message simulator exists for payslip delivery proof.",
+    "current_status": "pass",
+    "current_outcome": "The payslip summary and itemized follow-up stayed bound to the settled worker and consent phone; a mismatched consent phone was skipped and received no PII.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4385,10 +4385,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Access code message.",
     "expected": "Only intended opted-in owner/supervisor receives it.",
-    "current_status": "blocked",
-    "current_outcome": "No safe access-code messaging simulator is available; real code delivery is outside scope.",
+    "current_status": "pass",
+    "current_outcome": "The access code reached only the opted-in tenant owner in simulation, remained tied to the intended profile, and plaintext code was absent from the delivery snapshot.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4442,10 +4442,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Deadline/daily/monthly cooldown.",
     "expected": "No duplicate spam.",
-    "current_status": "blocked",
-    "current_outcome": "No simulated delivery history exists for deadline/daily/monthly cooldown proof.",
+    "current_status": "pass",
+    "current_outcome": "Deadline, daily, and monthly idempotency grains independently suppressed duplicates; daily and monthly briefs each produced exactly one delivery.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4499,10 +4499,10 @@
     "feature": "23. WhatsApp",
     "scenario": "Retry failed message.",
     "expected": "Maximum retry and 24-hour rules enforced.",
-    "current_status": "blocked",
-    "current_outcome": "No failed simulated delivery exists for retry and 24-hour rule verification.",
+    "current_status": "pass",
+    "current_outcome": "A targeted retry recovered one eligible failure and incremented retry history once; retry_count 3 and older-than-24-hour failures remained untouched.",
     "existing_evidence": [
-      "evidence/batch-12-dashboard-whatsapp-billing-blockers.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": null,
     "user_role": "owner + supervisor + consented test recipient",
@@ -4557,9 +4557,9 @@
     "scenario": "Live template rejection or expired token.",
     "expected": "Clear operational log and manual fallback.",
     "current_status": "blocked",
-    "current_outcome": "Live WhatsApp template rejection/expired-token behavior was not executed against production. It requires controlled Meta setup, consented recipient numbers, and authorization to trigger live provider failures.",
+    "current_outcome": "Deterministic template-rejected and expired-token modes produced failed operational logs with explicit manual-fallback guidance. The required live Meta rejection or expired-token event was not triggered against a consented recipient, so live-provider behavior remains unverified.",
     "existing_evidence": [
-      "logs/security-review.json"
+      "output/qa/blocked-row-campaign/B16-qa-whatsapp.json"
     ],
     "severity": "Medium",
     "user_role": "owner + supervisor + consented test recipient",

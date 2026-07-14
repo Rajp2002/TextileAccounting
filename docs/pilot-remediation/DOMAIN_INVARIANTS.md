@@ -391,3 +391,13 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Stored party, quality, worker, dispatch, note, and template text is rendered as inert data across owner surfaces; markup cannot become an image, event handler, or executable script.
 - Custom interactive cards and disclosures support keyboard activation and state semantics; icon-only actions have accessible names. At 200%-equivalent layout, totals and visible actions remain unclipped without horizontal overflow.
 - PWA readiness claims are split honestly: manifest/icon/scope/start/update proof does not substitute for observing a real install and standalone reopen.
+
+## B16 WhatsApp delivery invariants
+
+- Deterministic provider simulation is permitted only when `WHATSAPP_PROVIDER=simulate`; production Meta configuration must never enter simulator branches implicitly.
+- Consent is bound to the exact organization, recipient identity, and normalized phone. Missing consent, opt-out, missing phone, and phone mismatch are distinct durable skip outcomes.
+- A WhatsApp provider timeout or rejection cannot roll back the underlying advance, payroll, or access-code business operation. Delivery history records the communication outcome independently.
+- Payslip content is worker-and-phone-bound and cannot leak itemized data on mismatch. Access-code delivery is owner-only, and persisted snapshots cannot retain the plaintext code.
+- Retry preserves historical attempts, is tenant/log targeted, uses an atomic claim, never exceeds three attempts, and leaves capped or stale rows untouched.
+- Daily, monthly, and deadline briefs use independent idempotency/cooldown grains; one brief type cannot suppress or duplicate another.
+- A simulated rejection or expired token proves fallback handling but does not satisfy a matrix row that explicitly requires a live provider event.

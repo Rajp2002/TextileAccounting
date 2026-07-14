@@ -1,16 +1,16 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **348 PASS, 3 FAIL, 25 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **356 PASS, 3 FAIL, 17 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B15 — authentication, privacy, audit, adversarial UX, and PWA device proof (10 PASS, 1 precisely BLOCKED)**.
-- Active batch: **B16 — WhatsApp simulation and provider boundaries**.
-- Validation gate: local and Vercel gates passed 89 files / 633 passed plus 1 intentional skip, TypeScript, targeted lint, and a successful optimized Next.js build.
-- Production deployment: `dpl_CmFozomMsAhE36kvGUMQiPwJpsFr`, Ready and aliased, exact commit `2e3254f75502ca56192d015c06bba4f7972518aa`.
-- Migrations: B15 atomic worker erasure and production-trigger scoping are deployed and exercised in QA and production; retained production/payroll history remains intact while worker PII and client IP audit payloads are redacted.
-- Cleanup: all prefixed B15 QA and production tenants, profiles/auth users, worker/production/audit/export fixtures, and dependencies were removed and reconciled.
-- B15 evidence: `output/qa/blocked-row-campaign/B15-qa-security.json`, `B15-qa-browser.json`, `B15-qa-http.json`, and `B15-production-security.json`.
-- OFF-001 blocker: actual install and standalone reopen need a supported PWA-capable browser/device; manifest, icons, scope, start route, update notice, and refresh activation are already proven.
+- Completed batch: **B16 — WhatsApp simulation and provider boundaries (8 PASS, 1 precisely BLOCKED)**.
+- Active batch: **B17 — Razorpay checkout, webhook, replay, and entitlement timing**.
+- Validation gate: local gate passed 90 files / 641 passed plus 1 intentional skip; Vercel passed 90 files / 642 tests; TypeScript, ESLint, and optimized builds passed.
+- Production deployment: `dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y`, Ready and aliased, exact commit `ee2af23a31e648880bdf3810f9cacb545cefcedd`.
+- Migration/functions: B16 delivery/retry constraints and daily/monthly idempotency grain are deployed in QA and production; six production WhatsApp functions are Active at the verified source.
+- Cleanup: the prefixed B16 QA tenant, profile/auth user, workers, advances, settlements, consents, delivery logs, cooldowns, and brief markers reconciled to zero.
+- B16 evidence: `output/qa/blocked-row-campaign/B16-qa-whatsapp.json`.
+- WA-010 blocker: deterministic rejection/expired-token logs and manual fallback passed; a controlled live Meta failure against a consented recipient remains required.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -30,10 +30,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B15 closeout
+## B16 closeout
 
-B15 directly proved the recovery-token lifecycle, one-hour idle expiry, proxy-isolated auth limiter keys, same-user/cross-origin action rejection, tenant-scoped audited export, atomic erasure with retained-history redaction, stored-XSS safety, audit context, keyboard operation, and 200%-equivalent layouts. The exact implementation commit and both migrations are live, matching disposable QA and production fixtures passed and reconciled to zero, and only OFF-001 install/standalone reopen remains blocked by browser capability.
+B16 directly proved opted-in delivery, opted-out/missing-consent/missing-phone/phone-mismatch skips, timeout retention, payslip itemization and phone binding, access-code privacy, daily/monthly/deadline idempotency, and bounded targeted retry. The exact implementation commit, migration, and six functions are live; disposable QA data reconciled to zero. WA-010 remains blocked only on its explicitly live Meta failure requirement.
 
 ## Exact next action
 
-Execute B16 with a deterministic WhatsApp provider simulator covering consent, sent/skipped/timeout/retry/cooldown/failure outcomes and core-write invariants before any WA row promotion.
+Execute B17 with a disposable Razorpay test-mode tenant covering hosted checkout, signed/invalid/replayed/out-of-order webhooks, failure/cancel/renewal/expiry transitions, and exact entitlement reconciliation.
