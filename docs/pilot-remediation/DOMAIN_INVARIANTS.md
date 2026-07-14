@@ -411,3 +411,13 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Referral conversion and refund reservation are database-serialized before provider activity. Exactly one 10% refund uses a stable provider idempotency key; replay cannot reserve or send another refund.
 - Period expiry removes gated access from the current authenticated session without deleting the account, profile, subscription, payment, or referral history.
 - Hosted payment proof uses explicit Razorpay TEST mode only. A TEST capture/refund is evidence of provider-boundary behavior, never evidence that real money moved.
+
+## B18 recovery invariants
+
+1. A restore pass requires business reconciliation, not merely a successful import: organization, identity, production, stock, receivable, and payroll grains must match the backup's canonical digest.
+2. Restored authentication must be exercised independently; database row restoration alone cannot prove an operable recovery.
+3. Backup retention/scheduling and restore mechanics are separate gates. A successful disposable restore does not imply that a recoverable production backup exists.
+4. Application rollback proof must identify both candidate and last-known-good deployments, return the active route to the intended source commit, and include an HTTP runtime check.
+5. Non-reversible database changes use a reviewed forward-fix with preserved recovery provenance; destructive down-migrations are not an acceptable default.
+6. Recovery exercises must use disposable infrastructure, record elapsed recovery time, and reconcile fixtures, private backup material, temporary schema objects, worktrees, and provider projects to zero.
+7. No recovery rehearsal may mutate the live production database or production alias unless an incident commander explicitly authorizes that scope.

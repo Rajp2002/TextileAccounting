@@ -154,27 +154,29 @@
       "scenario": "Verify backup schedule and perform restore into a disposable project.",
       "expected": "Restored org, users, production, stock, receivables, and payroll reconcile.",
       "status": "blocked",
-      "actual": "No disposable-project restore exercise or current restore evidence was available.",
+      "actual": "A sanitized isolated-QA logical backup deleted and restored one organization, two users, production, stock, receivable, and payroll in 2478.4 ms with identical SHA-256 summaries, successful restored-owner sign-in, and zero cleanup. Production backup control inspection reports WAL-G enabled, PITR disabled, and zero retained backups; Supabase documents that Free projects must maintain regular off-site CLI dumps. No scheduled off-site production dump is configured, so the schedule half of this row remains unverified.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
+        "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
       ],
-      "notes": "",
+      "notes": "Precise external dependency: upgrade production to Pro for retained daily backups, or approve/provide an off-site destination plus database dump credentials and secret placement for a scheduled logical-backup job. A paid branch was user-approved but Supabase refused it because branches require Pro; a zero-cost project was refused by the two-active-project Free-plan limit. Neither resource was created or charged.",
       "severity": "High",
-      "updatedAt": "2026-06-22T03:14:03.568Z"
+      "updatedAt": "2026-07-14T04:46:34.752Z"
     },
     {
       "id": "TECH-012",
       "section": "8. Technical and Deployment Gate",
       "scenario": "Verify rollback procedure for application and database.",
       "expected": "Team can restore the last known good application and has a forward-fix plan for non-reversible migrations.",
-      "status": "blocked",
-      "actual": "Vercel exposes rollback candidates, but no exercised application/database rollback and forward-fix runbook was found.",
+      "status": "pass",
+      "actual": "A disposable Vercel project deployed an actual B17 production build after 91 files / 650 tests, exposed distinct good/candidate release markers, and natively rolled the alias back to READY deployment dpl_4W61veVnHqTyGDU19qC5dUBm2V14 in two provider-reported seconds; /privacy returned 200 afterward. A rollback-only QA transaction also rehearsed a non-reversible column removal and reviewed forward-fix/backfill, preserved provenance, reconciled one row, and left no persistent probe.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
+        "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
       ],
-      "notes": "",
+      "notes": "No production project was changed. The disposable Vercel project and local worktree were removed; the QA forward-fix transaction rolled back cleanly.",
       "severity": "High",
-      "updatedAt": "2026-06-22T03:14:03.568Z"
+      "updatedAt": "2026-07-14T04:46:34.752Z"
     },
     {
       "id": "TECH-013",

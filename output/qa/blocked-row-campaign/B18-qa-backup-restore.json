@@ -1,0 +1,180 @@
+{
+  "run_id": "B18-QA-RESTORE-1784003257128",
+  "environment": "isolated-qa-logical-restore",
+  "project_ref": "eutycrtzzxmlkcpipgod",
+  "sanitized_fixture": true,
+  "production_mutated": false,
+  "assertions": [
+    {
+      "name": "sanitized backup contains every required recovery domain",
+      "passed": true,
+      "organizations": 1,
+      "users": 2,
+      "production": 1,
+      "stock": 1,
+      "receivables": 1,
+      "payroll": 1
+    },
+    {
+      "name": "simulated loss removes the complete disposable fixture before restore",
+      "passed": true,
+      "delete_errors": [],
+      "reconciliation": {
+        "organizations": 0,
+        "profiles": 0,
+        "workers": 0,
+        "machines": 0,
+        "production_logs": 0,
+        "fabric_stock_lots": 0,
+        "commercial_receivables": 0,
+        "payroll_settlements": 0,
+        "auth_users_exist": 0
+      }
+    },
+    {
+      "name": "restored organization users production stock receivable and payroll reconcile exactly",
+      "passed": true,
+      "backup_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+      "restored_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+      "restore_duration_ms": 2478.4
+    },
+    {
+      "name": "restored owner identity is usable after credential rotation",
+      "passed": true,
+      "signed_in": true,
+      "restored_user_id": "88f405f1...fa25"
+    }
+  ],
+  "cleanup": "complete",
+  "passed": true,
+  "preflight_cleanup": [
+    {
+      "org_id": "2cdb60bd...d4d1",
+      "errors": [],
+      "reconciliation": {
+        "organizations": 0,
+        "profiles": 0,
+        "workers": 0,
+        "machines": 0,
+        "production_logs": 0,
+        "fabric_stock_lots": 0,
+        "commercial_receivables": 0,
+        "payroll_settlements": 0,
+        "auth_users_exist": 0
+      }
+    }
+  ],
+  "backup_manifest": {
+    "format": "sanitized logical JSON",
+    "captured_at": "2026-07-14T04:27:42.622Z",
+    "sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+    "tables": [
+      "organizations",
+      "profiles",
+      "workers",
+      "machines",
+      "production_logs",
+      "fabric_stock_lots",
+      "commercial_receivables",
+      "payroll_settlements"
+    ],
+    "counts": {
+      "organizations": 1,
+      "users": 2,
+      "production": 1,
+      "stock": 1,
+      "receivables": 1,
+      "payroll": 1
+    }
+  },
+  "restore": {
+    "target": "existing isolated QA project because Free-plan branch/new-project creation was unavailable",
+    "restore_duration_ms": 2478.4,
+    "backup_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+    "restored_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+    "summary": {
+      "organization": {
+        "id": "be20c163-8ffd-49c8-b233-f88ca1013c07",
+        "name": "B18 Recovery ab27e50948",
+        "onboarding_complete": true,
+        "production_mode": "both"
+      },
+      "users": [
+        {
+          "role": "owner",
+          "full_name": "B18 Owner",
+          "email": "b18-owner-ab27e50948@qa.weavly.local"
+        },
+        {
+          "role": "supervisor",
+          "full_name": "B18 Supervisor",
+          "email": "b18-supervisor-ab27e50948@qa.weavly.local"
+        }
+      ],
+      "production": [
+        {
+          "id": 1851,
+          "worker_id": 102,
+          "machine_id": "051a1f78-d027-4a19-b5d4-8d969a74138d",
+          "meters": 120,
+          "date": "2026-07-14",
+          "shift": "day",
+          "worker_rate_snapshot": 3.25
+        }
+      ],
+      "stock": [
+        {
+          "id": "97105317-fc02-4a6b-a929-a224bf083d83",
+          "quality_label": "B18 Recovery Fabric",
+          "godown": "B18 QA Godown",
+          "original_meters": 100,
+          "available_meters": 75,
+          "cost_per_meter": 22.5,
+          "source_type": "manual"
+        }
+      ],
+      "receivables": [
+        {
+          "id": "d3b2801c-8248-4793-a462-02e869bcd5c7",
+          "source_type": "party_invoice",
+          "source_id": "0a0c37ba-6ddf-49a3-a1e3-f8227307b45a",
+          "party_name": "B18 Recovery Buyer",
+          "quality_label": "B18 Recovery Fabric",
+          "total_amount": 10000,
+          "received_amount": 2500,
+          "balance_amount": 7500,
+          "payment_status": "partial"
+        }
+      ],
+      "payroll": [
+        {
+          "id": 28,
+          "worker_type": "meter",
+          "meter_worker_id": 102,
+          "month": "2026-07",
+          "cycle_start_date": "2026-07-01",
+          "gross_pay": 390,
+          "advance_deducted": 90,
+          "net_payout": 300,
+          "carried_forward_debt": 0,
+          "status": "paid",
+          "payment_mode": "cash"
+        }
+      ]
+    }
+  },
+  "cleanup_result": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "workers": 0,
+      "machines": 0,
+      "production_logs": 0,
+      "fabric_stock_lots": 0,
+      "commercial_receivables": 0,
+      "payroll_settlements": 0,
+      "auth_users_exist": 0
+    }
+  }
+}

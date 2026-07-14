@@ -1,16 +1,16 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **364 PASS, 3 FAIL, 9 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **365 PASS, 3 FAIL, 8 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B17 — Razorpay checkout, webhook, replay, and entitlement timing (8/8 PASS)**.
-- Active batch: **B18 — backup restore and rollback/forward-fix exercise**.
-- Validation gate: local gate passed 91 files / 649 passed plus 1 intentional skip; Vercel passed 91 files / 650 tests; TypeScript, ESLint, and optimized builds passed.
-- Production deployment: `dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw`, Ready and aliased, exact commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
-- Migration: `20260714090000_b17_harden_razorpay_lifecycle.sql` is deployed in QA and production; production history version is `20260714040018`. The drifted CLI dry-run was refused, and only B17 was applied through the scoped migration API.
-- Provider proof: hosted Razorpay TEST checkout used Netbanking and Bank of Baroda; no real money moved. Eighteen QA assertions and nine production-boundary assertions passed.
-- Cleanup: the disposable QA tenant and both production boundary tenants reconciled organizations, profiles/auth users, subscriptions, payments, webhook events, refunds, and dependencies to zero.
-- B17 evidence: `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json`.
+- Completed batch: **B18 — backup restore and rollback/forward-fix exercise (1 PASS, 1 precisely BLOCKED)**.
+- Active batch: **B19 — external and human acceptance evidence**.
+- Restore proof: sanitized organization, two users, production, stock, receivable, and payroll ledgers restored into isolated QA with matching SHA-256 digests, four assertions, restored owner sign-in, and 2,478.4 ms restore time.
+- Rollback proof: native Vercel rollback returned the disposable app to deployment `dpl_4W61veVnHqTyGDU19qC5dUBm2V14` at exact source commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`; provider-reported duration was 2 seconds and `/privacy` returned 200.
+- Database proof: a rollback-only QA transaction dropped a legacy column, restored its canonical replacement from preserved JSON provenance, reconciled the row, and left no temporary contract.
+- Cleanup: all prefixed QA rows/auth, private backup material, the disposable Vercel project, and the disposable worktree were removed; production was not mutated.
+- TECH-011 blocker: production reports WAL-G enabled, PITR disabled, and no retained backups. The runtime restore passed, but the row still needs an automated retained or approved off-site production backup schedule.
+- B18 evidence: `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -30,10 +30,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B17 closeout
+## B18 closeout
 
-B17 directly proved hosted TEST checkout, canonical capture, signed replay/conflict/invalid-HMAC handling, failure and cancellation access preservation, monotonic renewal/expiry transitions, one provider-idempotent 10% referral refund, and access loss without account or history loss. The exact implementation, migration, and production deployment are live; disposable QA and production fixtures reconciled to zero.
+B18 proves that a sanitized multi-ledger backup can be restored and reconciled, that the restored owner can authenticate, that an actual application build can be returned to a marked last-known-good deployment through the provider's native rollback, and that a non-reversible database change has a viable provenance-preserving forward-fix. All exercises ran in disposable QA infrastructure and cleaned to zero. TECH-012 is PASS. TECH-011 remains BLOCKED solely because production has no retained or approved off-site backup schedule; restore mechanics themselves passed.
 
 ## Exact next action
 
-Execute B18 in disposable infrastructure: restore and reconcile a sanitized multi-ledger fixture, then exercise application rollback and a reviewed database forward-fix while recording timing, release/migration identity, and zero production impact.
+Execute B19: inspect configured live Sentry event payloads for scrubbing evidence, and retain the legal, factory-language, business-truth-sheet, and supervisor-register rows as precise external blockers unless their required human artifacts are available.

@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-14T04:14:45.316Z",
+  "updated_at": "2026-07-14T04:49:55.228Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 364,
-    "blocked": 9,
+    "pass": 365,
+    "blocked": 8,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -29,10 +29,11 @@
     "B14",
     "B15",
     "B16",
-    "B17"
+    "B17",
+    "B18"
   ],
-  "active_batch": "B18",
-  "active_batch_state": "B17 closed with 8 PASS from hosted Razorpay TEST checkout, signed lifecycle/replay QA, exact-deployment production boundary proof, and zero cleanup; B18 active",
+  "active_batch": "B19",
+  "active_batch_state": "B18 executable scope closed with TECH-012 PASS from native disposable Vercel rollback and rollback-only database forward-fix; TECH-011 restore passed but remains precisely blocked on an automated retained/off-site production backup schedule; B19 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -331,12 +332,12 @@
     "BILL-007",
     "BILL-009",
     "BILL-010",
-    "SEC-007"
+    "SEC-007",
+    "TECH-012"
   ],
   "rows_moved_to_fail": [],
   "rows_remaining_blocked": [
     "TECH-011",
-    "TECH-012",
     "WA-010",
     "OFF-001",
     "SEC-011",
@@ -377,7 +378,10 @@
     "Razorpay webhook processing now validates HMAC before atomic event claim, detects same-ID body conflicts, and converges provider-canonical payment state without duplicate entitlement or referral effects.",
     "Subscription lifecycle updates are monotonic: failed renewals preserve the paid period, cancellation retains access through period end, captured renewal anchors exactly 365 days, and stale events cannot reverse cancellation or expiry.",
     "Referral conversion and refund claims are database-serialized before provider work, with a stable provider idempotency key and exactly one 10% TEST refund reservation.",
-    "Expired paid access is removed without deleting the account, profile, subscription, or payment history."
+    "Expired paid access is removed without deleting the account, profile, subscription, or payment history.",
+    "A repeatable sanitized logical-backup harness now restores a multi-ledger tenant into isolated QA, reconciles organization, users, production, stock, receivables, and payroll by canonical digest, proves restored owner sign-in, and cleans every fixture.",
+    "Application rollback is now rehearsed with a native Vercel rollback between two actual application deployments, while a rollback-only database exercise proves the forward-fix pattern for a deliberately non-reversible dropped column using preserved recovery payload provenance.",
+    "Production backup availability is explicitly measured instead of assumed: WAL-G is enabled but no retained backup is exposed and PITR is disabled, so TECH-011 remains blocked only on an automated retained or off-site backup schedule."
   ],
   "commits": [
     {
@@ -602,6 +606,36 @@
       "batch": "B17",
       "type": "prefixed disposable QA Razorpay tenant plus two prefixed production boundary tenants",
       "state": "removed; organizations/profiles/auth/subscriptions/payments/webhook events/refunds and all billing dependencies reconciled to zero in both environments"
+    },
+    {
+      "batch": "B18",
+      "type": "prefixed disposable QA recovery tenant with owner/auth, production, stock, receivable, payroll, and recovery-payload fixtures plus a disposable Vercel rollback project",
+      "state": "removed; all QA database/auth counts reconciled to zero, private backup deleted, temporary database transaction rolled back, disposable Vercel project deleted, and worktree pruned"
+    }
+  ],
+  "recovery_exercises": [
+    {
+      "batch": "B18",
+      "type": "sanitized logical backup and isolated QA restore",
+      "result": "pass",
+      "backup_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+      "restored_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+      "restore_duration_ms": 2478.4,
+      "assertions": 4,
+      "cleanup": "zero",
+      "evidence": "output/qa/blocked-row-campaign/B18-qa-backup-restore.json"
+    },
+    {
+      "batch": "B18",
+      "type": "native application rollback and database forward-fix rehearsal",
+      "result": "pass",
+      "last_known_good_deployment": "dpl_4W61veVnHqTyGDU19qC5dUBm2V14",
+      "candidate_deployment": "dpl_7BQpDXn2pBdXY3Kfm7YCp4GZ5J7o",
+      "source_commit": "57caa6e6f15f25b6e26654a1d3cfc4b431452e9b",
+      "rollback_provider_duration_seconds": 2,
+      "production_impact": "none; disposable project only",
+      "database_cleanup": "transaction rolled back and temporary contract absent",
+      "evidence": "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
     }
   ],
   "outstanding_external_dependencies": [
@@ -615,10 +649,9 @@
     {
       "batch": "B18",
       "rows": [
-        "TECH-011",
-        "TECH-012"
+        "TECH-011"
       ],
-      "dependency": "Both require disposable infrastructure and an exercised recovery runbook, not application code inspection."
+      "dependency": "An automated retained or off-site production backup schedule. Current production reports WAL-G enabled, PITR disabled, and zero retained backups; Free-plan branching/new-project restore targets are unavailable. Upgrade to Pro or provide an approved off-site destination and database dump credential placement."
     },
     {
       "batch": "B19",
@@ -632,6 +665,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B17 production deployment dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw is Ready at exact commit 57caa6e; local gate passed 91 files / 649 passed plus 1 intentional skip and Vercel passed 91 files / 650 tests. Hosted Razorpay TEST checkout used Netbanking and Bank of Baroda; 18 QA and 9 production boundary assertions passed with no real money, no runtime error cluster, and zero cleanup.",
-  "exact_next_action": "Execute B18 in disposable infrastructure: restore a sanitized multi-ledger fixture and reconcile it, then exercise application rollback plus a reviewed database forward-fix while recording recovery time, commit/deployment IDs, migration state, and zero production impact."
+  "last_successful_validation": "B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, four reconciliation assertions, restored owner sign-in, 2,478.4 ms restore time, and zero cleanup. Native Vercel rollback restored exact source commit 57caa6e in 2 provider-reported seconds, /privacy returned 200, and the rollback-only database forward-fix reconciled preserved provenance. No production resource or data was changed. TECH-011 remains blocked only because production exposes no retained backup and PITR is disabled.",
+  "exact_next_action": "Execute B19 external-evidence review: inspect live Sentry payload scrubbing if a configured project is available, then preserve legal counsel, factory terminology, business truth-sheet, and supervisor-register rows as precisely blocked unless their named human artifacts exist."
 }

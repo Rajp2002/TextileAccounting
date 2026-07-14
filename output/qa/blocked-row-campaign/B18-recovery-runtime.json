@@ -1,0 +1,143 @@
+{
+  "run_id": "B18-RECOVERY-20260714T044242Z",
+  "scope": "backup restore plus application rollback and database forward-fix exercise",
+  "production_mutated": false,
+  "source_branch": "codex/estimator-production-readiness-20260710",
+  "source_checkpoint_commit": "3aa414be6802faad08b6f406edb5e2702bded2cd",
+  "row_outcomes": {
+    "TECH-011": {
+      "status": "blocked",
+      "runtime_restore_passed": true,
+      "blocker": "The production Supabase project is on the Free plan. The provider reports WAL-G enabled but exposes zero retained backups and no PITR; official guidance requires regular off-site CLI dumps for Free projects. No independently scheduled off-site production dump exists or was authorized/configured, so backup-schedule verification is not complete.",
+      "smallest_next_input": "Upgrade production to Pro for retained daily backups, or provide an approved off-site destination plus database dump credentials/secret placement for a scheduled logical-backup job."
+    },
+    "TECH-012": {
+      "status": "pass",
+      "application_rollback_passed": true,
+      "database_forward_fix_passed": true
+    }
+  },
+  "production_backup_control": {
+    "project_ref": "vzhwahudircrpgtitwzd",
+    "region": "ap-south-1",
+    "walg_enabled": true,
+    "pitr_enabled": false,
+    "retained_backups_listed": 0,
+    "checked_with": "supabase backups list --project-ref vzhwahudircrpgtitwzd --output json",
+    "official_reference": "https://supabase.com/docs/guides/platform/backups",
+    "official_free_plan_guidance": "Regularly export with Supabase CLI db dump and maintain off-site backups."
+  },
+  "disposable_supabase_attempts": [
+    {
+      "target": "development branch on production schema",
+      "quoted_cost_usd": 0.01344,
+      "recurrence": "hourly",
+      "user_confirmed": true,
+      "created": false,
+      "result": "refused because branching requires Pro; no branch and no hourly charge"
+    },
+    {
+      "target": "separate disposable project in the existing organization",
+      "quoted_cost_usd": 0,
+      "recurrence": "monthly",
+      "created": false,
+      "result": "refused because the Free-plan two-active-project limit was already reached"
+    }
+  ],
+  "logical_restore": {
+    "target_project_ref": "eutycrtzzxmlkcpipgod",
+    "target": "isolated QA project with disposable prefixed fixture",
+    "sanitized": true,
+    "evidence": "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
+    "domains": [
+      "organization",
+      "two users",
+      "production",
+      "stock",
+      "receivable",
+      "payroll"
+    ],
+    "backup_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+    "restored_sha256": "257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a",
+    "restore_duration_ms": 2478.4,
+    "restored_owner_sign_in": true,
+    "cleanup_reconciled_to_zero": true
+  },
+  "database_forward_fix": {
+    "project_ref": "eutycrtzzxmlkcpipgod",
+    "mode": "rollback-only transaction using a temporary recovery contract",
+    "candidate": "drop the legacy_value column while retaining a recovery payload",
+    "forward_fix": "add canonical_value and backfill from the preserved recovery payload",
+    "restored_rows": 1,
+    "forward_fix_reconciled": true,
+    "provenance_preserved": true,
+    "probe_absent_after_rollback": true,
+    "persistent_schema_or_data_change": false
+  },
+  "application_rollback": {
+    "provider": "Vercel",
+    "disposable_project": "weavly-b18-rollback-20260714",
+    "source_commit": "57caa6e6f15f25b6e26654a1d3cfc4b431452e9b",
+    "build": {
+      "application": "actual Weavly Next.js production build",
+      "test_files_passed": 91,
+      "tests_passed": 650,
+      "typescript_passed": true,
+      "static_pages_generated": 41,
+      "build_passed": true
+    },
+    "last_known_good": {
+      "deployment_id": "dpl_4W61veVnHqTyGDU19qC5dUBm2V14",
+      "deployment_url": "https://weavly-b18-rollback-20260714-kv0s8d0yd.vercel.app",
+      "ready_state": "READY",
+      "release_marker": "last-known-good"
+    },
+    "simulated_candidate": {
+      "deployment_id": "dpl_7BQpDXn2pBdXY3Kfm7YCp4GZ5J7o",
+      "deployment_url": "https://weavly-b18-rollback-20260714-36evofob8.vercel.app",
+      "ready_state": "READY",
+      "release_marker_before_rollback": "simulated-regression-candidate"
+    },
+    "rollback": {
+      "command_target": "dpl_4W61veVnHqTyGDU19qC5dUBm2V14",
+      "provider_reported_duration_seconds": 2,
+      "wall_duration_seconds": 9.58,
+      "status_command_confirmed": true,
+      "alias_release_marker_after_rollback": "last-known-good",
+      "alias_source_commit_after_rollback": "57caa6e6f15f25b6e26654a1d3cfc4b431452e9b",
+      "privacy_route_status_after_rollback": 200
+    },
+    "production_project_affected": false,
+    "disposable_project_removed": true,
+    "local_worktree_removed": true
+  },
+  "assertions": [
+    {
+      "name": "production backup controls are inspected and the missing Free-plan schedule is stated precisely",
+      "passed": true
+    },
+    {
+      "name": "sanitized required-domain restore hash-reconciles and the restored owner can sign in",
+      "passed": true
+    },
+    {
+      "name": "database forward-fix restores a non-reversible contract and the rehearsal rolls back cleanly",
+      "passed": true
+    },
+    {
+      "name": "actual application build passes 91 files and 650 tests before disposable deployment",
+      "passed": true
+    },
+    {
+      "name": "Vercel native rollback restores the marked last-known-good deployment",
+      "passed": true
+    },
+    {
+      "name": "production remains untouched and every disposable QA/Vercel resource reconciles or is removed",
+      "passed": true
+    }
+  ],
+  "exercise_passed": true,
+  "batch_fully_closed": false,
+  "cleanup": "complete"
+}

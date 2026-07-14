@@ -5,9 +5,10 @@
     "scenario": "Verify backup schedule and perform restore into a disposable project.",
     "expected": "Restored org, users, production, stock, receivables, and payroll reconcile.",
     "current_status": "blocked",
-    "current_outcome": "No disposable-project restore exercise or current restore evidence was available.",
+    "current_outcome": "A sanitized isolated-QA logical backup deleted and restored one organization, two users, production, stock, receivable, and payroll in 2478.4 ms with identical SHA-256 summaries, successful restored-owner sign-in, and zero cleanup. Production backup control inspection reports WAL-G enabled, PITR disabled, and zero retained backups; Supabase documents that Free projects must maintain regular off-site CLI dumps. No scheduled off-site production dump is configured, so the schedule half of this row remains unverified.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
+      "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
     ],
     "severity": "High",
     "user_role": "release operator",
@@ -41,10 +42,11 @@
     "feature": "8. Technical and Deployment Gate",
     "scenario": "Verify rollback procedure for application and database.",
     "expected": "Team can restore the last known good application and has a forward-fix plan for non-reversible migrations.",
-    "current_status": "blocked",
-    "current_outcome": "Vercel exposes rollback candidates, but no exercised application/database rollback and forward-fix runbook was found.",
+    "current_status": "pass",
+    "current_outcome": "A disposable Vercel project deployed an actual B17 production build after 91 files / 650 tests, exposed distinct good/candidate release markers, and natively rolled the alias back to READY deployment dpl_4W61veVnHqTyGDU19qC5dUBm2V14 in two provider-reported seconds; /privacy returned 200 afterward. A rollback-only QA transaction also rehearsed a non-reversible column removal and reviewed forward-fix/backfill, preserved provenance, reconciled one row, and left no persistent probe.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
+      "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
     ],
     "severity": "High",
     "user_role": "release operator",

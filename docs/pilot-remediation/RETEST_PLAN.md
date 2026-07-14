@@ -682,3 +682,12 @@ Acceptance:
 - Verify migration `20260714090000_b17_harden_razorpay_lifecycle.sql`, production history version `20260714040018`, four RPCs, both activation wrappers, six subscription columns, three indexes, and service-role-only refund claims before production lifecycle claims.
 - Canonical evidence is `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json` on production deployment `dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw` and implementation commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
 - Canonical counts after B17: 364 pass, 3 fail, 9 blocked, and 1 not applicable. Begin B18; do not rerun hosted provider proof unless one of these boundaries changes, and never substitute live money for TEST mode.
+
+### B18 recovery regression guard — 2026-07-14
+
+- Run `node scripts/qa/b18-backup-restore-proof.mjs` only against an isolated non-production target. It must create a sanitized organization/user/production/stock/receivable/payroll backup, restore it, match canonical digests, authenticate the restored owner, and report zero cleanup.
+- Recheck production backup inventory separately. `TECH-011` stays blocked whenever there is no automated retained or approved off-site production backup schedule, even if the disposable restore passes.
+- For application rollback, deploy an actual app build twice to a disposable project with distinct release markers, use the provider's native rollback command to restore the marked last-known-good deployment, verify exact source identity and an HTTP 200 route, then delete the project.
+- Rehearse non-reversible database recovery in a rollback-only transaction: preserve provenance, remove the legacy representation, introduce/backfill the canonical representation, assert reconciliation, roll back, and verify no temporary object remains.
+- Canonical evidence is `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
+- Canonical counts after B18: 365 pass, 3 fail, 8 blocked, and 1 not applicable. Begin B19; rerun B18 only if backup policy, schema recovery strategy, or deployment provider behavior changes.

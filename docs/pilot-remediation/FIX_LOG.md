@@ -2423,3 +2423,16 @@ Date: 2026-07-14 IST. Production commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9
 - Safety: the disposable QA tenant and both prefixed production boundary tenants, profiles/auth users, subscriptions, payments, webhook events, refunds, credentials, and temporary environments reconciled to zero or were removed.
 - Evidence: `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json`.
 - Formal matrix: 364 pass, 3 fail, 9 blocked, 1 not applicable. Readiness remains No-Go; B18 is active.
+
+## Blocked-row campaign B18 closeout — recovery restore and rollback
+
+Date: 2026-07-14 IST. Recovery exercise only; production source remains `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
+
+- Status changes: `TECH-012` moved from `blocked` to `pass`. `TECH-011` remains `blocked` solely because production lacks an automated retained or approved off-site backup schedule.
+- Restore runtime: a sanitized logical backup containing one organization, two users, one production record, one stock record, one receivable, and one payroll record restored into isolated QA. Backup and restored canonical digests both equal `257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a`; four reconciliation assertions and restored-owner sign-in passed in 2,478.4 ms.
+- Application rollback: two actual builds of the B17 source were deployed to disposable Vercel project `weavly-b18-rollback-20260714`. Native rollback returned the alias from candidate `dpl_7BQpDXn2pBdXY3Kfm7YCp4GZ5J7o` to marked last-known-good `dpl_4W61veVnHqTyGDU19qC5dUBm2V14` in two provider-reported seconds; the release marker matched the exact source commit and `/privacy` returned 200.
+- Database forward-fix: inside a rollback-only QA transaction, the rehearsal dropped a legacy column, added its canonical replacement, backfilled it from preserved JSON recovery provenance, reconciled the row, rolled back, and verified the temporary contract was absent.
+- Schedule finding: production backup inspection reports WAL-G enabled, PITR disabled, and zero retained backups. Free-plan branching was unavailable and the two-active-project limit rejected a new disposable Supabase project without creating a resource or charge. The isolated restore proves mechanics, not schedule retention.
+- Safety: production data, schema, deployment, and alias were untouched. All prefixed QA database/auth fixtures, private backup material, temporary database work, the disposable Vercel project, and the disposable worktree were removed or reconciled to zero.
+- Evidence: `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
+- Formal matrix: 365 pass, 3 fail, 8 blocked, 1 not applicable. Readiness remains No-Go; B19 is active.

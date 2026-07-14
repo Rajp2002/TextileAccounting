@@ -212,6 +212,10 @@ const b16ExecutableClosed = b16PassRows.every((id) => ledger.items.find((item) =
     && ledger.items.find((item) => item.id === 'WA-010')?.status === 'blocked'
 const b17Rows = batches.find((batch) => batch.id === 'B17').rows
 const b17Closed = b17Rows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
+const b18Rows = batches.find((batch) => batch.id === 'B18').rows
+const b18PassRows = b18Rows.filter((id) => id !== 'TECH-011')
+const b18ExecutableClosed = b18PassRows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
+    && ledger.items.find((item) => item.id === 'TECH-011')?.status === 'blocked'
 const checkpoint = {
     campaign: 'blocked-row-remediation',
     updated_at: new Date().toISOString(),
@@ -221,11 +225,11 @@ const checkpoint = {
     canonical_ledger: path.relative(root, ledgerPath),
     canonical_matrix: 'output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md',
     inventory: path.relative(root, inventoryPath),
-    completed_batches: b17Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17'] : b16ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16'] : b15ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15'] : b14Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14'] : b13Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13'] : b12Closed ? ['B08', 'B09', 'B10', 'B11', 'B12'] : b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
-    active_batch: b17Closed ? 'B18' : b16ExecutableClosed ? 'B17' : b15ExecutableClosed ? 'B16' : b14Closed ? 'B15' : b13Closed ? 'B14' : b12Closed ? 'B13' : b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
-    active_batch_state: b17Closed ? 'B17 closed with 8 PASS from hosted Razorpay TEST checkout, signed lifecycle/replay QA, exact-deployment production boundary proof, and zero cleanup; B18 active' : b16ExecutableClosed ? 'B16 executable scope closed with 8 PASS, WA-010 precisely blocked on controlled live Meta failure proof, exact production deployment/schema/function alignment, and zero cleanup; B17 active' : b15ExecutableClosed ? 'B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active' : b14Closed ? 'B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active' : b13Closed ? 'B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active' : b12Closed ? 'B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active' : b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
+    completed_batches: b18ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17', 'B18'] : b17Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17'] : b16ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16'] : b15ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15'] : b14Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14'] : b13Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13'] : b12Closed ? ['B08', 'B09', 'B10', 'B11', 'B12'] : b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
+    active_batch: b18ExecutableClosed ? 'B19' : b17Closed ? 'B18' : b16ExecutableClosed ? 'B17' : b15ExecutableClosed ? 'B16' : b14Closed ? 'B15' : b13Closed ? 'B14' : b12Closed ? 'B13' : b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
+    active_batch_state: b18ExecutableClosed ? 'B18 executable scope closed with TECH-012 PASS from native disposable Vercel rollback and rollback-only database forward-fix; TECH-011 restore passed but remains precisely blocked on an automated retained/off-site production backup schedule; B19 active' : b17Closed ? 'B17 closed with 8 PASS from hosted Razorpay TEST checkout, signed lifecycle/replay QA, exact-deployment production boundary proof, and zero cleanup; B18 active' : b16ExecutableClosed ? 'B16 executable scope closed with 8 PASS, WA-010 precisely blocked on controlled live Meta failure proof, exact production deployment/schema/function alignment, and zero cleanup; B17 active' : b15ExecutableClosed ? 'B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active' : b14Closed ? 'B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active' : b13Closed ? 'B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active' : b12Closed ? 'B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active' : b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
     planned_batches: batches.map(({ id, name, rows, rootCause, validation, exit }) => ({ id, name, rows, rootCause, validation, exit })),
-    rows_moved_to_pass: b17Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows, ...b17Rows] : b16ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows] : b15ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows] : b14Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows] : b13Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows] : b12Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows] : b11Closed ? [...b09Rows, ...b10Rows, ...b11Rows] : b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
+    rows_moved_to_pass: b18ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows, ...b17Rows, ...b18PassRows] : b17Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows, ...b17Rows] : b16ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows] : b15ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows] : b14Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows] : b13Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows] : b12Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows] : b11Closed ? [...b09Rows, ...b10Rows, ...b11Rows] : b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
     rows_moved_to_fail: [],
     rows_remaining_blocked: blocked.map((item) => item.id),
     rows_marked_not_applicable: [],
@@ -276,6 +280,11 @@ const checkpoint = {
             'Subscription lifecycle updates are monotonic: failed renewals preserve the paid period, cancellation retains access through period end, captured renewal anchors exactly 365 days, and stale events cannot reverse cancellation or expiry.',
             'Referral conversion and refund claims are database-serialized before provider work, with a stable provider idempotency key and exactly one 10% TEST refund reservation.',
             'Expired paid access is removed without deleting the account, profile, subscription, or payment history.',
+        ] : []),
+        ...(b18ExecutableClosed ? [
+            'A repeatable sanitized logical-backup harness now restores a multi-ledger tenant into isolated QA, reconciles organization, users, production, stock, receivables, and payroll by canonical digest, proves restored owner sign-in, and cleans every fixture.',
+            'Application rollback is now rehearsed with a native Vercel rollback between two actual application deployments, while a rollback-only database exercise proves the forward-fix pattern for a deliberately non-reversible dropped column using preserved recovery payload provenance.',
+            'Production backup availability is explicitly measured instead of assumed: WAL-G is enabled but no retained backup is exposed and PITR is disabled, so TECH-011 remains blocked only on an automated retained or off-site backup schedule.',
         ] : []),
     ] : [],
     commits: b09Closed ? [
@@ -353,12 +362,41 @@ const checkpoint = {
         ...(b15ExecutableClosed ? [{ batch: 'B15', type: 'prefixed disposable QA and production security tenants with owner/adversary/recovery auth users', state: 'removed; organizations/profiles/auth/workers/production/audit/export and all dependent fixtures reconciled to zero in both environments' }] : []),
         ...(b16ExecutableClosed ? [{ batch: 'B16', type: 'prefixed disposable QA WhatsApp tenant with owner and five worker consent states', state: 'removed; organization/profile/auth/workers/advances/settlements/consents/delivery logs/cooldowns/brief markers and dependencies reconciled to zero' }] : []),
         ...(b17Closed ? [{ batch: 'B17', type: 'prefixed disposable QA Razorpay tenant plus two prefixed production boundary tenants', state: 'removed; organizations/profiles/auth/subscriptions/payments/webhook events/refunds and all billing dependencies reconciled to zero in both environments' }] : []),
+        ...(b18ExecutableClosed ? [{ batch: 'B18', type: 'prefixed disposable QA recovery tenant with owner/auth, production, stock, receivable, payroll, and recovery-payload fixtures plus a disposable Vercel rollback project', state: 'removed; all QA database/auth counts reconciled to zero, private backup deleted, temporary database transaction rolled back, disposable Vercel project deleted, and worktree pruned' }] : []),
     ],
+    recovery_exercises: b18ExecutableClosed ? [
+        {
+            batch: 'B18',
+            type: 'sanitized logical backup and isolated QA restore',
+            result: 'pass',
+            backup_sha256: '257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a',
+            restored_sha256: '257b65a8a164dda1f2f4b5d2ae45c63832930c8a8cec0ac881f8af70b5bb1e6a',
+            restore_duration_ms: 2478.4,
+            assertions: 4,
+            cleanup: 'zero',
+            evidence: 'output/qa/blocked-row-campaign/B18-qa-backup-restore.json',
+        },
+        {
+            batch: 'B18',
+            type: 'native application rollback and database forward-fix rehearsal',
+            result: 'pass',
+            last_known_good_deployment: 'dpl_4W61veVnHqTyGDU19qC5dUBm2V14',
+            candidate_deployment: 'dpl_7BQpDXn2pBdXY3Kfm7YCp4GZ5J7o',
+            source_commit: '57caa6e6f15f25b6e26654a1d3cfc4b431452e9b',
+            rollback_provider_duration_seconds: 2,
+            production_impact: 'none; disposable project only',
+            database_cleanup: 'transaction rolled back and temporary contract absent',
+            evidence: 'output/qa/blocked-row-campaign/B18-recovery-runtime.json',
+        },
+    ] : [],
     outstanding_external_dependencies: [
         ...(b16ExecutableClosed ? [{ batch: 'B16', rows: ['WA-010'], dependency: 'Controlled live Meta credentials, a consented recipient, and authorization to induce template rejection or expired-token behavior.' }] : [{ batch: 'B16', rows: b16Rows, dependency: batches.find((batch) => batch.id === 'B16').rootCause }]),
-        ...batches.filter((batch) => (b17Closed ? ['B18', 'B19'] : ['B17', 'B18', 'B19']).includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause })),
+        ...(b18ExecutableClosed ? [{ batch: 'B18', rows: ['TECH-011'], dependency: 'An automated retained or off-site production backup schedule. Current production reports WAL-G enabled, PITR disabled, and zero retained backups; Free-plan branching/new-project restore targets are unavailable. Upgrade to Pro or provide an approved off-site destination and database dump credential placement.' }] : []),
+        ...batches.filter((batch) => (b18ExecutableClosed ? ['B19'] : b17Closed ? ['B18', 'B19'] : ['B17', 'B18', 'B19']).includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause })),
     ],
-    last_successful_validation: b17Closed
+    last_successful_validation: b18ExecutableClosed
+        ? 'B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, four reconciliation assertions, restored owner sign-in, 2,478.4 ms restore time, and zero cleanup. Native Vercel rollback restored exact source commit 57caa6e in 2 provider-reported seconds, /privacy returned 200, and the rollback-only database forward-fix reconciled preserved provenance. No production resource or data was changed. TECH-011 remains blocked only because production exposes no retained backup and PITR is disabled.'
+        : b17Closed
         ? 'B17 production deployment dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw is Ready at exact commit 57caa6e; local gate passed 91 files / 649 passed plus 1 intentional skip and Vercel passed 91 files / 650 tests. Hosted Razorpay TEST checkout used Netbanking and Bank of Baroda; 18 QA and 9 production boundary assertions passed with no real money, no runtime error cluster, and zero cleanup.'
         : b16ExecutableClosed
         ? 'B16 production deployment dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y Ready at exact commit ee2af23; local gate passed 90 files / 641 passed plus 1 intentional skip and Vercel passed 642 tests; nine deterministic QA WhatsApp assertions and cleanup passed; production migration/functions/catalog and canonical alias are aligned without live Meta contact. WA-010 remains blocked on controlled live-provider proof.'
@@ -377,7 +415,9 @@ const checkpoint = {
         : b09Closed
         ? 'B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.'
         : 'B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.',
-    exact_next_action: b17Closed
+    exact_next_action: b18ExecutableClosed
+        ? 'Execute B19 external-evidence review: inspect live Sentry payload scrubbing if a configured project is available, then preserve legal counsel, factory terminology, business truth-sheet, and supervisor-register rows as precisely blocked unless their named human artifacts exist.'
+        : b17Closed
         ? 'Execute B18 in disposable infrastructure: restore a sanitized multi-ledger fixture and reconcile it, then exercise application rollback plus a reviewed database forward-fix while recording recovery time, commit/deployment IDs, migration state, and zero production impact.'
         : b16ExecutableClosed
         ? 'Execute B17 against a disposable tenant and Razorpay test-mode boundary: hosted checkout, signed/invalid/replayed/out-of-order webhooks, failure/cancel/renewal/expiry transitions, and exact entitlement/idempotency reconciliation.'
@@ -401,7 +441,38 @@ const checkpoint = {
 const table = batches.map((batch) => `| ${batch.id} | ${batch.name} | ${batch.rows.length} | ${batch.rows.map((id) => `\`${id}\``).join(', ')} |`).join('\n')
 const human = `# Blocked-Row Remediation Checkpoint\n\n- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).\n- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.\n- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.\n- Completed batch: **${b15ExecutableClosed ? 'B15 — authentication, privacy, audit, adversarial UX, and PWA device proof (10 PASS, 1 precisely BLOCKED)' : 'B14 — realtime dashboard recovery and large-range states (5/5 PASS)'}**.\n- Active batch: **${b15ExecutableClosed ? 'B16 — WhatsApp simulation and provider boundaries' : 'B15 — authentication, privacy, audit, adversarial UX, and PWA device proof'}**.\n- Validation gate: local and Vercel gates passed 89 files / 633 passed plus 1 intentional skip, TypeScript, targeted lint, and a successful optimized Next.js build.\n- Production deployment: \`${b15ExecutableClosed ? 'dpl_CmFozomMsAhE36kvGUMQiPwJpsFr' : 'dpl_3Xb6mYaqnG5FRpye7ULVWcxq9ttq'}\`, Ready and aliased, exact commit \`${b15ExecutableClosed ? '2e3254f75502ca56192d015c06bba4f7972518aa' : '6f80eac94d950460bf559583dbb18ef434afde00'}\`.\n- Migrations: B15 atomic worker erasure and production-trigger scoping are deployed and exercised in QA and production; retained production/payroll history remains intact while worker PII and client IP audit payloads are redacted.\n- Cleanup: all prefixed B15 QA and production tenants, profiles/auth users, worker/production/audit/export fixtures, and dependencies were removed and reconciled.\n- B15 evidence: \`output/qa/blocked-row-campaign/B15-qa-security.json\`, \`B15-qa-browser.json\`, \`B15-qa-http.json\`, and \`B15-production-security.json\`.\n- OFF-001 blocker: actual install and standalone reopen need a supported PWA-capable browser/device; manifest, icons, scope, start route, update notice, and refresh activation are already proven.\n- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.\n- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.\n\n## Correlation batches\n\n| Batch | Workflow/root | Rows | IDs |\n| --- | --- | ---: | --- |\n${table}\n\n## B15 closeout\n\nB15 directly proved the recovery-token lifecycle, one-hour idle expiry, proxy-isolated auth limiter keys, same-user/cross-origin action rejection, tenant-scoped audited export, atomic erasure with retained-history redaction, stored-XSS safety, audit context, keyboard operation, and 200%-equivalent layouts. The exact implementation commit and both migrations are live, matching disposable QA and production fixtures passed and reconciled to zero, and only OFF-001 install/standalone reopen remains blocked by browser capability.\n\n## Exact next action\n\n${b15ExecutableClosed ? 'Execute B16 with a deterministic WhatsApp provider simulator covering consent, sent/skipped/timeout/retry/cooldown/failure outcomes and core-write invariants before any WA row promotion.' : 'Complete B15 executable proof and preserve OFF-001 as blocked unless actual install/standalone reopen is observed.'}\n`
 
-const currentHuman = b17Closed ? `# Blocked-Row Remediation Checkpoint
+const b18Human = `# Blocked-Row Remediation Checkpoint
+
+- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
+- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.
+- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.
+- Completed batch: **B18 — backup restore and rollback/forward-fix exercise (1 PASS, 1 precisely BLOCKED)**.
+- Active batch: **B19 — external and human acceptance evidence**.
+- Restore proof: sanitized organization, two users, production, stock, receivable, and payroll ledgers restored into isolated QA with matching SHA-256 digests, four assertions, restored owner sign-in, and 2,478.4 ms restore time.
+- Rollback proof: native Vercel rollback returned the disposable app to deployment \`dpl_4W61veVnHqTyGDU19qC5dUBm2V14\` at exact source commit \`57caa6e6f15f25b6e26654a1d3cfc4b431452e9b\`; provider-reported duration was 2 seconds and \`/privacy\` returned 200.
+- Database proof: a rollback-only QA transaction dropped a legacy column, restored its canonical replacement from preserved JSON provenance, reconciled the row, and left no temporary contract.
+- Cleanup: all prefixed QA rows/auth, private backup material, the disposable Vercel project, and the disposable worktree were removed; production was not mutated.
+- TECH-011 blocker: production reports WAL-G enabled, PITR disabled, and no retained backups. The runtime restore passed, but the row still needs an automated retained or approved off-site production backup schedule.
+- B18 evidence: \`output/qa/blocked-row-campaign/B18-qa-backup-restore.json\` and \`B18-recovery-runtime.json\`.
+- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.
+- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.
+
+## Correlation batches
+
+| Batch | Workflow/root | Rows | IDs |
+| --- | --- | ---: | --- |
+${table}
+
+## B18 closeout
+
+B18 proves that a sanitized multi-ledger backup can be restored and reconciled, that the restored owner can authenticate, that an actual application build can be returned to a marked last-known-good deployment through the provider's native rollback, and that a non-reversible database change has a viable provenance-preserving forward-fix. All exercises ran in disposable QA infrastructure and cleaned to zero. TECH-012 is PASS. TECH-011 remains BLOCKED solely because production has no retained or approved off-site backup schedule; restore mechanics themselves passed.
+
+## Exact next action
+
+Execute B19: inspect configured live Sentry event payloads for scrubbing evidence, and retain the legal, factory-language, business-truth-sheet, and supervisor-register rows as precise external blockers unless their required human artifacts are available.
+`
+
+const currentHuman = b18ExecutableClosed ? b18Human : b17Closed ? `# Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
 - Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.
