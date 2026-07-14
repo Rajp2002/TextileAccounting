@@ -15,7 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth'
+import { parseJWT, requireRole } from '@/lib/auth'
 import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 import { getOrgTier } from '@/lib/subscription'
@@ -388,8 +388,9 @@ export async function joinOrganization(input: {
 // ─── signIn ───────────────────────────────────────────────────────────────────
 
 /**
- * Login: authenticates user and uses JWT claims (not a DB query) to
- * determine role and redirect destination.
+ * Login: authenticates the user and returns a safe internal destination. The
+ * client performs the navigation only after its user-scoped offline cache has
+ * also been cleared.
  */
 export async function signIn(input: { email: string; password: string }) {
     const parsed = safeParse(SignInSchema, input)
@@ -410,24 +411,29 @@ export async function signIn(input: { email: string; password: string }) {
         return { error: 'Session error. Please try again.' }
     }
 
-    // The custom_access_token_hook injects role/org_id at JWT mint time,
-    // but signInWithPassword returns app_metadata from raw_app_meta_data
-    // which may be stale (especially on re-login in PWA standalone mode).
-    // Refreshing the session forces the hook to re-run and populate claims.
-    let userRole = data.session.user.app_metadata?.role
-    let onboardingComplete = data.session.user.app_metadata?.onboarding_complete
+    // Read the freshly minted access token first. Unlike the user object's raw
+    // metadata, these values come from custom_access_token_hook for this login.
+    let jwt = parseJWT(data.session.access_token)
+    let userRole = jwt.user_role ?? data.session.user.app_metadata?.role
+    let orgId = jwt.org_id ?? data.session.user.app_metadata?.org_id
+    let onboardingComplete = jwt.onboarding_complete ?? data.session.user.app_metadata?.onboarding_complete
 
-    if (!userRole) {
+    const needsOrganization = userRole === 'owner' || userRole === 'supervisor'
+    if (!userRole || (needsOrganization && !orgId)) {
         const { data: refreshed } = await supabase.auth.refreshSession()
-        userRole = refreshed.session?.user.app_metadata?.role
-        onboardingComplete = refreshed.session?.user.app_metadata?.onboarding_complete
+        if (refreshed.session) {
+            jwt = parseJWT(refreshed.session.access_token)
+            userRole = jwt.user_role ?? refreshed.session.user.app_metadata?.role
+            orgId = jwt.org_id ?? refreshed.session.user.app_metadata?.org_id
+            onboardingComplete = jwt.onboarding_complete ?? refreshed.session.user.app_metadata?.onboarding_complete
+        }
     }
 
     // ── DB fallback: JWT claims still absent after refresh ────────────────────
     // This happens when the custom_access_token_hook can't find the profile
     // fast enough (PWA cold-open, network lag, or hook race condition).
     // Mirror the pattern used in getOnboardingStatus() — query DB directly.
-    if (!userRole) {
+    if (!userRole || ((userRole === 'owner' || userRole === 'supervisor') && !orgId)) {
         const admin = createAdminClient()
         // Use a single join query to fetch both profile role and org onboarding status
         const { data: profile } = await admin
@@ -438,6 +444,7 @@ export async function signIn(input: { email: string; password: string }) {
 
         if (profile?.role) {
             userRole = profile.role
+            orgId = profile.org_id ?? undefined
 
             if (profile.organizations && typeof profile.organizations === 'object' && !Array.isArray(profile.organizations)) {
                 onboardingComplete = (profile.organizations as { onboarding_complete?: boolean | null }).onboarding_complete ?? false
@@ -446,28 +453,21 @@ export async function signIn(input: { email: string; password: string }) {
     }
 
     if (userRole === 'owner') {
-        const admin = createAdminClient()
-        const { data: ownerProfile } = await admin
-            .from('profiles')
-            .select('org_id, organizations(onboarding_complete)')
-            .eq('id', data.session.user.id)
-            .maybeSingle()
-        const orgId = ownerProfile?.org_id
-        if (ownerProfile?.organizations && typeof ownerProfile.organizations === 'object' && !Array.isArray(ownerProfile.organizations)) {
-            onboardingComplete = (ownerProfile.organizations as { onboarding_complete?: boolean | null }).onboarding_complete ?? onboardingComplete
+        if (!orgId) {
+            return { error: 'Account setup incomplete. Please contact support.' }
         }
 
-        const tier = orgId ? await getOrgTier(orgId) : 'none'
-        if (tier === 'base') redirect('/owner/estimator')
-        if (tier === 'none') redirect('/owner/billing')
+        const tier = await getOrgTier(orgId)
+        if (tier === 'base') return { redirectTo: '/owner/estimator' }
+        if (tier === 'none') return { redirectTo: '/owner/billing' }
         if (!onboardingComplete) {
-            redirect('/onboarding')
+            return { redirectTo: '/onboarding' }
         }
-        redirect('/owner/today')
+        return { redirectTo: '/owner/today' }
     } else if (userRole === 'supervisor') {
-        redirect('/supervisor/dashboard')
+        return { redirectTo: '/supervisor/dashboard' }
     } else if (userRole === 'admin') {
-        redirect('/admin')
+        return { redirectTo: '/admin' }
     } else {
         // Role still absent after DB fallback — profile genuinely missing
         return { error: 'Account setup incomplete. Please contact support.' }

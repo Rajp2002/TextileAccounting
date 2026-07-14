@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,8 @@ import LoadingModal from '@/components/auth/loading-modal'
 import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 
 export default function LoginForm() {
+    const router = useRouter()
+    const sessionCleanupRef = useRef<ReturnType<typeof clearClientSessionState> | null>(null)
     const [loading, setLoading]             = useState(false)
     const [isRedirecting, setIsRedirecting] = useState(false)
     const [email, setEmail]                 = useState('')
@@ -20,6 +23,11 @@ export default function LoginForm() {
     const [showPassword, setShowPassword]   = useState(false)
 
     useEffect(() => {
+        // Start clearing user-scoped browser data as soon as the login screen is
+        // shown. In the common case this finishes while the user enters their
+        // credentials, so IndexedDB startup is not part of click-to-dashboard.
+        sessionCleanupRef.current = clearClientSessionState()
+
         const params = new URLSearchParams(window.location.search)
         if (params.get('message') === 'password-updated') {
             toast.success('Password updated. Please sign in with your new password.')
@@ -32,26 +40,25 @@ export default function LoginForm() {
         setLoading(true)
 
         try {
-            await clearClientSessionState()
-            const result = await signIn({ email: email.trim(), password })
+            // These operations are independent: cache cleanup touches only
+            // browser storage while signIn writes the server-side auth cookies.
+            // Waiting for both keeps cross-user cache isolation without adding
+            // cleanup time in front of the network request.
+            const cleanupPromise = sessionCleanupRef.current ?? clearClientSessionState()
+            const [, result] = await Promise.all([
+                cleanupPromise,
+                signIn({ email: email.trim(), password }),
+            ])
 
-            // result only returns on error — success triggers a redirect() on server
             if (result && 'error' in result) {
                 toast.error(result.error)
                 setLoading(false)
-            }
-        } catch (err: unknown) {
-            // NEXT_REDIRECT is not an error — it means redirect() fired
-            if (
-                typeof err === 'object' &&
-                err !== null &&
-                'digest' in err &&
-                typeof err.digest === 'string' &&
-                err.digest.startsWith('NEXT_REDIRECT')
-            ) {
-                setIsRedirecting(true)
                 return
             }
+
+            setIsRedirecting(true)
+            router.replace(result.redirectTo)
+        } catch {
             toast.error('Something went wrong. Please try again.')
             setLoading(false)
         }

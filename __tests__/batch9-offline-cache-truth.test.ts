@@ -70,7 +70,10 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(cleanup).toContain('db.mutations.clear()')
         expect(cleanup).toContain('window.sessionStorage.clear()')
         expect(logoutButton).toContain('clearClientSessionState')
-        expect(loginForm).toContain('await clearClientSessionState()')
+        expect(loginForm).toContain('await Promise.all([')
+        expect(loginForm).toContain('sessionCleanupRef.current = clearClientSessionState()')
+        expect(loginForm).toContain('const cleanupPromise = sessionCleanupRef.current ?? clearClientSessionState()')
+        expect(loginForm).toContain('signIn({ email: email.trim(), password })')
         expect(pwaSessionGuard).toContain('await clearClientSessionState()')
     })
 
