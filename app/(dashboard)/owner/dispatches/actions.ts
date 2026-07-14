@@ -71,7 +71,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
         return { success: false, stage: 'validation', message: 'Party name is required' }
     }
     if (soldMeters <= 0) {
-        return { success: false, stage: 'validation', message: 'Sold meters must be greater than 0' }
+        return { success: false, stage: 'validation', message: 'Metres Sold must be greater than 0' }
     }
     if (saleRatePerMeter <= 0) {
         return { success: false, stage: 'validation', message: 'Sale rate must be greater than 0' }
@@ -80,7 +80,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
         return { success: false, stage: 'validation', message: 'Credit days cannot be negative' }
     }
     if (input.dispatchNow && (requestedDispatchMeters <= 0 || requestedDispatchMeters > soldMeters)) {
-        return { success: false, stage: 'validation', message: 'Dispatched meters must be greater than 0 and not more than sold meters' }
+        return { success: false, stage: 'validation', message: 'Metres Sent must be greater than 0 and cannot exceed Metres Sold' }
     }
     const dispatchDate = input.dispatchNow ? normalizeDate(input.dispatchDate) : null
     if (input.dispatchNow && dispatchDate !== null && dispatchDate < saleDate) {
@@ -89,7 +89,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     const hasExplicitSoldTakas = input.soldTakas != null && String(input.soldTakas).trim() !== ''
     const soldTakas = hasExplicitSoldTakas ? toFiniteNumber(input.soldTakas) : null
     if (soldTakas != null && soldTakas <= 0) {
-        return { success: false, stage: 'validation', message: 'Sold takas must be greater than 0' }
+        return { success: false, stage: 'validation', message: 'Taka sold must be greater than 0' }
     }
 
     const { data, error } = await supabase.rpc('create_party_stock_sale_dispatch_v1', {
@@ -278,7 +278,7 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
         return {
             success: false,
             stage: 'dispatch',
-            message: 'Sale was saved, but dispatch could not be created. The sold takas are safe and appear under Sold Not Dispatched.',
+            message: 'Sale was saved, but Dispatch could not be created. The sold Taka remain safe under Sold — Pending Dispatch.',
             saleIds,
             recoverable: true
         }

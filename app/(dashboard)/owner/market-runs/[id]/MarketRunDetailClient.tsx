@@ -363,7 +363,7 @@ export default function MarketRunDetailClient({
                                         </div>
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                                             <div>
-                                                <p className="text-muted-foreground font-medium mb-0.5">Meters</p>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Metres Produced</p>
                                                 <p className="font-bold text-foreground">{fmtM(sale.meters_sold)}</p>
                                             </div>
                                             <div>
@@ -394,7 +394,7 @@ export default function MarketRunDetailClient({
                                     <tr>
                                         <th className="px-4 py-3 font-semibold">Date</th>
                                         <th className="px-4 py-3 font-semibold">Direct Trader Invoice</th>
-                                        <th className="px-4 py-3 font-semibold text-right">Meters</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Metres Produced</th>
                                         <th className="px-4 py-3 font-semibold text-right">Price / Meter</th>
                                         <th className="px-4 py-3 font-semibold text-right">Booked Profit</th>
                                         <th className="px-4 py-3 font-semibold text-right">Status</th>

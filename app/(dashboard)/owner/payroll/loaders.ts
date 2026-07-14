@@ -249,7 +249,7 @@ export async function loadOwnerPayrollInitialData(
             cycleStartDay: cycleConfig.cycle_start_day,
         }),
         operatorSchemaWarning: usedLegacyOperatorSchema
-            ? 'Machine-operator payroll fields are unavailable in this environment. Legacy payroll data is shown; do not settle machine-operator wages until the payroll migration is applied.'
+            ? 'Loom-worker Hisaab fields are unavailable in this environment. Legacy payroll data is shown; do not settle Worker Hisaab until the payroll migration is applied.'
             : undefined,
     }
 }

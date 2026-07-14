@@ -56,7 +56,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             )}>
                 <DollarSign className={cn('h-4 w-4 shrink-0', tone.icon)} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Payroll / Hisaab</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Worker Hisaab</p>
                     <p className={cn('text-sm font-bold', tone.text)}>
                         {payroll.currentCycleLabel}
                     </p>
@@ -83,7 +83,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
                         <HandCoins className="h-3.5 w-3.5 text-body" />
-                        <p className="min-w-0 truncate text-xs text-body">Pending Advances</p>
+                        <p className="min-w-0 truncate text-xs text-body">Pending Upaad</p>
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',
@@ -95,7 +95,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                         }
                     </p>
                     <p className="mt-0.5 text-[11px] text-body">
-                        {hasAdvances ? 'pending deduction' : 'No pending advances'}
+                        {hasAdvances ? 'Upaad recovery pending' : 'No pending Upaad'}
                     </p>
                 </div>
             </div>
@@ -135,7 +135,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                         hasUnsettled ? tone.link : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
                     )}
                 >
-                    {hasUnsettled ? 'Settle Hisaab →' : 'View Payroll'}
+                    {hasUnsettled ? 'Settle Worker Hisaab →' : 'View Worker Hisaab'}
                 </Link>
             </div>
         </div>

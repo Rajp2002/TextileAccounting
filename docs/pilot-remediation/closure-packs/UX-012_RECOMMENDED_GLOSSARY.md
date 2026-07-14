@@ -2,15 +2,15 @@
 
 Prepared: 2026-07-14 IST
 
-Status: proposal for factory-supervisor review; **not approved terminology**.
+Status: **product-owner-approved provisional limited-pilot baseline**. Actual pilot factory-user comprehension validation remains open; this is not factory-supervisor approval.
 
-The English and Gujarati entries below are recommendations based on current product meaning. The Gujarati is a discussion aid, not a linguistic or factory-side approval. The named pilot supervisor must replace any word the factory does not actually use.
+The English and Gujarati entries below are the provisional implementation baseline approved by the product owner on 2026-07-14. Gujarati/local wording remains a pilot-validation priority. The actual pilot user must identify confusing or rejected wording in context, corrections must be implemented, and the user must confirm after changes.
 
 | Canonical English proposal | Suggested Gujarati | Do not use interchangeably with | Definition / usage rule |
 | --- | --- | --- | --- |
 | Loom | લૂમ | generic machine, loom type | One physical weaving loom. Keep `machine` only as an internal technical identifier unless the supervisor chooses it for UI. |
 | Loom type | લૂમનો પ્રકાર | loom name/number | Technical category such as Jacquard or Rapier. |
-| Shift meters | પાળીના મીટર | counter reading, daily total | Fabric metres produced on one loom in the selected shift. |
+| Metres Produced This Shift | આ પાળીમાં ઉત્પાદિત મીટર | Counter Reading, daily total | Fabric metres produced on one loom in the selected shift. |
 | Counter reading | કાઉન્ટર રીડિંગ | shift meters | Actual cumulative loom-counter value; show only in a real counter-entry mode. |
 | Fabric quality | કાપડની ક્વોલિટી | market run, order, grade | Named fabric construction/specification used by costing, production and stock. |
 | Market run | માર્કેટ રન | party order, shift | Production for market/godown stock without a committed buyer order. |
@@ -21,7 +21,7 @@ The English and Gujarati entries below are recommendations based on current prod
 | Party ledger | પાર્ટી હિસાબ | stock ledger, payroll | Party-level sales/invoices, receipts, adjustments and balance. |
 | Amount due | લેવાનું બાકી | fabric receipt | Money still owed by the party. |
 | Godown stock | ગોડાઉન સ્ટોક | yarn inventory | Fabric recorded as available/pending in the godown; label expected versus physically counted state. |
-| Fabric stock lot | કાપડનો સ્ટોક લોટ | dispatch batch, yarn batch | Traceable fabric quantity grouped by source, quality and cost. |
+| Stock Lot | કાપડનો સ્ટોક લોટ | dispatch batch, yarn batch | Traceable fabric quantity grouped by source, quality and cost. |
 | Taka | તાકા (confirm spelling/meaning) | roll, bale, package | Physical unit used by the pilot factory; change the canonical term if the factory uses a different unit. |
 | Stock inward | સ્ટોક આવક / ઇનવર્ડ | production estimate | Recording fabric entering available godown stock, with source and physical/expected status. |
 | Dispatch | ડિસ્પેચ | sale, party receipt | Physical movement of fabric out of the factory. |
@@ -34,7 +34,7 @@ The English and Gujarati entries below are recommendations based on current prod
 | Warp yarn | તાણો / Warp (confirm) | weft yarn | Lengthwise yarn prepared on the beam. |
 | Weft yarn | વાણો / Weft (confirm) | warp yarn | Crosswise yarn inserted during weaving. |
 | Beam | બીમ | yarn lot, loom | Prepared warp carrier mounted/linked to a loom. |
-| Worker | કારીગર | party, supervisor role | Umbrella term for people whose work/attendance/pay is recorded. |
+| Worker | કારીગર (Karigar) | party, supervisor role | Use Worker in English and Karigar in applicable Gujarati/local context. |
 | Piece-rate worker | મીટર દરનો કારીગર | salaried worker | Worker paid from production metres and rate. |
 | Salaried worker | ફિક્સ પગારનો કારીગર | piece-rate worker | Worker paid by salary/day/attendance rather than loom output. |
 | Loom-shift assignment | લૂમ-પાળી કામગીરી | order assignment | Effective link between loom, worker, shift, pay mode and target. |

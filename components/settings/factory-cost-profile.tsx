@@ -220,7 +220,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-saffron" />
-                    <CardTitle className="text-base">{standaloneEstimator ? 'Costing Defaults' : 'Factory Cost Profile'}</CardTitle>
+                    <CardTitle className="text-base">{standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile'}</CardTitle>
                 </div>
                 <CardDescription>
                     {standaloneEstimator
@@ -234,7 +234,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Costing Profile' : 'Factory Type'}</Label>
+                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Cost Estimate Profile' : 'Factory Type'}</Label>
                         <p className="mt-1 text-xs text-muted-foreground">{standaloneEstimator ? 'Choose the closest costing profile, then fine-tune the enabled charges below.' : 'Select your factory type to configure which cost sections apply. Fine-tune with the toggles below.'}</p>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">

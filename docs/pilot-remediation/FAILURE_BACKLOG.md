@@ -6,7 +6,7 @@ This backlog is grouped by root cause and ordered by the required pilot priority
 
 The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. Subsequent remediation closed every formal failure. `OFF-009` and `OFF-010` now have exact delayed/throttled runtime proof; `WA-008` retains its live-provider acceptance test as a named post-pilot requirement without PASS credit. Historical row-level actuals remain immutable in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/` and `output/qa/remaining-gate-campaign/`.
 
-Current remediation note (2026-07-14): the active formal matrix has **367 pass, 0 fail, 7 blocked, and 3 not applicable**. `release_scope` and `pilot_gating` now distinguish verdict gates from optional, deferred, pre-public, pilot-operational, and post-pilot evidence. The three genuine limited-pilot gates are `TECH-011` production backup scheduling, `UX-012` factory terminology approval, and `GOLDEN-A-03` a business truth sheet. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest non-gating evidence debt. `WA-008` and `WA-010` link to specific post-pilot WhatsApp backlog items. `NEEDS-AUDIT-002` remains a separate legacy semantic-reconciliation audit item.
+Current remediation note (2026-07-14): the active formal matrix has **368 pass, 0 fail, 6 blocked, and 3 not applicable**. `UX-012` passes its traceably amended pre-pilot criterion at production commit `93c2622`; actual pilot-user comprehension feedback remains an open operating control, not factory-supervisor approval. The two remaining genuine limited-pilot gates are `TECH-011` production backup scheduling and `GOLDEN-A-03` a business truth sheet. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest non-gating evidence debt.
 
 ## Coverage Ledger
 
@@ -24,9 +24,9 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P4 | `OFF-A` offline, cache, and public claims | None — `OFF-010` closed with constrained-3G runtime proof |
 | P5 | `REL-A` release gates and observability | None — `TECH-001`, `TECH-005`, and `TECH-006` closed |
 
-Blocked rows also remain unresolved evidence debt. Only `TECH-011`, `UX-012`, and `GOLDEN-A-03` independently gate the limited pilot. `SEC-018` gates public reliance, not the closed supervised pilot. `TECH-012`, `BILL-003`, and the Golden payroll/stock rows formerly listed here are closed by B11–B18 direct runtime proof.
+Blocked rows also remain unresolved evidence debt. Only `TECH-011` and `GOLDEN-A-03` independently gate the limited pilot. `UX-012` is a passed pre-pilot row with an open in-pilot user-validation control. `SEC-018` gates public reliance, not the closed supervised pilot. `TECH-012`, `BILL-003`, and the Golden payroll/stock rows formerly listed here are closed by B11–B18 direct runtime proof.
 
-Medium blocked rows retain exact closure procedures: `GOLDEN-A-03` and `UX-012` are pilot gates; `OFF-001` is optional device evidence; `SIGNOFF-04` is a mandatory first-shift operating control. `WA-010` is post-pilot `PP-WA-003`. `SEC-011` remains deferred to the owner’s physical laptop for read-only Sentry inspection; its token must never be transferred or exposed.
+Medium rows retain exact controls: `GOLDEN-A-03` is a pilot gate; `UX-012` retains an open in-pilot user-validation control; `OFF-001` is optional device evidence; `SIGNOFF-04` is a mandatory first-shift operating control. `WA-010` is post-pilot `PP-WA-003`. `SEC-011` remains deferred to the owner’s physical laptop for read-only Sentry inspection; its token must never be transferred or exposed.
 
 Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed. `SEC-B` is now also closed after `AUTH-008` received fail-closed source coverage and fresh QA Redis proof on 2026-07-11. Batch 20 moved the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`; Batch 21D closes them with disposable QA runtime proof.
 

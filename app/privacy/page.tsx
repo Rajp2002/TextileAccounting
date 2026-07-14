@@ -72,7 +72,7 @@ export default async function PrivacyPolicyPage() {
                     <li>Attendance records (day-to-day workers)</li>
                     <li>Payroll calculations and settlement records</li>
                     <li>Cash advance (Upaad) records — amounts, reasons, deduction status</li>
-                    <li>Machine details — names, rates per meter, active status</li>
+                    <li>Loom details — names, rates per metre, active status</li>
                     <li>Customer order details — party names, fabric quality, target meters, deadlines</li>
                     <li>Yarn batch/beam inventory — batch IDs, weights, quality assignments, yield audit reports</li>
                     <li>Fabric quality definitions — names, target yields, estimated sale prices, worker rates</li>

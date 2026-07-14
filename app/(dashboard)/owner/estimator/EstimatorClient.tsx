@@ -1476,7 +1476,7 @@ export default function EstimatorClient({
             : partyName.trim()
 
         if (!resolvedPartyName) {
-            return toast.error(!canUseProduction ? 'Quality name is required' : targetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
+            return toast.error(!canUseProduction ? 'Fabric Quality is required' : targetMode === 'market' ? 'Fabric Quality is required' : t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
@@ -1531,8 +1531,8 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     quoteRequestIdRef.current = null
                     toast.success(canUseProduction
-                        ? (status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
-                        : (sourceQuoteId ? 'Costing updated' : 'Costing saved'))
+                        ? (status === 'accepted' ? 'Quotation saved & accepted!' : t('estimator.toast.converted_success'))
+                        : (sourceQuoteId ? 'Cost Estimate updated' : 'Cost Estimate saved'))
                     router.push('/owner/quotes')
                 } else {
                     toast.error(res.error ?? 'Failed to save quote')
@@ -1616,8 +1616,8 @@ export default function EstimatorClient({
         ? orderQuote?.actualMarginPct ?? state.profitPct
         : state.profitPct
     const costSegments = [
-        { label: 'Warp', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
-        { label: 'Weft', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
+        { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
+        { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
         { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
         { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
         { label: 'Overhead', value: totals.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
@@ -1687,10 +1687,10 @@ export default function EstimatorClient({
                         <p className="text-sm text-amber-800 flex-1">
                             {draft.sourceQuoteId ? (
                                 <>
-                                    {canUseProduction ? 'Re-estimating from quote for ' : 'Updating saved costing '}
+                                    {canUseProduction ? 'Recalculating Cost Estimate from Quotation for ' : 'Updating saved Cost Estimate '}
                                     <span className="font-bold">{canUseProduction ? (draft.partyName || 'Unknown Party') : (draft.qualityLabel || 'Untitled')}</span>
                                     {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
-                                    {canUseProduction && ' — editable quotes update in place; accepted quotes create a linked version'}
+                                    {canUseProduction && ' — editable Quotations update in place; accepted Quotations create a linked version'}
                                 </>
                             ) : (
                                 <>
@@ -1712,7 +1712,7 @@ export default function EstimatorClient({
                                 setSourceQuoteId(d.sourceQuoteId ?? null)
                                 setSourceQuoteUpdatedAt(d.sourceQuoteUpdatedAt ?? null)
                                 quoteRequestIdRef.current = null
-                                toast.success(draft.sourceQuoteId ? 'Quote specs loaded' : 'Draft restored')
+                                toast.success(draft.sourceQuoteId ? 'Quotation details loaded' : 'Cost Estimate draft restored')
                             }}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
                         >
@@ -1766,7 +1766,7 @@ export default function EstimatorClient({
                                     )}
                                 </div>
                                 <div className="flex gap-x-4 gap-y-1 overflow-x-auto pb-1 text-[11px] font-semibold no-scrollbar">
-                                    {(costSegments.length > 0 ? costSegments : [{ label: 'Warp', value: 0, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' }]).map(segment => (
+                                    {(costSegments.length > 0 ? costSegments : [{ label: 'Warp Yarn', value: 0, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' }]).map(segment => (
                                         <span key={segment.label} className={`inline-flex shrink-0 items-center gap-1.5 ${segment.text}`}>
                                             <span className={`h-2 w-2 rounded-full ${segment.color}`} />
                                             {segment.label}
@@ -1810,7 +1810,7 @@ export default function EstimatorClient({
                                         }
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{canUseProduction ? 'Save & Accept' : (sourceQuoteId ? 'Update Costing' : 'Save Costing')}</span>
+                                        <span className="truncate">{canUseProduction ? 'Save & Accept Quotation' : (sourceQuoteId ? 'Update Cost Estimate' : 'Save Cost Estimate')}</span>
                                     </Button>
 
                                     {/* TERTIARY: Save Quote */}
@@ -1823,7 +1823,7 @@ export default function EstimatorClient({
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">Save Quote</span>
+                                        <span className="truncate">Save Quotation</span>
                                     </Button>}
 
                                     {/* TERTIARY: Switch to Market mode */}
@@ -1836,7 +1836,7 @@ export default function EstimatorClient({
                                             onClick={() => setMode('market')}
                                         >
                                             <Gauge className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="truncate">Market Maal</span>
+                                            <span className="truncate">Market Run</span>
                                         </Button>
                                     )}
                                 </>
@@ -1850,7 +1850,7 @@ export default function EstimatorClient({
                                         onClick={() => handleSaveQuote('market')}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
-                                            ? 'Complete fabric label, quality, quantity, and cost result first.'
+                                            ? 'Complete Fabric Quality, quantity, and Cost Estimate first.'
                                             : undefined
                                         }
                                     >
@@ -1868,7 +1868,7 @@ export default function EstimatorClient({
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
                                         <Save className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">Save Quote</span>
+                                        <span className="truncate">Save Quotation</span>
                                     </Button>
 
                                     {/* TERTIARY: Transition to Party Order mode */}
@@ -2105,7 +2105,7 @@ export default function EstimatorClient({
                                     {partyHint && (
                                         <p className="text-[10px] text-slate-500 flex items-center gap-1">
                                             <span className="text-blue-500">💡</span>
-                                            Last quote:{' '}
+                                            Last Quotation:{' '}
                                             <span className="font-bold text-slate-700">₹{partyHint.quote_price_per_meter.toFixed(2)}/m</span>
                                             {' '}for <span className="font-medium">{partyHint.quality_label}</span>
                                             {' '}· {new Date(partyHint.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
@@ -2231,7 +2231,7 @@ export default function EstimatorClient({
                                         onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
                                     />
                                     {row.calculationMode === 'manual' ? (
-                                        <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
+                                        <NumField label="Warp Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Kilograms of Warp Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
                                     ) : (
                                         <>
                                             <YarnDensityFields
@@ -2452,7 +2452,7 @@ export default function EstimatorClient({
                                             warning={effectiveWidthWarning}
                                         />
                                         {row.calculationMode === 'manual' ? (
-                                            <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
+                                            <NumField label="Weft Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Kilograms of Weft Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
                                         ) : (
                                             <YarnDensityFields
                                                 row={row}
@@ -2837,7 +2837,7 @@ export default function EstimatorClient({
                                             {isDepreciation && item.meta && (
                                                 <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-indigo-100/50">
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Machine Value (avg/loom)</span>
+                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Loom Value (average)</span>
                                                         <div className="relative">
                                                             <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                             <Input 

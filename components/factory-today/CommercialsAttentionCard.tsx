@@ -35,7 +35,7 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                 <ReceiptText className="h-4 w-4 shrink-0" />
                 <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Commercials</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Party Ledger</p>
                         {hasIssues && (
                             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF3B30] text-[10px] font-bold text-white">
                                 {commercial.blockingIssues.length}
@@ -43,7 +43,7 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                         )}
                     </div>
                     <p className={cn('text-sm font-bold', hasIssues ? 'text-risk' : 'text-success')}>
-                        {hasIssues ? 'Receivables need review' : 'Receivables are current'}
+                        {hasIssues ? 'Amounts Due need review' : 'Amounts Due are current'}
                     </p>
                 </div>
                 {commercial.totalDueOrOverdue > 0 && (
@@ -51,7 +51,7 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                         <p className="text-[11px] font-bold text-risk">
                             Rs. {(commercial.totalDueOrOverdue / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}k
                         </p>
-                        <p className="text-[10px] text-body">due</p>
+                        <p className="text-[10px] text-body">Amount Due</p>
                     </div>
                 )}
             </div>
@@ -82,13 +82,13 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                         </div>
                     ))}
                     {commercial.blockingIssues.length > 5 && (
-                        <p className="py-2 text-xs text-muted">+{commercial.blockingIssues.length - 5} more receivables</p>
+                        <p className="py-2 text-xs text-muted">+{commercial.blockingIssues.length - 5} more Amounts Due</p>
                     )}
                 </div>
             ) : (
                 <div className="flex items-center gap-2 px-4 py-4">
                     <CheckCircle2 className="h-4 w-4 text-success" />
-                    <p className="text-sm text-body">No due receivables or payment mismatches.</p>
+                    <p className="text-sm text-body">No Amount Due or payment mismatches.</p>
                 </div>
             )}
 
@@ -102,7 +102,7 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                             : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
                     )}
                 >
-                    Review Commercials
+                    Review Party Ledger
                     <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
             </div>

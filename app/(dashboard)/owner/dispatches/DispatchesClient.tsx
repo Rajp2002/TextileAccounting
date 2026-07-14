@@ -711,12 +711,12 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
             const meters = Number.parseFloat(dispatchMeters)
             const takas = Number.parseInt(dispatchTakas, 10) || 0
             if (!Number.isFinite(meters) || meters <= 0) {
-                toast.error('Dispatch meters must be a valid number greater than 0')
+                toast.error('Metres Sent must be a valid number greater than 0')
                 return
             }
             const pendingMeters = confirmingSale.pending_dispatch_meters ?? confirmingSale.meters_sold
             if (meters > pendingMeters + 0.01) {
-                toast.error(`Cannot dispatch more than remaining pending meters (${pendingMeters.toFixed(2)} m)`)
+                toast.error(`Metres Sent cannot exceed sold metres still pending Dispatch (${pendingMeters.toFixed(2)} m)`)
                 return
             }
             const res = await confirmPendingSaleDispatch(
@@ -1039,7 +1039,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                         </div>
                                         <div className="grid grid-cols-2 gap-6 flex-grow max-w-sm">
                                             <div>
-                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Pending Meters</p>
+                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Sold — Pending Dispatch</p>
                                                 <p className="text-base font-black tabular-nums text-foreground">
                                                     {(sale.pending_dispatch_meters ?? sale.meters_sold).toFixed(2)}
                                                     <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
@@ -1218,7 +1218,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                             </div>
                             <div className="grid gap-3 grid-cols-2">
                                 <div className="space-y-1.5 col-span-2">
-                                    <Label className="text-xs font-semibold text-slate-700">Meters to Dispatch</Label>
+                                    <Label className="text-xs font-semibold text-slate-700">Metres Sent</Label>
                                     <Input
                                         type="number"
                                         step="0.01"
@@ -1278,7 +1278,8 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                 </div>
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-slate-700">Challan Number</Label>
+                                <Label className="text-xs font-semibold text-slate-700">Delivery Challan Number</Label>
+                                <p className="text-[11px] text-slate-500">Challan accompanies the goods; it is separate from Sale and Party Receipt Confirmation.</p>
                                 <Input
                                     value={challanNumber}
                                     onChange={(e) => setChallanNumber(e.target.value)}

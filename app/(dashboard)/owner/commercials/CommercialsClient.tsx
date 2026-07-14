@@ -740,7 +740,7 @@ function CommercialGroupCard({
 
                                         <div className="grid grid-cols-2 gap-2 text-xs">
                                             <div>
-                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Metres Sold</p>
                                                 <p className="mt-1 font-black text-foreground">{meters(rec.meters_sold ?? 0)}</p>
                                             </div>
                                             <div>
@@ -847,7 +847,7 @@ function CommercialGroupCard({
                                         <p className="text-xs text-muted-foreground">{entry.quality_label} · {formatDate(entry.event_date)}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Metres Sold</p>
                                         <p className="font-black">{meters(entry.meters_sold)}</p>
                                     </div>
                                     <div>
@@ -1421,7 +1421,7 @@ function PartiesDirectory({ insights }: { insights: CommercialPartyInsights }) {
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Metres Sold</p>
                                         <p className="mt-1 font-black text-foreground">{meters(row.metersSold)}</p>
                                     </div>
                                     <div>
@@ -1667,7 +1667,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
         <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground">Commercials</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">Party Ledger</h1>
                     <p className="mt-1 text-sm text-muted-foreground">Party dues, collection priority, and booked profit.</p>
                 </div>
             </div>

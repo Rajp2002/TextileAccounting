@@ -208,7 +208,7 @@ describe('Batch 24D PROD-022 production draft date/shift isolation', () => {
         expect(supervisorPage).toContain('countRestoredUnsavedDraftMeters(restoredMeters, existingProductionMeters)')
         expect(supervisorPage).toContain('Restored unsaved draft')
         expect(supervisorPage).toContain('restored from this device and have not been saved yet')
-        expect(supervisorPage).toContain('Confirm large shift meters')
+        expect(supervisorPage).toContain('Confirm large shift production')
         expect(supervisorPage).toContain('confirmedLargeMeters: true')
     })
 

@@ -98,7 +98,7 @@ export function WorkerBreakdown({ entries, selectedDate }: { entries: WorkerBrea
                     <div className="mx-4 mb-3 rounded-xl border border-border/60 overflow-hidden bg-muted/10">
                       {/* Sub-header */}
                       <div className="grid grid-cols-4 gap-3 px-4 py-2 bg-muted/30 border-b border-border/40">
-                        {['Machine', 'Output', 'Rate', 'Wages'].map(h => (
+                        {['Loom', 'Metres Produced', 'Rate', 'Earnings'].map(h => (
                           <span key={h} className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/50 last:text-right">{h}</span>
                         ))}
                       </div>

@@ -9,7 +9,7 @@ const actions = [
     {
         id: 'cost-fabric',
         label: 'Cost New Fabric',
-        description: 'Run the estimator',
+        description: 'Create a Cost Estimate',
         href: '/owner/estimator',
         icon: Calculator,
         color: 'text-saffron bg-saffron/10 border-saffron/20',
@@ -18,7 +18,7 @@ const actions = [
     {
         id: 'start-order',
         label: 'Start Party Order',
-        description: 'Convert a quote to order',
+        description: 'Convert a Quotation to a Party Order',
         href: '/owner/quotes',
         icon: Package,
         color: 'text-saffron bg-saffron/10 border-saffron/20',
@@ -26,8 +26,8 @@ const actions = [
     },
     {
         id: 'start-market-maal',
-        label: 'Start Market Maal',
-        description: 'New speculative run',
+        label: 'Start Market Run',
+        description: 'New Market Run for Godown Stock',
         href: '/owner/estimator?mode=market',
         icon: Store,
         color: 'text-warning bg-warning-soft border-warning/20',
@@ -35,7 +35,7 @@ const actions = [
     },
     {
         id: 'confirm-taka',
-        label: 'Godown Ledger',
+        label: 'Godown Stock',
         description: 'Review expected stock',
         href: '/owner/stock',
         icon: Zap,
@@ -53,8 +53,8 @@ const actions = [
     },
     {
         id: 'settle-hisaab',
-        label: 'Settle Hisaab',
-        description: 'Process payroll',
+        label: 'Settle Worker Hisaab',
+        description: 'Close worker pay and adjustments',
         href: '/owner/payroll',
         icon: DollarSign,
         color: 'text-success bg-success-soft border-success/20',

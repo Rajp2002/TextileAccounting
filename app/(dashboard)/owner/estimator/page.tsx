@@ -17,7 +17,7 @@ export default async function EstimatorPage() {
     ])
 
     return (
-        <Suspense fallback={<div className="p-20 text-center">Loading Estimator...</div>}>
+        <Suspense fallback={<div className="p-20 text-center">Loading Cost Estimate...</div>}>
             <EstimatorClient 
                 initialProfile={profileRes.data}
                 initialTemplates={templatesRes.data}

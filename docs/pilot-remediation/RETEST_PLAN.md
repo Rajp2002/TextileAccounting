@@ -17,6 +17,17 @@ npm audit --audit-level=high
 
 Current known state from `logs/technical-gates.md`:
 
+## UX-012 pilot-user operating retest — OPEN
+
+1. Use the deployed product in the actual pilot user's normal task context.
+2. Record reviewer name, role, date/time/time zone, route/output, language, and task context.
+3. Record every confusing or rejected term, including Worker Hisaab, Upaad, Kharchi, Inam, Kapaat, Hajiri, Taka, Warp/Weft local terms, and Fabric Quality.
+4. Implement each accepted correction consistently across UI, validation, locales, PDFs, exports, messages, documentation, and help.
+5. Rerun UX-012 targeted tests, full tests, TypeScript, build, and affected deployed route/output checks.
+6. Obtain the same user's dated confirmation after changes. Keep the operating action OPEN until all steps are complete.
+
+This control does not reopen the amended pre-pilot row unless feedback identifies a production/stock/payroll/dispatch/financial ambiguity or a regression.
+
 - `npm ci` fails until the lockfile is repaired.
 - `npm run lint` passed in the final QA run.
 - `npx vitest run` passed in the final QA run; Batch 20 full Vitest via `npm run build` passed with 363 passed and 1 skipped.

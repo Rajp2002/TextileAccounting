@@ -79,13 +79,13 @@ describe('Batch 15 payroll document/export consistency', () => {
         })
 
         expect(rows.map((row) => row.label)).toEqual([
-            'Gross Pay',
-            'Inam Bonus',
-            'Kapaat Deduction',
-            'Advance Recovered',
+            'Gross Earnings',
+            'Inam (bonus)',
+            'Kapaat (deduction)',
+            'Upaad Recovered',
             'PF Employee',
             'ESI Employee',
-            'Net Pay',
+            'Hisaab Payout',
             'Carry-Forward Debt',
             'Payment Mode',
         ])

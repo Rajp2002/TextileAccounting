@@ -380,21 +380,21 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             id: 'production-log',
             icon: Activity,
             title: 'Log first production',
-            description: 'Enter the first shift meters after loom, worker, and run are linked.',
+            description: 'Enter the first Metres Produced This Shift after the Loom, Worker, and work item are linked.',
             href: '/supervisor/production',
             ctaLabel: 'Log production',
             isComplete: ({ activationChecklist }) => activationChecklist.hasProductionLog,
             help: {
                 intro: 'The first production log proves the setup can run from costing to actual output.',
                 why: [
-                    'Meters drive progress, stock movement, payroll, and daily owner alerts.',
-                    'The log captures loom, worker, shift, quality, and shift-total meters in one record.',
+                    'Metres Produced This Shift drive progress, stock movement, Worker Hisaab, and daily owner alerts.',
+                    'The log captures Loom, Worker, shift, Fabric Quality, and Metres Produced This Shift in one record.',
                     'Commercial and dispatch readiness depends on production being recorded first.',
                 ],
                 actions: [
                     'Sign in as supervisor or use the supervisor flow.',
                     'Open Production and choose the loom/shift.',
-                    'Enter the shift-total meters produced, then save.',
+                    'Enter Metres Produced This Shift, then save.',
                 ],
                 clickPath: ['Supervisor app', 'Production', 'Select loom and shift', 'Save production'],
                 doneWhen: 'At least one production log exists.',
@@ -467,7 +467,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                 intro: 'Commercials is where the owner reviews whether the run made money and what the party still owes.',
                 why: [
                     'Expected and realized profit help catch pricing or costing mistakes early.',
-                    'Receivables show unpaid, partial, and collected amounts by party.',
+                    'Amount Due shows unpaid, partial, and collected amounts by Party.',
                     'The first review confirms that costing, stock, dispatch, and payment data are connected.',
                 ],
                 actions: [
@@ -475,7 +475,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                     'Review the profit snapshot and receivables list.',
                     'Record payment when the party pays so outstanding balance stays current.',
                 ],
-                clickPath: ['Owner sidebar', 'Commercials', 'Profit snapshot / Receivables', 'Record payment'],
+                clickPath: ['Owner sidebar', 'Party Ledger', 'Profit snapshot / Amount Due', 'Record payment'],
                 doneWhen: 'At least one commercial profit entry exists.',
             },
         },

@@ -31,7 +31,7 @@ const workflow = [
     },
     {
         title: 'Dispatch and settle',
-        description: 'Record challan references, returned receipt confirmations, shortages, advances, and payroll summaries.',
+        description: 'Record Delivery Challan references, Party Receipt Confirmations, shortages, Upaad, and Worker Hisaab summaries.',
         outcome: 'Close the loop from produced meters to party records and worker payments.',
         icon: Truck,
     },
@@ -40,7 +40,7 @@ const workflow = [
 const trustItems = [
     {
         title: 'Factory vocabulary inside the product',
-        copy: 'Market runs, Upaad, Kharchi, shift meters, loom assignments, worker rates, and dispatch shortages are first-class workflows.',
+        copy: 'Market Runs, Party Orders, Upaad, Kharchi, Metres Produced This Shift, loom assignments, worker rates, and Dispatch shortages are distinct workflows.',
         icon: ReceiptIndianRupee,
     },
     {
@@ -50,7 +50,7 @@ const trustItems = [
     },
     {
         title: 'WhatsApp where it actually helps',
-        copy: 'Daily briefs, payslips, advance receipts, and access-code requests reach owners and workers without replacing core records.',
+        copy: 'Daily briefs, Worker Hisaab payslips, Upaad receipts, and access-code requests reach owners and Workers without replacing core records.',
         icon: MessageCircle,
     },
 ]

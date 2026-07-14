@@ -34,7 +34,7 @@ const primaryNavItems = [
 ]
 
 const secondaryNavItems = [
-    { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
+    { name: "Looms", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
 ]
 
 // Bottom nav keeps the Phase 1 floor workflow one tap away.

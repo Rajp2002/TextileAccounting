@@ -716,7 +716,7 @@ Rows `WA-001`–`WA-007` and `WA-009` retain infrastructure-readiness evidence. 
 | UX-009 | 200% zoom and large text. | No clipped totals/buttons. |
 | UX-010 | Empty/loading/error/offline states. | Distinct and actionable. |
 | UX-011 | Owner and supervisor role copy. | No “Viewing as Owner” confusion for supervisors. |
-| UX-012 | Factory terminology review with brother/supervisor. | Labels match actual language: loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, hisaab. |
+| UX-012 | Amended 2026-07-14: product-owner-approved reconciled terminology baseline before the limited pilot; actual pilot factory-user comprehension validation remains an open operating control. | Pre-pilot: consistent approved wording across UI, validation, locales, PDFs, exports, messaging, and help; high-risk concepts remain distinct; production deployment/regression pass; no known error-causing ambiguity. Pilot: dated contextual feedback from the named actual user, every confusing/rejected term corrected, and post-change confirmation retained. See `UX-012_REQUIREMENT_AMENDMENT.md`. |
 
 ## 29. Historical Defect Regression Pack
 

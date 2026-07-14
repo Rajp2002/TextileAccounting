@@ -382,12 +382,12 @@ describe('Production Log Strictness / Forgiveness Validation', () => {
 
     describe('Validation copy completeness', () => {
         it('all required validation messages exist', () => {
-            expect(VALIDATION_MESSAGES.WORKER_REQUIRED).toBe('Select a worker before saving meters.')
-            expect(VALIDATION_MESSAGES.QUALITY_REQUIRED).toBe('Select a quality or run before saving meters.')
+            expect(VALIDATION_MESSAGES.WORKER_REQUIRED).toBe('Select a Worker before saving Metres Produced This Shift.')
+            expect(VALIDATION_MESSAGES.QUALITY_REQUIRED).toBe('Select a Fabric Quality, Market Run, or Party Order before saving Metres Produced This Shift.')
             expect(VALIDATION_MESSAGES.RATE_MISSING).toContain('No worker rate is set')
             expect(VALIDATION_MESSAGES.REASON_REQUIRED).toBe('Enter a reason for 0m production.')
             expect(VALIDATION_MESSAGES.NOTE_REQUIRED_OTHER).toContain("'Other'")
-            expect(VALIDATION_MESSAGES.NEGATIVE_METERS).toBe('Production meters cannot be negative.')
+            expect(VALIDATION_MESSAGES.NEGATIVE_METERS).toBe('Metres Produced This Shift cannot be negative.')
             expect(VALIDATION_MESSAGES.RATE_ZERO).toContain('greater than zero')
         })
 

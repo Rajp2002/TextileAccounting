@@ -163,7 +163,7 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
     const supabase = await createServerClient()
 
     const trimmedName = name.trim()
-    if (!trimmedName) return { error: 'Machine name is required.' }
+    if (!trimmedName) return { error: 'Loom name is required.' }
 
     const { data: existingMachines, error: existingMachinesError } = await supabase
         .from('machines')
@@ -203,7 +203,7 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
             return { error: DUPLICATE_LOOM_NAME_ERROR }
         }
         console.error('Failed to add machine:', error)
-        return { error: 'Failed to add machine. Please try again.' }
+        return { error: 'Failed to add loom. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -220,14 +220,14 @@ export async function addMachinesBulk(
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    if (!machines.length) return { error: 'No machines to add.' }
-    if (machines.length > 50) return { error: 'Cannot add more than 50 machines at once.' }
+    if (!machines.length) return { error: 'No looms to add.' }
+    if (machines.length > 50) return { error: 'Cannot add more than 50 looms at once.' }
 
     // Validate all entries upfront before any DB work
     const rows: DbPrimitivePayload[] = []
     for (const m of machines) {
         const trimmedName = m.name.trim()
-        if (!trimmedName) return { error: `Machine name is required for every entry.` }
+        if (!trimmedName) return { error: 'Loom name is required for every entry.' }
 
         const row: DbPrimitivePayload = {
             name: trimmedName,
@@ -282,7 +282,7 @@ export async function addMachinesBulk(
             return { error: DUPLICATE_LOOM_NAME_ERROR }
         }
         console.error('Failed to bulk-add machines:', error)
-        return { error: 'Failed to add machines. Please try again.' }
+        return { error: 'Failed to add looms. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -297,7 +297,7 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
     if ('error' in parsed) return { error: parsed.error }
 
     const trimmedName = name.trim()
-    if (!trimmedName) return { error: 'Machine name cannot be empty.' }
+    if (!trimmedName) return { error: 'Loom name cannot be empty.' }
 
     const { data: existingMachines, error: existingMachinesError } = await supabase
         .from('machines')
@@ -341,7 +341,7 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
             return { error: DUPLICATE_LOOM_NAME_ERROR }
         }
         console.error('Failed to update machine:', error)
-        return { error: 'Failed to update machine. Please try again.' }
+        return { error: 'Failed to update loom. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -453,7 +453,7 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
 
     if (error) {
         console.error('Failed to update machine status:', error)
-        return { error: 'Failed to update machine status. Please try again.' }
+        return { error: 'Failed to update loom status. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -550,7 +550,7 @@ export async function upsertMachineOperatorAssignment(data: {
         (data.workerType === 'meter_worker' && !!data.meterWorkerId && !data.fixedWorkerId) ||
         (data.workerType === 'fixed_worker' && !!data.fixedWorkerId && !data.meterWorkerId)
     if (!exactlyOneWorker) {
-        return { error: 'Choose exactly one meter or fixed worker for this loom shift.' }
+        return { error: 'Choose exactly one Piece-rate Worker or Salaried Worker for this loom shift.' }
     }
 
     const rate = numericValue(data.rate)
@@ -585,7 +585,7 @@ export async function upsertMachineOperatorAssignment(data: {
 
         if (error || !worker) {
             if (error) console.error('Failed to validate meter worker assignment:', error)
-            return { error: 'Active meter worker not found for this factory.' }
+            return { error: 'Active Piece-rate Worker not found for this factory.' }
         }
     } else {
         const { data: worker, error } = await supabase
@@ -598,7 +598,7 @@ export async function upsertMachineOperatorAssignment(data: {
 
         if (error || !worker) {
             if (error) console.error('Failed to validate fixed worker assignment:', error)
-            return { error: 'Active fixed worker not found for this factory.' }
+            return { error: 'Active Salaried Worker not found for this factory.' }
         }
     }
 

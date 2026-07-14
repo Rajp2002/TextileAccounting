@@ -141,7 +141,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         const kharchi = readProjectFile('components/supervisor/KharchiDialog.tsx')
 
         expect(kharchi).toContain('Kharchi is online-only')
-        expect(kharchi).toContain('Reconnect before recording cash')
+        expect(kharchi).toContain('Reconnect before giving cash')
         expect(kharchi).toContain('!isOnline')
         expect(kharchi).not.toContain('queueMutation')
         expect(kharchi).not.toContain('kharchi_offline')

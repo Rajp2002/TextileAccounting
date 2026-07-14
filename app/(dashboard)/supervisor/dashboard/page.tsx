@@ -1165,7 +1165,7 @@ export default function UnifiedDashboard() {
             }
 
             if (outcome.status === 'completed') {
-                toast.success(`Shift meters logged (${res.logged} looms)`)
+                toast.success(`Metres Produced This Shift saved (${res.logged} looms)`)
             }
             setProductionMeters({}) // Reset inputs after success
             setRestoredDraftInfo(null)
@@ -1293,7 +1293,7 @@ export default function UnifiedDashboard() {
     const saveHelperText = loading
         ? 'Loading shift data...'
         : validEntryCount === 0
-            ? 'Add shift meters or downtime reasons to save.'
+            ? t('floor.meter.saveHelper')
             : pendingEntryCount > 0
                 ? `${validEntryCount} ready, ${pendingEntryCount} pending`
                 : 'All loom entries ready'
@@ -1351,14 +1351,14 @@ export default function UnifiedDashboard() {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-xl font-bold leading-tight tracking-normal text-ink">Shift Meter Log</h1>
+                            <h1 className="text-xl font-bold leading-tight tracking-normal text-ink">{t('floor.meter.shiftProduction')}</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="secondary">
                                     {assignedCount}/{machines.length} assigned
                                 </Badge>
                                 {loggedMetersCount > 0 && (
                                     <Badge variant="brand" className="shadow-sm animate-in fade-in zoom-in duration-300">
-                                        {loggedMetersCount} shift-meter entries
+                                        {loggedMetersCount} shift-production entries
                                     </Badge>
                                 )}
                             </div>
@@ -1460,7 +1460,7 @@ export default function UnifiedDashboard() {
                     <div className="col-span-full rounded-xl border border-dashed border-hairline bg-surface/70 py-20 text-center">
                         <AlertCircle className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                         <p className="font-semibold text-ink">No looms found</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Activate looms in setup before logging shift meters.</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{t('floor.meter.noLoomsHelper')}</p>
                     </div>
                 ) : (
                     machines.map((machine) => {
@@ -1548,7 +1548,7 @@ export default function UnifiedDashboard() {
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-warning">
-                            <AlertTriangle className="h-5 w-5" /> Confirm large shift meters
+                            <AlertTriangle className="h-5 w-5" /> Confirm large shift production
                         </DialogTitle>
                         <DialogDescription>
                             One or more loom totals are at least {SUSPICIOUS_PRODUCTION_METERS_THRESHOLD.toLocaleString('en-IN')} m for this shift. This is allowed, but confirm the totals before saving.

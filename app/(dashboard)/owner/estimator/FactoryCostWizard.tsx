@@ -224,7 +224,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Avg Meters / Loom / Day</Label>
+                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Average m / Loom / Day</Label>
                                                 <Input 
                                                     type="number" 
                                                     value={avgOutput} 

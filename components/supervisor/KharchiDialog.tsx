@@ -95,7 +95,7 @@ export function KharchiDialog({
                         Record Kharchi
                     </DialogTitle>
                     <DialogDescription>
-                        Give a cash advance to {tl(workerName)}.
+                        Record supervisor-float cash for {tl(workerName)}. Kharchi is not automatically Upaad or a Worker Hisaab payout.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -135,7 +135,7 @@ export function KharchiDialog({
                     {!isOnline && (
                         <div className="flex items-start gap-2 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
                             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                            <span>Kharchi is not stored for offline sync. Reconnect before recording cash so the advance and supervisor float ledger update together.</span>
+                            <span>Kharchi is not stored for offline sync. Reconnect so the supervisor-float entry and any explicitly linked Upaad update together.</span>
                         </div>
                     )}
 

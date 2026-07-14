@@ -27,7 +27,7 @@ export default function LandingHero() {
                     </h1>
 
                     <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-600 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
-                        Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing registers and WhatsApp messages.
+                        Weavly connects Cost Estimates, Fabric Quality, loom assignments, Metres Produced This Shift, Dispatches, Upaad, and Worker Hisaab so owners know what happened without chasing registers and messages.
                     </p>
 
                     <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -178,7 +178,7 @@ export default function LandingHero() {
                                             <div className="border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900">
                                                 <MessageCircle className="h-5 w-5 text-emerald-600" />
                                                 <p className="mt-3 text-sm font-black text-zinc-950 dark:text-white">Daily brief queued</p>
-                                                <p className="mt-1 text-xs leading-5 text-zinc-500">Production, advances, and order pace sent over WhatsApp.</p>
+                                                <p className="mt-1 text-xs leading-5 text-zinc-500">Shift production, Upaad, and Party Order pace sent over WhatsApp.</p>
                                             </div>
                                             <div className="border border-orange-200 bg-orange-50 p-4 dark:border-orange-500/20 dark:bg-orange-500/10">
                                                 <p className="text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400">Market run</p>

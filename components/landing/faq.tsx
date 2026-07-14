@@ -1,7 +1,7 @@
 const faqs = [
     {
         question: 'Does Weavly work for grey fabric weaving factories?',
-        answer: 'Yes. The workflows are designed around fabric estimating, loom assignment, shift-wise meter logging, market runs, dispatch tracking, advances, and piece-rate payroll.',
+        answer: 'Yes. The workflows use Cost Estimates, Fabric Quality, loom assignments, Metres Produced This Shift, Market Runs, Party Orders, Godown Stock, Dispatch, Upaad, and Worker Hisaab.',
     },
     {
         question: 'Can my supervisor use this on the factory floor?',

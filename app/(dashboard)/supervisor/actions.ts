@@ -302,7 +302,7 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
 
     if (error) {
         console.error('Error deleting machine:', error)
-        return { error: 'Failed to delete machine. Please try again.' }
+        return { error: 'Failed to delete loom. Please try again.' }
     }
     return { success: true }
 }
@@ -499,7 +499,7 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
 
     if (orderError || !order) {
         if (orderError) console.error('Error verifying active production target:', orderError)
-        return { error: 'Only active cost analyses or qualities can be assigned to a machine.' }
+        return { error: 'Only an active Cost Estimate, Fabric Quality, Market Run, or Party Order can be assigned to a loom.' }
     }
 
     // Set audit actor before service-role DML
@@ -513,7 +513,7 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
 
     if (error) {
         console.error('Error linking production target to machine:', error)
-        return { error: 'Failed to assign cost analysis to machine. Please try again.' }
+        return { error: 'Failed to assign the production target to the loom. Please try again.' }
     }
 
     return { success: true }
@@ -1460,7 +1460,7 @@ export async function bulkLogProduction(entries: {
             if (!accessCode) {
                 return {
                     error: 'DUPLICATE_LOG_DETECTED',
-                    message: 'Production logs already exist for some machines on this shift. This requires an owner access code to overwrite.',
+                    message: 'Production records already exist for some looms in this shift. An owner access code is required to overwrite them.',
                     duplicateMachines: existingLogs!.map((l) => l.machine_id),
                 }
             }
@@ -1529,7 +1529,7 @@ export async function bulkLogProduction(entries: {
         if ((meterSettlementsRes.data?.length ?? 0) > 0 || (fixedSettlementsRes.data?.length ?? 0) > 0) {
             return {
                 error: 'PAYROLL_ALREADY_SETTLED',
-                message: 'Production logs cannot be modified because payroll for this period is already settled for one or more workers.',
+                message: 'Production records cannot be modified because Worker Hisaab is already settled for one or more workers in this period.',
             }
         }
     }
@@ -1574,7 +1574,7 @@ export async function bulkLogProduction(entries: {
         if (error.message.includes('DUPLICATE_LOG_DETECTED')) {
             return {
                 error: 'DUPLICATE_LOG_DETECTED',
-                message: 'Production logs already exist for some machines on this shift. Please refresh before overwriting.',
+                message: 'Production records already exist for some looms in this shift. Please refresh before overwriting.',
                 duplicateMachines: machineIds,
             }
         }
@@ -1789,7 +1789,7 @@ export async function updateMachineStatus(machineId: string, status: 'running' |
 
     if (error) {
         console.error('Failed to update machine status:', error)
-        return { error: 'Failed to update machine status. Please try again.' }
+        return { error: 'Failed to update loom status. Please try again.' }
     }
 
     revalidatePath('/supervisor/production')

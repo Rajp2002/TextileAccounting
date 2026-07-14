@@ -3,6 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
+import { UX012_DISTINCTIONS, UX012_EXPORT_LABELS, UX012_PRIORITY_HELPERS, UX012_TERMS } from '@/lib/terminology'
 
 const REDACTED = '[REDACTED]'
 const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
@@ -135,6 +136,14 @@ export async function exportOrganizationData() {
     return {
         exported_at: exportedAt,
         export_scope: 'current_owner_org',
+        terminology: {
+            baseline: 'UX-012 product-owner-approved limited-pilot baseline',
+            display_terms: UX012_TERMS,
+            dataset_labels: UX012_EXPORT_LABELS,
+            high_risk_distinctions: UX012_DISTINCTIONS,
+            priority_helpers: UX012_PRIORITY_HELPERS,
+            note: 'Dataset keys remain stable technical identifiers for portability; use these labels and distinctions when interpreting records.',
+        },
         sensitive_fields_review: {
             redaction_marker: REDACTED,
             redacted_fields: Array.from(SENSITIVE_EXPORT_FIELD_NAMES).sort(),

@@ -10,6 +10,7 @@ Pilot-ready means the product can be used by a Surat grey-fabric factory without
 4. `code_verified` is not counted as pass. Critical/high pilot paths require runtime or test evidence.
 5. Every resolved cluster has regression tests or a documented runtime-only proof reason.
 6. No destructive production mutation is used as proof outside an isolated QA tenant, rollback-only transaction, or disposable environment.
+7. UX-012's amended pre-pilot baseline is deployed and regression-tested; the actual pilot-user terminology feedback/correction/reconfirmation action remains an explicit operating control until completed.
 
 ## Domain Gates
 

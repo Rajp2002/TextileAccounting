@@ -1,10 +1,12 @@
-# UX-012 — Factory-Supervisor Terminology Decision Pack
+# UX-012 — Terminology Decision Pack
 
 Prepared: 2026-07-14 IST
 
-Current status: `BLOCKED` (`pilot_core`, gating)
+Current status: amended pre-pilot criterion `PASS` at production commit `93c2622`; actual pilot-user comprehension control remains `OPEN`
 
-Responsible reviewer: **named supervisor/brother from the pilot factory who uses these workflows**
+Baseline approver: **product owner (provisional limited-pilot approval, 2026-07-14)**
+
+Pilot reviewer: **named actual pilot factory user who uses these workflows**
 
 Reviewer name: ____________________
 
@@ -16,24 +18,29 @@ Review date/time/time zone: ____________________
 
 Facilitator: ____________________
 
-## Canonical requirement
+## Canonical requirement and traceable amendment
 
 > Factory terminology review with brother/supervisor.
 
 Expected labels match actual language for: **loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, and hisaab**.
 
-Existing source evidence shows these concepts in the product, but `output/qa/blocked-row-campaign/B19-external-evidence-review.json` found no named, dated factory-supervisor approval/change register. This template does not fill that gap until the real reviewer completes it.
+The original wording required a brother/supervisor review before pilot. The product owner approved a traceable amendment on 2026-07-14: use the reconciled product-owner-approved baseline for pre-pilot acceptance, and obtain more representative dated contextual comprehension evidence from the actual pilot factory user during the pilot. See `UX-012_REQUIREMENT_AMENDMENT.md`.
+
+No factory supervisor has approved the terminology. Product-owner approval must not be described as factory-supervisor approval.
 
 Supporting review documents:
 
 - [Complete factory-facing inventory](UX-012_TERMINOLOGY_INVENTORY.md)
 - [Recommended canonical glossary](UX-012_RECOMMENDED_GLOSSARY.md)
+- [Canonical mobile factory review register](UX-012_FACTORY_TERMINOLOGY_REVIEW_REGISTER.md) — complete this register for the current review; the shorter legacy table below is retained only for preparation-history context.
 
-No product wording was changed during preparation. The inventory found no isolated typo that could be corrected without also choosing factory vocabulary, a financial meaning, or a unit convention.
+The approved wording is implemented across the product and outputs. Full local regression, TypeScript, production build, remote build, and representative authenticated owner/supervisor route checks passed. Production deployment `dpl_2fRVGdqnpqhx1415kBcb1mDrzhBy` is `READY`. No known terminology ambiguity capable of causing production, stock, payroll, dispatch, or financial error remains. Evidence is under `output/qa/pilot-gate-closure/2026-07-14/UX-012/`.
 
-## What the reviewer is deciding
+Pilot-user review and correction confirmation remain open until completed. No factory-supervisor approval has occurred or is implied. The terminology/location tables below retain pre-implementation observations for traceability; the implemented baseline and current locations are authoritative in `lib/terminology.ts`, `UX-012_RECOMMENDED_GLOSSARY.md`, and the runtime evidence pack.
 
-The reviewer must see each term in context, explain what they think it means without coaching, and choose **Approve**, **Change**, or **Unclear**. Alternatives below are prompts, not decisions; the reviewer may write the factory's actual word.
+## What the pilot user will validate
+
+The actual pilot user must see each term in real work context, explain what they think it means without coaching, and choose **Approve**, **Change**, or **Unclear**. Alternatives below are prompts, not decisions; the reviewer may write the factory's actual word.
 
 | Concept | Current product wording and location | Plain-language meaning | Alternatives to discuss |
 | --- | --- | --- | --- |
@@ -195,29 +202,30 @@ I, [FULL NAME], [FACTORY-SIDE ROLE] at [FACTORY], re-reviewed UX-012 change requ
 - [ ] Same reviewer's dated re-approval after changes, if any.
 - [ ] No unresolved “Unclear”, blank decision, or unverified used locale.
 
-## Acceptance criteria
+## Amended acceptance criteria
 
-`UX-012` may become `PASS` only if a real named factory supervisor has approved every listed concept in context, in every language used for the pilot, and every requested change has been implemented, tested, shown to the reviewer, and re-approved. A template, source inspection, facilitator opinion, or screenshot without the decision register is insufficient.
+`UX-012` may become `PASS` for limited-pilot pre-pilot acceptance when the product-owner-approved baseline is consistently implemented across UI, validation, locales, PDFs, exports, messaging, documentation, and help; all high-risk distinctions remain explicit; production deployment and regression validation pass; and no known ambiguity can cause production, stock, payroll, dispatch, or financial errors.
 
-## Exact matrix-update procedure after real closure
+The following pilot operating action remains open after pre-pilot PASS: obtain dated contextual feedback from the named actual pilot factory user, record every confusing/rejected term, implement corrections, and obtain dated confirmation after changes. The row and verdict must disclose this open control. Product-owner approval is not factory-supervisor approval.
 
-1. Store the signed register, screenshot metadata, change requests, implementation proof, and final approval under `output/qa/pilot-gate-closure/YYYY-MM-DD/UX-012/`.
+## Exact matrix-update procedure after amended pre-pilot closure
+
+1. Store the product-owner amendment/approval reference, baseline, implementation proof, deployment evidence, regression output, screenshots, and ambiguity review under `output/qa/pilot-gate-closure/YYYY-MM-DD/UX-012/`.
 2. Edit only `UX-012` in `output/qa/PILOTQA-20260621-2058-8QIH/results.json`:
    - `status: "pass"`;
-   - `actual`: reviewer name/role, date, languages, all-term approval, change/retest summary, and final re-approval if applicable;
-   - `evidence`: paths to signed register, screenshots manifest, and implementation/retest proof;
-   - `notes`: state that all named terms were approved in the used locales with no open change request;
-   - `updatedAt`: real final approval time;
+   - `actual`: product-owner-approved baseline, amendment date, implementation/deployment/regression summary, and ambiguity review;
+   - `evidence`: paths to the amendment, baseline, deployment, screenshots, and tests;
+   - `notes`: explicitly state that no factory supervisor has approved the terminology and that actual pilot-user feedback/correction/reconfirmation remains open;
+   - `updatedAt`: actual final pre-pilot evidence time;
    - preserve `release_scope: "pilot_core"` and `pilot_gating: true`.
 3. Update only the matching `TEST_MATRIX.md` row, recalculate ledger counts with the command in the pack index/`TECH-011` procedure, and verify all evidence paths exist.
 4. Reconcile `REMAINING_GATE_REPORT.md`, `FAILURE_BACKLOG.md`, `LOOP_STATE.md`, `FIX_LOG.md`, and `PILOT_READY_DEFINITION.md` to the new artifact and calculated counts. Do not promote any other row.
 5. Run `git diff --check` and obtain a second-person check of the row and evidence before commit.
 
-## Exact human and laptop actions still required
+## Remaining pilot-user actions
 
-1. **Human:** nominate the actual pilot supervisor/brother and list the languages they use.
-2. **Facilitator laptop:** capture/redact the seven required screen contexts from the approved deployed build, including used locales.
-3. **Supervisor:** explain each term, complete every decision row, choose Approve/Change/Unclear, and sign/date the form.
-4. **Developer laptop:** implement each requested change, run focused tests/type-check, and recapture affected screens; do not change text based only on this template.
-5. **Supervisor:** re-review changed screens and provide dated final approval.
-6. **Documentation operator:** follow the matrix-update procedure. Keep `UX-012` `BLOCKED` until step 5 is complete.
+1. **Facilitator:** record the actual pilot user's name, role, languages, date/time, route/task, and device.
+2. **Pilot user:** explain each priority term in context and record every confusing/rejected term.
+3. **Developer:** implement each correction, test it, deploy it, and recapture the affected context.
+4. **Same pilot user:** provide dated confirmation after the correction.
+5. **Documentation operator:** keep the pilot control open until all four steps are evidenced; do not imply prior factory-supervisor approval.

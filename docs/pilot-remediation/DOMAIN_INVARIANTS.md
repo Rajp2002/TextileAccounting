@@ -2,6 +2,10 @@
 
 Every remediation task must cite the relevant invariant before code changes are proposed.
 
+## Terminology and business-event separation
+
+Operator-facing wording must preserve these non-interchangeable concepts: Counter Reading / Metres Produced This Shift; Fabric Quality / Market Run / Party Order; Cost Estimate / Quotation; Metres Sold / Sent / Received; Sale / Dispatch / Party Receipt Confirmation; Piece-rate / Salaried Worker; Upaad / Kharchi / Hisaab payout / Inam / Kapaat; and `kg/100m` / `m/kg`. A terminology change must propagate to every product/output surface without changing stable technical identifiers or collapsing business events.
+
 ## Security and Tenant Authority
 
 Role, organization, and permission claims are server-owned facts. A user can update personal profile data only through policies that cannot alter role, org, lock status, or other authorization fields.
