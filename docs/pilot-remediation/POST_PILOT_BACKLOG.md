@@ -41,3 +41,13 @@ Acceptance: the live failure produces a non-secret operational record, a clear m
 Source row: `MARKET-012` — “Reopen/reactivate closed run, if allowed.” Expected: “No duplicate backing order or stock.”
 
 The current product intentionally exposes no reopen/reactivate control. If reactivation is later introduced, specify the lifecycle and prove that reopening cannot duplicate the backing order, production attribution, or stock.
+
+## PP-TECH-011-001 — Independent immutable backup destination
+
+Source row: `TECH-011` interim pilot control hardening.
+
+Owner: product owner plus infrastructure/security owner.
+
+Replace the private GitHub Actions artifact interim destination with an owner-controlled object store in a separate account/security boundary. Apply lifecycle retention, versioning/object lock where supported, provider KMS or a separately controlled standard encryption key, least-privilege upload/download identities, stale-backup and expiry alerts, audit logs, and periodic key rotation. Add authenticated Storage object-byte export before the product stores any pilot-critical Supabase Storage object.
+
+Acceptance: daily encrypted artifacts are retained under the approved RPO/retention policy; deletion/expiry and reader permissions are tested; the decrypt/restore authority is separated from the upload runner; a scheduled artifact including any Storage objects is restored into disposable infrastructure; database and file hashes reconcile; the restore environment is removed; and a named verifier signs the exercise.

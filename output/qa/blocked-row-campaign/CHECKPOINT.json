@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-14T05:36:45.000Z",
+  "updated_at": "2026-07-14T10:41:53.000Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -34,7 +34,7 @@
     "B19"
   ],
   "active_batch": null,
-  "active_batch_state": "All internal remaining-gate work is complete. Seven rows remain honestly blocked; only TECH-011, UX-012, and GOLDEN-A-03 independently gate the limited pilot. WA-008 and WA-010 are named post-pilot requirements with no PASS credit.",
+  "active_batch_state": "Focused TECH-011 and UX-012 preparation is complete without status promotion. The Free-tier backup/restore workflows are unconfigured and unrun; the factory terminology pack is unsigned. Seven rows remain honestly blocked; only TECH-011, UX-012, and intentionally deferred GOLDEN-A-03 independently gate the limited pilot.",
   "planned_batches": [
     {
       "id": "B09",
@@ -658,6 +658,30 @@
     ],
     "evidence": "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
   },
+  "focused_gate_preparation": {
+    "prepared_at": "2026-07-14T10:41:53Z",
+    "tech_011": {
+      "status": "blocked",
+      "implemented": "daily encrypted Supabase CLI backup to private 14-day GitHub Actions artifact plus ephemeral local-Supabase restore drill",
+      "storage_baseline": "zero buckets, objects, and bytes; workflow fails closed if objects appear",
+      "required_settings_absent": [
+        "SUPABASE_PRODUCTION_DB_URL",
+        "SUPABASE_PRODUCTION_PROJECT_REF",
+        "BACKUP_AGE_RECIPIENT",
+        "BACKUP_AGE_IDENTITY"
+      ],
+      "scheduled_artifact": null,
+      "restore_result": null
+    },
+    "ux_012": {
+      "status": "blocked",
+      "inventory_concepts": 42,
+      "product_copy_changed": false,
+      "named_factory_supervisor_approval": null
+    },
+    "golden_a_03_changed": false,
+    "evidence": "output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json"
+  },
   "outstanding_external_dependencies": [
     {
       "batch": "B16",
@@ -671,7 +695,7 @@
       "rows": [
         "TECH-011"
       ],
-      "dependency": "An automated retained or off-site production backup schedule. Current production reports WAL-G enabled, PITR disabled, and zero retained backups; Free-plan branching/new-project restore targets are unavailable. Upgrade to Pro or provide an approved off-site destination and database dump credential placement."
+      "dependency": "Configure the four documented GitHub Actions names, approve the interim 14-day private-artifact limitations/RPO/RTO, merge the workflow to default, then retain and restore one real scheduled production artifact. A paid Supabase plan is optional, not required."
     },
     {
       "batch": "B19",
@@ -709,6 +733,6 @@
       "dependency": "One dated supervisor register for a known shift with an independent meter total."
     }
   ],
-  "last_successful_validation": "B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, four reconciliation assertions, restored owner sign-in, 2,478.4 ms restore time, and zero cleanup. Native Vercel rollback restored exact source commit 57caa6e in 2 provider-reported seconds, /privacy returned 200, and the rollback-only database forward-fix reconciled preserved provenance. No production resource or data was changed. TECH-011 remains blocked only because production exposes no retained backup and PITR is disabled.",
-  "exact_next_action": "Close one genuine pilot gate: approve an automated retained/off-site production backup for TECH-011, obtain the named supervisor terminology register for UX-012, or supply the independent real-fabric truth sheet for GOLDEN-A-03. SEC-011 remains deferred to the owner's physical laptop without transferring SENTRY_AUTH_TOKEN."
+  "last_successful_validation": "B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, restored owner sign-in, measured time, and zero cleanup; TECH-012 is pass. The focused sprint validated the new reconciliation SQL against production read-only aggregates and verified zero Storage buckets/objects/bytes, but no credential-backed scheduled artifact or restore ran. TECH-011 remains blocked.",
+  "exact_next_action": "TECH-011: configure the four exact Actions names, merge to default, wait for a scheduled artifact, restore/reconcile it, and obtain verifier signoff. UX-012: obtain the named factory supervisor's dated decisions, implement/retest any requested changes, and obtain re-approval. GOLDEN-A-03 is intentionally deferred and unchanged."
 }

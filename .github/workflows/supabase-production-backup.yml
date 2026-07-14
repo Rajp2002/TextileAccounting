@@ -1,0 +1,116 @@
+name: Supabase production logical backup
+
+on:
+  schedule:
+    - cron: '17 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: supabase-production-logical-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Encrypted retained backup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SUPABASE_PRODUCTION_DB_URL: ${{ secrets.SUPABASE_PRODUCTION_DB_URL }}
+      SUPABASE_PRODUCTION_PROJECT_REF: ${{ vars.SUPABASE_PRODUCTION_PROJECT_REF }}
+      BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+      BACKUP_RETENTION_DAYS: '14'
+      BACKUP_OUTPUT_DIR: /tmp/supabase-backup-output
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+
+      - name: Install standard backup tools
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age jq postgresql-client
+
+      - name: Validate required configuration
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$SUPABASE_PRODUCTION_DB_URL" ]] || { echo '::error::Missing Actions secret SUPABASE_PRODUCTION_DB_URL'; exit 2; }
+          [[ -n "$SUPABASE_PRODUCTION_PROJECT_REF" ]] || { echo '::error::Missing Actions variable SUPABASE_PRODUCTION_PROJECT_REF'; exit 2; }
+          [[ -n "$BACKUP_AGE_RECIPIENT" ]] || { echo '::error::Missing Actions variable BACKUP_AGE_RECIPIENT'; exit 2; }
+
+      - name: Create and encrypt logical backup
+        id: backup
+        shell: bash
+        run: scripts/backup/create-supabase-logical-backup.sh
+
+      - name: Upload encrypted private artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-production-backup-${{ steps.backup.outputs.backup_id }}
+          path: |
+            ${{ steps.backup.outputs.encrypted_file }}
+            ${{ steps.backup.outputs.receipt_file }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Write success summary
+        shell: bash
+        env:
+          COMPLETED_BACKUP_ID: ${{ steps.backup.outputs.backup_id }}
+          COMPLETED_BACKUP_SHA256: ${{ steps.backup.outputs.encrypted_sha256 }}
+        run: |
+          {
+            echo '## Supabase production backup'
+            echo
+            echo '- Result: encrypted artifact uploaded'
+            echo "- Backup ID: \`$COMPLETED_BACKUP_ID\`"
+            echo '- Retention: 14 days'
+            echo "- Ciphertext SHA-256: \`$COMPLETED_BACKUP_SHA256\`"
+            echo '- Storage-object guard: passed (zero objects)'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update failure issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '[TECH-011] Production backup workflow failed';
+            const body = [
+              'The scheduled production logical-backup workflow failed.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `Attempt: ${context.runAttempt}`,
+              '',
+              'No backup success should be inferred. Inspect the redacted Actions log and restore service before the next pilot shift.'
+            ].join('\n');
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const existing = issues.find(issue => issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+            }

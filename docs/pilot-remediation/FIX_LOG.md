@@ -27,7 +27,7 @@ Rules for entries:
 | `PAY-A` payroll/kharchi ledger integrity | Closed for current formal core rows through blocked-row B13 | Earlier batches closed payslip/export, statutory preview equality, settlement authorization/reversal, and online-only boundaries. B13 closes the remaining decimal rate, historical snapshot, cap, final settlement, adjustment, cycle, concurrency, reversal, exit, Kharchi, and Golden payroll rows with QA runtime/browser and production runtime proof. Provider/offline failures remain tracked under their own clusters. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Closed for the formal pilot row | `OFF-009` now has delayed-response runtime proof: unknown outcome, authoritative reconciliation, immediate resubmission guard, and exactly one persisted row. Other domain-specific idempotency rows retain their own existing evidence. |
 | `OFF-A` offline/cache/PWA claims | Pilot-critical rows closed / optional install evidence retained | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`; runtime remediation closes `OFF-007`; B15 proves manifest/icon/scope/start/update readiness. `OFF-009` and `OFF-010` now pass production-targeted delayed/throttled runtime proof. `OFF-001` remains optional, non-gating physical-device install evidence. |
-| `REL-A` release gates | Partially remediated through blocked-row B18 / open backup remainder | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. B18 closed rollback/forward-fix and proved restore mechanics; `TECH-011` remains blocked only on an automated retained or approved off-site production backup schedule. Live Sentry payload inspection remains separate B19 evidence debt. |
+| `REL-A` release gates | Free-tier backup control implemented / real artifact and restore still blocked | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. B18 closed rollback/forward-fix and proved sanitized restore mechanics. The 2026-07-14 focused sprint adds a daily encrypted Supabase CLI backup and ephemeral restore drill, but `TECH-011` remains blocked until owner configuration produces a scheduled artifact and that exact artifact restores/reconciles. |
 
 ## Entry Template
 
@@ -56,6 +56,21 @@ Status: internal implementation and proof closed; external pilot gates precisely
 - Matrix: `OFF-009` and `OFF-010` promoted to pass. `WA-008` and `WA-010` moved to non-gating post-pilot `not_applicable` with named backlog items; no PASS was claimed. Final counts: 367 pass, 0 fail, 7 blocked, 3 not applicable.
 - Evidence: `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`, `output/playwright/prepilot-remaining-gates/`, `docs/pilot-remediation/REMAINING_GATE_REPORT.md`, and `docs/pilot-remediation/POST_PILOT_BACKLOG.md`.
 - Production: commit `5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5` is live on READY deployment `dpl_3yvQ3zWGTpEB6xw1EYgvwbvgRaLL`. Vercel passed 92 files / 654 tests, TypeScript, optimized build, and Sentry release upload. Nine dependent Edge functions are ACTIVE with provider disabled. Deployed supervisor proof showed the manual owner-handoff toast, no access-code hash/expiry, no delivery row, four public-route HTTP 200s, zero post-deploy error/5xx logs, and zero fixture residue.
+
+## Focused TECH-011 / UX-012 preparation sprint — 2026-07-14
+
+Status: implementation prepared; both canonical rows remain `blocked`.
+
+- `TECH-011`: added a scheduled private-repository backup workflow, manual disposable restore workflow, encrypted dump/restore scripts, sanitized inventory SQL, runbook and post-pilot hardening item. The official Supabase sequence covers roles, schema, data including Auth records/Storage metadata, and separate migration history. `age` encrypts before upload; payload/cipher hashes, source project/commit and UTC times are recorded; private Actions retention is 14 days; failures create/update a repository issue.
+- Production read-only inventory: project healthy on Free/Postgres 17; migration history count 211 and head `20260714040018`; installed `pg_cron`/`pg_net` are captured by the extension check; Storage has zero buckets, objects and bytes. No active application Storage client was found. The workflow fails closed if an object appears because metadata is not object-byte recovery.
+- Credential boundary: the private GitHub repository had no Actions workflows, secret names or variable names before this sprint. The linked environment has no database password/URL suitable for non-interactive `supabase db dump`. Required owner names are `SUPABASE_PRODUCTION_DB_URL`, `SUPABASE_PRODUCTION_PROJECT_REF`, `BACKUP_AGE_RECIPIENT`, and `BACKUP_AGE_IDENTITY`; no values were read or printed.
+- Restore proof: not run. No scheduled artifact exists, no dump was retained, and production was never a restore target. `TECH-011` therefore remains `BLOCKED`.
+- `UX-012`: added a 42-concept owner/supervisor/mobile/docs/export inventory, proposed glossary, high-risk decision-only additions, and expanded screenshot instructions. No isolated typo was changed because every observed conflict also chooses factory vocabulary, financial meaning or unit convention. No application deployment was required.
+- Approval boundary: no named factory-supervisor approval or change request exists. `UX-012` remains `BLOCKED`; product-owner preference alone cannot satisfy the exact row unless that person truthfully signs in the required factory-supervisor role.
+- Deferred boundary: `GOLDEN-A-03` was not edited or reclassified.
+- Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json` plus the referenced workflow/script/closure-pack paths.
+- Validation: actionlint, ShellCheck, Bash syntax, YAML/JSON parsing, missing-secret fail-closed test, production read-only inventory SQL, changed-Markdown link validation and `git diff --check` passed. `npm ci`, ESLint, 92 Vitest files/653 passed plus 1 intentional skip, optimized Next build, and both high/critical audit gates passed; two pre-existing moderate advisories remain.
+- Matrix: no row or count changed; formal totals remain 367 pass, 0 fail, 7 blocked, and 3 not applicable.
 
 ## Active Entry: BATCH-01A-MUTABLE-PROFILE-AUTHZ
 
@@ -2460,3 +2475,15 @@ Date: 2026-07-14 IST. No production change and no status promotion.
 - Integrity: no external artifact was invented, no row inherited source-test credit, no secret value was recorded, and no runtime/provider resource was mutated.
 - Evidence: `output/qa/blocked-row-campaign/B19-external-evidence-review.json`.
 - Formal matrix: 365 pass, 3 fail, 8 blocked, 1 not applicable. All blocked-row batches B08–B19 have been reviewed; no independent executable batch remains. Readiness remains No-Go.
+
+## Remaining pilot gate evidence-pack preparation
+
+Date: 2026-07-14 IST. Documentation preparation only; application baseline `5a66eca`, documentation baseline `bb0380f`.
+
+- Added closure-ready packs for `TECH-011`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04` under `docs/pilot-remediation/closure-packs/`.
+- Each pack records the exact canonical requirement, current evidence, responsible-party fields, required artifacts, acceptance criteria, exact row-only matrix procedure, and outstanding human/laptop actions.
+- The UX pack identifies all required terms, source/product locations, plain-language meanings, alternatives, screenshot instructions, and dated approve/change/re-review fields.
+- The Golden A pack freezes the independent reference before Weavly entry and captures every input, formula/method, intermediate, tolerance, line-level variance, downstream snapshot, reviewer identity, and dated approval.
+- The SIGNOFF pack makes limited-pilot authorization conditional on `TECH-011`, `UX-012`, and `GOLDEN-A-03` being formally `PASS`; it retains the canonical first-shift Today/register reconciliation as the only way to close `SIGNOFF-04`.
+- Fresh read-only Supabase evidence still reports organization plan Free, production WAL-G enabled, PITR disabled, and no retained backup. No remote setting, billing plan, secret, schema, data, backup, or restore was changed. No restore proof is claimed.
+- Status changes: none. Formal matrix remains **367 pass, 0 fail, 7 blocked, and 3 not applicable**; all four requested rows remain `blocked`.

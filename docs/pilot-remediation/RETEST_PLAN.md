@@ -692,6 +692,24 @@ Acceptance:
 - Canonical evidence is `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
 - Canonical counts after B18: 365 pass, 3 fail, 8 blocked, and 1 not applicable. Begin B19; rerun B18 only if backup policy, schema recovery strategy, or deployment provider behavior changes.
 
+### TECH-011 Free-tier backup control retest — 2026-07-14
+
+- Static preparation paths: `.github/workflows/supabase-production-backup.yml`, `.github/workflows/supabase-production-restore-drill.yml`, `scripts/backup/create-supabase-logical-backup.sh`, `scripts/backup/restore-supabase-logical-backup.sh`, and `scripts/backup/sql/sanitized_inventory.sql`.
+- Before enabling, verify only the names—not values—of `SUPABASE_PRODUCTION_DB_URL`, `SUPABASE_PRODUCTION_PROJECT_REF`, `BACKUP_AGE_RECIPIENT`, and `BACKUP_AGE_IDENTITY`. The service-role key is not a database dump credential.
+- Wait for a default-branch scheduled run at `20:17 UTC`. A manual run can validate configuration but cannot alone close the schedule requirement.
+- Record the exact private artifact, 14-day expiry, encrypted byte count/SHA-256, source project/commit and timestamps. Confirm no plaintext SQL or identity file appears in the artifact/log.
+- Trigger the restore drill for that run/artifact. Require database start, payload hashes, documented restore order, exact migration head/extensions, Auth linkage, organization/users, estimator, orders, production, stock, receivables, payroll, tenant-boundary counts/digests, measured RTO and `--no-backup` cleanup.
+- Recheck `storage.buckets`/`storage.objects` at backup time. The current read-only baseline is zero buckets/objects/bytes. Any object must stop database-only closure until object bytes are independently retained/restored/hash-verified.
+- Only a real scheduled production artifact plus successful disposable restore and named verifier can promote `TECH-011`. The 2026-07-14 preparation artifact is `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json` and has no status effect.
+
+### UX-012 supervisor review retest — 2026-07-14
+
+- Use `UX-012_TERMINOLOGY_INVENTORY.md`, `UX-012_RECOMMENDED_GLOSSARY.md`, and `UX-012_TERMINOLOGY_DECISION_PACK.md` from the closure-pack directory.
+- Capture the required owner/supervisor/mobile/output screen contexts for every language actually used. Do not submit production forms only to make screenshots; redact identities/amounts.
+- A named pilot-factory supervisor explains and decides every canonical term plus every high-risk term visible in the pilot. Record name, real role/factory, date/time/time zone, exact choice and change request.
+- Implement only approved changes, update affected tests/docs/exports, deploy if user-facing behavior changes, recapture affected contexts, and obtain the same reviewer’s dated re-approval.
+- Keep `UX-012` blocked for blank/unclear choices, product-owner-only opinion, unsigned screenshots, unimplemented changes, or an unreviewed used locale.
+
 ### B19 external-evidence regression guard — 2026-07-14
 
 - For `SEC-011`, use the read-only Sentry API with a local `SENTRY_AUTH_TOKEN` carrying `org:read`, `project:read`, and `event:read`. Inspect a current production event and report only redacted field-presence/results; never print the token, email/IP values, or a raw stack trace.

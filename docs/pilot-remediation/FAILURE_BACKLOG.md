@@ -456,22 +456,22 @@ Required proof: Batch 9 satisfies browser offline route, logout/account-switch c
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 
-Open failures/blockers: `TECH-011`, `TECH-012`. Freshly closed: `TECH-001`, `TECH-005`, `TECH-006`.
+Open blocker: `TECH-011`. Freshly closed: `TECH-001`, `TECH-005`, `TECH-006`, and `TECH-012`.
 
 Evidence: `logs/technical-gates.md`, `logs/clock-and-deployment-evidence.json`
 
 Invariant: a pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready.
 
-Impact: clean install and the high/critical dependency-audit gates are now repeatable. Restore/rollback remain unexercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts. Batch 8C closes clean deployed signoff after the Sentry DSN fix, Vercel runtime log review, and Sentry no-error release inspection.
+Impact: clean install and the high/critical dependency-audit gates are repeatable. B18 exercised sanitized restore mechanics and rollback/forward-fix, closing `TECH-012`; it did not supply a retained production artifact for `TECH-011`. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts. Batch 8C closes clean deployed signoff after the Sentry DSN fix, Vercel runtime log review, and Sentry no-error release inspection.
 
 Remediation direction:
 
 - Retain the repaired lockfile and zero-high/critical audit gate; track the two remaining moderate PostCSS/Next advisories separately.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
-- Exercise backup restore into disposable project and document rollback/forward-fix.
+- Configure the implemented Free-tier encrypted schedule, retain a real scheduled production artifact, and restore/reconcile that exact artifact in the disposable workflow.
 
-Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. Remaining proof is CI/deployment-provider evidence where required, restore evidence, and rollback runbook exercise.
+Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. B18 supplies rollback and sanitized restore proof. Remaining `TECH-011` proof is one scheduled encrypted production artifact restored and reconciled under the implemented runbook.
 
 ## Runtime Rerun Findings - 2026-07-10
 

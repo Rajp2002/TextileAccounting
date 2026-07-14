@@ -8,6 +8,8 @@
 - B19 Sentry review: production DSN, organization, and project keys are configured, but live event-payload inspection is intentionally deferred to the owner’s physical laptop. Codex must not obtain, expose, fabricate, replace, or request transfer of `SENTRY_AUTH_TOKEN`.
 - B19 human review: no qualified-counsel approval/redline, factory terminology approve/change register, business-accepted real-fabric truth sheet, or dated supervisor shift register was found.
 - B18 recovery: `TECH-012` passed; `TECH-011` remains blocked on an automated retained or approved off-site production backup schedule.
+- Focused `TECH-011` preparation: a daily encrypted Supabase CLI backup to a private 14-day GitHub Actions artifact and an ephemeral local-Supabase restore drill are implemented. Production Storage is zero buckets/objects/bytes. Required Actions settings are absent, so no scheduled artifact/restore proof exists and the row remains blocked.
+- Focused `UX-012` preparation: a 42-concept cross-surface inventory, proposed glossary, decision-only sheet and screenshot/re-approval procedure are ready. No product wording was changed and no named factory-supervisor approval exists, so the row remains blocked.
 - Scope correction: `WA-008` and `WA-010` are named post-pilot requirements with no PASS credit. `OFF-001` remains optional physical-device proof. `SEC-018` gates public reliance and `SIGNOFF-04` is a mandatory first-shift operating control.
 - Current campaign report: `docs/pilot-remediation/REMAINING_GATE_REPORT.md`.
 - B19 evidence: `output/qa/blocked-row-campaign/B19-external-evidence-review.json`.
@@ -36,4 +38,4 @@ All five B19 rows were reviewed individually. None was promoted from source test
 
 ## Exact next action
 
-Close one of the three genuine pilot gates: approve an automated retained/off-site production backup for `TECH-011`, obtain the named supervisor terminology register for `UX-012`, or supply the independent real-fabric truth sheet for `GOLDEN-A-03`. The owner may close `SEC-011` later on the physical laptop without transferring the token.
+For `TECH-011`, configure the four exact Actions names from the runbook, merge to default, wait for one scheduled encrypted artifact, then run and independently verify the disposable restore. For `UX-012`, have the named factory supervisor complete the dated register, implement/retest any requested changes, and obtain re-approval. `GOLDEN-A-03` is intentionally deferred and unchanged. The owner may close `SEC-011` later on the physical laptop without transferring the token.

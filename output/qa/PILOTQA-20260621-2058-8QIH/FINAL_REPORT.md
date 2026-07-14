@@ -13,6 +13,8 @@ The canonical `results.json`, `TEST_MATRIX.md`, and `docs/pilot-remediation/REMA
 
 The limited-pilot verdict remains **No-Go pending three genuine gates only**: `TECH-011` automated retained/off-site production backup, `UX-012` named factory-supervisor terminology acceptance, and `GOLDEN-A-03` independent real-fabric truth-sheet reconciliation. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain precise non-gating evidence debt. `WA-008` and `WA-010` are named post-pilot requirements and receive no PASS credit. `OFF-009` and `OFF-010` passed exact delayed-response and constrained-3G runtime/database proof.
 
+Focused preparation update: `TECH-011` now has a Free-plan-compatible daily encrypted Supabase CLI workflow, private 14-day off-Supabase artifact destination, fail-closed Storage guard, and ephemeral restore drill. Required GitHub settings are absent, so no real scheduled artifact or restore result exists. `UX-012` now has a complete 42-concept inventory, proposed glossary and dated supervisor decision/re-approval pack; no supervisor approval exists and no product wording changed. Both rows and the 367/0/7/3 counts remain unchanged. `GOLDEN-A-03` was intentionally left untouched.
+
 Production closeout: exact commit `5a66eca6ab80fb9d0a00abe3c3cf00a44a0ee4d5` is READY on deployment `dpl_3yvQ3zWGTpEB6xw1EYgvwbvgRaLL` and aliased to the canonical URL. The Vercel gate passed 92 files / 654 tests, TypeScript, build, and Sentry release upload. Nine WhatsApp-dependent Edge functions are ACTIVE with the provider disabled; deployed supervisor proof produced truthful manual handoff, no access code, no delivery row, and zero fixture residue. Four public routes returned 200 with no error/5xx log entry in the post-deploy window.
 
 ## Verdict

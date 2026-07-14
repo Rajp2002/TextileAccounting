@@ -27,6 +27,9 @@
 
 # production
 /build
+/backup-output/
+*.tar.gz.age
+*.agekey
 
 # misc
 .DS_Store

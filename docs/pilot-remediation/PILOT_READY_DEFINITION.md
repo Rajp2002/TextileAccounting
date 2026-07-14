@@ -79,10 +79,12 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 | Substitute worker logging | Batch 24F blocks mismatches with explicit reassignment-required behavior; no separate substitute persistence exists. | Capture browser/runtime proof for the reassignment-required flow before relying on it for pilot. |
 | Owner data export | Batch 24G source-fixes active UI wiring, audit-before-return behavior, org scoping, and redaction review, but runtime export proof is still missing. | Keep unavailable for pilot reliance until controlled export payload and audit-log EXPORT proof are complete. |
 | Public DPDP/legal claims | Requires qualified counsel review. | Do not rely on public legal readiness until review exists. |
-| Backup restore/rollback | Not exercised. | No pilot until exercise is completed. |
+| Production backup restore | B18 proved sanitized mechanics and rollback, but no retained production artifact has been restored. | No pilot until the implemented Free-tier schedule produces an artifact and that exact artifact restores/reconciles. |
 | Archived modules | Historical archived routes exist. | Keep hidden/archived and do not market as pilot features. |
 
 Batch 8 note: `TECH-007` migration-head alignment is closed for repository head `20260628185344` by supplied Supabase migration-list evidence. Batch 8B note: `TECH-010` Sentry release/source-map proof is closed by fresh production release `2538da25b2fa` with 529 source-map artifacts. Batch 8C note: `SIGNOFF-10` clean deployed signoff is closed by post-DSN browser smoke, Vercel runtime/server logs, and Sentry production release `7c6449a59061` no-error evidence. These do not satisfy live Sentry payload inspection, backup restore, rollback/forward-fix, audit, clean install, or deployed WhatsApp webhook proof.
+
+Focused 2026-07-14 note: a Free-plan-compatible daily encrypted Supabase CLI backup and ephemeral restore drill are source-controlled with private GitHub artifact retention, integrity hashes, Storage fail-closed coverage and a runbook. Preparation is not readiness: required Actions settings are absent, no scheduled production artifact exists, and no real artifact has been restored. `TECH-011` and the 367/0/7/3 counts are unchanged.
 
 Batch 9 note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are closed by public offline fallback proof, awaited auth-boundary cache cleanup, IndexedDB queue cleanup, privacy/public copy truth, and truthful online-only offline kharchi de-scope. The 2026-07-11 runtime-remediation campaign also closes `OFF-007` with active-draft production update proof. `OFF-010` remains partial, and `OFF-009` remains open.
 

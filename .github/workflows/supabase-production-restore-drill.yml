@@ -1,0 +1,114 @@
+name: Supabase production backup restore drill
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: GitHub Actions run ID that created the selected scheduled backup
+        required: true
+        type: string
+      backup_artifact_name:
+        description: Exact private artifact name from that backup run
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: supabase-production-restore-drill
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    name: Disposable restore and reconciliation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BACKUP_AGE_IDENTITY: ${{ secrets.BACKUP_AGE_IDENTITY }}
+      RESTORE_INPUT_DIR: /tmp/selected-backup
+      RESTORE_EVIDENCE_DIR: /tmp/restore-evidence
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+
+      - name: Install standard restore tools
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age jq postgresql-client
+
+      - name: Validate decrypt configuration
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$BACKUP_AGE_IDENTITY" ]] || { echo '::error::Missing Actions secret BACKUP_AGE_IDENTITY'; exit 2; }
+
+      - name: Download exact retained artifact
+        shell: bash
+        env:
+          BACKUP_RUN_ID: ${{ inputs.backup_run_id }}
+          BACKUP_ARTIFACT_NAME: ${{ inputs.backup_artifact_name }}
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RESTORE_INPUT_DIR"
+          gh run download "$BACKUP_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "$BACKUP_ARTIFACT_NAME" \
+            --dir "$RESTORE_INPUT_DIR"
+
+      - name: Prepare private decrypt identity
+        id: input
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          identity_file="$RUNNER_TEMP/backup-age-identity.agekey"
+          printf '%s\n' "$BACKUP_AGE_IDENTITY" > "$identity_file"
+          encrypted_file="$(find "$RESTORE_INPUT_DIR" -maxdepth 1 -type f -name '*.tar.gz.age' -print -quit)"
+          [[ -n "$encrypted_file" ]] || { echo '::error::Selected artifact has no encrypted backup file'; exit 3; }
+          echo "identity_file=$identity_file" >> "$GITHUB_OUTPUT"
+          echo "encrypted_file=$encrypted_file" >> "$GITHUB_OUTPUT"
+
+      - name: Restore into disposable local Supabase and reconcile
+        id: restore
+        shell: bash
+        env:
+          BACKUP_ENCRYPTED_FILE: ${{ steps.input.outputs.encrypted_file }}
+          BACKUP_AGE_IDENTITY_FILE: ${{ steps.input.outputs.identity_file }}
+        run: scripts/backup/restore-supabase-logical-backup.sh
+
+      - name: Upload restore evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-restore-proof-${{ github.run_id }}
+          path: ${{ env.RESTORE_EVIDENCE_DIR }}/restore-result.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Write restore summary
+        if: success()
+        shell: bash
+        env:
+          RESTORED_BACKUP_ID: ${{ steps.restore.outputs.backup_id }}
+          RECOVERY_SECONDS: ${{ steps.restore.outputs.recovery_seconds }}
+          RESTORED_MIGRATION_HEAD: ${{ steps.restore.outputs.migration_head }}
+        run: |
+          {
+            echo '## Supabase disposable restore drill'
+            echo
+            echo '- Result: restored and reconciled'
+            echo "- Backup ID: \`$RESTORED_BACKUP_ID\`"
+            echo "- Recovery time: \`$RECOVERY_SECONDS seconds\`"
+            echo "- Migration head: \`$RESTORED_MIGRATION_HEAD\`"
+            echo '- Production targeted: no'
+            echo '- Disposable database retained: no'
+          } >> "$GITHUB_STEP_SUMMARY"

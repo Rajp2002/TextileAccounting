@@ -421,6 +421,9 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 5. Non-reversible database changes use a reviewed forward-fix with preserved recovery provenance; destructive down-migrations are not an acceptable default.
 6. Recovery exercises must use disposable infrastructure, record elapsed recovery time, and reconcile fixtures, private backup material, temporary schema objects, worktrees, and provider projects to zero.
 7. No recovery rehearsal may mutate the live production database or production alias unless an incident commander explicitly authorizes that scope.
+8. A PostgreSQL dump protects Storage metadata, not Storage object bytes. A database-only backup must fail closed when pilot-critical objects exist unless a separate retained object-byte export is restored and hash-verified.
+9. Backup artifacts must identify source project, source commit, capture time, tool version, retention and integrity hashes without disclosing credentials or contents. Plaintext dumps and decrypt identities are never committed.
+10. The exact retained scheduled artifact selected for closure must be the artifact restored; a fixture, manual-only run, configuration screenshot, or successful backup without restore cannot substitute.
 
 ## B19 external-evidence invariants
 
@@ -428,6 +431,8 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 2. Observability review is read-only. Sentry output must redact PII and must never echo or persist authentication tokens, raw stack traces, email addresses, or IP addresses.
 3. Legal-readiness wording requires qualified-counsel evidence; QA may identify the dependency but cannot issue legal approval.
 4. Factory terminology approval must identify a human reviewer and capture approve/change decisions for the required terms.
+5. A product owner or facilitator cannot substitute for the named factory-supervisor role unless they truthfully perform and sign in that factory-side role.
+6. Terms that distinguish money, stock quantity, production measurement or inverse textile units require explicit contextual approval; source consistency alone cannot decide them.
 5. A Golden Journey truth comparison needs an independent business-accepted reference containing both inputs and expected totals; application-generated output is not its own oracle.
 6. Daily supervisor sign-off needs an independent dated shift register; application totals cannot self-attest.
 7. An unavailable external artifact remains an honest blocker with the smallest closure dependency. No external review row inherits PASS from adjacent technical evidence.

@@ -2065,3 +2065,19 @@ The product scope model now records `release_scope` and `pilot_gating` on every 
 `WA-008` moved from fail to `not_applicable` as a requirement-definition correction linked to `PP-WA-002`; `WA-010` moved from blocked to `not_applicable` under `PP-WA-003`. Neither receives PASS credit. `SEC-011` remains unchanged except for its precise owner-physical-laptop prerequisite; Codex did not obtain, expose, fabricate, replace, or request transfer of `SENTRY_AUTH_TOKEN`.
 
 Current counts are **367 pass, 0 fail, 7 blocked, and 3 not applicable**. The limited-pilot verdict is No-Go pending only `TECH-011`, `UX-012`, and `GOLDEN-A-03`. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest evidence debt under non-gating scopes; `SIGNOFF-04` becomes a mandatory first-shift operating control.
+
+## Closure-pack preparation — 2026-07-14
+
+The four remaining requested evidence packs are ready under `docs/pilot-remediation/closure-packs/`. They prepare collection and review only: `TECH-011`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04` remain `blocked`, and the formal counts remain **367 pass, 0 fail, 7 blocked, and 3 not applicable**.
+
+The fresh read-only production backup check remains unchanged: the Supabase organization is Free, WAL-G is enabled, PITR is disabled, and no retained managed backup is listed. Paid managed backup/PITR/branching is not mandatory for the pilot. A Free-tier daily encrypted Supabase CLI dump to a private GitHub Actions artifact (14-day interim retention) plus an ephemeral local-Supabase restore drill is now implemented. Production Storage has zero buckets/objects/bytes; the workflow fails if object bytes would be uncovered. GitHub has no required backup settings yet, so no real artifact or restore proof exists. No billing, secret, production schema/data, backup setting, or restore target was mutated.
+
+Exact next actions are external: the owner approves the interim backup limitations/RPO/RTO, configures the four exact Actions names and merges the workflow to default; a scheduled artifact must then be restored and independently verified. A named supervisor completes and, after any approved changes, re-approves the terminology register. `GOLDEN-A-03` remains intentionally deferred and unchanged. Only after all three core gates pass may both owners authorize the limited first session; the supervisor register must then reconcile to Today meters before `SIGNOFF-04` can pass.
+
+## Focused TECH-011 / UX-012 sprint — 2026-07-14
+
+The two preparation tracks are complete without status promotion. `TECH-011` now has source-controlled daily backup and restore-drill workflows, standard age encryption, private off-Supabase 14-day artifact retention, failure visibility, sanitized reconciliation and fail-closed Storage coverage. Read-only production checks verified healthy Postgres 17, 211 migration records/head `20260714040018`, and zero Storage buckets/objects/bytes. The repository had no Actions secret/variable names and local access lacked a database password, so no scheduled backup or production-artifact restore could be executed.
+
+`UX-012` now has a complete cross-surface terminology inventory, proposed canonical glossary, decision-only sheet, Gujarati discussion terms and reproducible screenshot/approval flow. Loom/machine, shift total/counter reading, quality/run, party/Commercials, Taka units, sold/sent/received metres, worker types, Upaad/Kharchi/Hisaab and inverse textile units remain genuine human choices. No product wording or application behavior changed, so no Vercel deployment was performed.
+
+Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json`. Counts remain **367 pass, 0 fail, 7 blocked, and 3 not applicable**; the verdict remains No-Go pending `TECH-011`, `UX-012`, and unchanged/deferred `GOLDEN-A-03`.
