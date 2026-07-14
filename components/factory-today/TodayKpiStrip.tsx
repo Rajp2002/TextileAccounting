@@ -68,7 +68,7 @@ export function TodayKpiStrip({ productionMode, production, machines, dispatch, 
                 : production.nightShiftLogged
                     ? 'Night shift logged'
                     : 'Partial shift logged'
-        : 'Log shift meters'
+        : 'Record Metres Produced This Shift'
 
     return (
         <div className="space-y-3">
@@ -103,7 +103,7 @@ export function TodayKpiStrip({ productionMode, production, machines, dispatch, 
                 />
                 <KpiCard
                     icon={Package}
-                    label={marketRunOnly ? 'Godown Ledger' : 'Godown Stock'}
+                    label="Godown Stock"
                     value={marketRunOnly ? 'Expected' : 'Live'}
                     sub={marketRunOnly ? 'As per production' : 'Current ledger'}
                     color={stockColor}

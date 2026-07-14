@@ -117,6 +117,9 @@ describe('UX-012 terminology baseline', () => {
             'components/navigation/owner-sidebar.tsx',
             'components/factory-today/QuickActionsCard.tsx',
             'components/factory-today/CommercialsAttentionCard.tsx',
+            'components/factory-today/TodayKpiStrip.tsx',
+            'components/factory-today/PayrollHisaabCard.tsx',
+            'app/(dashboard)/owner/advances/AdvancesClient.tsx',
             'app/(dashboard)/owner/stock/TakaStockClient.tsx',
             'components/dispatches/SellAndDispatchDialog.tsx',
             'lib/generate-payslip.ts',
@@ -132,6 +135,9 @@ describe('UX-012 terminology baseline', () => {
             'Run the estimator',
             'Review Commercials',
             'PAYROLL SLIP',
+            'Log shift meters',
+            'Pending Advances',
+            'Pending advances',
         ]) {
             expect(surfaces).not.toContain(forbidden)
         }

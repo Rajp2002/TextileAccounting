@@ -103,7 +103,7 @@ function PlanCards({
             name: 'Weavly Estimator',
             badge: 'Standalone',
             renewal: '₹2,000/year + GST (₹2,360/year total)',
-            features: ['Estimator workspace', 'Saved qualities', 'Quote history', 'Draft recovery', 'Independent customer access'],
+            features: ['Estimator workspace', 'Saved Fabric Qualities', 'Quotations', 'Draft recovery', 'Independent account access'],
             icon: Zap,
         },
         {

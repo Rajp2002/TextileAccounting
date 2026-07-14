@@ -83,7 +83,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
                         <HandCoins className="h-3.5 w-3.5 text-body" />
-                        <p className="min-w-0 truncate text-xs text-body">Pending Advances</p>
+                        <p className="min-w-0 truncate text-xs text-body">Pending Upaad</p>
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',

@@ -744,7 +744,7 @@ export default function AdvancesClient({ initialData }: { initialData: OwnerAdva
                                 ) : allPendingAdvances && allPendingAdvances.length > 0 ? (
                                     <div className="space-y-4">
                                         <div>
-                                            <h2 className="text-xl font-semibold text-ink">Pending advances</h2>
+                                            <h2 className="text-xl font-semibold text-ink">Pending Upaad</h2>
                                             <p className="mt-1 text-sm text-muted-foreground">Select a worker on the left to manage recoveries or add another advance.</p>
                                         </div>
                                         <div className="overflow-hidden rounded-2xl border border-hairline bg-surface">

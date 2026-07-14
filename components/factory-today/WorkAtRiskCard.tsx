@@ -61,7 +61,7 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
                 <div>
                     <div className="flex items-center gap-2 px-4 pt-3 pb-2">
                         <Package className="h-3.5 w-3.5 text-muted" />
-                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Orders behind pace</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Party Orders behind pace</p>
                     </div>
                     <div className="divide-y divide-hairline px-4">
                         {ordersBehindPace.slice(0, 3).map((order) => (
@@ -129,7 +129,7 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
                         href="/owner/orders"
                         className="flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                     >
-                        View Orders
+                        View Party Orders
                     </Link>
                 )}
                 {visibility.marketRuns && (
