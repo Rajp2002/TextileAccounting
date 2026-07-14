@@ -2,8 +2,8 @@
   "row": "UX-012",
   "captured_at": "2026-07-14T20:00:00+05:30",
   "production_url": "https://textile-accounting.vercel.app",
-  "commit": "bfc93dd11692408b7ccf5ce59fb99f3434e6aaae",
-  "deployment_id": "dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD",
+  "commit": "93c2622026824494dfcf0eb52cba0106ef577ad7",
+  "deployment_id": "dpl_2fRVGdqnpqhx1415kBcb1mDrzhBy",
   "deployment_state": "READY",
   "target": "production",
   "owner_evidence": {

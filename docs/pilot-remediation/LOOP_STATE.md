@@ -2084,6 +2084,6 @@ Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json`. 
 
 ## UX-012 amended-criteria closeout — 2026-07-14
 
-The product owner approved a traceable limited-pilot amendment replacing the pre-pilot brother/supervisor substitute review with a reconciled product-owner baseline plus an open contextual review by the actual pilot user. The approved terminology was implemented across application and output surfaces, tested locally and remotely, and deployed at commit `bfc93dd` (`dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD`, `READY`). Representative authenticated owner and supervisor routes were inspected without creating or changing production records.
+The product owner approved a traceable limited-pilot amendment replacing the pre-pilot brother/supervisor substitute review with a reconciled product-owner baseline plus an open contextual review by the actual pilot user. The approved terminology was implemented across application and output surfaces, tested locally and remotely, and deployed at commit `93c2622` (`dpl_2fRVGdqnpqhx1415kBcb1mDrzhBy`, `READY`). Representative authenticated owner and supervisor routes were inspected without creating or changing production records.
 
 Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6 blocked, and 3 not applicable**. The verdict remains **No-Go**, now pending `TECH-011` and `GOLDEN-A-03`. Actual pilot-user terminology feedback, correction, and post-change confirmation remains an OPEN operating control. No factory-supervisor approval is claimed or implied.
