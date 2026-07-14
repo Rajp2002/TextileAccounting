@@ -1,117 +1,131 @@
-import { Check, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BILLING_PLANS, type PurchasablePlanTier } from '@/lib/billing-constants'
 
-const plans = [
-    {
-        name: 'Start with Estimating',
-        price: '₹2,000',
-        suffix: '/month',
-        description: 'For owners who want Weavly as their quoting and costing desk before connecting the floor.',
-        guidance: 'Good first step if your biggest leak is wrong costing or manual quote history.',
+const planDetails: Record<PurchasablePlanTier, {
+    badge: string
+    description: string
+    features: string[]
+}> = {
+    base: {
+        badge: 'Costing desk',
+        description: 'For owners who want reliable costing, quote history, and margin control without moving factory-floor operations yet.',
         features: [
             'Warp and weft cost estimator',
-            'Fabric templates and quote history',
+            'Fabric templates and saved qualities',
+            'Quote history and draft recovery',
             'Margin and landed-cost visibility',
-            'Single owner account',
+            'Independent owner access',
         ],
-        excluded: ['Production and order tracking', 'Payroll and advances', 'WhatsApp daily brief'],
     },
-    {
-        name: 'Run the Full Factory Loop',
-        price: '₹5,000',
-        suffix: '/month',
-        description: 'For factories ready to connect quotes, looms, shift logs, dispatches, payroll, and owner visibility.',
-        guidance: 'Most useful when you want supervisors and payroll to run from the same production record.',
+    premium: {
+        badge: 'Complete factory',
+        description: 'For factories ready to connect quotes, looms, shift logs, stock, dispatches, payroll, and owner visibility.',
         features: [
-            'Everything in Estimating',
-            'Orders, market runs, and dispatch tracking',
+            'Everything in Weavly Estimator',
+            'Production and order tracking',
             'Shift production logs with shift-total meters',
+            'Market runs and godown stock',
+            'Dispatches and sale records',
             'Payroll, advances, and settlement',
-            'WhatsApp briefs, payslips, and receipts',
             'Operational analytics for owners',
             'Unlimited machines and workers',
-            'Priority support',
         ],
     },
-]
+}
+
+function formatRupees(paise: number) {
+    return `₹${(paise / 100).toLocaleString('en-IN')}`
+}
 
 export default function LandingPricing() {
+    const plans = (['base', 'premium'] as const).map((tier) => ({
+        ...BILLING_PLANS[tier],
+        ...planDetails[tier],
+    }))
+
     return (
-        <section className="landing-section relative overflow-hidden py-20 sm:py-28 lg:py-12" id="pricing">
-            <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
-                <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+        <section className="landing-section relative overflow-hidden py-20 sm:py-28 lg:py-16" id="pricing">
+            <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+                <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
                     <div>
-                        <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Pricing</p>
+                        <p className="text-xs font-black uppercase leading-7 tracking-[0.32em] text-orange-700 dark:text-orange-500">Pricing</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                        Start with costing, or run the whole factory loop.
+                            Pay for the first year. Renew for less.
                         </h2>
                     </div>
                     <div className="max-w-2xl lg:ml-auto">
                         <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                            Begin with a focused pilot. Add the floor workflow when your team is ready to move daily production and payroll into Weavly.
+                            Start with the Estimator or bring the full factory workflow into Weavly. Both plans include a full year of access, with a lower annual renewal from year two.
                         </p>
                         <p className="mt-3 text-sm text-zinc-400 dark:text-zinc-500">
-                            All prices are exclusive of 18% GST. Trial includes Premium access for 7 days.
+                            Start with a 7-day Premium trial. Prices below show 18% GST separately and include one factory.
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-12 grid gap-5 lg:mt-8 lg:grid-cols-3">
-                    {plans.map((plan, index) => (
-                        <div key={plan.name} className={`flex min-h-[42rem] flex-col border p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur sm:p-8 lg:min-h-[36rem] lg:p-6 ${index === 1 ? 'border-zinc-950 bg-zinc-950 text-white shadow-[0_30px_90px_rgba(24,24,27,0.2)]' : 'border-zinc-200 bg-white/92 dark:border-white/10 dark:bg-zinc-950/75'}`}>
-                            <div>
+                <div className="mt-10 grid gap-5 lg:grid-cols-2">
+                    {plans.map((plan, index) => {
+                        const isPremium = index === 1
+                        const firstYearBase = formatRupees(plan.firstYearBasePaise)
+                        const firstYearGst = formatRupees(plan.firstYearGstPaise)
+                        const firstYearTotal = formatRupees(plan.firstYearTotalPaise)
+                        const renewalBase = formatRupees(plan.renewalBasePaise)
+                        const renewalGst = formatRupees(plan.renewalGstPaise)
+                        const renewalTotal = formatRupees(plan.renewalTotalPaise)
+
+                        return (
+                            <div
+                                key={plan.tier}
+                                className={`flex flex-col border p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur sm:p-8 ${isPremium ? 'border-zinc-950 bg-zinc-950 text-white shadow-[0_30px_90px_rgba(24,24,27,0.2)]' : 'border-zinc-200 bg-white/92 dark:border-white/10 dark:bg-zinc-950/75'}`}
+                            >
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <h3 className={`text-2xl font-black ${index === 1 ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{plan.name}</h3>
-                                    {index === 1 ? (
-                                        <span className="border border-orange-300/30 bg-orange-400/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-orange-200">Best pilot</span>
-                                    ) : null}
+                                    <h3 className={`text-2xl font-black ${isPremium ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{plan.name}</h3>
+                                    <span className={`border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${isPremium ? 'border-orange-300/30 bg-orange-400/10 text-orange-200' : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300'}`}>
+                                        {plan.badge}
+                                    </span>
                                 </div>
-                                <p className={`mt-4 text-sm leading-6 ${index === 1 ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>{plan.description}</p>
-                                <p className="mt-8 flex items-baseline gap-1 lg:mt-5">
-                                    <span className={`text-5xl font-black tracking-tight ${index === 1 ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{plan.price}</span>
-                                    <span className={`text-sm font-semibold ${index === 1 ? 'text-zinc-400' : 'text-zinc-500'}`}>{plan.suffix}</span>
-                                </p>
-                            </div>
+                                <p className={`mt-4 max-w-xl text-sm leading-6 ${isPremium ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>{plan.description}</p>
 
-                            <div className={`mt-7 border-l-2 px-4 py-3 lg:mt-5 lg:py-2 ${index === 1 ? 'border-orange-300 bg-white/5' : 'border-orange-600 bg-orange-50/70 dark:bg-orange-500/10'}`}>
-                                <p className={`text-sm font-bold leading-6 ${index === 1 ? 'text-zinc-100' : 'text-zinc-800 dark:text-zinc-100'}`}>{plan.guidance}</p>
-                            </div>
-
-                            <Button asChild className={`mt-7 w-full rounded-md py-6 font-bold lg:mt-5 ${index === 1 ? 'bg-white text-zinc-950 hover:bg-orange-50' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
-                                <a href="/signup">Request pilot access</a>
-                            </Button>
-
-                            <div className={`mt-8 grid gap-4 text-sm leading-6 lg:mt-5 lg:gap-2.5 lg:leading-5 ${index === 1 ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>
-                                {plan.features.map((feature) => (
-                                    <div key={feature} className="flex gap-3">
-                                        <Check className={`h-5 w-5 flex-none ${index === 1 ? 'text-orange-300' : 'text-orange-600'}`} aria-hidden="true" />
-                                        <span>{feature}</span>
+                                <div className="mt-7 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
+                                    <div className={`border p-5 ${isPremium ? 'border-white/10 bg-white/5' : 'border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5'}`}>
+                                        <p className={`text-xs font-black uppercase tracking-[0.18em] ${isPremium ? 'text-orange-300' : 'text-orange-700 dark:text-orange-400'}`}>First year</p>
+                                        <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
+                                            <span className={`text-5xl font-black tracking-tight ${isPremium ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{firstYearBase}</span>
+                                            <span className={`text-sm font-semibold ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>+ GST</span>
+                                        </p>
+                                        <p className={`mt-2 text-xs ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
                                     </div>
-                                ))}
-                                {plan.excluded?.map((feature) => (
-                                    <div key={feature} className="flex gap-3 text-zinc-400 dark:text-zinc-500">
-                                        <X className="h-5 w-5 flex-none text-zinc-400" aria-hidden="true" />
-                                        <span>{feature}</span>
+                                    <div className={`border p-5 ${isPremium ? 'border-orange-300/25 bg-orange-400/10' : 'border-orange-200 bg-orange-50/70 dark:border-orange-500/20 dark:bg-orange-500/10'}`}>
+                                        <p className={`text-xs font-black uppercase tracking-[0.18em] ${isPremium ? 'text-orange-300' : 'text-orange-700 dark:text-orange-400'}`}>Renewal from year 2</p>
+                                        <p className="mt-3 flex flex-wrap items-baseline gap-x-1">
+                                            <span className={`text-3xl font-black tracking-tight ${isPremium ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{renewalBase}</span>
+                                            <span className={`text-sm font-semibold ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>/year + GST</span>
+                                        </p>
+                                        <p className={`mt-2 text-xs ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>{renewalGst} GST · {renewalTotal} total</p>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                                </div>
 
-                    <div className="flex min-h-[42rem] flex-col justify-between border border-orange-200 bg-orange-50/85 p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur dark:border-orange-500/20 dark:bg-orange-500/10 sm:p-8 lg:min-h-[36rem] lg:p-6">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700 dark:text-orange-400">Setup and training add-on</p>
-                            <h3 className="mt-5 text-3xl font-black tracking-tight text-zinc-950 dark:text-white">Get the first factory floor configured with your team.</h3>
-                            <p className="mt-5 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
-                            We help set up machines, workers, starting data, and staff training so the owner and supervisor can begin with real factory records instead of an empty account.
-                            </p>
-                        </div>
-                        <div className="mt-8 border border-orange-200 bg-white p-5 text-left dark:border-orange-500/20 dark:bg-zinc-950/80">
-                            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">One-time payment</p>
-                            <p className="mt-2 text-5xl font-black text-zinc-950 dark:text-white">₹4,999</p>
-                            <p className="mt-1 text-xs text-zinc-500">+ GST, optional</p>
-                        </div>
-                    </div>
+                                <Button asChild className={`mt-6 w-full rounded-md py-6 font-bold ${isPremium ? 'bg-white text-zinc-950 hover:bg-orange-50' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
+                                    <a href="/signup">Start 7-day trial</a>
+                                </Button>
+
+                                <div className={`mt-7 grid gap-3 text-sm leading-6 sm:grid-cols-2 ${isPremium ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>
+                                    {plan.features.map((feature) => (
+                                        <div key={feature} className="flex gap-3">
+                                            <Check className={`mt-0.5 h-5 w-5 flex-none ${isPremium ? 'text-orange-300' : 'text-orange-600'}`} aria-hidden="true" />
+                                            <span>{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <div className="mt-5 flex flex-col gap-2 border border-orange-200 bg-orange-50/80 px-5 py-4 text-sm text-zinc-700 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-zinc-300">
+                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> Multi-factory pricing is quoted after a workflow review.</p>
+                    <a className="font-bold text-orange-700 underline decoration-orange-300 underline-offset-4 hover:text-orange-800 dark:text-orange-300" href="/signup">Request pilot access</a>
                 </div>
             </div>
         </section>
