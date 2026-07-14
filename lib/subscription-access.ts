@@ -8,6 +8,16 @@ type SubscriptionAccessRow = {
   created_at?: string | null
 }
 
+const ACCESS_BEARING_STATUSES = new Set([
+  'active',
+  'authenticated',
+  'pending',
+  'paused',
+  'halted',
+  'cancelled',
+  'completed',
+])
+
 export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'premium'): boolean {
   if (actual === 'none') return false
   if (actual === 'trial' || actual === 'premium') return true
@@ -15,8 +25,12 @@ export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'prem
 }
 
 function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): boolean {
-  if (!['active', 'authenticated'].includes(row.status)) return false
-  if (!row.current_end) return true
+  // Paid access is period-based, not webhook-label-based. A failed renewal,
+  // pause, halt, completion, or cancel-at-cycle-end must not erase the period
+  // that was already purchased. `expired` is intentionally excluded because
+  // it is the provider's terminal no-access state.
+  if (!ACCESS_BEARING_STATUSES.has(row.status)) return false
+  if (!row.current_end) return ['active', 'authenticated'].includes(row.status)
 
   const endMs = new Date(row.current_end).getTime()
   if (!Number.isFinite(endMs)) return false

@@ -1,152 +1,109 @@
-import { createAdminClient } from '@/lib/supabase/admin';
-import Razorpay from 'razorpay';
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from '@sentry/nextjs'
+import { createIdempotentRazorpayRefund } from '@/lib/razorpay-refund-client'
+import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function processReferralConversion(refereeOrgId: string) {
-    const supabase = createAdminClient();
-    
-    // Find pending use
-    const { data: usage } = await supabase
-        .from('referral_uses')
-        .select(`
-            id,
-            referral_code_id,
-            referral_codes ( org_id )
-        `)
-        .eq('referee_org_id', refereeOrgId)
-        .eq('status', 'pending')
-        .single();
-        
-    if (!usage) return; // No pending referral found
-    
-    // App-level idempotency check: Skip if discount window already exists for this referral use
-    const { data: existingWindow } = await supabase
-        .from('referral_discount_windows')
-        .select('id')
-        .eq('referral_use_id', usage.id)
-        .maybeSingle();
-
-    if (existingWindow) {
-        Sentry.captureMessage(`Discount window already exists for referral use ${usage.id}`, 'info');
-        return;
-    }
-    
-    const codeInfo = Array.isArray(usage.referral_codes) ? usage.referral_codes[0] : usage.referral_codes;
-    if (!codeInfo?.org_id) return;
-    const referrerOrgId = codeInfo.org_id;
-
-    // 1. Mark as converted
-    await supabase.from('referral_uses')
-        .update({ status: 'converted', converted_at: new Date().toISOString() })
-        .eq('id', usage.id);
-        
-    // 2. Determine discount window bounds (3 months starting from next billing cycle)
-    const { data: sub } = await supabase
-        .from('org_subscriptions')
-        .select('current_end')
-        .eq('org_id', referrerOrgId)
-        .in('status', ['active', 'authenticated'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-    let validFrom = new Date();
-    if (sub && sub.current_end && new Date(sub.current_end) > validFrom) {
-        validFrom = new Date(sub.current_end);
-    }
-    
-    const validUntil = new Date(validFrom);
-    validUntil.setMonth(validUntil.getMonth() + 3);
-    
-    const { error: insertError } = await supabase.from('referral_discount_windows')
-        .insert({
-            referrer_org_id: referrerOrgId,
-            referral_use_id: usage.id,
-            discount_pct: 10,
-            valid_from: validFrom.toISOString(),
-            valid_until: validUntil.toISOString()
-        });
-
-    if (insertError) {
-        if (insertError.code === '23505') {
-            Sentry.captureMessage('Concurrent insert prevented by unique constraint', 'warning');
-            return;
-        }
-        Sentry.captureException(insertError, { tags: { component: 'referral_webhook', phase: 'discount_window_insert' } });
-        return;
-    }
+type ReferralConversionResult = {
+    converted: boolean
+    alreadyProcessed?: boolean
 }
 
-export async function issueReferralRefund(orgId: string, paymentId: string, amountPaise: number) {
-    const supabase = createAdminClient();
-    
-    // Idempotency check: Skip if refund already issued for this payment
-    const { data: existingRefund } = await supabase
-        .from('referral_refunds')
-        .select('id')
-        .eq('razorpay_payment_id', paymentId)
-        .maybeSingle()
+type ReferralRefundClaim = {
+    eligible: boolean
+    claimed: boolean
+    status?: string
+    refundAmountPaise?: number
+    discountPct?: number
+    windowCount?: number
+    idempotencyKey?: string
+}
 
-    if (existingRefund) {
-        Sentry.captureMessage(`Refund already processed for payment ${paymentId}`, 'info')
-        return
+/** Convert a pending referral and create its discount window atomically. */
+export async function processReferralConversion(refereeOrgId: string) {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.rpc('claim_referral_conversion', {
+        p_referee_org_id: refereeOrgId,
+    })
+
+    if (error) {
+        Sentry.captureException(error, {
+            tags: { component: 'referral_webhook', phase: 'claim_conversion' },
+        })
+        throw error
     }
-    
-    // Check if they have active windows
-    const now = new Date().toISOString();
-    const { data: windows } = await supabase
-        .from('referral_discount_windows')
-        .select('id, discount_pct')
-        .eq('referrer_org_id', orgId)
-        .lte('valid_from', now)
-        .gte('valid_until', now);
-        
-    if (!windows || windows.length === 0) return;
-    
-    // Calculate effective discount
-    const totalDiscountPct = Math.min(100, windows.reduce((sum, w) => sum + w.discount_pct, 0));
-    
-    if (totalDiscountPct > 0) {
-        const refundAmountPaise = Math.round(amountPaise * (totalDiscountPct / 100));
-        
-        let refundId = null;
-        let status = 'pending';
-        
-        // Initialize Razorpay
-        if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-            try {
-                const rzp = new Razorpay({
-                    key_id: process.env.RAZORPAY_KEY_ID,
-                    key_secret: process.env.RAZORPAY_KEY_SECRET,
-                });
-                
-                const refund = await rzp.payments.refund(paymentId, {
-                    amount: refundAmountPaise,
-                    notes: {
-                        reason: `Weavly referral discount: ${totalDiscountPct}% (${windows.length} referrals)`
-                    }
-                });
-                
-                refundId = refund.id;
-                status = 'issued';
-            } catch (error) {
-                Sentry.captureException(error, { tags: { component: 'referral_webhook', phase: 'razorpay_refund' } });
-                status = 'failed';
-            }
-        } else {
-            Sentry.captureMessage('Razorpay keys missing for referral refund', 'warning');
-        }
-        
-        // Log it
-        await supabase.from('referral_refunds').insert({
-            referrer_org_id: orgId,
-            razorpay_payment_id: paymentId,
-            razorpay_refund_id: refundId,
-            original_amount_paise: amountPaise,
-            refund_amount_paise: refundAmountPaise,
-            discount_pct_applied: totalDiscountPct,
-            windows_applied: JSON.stringify(windows.map(w => w.id)),
-            status: status
-        });
+
+    return data as ReferralConversionResult | null
+}
+
+/**
+ * Claim and issue one referral refund per captured payment.
+ *
+ * The database claim serializes concurrent webhook/callback deliveries. The
+ * provider request uses Razorpay's X-Refund-Idempotency header, so a retry
+ * after an unknown network outcome cannot create a second refund.
+ */
+export async function issueReferralRefund(orgId: string, paymentId: string, amountPaise: number) {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.rpc('claim_referral_refund', {
+        p_org_id: orgId,
+        p_razorpay_payment_id: paymentId,
+        p_original_amount_paise: amountPaise,
+    })
+
+    if (error) {
+        Sentry.captureException(error, {
+            tags: { component: 'referral_webhook', phase: 'claim_refund' },
+        })
+        throw error
+    }
+
+    const claim = data as ReferralRefundClaim | null
+    if (!claim?.eligible || !claim.claimed) return claim
+    if (
+        !claim.idempotencyKey ||
+        !claim.refundAmountPaise ||
+        !claim.discountPct ||
+        !claim.windowCount
+    ) {
+        throw new Error('Referral refund claim returned incomplete provider context.')
+    }
+
+    try {
+        const refund = await createIdempotentRazorpayRefund({
+            paymentId,
+            amountPaise: claim.refundAmountPaise,
+            idempotencyKey: claim.idempotencyKey,
+            note: `Weavly referral discount: ${claim.discountPct}% (${claim.windowCount} referrals)`,
+        })
+
+        const { error: updateError } = await supabase
+            .from('referral_refunds')
+            .update({
+                razorpay_refund_id: refund.id,
+                status: 'issued',
+                last_error: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('razorpay_payment_id', paymentId)
+            .eq('idempotency_key', claim.idempotencyKey)
+
+        if (updateError) throw updateError
+        return { ...claim, status: 'issued', refundId: refund.id }
+    } catch (refundError) {
+        const message = refundError instanceof Error ? refundError.message.slice(0, 500) : 'Unknown refund error'
+        const { error: updateError } = await supabase
+            .from('referral_refunds')
+            .update({
+                status: 'failed',
+                last_error: message,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('razorpay_payment_id', paymentId)
+            .eq('idempotency_key', claim.idempotencyKey)
+
+        Sentry.captureException(refundError, {
+            tags: { component: 'referral_webhook', phase: 'razorpay_refund' },
+            extra: { localStatusUpdateFailed: updateError?.message ?? null },
+        })
+        throw refundError
     }
 }
