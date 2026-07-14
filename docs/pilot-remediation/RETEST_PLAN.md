@@ -670,3 +670,15 @@ Acceptance:
 - Verify migration `20260714073000_b16_whatsapp_delivery_boundaries.sql`, delivery status/retry/brief constraints, the organization/date/type uniqueness grain, and the six active function versions before production claims.
 - Canonical evidence is `output/qa/blocked-row-campaign/B16-qa-whatsapp.json` on production deployment `dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y` and implementation commit `ee2af23a31e648880bdf3810f9cacb545cefcedd`.
 - Canonical counts after B16: 356 pass, 3 fail, 17 blocked, and 1 not applicable. Begin B17; do not rerun B16 unless one of these boundaries changes or a controlled live Meta proof surface becomes available.
+
+### B17 Razorpay lifecycle regression guard — 2026-07-14
+
+- Preserve verify-before-claim webhook handling, body-bound event identity, same-body replay success, same-ID/different-body conflict, and zero mutation on invalid HMAC.
+- Preserve canonical provider convergence for `order.paid` and `payment.captured`, captured-state protection from late failure, and explicit failed-to-captured recovery.
+- Preserve paid access after renewal failure and cancellation, exact 365-day anchored renewal, monotonic cancellation/expiry, and absence of any false auto-renew enablement path.
+- Preserve database-first referral conversion/refund claims, one 10% provider refund with stable idempotency, and replay behavior that cannot reserve or issue another refund.
+- Preserve expiry access loss for the same authenticated session while retaining account, profile, subscription, payment, and referral history.
+- Focused regression command: `npx vitest run __tests__/b17-razorpay-lifecycle-boundaries.test.ts __tests__/p1-payment-invariants.test.ts`; use `node scripts/qa/b17-razorpay-runtime-proof.mjs` only with isolated Razorpay TEST credentials and disposable data. Production-boundary proof must assert the exact deployment and TEST key before mutation.
+- Verify migration `20260714090000_b17_harden_razorpay_lifecycle.sql`, production history version `20260714040018`, four RPCs, both activation wrappers, six subscription columns, three indexes, and service-role-only refund claims before production lifecycle claims.
+- Canonical evidence is `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json` on production deployment `dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw` and implementation commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
+- Canonical counts after B17: 364 pass, 3 fail, 9 blocked, and 1 not applicable. Begin B18; do not rerun hosted provider proof unless one of these boundaries changes, and never substitute live money for TEST mode.

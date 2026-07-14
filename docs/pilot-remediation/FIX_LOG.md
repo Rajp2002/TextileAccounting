@@ -2409,3 +2409,17 @@ Date: 2026-07-14 IST. Production commit `ee2af23a31e648880bdf3810f9cacb545cefced
 - Safety: the disposable QA organization, profile, auth user, consent, core business records, delivery logs, credentials, and fixtures reconciled to zero after the run.
 - Evidence: `output/qa/blocked-row-campaign/B16-qa-whatsapp.json` plus the exact production deployment, migration history, catalog, and function-version checks recorded in the campaign checkpoint.
 - Formal matrix: 356 pass, 3 fail, 17 blocked, 1 not applicable. Readiness remains No-Go; B17 is active.
+
+## Blocked-row campaign B17 closeout — Razorpay lifecycle and entitlement boundaries
+
+Date: 2026-07-14 IST. Production commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
+
+- Status changes: `BILL-003`, `BILL-004`, `BILL-005`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, and `SEC-007` moved from `blocked` to `pass` after hosted Razorpay TEST checkout, 18 QA assertions, and 9 exact-deployment production assertions.
+- Defects fixed: webhook validation and claim were not one fail-closed boundary; same event IDs could not distinguish replay from body conflict; payment/subscription updates could regress on late events; failed renewal and cancellation could incorrectly lose paid-period access; referral conversion/refund work was not claimed before provider activity; and refund requests lacked a stable provider idempotency key. Atomic claims, canonical provider fetch, monotonic lifecycle rules, preserved paid-period access, direct provider refund idempotency, and database-serialized referral claims now enforce those boundaries.
+- Provider runtime: hosted Razorpay TEST checkout used Netbanking and Bank of Baroda. Initial capture, mock-bank renewal failure, later renewal success, two captured payments, one failed payment, and one 10% TEST refund reconciled. No real money moved.
+- Webhook/runtime: valid HMAC, same-body replay, same-ID body conflict, invalid HMAC, order.paid/payment.captured convergence, late failure, cancellation/recovery/expiry, failed-to-captured reconciliation, anchored 365-day renewal, one referral conversion/refund, refund replay, and expiry access loss with account/history preservation passed in QA and at the production alias boundary.
+- Release: Vercel deployment `dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw` is Ready and aliased to `https://textile-accounting.vercel.app` at the exact implementation commit. The full local gate passed 91 files / 649 passed plus 1 intentional skip, TypeScript, ESLint, and optimized build; the remote gate passed 91 files / 650 tests with no runtime error cluster.
+- Database: migration `20260714090000_b17_harden_razorpay_lifecycle.sql` is applied in QA and production; production history version is `20260714040018`. The CLI dry-run correctly refused unrelated remote/local history drift, so no repair or pull was attempted; only B17 was applied through the scoped migration API. Production catalog verification found four RPCs, both activation wrappers, six subscription columns, three indexes, and service-role-only refund claim execution.
+- Safety: the disposable QA tenant and both prefixed production boundary tenants, profiles/auth users, subscriptions, payments, webhook events, refunds, credentials, and temporary environments reconciled to zero or were removed.
+- Evidence: `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json`.
+- Formal matrix: 364 pass, 3 fail, 9 blocked, 1 not applicable. Readiness remains No-Go; B18 is active.

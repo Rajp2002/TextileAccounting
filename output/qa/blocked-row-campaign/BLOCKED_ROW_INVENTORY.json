@@ -4613,10 +4613,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Successful Razorpay checkout/webhook.",
     "expected": "Subscription/payment recorded once.",
-    "current_status": "blocked",
-    "current_outcome": "Successful Razorpay checkout/webhook was not executed in production. This requires an authorized payment-provider test transaction and webhook event delivery; code review has not been converted into a live pass.",
+    "current_status": "pass",
+    "current_outcome": "Hosted Razorpay TEST checkout through Netbanking and Bank of Baroda produced exactly one initial capture; a failed renewal preserved paid access and a later successful renewal appended exactly 365 days with one additional capture.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": "High",
     "user_role": "owner + billing webhook",
@@ -4666,10 +4667,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Duplicate/replayed webhook.",
     "expected": "Idempotent.",
-    "current_status": "blocked",
-    "current_outcome": "No safe webhook replay surface is available; live billing webhook mutation is outside scope.",
+    "current_status": "pass",
+    "current_outcome": "A signed same-event replay returned duplicate success, while order.paid and payment.captured converged on one payment state without an extra capture, entitlement extension, or refund.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + billing webhook",
@@ -4719,10 +4721,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Invalid webhook signature.",
     "expected": "Rejected without state change.",
-    "current_status": "blocked",
-    "current_outcome": "No safe invalid-signature webhook simulator is available; live billing webhook mutation is outside scope.",
+    "current_status": "pass",
+    "current_outcome": "An invalid Razorpay HMAC returned 400 before event claim and produced no webhook-ledger, billing, entitlement, referral, or refund mutation.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + billing webhook",
@@ -4772,10 +4775,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Payment failure, cancel, auto-renew toggle.",
     "expected": "Accurate subscription state and access.",
-    "current_status": "blocked",
-    "current_outcome": "Payment failure, cancel, and auto-renew toggle were not exercised because they require controlled Razorpay subscription/payment state changes against the production-connected billing flow.",
+    "current_status": "pass",
+    "current_outcome": "A failed renewal remained recorded without revoking the paid period, cancellation retained access through period end, no endpoint falsely enabled auto-renewal, and a later success extended the anchored period correctly.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": "Medium",
     "user_role": "owner + billing webhook",
@@ -4825,10 +4829,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Webhook arrives out of order.",
     "expected": "Final state is correct.",
-    "current_status": "blocked",
-    "current_outcome": "Out-of-order Razorpay webhook delivery was not fired against production. It requires controlled synthetic webhook delivery or provider replay tooling that has not been authorized for this QA run.",
+    "current_status": "pass",
+    "current_outcome": "Canonical provider state prevented a late failed event from regressing captured payment; explicit failed-to-captured reconciliation succeeded, and older lifecycle events could not regress cancellation or expiry.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": "Medium",
     "user_role": "owner + billing webhook",
@@ -4878,10 +4883,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Referral conversion/refund replay.",
     "expected": "Idempotent.",
-    "current_status": "blocked",
-    "current_outcome": "Referral conversion/refund replay was not exercised because it depends on controlled Razorpay/referral lifecycle events and refund replay against production-connected billing state.",
+    "current_status": "pass",
+    "current_outcome": "The pending referral converted once and reserved exactly one provider-idempotent 10% Razorpay TEST refund; replay could not reserve or issue a second refund, and the production claim boundary matched.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": "Medium",
     "user_role": "owner + billing webhook",
@@ -4931,10 +4937,11 @@
     "feature": "24. Billing, Trial, and Referrals",
     "scenario": "Subscription expires during active session.",
     "expected": "Access changes safely without data loss.",
-    "current_status": "blocked",
-    "current_outcome": "Subscription expiry during an active session was not exercised because it requires safely manipulating production subscription entitlement timing or provider state.",
+    "current_status": "pass",
+    "current_outcome": "After paid-period expiry the same authenticated session was redirected away from gated application content while its account, profile, payment, and subscription history remained preserved.",
     "existing_evidence": [
-      "logs/technical-gates.md"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": "Medium",
     "user_role": "owner + billing webhook",
@@ -5306,10 +5313,11 @@
     "feature": "27. Security, Privacy, and Audit",
     "scenario": "Razorpay webhook HMAC and idempotency.",
     "expected": "Invalid/replay safe.",
-    "current_status": "blocked",
-    "current_outcome": "No isolated Razorpay webhook simulator is available; live HMAC/replay mutation is outside scope.",
+    "current_status": "pass",
+    "current_outcome": "Webhook HMAC validation ran before event claim; the same ID and body replayed as a duplicate, the same ID with a different body returned 409, and production alias proof showed no extra mutation or refund.",
     "existing_evidence": [
-      "evidence/batches-13-15-final-security-ux.json"
+      "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+      "output/qa/blocked-row-campaign/B17-production-runtime.json"
     ],
     "severity": null,
     "user_role": "owner + billing webhook",

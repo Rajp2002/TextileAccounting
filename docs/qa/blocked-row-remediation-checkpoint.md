@@ -1,16 +1,16 @@
 # Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
-- Current ledger: **356 PASS, 3 FAIL, 17 BLOCKED, 1 NOT APPLICABLE (377 total)**.
+- Current ledger: **364 PASS, 3 FAIL, 9 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B16 — WhatsApp simulation and provider boundaries (8 PASS, 1 precisely BLOCKED)**.
-- Active batch: **B17 — Razorpay checkout, webhook, replay, and entitlement timing**.
-- Validation gate: local gate passed 90 files / 641 passed plus 1 intentional skip; Vercel passed 90 files / 642 tests; TypeScript, ESLint, and optimized builds passed.
-- Production deployment: `dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y`, Ready and aliased, exact commit `ee2af23a31e648880bdf3810f9cacb545cefcedd`.
-- Migration/functions: B16 delivery/retry constraints and daily/monthly idempotency grain are deployed in QA and production; six production WhatsApp functions are Active at the verified source.
-- Cleanup: the prefixed B16 QA tenant, profile/auth user, workers, advances, settlements, consents, delivery logs, cooldowns, and brief markers reconciled to zero.
-- B16 evidence: `output/qa/blocked-row-campaign/B16-qa-whatsapp.json`.
-- WA-010 blocker: deterministic rejection/expired-token logs and manual fallback passed; a controlled live Meta failure against a consented recipient remains required.
+- Completed batch: **B17 — Razorpay checkout, webhook, replay, and entitlement timing (8/8 PASS)**.
+- Active batch: **B18 — backup restore and rollback/forward-fix exercise**.
+- Validation gate: local gate passed 91 files / 649 passed plus 1 intentional skip; Vercel passed 91 files / 650 tests; TypeScript, ESLint, and optimized builds passed.
+- Production deployment: `dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw`, Ready and aliased, exact commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`.
+- Migration: `20260714090000_b17_harden_razorpay_lifecycle.sql` is deployed in QA and production; production history version is `20260714040018`. The drifted CLI dry-run was refused, and only B17 was applied through the scoped migration API.
+- Provider proof: hosted Razorpay TEST checkout used Netbanking and Bank of Baroda; no real money moved. Eighteen QA assertions and nine production-boundary assertions passed.
+- Cleanup: the disposable QA tenant and both production boundary tenants reconciled organizations, profiles/auth users, subscriptions, payments, webhook events, refunds, and dependencies to zero.
+- B17 evidence: `output/qa/blocked-row-campaign/B17-qa-razorpay.json` and `B17-production-runtime.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -30,10 +30,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B16 closeout
+## B17 closeout
 
-B16 directly proved opted-in delivery, opted-out/missing-consent/missing-phone/phone-mismatch skips, timeout retention, payslip itemization and phone binding, access-code privacy, daily/monthly/deadline idempotency, and bounded targeted retry. The exact implementation commit, migration, and six functions are live; disposable QA data reconciled to zero. WA-010 remains blocked only on its explicitly live Meta failure requirement.
+B17 directly proved hosted TEST checkout, canonical capture, signed replay/conflict/invalid-HMAC handling, failure and cancellation access preservation, monotonic renewal/expiry transitions, one provider-idempotent 10% referral refund, and access loss without account or history loss. The exact implementation, migration, and production deployment are live; disposable QA and production fixtures reconciled to zero.
 
 ## Exact next action
 
-Execute B17 with a disposable Razorpay test-mode tenant covering hosted checkout, signed/invalid/replayed/out-of-order webhooks, failure/cancel/renewal/expiry transitions, and exact entitlement reconciliation.
+Execute B18 in disposable infrastructure: restore and reconcile a sanitized multi-ledger fixture, then exercise application rollback and a reviewed database forward-fix while recording timing, release/migration identity, and zero production impact.

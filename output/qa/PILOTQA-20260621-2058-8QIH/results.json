@@ -4041,70 +4041,75 @@
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Successful Razorpay checkout/webhook.",
       "expected": "Subscription/payment recorded once.",
-      "status": "blocked",
-      "actual": "Successful Razorpay checkout/webhook was not executed in production. This requires an authorized payment-provider test transaction and webhook event delivery; code review has not been converted into a live pass.",
+      "status": "pass",
+      "actual": "Hosted Razorpay TEST checkout through Netbanking and Bank of Baroda produced exactly one initial capture; a failed renewal preserved paid access and a later successful renewal appended exactly 365 days with one additional capture.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "High",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "BILL-004",
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Duplicate/replayed webhook.",
       "expected": "Idempotent.",
-      "status": "blocked",
-      "actual": "No safe webhook replay surface is available; live billing webhook mutation is outside scope.",
+      "status": "pass",
+      "actual": "A signed same-event replay returned duplicate success, while order.paid and payment.captured converged on one payment state without an extra capture, entitlement extension, or refund.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-13T03:25:00.000Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "BILL-005",
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Invalid webhook signature.",
       "expected": "Rejected without state change.",
-      "status": "blocked",
-      "actual": "No safe invalid-signature webhook simulator is available; live billing webhook mutation is outside scope.",
+      "status": "pass",
+      "actual": "An invalid Razorpay HMAC returned 400 before event claim and produced no webhook-ledger, billing, entitlement, referral, or refund mutation.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "BILL-006",
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Payment failure, cancel, auto-renew toggle.",
       "expected": "Accurate subscription state and access.",
-      "status": "blocked",
-      "actual": "Payment failure, cancel, and auto-renew toggle were not exercised because they require controlled Razorpay subscription/payment state changes against the production-connected billing flow.",
+      "status": "pass",
+      "actual": "A failed renewal remained recorded without revoking the paid period, cancellation retained access through period end, no endpoint falsely enabled auto-renewal, and a later success extended the anchored period correctly.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "BILL-007",
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Webhook arrives out of order.",
       "expected": "Final state is correct.",
-      "status": "blocked",
-      "actual": "Out-of-order Razorpay webhook delivery was not fired against production. It requires controlled synthetic webhook delivery or provider replay tooling that has not been authorized for this QA run.",
+      "status": "pass",
+      "actual": "Canonical provider state prevented a late failed event from regressing captured payment; explicit failed-to-captured reconciliation succeeded, and older lifecycle events could not regress cancellation or expiry.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "BILL-008",
@@ -4128,28 +4133,30 @@
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Referral conversion/refund replay.",
       "expected": "Idempotent.",
-      "status": "blocked",
-      "actual": "Referral conversion/refund replay was not exercised because it depends on controlled Razorpay/referral lifecycle events and refund replay against production-connected billing state.",
+      "status": "pass",
+      "actual": "The pending referral converted once and reserved exactly one provider-idempotent 10% Razorpay TEST refund; replay could not reserve or issue a second refund, and the production claim boundary matched.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "BILL-010",
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Subscription expires during active session.",
       "expected": "Access changes safely without data loss.",
-      "status": "blocked",
-      "actual": "Subscription expiry during an active session was not exercised because it requires safely manipulating production subscription entitlement timing or provider state.",
+      "status": "pass",
+      "actual": "After paid-period expiry the same authenticated session was redirected away from gated application content while its account, profile, payment, and subscription history remained preserved.",
       "evidence": [
-        "logs/technical-gates.md"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "Medium",
-      "updatedAt": "2026-06-23T17:06:09.304Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "OFF-001",
@@ -4549,14 +4556,15 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Razorpay webhook HMAC and idempotency.",
       "expected": "Invalid/replay safe.",
-      "status": "blocked",
-      "actual": "No isolated Razorpay webhook simulator is available; live HMAC/replay mutation is outside scope.",
+      "status": "pass",
+      "actual": "Webhook HMAC validation ran before event claim; the same ID and body replayed as a duplicate, the same ID with a different body returned 409, and production alias proof showed no extra mutation or refund.",
       "evidence": [
-        "evidence/batches-13-15-final-security-ux.json"
+        "output/qa/blocked-row-campaign/B17-qa-razorpay.json",
+        "output/qa/blocked-row-campaign/B17-production-runtime.json"
       ],
-      "notes": "",
+      "notes": "B17 used Razorpay TEST mode only: hosted Bank of Baroda netbanking QA plus signed lifecycle/replay probes and exact-deployment production boundary proof. Implementation commit 57caa6e6f15f25b6e26654a1d3cfc4b431452e9b is deployed as dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw; no real money moved and every disposable QA/production organization, profile, auth user, billing row, webhook event, and refund reconciled to zero.",
       "severity": "",
-      "updatedAt": "2026-07-10T22:30:00.000Z"
+      "updatedAt": "2026-07-14T04:12:48.000Z"
     },
     {
       "id": "SEC-008",

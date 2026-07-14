@@ -401,3 +401,13 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 - Retry preserves historical attempts, is tenant/log targeted, uses an atomic claim, never exceeds three attempts, and leaves capped or stale rows untouched.
 - Daily, monthly, and deadline briefs use independent idempotency/cooldown grains; one brief type cannot suppress or duplicate another.
 - A simulated rejection or expired token proves fallback handling but does not satisfy a matrix row that explicitly requires a live provider event.
+
+## B17 Razorpay lifecycle invariants
+
+- Razorpay HMAC verification precedes event claim or business mutation. An invalid signature creates no event-ledger, payment, subscription, referral, or refund effect.
+- Event identity is content-bound: the same provider event ID and body is a successful duplicate; the same ID with a different body is a conflict. Neither path may repeat entitlement, conversion, or refund effects.
+- Provider-canonical order/payment state is authoritative. `order.paid` and `payment.captured` converge on one capture, and late failure cannot regress a captured payment.
+- Subscription lifecycle is monotonic. A failed renewal and cancellation preserve access through the already-paid period; a successful renewal appends exactly 365 days from the current paid-period end; stale events cannot undo cancellation or expiry.
+- Referral conversion and refund reservation are database-serialized before provider activity. Exactly one 10% refund uses a stable provider idempotency key; replay cannot reserve or send another refund.
+- Period expiry removes gated access from the current authenticated session without deleting the account, profile, subscription, payment, or referral history.
+- Hosted payment proof uses explicit Razorpay TEST mode only. A TEST capture/refund is evidence of provider-boundary behavior, never evidence that real money moved.

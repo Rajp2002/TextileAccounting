@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-14T02:42:46.455Z",
+  "updated_at": "2026-07-14T04:14:45.316Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -10,8 +10,8 @@
     "total": 377
   },
   "current_counts": {
-    "pass": 356,
-    "blocked": 17,
+    "pass": 364,
+    "blocked": 9,
     "not_applicable": 1,
     "fail": 3,
     "total": 377
@@ -28,10 +28,11 @@
     "B13",
     "B14",
     "B15",
-    "B16"
+    "B16",
+    "B17"
   ],
-  "active_batch": "B17",
-  "active_batch_state": "B16 executable scope closed with 8 PASS, WA-010 precisely blocked on controlled live Meta failure proof, exact production deployment/schema/function alignment, and zero cleanup; B17 active",
+  "active_batch": "B18",
+  "active_batch_state": "B17 closed with 8 PASS from hosted Razorpay TEST checkout, signed lifecycle/replay QA, exact-deployment production boundary proof, and zero cleanup; B18 active",
   "planned_batches": [
     {
       "id": "B09",
@@ -322,13 +323,7 @@
     "WA-005",
     "WA-006",
     "WA-007",
-    "WA-009"
-  ],
-  "rows_moved_to_fail": [],
-  "rows_remaining_blocked": [
-    "TECH-011",
-    "TECH-012",
-    "WA-010",
+    "WA-009",
     "BILL-003",
     "BILL-004",
     "BILL-005",
@@ -336,8 +331,14 @@
     "BILL-007",
     "BILL-009",
     "BILL-010",
+    "SEC-007"
+  ],
+  "rows_moved_to_fail": [],
+  "rows_remaining_blocked": [
+    "TECH-011",
+    "TECH-012",
+    "WA-010",
     "OFF-001",
-    "SEC-007",
     "SEC-011",
     "SEC-018",
     "UX-012",
@@ -372,7 +373,11 @@
     "WhatsApp consent is tenant- and exact-phone-bound, including explicit missing-consent, missing-phone, opted-out, and phone-mismatch delivery outcomes.",
     "Provider success, timeout, failure, template rejection, and expired-token outcomes are deterministic in simulator mode while production remains bound to the configured Meta provider.",
     "Delivery retries preserve history, enforce a three-attempt and 24-hour ceiling, and target one tenant log through a compare-and-set claim.",
-    "Daily and monthly brief idempotency now use independent grains, and access-code delivery snapshots exclude plaintext codes."
+    "Daily and monthly brief idempotency now use independent grains, and access-code delivery snapshots exclude plaintext codes.",
+    "Razorpay webhook processing now validates HMAC before atomic event claim, detects same-ID body conflicts, and converges provider-canonical payment state without duplicate entitlement or referral effects.",
+    "Subscription lifecycle updates are monotonic: failed renewals preserve the paid period, cancellation retains access through period end, captured renewal anchors exactly 365 days, and stale events cannot reverse cancellation or expiry.",
+    "Referral conversion and refund claims are database-serialized before provider work, with a stable provider idempotency key and exactly one 10% TEST refund reservation.",
+    "Expired paid access is removed without deleting the account, profile, subscription, or payment history."
   ],
   "commits": [
     {
@@ -410,6 +415,10 @@
     {
       "sha": "ee2af23a31e648880bdf3810f9cacb545cefcedd",
       "subject": "fix(whatsapp): enforce B16 delivery boundaries"
+    },
+    {
+      "sha": "57caa6e6f15f25b6e26654a1d3cfc4b431452e9b",
+      "subject": "fix: harden Razorpay lifecycle boundaries"
     }
   ],
   "production_deployments": [
@@ -473,6 +482,13 @@
       "state": "READY",
       "target": "production",
       "alias": "https://textile-accounting.vercel.app"
+    },
+    {
+      "id": "dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw",
+      "commit": "57caa6e6f15f25b6e26654a1d3cfc4b431452e9b",
+      "state": "READY",
+      "target": "production",
+      "alias": "https://textile-accounting.vercel.app"
     }
   ],
   "migrations": [
@@ -533,6 +549,12 @@
       "file": "20260714073000_b16_whatsapp_delivery_boundaries.sql",
       "production_history_version": "20260713235949",
       "alignment": "verified by delivery/retry constraints, daily/monthly idempotency catalog, nine-assertion QA simulator proof, and Active production function catalog; no live Meta messages were sent"
+    },
+    {
+      "environment": "qa and production",
+      "file": "20260714090000_b17_harden_razorpay_lifecycle.sql",
+      "production_history_version": "20260714040018",
+      "alignment": "verified by four RPCs, current and legacy activation functions, six subscription columns, three indexes, privilege catalog, hosted Razorpay TEST proof, and exact-deployment production runtime proof; the drifted CLI dry-run was refused and only this migration was applied through the scoped migration API"
     }
   ],
   "created_test_accounts_and_tenants": [
@@ -575,6 +597,11 @@
       "batch": "B16",
       "type": "prefixed disposable QA WhatsApp tenant with owner and five worker consent states",
       "state": "removed; organization/profile/auth/workers/advances/settlements/consents/delivery logs/cooldowns/brief markers and dependencies reconciled to zero"
+    },
+    {
+      "batch": "B17",
+      "type": "prefixed disposable QA Razorpay tenant plus two prefixed production boundary tenants",
+      "state": "removed; organizations/profiles/auth/subscriptions/payments/webhook events/refunds and all billing dependencies reconciled to zero in both environments"
     }
   ],
   "outstanding_external_dependencies": [
@@ -584,20 +611,6 @@
         "WA-010"
       ],
       "dependency": "Controlled live Meta credentials, a consented recipient, and authorization to induce template rejection or expired-token behavior."
-    },
-    {
-      "batch": "B17",
-      "rows": [
-        "BILL-003",
-        "BILL-004",
-        "BILL-005",
-        "BILL-006",
-        "BILL-007",
-        "BILL-009",
-        "BILL-010",
-        "SEC-007"
-      ],
-      "dependency": "Rows require authorized Razorpay test-mode checkout and synthetic/replayed signed events against disposable billing state."
     },
     {
       "batch": "B18",
@@ -619,6 +632,6 @@
       "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
     }
   ],
-  "last_successful_validation": "B16 production deployment dpl_HSVWPpa4zPnR3gfEqXB1h3c55p4y Ready at exact commit ee2af23; local gate passed 90 files / 641 passed plus 1 intentional skip and Vercel passed 642 tests; nine deterministic QA WhatsApp assertions and cleanup passed; production migration/functions/catalog and canonical alias are aligned without live Meta contact. WA-010 remains blocked on controlled live-provider proof.",
-  "exact_next_action": "Execute B17 against a disposable tenant and Razorpay test-mode boundary: hosted checkout, signed/invalid/replayed/out-of-order webhooks, failure/cancel/renewal/expiry transitions, and exact entitlement/idempotency reconciliation."
+  "last_successful_validation": "B17 production deployment dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw is Ready at exact commit 57caa6e; local gate passed 91 files / 649 passed plus 1 intentional skip and Vercel passed 91 files / 650 tests. Hosted Razorpay TEST checkout used Netbanking and Bank of Baroda; 18 QA and 9 production boundary assertions passed with no real money, no runtime error cluster, and zero cleanup.",
+  "exact_next_action": "Execute B18 in disposable infrastructure: restore a sanitized multi-ledger fixture and reconcile it, then exercise application rollback plus a reviewed database forward-fix while recording recovery time, commit/deployment IDs, migration state, and zero production impact."
 }

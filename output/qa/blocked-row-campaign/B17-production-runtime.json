@@ -1,0 +1,123 @@
+{
+  "run_id": "B17PROD-1784002166230-C6671B",
+  "environment": "production-alias-razorpay-test-mode",
+  "project_ref": "vzhwahudircrpgtitwzd",
+  "base_url": "https://textile-accounting.vercel.app",
+  "deployment_id": "dpl_AjR5NjfcewVpx9kS2cNXBU89v8fw",
+  "commit_sha": "57caa6e6f15f25b6e26654a1d3cfc4b431452e9b",
+  "real_money_charged": false,
+  "provider_mode": "test",
+  "assertions": [
+    {
+      "id": "PROD-SETUP",
+      "name": "two isolated prefixed production-proof tenants exist",
+      "passed": true,
+      "organizations": 2,
+      "profiles": 2
+    },
+    {
+      "id": "BILL-010-PROD-BEFORE",
+      "name": "live alias renders gated estimator history during the paid period",
+      "passed": true,
+      "status": 200,
+      "redirected": false
+    },
+    {
+      "id": "SEC-007-PROD",
+      "name": "live signed webhook accepts once, deduplicates replay, and rejects body conflict/invalid HMAC",
+      "passed": true,
+      "first": 200,
+      "replay_duplicate": true,
+      "conflict": 409,
+      "invalid": 400,
+      "invalid_rows": 0
+    },
+    {
+      "id": "BILL-009-CONVERSION-PROD",
+      "name": "live activation converts one pending referral exactly once",
+      "passed": true,
+      "status": "converted",
+      "windows": 1
+    },
+    {
+      "id": "BILL-006-PROD",
+      "name": "live cancellation retains the paid end and a stale activation cannot regress it",
+      "passed": true,
+      "cancel_status": 200,
+      "stale_status": 200,
+      "lifecycle_status": "cancelled",
+      "end_retained": true
+    },
+    {
+      "id": "BILL-007-PROD",
+      "name": "production activation wrapper replaces the exact failed snapshot with one captured payment",
+      "passed": true,
+      "payment_status": "captured",
+      "subscription_status": "active",
+      "active_end": true
+    },
+    {
+      "id": "BILL-009-CLAIM-PROD",
+      "name": "production refund reservation is 10%, stable, and non-claimable on replay",
+      "passed": true,
+      "first_claimed": true,
+      "second_claimed": false,
+      "rows": 1,
+      "amount_paise": 82600,
+      "discount_pct": 10
+    },
+    {
+      "id": "BILL-010-PROD",
+      "name": "live expiry is monotonic and removes gated access without deleting the account",
+      "passed": true,
+      "expiry_status": 200,
+      "stale_status": 200,
+      "final_status": "expired",
+      "redirect_mode": "next_stream",
+      "organizations": 1,
+      "profiles": 1
+    },
+    {
+      "id": "PROD-CLEANUP",
+      "name": "all disposable production-proof database and auth state reconciles to zero",
+      "passed": true,
+      "errors": [],
+      "reconciliation": {
+        "organizations": 0,
+        "profiles": 0,
+        "subscriptions": 0,
+        "payments": 0,
+        "webhook_events": 0,
+        "referral_refunds": 0,
+        "auth_users_exist": 0
+      },
+      "reconciled": true
+    }
+  ],
+  "fixture": {
+    "primary": {
+      "factory": "B17PROD-1784002166230-C6671B-PRIMARY",
+      "org": "f19cf353...2d84",
+      "profile": "d016adf7...4e11"
+    },
+    "referee": {
+      "factory": "B17PROD-1784002166230-C6671B-REFEREE",
+      "org": "c959dd7d...fd9a",
+      "profile": "e8862994...b4de"
+    }
+  },
+  "cleanup": {
+    "errors": [],
+    "reconciliation": {
+      "organizations": 0,
+      "profiles": 0,
+      "subscriptions": 0,
+      "payments": 0,
+      "webhook_events": 0,
+      "referral_refunds": 0,
+      "auth_users_exist": 0
+    },
+    "reconciled": true
+  },
+  "passed": true
+}
