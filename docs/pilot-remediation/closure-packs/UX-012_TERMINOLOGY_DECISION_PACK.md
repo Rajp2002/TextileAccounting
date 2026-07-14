@@ -2,7 +2,7 @@
 
 Prepared: 2026-07-14 IST
 
-Current status: implementation and production proof pending against the amended pre-pilot criterion; actual pilot-user comprehension control remains `OPEN`
+Current status: amended pre-pilot criterion `PASS` at production commit `bfc93dd`; actual pilot-user comprehension control remains `OPEN`
 
 Baseline approver: **product owner (provisional limited-pilot approval, 2026-07-14)**
 
@@ -34,7 +34,9 @@ Supporting review documents:
 - [Recommended canonical glossary](UX-012_RECOMMENDED_GLOSSARY.md)
 - [Canonical mobile factory review register](UX-012_FACTORY_TERMINOLOGY_REVIEW_REGISTER.md) — complete this register for the current review; the shorter legacy table below is retained only for preparation-history context.
 
-The approved wording is now being implemented across the product. Pre-pilot acceptance still requires production deployment, regression proof, and no known error-causing ambiguity. Pilot-user review and correction confirmation remain open until completed.
+The approved wording is implemented across the product and outputs. Full local regression, TypeScript, production build, remote build, and representative authenticated owner/supervisor route checks passed. Production deployment `dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD` is `READY`. No known terminology ambiguity capable of causing production, stock, payroll, dispatch, or financial error remains. Evidence is under `output/qa/pilot-gate-closure/2026-07-14/UX-012/`.
+
+Pilot-user review and correction confirmation remain open until completed. No factory-supervisor approval has occurred or is implied. The terminology/location tables below retain pre-implementation observations for traceability; the implemented baseline and current locations are authoritative in `lib/terminology.ts`, `UX-012_RECOMMENDED_GLOSSARY.md`, and the runtime evidence pack.
 
 ## What the pilot user will validate
 

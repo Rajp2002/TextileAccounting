@@ -9,6 +9,16 @@ Rules for entries:
 - Runtime probes must use an isolated QA tenant, rollback-only transaction, or disposable environment.
 - Each entry must link the invariant, tests, runtime evidence, and matrix rows changed.
 
+## UX-012 amended-criteria closeout — 2026-07-14
+
+- Recorded the product-owner-approved requirement amendment without representing it as factory-supervisor approval.
+- Implemented the approved terminology baseline across navigation, forms/helpers, validation, owner/supervisor screens, English/Gujarati locales, payslip/PDF, CSV/data exports, WhatsApp outputs, documentation, and help.
+- Added nine UX-012 terminology regression tests plus updated affected product assertions. Full local result: 93 files, 662 passed, 1 skipped; TypeScript and optimized build passed. Remote production result: 93 files, 663 passed and build passed.
+- Production commit `bfc93dd11692408b7ccf5ce59fb99f3434e6aaae`; deployment `dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD` is `READY` and aliased to the canonical URL.
+- Representative authenticated owner and supervisor route evidence is recorded under `output/qa/pilot-gate-closure/2026-07-14/UX-012/`.
+- Matrix effect: only `UX-012` changed, from `blocked` to `pass`; counts are 368 pass, 0 fail, 6 blocked, 3 not applicable.
+- Actual pilot-user feedback/correction/reconfirmation remains OPEN as a pilot operating control.
+
 ## Current Resolution State
 
 | Cluster | Status | Notes |

@@ -1,0 +1,62 @@
+{
+  "row": "UX-012",
+  "captured_at": "2026-07-14T20:00:00+05:30",
+  "production_url": "https://textile-accounting.vercel.app",
+  "commit": "bfc93dd11692408b7ccf5ce59fb99f3434e6aaae",
+  "deployment_id": "dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD",
+  "deployment_state": "READY",
+  "target": "production",
+  "owner_evidence": {
+    "route": "/owner/today",
+    "qa_role": "owner",
+    "observed_terms": [
+      "Cost Estimate",
+      "Quotations",
+      "Party Orders",
+      "Market Runs",
+      "Godown Stock",
+      "Party Ledger",
+      "Worker Hisaab",
+      "Upaad",
+      "Looms",
+      "Archive",
+      "Amount Due"
+    ]
+  },
+  "supervisor_evidence": {
+    "route": "/supervisor/dashboard",
+    "qa_role": "supervisor",
+    "observed_terms": [
+      "Shift Production",
+      "Metres Produced This Shift",
+      "Counter Reading",
+      "Looms",
+      "Workers",
+      "Hajiri"
+    ],
+    "observed_helper": "Enter shift production, not the loom Counter Reading. Total metres produced on this loom in this shift.",
+    "console_errors_or_warnings": 0
+  },
+  "gujarati_evidence": {
+    "method": "source-backed locale regression plus authenticated locale switch",
+    "observed_terms": [
+      "આ પાળીમાં થયેલું ઉત્પાદન",
+      "કારીગરો",
+      "હાજરી (Attendance)",
+      "આ પાળીમાં ઉત્પાદિત મીટર"
+    ],
+    "note": "The authenticated browser retained one stale service-worker translation bundle until update activation. The final production deployment is READY at the listed commit; locale source and regression tests contain the corrected Gujarati strings. This is not pilot-user comprehension approval."
+  },
+  "validation": {
+    "local_test_files": 93,
+    "local_tests_passed": 662,
+    "local_tests_skipped": 1,
+    "typescript": "pass",
+    "local_production_build": "pass",
+    "remote_test_files": 93,
+    "remote_tests_passed": 663,
+    "remote_build": "pass"
+  },
+  "approval_boundary": "Product-owner-approved provisional baseline only. No factory supervisor approval is claimed or implied.",
+  "pilot_user_validation_control": "OPEN"
+}

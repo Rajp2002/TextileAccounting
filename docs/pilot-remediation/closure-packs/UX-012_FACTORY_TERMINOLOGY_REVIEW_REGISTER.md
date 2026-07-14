@@ -7,6 +7,8 @@ Audience: the named actual pilot factory user who personally uses the relevant w
 
 The product owner approved the baseline provisionally for the limited pilot on 2026-07-14. This is not factory-supervisor approval. During the pilot, use the deployed screens in real context to record the actual user's comprehension, confusing/rejected terms, corrections, and dated post-change confirmation.
 
+Implementation evidence: production commit `bfc93dd11692408b7ccf5ce59fb99f3434e6aaae`; deployment `dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD` (`READY`); local 93 test files / 662 passed / 1 skipped; remote 93 files / 663 passed. See `output/qa/pilot-gate-closure/2026-07-14/UX-012/`. The blank reviewer fields below are intentionally still blank until the actual pilot user performs the contextual review.
+
 ## How to review on a phone
 
 Open one decision at a time. Look at the stated screen, say what the term means in your own words, then record one choice and any note.

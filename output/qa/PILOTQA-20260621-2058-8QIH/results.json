@@ -5587,24 +5587,24 @@
     {
       "id": "UX-012",
       "section": "28. UX, Accessibility, and Operational Fit",
-      "scenario": "Factory terminology review with brother/supervisor.",
-      "expected": "Labels match actual language: loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, hisaab.",
-      "status": "blocked",
-      "actual": "The required loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, and hisaab labels exist in the product, but the B19 review found no dated brother/supervisor factory-language approval artifact.",
+      "scenario": "Amended limited-pilot terminology acceptance: product-owner-approved reconciled baseline before pilot, followed by contextual validation with the actual pilot factory user during the pilot.",
+      "expected": "Before pilot: approved baseline, consistent wording across product and outputs, explicit high-risk distinctions, passing production deployment/regression validation, and no known error-causing ambiguity. During pilot: dated named-user feedback, corrections, and post-change confirmation remain an open operating control until complete.",
+      "status": "pass",
+      "actual": "The product-owner-approved baseline was implemented across the primary product, validation, English/Gujarati locales, PDFs, exports, messages, documentation, and help. High-risk distinctions are explicit and regression-tested. Production deployment bfc93dd is READY and representative authenticated owner/supervisor routes passed. No error-causing terminology ambiguity is known. Actual pilot-user comprehension validation remains an open pilot operating control; no factory-supervisor approval is claimed.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1174",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1235",
-        "components/landing/faq.tsx:16",
-        "lib/i18n/locales/en.ts:101",
-        "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
+        "docs/pilot-remediation/closure-packs/UX-012_REQUIREMENT_AMENDMENT.md",
+        "docs/pilot-remediation/closure-packs/UX-012_TERMINOLOGY_DECISION_PACK.md",
+        "docs/pilot-remediation/closure-packs/UX-012_FACTORY_TERMINOLOGY_REVIEW_REGISTER.md",
+        "__tests__/ux-012-terminology-baseline.test.ts",
+        "output/qa/pilot-gate-closure/2026-07-14/UX-012/runtime-evidence.json",
+        "output/qa/pilot-gate-closure/2026-07-14/UX-012/acceptance-review.md"
       ],
-      "notes": "Smallest dependency: one named factory supervisor provides a dated approve/change register for the listed terms.",
+      "notes": "Traceable product-owner amendment replaces the pre-pilot substitute reviewer with actual pilot-user validation. Pilot control remains OPEN: record actual user name/role, date/context, confusing or rejected terms, corrections, and confirmation after changes.",
       "severity": "Medium",
-      "updatedAt": "2026-07-14T04:54:52.494Z",
+      "updatedAt": "2026-07-14T14:30:00.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
-      "disposition_classification": "C"
+      "disposition_classification": "F"
     },
     {
       "id": "GOLDEN-A-01",

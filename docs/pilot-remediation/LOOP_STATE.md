@@ -12,15 +12,15 @@ Source-of-truth artifacts:
 
 ## Current Verdict
 
-Status: No-Go pending three genuine pilot gates: `TECH-011`, `UX-012`, and `GOLDEN-A-03`.
+Status: No-Go pending two genuine pilot gates: `TECH-011` and `GOLDEN-A-03`. `UX-012` passes the amended pre-pilot criterion; actual pilot-user terminology validation remains an open operating control.
 
 Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, Batch 24C Factory Today setup and historical analytics state closeout, Batch 24D estimator submit and production draft isolation source-fix closeout, and Batch 24E master data loom guardrails source-fix closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 367 | Formal ledger records pass; legacy pass/Actual semantic reconciliation remains an explicit audit item. |
+| `pass` | 368 | Formal ledger records pass; legacy pass/Actual semantic reconciliation remains an explicit audit item. |
 | `fail` | 0 | No formal failure remains. |
-| `blocked` | 7 | Three are pilot-gating; four are optional, deferred, pre-public, or pilot-operational evidence. |
+| `blocked` | 6 | Two are pilot-gating; four are optional, deferred, pre-public, or pilot-operational evidence. |
 | `code_verified` | 0 | The active formal ledger has no rows in this state. |
 | `not_applicable` | 3 | Exact post-pilot/absent capabilities linked to named backlog items; no PASS credit. |
 | `not_run` | 0 | Matrix was fully classified. |
@@ -2081,3 +2081,9 @@ The two preparation tracks are complete without status promotion. `TECH-011` now
 `UX-012` now has a complete cross-surface terminology inventory, proposed canonical glossary, decision-only sheet, Gujarati discussion terms and reproducible screenshot/approval flow. Loom/machine, shift total/counter reading, quality/run, party/Commercials, Taka units, sold/sent/received metres, worker types, Upaad/Kharchi/Hisaab and inverse textile units remain genuine human choices. No product wording or application behavior changed, so no Vercel deployment was performed.
 
 Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json`. Counts remain **367 pass, 0 fail, 7 blocked, and 3 not applicable**; the verdict remains No-Go pending `TECH-011`, `UX-012`, and unchanged/deferred `GOLDEN-A-03`.
+
+## UX-012 amended-criteria closeout — 2026-07-14
+
+The product owner approved a traceable limited-pilot amendment replacing the pre-pilot brother/supervisor substitute review with a reconciled product-owner baseline plus an open contextual review by the actual pilot user. The approved terminology was implemented across application and output surfaces, tested locally and remotely, and deployed at commit `bfc93dd` (`dpl_4z2xhBamSuufrjwGaS1wUS4rT1GD`, `READY`). Representative authenticated owner and supervisor routes were inspected without creating or changing production records.
+
+Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6 blocked, and 3 not applicable**. The verdict remains **No-Go**, now pending `TECH-011` and `GOLDEN-A-03`. Actual pilot-user terminology feedback, correction, and post-change confirmation remains an OPEN operating control. No factory-supervisor approval is claimed or implied.
