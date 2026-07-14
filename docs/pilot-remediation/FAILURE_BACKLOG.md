@@ -469,9 +469,9 @@ Remediation direction:
 - Retain the repaired lockfile and zero-high/critical audit gate; track the two remaining moderate PostCSS/Next advisories separately.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
-- Configure the implemented Free-tier encrypted schedule, retain a real scheduled production artifact, and restore/reconcile that exact artifact in the disposable workflow.
+- Keep the configured Free-tier encrypted schedule active, validate the sanitized-inventory correction with a manual canary, then retain a new successful scheduled production artifact and restore/reconcile that exact artifact in the disposable workflow. Scheduled run `29368765626` failed closed and produced no artifact.
 
-Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. B18 supplies rollback and sanitized restore proof. Remaining `TECH-011` proof is one scheduled encrypted production artifact restored and reconciled under the implemented runbook.
+Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. B18 supplies rollback and sanitized restore proof. Scheduled run `29368765626` proves the schedule fired and failed closed but supplied zero artifacts. Remaining `TECH-011` proof is one newly scheduled encrypted production artifact restored and reconciled under the implemented runbook.
 
 ## Runtime Rerun Findings - 2026-07-10
 

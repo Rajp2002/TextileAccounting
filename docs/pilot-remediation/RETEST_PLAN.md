@@ -701,6 +701,10 @@ Acceptance:
 - Trigger the restore drill for that run/artifact. Require database start, payload hashes, documented restore order, exact migration head/extensions, Auth linkage, organization/users, estimator, orders, production, stock, receivables, payroll, tenant-boundary counts/digests, measured RTO and `--no-backup` cleanup.
 - Recheck `storage.buckets`/`storage.objects` at backup time. The current read-only baseline is zero buckets/objects/bytes. Any object must stop database-only closure until object bytes are independently retained/restored/hash-verified.
 - Only a real scheduled production artifact plus successful disposable restore and named verifier can promote `TECH-011`. The 2026-07-14 preparation artifact is `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json` and has no status effect.
+- Scheduled run `29368765626` on 2026-07-14/15 is failure evidence only: all five dump commands completed, but aligned psql rendering of multiline `jsonb_pretty` output caused sanitized-inventory `jq` parsing to fail. Artifact count was zero; do not attempt restore or grant schedule credit from this run.
+- Regression-test the corrected inventory capture with zero/non-zero/malformed/missing/multiple-row JSON, numeric-type enforcement, stderr isolation, unusual whitespace/Unicode and credential non-echo. Preserve one-object SQL aggregation and `psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1`.
+- After merge, use one `workflow_dispatch` run only as a canary for valid inventory, zero Storage, SHA-256 completion, encryption and 14-day artifact upload. Label it supporting validation, not scheduled evidence, and do not use it for formal restore closure.
+- Keep the daily `17 20 * * *` schedule unchanged. Record the next successful `event=schedule` run ID and exact artifact name; only that artifact may proceed to disposable restore, exact reconciliation, measured RTO, cleanup proof and named-verifier approval.
 
 ### UX-012 supervisor review retest — 2026-07-14
 

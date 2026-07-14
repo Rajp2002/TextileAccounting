@@ -23,7 +23,7 @@ Expected: restored organization, users, production, stock, receivables, and payr
 - A fresh read-only check on 2026-07-14 ran `npx supabase backups list --project-ref vzhwahudircrpgtitwzd --output json` and returned WAL-G enabled, PITR disabled, and no listed backups. The connected organization reports the `free` plan.
 - Supabase documents that Pro/Team/Enterprise projects receive retained daily backups and that Free projects should regularly export with `supabase db dump` and maintain off-site backups: <https://supabase.com/docs/guides/platform/backups>.
 - Current official CLI guidance uses roles, schema and data dumps, with migration history exported separately; database backups contain Storage metadata but not object bytes: <https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore>.
-- The implemented [free-tier runbook](TECH-011_BACKUP_RESTORE_RUNBOOK.md) and two GitHub Actions workflows now prepare a daily encrypted logical backup and an ephemeral restore drill. No required GitHub secrets/variables are configured yet, so neither workflow has produced closure evidence.
+- The implemented [free-tier runbook](TECH-011_BACKUP_RESTORE_RUNBOOK.md) and two GitHub Actions workflows prepare a daily encrypted logical backup and an ephemeral restore drill. All required Actions setting names are configured, but first scheduled run `29368765626` failed closed during sanitized-inventory parsing and produced no artifact. Neither workflow has produced closure evidence.
 
 The B18 fixture proves restore mechanics only. It is not a retained production backup, and it must not be cited as closure proof for this row.
 
@@ -40,7 +40,7 @@ The B18 fixture proves restore mechanics only. It is not a retained production b
 | Installed effect-capable extensions | `pg_cron` and `pg_net` are installed | Disposable restore must not carry production secrets or external side effects |
 | Supabase Storage | Read-only database query: `0` buckets, `0` objects, `0` bytes; no active Storage client found in source | Database-only coverage is currently sufficient for pilot records, but the workflow must fail if objects appear |
 | Existing CI/CD | Private GitHub repository; no Actions workflows, Actions secrets or Actions variables existed at inspection time | New workflows can use private artifacts, but owner configuration and a default-branch merge are still required |
-| Implemented off-site schedule | Daily `20:17 UTC` encrypted logical backup, private Actions artifact, 14-day retention | Code/config is ready; schedule has not run because required secrets/variables are absent and the workflow is not yet on the default branch |
+| Implemented off-site schedule | Daily `20:17 UTC` encrypted logical backup, private Actions artifact, 14-day retention | Workflow is active on the default branch and required setting names are configured. First scheduled run `29368765626` failed closed during sanitized-inventory parsing and produced no artifact. |
 | Local credentials | Management/API login and server API keys exist; no database password/connection URL is available | Read-only inventory works, but a real CLI dump cannot be run or delegated without the database URL secret |
 
 No production backup setting, plan, secret, data or schema was changed while preparing this pack. No dump was committed or retained locally.
@@ -95,7 +95,7 @@ Post-pilot hardening requires moving encrypted backups to separate object storag
 ## Required closure artifacts
 
 - [x] Dated owner approval of the interim route, 14-day retention, limitations, RPO/RTO, backup owner, and restore operator (recorded in the owner-approved policy above).
-- [ ] GitHub Actions settings evidence showing the four required names exist, with values redacted.
+- [x] GitHub Actions settings evidence showing the four required names exist, with values uninspected and undisclosed.
 - [ ] Default-branch workflow/schedule evidence and responsible operator’s failure-notification confirmation.
 - [ ] One completed scheduled production backup artifact created after enablement; manual “run now” alone is insufficient unless the schedule subsequently runs successfully.
 - [ ] Artifact identifier, source project ref, capture time, size/checksum where available, and retention expiry.

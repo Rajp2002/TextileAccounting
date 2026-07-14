@@ -13,7 +13,7 @@ Current gate state: `BLOCKED`. This runbook is an implemented control design, no
 | Workflow | `.github/workflows/supabase-production-backup.yml` |
 | Backup tool/order | Supabase CLI `2.109.1`: roles → application schema → data → migration-history schema → migration-history data |
 | Database coverage | Roles, public/application schema, data including Auth records and Storage metadata, migration history, sanitized reconciliation inventory |
-| Storage object bytes | Not included. The workflow fails closed if `storage.objects` is non-zero. Production had zero buckets/objects/bytes in the 2026-07-14 read-only check. |
+| Storage object bytes | Not included. The validated inventory requires non-negative integer `bucket_count`, `object_count` and `total_bytes` values and fails closed unless all three are zero. Production had zero buckets/objects/bytes in the 2026-07-14 read-only check. |
 | Encryption | `age` public-key encryption before upload; plaintext exists only in an ephemeral runner directory removed by an EXIT trap |
 | Off-site/interim destination | Private GitHub Actions artifact in `Rajp2002/TextileAccounting`, outside the Supabase account |
 | Retention | 14 days per artifact |
@@ -36,7 +36,13 @@ Values must be entered through GitHub Actions settings or the authenticated `gh`
 | `BACKUP_AGE_RECIPIENT` | Actions variable | Public `age1...` encryption recipient | Generate one owner-controlled age identity and store its public recipient here. |
 | `BACKUP_AGE_IDENTITY` | Actions secret | Private age identity used only by the restore drill | Store the full private identity as a secret and retain a second encrypted/offline owner recovery copy. |
 
-The repository inspection on 2026-07-14 found none of these secret/variable names configured. Linked Supabase metadata and API keys do not provide the database password, and the linked dump could not complete non-interactively. No credential was printed or copied.
+The repository inspection on 2026-07-15 verified that all four expected names are configured without inspecting or printing their values. Scheduled run `29368765626` passed required-configuration validation.
+
+## First scheduled run and remediation
+
+Run `29368765626` was triggered by `schedule` after the 2026-07-14 `20:17 UTC` cron window and ran from `main`. Roles, schema, data, migration-history schema and migration-history data completed. The next step failed while parsing sanitized inventory because multiline `jsonb_pretty` output had been rendered through psql's default aligned display format. `jq` rejected the display-formatted stdout at line 2, column 0. Upload, SHA-256 completion and encryption completion did not run; the Actions artifact API reported zero artifacts. The existing workflow therefore failed closed and there is nothing from that run to restore.
+
+The correction returns one compact `jsonb` value at the SQL source and captures it with `--no-psqlrc`, tuples-only, unaligned, quiet and `ON_ERROR_STOP` settings. Query stderr is isolated from the JSON candidate. Before use, the capture requires exactly one JSON document, validates the expected inventory envelope and integer Storage counts, and refuses invalid/missing/non-zero Storage values without printing database-derived content.
 
 ## One-time owner setup
 
@@ -56,7 +62,7 @@ The repository inspection on 2026-07-14 found none of these secret/variable name
 
 1. The scheduled workflow validates only the presence of required settings; it never prints their values.
 2. It creates the five official logical dump layers and a sanitized inventory.
-3. It checks `storage.objects`. Any non-zero value stops the run before upload and tells the owner that object-byte export must be designed.
+3. It validates `storage.bucket_count`, `storage.object_count` and `storage.total_bytes` as non-negative integers. Invalid, missing or non-zero values stop the run before upload with a sanitized message.
 4. It records file hashes and a manifest, archives the payload, encrypts with `age`, and uploads only ciphertext plus a non-sensitive receipt.
 5. GitHub retains the private artifact for 14 days. A successful job summary records the backup ID, SHA-256 and retention.
 6. On failure, treat the day as **not backed up**. Open the linked run from the issue, repair configuration/tool/network/storage coverage, rerun safely, and record the resolution. Never close the issue merely because a retry started.
