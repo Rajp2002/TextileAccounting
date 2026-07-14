@@ -216,6 +216,12 @@ const b18Rows = batches.find((batch) => batch.id === 'B18').rows
 const b18PassRows = b18Rows.filter((id) => id !== 'TECH-011')
 const b18ExecutableClosed = b18PassRows.every((id) => ledger.items.find((item) => item.id === id)?.status === 'pass')
     && ledger.items.find((item) => item.id === 'TECH-011')?.status === 'blocked'
+const b19Rows = batches.find((batch) => batch.id === 'B19').rows
+const b19ExternallyReviewed = b19Rows.every((id) => {
+    const item = ledger.items.find((candidate) => candidate.id === id)
+    return item?.status === 'blocked'
+        && item.evidence?.includes('output/qa/blocked-row-campaign/B19-external-evidence-review.json')
+})
 const checkpoint = {
     campaign: 'blocked-row-remediation',
     updated_at: new Date().toISOString(),
@@ -225,9 +231,9 @@ const checkpoint = {
     canonical_ledger: path.relative(root, ledgerPath),
     canonical_matrix: 'output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md',
     inventory: path.relative(root, inventoryPath),
-    completed_batches: b18ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17', 'B18'] : b17Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17'] : b16ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16'] : b15ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15'] : b14Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14'] : b13Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13'] : b12Closed ? ['B08', 'B09', 'B10', 'B11', 'B12'] : b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
-    active_batch: b18ExecutableClosed ? 'B19' : b17Closed ? 'B18' : b16ExecutableClosed ? 'B17' : b15ExecutableClosed ? 'B16' : b14Closed ? 'B15' : b13Closed ? 'B14' : b12Closed ? 'B13' : b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
-    active_batch_state: b18ExecutableClosed ? 'B18 executable scope closed with TECH-012 PASS from native disposable Vercel rollback and rollback-only database forward-fix; TECH-011 restore passed but remains precisely blocked on an automated retained/off-site production backup schedule; B19 active' : b17Closed ? 'B17 closed with 8 PASS from hosted Razorpay TEST checkout, signed lifecycle/replay QA, exact-deployment production boundary proof, and zero cleanup; B18 active' : b16ExecutableClosed ? 'B16 executable scope closed with 8 PASS, WA-010 precisely blocked on controlled live Meta failure proof, exact production deployment/schema/function alignment, and zero cleanup; B17 active' : b15ExecutableClosed ? 'B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active' : b14Closed ? 'B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active' : b13Closed ? 'B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active' : b12Closed ? 'B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active' : b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
+    completed_batches: b19ExternallyReviewed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17', 'B18', 'B19'] : b18ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17', 'B18'] : b17Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17'] : b16ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16'] : b15ExecutableClosed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15'] : b14Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14'] : b13Closed ? ['B08', 'B09', 'B10', 'B11', 'B12', 'B13'] : b12Closed ? ['B08', 'B09', 'B10', 'B11', 'B12'] : b11Closed ? ['B08', 'B09', 'B10', 'B11'] : b10Closed ? ['B08', 'B09', 'B10'] : b09Closed ? ['B08', 'B09'] : ['B08'],
+    active_batch: b19ExternallyReviewed ? null : b18ExecutableClosed ? 'B19' : b17Closed ? 'B18' : b16ExecutableClosed ? 'B17' : b15ExecutableClosed ? 'B16' : b14Closed ? 'B15' : b13Closed ? 'B14' : b12Closed ? 'B13' : b11Closed ? 'B12' : b10Closed ? 'B11' : b09Closed ? 'B10' : 'B09',
+    active_batch_state: b19ExternallyReviewed ? 'All blocked-row batches reviewed; executable scope is complete. Eight rows remain precisely blocked on genuine external dependencies and three pre-existing formal failures remain unchanged; pilot readiness is No-Go.' : b18ExecutableClosed ? 'B18 executable scope closed with TECH-012 PASS from native disposable Vercel rollback and rollback-only database forward-fix; TECH-011 restore passed but remains precisely blocked on an automated retained/off-site production backup schedule; B19 active' : b17Closed ? 'B17 closed with 8 PASS from hosted Razorpay TEST checkout, signed lifecycle/replay QA, exact-deployment production boundary proof, and zero cleanup; B18 active' : b16ExecutableClosed ? 'B16 executable scope closed with 8 PASS, WA-010 precisely blocked on controlled live Meta failure proof, exact production deployment/schema/function alignment, and zero cleanup; B17 active' : b15ExecutableClosed ? 'B15 executable scope closed with 10 PASS, OFF-001 precisely blocked on unavailable install/standalone browser capability, matching QA/production security proof, and zero cleanup; B16 active' : b14Closed ? 'B14 closed with QA realtime/browser and exact-deployment production large-range proof plus zero cleanup; B15 active' : b13Closed ? 'B13 closed with QA runtime/browser and exact-deployment production payroll proof plus zero cleanup; B14 active' : b12Closed ? 'B12 closed with matching QA and exact-deployment production lifecycle proof plus zero cleanup; B13 active' : b11Closed ? 'B11 closed with direct QA lifecycle proof, exact production Start Party Order proof, and zero cleanup; B12 queued' : b10Closed ? 'B10 closed with QA and production proof, exact deployment, and zero cleanup; B11 queued' : b09Closed ? 'B09 closed with exact production proof and cleanup; B10 queued' : 'runtime proof complete; exact production deployment and alias proof pending',
     planned_batches: batches.map(({ id, name, rows, rootCause, validation, exit }) => ({ id, name, rows, rootCause, validation, exit })),
     rows_moved_to_pass: b18ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows, ...b17Rows, ...b18PassRows] : b17Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows, ...b17Rows] : b16ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows, ...b16PassRows] : b15ExecutableClosed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows, ...b15PassRows] : b14Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows, ...b14Rows] : b13Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows, ...b13Rows] : b12Closed ? [...b09Rows, ...b10Rows, ...b11Rows, ...b12Rows] : b11Closed ? [...b09Rows, ...b10Rows, ...b11Rows] : b10Closed ? [...b09Rows, ...b10Rows] : b09Closed ? b09Rows : [],
     rows_moved_to_fail: [],
@@ -389,10 +395,24 @@ const checkpoint = {
             evidence: 'output/qa/blocked-row-campaign/B18-recovery-runtime.json',
         },
     ] : [],
+    external_evidence_review: b19ExternallyReviewed ? {
+        batch: 'B19',
+        result: 'five genuine external dependencies confirmed; no row promoted without its required artifact',
+        rows: b19Rows,
+        sentry: 'DSN, organization, and project configured; read-only API token and live event payload unavailable',
+        human_artifacts_absent: ['qualified-counsel legal review', 'factory terminology approve/change register', 'business-accepted real-fabric truth sheet', 'dated supervisor shift register'],
+        evidence: 'output/qa/blocked-row-campaign/B19-external-evidence-review.json',
+    } : null,
     outstanding_external_dependencies: [
         ...(b16ExecutableClosed ? [{ batch: 'B16', rows: ['WA-010'], dependency: 'Controlled live Meta credentials, a consented recipient, and authorization to induce template rejection or expired-token behavior.' }] : [{ batch: 'B16', rows: b16Rows, dependency: batches.find((batch) => batch.id === 'B16').rootCause }]),
         ...(b18ExecutableClosed ? [{ batch: 'B18', rows: ['TECH-011'], dependency: 'An automated retained or off-site production backup schedule. Current production reports WAL-G enabled, PITR disabled, and zero retained backups; Free-plan branching/new-project restore targets are unavailable. Upgrade to Pro or provide an approved off-site destination and database dump credential placement.' }] : []),
-        ...batches.filter((batch) => (b18ExecutableClosed ? ['B19'] : b17Closed ? ['B18', 'B19'] : ['B17', 'B18', 'B19']).includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause })),
+        ...(b19ExternallyReviewed ? [
+            { batch: 'B19', rows: ['SEC-011'], dependency: 'Set SENTRY_AUTH_TOKEN locally with org:read, project:read, and event:read, then inspect a current production event through the read-only Sentry API with PII-redacted output.' },
+            { batch: 'B19', rows: ['SEC-018'], dependency: 'A dated approval or redline from qualified Indian privacy counsel covering DPDP, breach, grievance, retention, offline storage, and minor/child wording.' },
+            { batch: 'B19', rows: ['UX-012'], dependency: 'A named factory supervisor provides a dated approve/change register for the listed factory terms.' },
+            { batch: 'B19', rows: ['GOLDEN-A-03'], dependency: 'One business-accepted real-fabric truth sheet with inputs and expected yarn, weave, processing, overhead, landed-cost, and quote totals.' },
+            { batch: 'B19', rows: ['SIGNOFF-04'], dependency: 'One dated supervisor register for a known shift with an independent meter total.' },
+        ] : batches.filter((batch) => (b18ExecutableClosed ? ['B19'] : b17Closed ? ['B18', 'B19'] : ['B17', 'B18', 'B19']).includes(batch.id)).map((batch) => ({ batch: batch.id, rows: batch.rows, dependency: batch.rootCause }))),
     ],
     last_successful_validation: b18ExecutableClosed
         ? 'B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, four reconciliation assertions, restored owner sign-in, 2,478.4 ms restore time, and zero cleanup. Native Vercel rollback restored exact source commit 57caa6e in 2 provider-reported seconds, /privacy returned 200, and the rollback-only database forward-fix reconciled preserved provenance. No production resource or data was changed. TECH-011 remains blocked only because production exposes no retained backup and PITR is disabled.'
@@ -415,7 +435,9 @@ const checkpoint = {
         : b09Closed
         ? 'B09 production deployment dpl_EPGVy9PMbaLLphgssXvBq9HgD5yB Ready at exact commit 812512c; remote gate 82 files / 599 tests; production alias Copy previous, accessible sheet, verified breakdown persistence, migration head, and zero-fixture cleanup all passed.'
         : 'B09 optimized production build; 82 files / 598 passed and 1 skipped; 20-loom browser, offline, timeout, invalid-payload, breakdown persistence, and two-supervisor concurrency proof all green.',
-    exact_next_action: b18ExecutableClosed
+    exact_next_action: b19ExternallyReviewed
+        ? 'No independent executable blocked-row batch remains. Supply any one named external artifact to resume its row: start with a local read-only SENTRY_AUTH_TOKEN (org:read, project:read, event:read) for SEC-011; otherwise provide the counsel review, factory terminology register, real-fabric truth sheet, supervisor meter register, production backup schedule, controlled live Meta proof, or supported PWA install surface.'
+        : b18ExecutableClosed
         ? 'Execute B19 external-evidence review: inspect live Sentry payload scrubbing if a configured project is available, then preserve legal counsel, factory terminology, business truth-sheet, and supervisor-register rows as precisely blocked unless their named human artifacts exist.'
         : b17Closed
         ? 'Execute B18 in disposable infrastructure: restore a sanitized multi-ledger fixture and reconcile it, then exercise application rollback plus a reviewed database forward-fix while recording recovery time, commit/deployment IDs, migration state, and zero production impact.'
@@ -472,7 +494,37 @@ B18 proves that a sanitized multi-ledger backup can be restored and reconciled, 
 Execute B19: inspect configured live Sentry event payloads for scrubbing evidence, and retain the legal, factory-language, business-truth-sheet, and supervisor-register rows as precise external blockers unless their required human artifacts are available.
 `
 
-const currentHuman = b18ExecutableClosed ? b18Human : b17Closed ? `# Blocked-Row Remediation Checkpoint
+const b19Human = `# Blocked-Row Remediation Checkpoint
+
+- Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
+- Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.
+- Canonical ledger: \`output/qa/PILOTQA-20260621-2058-8QIH/results.json\`.
+- Completed batches: **B08 through B19**. No independent executable blocked-row batch remains.
+- Campaign outcome: 95 blocked rows moved to evidence-backed PASS; eight rows remain precisely BLOCKED on genuine external dependencies; the three pre-existing formal failures remain unchanged. Pilot readiness is **No-Go**.
+- B19 Sentry review: production DSN, organization, and project keys are configured, but no local read-only \`SENTRY_AUTH_TOKEN\` or live event-payload artifact exists. Source redaction and clean logs are supporting evidence, not live payload proof.
+- B19 human review: no qualified-counsel approval/redline, factory terminology approve/change register, business-accepted real-fabric truth sheet, or dated supervisor shift register was found.
+- B18 recovery: \`TECH-012\` passed; \`TECH-011\` remains blocked on an automated retained or approved off-site production backup schedule.
+- Other precise blockers: \`WA-010\` needs controlled live Meta failure proof and \`OFF-001\` needs a supported PWA install/standalone-reopen surface.
+- B19 evidence: \`output/qa/blocked-row-campaign/B19-external-evidence-review.json\`.
+- Full row inventory: \`output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json\`.
+- Machine-readable checkpoint: \`output/qa/blocked-row-campaign/CHECKPOINT.json\`.
+
+## Correlation batches
+
+| Batch | Workflow/root | Rows | IDs |
+| --- | --- | ---: | --- |
+${table}
+
+## B19 external-evidence closeout
+
+All five B19 rows were reviewed individually. None was promoted from source tests or inferred evidence. \`SEC-011\` has an exact read-only API credential dependency; \`SEC-018\`, \`UX-012\`, \`GOLDEN-A-03\`, and \`SIGNOFF-04\` each identify the smallest named human artifact that can close the row.
+
+## Exact next action
+
+To resume the only immediately machine-verifiable row, create a Sentry auth token with \`org:read\`, \`project:read\`, and \`event:read\`, set it locally as \`SENTRY_AUTH_TOKEN\`, and confirm it is ready. Do not paste or commit the token. Any other remaining row resumes when its named external artifact is supplied.
+`
+
+const currentHuman = b19ExternallyReviewed ? b19Human : b18ExecutableClosed ? b18Human : b17Closed ? `# Blocked-Row Remediation Checkpoint
 
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
 - Current ledger: **${counts.pass} PASS, ${counts.fail} FAIL, ${counts.blocked} BLOCKED, ${counts.not_applicable} NOT APPLICABLE (${ledger.items.length} total)**.

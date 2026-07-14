@@ -691,3 +691,12 @@ Acceptance:
 - Rehearse non-reversible database recovery in a rollback-only transaction: preserve provenance, remove the legacy representation, introduce/backfill the canonical representation, assert reconciliation, roll back, and verify no temporary object remains.
 - Canonical evidence is `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
 - Canonical counts after B18: 365 pass, 3 fail, 8 blocked, and 1 not applicable. Begin B19; rerun B18 only if backup policy, schema recovery strategy, or deployment provider behavior changes.
+
+### B19 external-evidence regression guard — 2026-07-14
+
+- For `SEC-011`, use the read-only Sentry API with a local `SENTRY_AUTH_TOKEN` carrying `org:read`, `project:read`, and `event:read`. Inspect a current production event and report only redacted field-presence/results; never print the token, email/IP values, or a raw stack trace.
+- For `SEC-018`, attach a dated qualified-counsel approval/redline covering DPDP, breach, grievance, retention, offline storage, and minor/child wording. QA review alone cannot promote it.
+- For `UX-012`, capture a named factory supervisor's dated approve/change decision for loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, and hisaab.
+- For `GOLDEN-A-03`, compare one real fabric estimate against a business-accepted independent truth sheet containing inputs and expected yarn, weave, processing, overhead, landed-cost, and quote totals.
+- For `SIGNOFF-04`, reconcile Today meters against one dated external supervisor shift register and retain both totals and any explained variance.
+- Canonical evidence is `output/qa/blocked-row-campaign/B19-external-evidence-review.json`. Counts remain 365 pass, 3 fail, 8 blocked, and 1 not applicable. Rerun only the row whose named external artifact becomes available.

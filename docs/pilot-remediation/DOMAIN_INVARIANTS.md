@@ -421,3 +421,13 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 5. Non-reversible database changes use a reviewed forward-fix with preserved recovery provenance; destructive down-migrations are not an acceptable default.
 6. Recovery exercises must use disposable infrastructure, record elapsed recovery time, and reconcile fixtures, private backup material, temporary schema objects, worktrees, and provider projects to zero.
 7. No recovery rehearsal may mutate the live production database or production alias unless an incident commander explicitly authorizes that scope.
+
+## B19 external-evidence invariants
+
+1. Source code, unit tests, clean logs, or configuration-key presence cannot substitute for direct inspection when a row explicitly requires a live provider payload.
+2. Observability review is read-only. Sentry output must redact PII and must never echo or persist authentication tokens, raw stack traces, email addresses, or IP addresses.
+3. Legal-readiness wording requires qualified-counsel evidence; QA may identify the dependency but cannot issue legal approval.
+4. Factory terminology approval must identify a human reviewer and capture approve/change decisions for the required terms.
+5. A Golden Journey truth comparison needs an independent business-accepted reference containing both inputs and expected totals; application-generated output is not its own oracle.
+6. Daily supervisor sign-off needs an independent dated shift register; application totals cannot self-attest.
+7. An unavailable external artifact remains an honest blocker with the smallest closure dependency. No external review row inherits PASS from adjacent technical evidence.

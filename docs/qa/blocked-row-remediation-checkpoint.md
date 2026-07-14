@@ -3,14 +3,13 @@
 - Canonical baseline: 270 PASS, 3 FAIL, 103 BLOCKED, 1 NOT APPLICABLE (377 total).
 - Current ledger: **365 PASS, 3 FAIL, 8 BLOCKED, 1 NOT APPLICABLE (377 total)**.
 - Canonical ledger: `output/qa/PILOTQA-20260621-2058-8QIH/results.json`.
-- Completed batch: **B18 — backup restore and rollback/forward-fix exercise (1 PASS, 1 precisely BLOCKED)**.
-- Active batch: **B19 — external and human acceptance evidence**.
-- Restore proof: sanitized organization, two users, production, stock, receivable, and payroll ledgers restored into isolated QA with matching SHA-256 digests, four assertions, restored owner sign-in, and 2,478.4 ms restore time.
-- Rollback proof: native Vercel rollback returned the disposable app to deployment `dpl_4W61veVnHqTyGDU19qC5dUBm2V14` at exact source commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`; provider-reported duration was 2 seconds and `/privacy` returned 200.
-- Database proof: a rollback-only QA transaction dropped a legacy column, restored its canonical replacement from preserved JSON provenance, reconciled the row, and left no temporary contract.
-- Cleanup: all prefixed QA rows/auth, private backup material, the disposable Vercel project, and the disposable worktree were removed; production was not mutated.
-- TECH-011 blocker: production reports WAL-G enabled, PITR disabled, and no retained backups. The runtime restore passed, but the row still needs an automated retained or approved off-site production backup schedule.
-- B18 evidence: `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
+- Completed batches: **B08 through B19**. No independent executable blocked-row batch remains.
+- Campaign outcome: 95 blocked rows moved to evidence-backed PASS; eight rows remain precisely BLOCKED on genuine external dependencies; the three pre-existing formal failures remain unchanged. Pilot readiness is **No-Go**.
+- B19 Sentry review: production DSN, organization, and project keys are configured, but no local read-only `SENTRY_AUTH_TOKEN` or live event-payload artifact exists. Source redaction and clean logs are supporting evidence, not live payload proof.
+- B19 human review: no qualified-counsel approval/redline, factory terminology approve/change register, business-accepted real-fabric truth sheet, or dated supervisor shift register was found.
+- B18 recovery: `TECH-012` passed; `TECH-011` remains blocked on an automated retained or approved off-site production backup schedule.
+- Other precise blockers: `WA-010` needs controlled live Meta failure proof and `OFF-001` needs a supported PWA install/standalone-reopen surface.
+- B19 evidence: `output/qa/blocked-row-campaign/B19-external-evidence-review.json`.
 - Full row inventory: `output/qa/blocked-row-campaign/BLOCKED_ROW_INVENTORY.json`.
 - Machine-readable checkpoint: `output/qa/blocked-row-campaign/CHECKPOINT.json`.
 
@@ -30,10 +29,10 @@
 | B18 | backup restore and rollback/forward-fix exercise | 2 | `TECH-011`, `TECH-012` |
 | B19 | genuine external review and human truth sources | 5 | `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, `SIGNOFF-04` |
 
-## B18 closeout
+## B19 external-evidence closeout
 
-B18 proves that a sanitized multi-ledger backup can be restored and reconciled, that the restored owner can authenticate, that an actual application build can be returned to a marked last-known-good deployment through the provider's native rollback, and that a non-reversible database change has a viable provenance-preserving forward-fix. All exercises ran in disposable QA infrastructure and cleaned to zero. TECH-012 is PASS. TECH-011 remains BLOCKED solely because production has no retained or approved off-site backup schedule; restore mechanics themselves passed.
+All five B19 rows were reviewed individually. None was promoted from source tests or inferred evidence. `SEC-011` has an exact read-only API credential dependency; `SEC-018`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04` each identify the smallest named human artifact that can close the row.
 
 ## Exact next action
 
-Execute B19: inspect configured live Sentry event payloads for scrubbing evidence, and retain the legal, factory-language, business-truth-sheet, and supervisor-register rows as precise external blockers unless their required human artifacts are available.
+To resume the only immediately machine-verifiable row, create a Sentry auth token with `org:read`, `project:read`, and `event:read`, set it locally as `SENTRY_AUTH_TOKEN`, and confirm it is ready. Do not paste or commit the token. Any other remaining row resumes when its named external artifact is supplied.

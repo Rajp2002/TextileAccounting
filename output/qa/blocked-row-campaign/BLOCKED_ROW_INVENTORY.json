@@ -5498,9 +5498,10 @@
     "scenario": "Secrets in client bundle, logs, repository, Sentry.",
     "expected": "None exposed.",
     "current_status": "blocked",
-    "current_outcome": "Repository, generated client static bundle, QA output, and 7-day Vercel production runtime logs were checked without finding server-secret value exposure. Secret variable names appear only in expected server-side code/docs and audit findings. Sentry is integrated, but live Sentry event payload/issue inspection was not available, so the full secrets-in-Sentry requirement remains blocked.",
+    "current_outcome": "Repository, generated client static bundle, QA output, and seven-day Vercel production logs contain no discovered server-secret value. Shared redaction code/tests cover user identity, IP, authorization/cookie headers, query/cookies, messages, breadcrumbs, and exception text. Production Sentry DSN, organization, and project keys are configured, but no local read-only SENTRY_AUTH_TOKEN or live event-payload artifact is available, so direct live Sentry payload inspection remains blocked.",
     "existing_evidence": [
-      "logs/secrets-exposure-scan.json"
+      "logs/secrets-exposure-scan.json",
+      "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
     ],
     "severity": null,
     "user_role": "release operator + counsel + factory reviewer",
@@ -5739,7 +5740,7 @@
     "scenario": "DPDP, breach, grievance, and retention wording.",
     "expected": "Reviewed against current law by qualified counsel before public reliance.",
     "current_status": "blocked",
-    "current_outcome": "The public policy pages contain DPDP, breach, grievance, retention, offline-storage, and children/minor claims, but there is no repository evidence of qualified counsel review. Because DPDP Rules 2025 and phased enforcement materially affect this wording, this cannot be passed by QA alone and requires qualified counsel review before public reliance.",
+    "current_outcome": "Public policy wording covers DPDP, breach, grievance, retention, offline storage, and children/minors, but the B19 workspace review found no dated qualified-counsel approval or redline. QA cannot substitute for legal advice, so public legal-readiness reliance remains blocked.",
     "existing_evidence": [
       "logs/auth-security-time-code-evidence-20260624.json",
       "app/privacy/page.tsx:37",
@@ -5749,7 +5750,8 @@
       "docs/general/MASTER_BUSINESS_LEGAL_DOCUMENT.md:624",
       "docs/general/MASTER_BUSINESS_LEGAL_DOCUMENT.md:645",
       "https://www.meity.gov.in/documents/act-and-policies/digital-personal-data-protection-rules-2025-gDOxUjMtQWa?pageTitle=Digital-Personal-Data-Protection-Rules-2025",
-      "https://static.pib.gov.in/WriteReadData/specificdocs/documents/2025/nov/doc20251117695301.pdf"
+      "https://static.pib.gov.in/WriteReadData/specificdocs/documents/2025/nov/doc20251117695301.pdf",
+      "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
     ],
     "severity": "High",
     "user_role": "release operator + counsel + factory reviewer",
@@ -6049,13 +6051,14 @@
     "scenario": "Factory terminology review with brother/supervisor.",
     "expected": "Labels match actual language: loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, hisaab.",
     "current_status": "blocked",
-    "current_outcome": "The repository contains the relevant labels for loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, and hisaab flows, but the guide requires terminology review with the brother/supervisor. That human review was not available during this run, so the item remains blocked rather than source-passed.",
+    "current_outcome": "The required loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, and hisaab labels exist in the product, but the B19 review found no dated brother/supervisor factory-language approval artifact.",
     "existing_evidence": [
       "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
       "app/(dashboard)/supervisor/dashboard/page.tsx:1174",
       "app/(dashboard)/supervisor/dashboard/page.tsx:1235",
       "components/landing/faq.tsx:16",
-      "lib/i18n/locales/en.ts:101"
+      "lib/i18n/locales/en.ts:101",
+      "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
     ],
     "severity": "Medium",
     "user_role": "release operator + counsel + factory reviewer",
@@ -6102,12 +6105,13 @@
     "scenario": "Build a real fabric estimate and compare it with the truth sheet.",
     "expected": "Complete the step and preserve all stated downstream invariants.",
     "current_status": "blocked",
-    "current_outcome": "The real-fabric estimate comparison cannot be completed from repository/source evidence alone because the external truth sheet or business-accepted reference estimate was not provided in the run artifacts. Existing estimator tests cover calculations and defects, but this golden step requires a human/business truth comparison.",
+    "current_outcome": "Estimator calculation coverage exists and the test guide specifies an independent factory truth sheet, but the B19 review found no completed business-accepted real-fabric reference estimate. A human/business truth comparison therefore cannot be claimed.",
     "existing_evidence": [
       "results.json:EST-003",
       "results.json:EST-011",
       "results.json:EST-017",
-      "results.json:EST-019"
+      "results.json:EST-019",
+      "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
     ],
     "severity": "Medium",
     "user_role": "release operator + counsel + factory reviewer",
@@ -6573,11 +6577,12 @@
     "scenario": "Today meters reconcile with supervisor register.",
     "expected": "Satisfied with current-run evidence.",
     "current_status": "blocked",
-    "current_outcome": "Today-meter reconciliation with the supervisor's external register was not possible from available artifacts. The application-side production evidence has known correction/stock defects, and no external register/truth sheet was supplied for this final sign-off.",
+    "current_outcome": "Application-side Today/production proofs exist, but the B19 review found no independent dated supervisor shift register whose meter total can be compared with the app.",
     "existing_evidence": [
       "results.json:PROD-016",
       "results.json:PROD-028",
-      "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json"
+      "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
+      "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
     ],
     "severity": "Medium",
     "user_role": "release operator + counsel + factory reviewer",

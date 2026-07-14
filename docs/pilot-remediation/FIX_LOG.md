@@ -27,7 +27,7 @@ Rules for entries:
 | `PAY-A` payroll/kharchi ledger integrity | Closed for current formal core rows through blocked-row B13 | Earlier batches closed payslip/export, statutory preview equality, settlement authorization/reversal, and online-only boundaries. B13 closes the remaining decimal rate, historical snapshot, cap, final settlement, adjustment, cycle, concurrency, reversal, exit, Kharchi, and Golden payroll rows with QA runtime/browser and production runtime proof. Provider/offline failures remain tracked under their own clusters. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Partially closed through blocked-row B15 | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`; runtime remediation closes `OFF-007`; B15 proves the production manifest, icons, scope, start route, update notice, and refresh activation. `OFF-001` remains blocked only on actual install/standalone reopen; `OFF-009` and `OFF-010` remain formal failures. |
-| `REL-A` release gates | Partially remediated through runtime remediation / open remainder | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. Live Sentry payload inspection, restore, and rollback remain open or blocked. |
+| `REL-A` release gates | Partially remediated through blocked-row B18 / open backup remainder | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. B18 closed rollback/forward-fix and proved restore mechanics; `TECH-011` remains blocked only on an automated retained or approved off-site production backup schedule. Live Sentry payload inspection remains separate B19 evidence debt. |
 
 ## Entry Template
 
@@ -2436,3 +2436,15 @@ Date: 2026-07-14 IST. Recovery exercise only; production source remains `57caa6e
 - Safety: production data, schema, deployment, and alias were untouched. All prefixed QA database/auth fixtures, private backup material, temporary database work, the disposable Vercel project, and the disposable worktree were removed or reconciled to zero.
 - Evidence: `output/qa/blocked-row-campaign/B18-qa-backup-restore.json` and `B18-recovery-runtime.json`.
 - Formal matrix: 365 pass, 3 fail, 8 blocked, 1 not applicable. Readiness remains No-Go; B19 is active.
+
+## Blocked-row campaign B19 closeout — external evidence review
+
+Date: 2026-07-14 IST. No production change and no status promotion.
+
+- Rows reviewed: `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04` remain `blocked`, each with an individually named external dependency.
+- Sentry: production DSN, organization, and project keys are present. The current shell and `.env.production.local` contain no read-only `SENTRY_AUTH_TOKEN`, and no live Sentry event-payload artifact exists. Repository/client/log scans and redaction tests are supporting evidence only; direct API payload inspection is still required.
+- Legal: no dated qualified-counsel approval or redline was found for DPDP, breach, grievance, retention, offline-storage, or minor/child wording.
+- Factory acceptance: no named supervisor terminology approve/change register, business-accepted real-fabric truth sheet, or dated supervisor shift register was found.
+- Integrity: no external artifact was invented, no row inherited source-test credit, no secret value was recorded, and no runtime/provider resource was mutated.
+- Evidence: `output/qa/blocked-row-campaign/B19-external-evidence-review.json`.
+- Formal matrix: 365 pass, 3 fail, 8 blocked, 1 not applicable. All blocked-row batches B08–B19 have been reviewed; no independent executable batch remains. Readiness remains No-Go.

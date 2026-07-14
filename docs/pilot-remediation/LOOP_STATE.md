@@ -2049,3 +2049,9 @@ Current counts are 364 pass, 3 fail, 9 blocked, and 1 not applicable. B18 is act
 `TECH-012` is `PASS`. A sanitized six-ledger QA restore matched its backup digest, reconciled four business groupings, authenticated the restored owner, and cleaned to zero; native Vercel rollback restored an actual application build at exact commit `57caa6e6f15f25b6e26654a1d3cfc4b431452e9b`; and a rollback-only database transaction proved a provenance-preserving forward-fix for a non-reversible change. Production was not mutated.
 
 `TECH-011` remains `BLOCKED`: production has WAL-G enabled but PITR disabled and exposes no retained backup. Restore mechanics passed, but closure needs an automated retained or approved off-site production backup schedule. Current counts are 365 pass, 3 fail, 8 blocked, and 1 not applicable. B19 is active with `SEC-011`, `SEC-018`, `UX-012`, `GOLDEN-A-03`, and `SIGNOFF-04`; B18 pass credit must not be inherited.
+
+### Blocked-row campaign B19 externally reviewed; executable campaign scope complete
+
+All five B19 rows were reviewed without status promotion. `SEC-011` is blocked on a local read-only Sentry API token and a live production event payload; `SEC-018` on qualified-counsel approval/redline; `UX-012` on a named factory supervisor's terminology register; `GOLDEN-A-03` on a business-accepted real-fabric truth sheet; and `SIGNOFF-04` on a dated supervisor meter register. No qualifying artifact was found in the repository or QA outputs.
+
+Current counts remain 365 pass, 3 fail, 8 blocked, and 1 not applicable. All B08–B19 blocked-row batches are reviewed. The other precise blockers are `TECH-011` (production backup schedule), `WA-010` (controlled live Meta failure), and `OFF-001` (supported PWA install/standalone reopen). No independent executable blocked-row batch remains; readiness stays No-Go until named external evidence is supplied and the three formal failures are separately resolved or de-scoped.

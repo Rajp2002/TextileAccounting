@@ -1,6 +1,6 @@
 {
   "campaign": "blocked-row-remediation",
-  "updated_at": "2026-07-14T04:49:55.228Z",
+  "updated_at": "2026-07-14T04:56:20.232Z",
   "branch": "codex/estimator-production-readiness-20260710",
   "starting_counts": {
     "pass": 270,
@@ -30,10 +30,11 @@
     "B15",
     "B16",
     "B17",
-    "B18"
+    "B18",
+    "B19"
   ],
-  "active_batch": "B19",
-  "active_batch_state": "B18 executable scope closed with TECH-012 PASS from native disposable Vercel rollback and rollback-only database forward-fix; TECH-011 restore passed but remains precisely blocked on an automated retained/off-site production backup schedule; B19 active",
+  "active_batch": null,
+  "active_batch_state": "All blocked-row batches reviewed; executable scope is complete. Eight rows remain precisely blocked on genuine external dependencies and three pre-existing formal failures remain unchanged; pilot readiness is No-Go.",
   "planned_batches": [
     {
       "id": "B09",
@@ -638,6 +639,25 @@
       "evidence": "output/qa/blocked-row-campaign/B18-recovery-runtime.json"
     }
   ],
+  "external_evidence_review": {
+    "batch": "B19",
+    "result": "five genuine external dependencies confirmed; no row promoted without its required artifact",
+    "rows": [
+      "SEC-011",
+      "SEC-018",
+      "UX-012",
+      "GOLDEN-A-03",
+      "SIGNOFF-04"
+    ],
+    "sentry": "DSN, organization, and project configured; read-only API token and live event payload unavailable",
+    "human_artifacts_absent": [
+      "qualified-counsel legal review",
+      "factory terminology approve/change register",
+      "business-accepted real-fabric truth sheet",
+      "dated supervisor shift register"
+    ],
+    "evidence": "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
+  },
   "outstanding_external_dependencies": [
     {
       "batch": "B16",
@@ -656,15 +676,39 @@
     {
       "batch": "B19",
       "rows": [
-        "SEC-011",
-        "SEC-018",
-        "UX-012",
-        "GOLDEN-A-03",
+        "SEC-011"
+      ],
+      "dependency": "Set SENTRY_AUTH_TOKEN locally with org:read, project:read, and event:read, then inspect a current production event through the read-only Sentry API with PII-redacted output."
+    },
+    {
+      "batch": "B19",
+      "rows": [
+        "SEC-018"
+      ],
+      "dependency": "A dated approval or redline from qualified Indian privacy counsel covering DPDP, breach, grievance, retention, offline storage, and minor/child wording."
+    },
+    {
+      "batch": "B19",
+      "rows": [
+        "UX-012"
+      ],
+      "dependency": "A named factory supervisor provides a dated approve/change register for the listed factory terms."
+    },
+    {
+      "batch": "B19",
+      "rows": [
+        "GOLDEN-A-03"
+      ],
+      "dependency": "One business-accepted real-fabric truth sheet with inputs and expected yarn, weave, processing, overhead, landed-cost, and quote totals."
+    },
+    {
+      "batch": "B19",
+      "rows": [
         "SIGNOFF-04"
       ],
-      "dependency": "These explicitly depend on external Sentry payload access, qualified counsel, factory terminology review, business truth sheet, or supervisor register."
+      "dependency": "One dated supervisor register for a known shift with an independent meter total."
     }
   ],
   "last_successful_validation": "B18 restored a sanitized six-ledger logical backup into isolated QA with matching SHA-256 digests, four reconciliation assertions, restored owner sign-in, 2,478.4 ms restore time, and zero cleanup. Native Vercel rollback restored exact source commit 57caa6e in 2 provider-reported seconds, /privacy returned 200, and the rollback-only database forward-fix reconciled preserved provenance. No production resource or data was changed. TECH-011 remains blocked only because production exposes no retained backup and PITR is disabled.",
-  "exact_next_action": "Execute B19 external-evidence review: inspect live Sentry payload scrubbing if a configured project is available, then preserve legal counsel, factory terminology, business truth-sheet, and supervisor-register rows as precisely blocked unless their named human artifacts exist."
+  "exact_next_action": "No independent executable blocked-row batch remains. Supply any one named external artifact to resume its row: start with a local read-only SENTRY_AUTH_TOKEN (org:read, project:read, event:read) for SEC-011; otherwise provide the counsel review, factory terminology register, real-fabric truth sheet, supervisor meter register, production backup schedule, controlled live Meta proof, or supported PWA install surface."
 }

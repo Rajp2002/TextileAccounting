@@ -1,0 +1,50 @@
+{
+  "batch": "B19",
+  "reviewed_at": "2026-07-14T04:54:52.494Z",
+  "result": "external_dependencies_confirmed",
+  "source_scope": [
+    "repository documentation and generated QA artifacts",
+    ".env.production.local key presence only; values were not read into evidence",
+    "current process environment key presence only"
+  ],
+  "rows": {
+    "SEC-011": {
+      "status": "blocked",
+      "configured": {
+        "sentry_dsn": true,
+        "sentry_org": true,
+        "sentry_project": true,
+        "sentry_read_only_api_token": false
+      },
+      "api_attempt": "not_run_missing_read_only_token",
+      "existing_supporting_evidence": "Repository, client bundle, QA output, production logs, shared redaction code, and redaction tests are clean, but none is a live Sentry event payload.",
+      "smallest_dependency": "Set a local SENTRY_AUTH_TOKEN with org:read, project:read, and event:read, then inspect a current production event through the read-only Sentry API with PII-redacted output."
+    },
+    "SEC-018": {
+      "status": "blocked",
+      "review_result": "No qualified-counsel attestation or redline was found in repository documentation or QA artifacts.",
+      "smallest_dependency": "Obtain a dated approval or redline from qualified Indian privacy counsel covering DPDP, breach, grievance, retention, offline storage, and minor/child wording."
+    },
+    "UX-012": {
+      "status": "blocked",
+      "review_result": "Application terminology exists, but no brother/supervisor factory-language approval artifact was found.",
+      "smallest_dependency": "Have one named factory supervisor review the listed labels and provide a dated approve/change register."
+    },
+    "GOLDEN-A-03": {
+      "status": "blocked",
+      "review_result": "The guide describes the required independent business truth sheet, but no completed reference estimate was found.",
+      "smallest_dependency": "Provide one business-accepted real-fabric truth sheet with inputs and expected yarn, weave, processing, overhead, landed-cost, and quote totals."
+    },
+    "SIGNOFF-04": {
+      "status": "blocked",
+      "review_result": "No external supervisor shift register with a comparable date/shift total was found.",
+      "smallest_dependency": "Provide one dated supervisor register for a known shift so Today meters can be reconciled against its independent total."
+    }
+  },
+  "assertions": {
+    "all_five_rows_reviewed": true,
+    "no_external_artifact_invented": true,
+    "no_secret_value_recorded": true,
+    "no_status_promoted_without_required_evidence": true
+  }
+}
