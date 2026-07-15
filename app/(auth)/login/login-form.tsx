@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +21,6 @@ function createTraceId() {
 }
 
 export default function LoginForm() {
-    const router = useRouter()
     const sessionCleanupRef = useRef<ReturnType<typeof clearClientSessionState> | null>(null)
     const [loading, setLoading]             = useState(false)
     const [isRedirecting, setIsRedirecting] = useState(false)
@@ -89,7 +87,10 @@ export default function LoginForm() {
             } catch {
                 // Telemetry must never delay or block navigation.
             }
-            router.replace(result.redirectTo)
+            // Cross the authentication boundary with a full document request.
+            // This guarantees the new session cookies are applied and avoids a
+            // Safari/PWA App Router transition stalling on the login screen.
+            window.location.replace(result.redirectTo)
         } catch {
             toast.error('Something went wrong. Please try again.')
             setLoading(false)
