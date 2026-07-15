@@ -53,4 +53,24 @@ describe('sign-in critical-path performance', () => {
         expect(ownerBranch).not.toContain(".from('profiles')")
         expect(ownerBranch).toContain("return succeed('/owner/today')")
     })
+
+    it('defers the tier lookup for completed owners to the request-cached dashboard gate', () => {
+        const authActions = read('app/(auth)/actions/auth.ts')
+        const signInBody = authActions.slice(
+            authActions.indexOf('export async function signIn'),
+            authActions.indexOf('// ─── regenerateJoinCode')
+        )
+        const ownerBranch = signInBody.slice(signInBody.indexOf("if (userRole === 'owner')"))
+        const incompleteBranch = ownerBranch.indexOf('if (!onboardingComplete)')
+        const tierLookup = ownerBranch.indexOf("telemetry.measure('tier_lookup'")
+        const completedDestination = ownerBranch.lastIndexOf("return succeed('/owner/today')")
+
+        expect(incompleteBranch).toBeGreaterThan(-1)
+        expect(tierLookup).toBeGreaterThan(incompleteBranch)
+        expect(completedDestination).toBeGreaterThan(tierLookup)
+
+        const todayLayout = read('app/(dashboard)/owner/today/layout.tsx')
+        expect(todayLayout).toContain('requiredTier="premium"')
+        expect(todayLayout).toContain('insufficientRedirect="/owner/estimator"')
+    })
 })

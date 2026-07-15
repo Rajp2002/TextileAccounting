@@ -11,6 +11,8 @@ interface AccessGateProps {
     requiredTier: 'base' | 'premium'
     /** Optional route label for performance logs. */
     routeName?: string
+    /** Optional destination when the user has a paid but insufficient tier. */
+    insufficientRedirect?: string
     children: React.ReactNode
 }
 
@@ -26,7 +28,12 @@ interface AccessGateProps {
  * layout, AccessGate, and the page's own requireRole() all run within the same
  * request, Supabase is contacted only once for each.
  */
-export default async function AccessGate({ requiredTier, routeName = '/owner/* access-gate', children }: AccessGateProps) {
+export default async function AccessGate({
+    requiredTier,
+    routeName = '/owner/* access-gate',
+    insufficientRedirect,
+    children,
+}: AccessGateProps) {
     const perf = createPerfTimer(routeName)
 
     // getCachedSession() is a request-scoped cache: the getUser + profiles lookup
@@ -50,6 +57,10 @@ export default async function AccessGate({ requiredTier, routeName = '/owner/* a
     // Tier is sufficient → render the protected content
     if (tierSatisfies(tier, requiredTier)) {
         return <>{children}</>
+    }
+
+    if (insufficientRedirect) {
+        redirect(insufficientRedirect)
     }
 
     // Tier is insufficient (base trying to access premium) → show upgrade wall
