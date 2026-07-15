@@ -71,7 +71,7 @@ Production read-only smoke reproduced an overlapping initial setup request: loom
 
 The dashboard now waits for the tenant/user-scoped draft key before making its setup request, reducing the initial setup fetches from two to one. Active requests always settle loading in `finally`; stale completions cannot clear a newer request, and a genuine failure produces a retryable error rather than an endless spinner. No shift mutation or optimistic state was introduced.
 
-Files: `app/(dashboard)/supervisor/dashboard/page.tsx` and `__tests__/batch24d-submit-draft-isolation.test.ts`. Production verification is required after the web deployment reaches the exact merged commit.
+Files: `app/(dashboard)/supervisor/dashboard/page.tsx` and `__tests__/batch24d-submit-draft-isolation.test.ts`. Production deployment `dpl_2dhb5j87YkJQCZ1pVe54Gtrda4nY` reached Ready for merge commit `9c0a4c2`. Five canonical hard reloads all settled with no loading text in 5,024–6,543 ms (p50 5,450 ms; p95 6,543 ms), versus the censored pre-fix reproduction that remained blocked after 15 seconds.
 
 ## Database migration reconciliation and tenant-safe views
 
