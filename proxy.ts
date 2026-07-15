@@ -124,9 +124,10 @@ export async function updateSession(request: NextRequest) {
 
     const { pathname } = request.nextUrl
     const hasAuthSessionCookie = hasSupabaseAuthSessionCookie(request)
+    const isSignOutRequest = request.method === 'POST' && pathname === '/auth/signout'
 
     // ── IP-based rate limiting for auth routes ─────────────────────────────
-    if (isAuthRoute(pathname)) {
+    if (isAuthRoute(pathname) && !isSignOutRequest) {
         const ip = getClientIpFromHeaders(request.headers)
 
         const isSignup = pathname.startsWith('/signup') || pathname.startsWith('/join')
@@ -145,11 +146,10 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // A login Server Action is about to replace any old session cookie. Let the
-    // action authenticate directly instead of validating a stale/expired session
-    // first and putting another remote Auth call in front of the password check.
+    // Auth mutations manage their own cookie lifecycle. Let them run directly
+    // instead of validating or redirecting the session before their handlers run.
     const isLoginActionRequest = request.method === 'POST' && pathname === '/login'
-    if (isLoginActionRequest) {
+    if (isLoginActionRequest || isSignOutRequest) {
         return response
     }
 
