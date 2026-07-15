@@ -2089,3 +2089,15 @@ Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json`. 
 The product owner approved a traceable limited-pilot amendment replacing the pre-pilot brother/supervisor substitute review with a reconciled product-owner baseline plus an open contextual review by the actual pilot user. The approved terminology was implemented across application and output surfaces, tested locally and remotely, and deployed at commit `93c2622` (`dpl_2fRVGdqnpqhx1415kBcb1mDrzhBy`, `READY`). Representative authenticated owner and supervisor routes were inspected without creating or changing production records.
 
 Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6 blocked, and 3 not applicable**. The verdict remains **No-Go**, now pending `TECH-011` and `GOLDEN-A-03`. Actual pilot-user terminology feedback, correction, and post-change confirmation remains an OPEN operating control. No factory-supervisor approval is claimed or implied.
+## Active release closeout — performance, migration alignment, and supervisor readiness (2026-07-15)
+
+- State: `fixed_pending_runtime_proof` for the supervisor endless-loading production reproduction; database reconciliation and security-view runtime checks are complete.
+- Branch: `codex/performance-campaign-20260715-upstream`, rebased onto `origin/main` at `f8a47d7` before the final fetch gate.
+- Commits: `8d4d767` bundle optimization, `341f151` migration/view hardening, and `6626cfa` supervisor request-race fix, plus campaign evidence commits.
+- Database: production-linked local/remote migration history is aligned at 212 versions through `20260715113013`; dry-run reports no pending migrations; full shadow replay yields no public-schema diff. The applied view migration changes no business rows.
+- Security: all six target views report `security_invoker=true`; security-advisor error count is zero. Owner reads and tenant-negative checks passed.
+- Static gate: lint passed; 99 test files passed with 697 tests and one intentional skip; TypeScript/production build passed with 43 static pages; diff check passed.
+- Runtime before fix: production supervisor data rendered, but loading and the disabled save state persisted beyond 15 seconds on a hard reload. No write was attempted.
+- Next action: fetch/rebase if `origin/main` advances, push the branch, open a ready PR, require the exact Vercel preview to pass, merge without discarding evidence commits, wait for the exact production deployment, and repeat owner/supervisor role and supervisor-ready-state smoke. Promote the supervisor item only if the deployed helper exits loading and the active route remains tenant-correct.
+- Blockers: no source, migration, or static-gate blocker. Exact deployed after timing is intentionally pending the merged web deployment.
+- Matrix/readiness: unchanged; no formal row promotion or pilot-count change is claimed.

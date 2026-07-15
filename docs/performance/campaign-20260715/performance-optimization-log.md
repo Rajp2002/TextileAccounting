@@ -61,16 +61,32 @@ The payroll initial graph included jsPDF even though PDF export is a secondary a
 
 ## Upstream authentication integration
 
-The clean campaign branch was created from current `origin/main` and therefore includes upstream commits `17d9ab5` and `c88db01`. Those changes shorten and instrument the production sign-in critical path. They are not authored or claimed as `ae65791` campaign work, but they are part of the final tested branch.
+The clean campaign branch was rebased onto current `origin/main` at `f8a47d7`. The upstream authentication changes shorten and instrument the production sign-in critical path and make redirects/logout deployment-safe. They are not authored or claimed as `8d4d767` campaign work, but they are part of the final tested branch.
 
 Authenticated QA verification then passed for owner and supervisor sessions, session logout/restoration cycles, server-authoritative role redirect, and gated route rendering. Credentials remained in the protected local secret store and are absent from artifacts.
 
+## PERF-010 — prevent supervisor setup load freeze
+
+Production read-only smoke reproduced an overlapping initial setup request: loom, worker, order, and assignment data rendered, but the active request left `loading` true for more than 15 seconds, disabling shift submission indefinitely.
+
+The dashboard now waits for the tenant/user-scoped draft key before making its setup request, reducing the initial setup fetches from two to one. Active requests always settle loading in `finally`; stale completions cannot clear a newer request, and a genuine failure produces a retryable error rather than an endless spinner. No shift mutation or optimistic state was introduced.
+
+Files: `app/(dashboard)/supervisor/dashboard/page.tsx` and `__tests__/batch24d-submit-draft-isolation.test.ts`. Production verification is required after the web deployment reaches the exact merged commit.
+
+## Database migration reconciliation and tenant-safe views
+
+- Nine production history versions were matched to their one-to-one repository migrations after name/content/catalog verification; history metadata was repaired without replaying schema or touching business rows.
+- A full shadow replay exposed `organizations.join_code` being referenced before creation. The historical migration now creates the already-deployed column shape idempotently, and the complete 212-migration replay produces an empty public-schema diff against the linked database.
+- Migration `20260715113013_harden_summary_views_security_invoker.sql` sets `security_invoker=true` on six summary views whose underlying tables already enforce RLS. The production security advisor moved from six `security_definer_view` errors to zero.
+- Direct owner reads succeeded and tenant-negative probes returned zero cross-tenant rows. The migration changes metadata/comments only; rollback is six `ALTER VIEW ... RESET (security_invoker)` statements.
+
 ## Database, auth, and server behavior of campaign code
 
-- No database migrations, indexes, views, functions, triggers, RLS policies, queries, or RPCs changed.
-- No authentication, authorization, middleware, tenant resolution, or session cache code changed in `ae65791`.
+- The performance optimization commit `8d4d767` changed no database query, migration, or authentication boundary.
+- Release migration `341f151` changes only migration replay completeness and view execution identity; it changes no rows, calculations, functions, triggers, policies, indexes, or RPCs.
+- No authentication, authorization, middleware, tenant resolution, or session cache code changed in the campaign commits.
 - No optimistic financial/inventory state was introduced.
-- No production data or environment was touched.
+- No production business data was mutated.
 
 ## Measured experiment rejected
 
@@ -79,9 +95,9 @@ The global persisted React Query provider was temporarily scoped to the dashboar
 ## Functional and performance verification
 
 - Focused bundle-boundary, i18n, and payroll tests passed.
-- Clean upstream production build gate: 97 test files, 687 tests, no skips; TypeScript and 42-page generation passed.
+- Final production build gate: 99 test files passed; 697 tests passed and one intentional skip; TypeScript and 43 static pages passed.
 - Live English → Hindi → Gujarati → English switching passed.
-- Protected owner and supervisor QA sessions passed; no production data was used.
+- Protected owner and supervisor sessions passed in local QA and production read-only smoke; no production business mutation was used.
 - Owner and supervisor route sweeps, role redirect, mobile viewport, and streamed readiness checks passed.
 - Production manifests were measured from tree-equivalent before and optimized after builds.
-- Full lint is recorded in the final evidence commit after documentation reconciliation.
+- Full lint and `git diff --check` passed before push.

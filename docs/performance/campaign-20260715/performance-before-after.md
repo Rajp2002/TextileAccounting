@@ -60,5 +60,13 @@ There was no clean authenticated pre-change runtime capture for these code-only 
 ## Correctness evidence
 
 - No estimator, quotation, payroll, stock, order, or financial arithmetic changed.
-- No Supabase query, database plan, mutation, RLS policy, session validation, or invalidation behavior changed in `ae65791`.
+- The bundle optimization commit `8d4d767` changed no Supabase query, database plan, mutation, RLS policy, session validation, or invalidation behavior.
 - No critical route exceeded the local final guardrails above; no runtime percentage is claimed without an identical authenticated pre-change trace.
+
+## PERF-010 — supervisor loading completion
+
+- Identical scenario: production supervisor sign-in followed by a hard reload of `/supervisor/dashboard`, with no production form submission.
+- Before: loom data rendered, but the save helper remained `Loading shift data...` and the save control remained disabled after 15 seconds.
+- Fix: wait for the tenant-scoped draft key before the setup fetch and settle only the current request in `finally`.
+- Request change: two overlapping initial setup calls reduced to one by construction.
+- Functional verification before deployment: focused regression tests, full test suite, lint, TypeScript, and production build passed. Exact deployed after timing remains pending.

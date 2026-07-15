@@ -745,3 +745,14 @@ Acceptance:
 - Run fixture setup and cleanup against the same explicit target. The harness must reject target mismatch; reconcile `QA-OFF009-*` to zero.
 - Canonical runtime evidence is `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`. Current counts are 367 pass, 0 fail, 7 blocked, and 3 not applicable.
 - Reopen the verdict only for a regression or when one of `TECH-011`, `UX-012`, or `GOLDEN-A-03` receives its exact external artifact. Do not treat `OFF-001`, `SEC-011`, `SEC-018`, `SIGNOFF-04`, `WA-008`, or `WA-010` as an independent limited-pilot No-Go outside their recorded scope.
+### Performance release and migration-alignment regression guard — 2026-07-15
+
+- Before promotion, verify the exact merged commit is READY and production-targeted on Vercel and aliased to `https://textile-accounting.vercel.app`.
+- Run `supabase migration list --linked` and `supabase db push --linked --dry-run`; require 212 matching local/remote versions through `20260715113013` and `Remote database is up to date`.
+- Inspect `pg_class.reloptions` for `order_progress_summary`, `party_ledger_entries`, `yarn_lot_stock_summary`, `order_yarn_variance_summary`, `market_run_summary`, and `order_dispatch_summary`; require `security_invoker=true` for each. Re-run security advisors and require no `security_definer_view` error.
+- With the isolated owner QA account, open Today, orders, market runs, stock, party ledger, and dispatches read-only. Confirm final content, no endless loading, and no authorization error. Tenant-negative view probes must return zero foreign-organization rows; dispatch summary order IDs must all belong to owner-visible orders.
+- With the isolated supervisor account, hard reload `/supervisor/dashboard`. Require loom/assignment content plus the hidden ready marker, absence of `Loading shift data...`, and a settled save helper within the measured timeout. Do not submit production solely for this retest. Requesting `/owner/today` must redirect to `/supervisor/dashboard` without owner content.
+- Repeat the supervisor dashboard check at 390×844 and confirm the fixed save area remains reachable without horizontal clipping.
+- Preserve the existing six legacy stored-function lint findings as open audit work. Do not mark them fixed because the security-advisor view errors are closed.
+- Regression commands: `npm run lint`, `npm test`, the production-environment Next.js build, CSV/JSON validation for campaign artifacts, secret scan, `git diff --check`, and the migration dry-run/list commands above.
+- Rollback for the new migration is metadata-only: reset `security_invoker` on the six named views. Do not roll back unless production runtime demonstrates a verified incompatibility; underlying-table RLS must remain authoritative.

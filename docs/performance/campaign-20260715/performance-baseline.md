@@ -4,7 +4,7 @@
 
 - Final branch: `codex/performance-campaign-20260715-upstream`
 - Upstream baseline: `c88db01`; the before build was captured from tree-identical commit `68ac45f`
-- Optimization commits: `ae65791` (code) and `f4b00da` plus the final evidence commit (documentation)
+- Optimization commit: `8d4d767`; release-hardening commits: `341f151` and `6626cfa`
 - Framework: Next.js 16.2.10 App Router with webpack; React 19.2.7
 - Data platform: Supabase SSR 0.8.0 / supabase-js 2.95.3; PostgreSQL RLS scoped by `org_id`
 - Runtime: Node 24.11.1, npm 11.6.2, macOS 26.5.1 x86_64
@@ -12,7 +12,7 @@
 - Authentication: protected isolated owner and supervisor QA accounts
 - Network: localhost, unthrottled. Emitted gzip chunk size is used as a deterministic transfer proxy.
 - Mobile viewport: 390×844. Representative CPU and network throttling were unavailable.
-- Production: not contacted or modified
+- Production: authenticated read-only route smoke against `https://textile-accounting.vercel.app`; migration-history metadata reconciled and `20260715113013_harden_summary_views_security_invoker.sql` applied without business-row changes
 
 The before and after production builds used the same route-manifest parser, chunk deduplication, gzip method, and build command. Authenticated timing samples use URL commit for navigation; streamed data readiness is called out separately where measured.
 
@@ -21,7 +21,7 @@ The before and after production builds used the same route-manifest parser, chun
 - Next.js App Router provides dynamic server-rendered authenticated routes and client islands. Dashboard layouts preserve the application shell across child navigation.
 - Server loaders and server actions use Supabase server clients; browser queries and mutations use the browser client. Authorization and tenant scoping remain server/RLS authoritative.
 - TanStack Query is mounted globally with persisted offline support. Existing cache identity includes authenticated-user scope.
-- Authentication is enforced in `proxy.ts`, route loaders, and server actions. The final branch includes the upstream auth work in `17d9ab5` and `c88db01`; the campaign did not weaken or bypass those checks.
+- Authentication is enforced in `proxy.ts`, route loaders, and server actions. The final branch includes upstream auth work through `f8a47d7`; the campaign did not weaken or bypass those checks.
 - The global provider statically imported English, Hindi, Gujarati, legacy, and generated legacy dictionaries. This placed about 570 KB raw / 150 KB gzip avoidable JavaScript on every measured route.
 - Payroll statically imported `jsPDF` through the payslip generator, placing the PDF engine in the initial payroll graph.
 - Existing route evidence shows Supabase read fan-out remains important: Factory Today historically made 25 reads before earlier work reduced the blocking path to 11 reads with checklist data deferred; payroll historically made 24 ledger reads before its server read model was consolidated.
@@ -41,6 +41,7 @@ The before and after production builds used the same route-manifest parser, chun
 | Quotations and orders | `/owner/quotes`, `/owner/orders` | Cold/warm quotation samples; three order samples | P2 |
 | Stock and inventory | `/owner/stock` | Three desktop samples; mobile content verification | P2 |
 | Supervisor workflows | dashboard/workers/attendance/machines | Three hard samples per route; mobile dashboard | P2 |
+| Supervisor shift readiness | `/supervisor/dashboard` | Production reproduction: data rendered but loading never settled after 15 s | P0 |
 | Role boundary | supervisor → owner route | Server-authoritative redirect verified | P1 |
 | Analytics, settings, and administration | owner routes | Authenticated read-only route sweeps | P2 |
 | Documents and exports | payroll PDF | Initial graph measured; runtime click safely blocked by no paid QA settlement | P2 |
@@ -102,11 +103,11 @@ These historical numbers were produced by earlier campaigns and are not attribut
 - Twenty-sample local p95s are repeatable QA guardrails, but they are not production p95s; orders, stock, analytics, supervisor login, and cold-route observations still have fewer samples.
 - No slow SQL shape was confirmed in this campaign, so no speculative index/RPC change or QA `EXPLAIN ANALYZE` was performed.
 - Payroll PDF click could not be exercised without marking a real QA payroll settlement paid. The bundle boundary, emitted deferred chunk, types, build, and generator/read-model tests were verified instead.
-- No production data, migration, mutation, account, or environment was changed.
+- The linked production database contains no pending local migration after the history reconciliation and metadata-only view hardening. No production business row, account, financial value, stock value, or authorization policy was mutated by this release work.
 
 ## Finding ranking
 
-- P0: 0
+- P0: 1 (`PERF-010`)
 - P1: 4 (`PERF-001` through `PERF-004`)
 - P2: 4 (`PERF-005`, `PERF-006`, `PERF-007`, `PERF-009`)
 - P3: 1 (`PERF-008`)

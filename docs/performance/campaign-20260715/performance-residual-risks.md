@@ -34,6 +34,10 @@ The initial English path is much smaller, but first Hindi or Gujarati selection 
 
 Twenty-sample local p95s now cover auth, Factory Today, estimator, payroll, and the four supervisor routes. Localhost still excludes deployed cold starts, regional Supabase latency, production-scale data, and user hardware. Core Web Vitals, network request counts, and main-thread long tasks remain unmeasured in a representative deployed environment.
 
+### Legacy stored-function lint findings
+
+The linked schema lint still reports six pre-existing stored-function errors in `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert`. They predate this campaign and require the already-documented isolated formal audit because payroll, production, and tenant behavior can be affected. This release did not suppress or casually rewrite them.
+
 ## Deliberately deferred high-risk work
 
 - Tenant/reference caching: no tenant data was cached without a proven tenant key and invalidation design.
@@ -47,7 +51,7 @@ Twenty-sample local p95s now cover auth, Factory Today, estimator, payroll, and 
 - No representative CPU/network throttling in the browser harness.
 - No production-scale QA data or current SQL-plan access for slow shapes.
 - No deployed production p95 or production Core Web Vitals; smaller secondary-route samples remain directional.
-- Production was not contacted.
+- Production was contacted only for approved migration metadata/view hardening, authenticated read-only smoke, and tenant-negative reads; no production business mutation was performed.
 - The original worktree contained unrelated user changes. A clean linked worktree based on current upstream was used so those files remained untouched.
 
 ## Post-pilot monitoring recommendations
