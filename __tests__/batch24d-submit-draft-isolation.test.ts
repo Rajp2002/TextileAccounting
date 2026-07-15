@@ -183,8 +183,17 @@ describe('Batch 24D PROD-022 production draft date/shift isolation', () => {
         expect(supervisorPage).toContain('const selectedDraftKeyRef = useRef(selectedDraftKey)')
         expect(supervisorPage).toContain('selectedDraftKeyRef.current = selectedDraftKey')
         expect(supervisorPage).toContain('const requestedDraftKey = selectedDraftKey')
-        expect(supervisorPage).toContain('if (fetchRequestRef.current !== requestId) return')
-        expect(supervisorPage).toContain('if (selectedDraftKeyRef.current !== requestedDraftKey) return')
+        expect(supervisorPage).toContain('fetchRequestRef.current === requestId')
+        expect(supervisorPage).toContain('selectedDraftKeyRef.current === requestedDraftKey')
+        expect(supervisorPage).toContain('if (!isCurrentRequest()) return')
+    })
+
+    it('waits for the tenant-scoped draft key and always settles the active loading state', () => {
+        expect(supervisorPage).toContain('if (!selectedDraftKey) return')
+        expect(supervisorPage).toContain('void fetchData()')
+        expect(supervisorPage).toContain("console.error('Failed to load shift setup data', error)")
+        expect(supervisorPage).toContain("toast.error('Could not load shift data. Pull down to retry.')")
+        expect(supervisorPage).toContain('if (isCurrentRequest()) setLoading(false)')
     })
 
     it('persists and clears localStorage only for the active selected date/shift key', () => {

@@ -898,73 +898,86 @@ export default function UnifiedDashboard() {
         const requestedDate = date
         const requestedShift = shift
         const requestedDraftKey = selectedDraftKey
-
-        setLoading(true)
-        const data = await getShiftSetupData(requestedDate, requestedShift)
-
-        if (fetchRequestRef.current !== requestId) return
-        if (selectedDraftKeyRef.current !== requestedDraftKey) return
-
-        setMachines(data.machines)
-        setWorkers(data.workers)
-        setOrders(data.orders)
-        setAssignments(data.assignments)
-        setExistingLogs(data.existingLogs ?? [])
-        setCorrectionWindowExpiresAt(data.latestSubmittedAt
-            ? new Date(new Date(data.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
-            : null
+        const isCurrentRequest = () => (
+            fetchRequestRef.current === requestId &&
+            selectedDraftKeyRef.current === requestedDraftKey
         )
 
-        const existingProductionMeters = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: ShiftExistingLog) => {
-            if (typeof log.meters === 'number') {
-                acc[log.machine_id] = log.meters
-            }
-            return acc
-        }, {})
+        setLoading(true)
+        try {
+            const data = await getShiftSetupData(requestedDate, requestedShift)
 
-        const draftKey = requestedDraftKey
-        const cached = draftKey ? localStorage.getItem(draftKey) : null
-        if (cached) {
-            try {
-                const restoredMeters = parseProductionMetersDraft(cached)
-                setProductionMeters(restoredMeters)
-                setProductionMetersDraftKey(draftKey)
-                const unsavedCount = countRestoredUnsavedDraftMeters(restoredMeters, existingProductionMeters)
-                setRestoredDraftInfo(unsavedCount > 0 ? { count: unsavedCount } : null)
-            } catch (error) {
-                console.error('Failed to parse cached production metre drafts', error)
+            if (!isCurrentRequest()) return
+
+            setMachines(data.machines)
+            setWorkers(data.workers)
+            setOrders(data.orders)
+            setAssignments(data.assignments)
+            setExistingLogs(data.existingLogs ?? [])
+            setCorrectionWindowExpiresAt(data.latestSubmittedAt
+                ? new Date(new Date(data.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
+                : null
+            )
+
+            const existingProductionMeters = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: ShiftExistingLog) => {
+                if (typeof log.meters === 'number') {
+                    acc[log.machine_id] = log.meters
+                }
+                return acc
+            }, {})
+
+            const draftKey = requestedDraftKey
+            const cached = draftKey ? localStorage.getItem(draftKey) : null
+            if (cached) {
+                try {
+                    const restoredMeters = parseProductionMetersDraft(cached)
+                    setProductionMeters(restoredMeters)
+                    setProductionMetersDraftKey(draftKey)
+                    const unsavedCount = countRestoredUnsavedDraftMeters(restoredMeters, existingProductionMeters)
+                    setRestoredDraftInfo(unsavedCount > 0 ? { count: unsavedCount } : null)
+                } catch (error) {
+                    console.error('Failed to parse cached production metre drafts', error)
+                    setProductionMeters(existingProductionMeters)
+                    setProductionMetersDraftKey(draftKey)
+                    setRestoredDraftInfo(null)
+                }
+            } else {
                 setProductionMeters(existingProductionMeters)
                 setProductionMetersDraftKey(draftKey)
                 setRestoredDraftInfo(null)
             }
-        } else {
-            setProductionMeters(existingProductionMeters)
-            setProductionMetersDraftKey(draftKey)
-            setRestoredDraftInfo(null)
-        }
 
-        // Auto-map machine status to downtime mode defaults
-        const initialModes: Record<string, 'production' | 'downtime'> = {}
-        const initialReasons: Record<string, string> = {}
-        for (const m of data.machines) {
-            if (m.machine_status === 'maintenance') {
-                initialModes[m.id] = 'downtime'
-                initialReasons[m.id] = 'maintenance'
-            } else if (m.machine_status === 'idle') {
-                initialModes[m.id] = 'downtime'
-                initialReasons[m.id] = 'machine_idle'
-            } else {
-                initialModes[m.id] = 'production'
+            // Auto-map machine status to downtime mode defaults
+            const initialModes: Record<string, 'production' | 'downtime'> = {}
+            const initialReasons: Record<string, string> = {}
+            for (const m of data.machines) {
+                if (m.machine_status === 'maintenance') {
+                    initialModes[m.id] = 'downtime'
+                    initialReasons[m.id] = 'maintenance'
+                } else if (m.machine_status === 'idle') {
+                    initialModes[m.id] = 'downtime'
+                    initialReasons[m.id] = 'machine_idle'
+                } else {
+                    initialModes[m.id] = 'production'
+                }
             }
+            setLoggingModes(initialModes)
+            setDowntimeReasons(initialReasons)
+            setDowntimeNotes({})
+        } catch (error) {
+            if (isCurrentRequest()) {
+                console.error('Failed to load shift setup data', error)
+                toast.error('Could not load shift data. Pull down to retry.')
+            }
+        } finally {
+            if (isCurrentRequest()) setLoading(false)
         }
-        setLoggingModes(initialModes)
-        setDowntimeReasons(initialReasons)
-        setDowntimeNotes({})
-
-        setLoading(false)
     }, [date, shift, selectedDraftKey])
 
-    useEffect(() => { fetchData() }, [fetchData])
+    useEffect(() => {
+        if (!selectedDraftKey) return
+        void fetchData()
+    }, [fetchData, selectedDraftKey])
 
     const resetShiftDraftState = (nextDate: string, nextShift: 'day' | 'night') => {
         setLoading(true)
