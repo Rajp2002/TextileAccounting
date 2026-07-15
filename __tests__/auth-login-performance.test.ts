@@ -19,7 +19,7 @@ describe('sign-in critical-path performance', () => {
 
     it('short-circuits requests with no session before the remote Auth lookup', () => {
         const proxy = read('proxy.ts')
-        const loginActionFastPath = proxy.indexOf('if (isLoginActionRequest)')
+        const loginActionFastPath = proxy.indexOf('if (isLoginActionRequest || isSignOutRequest)')
         const fastPath = proxy.indexOf('if (!hasAuthSessionCookie)')
         const remoteLookup = proxy.indexOf('await supabase.auth.getUser()')
 

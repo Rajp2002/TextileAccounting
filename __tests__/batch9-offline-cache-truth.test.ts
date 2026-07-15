@@ -77,7 +77,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(pwaSessionGuard).toContain('await clearClientSessionState()')
     })
 
-    it('awaits logout client cleanup before allowing the server logout submit to proceed', () => {
+    it('awaits logout client cleanup before allowing the native logout POST to proceed', () => {
         const logoutButton = readProjectFile('components/auth/logout-button.tsx')
         const preventDefaultIndex = logoutButton.indexOf('event.preventDefault()')
         const awaitedCleanupIndex = logoutButton.indexOf('await clearClientSessionState()')
@@ -91,7 +91,8 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(logoutButton).toContain('await clearClientSessionState()')
         expect(logoutButton).not.toContain('void clearClientSessionState()')
         expect(logoutButton).toContain('formRef.current?.requestSubmit()')
-        expect(logoutButton.match(/<form ref=\{formRef\} action=\{signOut\} onSubmit=\{handleLogout\}>/g)).toHaveLength(2)
+        expect(logoutButton).not.toContain("from '@/app/(auth)/actions'")
+        expect(logoutButton.match(/<form ref=\{formRef\} action="\/auth\/signout" method="post" onSubmit=\{handleLogout\}>/g)).toHaveLength(2)
         expect(preventDefaultIndex).toBeGreaterThan(-1)
         expect(awaitedCleanupIndex).toBeGreaterThan(preventDefaultIndex)
         expect(guardFlipIndex).toBeGreaterThan(awaitedCleanupIndex)

@@ -4,7 +4,6 @@ import type { FormEvent } from 'react'
 import { useRef } from 'react'
 import { useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
-import { signOut } from '@/app/(auth)/actions'
 import { cn } from '@/lib/utils'
 import LoadingModal from './loading-modal'
 import { useTranslation } from '@/lib/i18n/context'
@@ -41,14 +40,14 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
 
         readyForServerLogoutRef.current = true
         formRef.current?.requestSubmit()
-        // The signOut action will handle the redirect
-        // We just need to show the loading state until then
+        // The native POST response performs a full-page redirect to /login.
+        // This deliberately avoids a deployment-sensitive Server Action transition.
     }
 
     if (variant === 'header') {
         return (
             <>
-                <form ref={formRef} action={signOut} onSubmit={handleLogout}>
+                <form ref={formRef} action="/auth/signout" method="post" onSubmit={handleLogout}>
                     <button
                         type="submit"
                         disabled={isLoggingOut}
@@ -70,7 +69,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
 
     return (
         <>
-            <form ref={formRef} action={signOut} onSubmit={handleLogout}>
+            <form ref={formRef} action="/auth/signout" method="post" onSubmit={handleLogout}>
                 <button
                     type="submit"
                     disabled={isLoggingOut}
