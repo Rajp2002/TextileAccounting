@@ -19,7 +19,7 @@ import { savePayrollConfig, toggleWorkerPaid } from './actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { useMutation } from '@tanstack/react-query'
-import { generateMeterPayslip, generateFixedPayslip, type PayslipItemization } from '@/lib/generate-payslip'
+import type { PayslipItemization } from '@/lib/generate-payslip'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { sendPayslipWhatsApp } from './whatsapp-actions'
@@ -1227,21 +1227,29 @@ function MeterWorkerRow({
                                         )}
                                         disabled={!isPaid}
                                         title={!isPaid ? 'Settle payroll first to download a payslip' : undefined}
-                                        onClick={() => isPaid && generateMeterPayslip({
-                                            factoryName,
-                                            month: selectedMonth,
-                                            workerName: worker.name,
-                                            cycleStartDate: cycleBounds.cycle_start,
-                                            cycleEndDate: cycleBounds.cycle_end,
-                                            machines: worker.machines,
-                                            totalMeters: worker.totalMeters,
-                                            totalPay: worker.totalPay,
-                                            advanceDeducted: displayDeduction,
-                                            remainingDebt: displayRemaining,
-                                            netPay: displayNet,
-                                            paymentMode: paymentModeLabel,
-                                            itemization: getPayslipItemization(worker.settlement?.itemization_payload),
-                                        })}
+                                        onClick={async () => {
+                                            if (!isPaid) return
+                                            try {
+                                                const { generateMeterPayslip } = await import('@/lib/generate-payslip')
+                                                generateMeterPayslip({
+                                                    factoryName,
+                                                    month: selectedMonth,
+                                                    workerName: worker.name,
+                                                    cycleStartDate: cycleBounds.cycle_start,
+                                                    cycleEndDate: cycleBounds.cycle_end,
+                                                    machines: worker.machines,
+                                                    totalMeters: worker.totalMeters,
+                                                    totalPay: worker.totalPay,
+                                                    advanceDeducted: displayDeduction,
+                                                    remainingDebt: displayRemaining,
+                                                    netPay: displayNet,
+                                                    paymentMode: paymentModeLabel,
+                                                    itemization: getPayslipItemization(worker.settlement?.itemization_payload),
+                                                })
+                                            } catch {
+                                                toast.error('Failed to generate payslip PDF.')
+                                            }
+                                        }}
                                     >
                                         <Download className="h-3.5 w-3.5" />
                                         PDF Slip
@@ -1567,22 +1575,30 @@ function FixedWorkerRow({
                                         )}
                                         disabled={!isPaid}
                                         title={!isPaid ? 'Settle payroll first to download a payslip' : undefined}
-                                        onClick={() => isPaid && generateFixedPayslip({
-                                            factoryName,
-                                            month: selectedMonth,
-                                            workerName: worker.name,
-                                            cycleStartDate: cycleBounds.cycle_start,
-                                            cycleEndDate: cycleBounds.cycle_end,
-                                            role: worker.role,
-                                            monthlySalary: worker.monthly_salary,
-                                            daysWorked: worker.daysWorked,
-                                            earnedPay: worker.earnedPay,
-                                            advanceDeducted: displayDeduction,
-                                            remainingDebt: displayRemaining,
-                                            netPay: displayNet,
-                                            paymentMode: paymentModeLabel,
-                                            itemization: getPayslipItemization(worker.settlement?.itemization_payload),
-                                        })}
+                                        onClick={async () => {
+                                            if (!isPaid) return
+                                            try {
+                                                const { generateFixedPayslip } = await import('@/lib/generate-payslip')
+                                                generateFixedPayslip({
+                                                    factoryName,
+                                                    month: selectedMonth,
+                                                    workerName: worker.name,
+                                                    cycleStartDate: cycleBounds.cycle_start,
+                                                    cycleEndDate: cycleBounds.cycle_end,
+                                                    role: worker.role,
+                                                    monthlySalary: worker.monthly_salary,
+                                                    daysWorked: worker.daysWorked,
+                                                    earnedPay: worker.earnedPay,
+                                                    advanceDeducted: displayDeduction,
+                                                    remainingDebt: displayRemaining,
+                                                    netPay: displayNet,
+                                                    paymentMode: paymentModeLabel,
+                                                    itemization: getPayslipItemization(worker.settlement?.itemization_payload),
+                                                })
+                                            } catch {
+                                                toast.error('Failed to generate payslip PDF.')
+                                            }
+                                        }}
                                     >
                                         <Download className="h-3.5 w-3.5" />
                                         PDF Slip
