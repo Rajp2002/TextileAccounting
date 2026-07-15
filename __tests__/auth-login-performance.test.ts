@@ -30,14 +30,16 @@ describe('sign-in critical-path performance', () => {
         expect(proxy).toContain("return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })")
     })
 
-    it('overlaps browser cache cleanup with authentication before navigating', () => {
+    it('overlaps browser cache cleanup with authentication before a full document navigation', () => {
         const loginForm = read('app/(auth)/login/login-form.tsx')
 
         expect(loginForm).toContain('sessionCleanupRef.current = clearClientSessionState()')
         expect(loginForm).toContain('await Promise.all([')
         expect(loginForm).toContain('cleanupPromise,')
         expect(loginForm).toContain('signIn({ email: email.trim(), password, traceId })')
-        expect(loginForm).toContain('router.replace(result.redirectTo)')
+        expect(loginForm).toContain('window.location.replace(result.redirectTo)')
+        expect(loginForm).not.toContain("from 'next/navigation'")
+        expect(loginForm).not.toContain('router.replace(result.redirectTo)')
     })
 
     it('uses freshly minted JWT routing claims and avoids a second owner profile query', () => {
