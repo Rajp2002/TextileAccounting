@@ -2,10 +2,6 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react"
 import { en } from "./locales/en"
-import { hi } from "./locales/hi"
-import { gu } from "./locales/gu"
-import { legacyPhraseTranslations } from "./legacy"
-import { generatedLegacyPhraseTranslations } from "./legacy-generated"
 import { applyTranslationGuards, translateFallbackUiText } from "./runtime"
 
 export type Language = "en" | "hi" | "gu"
@@ -18,6 +14,11 @@ type LocalizedTextState = {
   applied: string
 }
 type ElementAttributeStates = Map<string, LocalizedTextState>
+type TranslationResources = {
+  translation: TranslationTree
+  legacy: Record<string, string>
+  generatedLegacy: Record<string, string>
+}
 
 interface I18nContextProps {
   language: Language
@@ -28,7 +29,6 @@ interface I18nContextProps {
 
 const I18nContext = createContext<I18nContextProps | undefined>(undefined)
 
-const translations: Record<Language, TranslationTree> = { en, hi, gu }
 const LANGUAGE_STORAGE_KEY = "weavly_language"
 const SUPPORTED_LANGUAGES: Language[] = ["en", "hi", "gu"]
 const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label", "aria-description", "alt"] as const
@@ -36,14 +36,35 @@ const SKIP_TEXT_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE
 const SKIP_TRANSLATION_SELECTOR = '[data-i18n-skip="true"]'
 const translationCache = new WeakMap<Map<string, string>, Map<string, string | undefined>>()
 const reverseTranslationCache = new WeakMap<Map<string, string>, Map<string, string>>()
+const resourcePromises = new Map<Exclude<Language, "en">, Promise<TranslationResources>>()
+
+function loadLanguageResources(language: Exclude<Language, "en">) {
+  const existing = resourcePromises.get(language)
+  if (existing) return existing
+
+  const localePromise = language === "hi" ? import("./locales/hi").then(({ hi }) => hi) : import("./locales/gu").then(({ gu }) => gu)
+  const resourcePromise = Promise.all([
+    localePromise,
+    import("./legacy").then(({ legacyPhraseTranslations }) => legacyPhraseTranslations[language]),
+    import("./legacy-generated").then(({ generatedLegacyPhraseTranslations }) => generatedLegacyPhraseTranslations[language]),
+  ])
+    .then(([translation, legacy, generatedLegacy]) => ({ translation, legacy, generatedLegacy }))
+    .catch((error) => {
+      resourcePromises.delete(language)
+      throw error
+    })
+
+  resourcePromises.set(language, resourcePromise)
+  return resourcePromise
+}
 
 function isLanguage(value: string | null): value is Language {
   return SUPPORTED_LANGUAGES.includes(value as Language)
 }
 
-function getNestedTranslation(language: Language, key: string) {
+function getNestedTranslation(translation: TranslationTree, key: string) {
   const keys = key.split(".")
-  let value: string | TranslationTree | undefined = translations[language]
+  let value: string | TranslationTree | undefined = translation
 
   for (const k of keys) {
     if (value && typeof value === "object" && k in value) {
@@ -65,7 +86,7 @@ function interpolate(template: string, values?: InterpolationValues) {
   })
 }
 
-function collectPhraseMap(language: Language) {
+function collectPhraseMap(language: Language, resources?: TranslationResources) {
   const phraseMap = new Map<string, string>()
 
   function visit(source: TranslationTree, target: TranslationTree) {
@@ -86,13 +107,13 @@ function collectPhraseMap(language: Language) {
     }
   }
 
-  visit(en, translations[language])
+  visit(en, resources?.translation ?? en)
 
-  if (language !== "en") {
-    Object.entries(generatedLegacyPhraseTranslations[language]).forEach(([source, target]) => {
+  if (language !== "en" && resources) {
+    Object.entries(resources.generatedLegacy).forEach(([source, target]) => {
       phraseMap.set(source, target)
     })
-    Object.entries(legacyPhraseTranslations[language]).forEach(([source, target]) => {
+    Object.entries(resources.legacy).forEach(([source, target]) => {
       phraseMap.set(source, target)
     })
   }
@@ -317,6 +338,30 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   // Client-side effect will update the language if stored
   const [language, setLanguageState] = useState<Language>("en")
   const [isMounted, setIsMounted] = useState(false)
+  const [resources, setResources] = useState<Partial<Record<Language, TranslationResources>>>({
+    en: { translation: en, legacy: {}, generatedLegacy: {} },
+  })
+  const requestedLanguage = useRef<Language>("en")
+
+  const activateLanguage = useCallback((lang: Language) => {
+    requestedLanguage.current = lang
+    setLanguageState(lang)
+
+    if (lang === "en") return
+
+    void loadLanguageResources(lang)
+      .then((loadedResources) => {
+        setResources((current) => current[lang]
+          ? current
+          : { ...current, [lang]: loadedResources })
+      })
+      .catch(() => {
+        if (requestedLanguage.current !== lang) return
+        requestedLanguage.current = "en"
+        setLanguageState("en")
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, "en")
+      })
+  }, [])
 
   useEffect(() => {
     let disposed = false
@@ -325,32 +370,33 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       setIsMounted(true)
       const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY)
       if (isLanguage(savedLang)) {
-        setLanguageState(savedLang)
+        activateLanguage(savedLang)
       }
     })
     return () => {
       disposed = true
     }
-  }, [])
+  }, [activateLanguage])
 
   const setLanguage = (lang: Language) => {
-    setLanguageState(lang)
     localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
+    activateLanguage(lang)
   }
 
-  const activeLang = isMounted ? language : "en"
-  const phraseMap = useMemo(() => collectPhraseMap(activeLang), [activeLang])
+  const activeLang = isMounted && resources[language] ? language : "en"
+  const activeResources = resources[activeLang]
+  const phraseMap = useMemo(() => collectPhraseMap(activeLang, activeResources), [activeLang, activeResources])
 
   useEffect(() => {
-    document.documentElement.lang = language
+    document.documentElement.lang = activeLang
     document.documentElement.dir = "ltr"
-  }, [language])
+  }, [activeLang])
 
   const t = useCallback((key: string, values?: InterpolationValues): string => {
     // During SSR or first render before mount, default to English so hydration text matches.
-    const value = getNestedTranslation(activeLang, key) ?? getNestedTranslation("en", key) ?? key
+    const value = getNestedTranslation(activeResources?.translation ?? en, key) ?? getNestedTranslation(en, key) ?? key
     return interpolate(value, values)
-  }, [activeLang])
+  }, [activeResources])
 
   const tx = useCallback((text: string, values?: InterpolationValues): string => {
     const value = translateSourceText(text, activeLang, phraseMap) ?? text

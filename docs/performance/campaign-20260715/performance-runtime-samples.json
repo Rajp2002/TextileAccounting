@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-15",
+  "environment": {
+    "branch": "codex/performance-campaign-20260715-upstream",
+    "server": "next start localhost:3200",
+    "network": "localhost-unthrottled",
+    "mobileViewport": "390x844",
+    "productionContacted": false
+  },
+  "method": {
+    "navigation": "browser URL commit; streamed readiness recorded separately",
+    "p95Caveat": "Critical routes use 20 local samples and nearest-rank p95; results are not deployed production percentiles"
+  },
+  "owner": {
+    "loginMs": [1163, 684, 791, 644, 682, 932, 847, 725, 728, 720, 732, 825, 727, 746, 739, 729, 626, 625, 730, 724],
+    "logoutMs": [949, 498, 441, 392, 464, 588, 490, 501, 399, 500, 499, 498, 498, 497, 498, 497, 500, 505, 600, 406],
+    "hardNavigationMs": {
+      "/owner/today": [517, 613, 349, 536, 437, 528, 356, 554, 427, 440, 462, 468, 406, 361, 375, 455, 386, 407, 504, 385],
+      "/owner/estimator": [418, 351, 470, 335, 366, 357, 499, 415, 422, 388, 448, 328, 397, 421, 396, 723, 410, 350, 402, 339],
+      "/owner/payroll": [300, 450, 413, 514, 405, 374, 477, 404, 404, 447, 543, 1183, 400, 403, 473, 365, 367, 402, 445, 615],
+      "/owner/orders": [378, 310, 377],
+      "/owner/stock": [426, 441, 386],
+      "/owner/analytics": [679, 441, 415]
+    },
+    "routeTransitionMs": {
+      "/owner/today": 65,
+      "/owner/estimator": 47,
+      "/owner/payroll": 240,
+      "/owner/orders": 44,
+      "/owner/stock": 66,
+      "/owner/analytics": 45
+    },
+    "additionalFirstObservedMs": {
+      "/owner/quotes": 2380,
+      "/owner/dispatches": 2007,
+      "/owner/commercials": 407,
+      "/owner/settings": 369,
+      "/owner/advances": 497,
+      "/owner/fixed-workers": 518,
+      "/owner/machines": 464,
+      "/owner/market-runs": 343,
+      "/owner/billing": 391,
+      "/owner/archive": 642
+    },
+    "coldRouteRepeatsMs": {
+      "/owner/quotes": [502, 418, 365],
+      "/owner/dispatches": [406, 426, 416]
+    }
+  },
+  "supervisor": {
+    "loginMs": [1215],
+    "hardNavigationMs": {
+      "/supervisor/dashboard": [459, 330, 353, 3393, 800, 853, 391, 355, 370, 387, 379, 394, 349, 377, 375, 414, 401, 367, 618, 376],
+      "/supervisor/workers": [294, 279, 286, 379, 366, 1432, 419, 353, 341, 349, 325, 348, 338, 351, 320, 349, 329, 357, 334, 320],
+      "/supervisor/attendance": [281, 321, 299, 354, 340, 344, 348, 343, 351, 314, 357, 332, 337, 468, 358, 371, 343, 433, 420, 367],
+      "/supervisor/machines": [288, 319, 234, 388, 496, 414, 328, 346, 356, 373, 336, 339, 366, 364, 356, 382, 366, 378, 353, 359]
+    },
+    "ownerRouteBoundaryRedirectMs": 548,
+    "ownerRouteBoundaryFinalUrl": "/supervisor/dashboard",
+    "mobile": {
+      "routeCommitMs": 382,
+      "timeToReadyDataMs": 1216
+    }
+  },
+  "authPhaseDiagnosticMs": {
+    "passwordAuth": 540.5,
+    "getUser": 36.1,
+    "profile": 286.5,
+    "tierLookup": 114.3,
+    "organization": 69.6
+  },
+  "bundle": {
+    "before": {
+      "/login": {"requests": 22, "rawBytes": 1173014, "gzipBytes": 349344},
+      "/owner/today": {"requests": 27, "rawBytes": 1269682, "gzipBytes": 375185},
+      "/owner/estimator": {"requests": 30, "rawBytes": 1407777, "gzipBytes": 413526},
+      "/owner/payroll": {"requests": 34, "rawBytes": 2026912, "gzipBytes": 604925},
+      "/supervisor/dashboard": {"requests": 30, "rawBytes": 1563639, "gzipBytes": 464094}
+    },
+    "after": {
+      "/login": {"requests": 22, "rawBytes": 602445, "gzipBytes": 198867},
+      "/owner/today": {"requests": 27, "rawBytes": 699123, "gzipBytes": 224770},
+      "/owner/estimator": {"requests": 30, "rawBytes": 837223, "gzipBytes": 263119},
+      "/owner/payroll": {"requests": 32, "rawBytes": 1049114, "gzipBytes": 324625},
+      "/supervisor/dashboard": {"requests": 30, "rawBytes": 993072, "gzipBytes": 313751}
+    }
+  }
+}
