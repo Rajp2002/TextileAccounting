@@ -6,14 +6,19 @@ import { normalizeProductionMode } from '@/lib/production-mode'
 import { createPerfTimer } from '@/lib/perf'
 import { getCachedOrgTier } from '@/lib/subscription'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
+import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const perf = createPerfTimer('/owner/* layout')
+    const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
 
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs.
     // requireRole() calls getCachedSession() internally — subsequent calls in
     // AccessGate and page server actions within this request are cache hits.
-    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 2)
+    const { profile } = await signInTelemetry.measure(
+        'auth_profile',
+        () => perf.measure('authSession', () => requireRole(['owner']), 2)
+    )
     const userOrgId = profile.org_id
     const userFullName = profile.full_name
 
@@ -23,23 +28,30 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     let productionMode = normalizeProductionMode(null)
 
     const supabase = await createClient()
-    const orgPromise = perf.measure(
-        'profileOrgTier',
-        () => supabase
-            .from('organizations')
-            .select('name, production_mode')
-            .eq('id', userOrgId)
-            .single(),
-        1
+    const orgPromise = signInTelemetry.measure(
+        'organization_query',
+        () => perf.measure(
+            'profileOrgTier',
+            () => supabase
+                .from('organizations')
+                .select('name, production_mode')
+                .eq('id', userOrgId)
+                .single(),
+            1
+        )
     )
     const [{ data: org }, subscriptionTier] = await Promise.all([
         orgPromise,
-        perf.measure('businessData', () => getCachedOrgTier(userOrgId), 1),
+        signInTelemetry.measure(
+            'tier_lookup',
+            () => perf.measure('businessData', () => getCachedOrgTier(userOrgId), 1)
+        ),
     ])
 
     if (org?.name) factoryName = org.name
     productionMode = normalizeProductionMode(org?.production_mode)
     perf.log()
+    signInTelemetry.log('success', { route: '/owner/*' })
 
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background">

@@ -1,8 +1,11 @@
 import { requireRole } from '@/lib/auth'
 import { BrandBackground } from '@/components/brand-background'
+import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    await requireRole(['admin'])
+    const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
+    await signInTelemetry.measure('auth_profile', () => requireRole(['admin']))
+    signInTelemetry.log('success', { route: '/admin' })
 
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background text-foreground">

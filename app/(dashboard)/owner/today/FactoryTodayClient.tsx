@@ -166,6 +166,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
     return (
         <div className="min-w-0 space-y-6">
+            <span hidden data-signin-ready="true" />
             {/* Page Header */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start justify-between gap-3">

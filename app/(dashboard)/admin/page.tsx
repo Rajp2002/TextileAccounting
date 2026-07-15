@@ -9,6 +9,7 @@ import {
     getBreachReports
 } from '@/lib/actions/compliance'
 import { AdminDashboardUI } from './admin-ui'
+import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 
 export const metadata: Metadata = {
     title: 'Compliance Dashboard — Admin',
@@ -20,15 +21,16 @@ type FactoryDpaStatusSummary = {
 }
 
 export default async function AdminDashboardPage() {
+    const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_data')
     const [
-        grievances, 
-        notices, 
-        exportLogs, 
+        grievances,
+        notices,
+        exportLogs,
         settings,
         dpaTemplates,
         factoryDpaStatus,
         breachReports
-    ] = await Promise.all([
+    ] = await signInTelemetry.measure('dashboard_queries', () => Promise.all([
         getGrievances(),
         getNoticeRegistry(),
         getExportLogs(),
@@ -36,11 +38,13 @@ export default async function AdminDashboardPage() {
         getDpaTemplates(),
         getFactoryDpaStatus(),
         getBreachReports()
-    ])
+    ]))
     const hasLockedFactory = (factoryDpaStatus as FactoryDpaStatusSummary[]).some((f) => f.is_locked_down)
+    signInTelemetry.log('success', { route: '/admin' })
 
     return (
         <div className="p-6 lg:p-10 space-y-8">
+            <span hidden data-signin-ready="true" />
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
