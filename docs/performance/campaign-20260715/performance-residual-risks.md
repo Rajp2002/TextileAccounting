@@ -12,7 +12,7 @@ Recommended next action: collect at least 20 cold/warm QA samples with request w
 
 ### Factory Today and payroll data paths
 
-Current local samples are acceptable (Factory Today p50 517 ms; payroll p50 413 ms), but historical evidence shows meaningful Supabase read fan-out. Production-scale query plans and adequate p95 samples were unavailable, so no index, RPC, or caching change was made.
+Current 20-sample local distributions are acceptable (Factory Today p50/p95 437/554 ms; payroll 405/615 ms), but historical evidence shows meaningful Supabase read fan-out. Production-scale query plans were unavailable, so no index, RPC, or caching change was made.
 
 Recommended next action: enable sampled `WEAVLY_PERF_LOGS` in QA, capture at least 20 representative samples, map reads to query shapes, and run safe plan analysis only for confirmed slow queries. Payroll results must be financially reconciled before and after any database change.
 
@@ -32,7 +32,7 @@ The initial English path is much smaller, but first Hindi or Gujarati selection 
 
 ### Statistical and production observability gap
 
-Three-to-five local repeats do not establish a stable p95. Localhost also excludes deployed cold starts, regional Supabase latency, production-scale data, and user hardware. Core Web Vitals, network request counts, and main-thread long tasks remain unmeasured in a representative deployed environment.
+Twenty-sample local p95s now cover auth, Factory Today, estimator, payroll, and the four supervisor routes. Localhost still excludes deployed cold starts, regional Supabase latency, production-scale data, and user hardware. Core Web Vitals, network request counts, and main-thread long tasks remain unmeasured in a representative deployed environment.
 
 ## Deliberately deferred high-risk work
 
@@ -46,7 +46,7 @@ Three-to-five local repeats do not establish a stable p95. Localhost also exclud
 
 - No representative CPU/network throttling in the browser harness.
 - No production-scale QA data or current SQL-plan access for slow shapes.
-- No stable statistical p95 or production Core Web Vitals.
+- No deployed production p95 or production Core Web Vitals; smaller secondary-route samples remain directional.
 - Production was not contacted.
 - The original worktree contained unrelated user changes. A clean linked worktree based on current upstream was used so those files remained untouched.
 

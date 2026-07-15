@@ -10,15 +10,15 @@
   },
   "method": {
     "navigation": "browser URL commit; streamed readiness recorded separately",
-    "p95Caveat": "Three-to-five samples; observed nearest-rank maximum, not a stable production percentile"
+    "p95Caveat": "Critical routes use 20 local samples and nearest-rank p95; results are not deployed production percentiles"
   },
   "owner": {
-    "loginMs": [1163, 684, 791, 644, 682],
-    "logoutMs": [949, 498, 441, 392, 464],
+    "loginMs": [1163, 684, 791, 644, 682, 932, 847, 725, 728, 720, 732, 825, 727, 746, 739, 729, 626, 625, 730, 724],
+    "logoutMs": [949, 498, 441, 392, 464, 588, 490, 501, 399, 500, 499, 498, 498, 497, 498, 497, 500, 505, 600, 406],
     "hardNavigationMs": {
-      "/owner/today": [517, 613, 349, 536, 437],
-      "/owner/estimator": [418, 351, 470],
-      "/owner/payroll": [300, 450, 413],
+      "/owner/today": [517, 613, 349, 536, 437, 528, 356, 554, 427, 440, 462, 468, 406, 361, 375, 455, 386, 407, 504, 385],
+      "/owner/estimator": [418, 351, 470, 335, 366, 357, 499, 415, 422, 388, 448, 328, 397, 421, 396, 723, 410, 350, 402, 339],
+      "/owner/payroll": [300, 450, 413, 514, 405, 374, 477, 404, 404, 447, 543, 1183, 400, 403, 473, 365, 367, 402, 445, 615],
       "/owner/orders": [378, 310, 377],
       "/owner/stock": [426, 441, 386],
       "/owner/analytics": [679, 441, 415]
@@ -51,10 +51,10 @@
   "supervisor": {
     "loginMs": [1215],
     "hardNavigationMs": {
-      "/supervisor/dashboard": [459, 330, 353],
-      "/supervisor/workers": [294, 279, 286],
-      "/supervisor/attendance": [281, 321, 299],
-      "/supervisor/machines": [288, 319, 234]
+      "/supervisor/dashboard": [459, 330, 353, 3393, 800, 853, 391, 355, 370, 387, 379, 394, 349, 377, 375, 414, 401, 367, 618, 376],
+      "/supervisor/workers": [294, 279, 286, 379, 366, 1432, 419, 353, 341, 349, 325, 348, 338, 351, 320, 349, 329, 357, 334, 320],
+      "/supervisor/attendance": [281, 321, 299, 354, 340, 344, 348, 343, 351, 314, 357, 332, 337, 468, 358, 371, 343, 433, 420, 367],
+      "/supervisor/machines": [288, 319, 234, 388, 496, 414, 328, 346, 356, 373, 336, 339, 366, 364, 356, 382, 366, 378, 353, 359]
     },
     "ownerRouteBoundaryRedirectMs": 548,
     "ownerRouteBoundaryFinalUrl": "/supervisor/dashboard",

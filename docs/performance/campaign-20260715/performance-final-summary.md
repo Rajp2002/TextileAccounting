@@ -2,7 +2,7 @@
 
 ## Campaign status
 
-**Partially complete.** The highest-confidence application-controlled bundle bottlenecks were fixed and verified on the current upstream code, and authenticated owner/supervisor desktop and mobile workflows now have production-build runtime evidence. Stable production p95, Core Web Vitals, request waterfalls, SQL plans, and a non-mutating payroll-export fixture remain outside the available environment.
+**Partially complete.** The highest-confidence application-controlled bundle bottlenecks were fixed and verified on the current upstream code, and authenticated owner/supervisor desktop and mobile workflows now have production-build runtime evidence, including 20-sample local p50/p95 distributions for critical routes. Deployed production p95, Core Web Vitals, request waterfalls, SQL plans, and a non-mutating payroll-export fixture remain outside the available environment.
 
 - Branch: `codex/performance-campaign-20260715-upstream`
 - Code commit: `ae65791` (`perf: defer language and payroll export bundles`)
@@ -47,10 +47,12 @@
 - Median per-route initial gzip reduction: **40.1%**.
 - Five-scenario aggregate: 3,260,047 raw and 881,942 gzip bytes removed from summed route graphs.
 - Largest route result: payroll, 280,300 gzip bytes and two initial JavaScript requests removed.
-- Owner login: p50 684 ms; observed five-sample maximum 1,163 ms.
-- Factory Today: p50 517 ms; observed five-sample maximum 613 ms.
+- Owner login: p50 728 ms; p95 932 ms; maximum 1,163 ms over 20 samples.
+- Factory Today: p50 437 ms; p95 554 ms over 20 samples.
+- Estimator: p50 397 ms; p95 499 ms over 20 samples.
+- Payroll: p50 405 ms; p95 615 ms; maximum 1,183 ms over 20 samples.
 - Owner route transitions: median 56 ms; maximum 240 ms across six sections.
-- Supervisor dashboard: p50 353 ms; observed three-sample maximum 459 ms.
+- Supervisor dashboard: p50 379 ms; p95 853 ms; 3,393 ms first post-restart cold outlier over 20 samples.
 - Mobile supervisor: 382 ms route commit and 1,216 ms to ready data at 390×844.
 - Database-query improvement: none claimed; campaign code changed no queries or schema.
 - Core Web Vitals: unavailable in the local harness.
@@ -70,7 +72,7 @@
 ## Remaining issues
 
 1. Cold quotations and dispatches: first observed commits were 2.38 s and 2.01 s, versus 0.36–0.50 s warm. Impact: noticeable first-visit delay. Next action: 20-sample cold/warm server/network trace. Closure evidence: p50/p95 plus request/query attribution and reconciliation.
-2. Production-scale server/database behavior: historical read fan-out remains, though local Factory Today/payroll samples were below 0.7 s. Impact: latency may rise with real region/data scale. Next action: sampled QA server timing and safe plans for confirmed slow shapes. Closure evidence: 20+ samples, plans, and tenant/financial regression checks.
+2. Production-scale server/database behavior: historical read fan-out remains, though local Factory Today/payroll p95s were 554/615 ms. Impact: latency may rise with real region/data scale. Next action: sampled deployed server timing and safe plans for confirmed slow shapes. Closure evidence: production-scale samples, plans, and tenant/financial regression checks.
 3. Payroll PDF first-click latency: no paid QA settlement existed. Impact: deferred chunk delay is unmeasured. Next action: disposable paid-settlement fixture. Closure evidence: first/warm download timings and identical document values.
 4. Deployed mobile/Core Web Vitals: CPU/network throttling and production RUM were unavailable. Impact: low-powered-device long tasks may remain hidden. Next action: deployed mobile traces and privacy-safe RUM. Closure evidence: LCP, INP, CLS, requests, and long tasks.
 

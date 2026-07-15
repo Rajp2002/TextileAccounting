@@ -48,10 +48,12 @@ Across the five scenarios, 3,260,047 raw bytes and 881,942 gzip bytes were remov
 
 There was no clean authenticated pre-change runtime capture for these code-only bundle changes, so runtime numbers are reported as final guardrails rather than false before/after attribution:
 
-- Owner login p50 684 ms; observed max 1,163 ms over five samples.
-- Factory Today p50 517 ms; observed max 613 ms over five samples.
+- Owner login p50/p95 728/932 ms over 20 samples; maximum 1,163 ms.
+- Factory Today p50/p95 437/554 ms over 20 samples.
+- Estimator p50/p95 397/499 ms over 20 samples.
+- Payroll p50/p95 405/615 ms over 20 samples; one 1,183 ms outlier remained visible.
 - Owner route-transition median 56 ms; maximum 240 ms across six sections.
-- Supervisor dashboard p50 353 ms; observed max 459 ms over three samples.
+- Supervisor dashboard p50/p95 379/853 ms over 20 samples; the first post-restart sample was a 3,393 ms cold outlier.
 - Mobile supervisor route commit 382 ms; ready data 1,216 ms at 390×844.
 - Role boundary redirect 548 ms with no owner data exposed.
 

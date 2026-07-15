@@ -59,22 +59,22 @@ Initial client JavaScript is the unique set of `.js` chunks referenced by each r
 
 ## Final authenticated runtime baseline
 
-These are application-local production-build samples, not internet or production-region measurements. With only three to five repeats, “p95” below is the nearest-rank observed maximum, not a stable production percentile.
+These are application-local production-build samples, not internet or production-region measurements. Critical auth, Factory Today, estimator, payroll, and supervisor routes use 20 sequential read-only QA samples; p95 is the nearest-rank value.
 
-| Workflow | Samples (ms) | p50 (ms) | Observed max / p95 (ms) |
-| --- | --- | ---: | ---: |
-| Owner login | 1163, 684, 791, 644, 682 | 684 | 1163 |
-| Owner logout | 949, 498, 441, 392, 464 | 464 | 949 |
-| Factory Today | 517, 613, 349, 536, 437 | 517 | 613 |
-| Estimator | 418, 351, 470 | 418 | 470 |
-| Payroll | 300, 450, 413 | 413 | 450 |
-| Orders | 378, 310, 377 | 377 | 378 |
-| Stock | 426, 441, 386 | 426 | 441 |
-| Analytics | 679, 441, 415 | 441 | 679 |
-| Supervisor dashboard | 459, 330, 353 | 353 | 459 |
-| Supervisor workers | 294, 279, 286 | 286 | 294 |
-| Supervisor attendance | 281, 321, 299 | 299 | 321 |
-| Supervisor machines | 288, 319, 234 | 288 | 319 |
+| Workflow | N | Range (ms) | p50 (ms) | p95 (ms) | Max (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Owner login | 20 | 625–1163 | 728 | 932 | 1163 |
+| Owner logout | 20 | 392–949 | 498 | 600 | 949 |
+| Factory Today | 20 | 349–613 | 437 | 554 | 613 |
+| Estimator | 20 | 328–723 | 397 | 499 | 723 |
+| Payroll | 20 | 300–1183 | 405 | 615 | 1183 |
+| Orders | 3 | 310–378 | 377 | 378 | 378 |
+| Stock | 3 | 386–441 | 426 | 441 | 441 |
+| Analytics | 3 | 415–679 | 441 | 679 | 679 |
+| Supervisor dashboard | 20 | 330–3393 | 379 | 853 | 3393 |
+| Supervisor workers | 20 | 279–1432 | 341 | 419 | 1432 |
+| Supervisor attendance | 20 | 281–468 | 344 | 433 | 468 |
+| Supervisor machines | 20 | 234–496 | 356 | 414 | 496 |
 
 Owner client-side URL-commit transitions were 65 ms (Today), 47 ms (Estimator), 240 ms (Payroll), 44 ms (Orders), 66 ms (Stock), and 45 ms (Analytics): median 56 ms, maximum 240 ms.
 
@@ -99,7 +99,7 @@ These historical numbers were produced by earlier campaigns and are not attribut
 
 - Localhost timing excludes internet latency, Supabase region distance, deployed cold starts, production-scale row counts, and lower-powered CPU scheduling.
 - The browser harness did not expose reliable request-count waterfalls, Core Web Vitals, CPU throttling, or network throttling for authenticated runs.
-- Three-to-five samples are insufficient for a statistically stable p95.
+- Twenty-sample local p95s are repeatable QA guardrails, but they are not production p95s; orders, stock, analytics, supervisor login, and cold-route observations still have fewer samples.
 - No slow SQL shape was confirmed in this campaign, so no speculative index/RPC change or QA `EXPLAIN ANALYZE` was performed.
 - Payroll PDF click could not be exercised without marking a real QA payroll settlement paid. The bundle boundary, emitted deferred chunk, types, build, and generator/read-model tests were verified instead.
 - No production data, migration, mutation, account, or environment was changed.
