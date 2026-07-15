@@ -11,6 +11,13 @@
 
 -- ── 1. organizations: add missing columns ────────────────────────────────────
 
+-- Some early environments added join_code manually before migration history
+-- was established. Fresh migration replays must create the deployed column
+-- shape before the expiry backfill and uniqueness constraint reference it.
+ALTER TABLE organizations
+  ADD COLUMN IF NOT EXISTS join_code TEXT
+  DEFAULT upper(substr(md5(random()::text), 1, 5));
+
 ALTER TABLE organizations
   ADD COLUMN IF NOT EXISTS join_code_expires_at TIMESTAMPTZ;
 
