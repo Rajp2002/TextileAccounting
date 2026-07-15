@@ -20,6 +20,7 @@ import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchem
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 import { getOrgTier } from '@/lib/subscription'
 import { checkJoinCodeRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
+import { createSignInServerTimer, persistSignInTraceCookie } from '@/lib/sign-in-telemetry.server'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -392,23 +393,37 @@ export async function joinOrganization(input: {
  * client performs the navigation only after its user-scoped offline cache has
  * also been cleared.
  */
-export async function signIn(input: { email: string; password: string }) {
-    const parsed = safeParse(SignInSchema, input)
-    if ('error' in parsed) return { error: parsed.error }
+export async function signIn(input: { email: string; password: string; traceId?: string }) {
+    const telemetry = createSignInServerTimer('sign_in_server_action', input.traceId)
+    const fail = (error: string, outcome: string) => {
+        telemetry.log(outcome)
+        return { error }
+    }
+    const succeed = async (redirectTo: string) => {
+        await persistSignInTraceCookie(input.traceId)
+        telemetry.log('success', { destination: redirectTo })
+        return { redirectTo }
+    }
 
-    const supabase = await createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: parsed.data.email,
-        password: parsed.data.password,
-    })
+    const parsed = safeParse(SignInSchema, input)
+    if ('error' in parsed) return fail(parsed.error, 'invalid_input')
+
+    const supabase = await telemetry.measure('create_client', () => createClient())
+    const { data, error } = await telemetry.measure(
+        'password_auth',
+        () => supabase.auth.signInWithPassword({
+            email: parsed.data.email,
+            password: parsed.data.password,
+        })
+    )
 
     if (error) {
         // NEVER distinguish between wrong email vs wrong password — user enumeration attack vector
-        return { error: 'Incorrect email or password.' }
+        return fail('Incorrect email or password.', 'invalid_credentials')
     }
 
     if (!data.session) {
-        return { error: 'Session error. Please try again.' }
+        return fail('Session error. Please try again.', 'missing_session')
     }
 
     // Read the freshly minted access token first. Unlike the user object's raw
@@ -420,7 +435,10 @@ export async function signIn(input: { email: string; password: string }) {
 
     const needsOrganization = userRole === 'owner' || userRole === 'supervisor'
     if (!userRole || (needsOrganization && !orgId)) {
-        const { data: refreshed } = await supabase.auth.refreshSession()
+        const { data: refreshed } = await telemetry.measure(
+            'claims_refresh',
+            () => supabase.auth.refreshSession()
+        )
         if (refreshed.session) {
             jwt = parseJWT(refreshed.session.access_token)
             userRole = jwt.user_role ?? refreshed.session.user.app_metadata?.role
@@ -434,13 +452,15 @@ export async function signIn(input: { email: string; password: string }) {
     // fast enough (PWA cold-open, network lag, or hook race condition).
     // Mirror the pattern used in getOnboardingStatus() — query DB directly.
     if (!userRole || ((userRole === 'owner' || userRole === 'supervisor') && !orgId)) {
-        const admin = createAdminClient()
-        // Use a single join query to fetch both profile role and org onboarding status
-        const { data: profile } = await admin
-            .from('profiles')
-            .select('role, org_id, organizations(onboarding_complete)')
-            .eq('id', data.session.user.id)
-            .maybeSingle()
+        const { data: profile } = await telemetry.measure('profile_fallback', async () => {
+            const admin = createAdminClient()
+            // Use a single join query to fetch both profile role and org onboarding status
+            return admin
+                .from('profiles')
+                .select('role, org_id, organizations(onboarding_complete)')
+                .eq('id', data.session.user.id)
+                .maybeSingle()
+        })
 
         if (profile?.role) {
             userRole = profile.role
@@ -454,23 +474,23 @@ export async function signIn(input: { email: string; password: string }) {
 
     if (userRole === 'owner') {
         if (!orgId) {
-            return { error: 'Account setup incomplete. Please contact support.' }
+            return fail('Account setup incomplete. Please contact support.', 'missing_organization')
         }
 
-        const tier = await getOrgTier(orgId)
-        if (tier === 'base') return { redirectTo: '/owner/estimator' }
-        if (tier === 'none') return { redirectTo: '/owner/billing' }
+        const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
+        if (tier === 'base') return succeed('/owner/estimator')
+        if (tier === 'none') return succeed('/owner/billing')
         if (!onboardingComplete) {
-            return { redirectTo: '/onboarding' }
+            return succeed('/onboarding')
         }
-        return { redirectTo: '/owner/today' }
+        return succeed('/owner/today')
     } else if (userRole === 'supervisor') {
-        return { redirectTo: '/supervisor/dashboard' }
+        return succeed('/supervisor/dashboard')
     } else if (userRole === 'admin') {
-        return { redirectTo: '/admin' }
+        return succeed('/admin')
     } else {
         // Role still absent after DB fallback — profile genuinely missing
-        return { error: 'Account setup incomplete. Please contact support.' }
+        return fail('Account setup incomplete. Please contact support.', 'missing_role')
     }
 }
 

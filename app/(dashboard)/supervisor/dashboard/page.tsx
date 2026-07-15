@@ -1306,6 +1306,7 @@ export default function UnifiedDashboard() {
             onTouchEnd={handleTouchEnd}
             className="flex min-h-[90vh] select-none flex-col pb-32"
         >
+            {!loading && <span hidden data-signin-ready="true" />}
             {/* Pull to Refresh Indicator */}
             <div
                 className="ptr-indicator overflow-hidden transition-[height] duration-200"

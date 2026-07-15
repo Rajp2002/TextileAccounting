@@ -12,6 +12,14 @@ import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
 import LoadingModal from '@/components/auth/loading-modal'
 import { clearClientSessionState } from '@/lib/client-storage-cleanup'
+import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
+
+function createTraceId() {
+    if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+
+    const bytes = crypto.getRandomValues(new Uint8Array(16))
+    return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
+}
 
 export default function LoginForm() {
     const router = useRouter()
@@ -39,15 +47,27 @@ export default function LoginForm() {
         e.preventDefault()
         setLoading(true)
 
+        const traceId = createTraceId()
+        const clickStartedAt = Date.now()
+        const authStartedAt = performance.now()
+        const cleanupWaitStartedAt = performance.now()
+        let authRoundTripMs = 0
+        let cleanupWaitMs = 0
+
         try {
             // These operations are independent: cache cleanup touches only
             // browser storage while signIn writes the server-side auth cookies.
             // Waiting for both keeps cross-user cache isolation without adding
             // cleanup time in front of the network request.
-            const cleanupPromise = sessionCleanupRef.current ?? clearClientSessionState()
+            const cleanupPromise = (sessionCleanupRef.current ?? clearClientSessionState()).finally(() => {
+                cleanupWaitMs = performance.now() - cleanupWaitStartedAt
+            })
+            const signInPromise = signIn({ email: email.trim(), password, traceId }).finally(() => {
+                authRoundTripMs = performance.now() - authStartedAt
+            })
             const [, result] = await Promise.all([
                 cleanupPromise,
-                signIn({ email: email.trim(), password }),
+                signInPromise,
             ])
 
             if (result && 'error' in result) {
@@ -57,6 +77,18 @@ export default function LoginForm() {
             }
 
             setIsRedirecting(true)
+            try {
+                window.sessionStorage.setItem(SIGN_IN_TRACE_STORAGE_KEY, JSON.stringify({
+                    traceId,
+                    destination: result.redirectTo,
+                    clickStartedAt,
+                    actionCompletedAt: Date.now(),
+                    authRoundTripMs,
+                    cleanupWaitMs,
+                }))
+            } catch {
+                // Telemetry must never delay or block navigation.
+            }
             router.replace(result.redirectTo)
         } catch {
             toast.error('Something went wrong. Please try again.')

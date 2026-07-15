@@ -46,6 +46,7 @@ export const metadata: Metadata = {
 
 import Providers from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
+import { SignInTimingReporter } from "@/components/telemetry/sign-in-timing-reporter"
 
 export default function RootLayout({
   children,
@@ -71,6 +72,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+        <SignInTimingReporter />
         <Toaster />
       </body>
     </html>

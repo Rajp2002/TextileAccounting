@@ -27,6 +27,7 @@ import {
     type LoomLifecycleProtectionInput,
 } from '@/lib/master-data-loom-guardrails'
 import { normalizeMachineType, type OperatorPayMode, type OperatorWorkerType } from '@/lib/machine-operator-payroll'
+import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 
 type ShiftType = 'day' | 'night'
 
@@ -904,11 +905,15 @@ export async function requestAccessCode() {
  * Returns machines, active production targets, active workers, and any existing assignments.
  */
 export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_data')
+    const { profile } = await signInTelemetry.measure(
+        'auth_profile',
+        () => requireRole(['owner', 'supervisor'])
+    )
     const orgId = profile.org_id
     const supabase = await createServerClient()
 
-    const [machinesRes, ordersRes, workersRes, fixedWorkersRes, assignmentsRes, operatorAssignmentsRes, standingAssignmentsRes] = await Promise.all([
+    const [machinesRes, ordersRes, workersRes, fixedWorkersRes, assignmentsRes, operatorAssignmentsRes, standingAssignmentsRes] = await signInTelemetry.measure('setup_queries', () => Promise.all([
         supabase
             .from('machines')
             .select('id, name, status, machine_status, default_rate_per_m, current_order_id, loom_type')
@@ -949,7 +954,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .from('machine_assignments')
             .select('machine_id, worker_id, shift')
             .eq('org_id', orgId)
-    ])
+    ]))
 
     const activeOrderIds = new Set((ordersRes.data ?? []).map((order) => order.id))
     const activeWorkerIds = new Set((workersRes.data ?? []).map((worker) => worker.id))
@@ -1067,7 +1072,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         }]
     })
 
-    const [currentLogsRes, orderProductionRes] = await Promise.all([
+    const [currentLogsRes, orderProductionRes] = await signInTelemetry.measure('production_queries', () => Promise.all([
         machineIds.length === 0
             ? Promise.resolve({ data: [] as ProductionLogRow[] })
             : supabase
@@ -1084,7 +1089,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                   .select('order_id, meters')
                   .eq('org_id', orgId)
                   .in('order_id', orderIds),
-    ])
+    ]))
 
     const producedMetersByOrderId = new Map<string, number>()
     for (const row of orderProductionRes.data ?? []) {
@@ -1095,7 +1100,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         )
     }
 
-    return {
+    const result = {
         machines: eligibleMachines,
         orders: (ordersRes.data ?? []).map((order) => ({
             ...order,
@@ -1111,6 +1116,8 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         existingLogs: currentLogsRes.data ?? [],
         latestSubmittedAt: getLatestSubmittedAt((currentLogsRes.data ?? []) as Array<{ submitted_at: string | null }>),
     }
+    signInTelemetry.log('success', { route: '/supervisor/dashboard' })
+    return result
 }
 
 /**

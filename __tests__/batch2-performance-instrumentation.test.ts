@@ -37,7 +37,7 @@ describe('Batch 2 — server route instrumentation', () => {
         const layout = read('app/(dashboard)/owner/layout.tsx')
         expect(layout).toContain("createPerfTimer('/owner/* layout')")
         expect(layout).toContain("perf.measure('authSession'")
-        expect(layout).toContain("perf.measure(\n        'profileOrgTier'")
+        expect(layout).toMatch(/perf\.measure\(\s*'profileOrgTier'/)
     })
 
     it('measures AccessGate tier loading with route labels', () => {

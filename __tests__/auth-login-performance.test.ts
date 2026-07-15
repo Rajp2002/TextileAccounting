@@ -36,7 +36,7 @@ describe('sign-in critical-path performance', () => {
         expect(loginForm).toContain('sessionCleanupRef.current = clearClientSessionState()')
         expect(loginForm).toContain('await Promise.all([')
         expect(loginForm).toContain('cleanupPromise,')
-        expect(loginForm).toContain('signIn({ email: email.trim(), password })')
+        expect(loginForm).toContain('signIn({ email: email.trim(), password, traceId })')
         expect(loginForm).toContain('router.replace(result.redirectTo)')
     })
 
@@ -51,6 +51,6 @@ describe('sign-in critical-path performance', () => {
         expect(signInBody).toContain('parseJWT(data.session.access_token)')
         expect(signInBody).toContain('orgId = profile.org_id ?? undefined')
         expect(ownerBranch).not.toContain(".from('profiles')")
-        expect(ownerBranch).toContain("return { redirectTo: '/owner/today' }")
+        expect(ownerBranch).toContain("return succeed('/owner/today')")
     })
 })

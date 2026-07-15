@@ -9,6 +9,7 @@ import { formatToSurat, getSuratTodayString } from '@/lib/time'
 import { formatDateOnly } from '@/lib/format'
 import { calculatePieceRateGrossWages } from '@/lib/payroll-read-models'
 import { createPerfTimer, isPerfLoggingEnabled } from '@/lib/perf'
+import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { hasLinkedActiveProductionTarget, hasUsablePayrollConfig, type FactoryTodayMachineSetupRow } from '@/lib/factory-today-checklist'
 import { hasAnyShiftLoomAssignment } from '@/lib/production-worker-assignment-policy'
 
@@ -861,9 +862,17 @@ async function loadFactoryTodayChecklistPayload(
 
 export async function getFactoryToday(): Promise<FactoryTodayData> {
     const perf = createPerfTimer('/owner/today')
-    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
-    const result = await loadFactoryTodayDashboardPayload(profile.org_id, perf)
+    const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_data')
+    const { profile } = await signInTelemetry.measure(
+        'auth_profile',
+        () => perf.measure('authSession', () => requireRole(['owner']), 0)
+    )
+    const result = await signInTelemetry.measure(
+        'dashboard_queries',
+        () => loadFactoryTodayDashboardPayload(profile.org_id, perf)
+    )
     perf.log({ note: 'business includes 10-query first-render dashboard plus payroll cycle log query; setup checklist deferred' })
+    signInTelemetry.log('success', { route: '/owner/today' })
     return result
 }
 

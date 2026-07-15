@@ -3,12 +3,17 @@ import { SupervisorSidebar } from '@/components/navigation/supervisor-nav'
 import { requireRole } from '@/lib/auth'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { BrandBackground } from '@/components/brand-background'
+import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
+    const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs.
     // requireRole() uses getCachedSession() internally — subsequent calls in
     // page server actions within this request will be cache hits.
-    const { profile } = await requireRole(['supervisor', 'owner'])
+    const { profile } = await signInTelemetry.measure(
+        'auth_profile',
+        () => requireRole(['supervisor', 'owner'])
+    )
     const userOrgId = profile.org_id
     const userFullName = profile.full_name
 
@@ -16,12 +21,16 @@ export default async function SupervisorLayout({ children }: { children: React.R
     // requireRole() guarantees org_id is set, so no null guard needed.
     let factoryName = 'Weavly'
     const supabase = await createClient()
-    const { data: org } = await supabase
-        .from('organizations')
-        .select('name')
-        .eq('id', userOrgId)
-        .single()
+    const { data: org } = await signInTelemetry.measure(
+        'organization_query',
+        () => supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', userOrgId)
+            .single()
+    )
     if (org?.name) factoryName = org.name
+    signInTelemetry.log('success', { route: '/supervisor/*' })
 
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background">
