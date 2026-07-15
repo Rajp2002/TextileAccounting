@@ -2101,3 +2101,12 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Next action: fetch/rebase if `origin/main` advances, push the branch, open a ready PR, require the exact Vercel preview to pass, merge without discarding evidence commits, wait for the exact production deployment, and repeat owner/supervisor role and supervisor-ready-state smoke. Promote the supervisor item only if the deployed helper exits loading and the active route remains tenant-correct.
 - Blockers: no source, migration, or static-gate blocker. Exact deployed after timing is intentionally pending the merged web deployment.
 - Matrix/readiness: unchanged; no formal row promotion or pilot-count change is claimed.
+
+### Release closed on production
+
+- State: `pass` for the scoped performance release verification; no formal test-matrix row was promoted.
+- Source: PR `#18`, merge commit `9c0a4c2`; Vercel deployment `dpl_2dhb5j87YkJQCZ1pVe54Gtrda4nY` is Ready on the canonical production alias.
+- Supervisor after evidence: five of five hard reloads reached ready state, no loading text remained, range 5,024–6,543 ms, p50 5,450 ms, nearest-rank p95 6,543 ms. Against the greater-than-15-second censored baseline, deployed p95 improved by at least 56.4%.
+- Owner/role evidence: six owner workflow routes plus Factory Today rendered read-only; supervisor owner-route access redirected without exposing owner content.
+- Database: 212 migrations aligned through `20260715113013`, no pending dry-run migration, six protected views use invoker security, and no production business row changed.
+- Remaining work: deployed Core Web Vitals/waterfalls, cold quotation/dispatch attribution, payroll export click fixture, and the six separately documented legacy stored-function audits. None blocks this scoped release closeout or changes formal pilot-gate counts.

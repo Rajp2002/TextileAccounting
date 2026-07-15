@@ -12,7 +12,7 @@
 - Authentication: protected isolated owner and supervisor QA accounts
 - Network: localhost, unthrottled. Emitted gzip chunk size is used as a deterministic transfer proxy.
 - Mobile viewport: 390×844. Representative CPU and network throttling were unavailable.
-- Production: authenticated read-only route smoke against `https://textile-accounting.vercel.app`; migration-history metadata reconciled and `20260715113013_harden_summary_views_security_invoker.sql` applied without business-row changes
+- Production: deployment `dpl_2dhb5j87YkJQCZ1pVe54Gtrda4nY` for merge commit `9c0a4c2`; authenticated read-only route smoke against `https://textile-accounting.vercel.app`; migration-history metadata reconciled and `20260715113013_harden_summary_views_security_invoker.sql` applied without business-row changes
 
 The before and after production builds used the same route-manifest parser, chunk deduplication, gzip method, and build command. Authenticated timing samples use URL commit for navigation; streamed data readiness is called out separately where measured.
 

@@ -2,16 +2,16 @@
 
 ## Campaign status
 
-**Partially complete.** The highest-confidence application-controlled bundle bottlenecks were fixed and verified on the current upstream code, and authenticated owner/supervisor desktop and mobile workflows now have production-build runtime evidence, including 20-sample local p50/p95 distributions for critical routes. Deployed production p95, Core Web Vitals, request waterfalls, SQL plans, and a non-mutating payroll-export fixture remain outside the available environment.
+**Partially complete.** The highest-confidence application-controlled bundle bottlenecks and the production-blocking supervisor loading defect were fixed and verified on the current upstream code. Authenticated owner/supervisor workflows have production-build runtime evidence, including 20-sample local distributions for critical routes and a five-sample deployed after distribution for the loading fix. Broader deployed p95, Core Web Vitals, request waterfalls, SQL plans, and a non-mutating payroll-export fixture remain outside the available environment.
 
 - Branch: `codex/performance-campaign-20260715-upstream`
 - Code commit: `8d4d767` (`perf: defer language and payroll export bundles`)
 - Release-hardening commits: `341f151` (migration/view security) and `6626cfa` (supervisor loading)
 - Evidence commits: `2a269f6`, `92d7d9d`, `a7b6776`, and the final closeout commit
 - Upstream auth head included: `f8a47d7`
-- Pushed: no
+- Pushed: yes; PR #18 merged into `main` at `9c0a4c2`
 - Environment: clean local production build/server, protected isolated owner/supervisor QA accounts, desktop and 390×844 browser viewports
-- Production impact before web merge: migration history aligned and metadata-only view hardening applied; no production business-row mutation. Web deployment pending.
+- Production impact: migration history aligned; metadata-only view hardening applied; web deployment `dpl_2dhb5j87YkJQCZ1pVe54Gtrda4nY` Ready and aliased to the canonical URL. No production business-row mutation.
 
 ## Baseline and findings
 
@@ -48,8 +48,9 @@
 - Root cause: an initial setup request ran before the tenant/user draft key resolved, then a second overlapping request could leave the active loading state unsettled.
 - Fix: gate setup loading on the tenant-scoped key, ignore stale completions, and always settle the current request with explicit retry feedback.
 - Before: production data rendered but the workflow remained loading and submission-disabled after 15 seconds.
-- After: automated/static gates pass; exact deployed after timing remains pending.
-- Functional verification: no production mutation; draft isolation regression coverage, full suite, lint, types, and build passed.
+- After: five production hard reloads settled in 5,024–6,543 ms; p50 5,450 ms and nearest-rank p95 6,543 ms, with zero samples retaining the loading text.
+- Improvement: at least 56.4% at p95 relative to the 15-second censored baseline; exact percentage is not claimed because the original never completed.
+- Functional verification: no production mutation; draft isolation regression coverage, full suite, lint, types, build, canonical deployment smoke, owner routes, and role redirect passed.
 - Commit: `6626cfa`.
 
 ## Aggregate results
@@ -78,6 +79,7 @@
 - Database: 212 local/remote migrations align; dry-run reports up to date; full shadow replay produced an empty public-schema diff; six security-definer-view advisor errors reduced to zero.
 - Mobile: supervisor route and ready-data state passed at 390×844; representative CPU/network throttling unavailable.
 - Financial safety: no payroll, stock, quotation, order, or production mutation was performed.
+- Deployment: Vercel reports production target Ready for `dpl_2dhb5j87YkJQCZ1pVe54Gtrda4nY`, sourced from merge commit `9c0a4c2`, with canonical alias active.
 
 ## Remaining issues
 

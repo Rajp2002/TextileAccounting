@@ -69,4 +69,6 @@ There was no clean authenticated pre-change runtime capture for these code-only 
 - Before: loom data rendered, but the save helper remained `Loading shift data...` and the save control remained disabled after 15 seconds.
 - Fix: wait for the tenant-scoped draft key before the setup fetch and settle only the current request in `finally`.
 - Request change: two overlapping initial setup calls reduced to one by construction.
-- Functional verification before deployment: focused regression tests, full test suite, lint, TypeScript, and production build passed. Exact deployed after timing remains pending.
+- After: five production hard reloads all reached ready state without the loading text in 5,024–6,543 ms; p50 5,450 ms and nearest-rank p95 6,543 ms.
+- Improvement: because the baseline is right-censored at greater than 15,000 ms, exact percentage is unknowable; the measured p95 improvement is at least 56.4%, and the workflow changed from indefinitely blocked to usable.
+- Functional verification: focused regression tests, full test suite, lint, TypeScript, production build, canonical deployment smoke, owner routes, and the supervisor-to-owner redirect boundary passed. No production shift mutation was performed.

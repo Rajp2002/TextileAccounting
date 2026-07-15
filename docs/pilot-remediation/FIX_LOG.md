@@ -2523,3 +2523,13 @@ Branch `codex/performance-campaign-20260715-upstream`; code commits `8d4d767`, `
 - Release gates: `npm run lint` passed; `npm test` passed 99 files with 697 passed and one intentional skip; the Next.js 16.2.10 production build passed TypeScript and generated 43 static pages; migration dry-run reported `Remote database is up to date`; `git diff --check` passed.
 - Known follow-up: schema lint still reports the six pre-existing legacy stored-function errors in `lockdown_tenant`, `link_batch_to_machine`, `get_daily_brief_stats`, `replace_shift_production_logs`, `settle_worker_payroll`, and `get_yield_alert`. They were not suppressed or rewritten and remain subject to the existing isolated formal audit.
 - Formal matrix: no status or count changed. This batch adds performance/security/release evidence but does not supply new business-row proof for a formal matrix promotion.
+
+### Production deployment and runtime closeout
+
+- PR `#18` merged with history preserved at commit `9c0a4c2415aa7d10e1b6b8aef179cf76184e82dc`.
+- Vercel deployment `dpl_2dhb5j87YkJQCZ1pVe54Gtrda4nY` is production-targeted, Ready, and aliased to `https://textile-accounting.vercel.app`.
+- The PWA correctly announced the new build; after activating it, five hard reloads of the authenticated supervisor dashboard all reached the ready marker with no loading text in 5,024–6,543 ms (p50 5,450 ms; nearest-rank p95 6,543 ms). The pre-fix reproduction never settled within 15 seconds, so the deployed p95 improvement is at least 56.4% without inventing an exact uncensored baseline.
+- Supervisor access to `/owner/today` redirected to `/supervisor/dashboard` with no owner content. The owner session rendered Factory Today, Party Orders, Market Runs, Godown Stock, Party Ledger, Dispatches, and Worker Hisaab read-only with no application alert.
+- No production form, shift log, payroll, stock, order, quotation, dispatch, receipt, account, or financial record was created or changed during deployment verification.
+- Migration state remains aligned and the database dry-run remained up to date before merge. The six legacy stored-function lint findings remain open formal-audit work and received no pass claim.
+- Formal matrix and pilot-readiness counts remain unchanged.
