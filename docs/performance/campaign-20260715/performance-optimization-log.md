@@ -4,13 +4,13 @@
 
 ### What changed
 
-`lib/i18n/context.tsx` now ships only English in the initial provider graph. Hindi, Gujarati, legacy, and generated legacy translations are loaded concurrently after a non-English language is requested. Loaded resources are reused for the life of the browser module.
+`lib/i18n/context.tsx` now ships only English in the initial provider graph. Hindi, Gujarati, legacy, and generated legacy translations load concurrently only after a non-English language is requested. Loaded resources are reused for the life of the browser module.
 
-The active content language remains English until all resources for the requested language are available, preventing partially translated hydration. A failed chunk load restores English and removes the rejected promise so a later request can retry.
+The active content language remains English until all resources for the requested language are ready, preventing partially translated hydration. A failed chunk load restores English and removes the rejected promise so a later request can retry.
 
 ### Why
 
-The production manifest showed a 625,809-byte raw shared chunk dominated by translation data on every tested route. Most users do not need all three languages before first interaction.
+The production manifests showed roughly 570.6 KB raw / 150.4 KB gzip of avoidable translation code on every measured route. Most sessions do not require all three languages before first interaction.
 
 ### Files
 
@@ -23,24 +23,24 @@ The production manifest showed a 625,809-byte raw shared chunk dominated by tran
 - Keys: only the closed set `hi` and `gu`.
 - Values: immutable, build-versioned translation assets.
 - Invalidation: deployment chunk hashes and page reload; rejected loads are evicted immediately.
-- Tenant/security: contains no user, organization, session, financial, stock, payroll, or permission data.
+- Tenant/security: no user, organization, session, financial, stock, payroll, or permission data.
 - Bound: at most two promises/resources; no unbounded cache.
 
 ### Risks and controls
 
-- Risk: a brief English fallback while a selected dictionary downloads. Control: atomic activation after all resources resolve.
-- Risk: language chunk failure. Control: restore English, persist the safe fallback, and allow retry.
-- Risk: translation regression. Control: live English/Hindi/Gujarati switching plus existing runtime glossary tests.
+- First non-English selection incurs a download; resources activate atomically after all imports resolve.
+- Chunk failures restore and persist the safe English fallback and remain retryable.
+- Live English/Hindi/Gujarati switching and existing glossary/runtime tests cover behavior.
 
 ## PERF-002 — defer the payroll PDF engine
 
 ### What changed
 
-`PayrollClient.tsx` imports only the `PayslipItemization` type during compilation. `generateMeterPayslip` and `generateFixedPayslip` are imported on demand from the existing module when the user clicks PDF Slip. A load/generation failure shows an explicit error toast.
+`PayrollClient.tsx` imports only the `PayslipItemization` type during compilation. `generateMeterPayslip` and `generateFixedPayslip` load on demand from the existing module when the user clicks PDF Slip. Load or generation failure shows an explicit error toast.
 
 ### Why
 
-The payroll initial graph included the 330,613-byte raw jsPDF chunk despite PDF export being a secondary action.
+The payroll initial graph included jsPDF even though PDF export is a secondary action.
 
 ### Files
 
@@ -49,32 +49,39 @@ The payroll initial graph included the 330,613-byte raw jsPDF chunk despite PDF 
 
 ### Correctness and cache behavior
 
-- The PDF generator, formatting, itemization, settlement inputs, and financial calculations were not changed.
-- The standard browser module loader caches the immutable code chunk by deployment hash. No business data is cached.
-- The operation remains client-side and read-only; it does not add or duplicate a mutation.
+- Generator formatting, itemization, settlement inputs, and financial calculations are unchanged.
+- The browser module loader caches the immutable code chunk by deployment hash; no business data is cached.
+- The operation remains client-side and read-only and adds no mutation.
 
 ### Risks and controls
 
-- Risk: first PDF click pays the chunk download cost. Control: explicit pending network behavior from the browser and a failure toast; no false success is shown.
-- Risk: download regression. Control: emitted chunk confirmed, type checking passed, and payslip/read-model tests passed. Authenticated click verification remains blocked by PERF-003.
+- First PDF click pays the chunk cost; a failure toast prevents false success.
+- The deferred chunk, type boundary, build, and payslip/read-model tests passed.
+- The QA cycle had no paid settlement; the click was deliberately not forced through a financial mutation.
 
-## Database, auth, and server behavior
+## Upstream authentication integration
+
+The clean campaign branch was created from current `origin/main` and therefore includes upstream commits `17d9ab5` and `c88db01`. Those changes shorten and instrument the production sign-in critical path. They are not authored or claimed as `ae65791` campaign work, but they are part of the final tested branch.
+
+Authenticated QA verification then passed for owner and supervisor sessions, session logout/restoration cycles, server-authoritative role redirect, and gated route rendering. Credentials remained in the protected local secret store and are absent from artifacts.
+
+## Database, auth, and server behavior of campaign code
 
 - No database migrations, indexes, views, functions, triggers, RLS policies, queries, or RPCs changed.
-- No authentication, authorization, middleware, tenant resolution, or session cache code changed in the campaign commit.
+- No authentication, authorization, middleware, tenant resolution, or session cache code changed in `ae65791`.
 - No optimistic financial/inventory state was introduced.
 - No production data or environment was touched.
 
 ## Measured experiment rejected
 
-The global persisted React Query provider was temporarily scoped to the dashboard route group and onboarding, then rebuilt with the identical manifest measurement. `/login` changed from 598,136 raw / 197,270 gzip bytes and 22 initial chunks to 598,808 raw / 197,675 gzip bytes and 23 chunks; dashboard routes showed no material benefit. Because the experiment made the target route slightly worse, it was fully reverted and is not present in either campaign commit.
+The global persisted React Query provider was temporarily scoped to the dashboard route group and onboarding, then rebuilt with the identical manifest measurement. `/login` gained 672 raw bytes, 405 gzip bytes, and one initial chunk while authenticated routes showed no material benefit. The experiment was fully reverted.
 
 ## Functional and performance verification
 
-- Focused tests: 13 passed across bundle boundaries, i18n runtime, and payroll settlement history.
-- Full prebuild suite: 95 files passed; 676 tests passed and one skipped.
-- Focused ESLint: passed.
-- TypeScript `tsc --noEmit`: passed.
-- Production build: passed after the final code change; 95 test files and TypeScript were included in the build gate.
-- Browser: English→Hindi→Gujarati→English passed; expected headings and `html[lang]` values observed.
-- Production manifests: five identical route scenarios measured before and after.
+- Focused bundle-boundary, i18n, and payroll tests passed.
+- Clean upstream production build gate: 97 test files, 687 tests, no skips; TypeScript and 42-page generation passed.
+- Live English → Hindi → Gujarati → English switching passed.
+- Protected owner and supervisor QA sessions passed; no production data was used.
+- Owner and supervisor route sweeps, role redirect, mobile viewport, and streamed readiness checks passed.
+- Production manifests were measured from tree-equivalent before and optimized after builds.
+- Full lint is recorded in the final evidence commit after documentation reconciliation.

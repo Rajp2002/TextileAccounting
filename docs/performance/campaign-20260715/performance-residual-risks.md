@@ -1,57 +1,59 @@
 # Performance residual risks
 
-## Remaining slow or unverified workflows
+## Remaining slow or insufficiently measured workflows
 
-### Authenticated journeys
+### Cold quotations and dispatches
 
-The configured isolated QA owner sign-in did not leave `/login` on either the existing development server or the production-local server. This blocks current end-to-end traces for session restoration, Factory Today, estimator interaction, orders, quotations, payroll, stock, supervisor routes, mutations, and exports.
+The first observed production-local quotation and dispatch route commits were 2,380 ms and 2,007 ms. Warm samples were 365–502 ms and 406–426 ms respectively, and both routes streamed their correct final content.
 
-Recommended next action: diagnose the QA auth/account path separately without overwriting the pre-existing auth work, then repeat cold/warm traces using representative owner and supervisor organizations.
+User impact: a cold visit may feel materially slower than other owner routes.
 
-Evidence required for closure: successful isolated owner and supervisor sessions, network traces, console logs, route timings, and permission/tenant smoke checks.
+Recommended next action: collect at least 20 cold/warm QA samples with request waterfalls and server timing, separate code-chunk fetch from Supabase reads, then optimize the confirmed component. Evidence required: repeatable p50/p95, request count/bytes, and unchanged quotation/dispatch reconciliation.
 
 ### Factory Today and payroll data paths
 
-Existing evidence still shows many Supabase reads in these high-value routes. Current production-scale query plans and p95 samples were unavailable, so no index, RPC, or caching change was made.
+Current local samples are acceptable (Factory Today p50 517 ms; payroll p50 413 ms), but historical evidence shows meaningful Supabase read fan-out. Production-scale query plans and adequate p95 samples were unavailable, so no index, RPC, or caching change was made.
 
-Recommended next action: enable `WEAVLY_PERF_LOGS` in QA, capture at least 20 representative samples, map each read to a query shape, run safe `EXPLAIN (ANALYZE, BUFFERS)` against QA-scale data, and reconcile payroll outputs before and after any database change.
-
-### Deferred language payload
-
-The initial English path is much smaller, but the first Hindi or Gujarati selection still downloads shared legacy dictionaries containing both target languages. Splitting generated and legacy resources by language could reduce that secondary payload, but it requires a large mechanical data-file split and broader localization regression coverage.
+Recommended next action: enable sampled `WEAVLY_PERF_LOGS` in QA, capture at least 20 representative samples, map reads to query shapes, and run safe plan analysis only for confirmed slow queries. Payroll results must be financially reconciled before and after any database change.
 
 ### Payroll export click
 
-The first export now pays an on-demand module download. This is the intended tradeoff for removing jsPDF from every payroll visit, but the click should be timed under slow network conditions. If the delay is visible, prefetch the module on intentional hover/focus or when a settled-worker panel becomes visible, while retaining failure feedback.
+The QA cycle contained no paid settlement, so the PDF Slip action was unavailable. Marking payroll paid solely to enable a performance test would create a financial mutation and was intentionally rejected.
+
+Recommended next action: use a disposable, explicitly approved paid-settlement fixture or a pure browser test fixture. Measure first-click module load, generation, and download under slow network conditions. If delay is visible, consider hover/focus prefetch while retaining the current failure feedback.
+
+### Deferred language payload
+
+The initial English path is much smaller, but first Hindi or Gujarati selection still downloads shared legacy dictionaries. Splitting generated and legacy resources by language could reduce that secondary payload, but requires a large data-file split and broader localization regression coverage.
 
 ### Remaining route bundles
 
-`/supervisor/dashboard` still emits 989,888 raw / 312,583 gzip initial JavaScript, including a 203,639-byte shared chunk. `/owner/estimator` remains 836,380 raw / 262,709 gzip. Runtime profiling is needed to identify whether splitting those dependencies improves time-to-interaction without creating waterfalls.
+`/supervisor/dashboard` still emits 993,072 raw / 313,751 gzip initial JavaScript; `/owner/estimator` emits 837,223 raw / 263,119 gzip. Runtime profiling is needed before splitting remaining shared dependencies because extra boundaries can create new waterfalls.
 
-### Cold request behavior
+### Statistical and production observability gap
 
-The first production-local `/login` request was 813 ms TTFB versus 42–89 ms after warm-up. This is not enough to distinguish Next.js initialization, hosting cold start, middleware, or external auth/service latency.
+Three-to-five local repeats do not establish a stable p95. Localhost also excludes deployed cold starts, regional Supabase latency, production-scale data, and user hardware. Core Web Vitals, network request counts, and main-thread long tasks remain unmeasured in a representative deployed environment.
 
 ## Deliberately deferred high-risk work
 
-- Authentication deduplication: pre-existing uncommitted auth work overlaps this surface; changing it without a clean baseline risks revocation and authorization behavior.
-- Tenant/reference caching: no tenant data was cached because a correct tenant-key and invalidation proof was not available.
-- Database indexes/RPCs: no current plans or QA-scale proof; blind indexes would add write/storage cost.
-- Optimistic payroll, stock, quotation, or order updates: financial and operational correctness outweighs cosmetic latency.
-- Partial estimator recomputation: blocked pending before/after mathematical output reconciliation and interaction profiling.
+- Tenant/reference caching: no tenant data was cached without a proven tenant key and invalidation design.
+- Database indexes/RPCs: no confirmed slow plan; blind indexes would add write and storage cost.
+- Optimistic payroll, stock, quotation, or order updates: financial and operational correctness outweigh cosmetic latency.
+- Partial estimator recomputation: no observed blocking calculation and no before/after mathematical reconciliation fixture justified the risk.
+- Auth/session shortcuts: authoritative server checks and RLS were retained.
 
 ## Environment limitations
 
-- No representative mobile CPU/network throttling in the available authenticated harness.
-- No production-scale QA data or current Supabase query-plan access.
-- No stable p95 from sufficient repeated samples.
-- Production was limited to no contact; all tests were local and non-destructive.
-- Existing unrelated dirty files prevented rebasing onto the latest remote branch without risking user work.
+- No representative CPU/network throttling in the browser harness.
+- No production-scale QA data or current SQL-plan access for slow shapes.
+- No stable statistical p95 or production Core Web Vitals.
+- Production was not contacted.
+- The original worktree contained unrelated user changes. A clean linked worktree based on current upstream was used so those files remained untouched.
 
 ## Post-pilot monitoring recommendations
 
 - Collect route TTFB and time-to-required-data by route, role, and deployment region without logging PII or financial bodies.
-- Record Web Vitals for login, Factory Today, estimator, payroll, stock, orders, and supervisor production.
+- Record LCP, INP, CLS, and long tasks for login, Factory Today, estimator, payroll, stock, orders, quotations, dispatches, and supervisor routes.
 - Add sampled server timing around auth resolution, organization resolution, route read models, and export generation.
 - Alert on duplicate read storms, mutation retries, export failures, and p95 regressions above 5%.
-- Keep cache metrics tenant-aware; never emit tokens, row bodies, worker PII, or full financial records.
+- Keep cache and telemetry dimensions tenant-safe; never emit tokens, row bodies, worker PII, or full financial records.

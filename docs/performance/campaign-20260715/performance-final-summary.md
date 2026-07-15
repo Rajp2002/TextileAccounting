@@ -2,71 +2,78 @@
 
 ## Campaign status
 
-**Partially complete.** Two high-confidence, measured initial-bundle bottlenecks were fixed and verified. Authenticated end-to-end and mobile/production-scale database evidence remains blocked by the local QA login flow.
+**Partially complete.** The highest-confidence application-controlled bundle bottlenecks were fixed and verified on the current upstream code, and authenticated owner/supervisor desktop and mobile workflows now have production-build runtime evidence. Stable production p95, Core Web Vitals, request waterfalls, SQL plans, and a non-mutating payroll-export fixture remain outside the available environment.
 
-- Branch: `codex/performance-campaign-20260715`
-- Code commit: `3bc65d4` (`perf: defer language and payroll export bundles`)
-- Documentation commit: this artifact commit
+- Branch: `codex/performance-campaign-20260715-upstream`
+- Code commit: `ae65791` (`perf: defer language and payroll export bundles`)
+- Evidence commits: `f4b00da` and the final documentation commit
+- Upstream auth commits included: `17d9ab5`, `c88db01`
 - Pushed: no
-- Environment: local production build/server and Codex in-app browser; protected isolated QA credentials for attempted sign-in
-- Production impact: none; no deploy, production request, data mutation, or migration occurred
+- Environment: clean local production build/server, protected isolated owner/supervisor QA accounts, desktop and 390×844 browser viewports
+- Production impact: none; no deployment, production request, data mutation, or migration
 
 ## Baseline and findings
 
 - Five routes received identical before/after emitted-bundle measurements.
-- Two anonymous production-local runtime paths were sampled after the change.
-- Existing authenticated baselines for Factory Today, payroll, advances, and dispatches were reviewed.
-- Findings: 0 P0, 4 P1, 3 P2, and 1 P3.
-- Main bottleneck categories: global data bundled into every route, export tooling loaded before use, Supabase read fan-out, cold initialization, and missing authenticated performance evidence.
+- Seventeen authenticated/public runtime scenarios were exercised, including login/logout, six owner core routes, four supervisor routes, role boundary, mobile readiness, localization, and anonymous redirect behavior.
+- Ten additional owner routes received authenticated read-only smoke/timing coverage.
+- Findings: 0 P0, 4 P1, 4 P2, and 1 P3.
+- Main bottleneck categories: globally eager language data, eagerly loaded export tooling, cold route/data initialization, historical Supabase read fan-out, and missing deployed observability.
 
 ## Implemented optimizations
 
 ### PERF-001 — global language resources
 
-- Root cause: static imports shipped all translations to all users.
-- Fix: concurrent, on-demand language resource loading with a two-key bounded cache and safe English fallback.
-- Before: route-dependent initial gzip 347,831–604,319 bytes, including the global dictionaries.
-- After: 150.6 KB gzip removed from every measured route.
-- Improvement: 32.5%–43.3% gzip depending on route.
-- Functional verification: live English/Hindi/Gujarati switching and return to English; targeted tests, lint, type check, full suite, and build.
-- Commit: `3bc65d4`.
+- Root cause: static imports shipped all translations to every session.
+- Fix: concurrent on-demand language loading with a two-key bounded module cache and safe English fallback.
+- Before: 150.3–150.5 KB avoidable gzip in every measured initial route graph.
+- After: absent from the English initial graph; loaded only when Hindi or Gujarati is selected.
+- Improvement: 32.4%–43.1% initial gzip reduction depending on route.
+- Functional verification: live English/Hindi/Gujarati switching and return to English; tests, types, lint, and production build.
+- Commit: `ae65791`.
 
 ### PERF-002 — payroll PDF engine
 
 - Root cause: static payslip generator import loaded jsPDF on every payroll visit.
 - Fix: type-only initial import and on-demand generator import at PDF click.
-- Before: 2,023,626 raw / 604,319 gzip bytes; 34 initial JS requests.
-- After: 1,046,208 raw / 323,496 gzip bytes; 32 requests.
-- Improvement: 48.3% raw and 46.5% gzip.
-- Functional verification: payroll calculation/generator code unchanged; focused payroll tests, type check, build, and emitted chunk verification passed. Authenticated click remains blocked.
-- Commit: `3bc65d4`.
+- Before: 2,026,912 raw / 604,925 gzip bytes; 34 initial JS requests.
+- After: 1,049,114 raw / 324,625 gzip bytes; 32 requests.
+- Improvement: 48.2% raw, 46.3% gzip, and two initial requests.
+- Functional verification: payroll calculation/generator code unchanged; focused tests, types, build, and emitted deferred chunk passed. Runtime click was safely deferred because QA had no paid settlement.
+- Commit: `ae65791`.
 
 ## Aggregate results
 
-- Median initial gzip reduction across five routes: 40.2%.
-- Largest route result: payroll, 280,823 gzip bytes and two initial JavaScript requests removed.
-- Common route result: approximately 150.6 KB gzip removed from every measured route.
-- Database-query improvement: none claimed; no database behavior changed.
-- Core Web Vitals / p95: not claimed because authenticated representative traces were unavailable.
-- Regressions: none in available automated, build, public runtime, or language-switch evidence.
+- Median per-route initial gzip reduction: **40.1%**.
+- Five-scenario aggregate: 3,260,047 raw and 881,942 gzip bytes removed from summed route graphs.
+- Largest route result: payroll, 280,300 gzip bytes and two initial JavaScript requests removed.
+- Owner login: p50 684 ms; observed five-sample maximum 1,163 ms.
+- Factory Today: p50 517 ms; observed five-sample maximum 613 ms.
+- Owner route transitions: median 56 ms; maximum 240 ms across six sections.
+- Supervisor dashboard: p50 353 ms; observed three-sample maximum 459 ms.
+- Mobile supervisor: 382 ms route commit and 1,216 ms to ready data at 390×844.
+- Database-query improvement: none claimed; campaign code changed no queries or schema.
+- Core Web Vitals: unavailable in the local harness.
+- Regressions: none in automated, build, localization, authenticated route, role-boundary, or mobile evidence.
 
 ## Verification
 
-- Production build: passed.
-- Type check: passed through `tsc --noEmit` and Next.js build.
-- Focused lint: passed; full lint result recorded after final verification.
-- Tests: full prebuild suite passed (95 files; 676 passed, one skipped).
-- Browser/runtime: public login render and English/Hindi/Gujarati switching passed; anonymous protected-route redirect passed.
-- Database: no migration/query change; query-plan testing not applicable to completed fixes.
-- Mobile: blocked by authenticated QA and representative device/throttling limitations.
+- Production build: passed; 42 static pages generated.
+- Type check: passed through Next.js build.
+- Lint: passed in the final clean worktree.
+- Tests: 97 test files, 687 tests, no skips in the clean production build gate.
+- Browser/runtime: owner and supervisor auth, gated routes, logout, role redirect, localization, streaming readiness, and read-only route sweeps passed.
+- Database: no migration/query change; no plan was claimed without a confirmed slow query.
+- Mobile: supervisor route and ready-data state passed at 390×844; representative CPU/network throttling unavailable.
+- Financial safety: no payroll, stock, quotation, order, or production mutation was performed.
 
 ## Remaining issues
 
-1. QA sign-in does not complete. User impact: no trustworthy current gated-route or role/tenant browser evidence. Next action: repair/diagnose the isolated QA auth path, then rerun owner and supervisor traces. Closure evidence: successful sessions plus route/network/permission captures.
-2. Factory Today and payroll retain material server read fan-out in historical evidence. User impact: first usable data can remain sensitive to Supabase latency. Next action: collect current QA p50/p95 and query plans before changing SQL. Closure evidence: repeated timings, plans, reconciliation, and tenant tests.
-3. Low-powered mobile behavior is unmeasured. User impact: hydration/main-thread regressions may remain hidden. Next action: cold/warm mobile CPU/network traces after auth is restored. Closure evidence: LCP, INP, CLS, long tasks, requests, and route timings.
-4. Hindi/Gujarati first selection still has a sizable deferred legacy payload. User impact: first language switch may pause on a slow link. Next action: split translation data by language only after localization regression coverage exists.
+1. Cold quotations and dispatches: first observed commits were 2.38 s and 2.01 s, versus 0.36–0.50 s warm. Impact: noticeable first-visit delay. Next action: 20-sample cold/warm server/network trace. Closure evidence: p50/p95 plus request/query attribution and reconciliation.
+2. Production-scale server/database behavior: historical read fan-out remains, though local Factory Today/payroll samples were below 0.7 s. Impact: latency may rise with real region/data scale. Next action: sampled QA server timing and safe plans for confirmed slow shapes. Closure evidence: 20+ samples, plans, and tenant/financial regression checks.
+3. Payroll PDF first-click latency: no paid QA settlement existed. Impact: deferred chunk delay is unmeasured. Next action: disposable paid-settlement fixture. Closure evidence: first/warm download timings and identical document values.
+4. Deployed mobile/Core Web Vitals: CPU/network throttling and production RUM were unavailable. Impact: low-powered-device long tasks may remain hidden. Next action: deployed mobile traces and privacy-safe RUM. Closure evidence: LCP, INP, CLS, requests, and long tasks.
 
 ## Pilot recommendation
 
-**Not performance-ready for pilot based on current evidence.** The measured bundle reductions are large and safe, but pilot readiness requires successful authenticated owner/supervisor journeys, representative mobile traces, and current server/database timing for Factory Today and payroll. The absence of that evidence is a verification gap, not proof of failure; it must be closed before a performance-ready claim.
+**Performance-ready with documented limitations.** The application-controlled initial bundles improved materially, all sampled core authenticated routes rendered correctly, common route transitions were effectively immediate, the role boundary remained authoritative, and the production build/test gate passed. Pilot monitoring should specifically watch cold quotations/dispatches, deployed p95/Core Web Vitals, Supabase regional latency, and first payroll export. These limitations do not justify weakening tenant, financial, or authorization guarantees.

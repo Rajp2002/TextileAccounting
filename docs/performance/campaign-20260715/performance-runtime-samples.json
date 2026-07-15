@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-15",
+  "environment": {
+    "branch": "codex/performance-campaign-20260715-upstream",
+    "server": "next start localhost:3200",
+    "network": "localhost-unthrottled",
+    "mobileViewport": "390x844",
+    "productionContacted": false
+  },
+  "method": {
+    "navigation": "browser URL commit; streamed readiness recorded separately",
+    "p95Caveat": "Three-to-five samples; observed nearest-rank maximum, not a stable production percentile"
+  },
+  "owner": {
+    "loginMs": [1163, 684, 791, 644, 682],
+    "logoutMs": [949, 498, 441, 392, 464],
+    "hardNavigationMs": {
+      "/owner/today": [517, 613, 349, 536, 437],
+      "/owner/estimator": [418, 351, 470],
+      "/owner/payroll": [300, 450, 413],
+      "/owner/orders": [378, 310, 377],
+      "/owner/stock": [426, 441, 386],
+      "/owner/analytics": [679, 441, 415]
+    },
+    "routeTransitionMs": {
+      "/owner/today": 65,
+      "/owner/estimator": 47,
+      "/owner/payroll": 240,
+      "/owner/orders": 44,
+      "/owner/stock": 66,
+      "/owner/analytics": 45
+    },
+    "additionalFirstObservedMs": {
+      "/owner/quotes": 2380,
+      "/owner/dispatches": 2007,
+      "/owner/commercials": 407,
+      "/owner/settings": 369,
+      "/owner/advances": 497,
+      "/owner/fixed-workers": 518,
+      "/owner/machines": 464,
+      "/owner/market-runs": 343,
+      "/owner/billing": 391,
+      "/owner/archive": 642
+    },
+    "coldRouteRepeatsMs": {
+      "/owner/quotes": [502, 418, 365],
+      "/owner/dispatches": [406, 426, 416]
+    }
+  },
+  "supervisor": {
+    "loginMs": [1215],
+    "hardNavigationMs": {
+      "/supervisor/dashboard": [459, 330, 353],
+      "/supervisor/workers": [294, 279, 286],
+      "/supervisor/attendance": [281, 321, 299],
+      "/supervisor/machines": [288, 319, 234]
+    },
+    "ownerRouteBoundaryRedirectMs": 548,
+    "ownerRouteBoundaryFinalUrl": "/supervisor/dashboard",
+    "mobile": {
+      "routeCommitMs": 382,
+      "timeToReadyDataMs": 1216
+    }
+  },
+  "authPhaseDiagnosticMs": {
+    "passwordAuth": 540.5,
+    "getUser": 36.1,
+    "profile": 286.5,
+    "tierLookup": 114.3,
+    "organization": 69.6
+  },
+  "bundle": {
+    "before": {
+      "/login": {"requests": 22, "rawBytes": 1173014, "gzipBytes": 349344},
+      "/owner/today": {"requests": 27, "rawBytes": 1269682, "gzipBytes": 375185},
+      "/owner/estimator": {"requests": 30, "rawBytes": 1407777, "gzipBytes": 413526},
+      "/owner/payroll": {"requests": 34, "rawBytes": 2026912, "gzipBytes": 604925},
+      "/supervisor/dashboard": {"requests": 30, "rawBytes": 1563639, "gzipBytes": 464094}
+    },
+    "after": {
+      "/login": {"requests": 22, "rawBytes": 602445, "gzipBytes": 198867},
+      "/owner/today": {"requests": 27, "rawBytes": 699123, "gzipBytes": 224770},
+      "/owner/estimator": {"requests": 30, "rawBytes": 837223, "gzipBytes": 263119},
+      "/owner/payroll": {"requests": 32, "rawBytes": 1049114, "gzipBytes": 324625},
+      "/supervisor/dashboard": {"requests": 30, "rawBytes": 993072, "gzipBytes": 313751}
+    }
+  }
+}
