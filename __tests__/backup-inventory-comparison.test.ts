@@ -100,6 +100,11 @@ describe('sanitized backup inventory comparison', () => {
 
     expect(result.status).toBe(5)
     expect(comparison.exact_match).toBe(false)
+    expect(comparison.business_inventory_exact_match).toBe(false)
+    expect(comparison.extension_names_match).toBe(true)
+    expect(comparison.extension_version_differences).toEqual([
+      { name: 'pgcrypto', source_version: '1.3', restored_version: '1.4' },
+    ])
     expect(comparison.differences.domains).toEqual([
       {
         domain: 'stock',
@@ -118,5 +123,26 @@ describe('sanitized backup inventory comparison', () => {
     expect(serialized).not.toContain('digest-auth')
     expect(serialized).not.toContain('different-auth-digest')
     expect(result.stdout).toBe('')
+  })
+
+  it('classifies an extension-only version variance separately from business inventory', () => {
+    const source = inventory()
+    const restored = inventory({
+      extensions: [{ name: 'pgcrypto', version: '1.4' }],
+    })
+
+    const { result, comparison } = compare(source, restored)
+
+    expect(result.status).toBe(5)
+    expect(comparison.exact_match).toBe(false)
+    expect(comparison.business_inventory_exact_match).toBe(true)
+    expect(comparison.extension_names_match).toBe(true)
+    expect(comparison.extension_version_differences).toEqual([
+      { name: 'pgcrypto', source_version: '1.3', restored_version: '1.4' },
+    ])
+    expect(comparison.differences.domains).toEqual([])
+    expect(comparison.differences.auth.identity_digest_match).toBe(true)
+    expect(comparison.differences.storage.source).toEqual(comparison.differences.storage.restored)
+    expect(comparison.differences.migrations.source).toEqual(comparison.differences.migrations.restored)
   })
 })

@@ -67,8 +67,26 @@ jq -n \
         | unique;
     ($source[0]) as $source_inventory
     | ($restored[0]) as $restored_inventory
+    | (reduce ($source_inventory.extensions // [])[] as $extension ({}; .[$extension.name] = $extension.version)) as $source_extensions
+    | (reduce ($restored_inventory.extensions // [])[] as $extension ({}; .[$extension.name] = $extension.version)) as $restored_extensions
     | {
         exact_match: false,
+        business_inventory_exact_match: (
+            $source_inventory.domains == $restored_inventory.domains
+            and $source_inventory.auth == $restored_inventory.auth
+            and $source_inventory.storage == $restored_inventory.storage
+            and $source_inventory.migrations == $restored_inventory.migrations
+        ),
+        extension_names_match: (($source_extensions | keys) == ($restored_extensions | keys)),
+        extension_version_differences: [
+            (($source_extensions | keys) + ($restored_extensions | keys) | unique)[] as $name
+            | select($source_extensions[$name] != $restored_extensions[$name])
+            | {
+                name: $name,
+                source_version: ($source_extensions[$name] // null),
+                restored_version: ($restored_extensions[$name] // null)
+            }
+        ],
         differences: {
             domains: [
                 domain_names($source_inventory; $restored_inventory)[] as $domain
