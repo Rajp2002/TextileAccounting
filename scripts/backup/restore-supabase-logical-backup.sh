@@ -97,15 +97,32 @@ SANITIZED_INVENTORY_OUTPUT_FILE="$work_dir/restored-inventory.json" \
 SANITIZED_INVENTORY_STDERR_FILE="$work_dir/restored-inventory.stderr" \
     "$repo_root/scripts/backup/capture-sanitized-inventory.sh"
 
-jq --sort-keys . "$payload_dir/source-inventory.json" > "$work_dir/source-inventory.normalized.json"
-jq --sort-keys . "$work_dir/restored-inventory.json" > "$work_dir/restored-inventory.normalized.json"
-if ! cmp -s "$work_dir/source-inventory.normalized.json" "$work_dir/restored-inventory.normalized.json"; then
+comparison_file="$work_dir/inventory-comparison.json"
+comparison_status=0
+SANITIZED_SOURCE_INVENTORY_FILE="$payload_dir/source-inventory.json" \
+    SANITIZED_RESTORED_INVENTORY_FILE="$work_dir/restored-inventory.json" \
+    SANITIZED_INVENTORY_COMPARISON_FILE="$comparison_file" \
+    "$repo_root/scripts/backup/compare-sanitized-inventories.sh" || comparison_status=$?
+if [[ "$comparison_status" -ne 0 ]]; then
+    if [[ "$comparison_status" -ne 5 || ! -f "$comparison_file" ]]; then
+        printf 'Sanitized inventory comparison could not be completed safely.\n' >&2
+        exit 6
+    fi
     printf 'Restored inventory does not exactly match the encrypted source inventory.\n' >&2
     jq -n \
         --arg status fail \
         --arg reason inventory_mismatch \
         --arg restore_started_at_utc "$restore_started_at" \
-        '{status: $status, reason: $reason, restore_started_at_utc: $restore_started_at_utc}' \
+        --slurpfile comparison "$comparison_file" \
+        '{
+            status: $status,
+            reason: $reason,
+            restore_target: "ephemeral local Supabase stack",
+            production_targeted: false,
+            restore_started_at_utc: $restore_started_at_utc,
+            inventory_comparison: $comparison[0],
+            cleanup: "performed by EXIT trap; Supabase stopped with --no-backup"
+        }' \
         > "$RESTORE_EVIDENCE_DIR/restore-result.json"
     exit 5
 fi
