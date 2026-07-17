@@ -174,7 +174,7 @@
       "scenario": "Verify backup schedule and perform restore into a disposable project.",
       "expected": "Restored org, users, production, stock, receivables, and payroll reconcile.",
       "status": "blocked",
-      "actual": "Scheduled production-backup run 29451202680 created encrypted artifact 8357639557 with 14-day retention. Restore run 29494683840 restored that exact artifact into disposable local Supabase in 128 seconds without targeting production. Organization, profiles/Auth, estimator, orders, production, stock, receivables, payroll, Storage, tenant boundaries, identity digests and migration history reconciled; zero effect-capable jobs were restored and cleanup passed. The sole explained variance was compatible pg_net 0.19.5 to 0.20.3. The comparison/restore fixes are included in the current release candidate.",
+      "actual": "Scheduled production-backup run 29451202680 created encrypted artifact 8357639557 with 14-day retention. Restore run 29494683840 restored that exact artifact into disposable local Supabase in 128 seconds without targeting production. Organization, profiles/Auth, estimator, orders, production, stock, receivables, payroll, Storage, tenant boundaries, identity digests and migration history reconciled; zero effect-capable jobs were restored and cleanup passed. The sole explained variance was compatible pg_net 0.19.5 to 0.20.3. PR 20 merged the comparison/restore fixes to main at 5f8d0c8; production deployment dpl_8CXejpq4oQpDbjQ3EnbKpZC21MAJ is READY.",
       "evidence": [
         "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
         "output/qa/blocked-row-campaign/B18-recovery-runtime.json",
@@ -182,11 +182,13 @@
         "output/qa/pilot-gate-closure/2026-07-16/TECH-011/restore-result-redacted.json",
         "output/qa/pilot-gate-closure/2026-07-16/TECH-011/verification.md",
         "https://github.com/Rajp2002/TextileAccounting/actions/runs/29451202680",
-        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29494683840"
+        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29494683840",
+        "https://github.com/Rajp2002/TextileAccounting/pull/20",
+        "dpl_8CXejpq4oQpDbjQ3EnbKpZC21MAJ"
       ],
-      "notes": "Technical proof is pass-ready. Keep formally blocked until this release candidate reaches main, a named independent verifier signs the recovery evidence, and the deferred second approved recovery-identity copy is confirmed. Do not repeat the restore merely to manufacture evidence.",
+      "notes": "Technical proof and release integration are complete. Keep formally blocked until a named independent verifier signs the recovery evidence and the deferred second approved recovery-identity copy is confirmed. Do not repeat the restore merely to manufacture evidence.",
       "severity": "High",
-      "updatedAt": "2026-07-17T18:20:00.000Z",
+      "updatedAt": "2026-07-17T18:47:00.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
       "disposition_classification": "C"

@@ -104,11 +104,19 @@ The detailed classifications and caveats are in `verification-results.md`. The g
 
 The current formal No-Go should remain until:
 
-- `TECH-011`: restore and reconcile one retained scheduled backup artifact.
+- `TECH-011`: obtain named independent-verifier approval and confirm the
+  deferred second approved recovery-identity copy. The scheduled encrypted
+  backup, exact disposable restore, reconciliation and production release are
+  complete.
 - `GOLDEN-A-03`: independently reconcile a real fabric estimate.
-- `UX-012`: obtain factory terminology sign-off.
 
-Also immediately contain the untracked recovery-identity file without losing the only recovery key. High-confidence P1 work should then be a lean CI/golden gate, manual stock-lot atomicity, operator-assignment atomicity, financial request keys and bounded operation correlation. `SIGNOFF-04` should reconcile the first real shift against an independent supervisor register.
+Keep the untracked recovery-identity file contained without losing the only
+confirmed recovery copy. UX-012 is Founder-approved; exact Gujarati and
+populated factory-context feedback remains a first-pilot-run control.
+High-confidence P1 work should then be a lean CI/golden gate, manual stock-lot
+atomicity, operator-assignment atomicity, financial request keys and bounded
+operation correlation. `SIGNOFF-04` should reconcile the first real shift
+against an independent supervisor register.
 
 ### 11. What should wait until after pilot?
 
@@ -116,7 +124,11 @@ General scenario comparison, active support console, public tracking, provider-n
 
 ### 12. Were any regressions introduced?
 
-No product behavior changed. Lint, type check, 678 tests and production build passed on the visible working tree. Only reference/analysis artifacts were added. Runtime-dependent behavior was not reclassified from code inspection.
+No product regression was identified. On the clean integration branch, lint,
+TypeScript, 700 tests and the production build passed. The focused backup suite
+passed all 16 tests locally; Vercel intentionally skipped that shell-integration
+suite because its build image does not provide system `jq`. Public production
+smoke checks returned HTTP 200 for five canonical assets/routes.
 
 ### 13. Did any changes affect database compatibility?
 
@@ -128,7 +140,13 @@ No. No auth/RLS/RPC/product code was changed. Future command RPCs must derive/va
 
 ### 15. Did any changes affect production or QA environments?
 
-No remote environment was mutated. Distinct project refs were identified without printing secrets. The Supabase CLI link points to production, so later database work must fail closed unless a command explicitly verifies its intended target. A local production-configured build ran; it compiled only and did not deploy or intentionally mutate remote state.
+PR `#20` was merged to `main` at
+`5f8d0c8355c89f3a24e0f127fc0c87ca91e89b57` and Vercel production deployment
+`dpl_8CXejpq4oQpDbjQ3EnbKpZC21MAJ` reached `READY` at the canonical alias.
+No production database/schema/data mutation occurred. Distinct project refs
+were checked without printing secrets; the Supabase CLI link points to
+production, so later database work must continue to fail closed unless its
+target is explicitly verified.
 
 ### 16. What is the recommended next action?
 

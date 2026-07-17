@@ -63,7 +63,12 @@ All backup job stages passed, including configuration validation, logical dump/e
 - Cleanup: disposable Supabase stopped with `--no-backup` by the EXIT trap.
 - Repository evidence: `output/qa/pilot-gate-closure/2026-07-16/TECH-011/`.
 
-TECH-011 remains formally `BLOCKED` even though the technical proof is pass-ready. Commits `da272ea` and `d07a570` must reach `main`, and a named independent verifier must review and sign/date the evidence before matrix promotion.
+TECH-011 remains formally `BLOCKED` even though the technical proof is pass-ready.
+Commits `da272ea` and `d07a570` reached `main` through PR `#20` at merge
+`5f8d0c8355c89f3a24e0f127fc0c87ca91e89b57`; production deployment
+`dpl_8CXejpq4oQpDbjQ3EnbKpZC21MAJ` is `READY`. A named independent verifier
+must still review and sign/date the evidence, and the deferred second approved
+recovery-identity copy must be confirmed before matrix promotion.
 
 ## GOLDEN-A-03 estimator truth
 
@@ -83,9 +88,7 @@ State: **BLOCKED on external input**. Required next human action is a named pilo
 
 ## Sprint 0 remaining actions
 
-1. Merge `da272ea` and `d07a570` to `main`; retain a main-ref restore rerun if required by the release process.
-2. Name an independent factory-side TECH-011 verifier and obtain dated approval before promoting the matrix row.
-3. Confirm that a second approved encrypted/offline recovery-identity copy exists before moving/removing the repository-root identity.
-4. Have a factory estimator freeze the independent truth sheet before Weavly entry.
-5. Have a named factory owner/supervisor complete the terminology decision pack.
-6. Keep the two remaining gates independent: one PASS must not promote another. UX-012 is separately Founder-approved, with factory-operator review retained as a pilot-run control.
+1. Name an independent TECH-011 verifier and obtain dated approval before promoting the matrix row.
+2. Confirm that a second approved encrypted/offline recovery-identity copy exists before moving/removing the repository-root identity.
+3. Have a factory estimator freeze the independent truth sheet before Weavly entry.
+4. Keep the two remaining gates independent: one PASS must not promote another. UX-012 is Founder-approved, with factory-operator review retained as a pilot-run control.
