@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 const comparisonScript = join(process.cwd(), 'scripts/backup/compare-sanitized-inventories.sh')
 const temporaryDirectories: string[] = []
+const systemJqAvailable = spawnSync('jq', ['--version']).status === 0
 
 function inventory(overrides: Record<string, unknown> = {}) {
   return {
@@ -66,7 +67,11 @@ afterEach(() => {
   }
 })
 
-describe('sanitized backup inventory comparison', () => {
+// The production restore runner includes jq and the focused local/Actions test
+// exercises the real shell comparison. Vercel's build image does not include
+// jq, so skip this external-tool integration suite there instead of reporting
+// misleading ENOENT failures after the script correctly fails closed.
+describe.skipIf(!systemJqAvailable)('sanitized backup inventory comparison', () => {
   it('passes only when normalized inventories are exactly equal', () => {
     const expected = inventory()
     const { result, comparison } = compare(expected, expected)
