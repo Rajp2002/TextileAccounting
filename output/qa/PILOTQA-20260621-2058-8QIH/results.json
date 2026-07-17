@@ -174,15 +174,19 @@
       "scenario": "Verify backup schedule and perform restore into a disposable project.",
       "expected": "Restored org, users, production, stock, receivables, and payroll reconcile.",
       "status": "blocked",
-      "actual": "A sanitized isolated-QA logical backup deleted and restored one organization, two users, production, stock, receivable, and payroll in 2478.4 ms with identical SHA-256 summaries, successful restored-owner sign-in, and zero cleanup. The encrypted production-backup workflow is active and its required setting names are configured. Scheduled run 29368765626 completed the five logical dump commands but failed closed during sanitized-inventory parsing; zero artifacts were created. No scheduled production artifact has been restored, reconciled, timed, cleaned up, or independently approved.",
+      "actual": "Scheduled production-backup run 29451202680 created encrypted artifact 8357639557 with 14-day retention. Restore run 29494683840 restored that exact artifact into disposable local Supabase in 128 seconds without targeting production. Organization, profiles/Auth, estimator, orders, production, stock, receivables, payroll, Storage, tenant boundaries, identity digests and migration history reconciled; zero effect-capable jobs were restored and cleanup passed. The sole explained variance was compatible pg_net 0.19.5 to 0.20.3. The comparison/restore fixes are included in the current release candidate.",
       "evidence": [
         "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
         "output/qa/blocked-row-campaign/B18-recovery-runtime.json",
-        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29368765626"
+        "output/qa/pilot-gate-closure/2026-07-16/TECH-011/scheduled-backup-metadata.json",
+        "output/qa/pilot-gate-closure/2026-07-16/TECH-011/restore-result-redacted.json",
+        "output/qa/pilot-gate-closure/2026-07-16/TECH-011/verification.md",
+        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29451202680",
+        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29494683840"
       ],
-      "notes": "Precise remaining dependency: merge the inventory-output correction, validate it with a manual canary that receives no schedule credit, wait for a new scheduled encrypted artifact, restore and reconcile that exact artifact, measure recovery and cleanup, and obtain named-verifier approval.",
+      "notes": "Technical proof is pass-ready. Keep formally blocked until this release candidate reaches main, a named independent verifier signs the recovery evidence, and the deferred second approved recovery-identity copy is confirmed. Do not repeat the restore merely to manufacture evidence.",
       "severity": "High",
-      "updatedAt": "2026-07-14T23:03:09.000Z",
+      "updatedAt": "2026-07-17T18:20:00.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
       "disposition_classification": "C"
@@ -5591,18 +5595,21 @@
       "scenario": "Amended limited-pilot terminology acceptance: product-owner-approved reconciled baseline before pilot, followed by contextual validation with the actual pilot factory user during the pilot.",
       "expected": "Before pilot: approved baseline, consistent wording across product and outputs, explicit high-risk distinctions, passing production deployment/regression validation, and no known error-causing ambiguity. During pilot: dated named-user feedback, corrections, and post-change confirmation remain an open operating control until complete.",
       "status": "pass",
-      "actual": "The product-owner-approved baseline was implemented across the primary product, validation, English/Gujarati locales, PDFs, exports, messages, documentation, and help. High-risk distinctions are explicit and regression-tested. Production deployment 93c2622 is READY and representative authenticated owner/supervisor routes passed. No error-causing terminology ambiguity is known. Actual pilot-user comprehension validation remains an open pilot operating control; no factory-supervisor approval is claimed.",
+      "actual": "The product-owner-approved baseline was implemented across the primary product, validation, English/Gujarati locales, PDFs, exports, messages, documentation, and help. High-risk distinctions are explicit and regression-tested. Production deployment 93c2622 is READY and representative authenticated owner/supervisor routes passed. On 2026-07-17 Raj explicitly confirmed approval in the Founder role; fresh disposable-QA owner/supervisor screenshots and cleanup evidence were added. Actual pilot-user comprehension validation remains an open operating control; no factory-supervisor approval is claimed.",
       "evidence": [
         "docs/pilot-remediation/closure-packs/UX-012_REQUIREMENT_AMENDMENT.md",
         "docs/pilot-remediation/closure-packs/UX-012_TERMINOLOGY_DECISION_PACK.md",
         "docs/pilot-remediation/closure-packs/UX-012_FACTORY_TERMINOLOGY_REVIEW_REGISTER.md",
         "__tests__/ux-012-terminology-baseline.test.ts",
         "output/qa/pilot-gate-closure/2026-07-14/UX-012/runtime-evidence.json",
-        "output/qa/pilot-gate-closure/2026-07-14/UX-012/acceptance-review.md"
+        "output/qa/pilot-gate-closure/2026-07-14/UX-012/acceptance-review.md",
+        "output/qa/pilot-gate-closure/2026-07-16/UX-012/founder-preliminary-review.md",
+        "output/qa/pilot-gate-closure/2026-07-17/UX-012/runtime-evidence.md",
+        "output/qa/pilot-gate-closure/2026-07-17/UX-012/screenshot-index.md"
       ],
-      "notes": "Traceable product-owner amendment replaces the pre-pilot substitute reviewer with actual pilot-user validation. Pilot control remains OPEN: record actual user name/role, date/context, confusing or rejected terms, corrections, and confirmation after changes.",
+      "notes": "PASS is explicit Founder acceptance under the traceable requirement amendment, not a factory-operator signature. Pilot control remains OPEN: record actual user name/role, populated context, exact Gujarati feedback, confusing or rejected terms, corrections, and confirmation after changes. Any disagreement reopens UX-012.",
       "severity": "Medium",
-      "updatedAt": "2026-07-14T14:30:00.000Z",
+      "updatedAt": "2026-07-17T18:20:00.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
       "disposition_classification": "F"

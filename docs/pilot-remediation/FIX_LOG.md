@@ -2533,3 +2533,31 @@ Branch `codex/performance-campaign-20260715-upstream`; code commits `8d4d767`, `
 - No production form, shift log, payroll, stock, order, quotation, dispatch, receipt, account, or financial record was created or changed during deployment verification.
 - Migration state remains aligned and the database dry-run remained up to date before merge. The six legacy stored-function lint findings remain open formal-audit work and received no pass claim.
 - Formal matrix and pilot-readiness counts remain unchanged.
+
+## Repository-grounded architecture and remaining-gate release candidate
+
+Date: 2026-07-17 IST.
+
+- Added the original Narola commercial/technical proposal and a faithful
+  technical summary under `docs/reference/`.
+- Added the repository-grounded current-state map, concept assessment,
+  idempotency matrix, golden journeys, recommendation/rejection registers,
+  sprint plan, implementation plan and verification summary under
+  `outputs/architecture-enhancement/`.
+- Integrated backup comparison/restore fixes that report sanitized mismatches
+  safely and accept only the documented compatible `pg_net` runtime-version
+  variance.
+- TECH-011 evidence now records scheduled run `29451202680`, encrypted artifact
+  `8357639557`, exact-artifact restore run `29494683840`, 128-second RTO,
+  required reconciliation, zero restored jobs and successful cleanup.
+- Added authenticated UX-012 owner/supervisor screenshots and Raj's explicit
+  Founder reconfirmation. UX-012 remains `pass`; actual-user review of populated
+  English contexts and exact Gujarati wording remains an open first-pilot-run
+  control.
+- Formal matrix status/count change: none. Counts remain **368 pass, 0 fail,
+  6 blocked and 3 not applicable**. TECH-011 remains blocked for release
+  integration, named independent-verifier approval and deferred second
+  recovery-identity confirmation. GOLDEN-A-03 remains the other pilot gate.
+- Safety: the repository-root recovery identity was explicitly excluded from
+  Git. No production data/schema mutation, billing action or deployment has
+  occurred during candidate preparation.
