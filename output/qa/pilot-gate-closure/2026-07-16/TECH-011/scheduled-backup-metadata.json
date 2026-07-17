@@ -1,0 +1,21 @@
+{
+  "status": "pass",
+  "workflow": "Supabase production logical backup",
+  "event": "schedule",
+  "run_id": 29451202680,
+  "run_url": "https://github.com/Rajp2002/TextileAccounting/actions/runs/29451202680",
+  "source_commit": "e4d10a9958fefa1b9da40807360276f80b1ba43e",
+  "created_at_utc": "2026-07-15T21:14:09Z",
+  "completed_at_utc": "2026-07-15T21:19:01Z",
+  "backup_id": "20260715T211440Z-29451202680-1",
+  "source_project_ref": "vzhwahudircrpgtitwzd",
+  "artifact_id": 8357639557,
+  "artifact_name": "supabase-production-backup-20260715T211440Z-29451202680-1",
+  "artifact_bundle_bytes": 765231,
+  "encrypted_payload_bytes": 764377,
+  "encrypted_sha256": "8377fef1fc5529c3b398745cd2a4305c1b6174ab514b5cf54fde7b17887d4f2f",
+  "artifact_created_at_utc": "2026-07-15T21:18:57Z",
+  "artifact_expires_at_utc": "2026-07-29T21:18:56Z",
+  "retention_days": 14,
+  "storage_object_count_at_capture": 0
+}
