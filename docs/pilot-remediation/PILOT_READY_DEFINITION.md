@@ -179,7 +179,7 @@ The canonical matrix is **368 pass, 0 fail, 6 blocked, and 3 not applicable**. E
 
 The verdict is **No-Go pending two gates**:
 
-1. `TECH-011`: the scheduled encrypted artifact and exact disposable restore have passed; release integration, named independent-verifier approval and confirmation of the deferred second recovery-identity copy remain.
+1. `TECH-011`: the scheduled encrypted artifact, exact disposable restore and production release integration have passed; named independent-verifier approval and confirmation of the deferred second recovery-identity copy remain.
 2. `GOLDEN-A-03`: one independent real-fabric truth sheet must reconcile with the estimator and accepted downstream snapshot.
 
 `UX-012` passes the amended pre-pilot criterion through deployed baseline evidence and Raj's explicit Founder approval. Named actual-user review of populated English contexts and exact Gujarati wording remains a mandatory first-pilot-run control; disagreement reopens the row. `OFF-001` is optional PWA-install evidence; `SEC-011` is intentionally deferred to a read-only check on the owner’s physical laptop; `SEC-018` gates public legal reliance; and `SIGNOFF-04` is a mandatory first-shift operating control. These rows retain their recorded status without independently producing a pre-session No-Go.

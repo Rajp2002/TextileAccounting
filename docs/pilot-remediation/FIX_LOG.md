@@ -2556,8 +2556,26 @@ Date: 2026-07-17 IST.
   control.
 - Formal matrix status/count change: none. Counts remain **368 pass, 0 fail,
   6 blocked and 3 not applicable**. TECH-011 remains blocked for release
-  integration, named independent-verifier approval and deferred second
+  governance: named independent-verifier approval and deferred second
   recovery-identity confirmation. GOLDEN-A-03 remains the other pilot gate.
 - Safety: the repository-root recovery identity was explicitly excluded from
-  Git. No production data/schema mutation, billing action or deployment has
-  occurred during candidate preparation.
+  Git. No production data/schema mutation or billing action occurred during
+  candidate preparation.
+
+### Production release closeout
+
+- PR `#20` merged with history preserved at commit
+  `5f8d0c8355c89f3a24e0f127fc0c87ca91e89b57`.
+- Production deployment `dpl_8CXejpq4oQpDbjQ3EnbKpZC21MAJ` reached `READY`
+  and serves the canonical alias `https://textile-accounting.vercel.app`.
+- The exact merge commit passed GitHub/Vercel status checks. Public smoke checks
+  returned HTTP 200 for `/`, `/login`, `/privacy`, `/manifest.webmanifest` and
+  `/sw.js`.
+- Clean integration validation passed lint, TypeScript, the production build
+  and the full test suite: 100 files, 700 passed and one environment-dependent
+  `jq` shell-integration suite skipped in the Vercel build image. The same
+  focused backup suite passed all 16 tests locally with system `jq`.
+- No production database/schema/data mutation was performed during release or
+  smoke verification. The recovery identity remained untracked and excluded.
+- Formal matrix status/count change: none. Counts remain **368 pass, 0 fail,
+  6 blocked and 3 not applicable**.

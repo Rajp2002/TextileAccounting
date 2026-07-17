@@ -1,12 +1,18 @@
 # Verification results
 
-Verified: 2026-07-15 IST
+Verified: 2026-07-17 IST
 
 ## Scope statement
 
-No product recommendation was implemented, so there is no change-specific migration, tenant-isolation, role-denial, retry, duplicate-submit, browser or production runtime claim to verify in this pass. Verification covered proposal preservation, document readability, analysis-artifact integrity and the visible working-tree baseline. The baseline includes unrelated uncommitted auth/performance/estimator work listed in `pre-change-checkpoint.md`; a green result must not be misattributed to this review.
+The release contains the proposal/reference analysis, UX-012 evidence, TECH-011
+evidence and the bounded backup comparison/restore safety fixes. Validation was
+performed from a clean integration branch based on current `origin/main`, so
+the green result does not claim or overwrite stale unrelated changes in the
+original dirty worktree.
 
-No database command, Supabase migration, Vercel deployment, provider call, production browser mutation or production data mutation was performed.
+No database command, Supabase migration, provider mutation, production browser
+form submission or production data mutation was performed. PR `#20` merged to
+`main`, and Vercel deployed that exact merge commit to production.
 
 | Recommendation / artifact | Verification command or procedure | Environment | Expected result | Actual result | Evidence path | Classification | Remaining risk |
 |---|---|---|---|---|---|---|---|
@@ -18,6 +24,9 @@ No database command, Supabase migration, Vercel deployment, provider call, produ
 | Lint baseline | `npm run lint` | Local visible working tree | No lint errors | Exit 0, no diagnostics | Terminal result recorded here | PASS | Same dirty-tree attribution limitation |
 | Automated test baseline | `npm test` | Local visible working tree | Repository test suite succeeds | 96 test files passed; 678 passed, 1 skipped of 679; exit 0 | Vitest terminal result | PASS | Many tests are source contracts, not deployed SQL/browser proof |
 | Production build baseline | `npm run build` (includes prebuild test) | Local build using `.env.production.local`; no server/deploy/database call initiated | Optimized Next build completes | Exit 0; 96 files/678 tests passed/1 skipped in prebuild; Next.js compiled, type-checked and generated 42 static pages | Next build terminal result | PASS | Build loaded production-named environment values locally; this confirms compile only, not production behavior or deployment |
+| Clean release validation | `npm ci`; focused backup tests; `npm test`; `npm run lint`; `npx tsc --noEmit`; production-configured `npm run build` | Clean integration worktree at release branch | Dependencies install and all available gates pass | Install passed; focused backup suite 2 files/16 tests; full suite 100 files/700 passed/1 environment-dependent skip; lint and TypeScript passed; optimized build compiled and generated 43 static pages | PR `#20` checks and local release transcript | PASS | Vercel lacks system `jq`, so only the shell-integration suite is skipped there; GitHub restore runners and local focused proof include `jq` |
+| Main integration | PR `#20` merge and exact-commit status inspection | GitHub `main` | Reviewable history-preserving merge with green status | Merged at `5f8d0c8355c89f3a24e0f127fc0c87ca91e89b57`; exact commit status succeeded | `https://github.com/Rajp2002/TextileAccounting/pull/20` | PASS | None identified |
+| Production deployment | Vercel deployment inspection plus public Node fetch smoke | Production, read-only | Exact merge commit reaches READY; canonical public routes respond | Deployment `dpl_8CXejpq4oQpDbjQ3EnbKpZC21MAJ` READY; `/`, `/login`, `/privacy`, `/manifest.webmanifest` and `/sw.js` returned HTTP 200 | `https://textile-accounting.vercel.app` | PASS | Authenticated business flows were not mutated during release smoke |
 | Tenant isolation after implementation | Not run - no implementation/schema change | N/A | No changed boundary to test | No product change | `current-state-map.md` and existing security evidence | NOT APPLICABLE | A later RPC/idempotency implementation must run wrong-role and cross-tenant integration/browser proof |
 | Duplicate submission/retry after implementation | Not run - no implementation | N/A | No changed command to test | No product change | `idempotency-matrix.md` | NOT APPLICABLE | REC-005..007 remain recommendations, not verified fixes |
 | Mobile workflow after implementation | Not run - no UI implementation | N/A | No changed mobile behavior | No product change | `golden-journeys.md` | NOT APPLICABLE | Existing OFF-009/OFF-010 evidence applies to its recorded build only |
@@ -36,8 +45,12 @@ No database command, Supabase migration, Vercel deployment, provider call, produ
 
 ## Regression and environment conclusion
 
-- **Regressions introduced by this review:** none identified; only PDF/Markdown artifacts were added.
+- **Regressions introduced by this release:** none identified by clean
+  lint/type/test/build checks and public production smoke.
 - **Database compatibility impact:** none.
 - **Tenant-isolation impact:** none.
-- **Production/QA impact:** none. A local production-configured build ran, but it did not deploy or intentionally call/mutate a remote database.
-- **Verification caveat:** the green lint/type/test/build baseline covers the entire visible dirty tree and therefore also validates—but does not take ownership of—the user's pre-existing uncommitted changes.
+- **Production/QA impact:** production application assets were deployed from
+  exact merge `5f8d0c8`; no production database/schema/data mutation occurred.
+- **Verification caveat:** authenticated production business mutations were
+  intentionally excluded from release smoke. Existing QA screenshots and
+  TECH-011 runtime evidence retain their recorded environment scope.
