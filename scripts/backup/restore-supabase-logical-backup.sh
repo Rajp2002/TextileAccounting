@@ -97,17 +97,90 @@ SANITIZED_INVENTORY_OUTPUT_FILE="$work_dir/restored-inventory.json" \
 SANITIZED_INVENTORY_STDERR_FILE="$work_dir/restored-inventory.stderr" \
     "$repo_root/scripts/backup/capture-sanitized-inventory.sh"
 
-jq --sort-keys . "$payload_dir/source-inventory.json" > "$work_dir/source-inventory.normalized.json"
-jq --sort-keys . "$work_dir/restored-inventory.json" > "$work_dir/restored-inventory.normalized.json"
-if ! cmp -s "$work_dir/source-inventory.normalized.json" "$work_dir/restored-inventory.normalized.json"; then
-    printf 'Restored inventory does not exactly match the encrypted source inventory.\n' >&2
+comparison_file="$work_dir/inventory-comparison.json"
+comparison_status=0
+compatible_extension_variance=false
+SANITIZED_SOURCE_INVENTORY_FILE="$payload_dir/source-inventory.json" \
+    SANITIZED_RESTORED_INVENTORY_FILE="$work_dir/restored-inventory.json" \
+    SANITIZED_INVENTORY_COMPARISON_FILE="$comparison_file" \
+    "$repo_root/scripts/backup/compare-sanitized-inventories.sh" || comparison_status=$?
+if [[ "$comparison_status" -ne 0 ]]; then
+    if [[ "$comparison_status" -ne 5 || ! -f "$comparison_file" ]]; then
+        printf 'Sanitized inventory comparison could not be completed safely.\n' >&2
+        exit 6
+    fi
+    if jq -e '
+        .business_inventory_exact_match == true and
+        .extension_names_match == true and
+        (.extension_version_differences | map(.name) == ["pg_net"])
+    ' "$comparison_file" >/dev/null 2>&1; then
+        pg_net_signature_ok="$(
+            psql "$restore_db_url" \
+                --no-psqlrc \
+                --set ON_ERROR_STOP=1 \
+                --tuples-only \
+                --no-align \
+                --quiet \
+                --command "select to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is not null"
+        )"
+        if [[ "$pg_net_signature_ok" == "t" ]]; then
+            compatible_extension_variance=true
+            printf 'Business inventory matches exactly; compatible pg_net version variance recorded.\n'
+        fi
+    fi
+
+    if [[ "$compatible_extension_variance" == true ]]; then
+        :
+    else
+        printf 'Restored inventory does not satisfy the recovery compatibility policy.\n' >&2
+        jq -n \
+            --arg status fail \
+            --arg reason inventory_mismatch \
+            --arg restore_started_at_utc "$restore_started_at" \
+            --slurpfile comparison "$comparison_file" \
+            '{
+                status: $status,
+                reason: $reason,
+                restore_target: "ephemeral local Supabase stack",
+                production_targeted: false,
+                restore_started_at_utc: $restore_started_at_utc,
+                inventory_comparison: $comparison[0],
+                cleanup: "performed by EXIT trap; Supabase stopped with --no-backup"
+            }' \
+            > "$RESTORE_EVIDENCE_DIR/restore-result.json"
+        exit 5
+    fi
+fi
+
+effect_job_count="$(
+    psql "$restore_db_url" \
+        --no-psqlrc \
+        --set ON_ERROR_STOP=1 \
+        --tuples-only \
+        --no-align \
+        --quiet \
+        --command 'select count(*) from cron.job'
+)"
+if [[ "$effect_job_count" != "0" ]]; then
+    printf 'Disposable restore contains scheduled effect-capable jobs; stopping safely.\n' >&2
     jq -n \
         --arg status fail \
-        --arg reason inventory_mismatch \
+        --arg reason effect_capable_jobs_present \
         --arg restore_started_at_utc "$restore_started_at" \
-        '{status: $status, reason: $reason, restore_started_at_utc: $restore_started_at_utc}' \
+        --argjson effect_job_count "$effect_job_count" \
+        --slurpfile comparison "$comparison_file" \
+        '{
+            status: $status,
+            reason: $reason,
+            restore_target: "ephemeral local Supabase stack",
+            production_targeted: false,
+            restore_started_at_utc: $restore_started_at_utc,
+            inventory_comparison: $comparison[0],
+            effect_capable_job_count: $effect_job_count,
+            cleanup: "performed by EXIT trap; Supabase stopped with --no-backup"
+        }' \
         > "$RESTORE_EVIDENCE_DIR/restore-result.json"
-    exit 5
+    exit 7
 fi
 
 psql "$restore_db_url" --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --quiet --command 'select 1' >/dev/null
@@ -129,6 +202,9 @@ jq -n \
     --arg restore_completed_at_utc "$restore_completed_at" \
     --arg migration_head "$migration_head" \
     --argjson recovery_seconds "$recovery_seconds" \
+    --argjson inventory_exact_match "$(jq -r '.exact_match' "$comparison_file")" \
+    --argjson compatible_extension_variance "$compatible_extension_variance" \
+    --slurpfile comparison "$comparison_file" \
     --slurpfile inventory "$work_dir/restored-inventory.json" \
     '{
         status: $status,
@@ -142,7 +218,12 @@ jq -n \
         recovery_seconds: $recovery_seconds,
         database_start_check: "pass",
         restore_order_check: "pass",
-        inventory_exact_match: true,
+        inventory_exact_match: $inventory_exact_match,
+        business_inventory_exact_match: true,
+        extension_compatibility_check: "pass",
+        compatible_extension_version_variance: $compatible_extension_variance,
+        inventory_comparison: $comparison[0],
+        effect_capable_job_count: 0,
         migration_head: $migration_head,
         inventory: $inventory[0],
         cleanup: "performed by EXIT trap; Supabase stopped with --no-backup"

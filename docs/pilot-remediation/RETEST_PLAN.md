@@ -716,6 +716,7 @@ Acceptance:
 - Regression-test the corrected inventory capture with zero/non-zero/malformed/missing/multiple-row JSON, numeric-type enforcement, stderr isolation, unusual whitespace/Unicode and credential non-echo. Preserve one-object SQL aggregation and `psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1`.
 - After merge, use one `workflow_dispatch` run only as a canary for valid inventory, zero Storage, SHA-256 completion, encryption and 14-day artifact upload. Label it supporting validation, not scheduled evidence, and do not use it for formal restore closure.
 - Keep the daily `17 20 * * *` schedule unchanged. Record the next successful `event=schedule` run ID and exact artifact name; only that artifact may proceed to disposable restore, exact reconciliation, measured RTO, cleanup proof and named-verifier approval.
+- 2026-07-16 result: scheduled run `29451202680` produced artifact `8357639557`; restore run `29494683840` restored it in 128 seconds with exact business/Auth/Storage/migration reconciliation, zero jobs, no production target and successful cleanup. The only compatible variance was `pg_net` `0.19.5` to `0.20.3`. Do not repeat this drill merely to manufacture evidence. After this release reaches `main`, remaining work is named independent-verifier sign-off and confirmation of the deferred second recovery-identity copy.
 
 ### UX-012 supervisor review retest — 2026-07-14
 
@@ -723,6 +724,7 @@ Acceptance:
 - Capture the required owner/supervisor/mobile/output screen contexts for every language actually used. Do not submit production forms only to make screenshots; redact identities/amounts.
 - A named pilot-factory supervisor explains and decides every canonical term plus every high-risk term visible in the pilot. Record name, real role/factory, date/time/time zone, exact choice and change request.
 - Implement only approved changes, update affected tests/docs/exports, deploy if user-facing behavior changes, recapture affected contexts, and obtain the same reviewer’s dated re-approval.
+- 2026-07-17 result: Raj explicitly reconfirmed the deployed baseline as Founder and disposable-QA owner/supervisor screenshots were captured and cleaned. UX-012 remains `pass`; actual-user review of populated English contexts and exact Gujarati wording stays OPEN during the first pilot run. Any disagreement reopens the row.
 - Keep `UX-012` blocked for blank/unclear choices, product-owner-only opinion, unsigned screenshots, unimplemented changes, or an unreviewed used locale.
 
 ### B19 external-evidence regression guard — 2026-07-14
