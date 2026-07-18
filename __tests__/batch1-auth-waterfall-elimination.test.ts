@@ -32,7 +32,8 @@ describe('Batch 1 — auth.ts cached session helper', () => {
     it('still anchors authorization to the profiles DB row (not user metadata)', () => {
         // p0-authz-boundary.test.ts requires these exact strings to be present
         expect(authLib).toContain(".from('profiles')")
-        expect(authLib).toContain(".select('role, org_id, full_name')")
+        expect(authLib).toContain(".select('role, org_id, full_name, access_revoked_at')")
+        expect(authLib).toContain('if (dbProfile?.access_revoked_at) return null')
         expect(authLib).toContain('const admin = createAdminClient()')
         expect(authLib).not.toContain('user.user_metadata?.role')
     })

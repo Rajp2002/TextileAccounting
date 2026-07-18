@@ -127,9 +127,11 @@ export const getCachedSession = cache(async (): Promise<{
     const admin = createAdminClient()
     const { data: dbProfile } = await admin
         .from('profiles')
-        .select('role, org_id, full_name')
+        .select('role, org_id, full_name, access_revoked_at')
         .eq('id', user.id)
         .maybeSingle()
+
+    if (dbProfile?.access_revoked_at) return null
 
     const role = dbProfile?.role ?? undefined
     const org_id = dbProfile?.org_id ?? undefined
