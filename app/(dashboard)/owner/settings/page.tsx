@@ -24,6 +24,7 @@ import {
     SlidersHorizontal,
     Smartphone,
     User,
+    Users,
     XCircle,
     type LucideIcon,
 } from 'lucide-react'
@@ -47,6 +48,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
 import { tierSatisfies } from '@/lib/subscription-access'
+import { SupervisorAccessManager } from '@/components/settings/supervisor-access-manager'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -434,6 +436,12 @@ export default function SettingsPage() {
                             </div>
                         </SettingsPanel>
                     </SettingsSection>
+
+                    {hasPremium && (
+                        <SettingsSection id="supervisors-access" title="Supervisors & Access" icon={Users}>
+                            <SupervisorAccessManager factoryName={org?.name || 'This factory'} />
+                        </SettingsSection>
+                    )}
 
                     {hasPremium && <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                         <SettingsSection id="production-mode" title="Production Mode" icon={SlidersHorizontal}>

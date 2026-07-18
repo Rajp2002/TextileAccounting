@@ -763,7 +763,7 @@ async function loadFactoryTodayChecklistPayload(
             // Setup checklist: joined supervisor profile; admin client preserves the existing RLS bypass for owner setup status.
             (async () => {
                 try {
-                    const { data } = await admin.from('profiles').select('id').eq('org_id', orgId).eq('role', 'supervisor').limit(1)
+                    const { data } = await admin.from('profiles').select('id').eq('org_id', orgId).eq('role', 'supervisor').is('access_revoked_at', null).limit(1)
                     return { data: data ?? [] }
                 } catch {
                     return { data: [] }
