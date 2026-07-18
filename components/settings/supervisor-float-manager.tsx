@@ -32,6 +32,7 @@ export function SupervisorFloatManager() {
                 .select('id, full_name, phone')
                 .eq('org_id', userProfile!.org_id)
                 .eq('role', 'supervisor')
+                .is('access_revoked_at', null)
 
             if (pErr) throw pErr
 

@@ -47,7 +47,8 @@ describe('Batch 1A profile authorization boundary', () => {
 
     it('keeps server authorization anchored to the protected profile row, not user metadata', () => {
         expect(authLib).toContain(".from('profiles')")
-        expect(authLib).toContain(".select('role, org_id, full_name')")
+        expect(authLib).toContain(".select('role, org_id, full_name, access_revoked_at')")
+        expect(authLib).toContain('if (dbProfile?.access_revoked_at) return null')
         expect(authLib).toContain('const admin = createAdminClient()')
         expect(authLib).not.toContain('user.user_metadata?.role')
     })
