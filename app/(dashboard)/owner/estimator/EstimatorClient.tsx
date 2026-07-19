@@ -35,9 +35,9 @@ import {
     Zap,
     Play,
     CheckCircle2,
-    ArrowRight,
     Minus,
     ReceiptText,
+    FileDown,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -91,7 +91,20 @@ import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import FactoryCostWizard from './FactoryCostWizard'
+import {
+    getEstimatorWorkflowConfig,
+    type EstimatorWorkflowMode,
+    type ProductionMode,
+} from '@/lib/production-mode'
+import {
+    getFirstEstimatorValidationMessage,
+    validateEstimatorSnapshot,
+} from '@/lib/estimator-validation'
+import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
 import { createClientRequestUuid } from '@/lib/client-request-id'
+import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
+import { createCostingExportModel } from '@/lib/estimator-export'
+import type { CostingRecordKind } from '@/lib/costing-workspace'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -107,6 +120,12 @@ type FactoryCostProfile = Partial<{
     overhead_pct: number | string | null
     default_commission_pct: number | string | null
     default_transport_per_m: number | string | null
+    default_warp_yarn_name: string | null
+    default_warp_yarn_rate_per_kg: number | string | null
+    default_weft_yarn_name: string | null
+    default_weft_yarn_rate_per_kg: number | string | null
+    default_processing_rate_per_m: number | string | null
+    default_finishing_rate_per_m: number | string | null
     enabled_sections: FactorySections
     overhead_items: unknown[]
     monthly_output_m: number | string | null
@@ -209,6 +228,10 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 warpingRatePerKg:   Number(profile.warping_rate_per_kg ?? 2),
                 sizingRatePerKg:    Number(profile.sizing_rate_per_kg  ?? 1.5),
                 windingRatePerKg:   Number(profile.winding_rate_per_kg ?? 0),
+                warpRows:           state.warpRows.map((row, index) => index === 0 ? { ...row, label: profile.default_warp_yarn_name || row.label, yarnRate: Number(profile.default_warp_yarn_rate_per_kg ?? row.yarnRate) } : row),
+                weftRows:           state.weftRows.map((row, index) => index === 0 ? { ...row, label: profile.default_weft_yarn_name || row.label, yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
+                processingRatePerM: Number(profile.default_processing_rate_per_m ?? state.processingRatePerM),
+                finishingRatePerM:  Number(profile.default_finishing_rate_per_m ?? state.finishingRatePerM),
                 overheadItems:      ensureOverheadIntegrity(savedItems ?? state.overheadItems),
                 monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
@@ -383,6 +406,10 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 warpingRatePerKg:  Number(profile.warping_rate_per_kg  ?? base.warpingRatePerKg),
                 sizingRatePerKg:   Number(profile.sizing_rate_per_kg   ?? base.sizingRatePerKg),
                 windingRatePerKg:  Number(profile.winding_rate_per_kg  ?? base.windingRatePerKg),
+                warpRows:          base.warpRows.map((row, index) => index === 0 ? { ...row, label: profile.default_warp_yarn_name || row.label, yarnRate: Number(profile.default_warp_yarn_rate_per_kg ?? row.yarnRate) } : row),
+                weftRows:          base.weftRows.map((row, index) => index === 0 ? { ...row, label: profile.default_weft_yarn_name || row.label, yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
+                processingRatePerM: Number(profile.default_processing_rate_per_m ?? base.processingRatePerM),
+                finishingRatePerM: Number(profile.default_finishing_rate_per_m ?? base.finishingRatePerM),
                 overheadPct:       Number(profile.overhead_pct         ?? base.overheadPct),
                 commissionPct:     Number(profile.default_commission_pct ?? base.commissionPct),
                 transportPerM:     Number(profile.default_transport_per_m ?? base.transportPerM),
@@ -975,6 +1002,9 @@ export default function EstimatorClient({
     userId,
     orgId,
     canUseProduction,
+    productionMode,
+    staleDefaultRateNames,
+    organizationName,
 }: {
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
@@ -982,12 +1012,19 @@ export default function EstimatorClient({
     userId: string
     orgId: string
     canUseProduction: boolean
+    productionMode: ProductionMode
+    staleDefaultRateNames: string[]
+    organizationName: string
 }) {
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
-    
-    const [mode, setMode] = useState<'quote' | 'market'>(canUseProduction && searchParams.get('mode') === 'market' ? 'market' : 'quote')
+
+    const estimatorWorkflow = getEstimatorWorkflowConfig(productionMode, searchParams.get('mode'))
+    const [mode, setMode] = useState<EstimatorWorkflowMode>(
+        canUseProduction ? estimatorWorkflow.initialMode : 'quote'
+    )
+    const { allowsPartyOrders, allowsMarketRuns } = estimatorWorkflow
 
     const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
     const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
@@ -1019,6 +1056,10 @@ export default function EstimatorClient({
             warpingRatePerKg:  Number(initialProfile.warping_rate_per_kg  ?? base.warpingRatePerKg),
             sizingRatePerKg:   Number(initialProfile.sizing_rate_per_kg   ?? base.sizingRatePerKg),
             windingRatePerKg:  Number(initialProfile.winding_rate_per_kg  ?? base.windingRatePerKg),
+            warpRows:          base.warpRows.map((row, index) => index === 0 ? { ...row, label: initialProfile.default_warp_yarn_name || row.label, yarnRate: Number(initialProfile.default_warp_yarn_rate_per_kg ?? row.yarnRate) } : row),
+            weftRows:          base.weftRows.map((row, index) => index === 0 ? { ...row, label: initialProfile.default_weft_yarn_name || row.label, yarnRate: Number(initialProfile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
+            processingRatePerM: Number(initialProfile.default_processing_rate_per_m ?? base.processingRatePerM),
+            finishingRatePerM: Number(initialProfile.default_finishing_rate_per_m ?? base.finishingRatePerM),
             overheadPct:       Number(initialProfile.overhead_pct         ?? base.overheadPct),
             commissionPct:     Number(initialProfile.default_commission_pct ?? base.commissionPct),
             transportPerM:     Number(initialProfile.default_transport_per_m ?? base.transportPerM),
@@ -1073,9 +1114,18 @@ export default function EstimatorClient({
     const [weftInstruction, setWeftInstruction] = useState('')
     const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null)
     const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
+    const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
+    const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
     const quoteRequestIdRef = useRef<string | null>(null)
+    const autoRestoredDraftSavedAtRef = useRef<number | null>(null)
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
+    const [showExportDialog, setShowExportDialog] = useState(false)
+    const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
+        targetMode: 'quote' | 'market'
+        status: 'draft' | 'accepted'
+        recordKindOverride?: 'costing' | 'quotation'
+    } | null>(null)
     const [templateName,     setTemplateName]     = useState('')
     const [templateSaveError, setTemplateSaveError] = useState<string | null>(null)
 
@@ -1104,9 +1154,62 @@ export default function EstimatorClient({
     const partyLookupTimerRef = useState<ReturnType<typeof setTimeout> | null>(null)
 
     // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
-    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave<EstimateState>({
+    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow } = useAutosave<EstimateState>({
         orgId, userId, debounceMs: 2000,
     })
+
+    const buildCurrentDraft = useCallback((
+        clientRequestId = quoteRequestIdRef.current,
+        recordKindOverride?: 'costing' | 'quotation',
+    ) => ({
+        state,
+        partyName,
+        qualityLabel,
+        warpInstruction,
+        weftInstruction,
+        sourceQuoteId: sourceQuoteId ?? undefined,
+        sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+        sourceRecordKind: recordKindOverride ?? sourceRecordKind ?? undefined,
+        clientRequestId: clientRequestId ?? undefined,
+    }), [
+        partyName,
+        qualityLabel,
+        sourceQuoteId,
+        sourceQuoteUpdatedAt,
+        sourceRecordKind,
+        state,
+        warpInstruction,
+        weftInstruction,
+    ])
+
+    const applyEstimatorDraft = useCallback(() => {
+        const restored = restoreDraft()
+        if (!restored) return
+
+        dispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
+        setPartyName(restored.partyName)
+        setQualityLabel(restored.qualityLabel)
+        setWarpInstruction(restored.warpInstruction)
+        setWeftInstruction(restored.weftInstruction)
+        setSourceQuoteId(restored.sourceQuoteId ?? null)
+        setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
+        setSourceRecordKind(restored.sourceRecordKind ?? null)
+        quoteRequestIdRef.current = restored.clientRequestId ?? null
+        toast.success(restored.sourceQuoteId
+            ? restored.sourceRecordKind === 'costing' ? 'Costing specifications loaded' : 'Quotation specifications loaded'
+            : 'Cost Estimate draft restored')
+    }, [restoreDraft])
+
+    useEffect(() => {
+        if (!hasDraft || !draft || !shouldAutoRestoreEstimatorDraft(draft)) return
+        if (autoRestoredDraftSavedAtRef.current === draft.savedAt) return
+
+        // React StrictMode can replay mount effects. savedAt identifies this
+        // handoff so an explicit Open & Update / Duplicate action is applied
+        // once without affecting the manual recovery flow for ordinary drafts.
+        autoRestoredDraftSavedAtRef.current = draft.savedAt
+        applyEstimatorDraft()
+    }, [applyEstimatorDraft, draft, hasDraft])
 
     // Fallback fetch: only runs if no initial data was server-provided
     useEffect(() => {
@@ -1166,7 +1269,7 @@ export default function EstimatorClient({
 
     // Party rate memory — debounced 800ms, 3-char minimum
     useEffect(() => {
-        if (!canUseProduction) { setPartyHint(null); return }
+        if (isStandaloneCostingSession) { setPartyHint(null); return }
         if (partyLookupTimerRef[0]) clearTimeout(partyLookupTimerRef[0])
         if (partyName.trim().length < 3) { setPartyHint(null); return }
         const timer = setTimeout(async () => {
@@ -1177,12 +1280,46 @@ export default function EstimatorClient({
         partyLookupTimerRef[0] = timer
         return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [partyName, canUseProduction])
+    }, [isStandaloneCostingSession, partyName])
 
-    const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
+    const estimatorValidation = useMemo(() => validateEstimatorSnapshot(state), [state])
+    const firstEstimatorValidationMessage = useMemo(
+        () => getFirstEstimatorValidationMessage(estimatorValidation),
+        [estimatorValidation],
+    )
+    const validationIssueMap = useMemo(() => {
+        if (estimatorValidation.valid) return new Map<string, string>()
+        return new Map(estimatorValidation.issues.map(issue => [issue.field, issue.message]))
+    }, [estimatorValidation])
+    const validationMessageFor = (field: string) => validationIssueMap.get(field)
+    const hasValidationIssueFor = (prefix: string) => !estimatorValidation.valid
+        && estimatorValidation.issues.some(issue => issue.field === prefix || issue.field.startsWith(`${prefix}.`))
+
+    const totals: EstimatorV3Totals = useMemo(() => {
+        try {
+            return calcFullTotals(state)
+        } catch {
+            // A restored or manually tampered payload can contain a non-finite
+            // value. Keep the page recoverable while field validation explains
+            // what must be fixed; never let Decimal terminate the render.
+            return calcFullTotals(makeDefaultEstimateState())
+        }
+    }, [state])
+    const hasValidCostResult = estimatorValidation.valid
+        && Number.isFinite(totals.totalProductionCostPerM)
+        && totals.totalProductionCostPerM >= 0
+    const validationSummaryId = 'estimator-save-validation-summary'
+    const exportModel = useMemo(() => hasValidCostResult
+        ? createCostingExportModel({ qualityLabel, state, totals })
+        : null,
+    [hasValidCostResult, qualityLabel, state, totals])
     const scenarios = useMemo(() =>
         runScenarios(state, totals, customTargetPrice ? Number(customTargetPrice) : undefined),
     [state, totals, customTargetPrice])
+    const breakEvenScenario = useMemo(
+        () => scenarios.find(scenario => scenario.id === 'break-even'),
+        [scenarios],
+    )
 
     const filteredTemplates = useMemo(() =>
         templateSearch.trim()
@@ -1379,6 +1516,7 @@ export default function EstimatorClient({
         setWeftInstruction('')
         setSourceQuoteId(null)
         setSourceQuoteUpdatedAt(null)
+        setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setCustomTargetPrice('')
         clearDraft()
@@ -1467,28 +1605,70 @@ export default function EstimatorClient({
         toast.success(t('estimator.quality.deleted'))
     }
 
-    const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode, status: 'draft' | 'accepted' = 'draft') => {
+    const handleSaveQuote = async (
+        targetMode: 'quote' | 'market' = mode,
+        status: 'draft' | 'accepted' = 'draft',
+        staleRatesAcknowledged = false,
+        recordKindOverride?: 'costing' | 'quotation',
+    ) => {
         if (saveQuoteLockRef.current || savingQuote) return
+        const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
+        const effectiveTargetMode = saveAsStandaloneCosting ? 'quote' : targetMode
+        if (firstEstimatorValidationMessage) {
+            return toast.error(firstEstimatorValidationMessage)
+        }
+        if (!saveAsStandaloneCosting && canUseProduction && effectiveTargetMode === 'quote' && !allowsPartyOrders) {
+            return toast.error('Party quotations are unavailable in Market Run only mode')
+        }
+        if (effectiveTargetMode === 'market' && !allowsMarketRuns) {
+            return toast.error('Market Runs are unavailable in Order-Based only mode')
+        }
 
-        const resolvedPartyName = !canUseProduction
+        const resolvedPartyName = saveAsStandaloneCosting
             ? qualityLabel.trim()
-            : targetMode === 'market'
+            : effectiveTargetMode === 'market'
             ? (qualityLabel.trim() || partyName.trim()) 
             : partyName.trim()
 
         if (!resolvedPartyName) {
-            return toast.error(!canUseProduction ? 'Fabric Quality is required' : targetMode === 'market' ? 'Fabric Quality is required' : t('estimator.toast.party_required'))
+            return toast.error(saveAsStandaloneCosting ? 'Quality name is required' : effectiveTargetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
             return toast.error('Set a quantity before saving')
         }
+        if (staleDefaultRateNames.length > 0 && !staleRatesAcknowledged) {
+            setPendingStaleRateSave({ targetMode, status, recordKindOverride })
+            return
+        }
+
+        const browserIsOnline = typeof navigator === 'undefined' || navigator.onLine
+        if (!browserIsOnline) {
+            const draftSaved = saveDraftNow(buildCurrentDraft(undefined, saveAsStandaloneCosting ? 'costing' : 'quotation'))
+            toast.error('Reconnect before saving', {
+                description: draftSaved
+                    ? 'Your Cost Estimate and save identity are stored on this device.'
+                    : 'Browser storage is unavailable, so keep this page open until you reconnect.',
+                duration: Infinity,
+            })
+            return
+        }
+
+        const clientRequestId = effectiveTargetMode === 'quote'
+            ? quoteRequestIdRef.current ?? createClientRequestUuid()
+            : null
+        if (clientRequestId) quoteRequestIdRef.current = clientRequestId
+
+        // Flush both the current inputs and request identity before the action.
+        // If the response is lost after commit, reopening and retrying reuses the
+        // same idempotency key instead of creating a duplicate.
+        const draftSavedBeforeSubmit = saveDraftNow(buildCurrentDraft(clientRequestId, saveAsStandaloneCosting ? 'costing' : 'quotation'))
 
         saveQuoteLockRef.current = true
         setSavingQuote(true)
 
         try {
-            if (targetMode === 'market') {
+            if (effectiveTargetMode === 'market') {
                 const res = await createMarketRunFromEstimator({
                     fabricLabel:             resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
@@ -1506,15 +1686,14 @@ export default function EstimatorClient({
                     clearDraft()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
+                    setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
                     toast.success('Market Run created successfully')
                     router.push(`/owner/market-runs/${res.marketRunId}`)
                 }
             } else {
-                const clientRequestId = quoteRequestIdRef.current ?? createClientRequestUuid()
-                quoteRequestIdRef.current = clientRequestId
                 const res = await saveEstimatorQuoteV3({
-                    clientRequestId,
+                    clientRequestId:          clientRequestId!,
                     partyName:               resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
                     warpInstruction:         warpInstruction.trim() || undefined,
@@ -1523,6 +1702,7 @@ export default function EstimatorClient({
                     quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
                     totalProductionCostPerM: totals.totalProductionCostPerM,
                     status:                  status,
+                    recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
                     sourceQuoteId:           sourceQuoteId ?? undefined,
                     expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
                 })
@@ -1530,10 +1710,11 @@ export default function EstimatorClient({
                     clearDraft()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
+                    setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
-                    toast.success(canUseProduction
-                        ? (status === 'accepted' ? 'Quotation saved & accepted!' : t('estimator.toast.converted_success'))
-                        : (sourceQuoteId ? 'Cost Estimate updated' : 'Cost Estimate saved'))
+                    toast.success(!saveAsStandaloneCosting
+                        ? (status === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
+                        : (sourceQuoteId ? 'New costing version saved' : 'Costing saved'))
                     router.push('/owner/quotes')
                 } else {
                     toast.error(res.error ?? 'Failed to save quote')
@@ -1541,7 +1722,11 @@ export default function EstimatorClient({
             }
         } catch (error) {
             console.error('Failed to save estimator quote:', error)
-            toast.error(error instanceof Error ? error.message : 'Failed to save quote')
+            toast.error(error instanceof Error ? error.message : 'Failed to save quote', {
+                description: draftSavedBeforeSubmit
+                    ? 'Your Cost Estimate and retry identity remain saved on this device.'
+                    : undefined,
+            })
         } finally {
             setSavingQuote(false)
             saveQuoteLockRef.current = false
@@ -1585,6 +1770,7 @@ export default function EstimatorClient({
             clearDraft()
             setSourceQuoteId(null)
             setSourceQuoteUpdatedAt(null)
+            setSourceRecordKind(null)
             quoteRequestIdRef.current = null
             toast.success('Party order started')
             router.push(`/owner/orders?orderId=${result.orderId}`)
@@ -1639,7 +1825,7 @@ export default function EstimatorClient({
     ].filter(line => line.value > 0)
     return (
         <div className="estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
-            {!state.isConfigured && canUseProduction && (
+            {!state.isConfigured && (
                 <FactoryCostWizard 
                     initialState={state}
                     saving={saving}
@@ -1688,10 +1874,11 @@ export default function EstimatorClient({
                         <p className="text-sm text-amber-800 flex-1">
                             {draft.sourceQuoteId ? (
                                 <>
-                                    {canUseProduction ? 'Recalculating Cost Estimate from Quotation for ' : 'Updating saved Cost Estimate '}
-                                    <span className="font-bold">{canUseProduction ? (draft.partyName || 'Unknown Party') : (draft.qualityLabel || 'Untitled')}</span>
+                                    {draft.sourceRecordKind === 'costing' ? 'Updating saved Cost Estimate ' : canUseProduction ? 'Recalculating Cost Estimate from Quotation for ' : 'Updating saved Cost Estimate '}
+                                    <span className="font-bold">{draft.sourceRecordKind === 'costing' || !canUseProduction ? (draft.qualityLabel || 'Untitled') : (draft.partyName || 'Unknown Party')}</span>
                                     {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
-                                    {canUseProduction && ' — editable Quotations update in place; accepted Quotations create a linked version'}
+                                    {canUseProduction && draft.sourceRecordKind !== 'costing' && ' — editable Quotations update in place; accepted Quotations create a linked version'}
+                                    {draft.sourceRecordKind === 'costing' && ' — saving creates a new costing version without changing the original'}
                                 </>
                             ) : (
                                 <>
@@ -1702,19 +1889,7 @@ export default function EstimatorClient({
                             )}
                         </p>
                         <button
-                            onClick={() => {
-                                const d = restoreDraft()
-                                if (!d) return
-                                dispatch({ type: 'RESTORE_DRAFT', draftState: d.state })
-                                setPartyName(d.partyName)
-                                setQualityLabel(d.qualityLabel)
-                                setWarpInstruction(d.warpInstruction)
-                                setWeftInstruction(d.weftInstruction)
-                                setSourceQuoteId(d.sourceQuoteId ?? null)
-                                setSourceQuoteUpdatedAt(d.sourceQuoteUpdatedAt ?? null)
-                                quoteRequestIdRef.current = null
-                                toast.success(draft.sourceQuoteId ? 'Quotation details loaded' : 'Cost Estimate draft restored')
-                            }}
+                            onClick={applyEstimatorDraft}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
                         >
                             {draft.sourceQuoteId ? 'Load Specs' : 'Restore'}
@@ -1732,24 +1907,47 @@ export default function EstimatorClient({
                 <div className={hudShellClass}>
                     <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
                         <div className="min-w-0 space-y-3">
-                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,0.7fr)] sm:items-end">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5 xl:items-end">
                                 <div className="min-w-0">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
-                                    <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-ink)] sm:text-[40px]">
-                                        ₹{totals.totalProductionCostPerM.toFixed(2)}
+                                    <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-ink)] sm:text-[32px]">
+                                        {hasValidCostResult ? `₹${totals.totalProductionCostPerM.toFixed(2)}` : '—'}
                                     </p>
+                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
                                 </div>
-                                <ArrowRight className="hidden h-7 w-7 self-center text-[var(--color-subtle)] sm:block" />
                                 <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
-                                    <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[40px]">
-                                        ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">
+                                        {mode === 'market' ? 'Target selling price' : canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'}
                                     </p>
+                                    <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[32px]">
+                                        {hasValidCostResult && orderQuote?.isValid ? `₹${orderQuote.quotePricePerM.toFixed(2)}` : '—'}
+                                    </p>
+                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
                                 </div>
                                 <div className="min-w-0 rounded-[12px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] px-3 py-2">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">{t('estimator.hud.margin')}</p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-factory-green)]">
                                         {displayMarginPct >= 0 ? '+' : ''}{displayMarginPct.toFixed(1)}%
+                                    </p>
+                                </div>
+                                <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4">
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Break-even price</p>
+                                    <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-ink)]">
+                                        {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
+                                            ? `₹${breakEvenScenario.quotePricePerM.toFixed(2)}`
+                                            : '—'}
+                                    </p>
+                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">minimum at 0% margin</p>
+                                </div>
+                                <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4">
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
+                                    <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)]">
+                                        {hasValidCostResult && hasOrderQty && orderQuote?.isValid
+                                            ? `₹${orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+                                            : '—'}
+                                    </p>
+                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">
+                                        {hasOrderQty ? `for ${Number(state.orderQuantityM).toLocaleString('en-IN')} m` : 'set costing quantity'}
                                     </p>
                                 </div>
                             </div>
@@ -1779,10 +1977,10 @@ export default function EstimatorClient({
 
                         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end 2xl:w-[520px]">
 
-                            {mode === 'quote' ? (
+                            {mode === 'quote' || isStandaloneCostingSession ? (
                                 <>
                                     {/* PRIMARY: atomically create the accepted quote and live order */}
-                                    <Button
+                                    {canUseProduction && !isStandaloneCostingSession && <Button
                                         id="btn-start-party-order"
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
@@ -1795,7 +1993,7 @@ export default function EstimatorClient({
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">Start Party Order</span>
-                                    </Button>
+                                    </Button>}
 
                                     {/* SECONDARY: retain an accepted quote without starting production */}
                                     <Button
@@ -1803,19 +2001,34 @@ export default function EstimatorClient({
                                         size="sm"
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
-                                        onClick={() => handleSaveQuote('quote', canUseProduction ? 'accepted' : 'draft')}
-                                        disabled={savingQuote || !hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                        title={(!hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
-                                            ? (canUseProduction ? 'Complete party, quality, quantity, and cost result first.' : 'Complete quality, costing quantity, and cost result first.')
-                                            : undefined
-                                        }
+                                        onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
+                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? ((!hasOrderQty || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                            ? (!isStandaloneCostingSession ? 'Complete party, quality, quantity, and cost result first.' : 'Complete quality, costing quantity, and cost result first.')
+                                            : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{canUseProduction ? 'Save & Accept Quotation' : (sourceQuoteId ? 'Update Cost Estimate' : 'Save Cost Estimate')}</span>
+                                        <span className="truncate">{!isStandaloneCostingSession ? 'Save & Accept' : (sourceQuoteId ? 'Save New Version' : 'Save Costing')}</span>
                                     </Button>
 
+                                    {isStandaloneCostingSession && (
+                                        <Button
+                                            id="btn-export-cost-sheet"
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
+                                            onClick={() => setShowExportDialog(true)}
+                                            disabled={!exportModel}
+                                            title={exportModel ? 'Create an internal cost sheet or customer quotation' : 'Correct the highlighted inputs before exporting'}
+                                        >
+                                            <FileDown className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">Export Cost Sheet</span>
+                                        </Button>
+                                    )}
+
                                     {/* TERTIARY: Save Quote */}
-                                    {canUseProduction && <Button
+                                    {canUseProduction && !isStandaloneCostingSession && <Button
                                         id="btn-save-quote"
                                         size="sm"
                                         variant="outline"
@@ -1827,8 +2040,24 @@ export default function EstimatorClient({
                                         <span className="truncate">Save Quotation</span>
                                     </Button>}
 
+                                    {canUseProduction && !isStandaloneCostingSession && (
+                                        <Button
+                                            id="btn-save-costing"
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
+                                            onClick={() => handleSaveQuote('quote', 'draft', false, 'costing')}
+                                            disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                            aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                            title={firstEstimatorValidationMessage ?? 'Save an internal costing without creating a customer quotation'}
+                                        >
+                                            <Save className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">Save Costing</span>
+                                        </Button>
+                                    )}
+
                                     {/* TERTIARY: Switch to Market mode */}
-                                    {canUseProduction && (
+                                    {canUseProduction && !isStandaloneCostingSession && allowsMarketRuns && (
                                         <Button
                                             id="btn-switch-market"
                                             size="sm"
@@ -1860,7 +2089,7 @@ export default function EstimatorClient({
                                     </Button>
 
                                     {/* SECONDARY: Save Quote (draft) */}
-                                    <Button
+                                    {allowsPartyOrders && <Button
                                         id="btn-save-quote-market"
                                         size="sm"
                                         variant="outline"
@@ -1870,10 +2099,24 @@ export default function EstimatorClient({
                                     >
                                         <Save className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate">Save Quotation</span>
+                                    </Button>}
+
+                                    <Button
+                                        id="btn-save-costing-market"
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
+                                        onClick={() => handleSaveQuote('quote', 'draft', false, 'costing')}
+                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? 'Save this analysis without starting production'}
+                                    >
+                                        <Save className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">Save Costing</span>
                                     </Button>
 
                                     {/* TERTIARY: Transition to Party Order mode */}
-                                    <Button
+                                    {allowsPartyOrders && <Button
                                         id="btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
@@ -1883,7 +2126,7 @@ export default function EstimatorClient({
                                     >
                                         <Play className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate">Party Order</span>
-                                    </Button>
+                                    </Button>}
                                 </>
                             )}
 
@@ -2094,7 +2337,7 @@ export default function EstimatorClient({
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
-                            {canUseProduction && mode !== 'market' && (
+                            {canUseProduction && !isStandaloneCostingSession && mode !== 'market' && (
                                 <div className="space-y-1.5">
                                     <Label className="text-[10px] uppercase font-bold text-slate-500">
                                         {t('estimator.order_basics.party')}
@@ -2118,7 +2361,7 @@ export default function EstimatorClient({
                             )}
 
                             {/* Fabric / Quality Name (visible in both modes) */}
-                            <div className={!canUseProduction || mode === 'market' ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
+                            <div className={isStandaloneCostingSession || mode === 'market' ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
@@ -2127,7 +2370,7 @@ export default function EstimatorClient({
                                     onChange={e => {
                                         const val = e.target.value
                                         setQualityLabel(val)
-                                        if (!canUseProduction || mode === 'market') {
+                                        if (isStandaloneCostingSession || mode === 'market') {
                                             setPartyName(val)
                                         }
                                     }}
@@ -3240,6 +3483,47 @@ export default function EstimatorClient({
             )}
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
+
+            <CostingExportDialog
+                open={showExportDialog}
+                onOpenChange={setShowExportDialog}
+                model={exportModel}
+                defaultCustomerName={!isStandaloneCostingSession ? partyName : ''}
+                defaultBusinessName={organizationName}
+            />
+
+            <Dialog open={Boolean(pendingStaleRateSave)} onOpenChange={open => { if (!open) setPendingStaleRateSave(null) }}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                            Review overdue costing rates
+                        </DialogTitle>
+                        <DialogDescription>
+                            This estimate uses defaults whose review date has passed. You can still save deliberately, or review them first.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                        <p className="text-xs font-bold uppercase tracking-wide text-amber-800">Overdue defaults</p>
+                        <p className="mt-1 text-sm font-medium text-amber-950">{staleDefaultRateNames.join(', ')}</p>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => { setPendingStaleRateSave(null); router.push('/owner/rates') }}>
+                            Review Rates
+                        </Button>
+                        <Button
+                            className="bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]"
+                            onClick={() => {
+                                const pending = pendingStaleRateSave
+                                setPendingStaleRateSave(null)
+                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride)
+                            }}
+                        >
+                            Save with These Rates
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Start New Quality Dialog */}
             <Dialog open={showConfirmNewQuality} onOpenChange={setShowConfirmNewQuality}>

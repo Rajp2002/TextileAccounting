@@ -15,15 +15,19 @@ describe('Estimator-only product presentation', () => {
     const costProfile = read('components/settings/factory-cost-profile.tsx')
 
     it('limits Base navigation to estimator destinations and account billing', () => {
-        expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/settings'])")
-        expect(sidebar).toContain("? 'Saved Cost Estimates'")
+        expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings'])")
+        expect(sidebar).toContain("? 'Saved Costings'")
+        expect(sidebar).toContain('Rates & Qualities')
         expect(sidebar).toContain('Subscription & Billing')
     })
 
     it('removes party requirements and quote workflow actions from Base costing', () => {
-        expect(estimator).toContain('!canUseProduction || mode === \'market\'')
+        expect(estimator).toContain("const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'")
         expect(estimator).toContain("? qualityLabel.trim()")
-        expect(estimator).toContain("'Update Cost Estimate' : 'Save Cost Estimate'")
+        expect(estimator).toContain("'Save New Version' : 'Save Costing'")
+        expect(estimator).toContain('{canUseProduction && !isStandaloneCostingSession && <Button')
+        expect(estimator).toContain('id="btn-start-party-order"')
+        expect(estimator).not.toContain('!canUseProduction || !hasOrderQty')
         expect(estimator).toContain("t('estimator.hud.quote_per_m')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("t('estimator.simulation.title')")
@@ -33,18 +37,21 @@ describe('Estimator-only product presentation', () => {
     it('keeps the costing backbone and terminology shared with Full Suite', () => {
         const english = read('lib/i18n/locales/en.ts')
 
-        expect(english).toContain('quote_per_m: "Quotation Price / m"')
-        expect(english).toContain('title: "Cost Estimate Details"')
-        expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
-        expect(estimator).not.toContain("canUseProduction ? t('estimator.hud.quote_per_m')")
+        expect(english).toContain('quote_per_m: "Final Price / m"')
+        expect(english).toContain('title: "Costing Details"')
+        expect(english).toContain('simulation_qty: "Costing Quantity"')
+        expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'")
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
         expect(estimator).not.toContain("!canUseProduction ? 'Costing Quantity'")
     })
 
     it('presents persisted quote entities as saved costings without forking persistence', () => {
-        expect(quotes).toContain("canUseProduction ? 'Quotations' : 'Saved Cost Estimates'")
+        expect(quotes).toContain("canUseQuotationWorkflow ? 'Costings & Quotations' : 'Saved Costings'")
+        expect(quotes).toContain('Search quality or costing…')
+        expect(quotes).toContain('Compare Saved Costings')
         expect(quotes).toContain("'Open & Update'")
-        expect(quotes).toContain("'Duplicate Cost Estimate'")
+        expect(quotes).toContain('Use as Starting Point')
+        expect(quotes).toContain('Costing loaded as a starting point')
         expect(estimator).toContain('saveEstimatorQuoteV3({')
     })
 
@@ -60,8 +67,13 @@ describe('Estimator-only product presentation', () => {
         expect(costProfile).toContain("standaloneEstimator ? 'Save Estimator Defaults' : 'Save Factory Profile'")
     })
 
-    it('keeps Base updates on the same editable persistence record', () => {
-        expect(estimator).toContain("handleSaveQuote('quote', canUseProduction ? 'accepted' : 'draft')")
+    it('saves Base edits through the authoritative versioned quote path', () => {
+        expect(estimator).toContain("handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')")
+        expect(estimator).toContain('Review overdue costing rates')
+        expect(estimator).toContain('Save with These Rates')
+        const actions = read('app/(dashboard)/owner/estimator/actions.ts')
+        expect(actions).toContain('costing_group_id: source.costing_group_id ?? source.id')
+        expect(actions).toContain('version_number: Number(source.version_number ?? 1) + 1')
     })
 
     it('uses an intentional deep-link explanation with a return path', () => {

@@ -21,6 +21,7 @@ import {
     type OverheadItem,
     type FactorySections,
 } from '@/lib/estimator'
+import { normalizeCostingRecordKind } from '@/lib/costing-workspace'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ─── Snapshot Rehydration ─────────────────────────────────────────────────────
@@ -116,6 +117,8 @@ export async function executeQuoteConversion(
         .single()
 
     if (quoteError || !quote) return { error: 'Quote not found.' }
+    if (normalizeCostingRecordKind(quote.record_kind) !== 'quotation')
+        return { error: 'Only customer quotations can be converted into orders.' }
     if (quote.status !== 'accepted')
         return { error: 'Only accepted quotes can be converted into orders.' }
     if (quote.order_id)

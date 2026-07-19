@@ -9,6 +9,8 @@ import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
+import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -557,11 +559,23 @@ export async function saveEstimatorQuoteV3(params: {
     totalProductionCostPerM: number
     quotePricePerM:     number
     status?:            'draft' | 'sent' | 'accepted' | 'rejected'
+    recordKind?:        'costing' | 'quotation'
     sourceQuoteId?:     string
     expectedSourceUpdatedAt?: string
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+    const [tier, productionModeResult] = await Promise.all([
+        getOrgTier(profile.org_id),
+        getOrganizationProductionMode(supabase, profile.org_id),
+    ])
+    const canUseProduction = tierSatisfies(tier, 'premium')
+    const newRecordKind = getNewEstimateRecordKind(canUseProduction, params.recordKind)
+    const allowsPartyOrders = getEstimatorWorkflowConfig(productionModeResult.productionMode).allowsPartyOrders
+
+    if (newRecordKind === 'quotation' && !allowsPartyOrders) {
+        return { error: 'Party quotations are unavailable in Market Run only mode.' }
+    }
 
     const requestIdError = validateClientRequestId(params.clientRequestId)
     if (requestIdError) return { error: requestIdError }
@@ -602,6 +616,7 @@ export async function saveEstimatorQuoteV3(params: {
 
     const quotePayload = {
             org_id:               profile.org_id,
+            record_kind:          newRecordKind,
             party_name:           params.partyName.trim(),
             quality_label:        params.qualityLabel.trim(),
             warp_instruction:     params.warpInstruction?.trim() || null,
@@ -658,7 +673,7 @@ export async function saveEstimatorQuoteV3(params: {
 
         const { data: source, error: sourceError } = await supabase
             .from('estimator_quotes')
-            .select('id, status, order_id, updated_at')
+            .select('id, status, order_id, updated_at, costing_group_id, version_number, record_kind')
             .eq('id', params.sourceQuoteId)
             .eq('org_id', profile.org_id)
             .maybeSingle()
@@ -669,10 +684,30 @@ export async function saveEstimatorQuoteV3(params: {
             return { error: 'This Quotation changed in another tab. Reload it from Quotations before saving again.' }
         }
 
+        const sourceRecordKind = normalizeCostingRecordKind(source.record_kind)
+        if (sourceRecordKind === 'quotation' && !allowsPartyOrders) {
+            return { error: 'Party quotations are unavailable in Market Run only mode.' }
+        }
+        if (shouldCreateImmutableRevision(sourceRecordKind, source.status, Boolean(source.order_id))) {
+            const { data: version, error: versionError } = await supabase
+                .from('estimator_quotes')
+                .insert({
+                    ...quotePayload,
+                    record_kind: sourceRecordKind,
+                    source_quote_id: source.id,
+                    costing_group_id: source.costing_group_id ?? source.id,
+                    version_number: Number(source.version_number ?? 1) + 1,
+                })
+                .select('id, updated_at, version_number')
+                .single()
+            if (versionError) return { error: versionError.message }
+            return { success: true, quoteId: version.id, updatedAt: version.updated_at, versionNumber: version.version_number }
+        }
+
         // Draft/sent/rejected quotes remain the same business record. Accepted
         // or converted quotes are immutable audit history, so re-estimation
         // creates a linked new version instead.
-        if (!source.order_id && ['draft', 'sent', 'rejected'].includes(source.status)) {
+        if (canUseProduction && sourceRecordKind === 'quotation' && !source.order_id && ['draft', 'sent', 'rejected'].includes(source.status)) {
             const { data: updated, error: updateError } = await supabase
                 .from('estimator_quotes')
                 .update(quotePayload)
@@ -1061,6 +1096,43 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
     return { data }
 }
 
+export async function updateSavedCostingLibraryState(input: {
+    id: string
+    expectedUpdatedAt: string
+    isArchived?: boolean
+    isFavorite?: boolean
+}) {
+    if (!UUID_PATTERN.test(input.id)) return { error: 'Costing identifier is invalid.' }
+    const timestampError = validateExpectedTimestamp(input.expectedUpdatedAt, 'This costing')
+    if (timestampError) return { error: timestampError }
+    if (input.isArchived === undefined && input.isFavorite === undefined) return { error: 'No library change was requested.' }
+
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Audit trigger falls back to auth.uid().
+    }
+
+    const changes: { is_archived?: boolean; is_favorite?: boolean; updated_at: string } = { updated_at: new Date().toISOString() }
+    if (input.isArchived !== undefined) changes.is_archived = input.isArchived
+    if (input.isFavorite !== undefined) changes.is_favorite = input.isFavorite
+
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .update(changes)
+        .eq('id', input.id)
+        .eq('org_id', profile.org_id)
+        .eq('updated_at', input.expectedUpdatedAt)
+        .select('id, updated_at, is_archived, is_favorite')
+        .maybeSingle()
+    if (error) return { error: error.message }
+    if (!data) return { error: 'This costing changed in another tab. Refresh Saved Costings and try again.' }
+    revalidatePath('/owner/quotes')
+    return { data }
+}
+
 export async function updateQuoteStatus(
     id: string,
     status: 'draft' | 'sent' | 'accepted' | 'rejected',
@@ -1074,12 +1146,15 @@ export async function updateQuoteStatus(
 
     const { data: current, error: currentError } = await supabase
         .from('estimator_quotes')
-        .select('id, status, order_id, updated_at')
+        .select('id, status, order_id, updated_at, record_kind')
         .eq('id', id)
         .eq('org_id', profile.org_id)
         .single()
 
     if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
+    if (normalizeCostingRecordKind(current.record_kind) !== 'quotation') {
+        return { error: 'Standalone costings do not have quotation statuses. Create a quotation from this costing first.' }
+    }
     if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
     if (Date.parse(current.updated_at) !== Date.parse(expectedUpdatedAt)) {
         return { error: 'This Quotation changed in another tab. Refresh Quotations before changing its status.' }
@@ -1204,6 +1279,7 @@ export async function createMarketRunFromEstimator(params: {
         .from('estimator_quotes')
         .insert({
             org_id:               profile.org_id,
+            record_kind:          'market_run',
             party_name:           params.fabricLabel.trim(),   // fabric label used as party placeholder
             quality_label:        params.qualityLabel.trim(),
             warp_instruction:     params.warpInstruction?.trim(),
