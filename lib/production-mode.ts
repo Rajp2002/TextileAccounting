@@ -1,6 +1,7 @@
 export const PRODUCTION_MODES = ['market_run', 'order_based', 'both'] as const
 
 export type ProductionMode = (typeof PRODUCTION_MODES)[number]
+export type EstimatorWorkflowMode = 'quote' | 'market'
 
 export type WorkflowKey =
     | 'estimator'
@@ -166,6 +167,33 @@ export function hasExplicitProductionMode(mode: unknown): mode is ProductionMode
 
 export function getWorkflowVisibility(mode: unknown) {
     return workflowVisibility[normalizeProductionMode(mode)]
+}
+
+export function getEstimatorWorkflowConfig(
+    productionMode: unknown,
+    requestedMode?: string | null
+): {
+    initialMode: EstimatorWorkflowMode
+    allowsPartyOrders: boolean
+    allowsMarketRuns: boolean
+} {
+    const normalized = normalizeProductionMode(productionMode)
+    const allowsPartyOrders = normalized !== 'market_run'
+    const allowsMarketRuns = normalized !== 'order_based'
+
+    if (!allowsPartyOrders) {
+        return { initialMode: 'market', allowsPartyOrders, allowsMarketRuns }
+    }
+
+    if (!allowsMarketRuns) {
+        return { initialMode: 'quote', allowsPartyOrders, allowsMarketRuns }
+    }
+
+    return {
+        initialMode: requestedMode === 'market' ? 'market' : 'quote',
+        allowsPartyOrders,
+        allowsMarketRuns,
+    }
 }
 
 export function isWorkflowVisible(mode: unknown, workflow: WorkflowKey) {
