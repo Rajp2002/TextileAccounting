@@ -31,15 +31,14 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain("t('estimator.hud.quote_per_m')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("t('estimator.simulation.title')")
-        expect(estimator).toContain('{canUseProduction && <Button')
     })
 
     it('keeps the costing backbone and terminology shared with Full Suite', () => {
         const english = read('lib/i18n/locales/en.ts')
 
-        expect(english).toContain('quote_per_m: "Final Price / m"')
-        expect(english).toContain('title: "Costing Details"')
-        expect(english).toContain('simulation_qty: "Costing Quantity"')
+        expect(english).toContain('quote_per_m: "Quotation Price / m"')
+        expect(english).toContain('title: "Cost Estimate Details"')
+        expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
         expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'")
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
         expect(estimator).not.toContain("!canUseProduction ? 'Costing Quantity'")

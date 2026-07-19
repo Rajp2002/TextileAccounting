@@ -117,7 +117,7 @@ describe('Estimator persistence safety', () => {
         expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'edit')}")
         expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'duplicate')}")
         expect(quotesClient).toContain('sourceQuoteId: isDuplicate ? undefined : quote.id')
-        expect(quotesClient).toContain('Delete this quote?')
+        expect(quotesClient).toContain("isStandaloneCosting(quoteToDelete.record_kind) ? 'Delete this Costing?' : 'Delete this Quotation?'")
         expect(functionBody(estimatorActions, 'deleteEstimatorQuote')).toContain(".in('status', ['draft', 'rejected'])")
     })
 

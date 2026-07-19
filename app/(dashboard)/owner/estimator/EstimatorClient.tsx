@@ -1287,14 +1287,6 @@ export default function EstimatorClient({
         () => getFirstEstimatorValidationMessage(estimatorValidation),
         [estimatorValidation],
     )
-    const validationIssueMap = useMemo(() => {
-        if (estimatorValidation.valid) return new Map<string, string>()
-        return new Map(estimatorValidation.issues.map(issue => [issue.field, issue.message]))
-    }, [estimatorValidation])
-    const validationMessageFor = (field: string) => validationIssueMap.get(field)
-    const hasValidationIssueFor = (prefix: string) => !estimatorValidation.valid
-        && estimatorValidation.issues.some(issue => issue.field === prefix || issue.field.startsWith(`${prefix}.`))
-
     const totals: EstimatorV3Totals = useMemo(() => {
         try {
             return calcFullTotals(state)
@@ -1985,7 +1977,7 @@ export default function EstimatorClient({
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={handleStartPartyOrder}
-                                        disabled={savingQuote || !canUseProduction || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? 'Complete party, quality, quantity, and cost result first.'
                                             : undefined
