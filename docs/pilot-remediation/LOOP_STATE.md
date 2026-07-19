@@ -2102,6 +2102,23 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Blockers: no source, migration, or static-gate blocker. Exact deployed after timing is intentionally pending the merged web deployment.
 - Matrix/readiness: unchanged; no formal row promotion or pilot-count change is claimed.
 
+## Active Estimator physical-iPhone release — 2026-07-19
+
+- State: `fixed_pending_runtime_proof`.
+- Branch: `codex/estimator-readiness-production`, based on current
+  `origin/main` rather than the stale broad remediation branch.
+- Physical-device result: Estimator continued-step matrix is 24 pass, 0 fail,
+  0 blocked; Save/reopen, iOS keyboard behavior, no-overflow layout, mobile
+  quality action and no-focus-zoom retest all passed.
+- Static gate: 102 test files / 708 tests passed with one intentional skip;
+  TypeScript, ESLint and the production build passed.
+- Data safety: the automated and physical-iPhone QA tenants were deleted and
+  their account/tenant records reconciled to zero.
+- Next action: commit and push the focused delta, merge the clean PR, wait for
+  the exact READY Vercel production deployment, run a disposable Base-account
+  save/reopen smoke, delete it, and record deployment plus cleanup evidence.
+- Formal wider-pilot matrix/readiness: unchanged.
+
 ### Release closed on production
 
 - State: `pass` for the scoped performance release verification; no formal test-matrix row was promoted.

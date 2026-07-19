@@ -2579,3 +2579,23 @@ Date: 2026-07-17 IST.
   smoke verification. The recovery identity remained untracked and excluded.
 - Formal matrix status/count change: none. Counts remain **368 pass, 0 fail,
   6 blocked and 3 not applicable**.
+
+## Estimator physical-iPhone remediation candidate
+
+Date: 2026-07-19 IST. Status: `fixed_pending_runtime_proof`.
+
+- Physical iPhone Safari passed the 24-row Estimator matrix after three scoped
+  fixes: browser-safe UUID request IDs, a mobile-only 16 px text-control rule,
+  and a reachable compact `New Quality` action.
+- Runtime values matched the independent expectations: `40 Ne` → `132.875 D`;
+  `1,000 m` tape → approximately `952 m` beam capacity and `2` beams. Save and
+  reopen succeeded, keyboard dismissal worked, and no blocking overflow or
+  final focus zoom remained.
+- Integrated `origin/main` proof passed 102 test files / 708 tests with one
+  intentional skip, TypeScript, ESLint and the production-environment Next.js
+  build with 43 generated routes/pages.
+- Both disposable QA tenants were removed; organization, profile,
+  subscription and Auth user reconciliation returned zero.
+- Formal wider-pilot matrix status/count change: none. Exact merged production
+  deployment, disposable Base smoke and cleanup remain the release proof gap.
+- Detailed evidence: `closure-packs/ESTIMATOR_IPHONE_READINESS_2026-07-19.md`.
