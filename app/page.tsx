@@ -37,15 +37,15 @@ export default function Home() {
           <div className="px-6 py-20 sm:px-6 sm:py-28 lg:px-8">
             <div className="relative mx-auto max-w-5xl text-center">
               <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-300">
-                Start with one factory floor
+                Start with one supervisor and one shift
               </p>
               <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-black tracking-normal text-white xs:text-4xl sm:text-6xl">
-                Bring your active orders, supervisors, looms, and payroll into one record.
+                Bring your active work, machines, stock, dispatches, and Hisaab into one record.
                 <br />
-                <span className="text-orange-300">See the difference in the first week.</span>
+                <span className="text-orange-300">Run the next shift with a clearer action list.</span>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-300 sm:text-lg">
-                A focused pilot is enough: one supervisor logs shift meters, the owner sees order pace, and payroll starts from the same production data.
+                A focused pilot is enough: one supervisor logs metres from the floor, the owner sees what is pending, and Worker Hisaab starts from the same production record.
               </p>
               <div className="mt-9 flex items-center justify-center gap-x-6">
                 <Link href="/signup">

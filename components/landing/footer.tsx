@@ -10,10 +10,10 @@ const footerSections = [
     {
         title: 'Product',
         links: [
+            { name: 'Real Product View', href: '/#product' },
             { name: 'Workflow', href: '/#workflow' },
             { name: 'Pricing', href: '/#pricing' },
-            { name: 'Production Tracking', href: '/#workflow' },
-            { name: 'Payroll Engine', href: '/#features' },
+            { name: 'Worker Hisaab', href: '/#features' },
         ]
     },
     {
@@ -54,7 +54,7 @@ export default function LandingFooter() {
                                 </div>
                             </Link>
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
-                                Built for grey fabric weaving factories that need costing, loom production, dispatch, and payroll in one operating record.
+                                Built for grey fabric weaving factories that need Cost Estimates, Machine production, dispatch, and Worker Hisaab in one operating record.
                             </p>
                         </div>
 

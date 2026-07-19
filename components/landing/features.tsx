@@ -2,37 +2,37 @@ import { Calculator, ClipboardList, Factory, MessageCircle, ReceiptIndianRupee, 
 
 const painPoints = [
     'Shift production arrives late from notebooks or WhatsApp.',
-    'Payroll depends on meter totals that workers can dispute.',
+    'Worker Hisaab depends on production totals that workers can dispute.',
     'Orders fall behind pace before the owner notices.',
-    'Challans, shortages, and party follow-ups live in separate places.',
-    'Yarn price changes make quote margins hard to trust.',
+    'Godown Stock, Delivery Challans, shortages, and Party collections live in separate places.',
+    'Yarn price changes make quotation margins hard to trust.',
 ]
 
-const replaces = ['Production register', 'Hajiri book', 'Excel costing sheet', 'Paper challan', 'WhatsApp follow-ups', 'Parchi payroll slips']
+const replaces = ['Production register', 'Hajiri book', 'Excel costing sheet', 'Delivery Challan', 'WhatsApp follow-ups', 'Worker Hisaab slips']
 
 const workflow = [
     {
-        title: 'Estimate the job',
-        description: 'Enter yarn specs, crimp, conversion, overhead, GST, shortage, and margin before the order reaches the loom.',
-        outcome: 'Know the quote price per meter and protect margin before saying yes.',
+        title: 'Create a Cost Estimate',
+        description: 'Enter warp and weft details, factory costs, GST, shortage, and margin. Save the costing as a reusable quality or lock it into a Quotation.',
+        outcome: 'Know landed cost, selling price, and expected margin before saying yes.',
         icon: Calculator,
     },
     {
-        title: 'Assign looms and workers',
-        description: 'Turn accepted quotes or market runs into live factory work with machine, worker, shift, and order visibility.',
-        outcome: 'See idle looms, missing assignments, and active orders without asking the floor.',
+        title: 'Start an Order or Market Run',
+        description: 'Convert an accepted Quotation into a Party Order, or start market maal when client demand is light. Then assign machines and workers.',
+        outcome: 'Every running machine is tied to a costed production target.',
         icon: Factory,
     },
     {
         title: 'Log every shift',
-        description: 'Supervisors enter total metres produced per shift from the floor. Designed for quick mobile entry in patchy factory conditions.',
-        outcome: 'Create one source of truth for production, payroll, and order progress.',
+        description: 'Supervisors enter machine status, worker assignment, and total metres produced from the mobile floor workflow.',
+        outcome: 'The same shift record updates progress, expected stock, and Worker Hisaab.',
         icon: ClipboardList,
     },
     {
-        title: 'Dispatch and settle',
-        description: 'Record Delivery Challan references, Party Receipt Confirmations, shortages, Upaad, and Worker Hisaab summaries.',
-        outcome: 'Close the loop from produced meters to party records and worker payments.',
+        title: 'Sell, dispatch, and settle',
+        description: 'Track Godown Stock, Party sales, Delivery Challan batches, received metres, shortages, collections, Upaad, and Worker Hisaab.',
+        outcome: 'Close the loop from metres produced to cash collected and workers paid.',
         icon: Truck,
     },
 ]
@@ -40,7 +40,7 @@ const workflow = [
 const trustItems = [
     {
         title: 'Factory vocabulary inside the product',
-        copy: 'Market Runs, Party Orders, Upaad, Kharchi, Metres Produced This Shift, loom assignments, worker rates, and Dispatch shortages are distinct workflows.',
+        copy: 'Market runs, Upaad, Kharchi, metres produced each shift, machine assignments, worker rates, and dispatch shortages are first-class workflows.',
         icon: ReceiptIndianRupee,
     },
     {
@@ -50,7 +50,7 @@ const trustItems = [
     },
     {
         title: 'WhatsApp where it actually helps',
-        copy: 'Daily briefs, Worker Hisaab payslips, Upaad receipts, and access-code requests reach owners and Workers without replacing core records.',
+        copy: 'Daily briefs, payslips, Upaad receipts, and access-code requests reach owners and workers without replacing core records.',
         icon: MessageCircle,
     },
 ]
@@ -67,7 +67,7 @@ export default function LandingFeatures() {
                                 Stop running the factory from registers, memory, and missed calls.
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                                Weavly is built for owners who need production, dispatch, and payroll to agree with each other before small mistakes become expensive disputes.
+                                Weavly is built for owners who need production, dispatch, and Worker Hisaab to agree with each other before small mistakes become expensive disputes.
                             </p>
                         </div>
 
@@ -110,11 +110,11 @@ export default function LandingFeatures() {
                         <div>
                             <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Factory workflow</p>
                             <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                                One operating loop from costing to settlement.
+                                One operating loop from costing to collection.
                             </h2>
                         </div>
                         <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
-                            Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log shift totals, dispatch stock, and settle people correctly.
+                            Weavly follows how a weaving unit actually moves work: calculate the Cost Estimate, issue the Quotation, run an Order or market maal, log shift totals, manage Godown Stock, dispatch, collect, and settle workers.
                         </p>
                     </div>
 
