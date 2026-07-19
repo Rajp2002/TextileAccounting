@@ -15,6 +15,7 @@ const estimatorClientSource = readFileSync(
   join(process.cwd(), 'app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
   'utf8',
 )
+const globalStylesSource = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
 
 describe('Estimator production-readiness regressions', () => {
   it('converts loom output from inches per minute to metres per day', () => {
@@ -154,5 +155,13 @@ describe('Estimator production-readiness regressions', () => {
   it('keeps applied-quality actions inside narrow mobile viewports', () => {
     expect(estimatorClientSource).toContain('col-span-2 flex min-w-0 flex-wrap items-center gap-1')
     expect(estimatorClientSource).toContain('h-12 min-w-0 max-w-full flex-1 rounded-[10px]')
+  })
+
+  it('prevents iOS Safari focus zoom on estimator text controls', () => {
+    expect(estimatorClientSource).toContain('estimator-mobile-form space-y-5')
+    expect(globalStylesSource).toContain('@media (max-width: 767.98px)')
+    expect(globalStylesSource).toContain('.estimator-mobile-form input:not([type])')
+    expect(globalStylesSource).toContain('.estimator-mobile-form select')
+    expect(globalStylesSource).toContain('font-size: 1rem;')
   })
 })

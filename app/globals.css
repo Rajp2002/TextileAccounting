@@ -420,6 +420,23 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /* iOS Safari magnifies focused form controls rendered below 16px. Keep the
+     Estimator at its intended scale while the keyboard and browser chrome are
+     visible, without disabling user-controlled page zoom. */
+  @media (max-width: 767.98px) {
+    .estimator-mobile-form input:not([type]),
+    .estimator-mobile-form input[type="text"],
+    .estimator-mobile-form input[type="search"],
+    .estimator-mobile-form input[type="email"],
+    .estimator-mobile-form input[type="tel"],
+    .estimator-mobile-form input[type="url"],
+    .estimator-mobile-form input[type="password"],
+    .estimator-mobile-form textarea,
+    .estimator-mobile-form select {
+      font-size: 1rem;
+    }
+  }
+
   @media (max-width: 339px) {
     .mobile-nav-label {
       display: none;

@@ -758,3 +758,21 @@ Acceptance:
 - Preserve the existing six legacy stored-function lint findings as open audit work. Do not mark them fixed because the security-advisor view errors are closed.
 - Regression commands: `npm run lint`, `npm test`, the production-environment Next.js build, CSV/JSON validation for campaign artifacts, secret scan, `git diff --check`, and the migration dry-run/list commands above.
 - Rollback for the new migration is metadata-only: reset `security_invoker` on the six named views. Do not roll back unless production runtime demonstrates a verified incompatibility; underlying-table RLS must remain authoritative.
+
+### Estimator physical-iPhone regression guard — 2026-07-19
+
+- Preserve request-ID creation when `crypto.randomUUID()` is missing or throws;
+  generated fallback IDs must be valid RFC 4122 version-4 UUIDs.
+- At a physical-iPhone width, preserve a reachable mobile `New Quality` action,
+  zero blocking horizontal overflow, and Estimator-scoped text/select font size
+  of at least 16 px so focus does not trigger Safari zoom.
+- Preserve `40 Ne` → `132.875 D`, `1,000 m` tape → approximately `952 m`
+  capacity, and two required beams for a 1,000 m costing.
+- Save and reopen must produce exactly one costing; a failed or repeated request
+  must not create a duplicate.
+- Focused command: `npx vitest run __tests__/client-request-id.test.ts
+  __tests__/estimator-production-readiness.test.ts
+  __tests__/batch10-estimator-quote-order-snapshots.test.ts`.
+- Before release, also run the full suite, TypeScript, ESLint and the production
+  build. Production proof must identify the exact merged commit/deployment and
+  reconcile the disposable Base account and tenant to zero.

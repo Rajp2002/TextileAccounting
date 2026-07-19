@@ -96,7 +96,7 @@ describe('Estimator persistence safety', () => {
         expect(saveQuote).toContain('client_request_id:        params.clientRequestId')
         expect(saveQuote).toContain(".eq('updated_at', params.expectedSourceUpdatedAt!)")
         expect(saveQuote).toContain('idempotentReplay: true')
-        expect(estimatorClient).toContain('globalThis.crypto.randomUUID()')
+        expect(estimatorClient).toContain('createClientRequestUuid()')
         expect(estimatorClient).toContain('expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined')
     })
 

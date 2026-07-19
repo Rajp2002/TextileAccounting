@@ -91,6 +91,7 @@ import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import FactoryCostWizard from './FactoryCostWizard'
+import { createClientRequestUuid } from '@/lib/client-request-id'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -1510,7 +1511,7 @@ export default function EstimatorClient({
                     router.push(`/owner/market-runs/${res.marketRunId}`)
                 }
             } else {
-                const clientRequestId = quoteRequestIdRef.current ?? globalThis.crypto.randomUUID()
+                const clientRequestId = quoteRequestIdRef.current ?? createClientRequestUuid()
                 quoteRequestIdRef.current = clientRequestId
                 const res = await saveEstimatorQuoteV3({
                     clientRequestId,
@@ -1637,7 +1638,7 @@ export default function EstimatorClient({
         { label: 'Factory overhead / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
     return (
-        <div className="space-y-5 pb-floating-button md:pb-20 relative">
+        <div className="estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && canUseProduction && (
                 <FactoryCostWizard 
                     initialState={state}
@@ -1928,15 +1929,17 @@ export default function EstimatorClient({
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="hidden h-12 flex-none rounded-[10px] px-4 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] sm:flex"
+                                    className="h-12 flex-none rounded-[10px] px-4 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setTemplateSaveError(null)
                                         setShowSaveTemplate(true)
                                     }}
+                                    aria-label="Save as New Quality"
                                 >
                                     <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="truncate hidden sm:inline">Save as New Quality</span>
+                                    <span className="truncate sm:hidden">New Quality</span>
+                                    <span className="hidden truncate sm:inline">Save as New Quality</span>
                                 </Button>
                             )}
                         </div>
