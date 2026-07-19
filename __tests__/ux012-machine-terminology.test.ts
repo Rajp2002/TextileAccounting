@@ -101,7 +101,7 @@ describe('UX-012 Batch 3 founder terminology boundaries', () => {
     expect(english).toContain('"estimator": "Cost Estimate"')
     expect(english).toContain('"quotes": "Quotations"')
     expect(sidebar).toContain('{ name: "Cost Estimate", href: "/owner/estimator"')
-    expect(quotations).toContain('Quotation History')
+    expect(quotations).toContain('Costings & Quotations')
     expect(quotations).toContain('Quotation Price')
     expect(quotations).toContain('Cost Estimate draft')
   })

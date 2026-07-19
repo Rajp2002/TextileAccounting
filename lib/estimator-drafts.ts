@@ -1,5 +1,7 @@
 'use client'
 
+import type { CostingRecordKind } from '@/lib/costing-workspace'
+
 export const ESTIMATOR_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 const ESTIMATOR_CLIENT_REQUEST_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -13,6 +15,7 @@ export interface EstimatorAutosaveData<TState = unknown> {
   savedAt: number
   sourceQuoteId?: string
   sourceQuoteUpdatedAt?: string
+  sourceRecordKind?: CostingRecordKind
   /**
    * Stable identity for a quote save/update attempt. Keeping it with the
    * local draft makes a retry idempotent even if the server committed but its
@@ -54,6 +57,9 @@ export function parseEstimatorDraft<TState = unknown>(
       savedAt: Number(parsed.savedAt),
       sourceQuoteId: typeof parsed.sourceQuoteId === 'string' ? parsed.sourceQuoteId : undefined,
       sourceQuoteUpdatedAt: typeof parsed.sourceQuoteUpdatedAt === 'string' ? parsed.sourceQuoteUpdatedAt : undefined,
+      sourceRecordKind: parsed.sourceRecordKind === 'costing' || parsed.sourceRecordKind === 'quotation' || parsed.sourceRecordKind === 'market_run'
+        ? parsed.sourceRecordKind
+        : undefined,
       clientRequestId:
         typeof parsed.clientRequestId === 'string' &&
         ESTIMATOR_CLIENT_REQUEST_ID_PATTERN.test(parsed.clientRequestId)

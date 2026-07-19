@@ -21,6 +21,7 @@ import {
     Warehouse,
     Factory,
     Archive,
+    Tags,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -36,7 +37,8 @@ const navGroups = [
         items: [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
             { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
-            { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "quotes" },
+            { name: "Rates & Qualities", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
+            { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
         ]
     },
@@ -90,6 +92,7 @@ const bottomNavItems = [
 
 function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
     if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Ledger'
+    if (item.name === 'Quotations') return productionMode === 'market_run' ? 'Saved Costings' : 'Costings & Quotations'
     return t(`nav.${item.translationKey}`) || item.name
 }
 
@@ -112,7 +115,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     const { t } = useTranslation()
     const productionMode = normalizeProductionMode(rawProductionMode)
     const hasPremium = tierSatisfies(subscriptionTier, 'premium')
-    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/settings'])
+    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings'])
     const visibleGroups = navGroups
         .map((group) => ({
             ...group,
@@ -152,9 +155,10 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         </div>
                         {group.items.map((item) => {
                             const Icon = item.icon
+                            const itemPath = item.href.split('#')[0]
                             const isActive = (item.name === 'Settings' || item.name === 'Factory Today')
-                                ? pathname === item.href
-                                : pathname === item.href || pathname.startsWith(item.href + "/")
+                                ? pathname === itemPath
+                                : pathname === itemPath || pathname.startsWith(itemPath + "/")
 
                             return (
                                 <Link
@@ -169,9 +173,11 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                     )}
                                 >
                                     <Icon className="h-[18px] w-[18px]" />
-                                    {!hasPremium && item.href === '/owner/quotes'
-                                        ? 'Saved Costings'
-                                        : getNavLabel(item, productionMode, t)}
+                {!hasPremium && item.href === '/owner/quotes'
+                  ? 'Saved Costings'
+                  : item.name === 'Rates & Qualities'
+                    ? 'Rates & Qualities'
+                    : getNavLabel(item, productionMode, t)}
                                 </Link>
                             )
                         })}
