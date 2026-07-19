@@ -44,7 +44,7 @@ interface LoomConfigSectionProps {
 
 // Ordered list for the dropdown — most common Surat loom types first
 const LOOM_TYPE_OPTIONS: { value: LoomType | ''; label: string }[] = [
-    { value: '', label: '— Select loom type —' },
+    { value: '', label: '— Select machine type —' },
     { value: 'jacquard_electronic', label: 'Jacquard (Electronic) — 250 RPM' },
     { value: 'jacquard_mechanical', label: 'Jacquard (Mechanical) — 130 RPM' },
     { value: 'water_jet',           label: 'Water Jet — 700 RPM' },
@@ -91,7 +91,7 @@ export function LoomConfigSection({
                         <Cpu className="h-4 w-4" />
                     </span>
                     <p className="text-[11px] uppercase tracking-[0.06em] font-semibold text-[var(--color-warning-amber)]">
-                    Loom Type & Output
+                    Machine Type & Output
                     </p>
                 </div>
                 {loomType && (
@@ -104,7 +104,7 @@ export function LoomConfigSection({
             {/* ── Loom Type Dropdown ── */}
             <div className="space-y-1.5">
                 <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-warning-amber)]">
-                    Loom Type
+                    Machine Type
                 </Label>
                 <select
                     id="loom-type-selector"
@@ -122,7 +122,7 @@ export function LoomConfigSection({
                 </select>
                 {!loomType && (
                     <p className="text-[11px] text-[var(--color-muted)] font-medium">
-                        Select your loom type to auto-fill RPM and power draw defaults.
+                        Select your machine type to auto-fill RPM and power draw defaults.
                     </p>
                 )}
             </div>
@@ -259,14 +259,14 @@ export function LoomConfigSection({
                 <div className="flex flex-col gap-3 rounded-[12px] border border-[#EFD7A4] bg-white/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p className="text-[9px] uppercase font-semibold text-[var(--color-warning-amber)] tracking-[0.06em] mb-0.5">
-                            Est. Daily Output per Loom
+                            Est. Daily Output per Machine
                         </p>
                         {dailyOutputM !== null ? (
                             <div className="flex items-baseline gap-1">
                                 <span className="text-2xl font-semibold font-mono text-[var(--color-warning-amber)] leading-none">
                                     {Math.round(dailyOutputM).toLocaleString('en-IN')}
                                 </span>
-                                <span className="text-xs font-bold text-slate-500">m/loom/day</span>
+                                <span className="text-xs font-bold text-slate-500">m/machine/day</span>
                             </div>
                         ) : (
                             <p className="text-sm font-bold text-slate-400 italic">
@@ -298,9 +298,9 @@ export function LoomConfigSection({
             {loomType && (
                 <div className="bg-white/65 border border-[#EFD7A4] rounded-lg px-3 py-2">
                     <p className="text-[10px] text-[var(--color-muted)] font-medium leading-snug">
-                        <span className="font-black">Note:</span> Loom type here is a costing input — independent of which machines are assigned to this order. 
+                        <span className="font-black">Note:</span> Machine type here is a costing input — independent of which machines are assigned to this order.
                         Use the <span className="font-bold">Suggest →</span> button to sync daily output into the Overhead section so overhead/m and electricity/m 
-                        reflect your actual loom class, not a generic default.
+                        reflect your actual machine class, not a generic default.
                     </p>
                 </div>
             )}

@@ -118,7 +118,7 @@ export const getCachedSession = cache(async (): Promise<{
 
     // Explicit revocation must invalidate every still-live browser/device JWT.
     // Supabase access tokens remain valid until expiry, so the server-owned
-    // revocation marker is checked on every new authenticated request.
+    // revocation marker is checked before loading any authorization state.
     if (await isUserRevoked(user.id)) return null
 
     // Always validate authorization-critical claims against the profile row.

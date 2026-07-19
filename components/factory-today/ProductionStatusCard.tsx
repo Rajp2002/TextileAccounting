@@ -90,7 +90,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                     className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
                 >
                     <ExternalLink className="h-4 w-4 lg:h-3 lg:w-3" />
-                    View Looms
+                    View Machines
                 </Link>
             </div>
         </div>

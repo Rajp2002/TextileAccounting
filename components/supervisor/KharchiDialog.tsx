@@ -92,10 +92,10 @@ export function KharchiDialog({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-saffron-deep">
                         <HandCoins className="h-5 w-5" />
-                        Record Kharchi
+                        Kharchi (Floor Cash)
                     </DialogTitle>
                     <DialogDescription>
-                        Give a cash advance to {tl(workerName)}.
+                        Record factory-floor cash for {tl(workerName)}. This remains a Kharchi entry, separate from Upaad.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -135,7 +135,7 @@ export function KharchiDialog({
                     {!isOnline && (
                         <div className="flex items-start gap-2 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
                             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                            <span>Kharchi is not stored for offline sync. Reconnect before recording cash so the advance and supervisor float ledger update together.</span>
+                            <span>Kharchi is not stored for offline sync. Reconnect before recording floor cash so the Kharchi entry and supervisor float ledger update together.</span>
                         </div>
                     )}
 

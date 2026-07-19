@@ -84,7 +84,7 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 
 Batch 8 note: `TECH-007` migration-head alignment is closed for repository head `20260628185344` by supplied Supabase migration-list evidence. Batch 8B note: `TECH-010` Sentry release/source-map proof is closed by fresh production release `2538da25b2fa` with 529 source-map artifacts. Batch 8C note: `SIGNOFF-10` clean deployed signoff is closed by post-DSN browser smoke, Vercel runtime/server logs, and Sentry production release `7c6449a59061` no-error evidence. These do not satisfy live Sentry payload inspection, backup restore, rollback/forward-fix, audit, clean install, or deployed WhatsApp webhook proof.
 
-Focused TECH-011 note updated 2026-07-15: the Free-plan-compatible daily encrypted Supabase CLI backup and ephemeral restore drill are source-controlled, active on `main`, and their four required Actions setting names are configured. Scheduled run `29368765626` failed closed after the logical dumps because sanitized inventory was emitted through aligned psql display formatting; it produced no artifact. A source correction is code-verified pending canary and new scheduled evidence. No real artifact has been restored, so `TECH-011` and the 367/0/7/3 counts are unchanged.
+Focused TECH-011 note updated 2026-07-16: scheduled run `29451202680` produced retained encrypted artifact `8357639557`; restore run `29494683840` restored that exact artifact into disposable local Supabase in 128 seconds. Business, Auth, Storage, migration, tenant-boundary and identity-digest reconciliation passed; zero effect-capable jobs were restored, production was not targeted and cleanup passed. The only explained variance was compatible `pg_net` `0.19.5` to `0.20.3`. Technical status is `pass_ready_pending_matrix_update`; formal `TECH-011` and the 367/0/7/3 counts remain unchanged pending merge to `main` and named independent-verifier approval.
 
 Batch 9 note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are closed by public offline fallback proof, awaited auth-boundary cache cleanup, IndexedDB queue cleanup, privacy/public copy truth, and truthful online-only offline kharchi de-scope. The 2026-07-11 runtime-remediation campaign also closes `OFF-007` with active-draft production update proof. `OFF-010` remains partial, and `OFF-009` remains open.
 
@@ -174,12 +174,17 @@ B19 reviews all five external-evidence rows without manufacturing PASS evidence.
 
 ## Current limited-pilot decision — 2026-07-14
 
-The canonical matrix is **367 pass, 0 fail, 7 blocked, and 3 not applicable**. Every row now records `release_scope` and `pilot_gating`; post-pilot `not_applicable` rows link to a named acceptance test and receive no PASS credit.
+The canonical matrix is **368 pass, 0 fail, 6 blocked, and 3 not applicable**. Every row records `release_scope` and `pilot_gating`; post-pilot `not_applicable` rows link to a named acceptance test and receive no PASS credit.
 
-The verdict is **No-Go pending three gates**:
+The verdict is **No-Go pending two gates**:
 
-1. `TECH-011`: an automated retained or approved off-site production backup must exist, and its artifact must pass disposable restore/reconciliation.
-2. `UX-012`: a named factory supervisor must accept or correct the required operating terminology.
-3. `GOLDEN-A-03`: one independent real-fabric truth sheet must reconcile with the estimator and accepted downstream snapshot.
+1. `TECH-011`: technical backup/restore proof is pass-ready; the compatibility fix must reach `main` and a named independent verifier must sign.
+2. `GOLDEN-A-03`: one independent real-fabric truth sheet must reconcile with the estimator and accepted downstream snapshot.
+
+`UX-012` passed on 2026-07-17 through Raj's explicit Founder acceptance of the
+implemented English terminology and his readiness-policy decision to treat
+factory-operator review as a pilot-run control. The first pilot run must still
+obtain a named operator's feedback on populated English contexts and exact
+Gujarati wording. Any disagreement reopens the row before wider pilot use.
 
 `OFF-001` is optional PWA-install evidence; `SEC-011` is intentionally deferred to a read-only check on the owner’s physical laptop; `SEC-018` gates public legal reliance; and `SIGNOFF-04` is a mandatory first-shift operating control. These four rows retain `BLOCKED` without independently producing a pre-session No-Go. Live WhatsApp provider delivery, signed callbacks, and live failure drills are post-pilot under `PP-WA-001`–`PP-WA-003`; the pilot provider is disabled and no core workflow depends on Meta credentials or delivery.

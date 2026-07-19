@@ -54,7 +54,7 @@ describe('Batch 24E master data loom guardrails', () => {
         ])).toBeNull()
 
         expect(ownerActions).toContain('findDuplicateLoomNameInBatch')
-        expect(ownerActions).toContain('Failed to validate loom names. Please try again.')
+        expect(ownerActions).toContain('Failed to validate machine names. Please try again.')
     })
 
     it('MASTER-002 keeps same-type different-name looms and different orgs valid', () => {
@@ -96,9 +96,9 @@ describe('Batch 24E master data loom guardrails', () => {
         expect(reasons).toContain('active worker assignments')
         expect(reasons).toContain('dated shift assignment history')
         expect(reasons).toContain('production history')
-        expect(buildProtectedLoomActionError('delete', reasons)).toContain('Cannot delete this loom')
-        expect(buildProtectedLoomActionError('deactivate', reasons)).toContain('Cannot deactivate this loom')
-        expect(buildProtectedLoomActionError('unlink', reasons)).toContain('Cannot unlink this loom')
+        expect(buildProtectedLoomActionError('delete', reasons)).toContain('Cannot delete this machine')
+        expect(buildProtectedLoomActionError('deactivate', reasons)).toContain('Cannot deactivate this machine')
+        expect(buildProtectedLoomActionError('unlink', reasons)).toContain('Cannot unlink this machine')
     })
 
     it('MASTER-005 preserves unused loom deactivate/delete paths', () => {

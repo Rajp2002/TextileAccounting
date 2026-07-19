@@ -73,12 +73,12 @@ function UpgradeWall({
                 {/* Headline */}
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                        Continue with Weavly Estimator
+                        Continue with Weavly Cost Estimate
                     </h2>
                     <p className="text-gray-500 mt-2 text-sm leading-relaxed">
                         This operational workspace is part of the <strong>Weavly Full Suite</strong>.
                         {currentTier === 'base' && (
-                            <> Your <strong>Estimator Plan</strong> remains complete for calculating, saving, and updating fabric costings.</>
+                            <> Your <strong>Cost Estimate Plan</strong> remains complete for calculating, saving, and updating fabric costings.</>
                         )}
                     </p>
                 </div>
@@ -86,7 +86,7 @@ function UpgradeWall({
                 <Link href="/owner/estimator" className="block">
                     <Button variant="outline" size="lg" className="w-full gap-2 rounded-xl">
                         <ArrowLeft className="h-4 w-4" />
-                        Return to Estimator
+                        Return to Cost Estimate
                     </Button>
                 </Link>
 
@@ -95,7 +95,7 @@ function UpgradeWall({
                     <ul className="space-y-2 text-sm text-gray-700">
                         {[
                             'Full production & order tracking',
-                            'Payroll, advances & settlement',
+                            'Worker Hisaab and Upaad',
                             'Daily WhatsApp briefs',
                             'Analytics & performance reports',
                             'Unlimited machines & workers',

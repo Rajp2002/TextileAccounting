@@ -29,7 +29,7 @@ const quickActions = [
   {
     href: '/owner/market-runs',
     label: 'Market Runs',
-    description: 'Track speculative loom output',
+    description: 'Track speculative machine output',
     icon: Store,
   },
   {

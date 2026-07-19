@@ -59,12 +59,12 @@ export function generateMeterPayslip(data: PayslipBaseData & {
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
-    let y = addPayslipHeader(doc, pageWidth, data, 'Meter Worker (Piece Rate)')
+    let y = addPayslipHeader(doc, pageWidth, data, 'Piece-Rate Worker')
 
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
     doc.text('Machine', 20, y)
-    doc.text('Meters', 90, y, { align: 'right' })
+    doc.text('Metres', 90, y, { align: 'right' })
     doc.text('Rate/m', 120, y, { align: 'right' })
     doc.text('Amount', pageWidth - 20, y, { align: 'right' })
     y += 2
@@ -277,7 +277,7 @@ function addSettlementRows(
 
     if (typeof data.totalMeters === 'number') {
         doc.setFont('helvetica', 'bold')
-        doc.text('Total Meters', 20, y)
+        doc.text('Total Metres', 20, y)
         doc.text(data.totalMeters.toFixed(1), 90, y, { align: 'right' })
         y += 6
     }

@@ -89,11 +89,11 @@ function validateTemplateRecipe(data: TemplateRecipeInput): string | null {
         return 'Sizing mode is invalid.'
     }
     if (data.loomType !== null && data.loomType !== undefined && !Object.prototype.hasOwnProperty.call(LOOM_TYPE_DEFAULTS, data.loomType)) {
-        return 'Loom type is invalid.'
+        return 'Machine type is invalid.'
     }
 
-    return validateOptionalPositiveNumber(data.loomRpm, 'Loom RPM', 10_000)
-        ?? validateOptionalPositiveNumber(data.loomPowerKw, 'Loom power', 10_000)
+    return validateOptionalPositiveNumber(data.loomRpm, 'Machine RPM', 10_000)
+        ?? validateOptionalPositiveNumber(data.loomPowerKw, 'Machine power', 10_000)
         ?? validateOptionalPositiveNumber(data.hoursPerShift, 'Hours per shift', 24)
 }
 

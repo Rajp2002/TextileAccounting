@@ -6,9 +6,10 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Weavly — Production Management',
         short_name: 'Weavly',
         description: 'Track production, manage workers, and automate daily briefs.',
-        // Start directly at /login so cold PWA opens skip the middleware
-        // auth-check → redirect chain (saves 3+ sequential server round-trips).
-        start_url: '/login',
+        // Base owners reopen directly on their product home. Unauthenticated
+        // launches still redirect to /login, while other roles retain the
+        // middleware's role-aware redirect.
+        start_url: '/owner/estimator',
         scope: '/',
         lang: 'en',
         display: 'standalone',

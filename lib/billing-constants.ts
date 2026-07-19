@@ -7,7 +7,7 @@ export type BillingPurchaseType = 'initial_purchase' | 'renewal'
 export const BILLING_PLANS = {
   base: {
     tier: 'base',
-    name: 'Weavly Estimator',
+    name: 'Weavly Cost Estimate',
     firstYearBasePaise: 700_000,       // ₹7,000
     firstYearGstPaise: 126_000,        // ₹1,260
     firstYearTotalPaise: 826_000,      // ₹8,260

@@ -26,7 +26,7 @@ export async function assignMachinesToOrderForOrg(
         .single<OrderQualityRow>()
 
     if (orderError || !order) return { error: 'Order not found' }
-    if (order.status !== 'active') return { error: 'Only active orders can be assigned to looms' }
+    if (order.status !== 'active') return { error: 'Only active orders can be assigned to machines' }
 
     if (machineIds.length > 0) {
         const { data: machines, error: machineFetchError } = await supabase

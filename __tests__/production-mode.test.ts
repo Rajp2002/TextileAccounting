@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getOrganizationProductionMode, getWorkflowVisibility, hasExplicitProductionMode, normalizeProductionMode } from '../lib/production-mode'
+import { getEstimatorWorkflowConfig, getOrganizationProductionMode, getWorkflowVisibility, hasExplicitProductionMode, normalizeProductionMode } from '../lib/production-mode'
 
 describe('production mode workflow visibility', () => {
     it('defaults missing or invalid production modes to market_run', () => {
@@ -42,6 +42,31 @@ describe('production mode workflow visibility', () => {
         expect(visibility.orders).toBe(true)
         expect(visibility.marketRuns).toBe(true)
         expect(visibility.stock).toBe(true)
+    })
+
+    it('forces the estimator into market mode for market-run-only factories', () => {
+        expect(getEstimatorWorkflowConfig('market_run', 'quote')).toEqual({
+            initialMode: 'market',
+            allowsPartyOrders: false,
+            allowsMarketRuns: true,
+        })
+    })
+
+    it('forces the estimator into quote mode for order-based-only factories', () => {
+        expect(getEstimatorWorkflowConfig('order_based', 'market')).toEqual({
+            initialMode: 'quote',
+            allowsPartyOrders: true,
+            allowsMarketRuns: false,
+        })
+    })
+
+    it('honours the requested estimator workflow when both are enabled', () => {
+        expect(getEstimatorWorkflowConfig('both', 'market')).toEqual({
+            initialMode: 'market',
+            allowsPartyOrders: true,
+            allowsMarketRuns: true,
+        })
+        expect(getEstimatorWorkflowConfig('both', 'quote').initialMode).toBe('quote')
     })
 
     it('defaults organization production mode when older databases lack the column', async () => {

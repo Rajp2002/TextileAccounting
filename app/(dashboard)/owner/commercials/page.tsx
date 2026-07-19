@@ -5,8 +5,8 @@ import { createPerfTimer } from '@/lib/perf'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-    title: 'Commercials | Owner Dashboard',
-    description: 'Gross profit, receivables, and payment tracking.',
+    title: 'Party Ledger | Owner Dashboard',
+    description: 'Party receivables, payments, outstanding balances, and booked profit.',
 }
 
 export default async function CommercialsPage() {
@@ -26,7 +26,7 @@ export default async function CommercialsPage() {
     if ('error' in commercialsRes) {
         return (
             <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-rose-600">Unable to load commercials</h1>
+                <h1 className="text-2xl font-bold text-rose-600">Unable to load Party Ledger</h1>
                 <p className="text-sm text-muted-foreground">{commercialsRes.error}</p>
             </div>
         )

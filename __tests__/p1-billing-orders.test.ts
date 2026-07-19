@@ -47,7 +47,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
     it('verifies billing page contains updated Full Suite pricing descriptions', () => {
         const content = readProjectFile('app/(dashboard)/owner/billing/page.tsx')
         expect(content).toContain('Weavly Full Suite')
-        expect(content).toContain('Weavly Estimator')
+        expect(content).toContain('Weavly Cost Estimate')
         expect(content).toContain('₹8,260')
         expect(content).toContain('₹2,000')
         expect(content).toContain('₹7,000')

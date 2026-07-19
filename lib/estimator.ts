@@ -496,7 +496,7 @@ export function getWidthWarnings(params: {
   if (finishedCm > 0 && effectiveCm > 0 && effectiveCm < finishedCm) {
     warnings.push({
       code: 'effective_width_below_finished_width',
-      message: `Effective costing width is below finished width. Add loom allowance or confirm this fabric narrows after finishing.`,
+      message: `Effective costing width is below finished width. Add machine allowance or confirm this fabric narrows after finishing.`,
     })
   }
 

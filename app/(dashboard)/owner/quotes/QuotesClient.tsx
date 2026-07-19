@@ -172,7 +172,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         if (res.error) {
             toast.error(res.error)
         } else {
-            toast.success(`Quote marked as ${newStatus}`)
+            toast.success(`Quotation marked as ${newStatus}`)
             setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...res.data, status: newStatus } : q))
         }
     }
@@ -208,7 +208,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
             return
         }
 
-        toast.success('Accepted quote converted into an active order')
+        toast.success('Accepted Quotation converted into an active order')
         setQuoteToConvert(null)
         router.push(`/owner/orders?orderId=${res.orderId}`)
     }
@@ -218,7 +218,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
             const draftKey = getEstimatorDraftStorageKey(orgId, userId)
             const linkedOrder = getLinkedOrder(quote)
             const isDuplicate = mode === 'duplicate'
-            const newDraft = {
+            const newDraft: EstimatorAutosaveData<QuoteDraftState> = {
                 state: buildDraftStateFromQuote(quote),
                 partyName: quote.party_name || '',
                 qualityLabel: isDuplicate ? `${quote.quality_label || 'Untitled'} Copy` : quote.quality_label || '',
@@ -227,14 +227,15 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 savedAt: getCurrentTimestampMs(),
                 sourceQuoteId: isDuplicate ? undefined : quote.id,
                 sourceQuoteUpdatedAt: isDuplicate ? undefined : quote.updated_at,
+                restoreOnEstimatorEntry: true,
             }
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
             setQuoteToRestore(null)
             setExistingDraftForRestore(null)
-            toast.success(isDuplicate ? 'Quote copied into a new estimator draft' : 'Quote snapshot restored')
+            toast.success(isDuplicate ? 'Quotation copied into a new Cost Estimate draft' : 'Quotation snapshot restored')
             router.push('/owner/estimator')
         } catch (error) {
-            toast.error('Browser storage is unavailable. The quote could not be opened in the estimator.')
+            toast.error('Browser storage is unavailable. The Quotation could not be opened in Cost Estimate.')
             console.error(error)
         }
     }
@@ -268,7 +269,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         }
         setQuotes(previous => previous.filter(quote => quote.id !== quoteToDelete.id))
         setQuoteToDelete(null)
-        toast.success('Quote deleted')
+        toast.success('Quotation deleted')
     }
 
     return (
@@ -277,9 +278,9 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                         <History className="h-6 w-6 text-indigo-500" />
-                        {canUseProduction ? 'Quote History' : 'Saved Costings'}
+                        {canUseProduction ? 'Quotation History' : 'Saved Cost Estimates'}
                     </h1>
-                    <p className="text-sm text-slate-500 font-medium">{canUseProduction ? 'Move quotes from draft to sent, manually accept them, then create active orders.' : 'Reopen, update, duplicate, or remove your previous fabric costings.'}</p>
+                    <p className="text-sm text-slate-500 font-medium">{canUseProduction ? 'Move Quotations from draft to sent, manually accept them, then create active orders.' : 'Reopen, update, duplicate, or remove your previous Cost Estimates.'}</p>
                 </div>
                 {canUseProduction && <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-lg shadow-sm w-full sm:w-auto overflow-x-auto">
                     {['all', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
@@ -307,11 +308,11 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         <div className="p-3 bg-white rounded-full shadow-sm shadow-slate-200/50">
                             <FileText className="h-6 w-6 text-slate-400" />
                         </div>
-                        <p className="text-sm font-bold text-slate-600">{canUseProduction ? 'No quotes found' : 'No saved costings yet'}</p>
+                        <p className="text-sm font-bold text-slate-600">{canUseProduction ? 'No Quotations found' : 'No saved Cost Estimates yet'}</p>
                         <p className="text-xs text-slate-500 max-w-xs">{
                             filterStatus === 'all'
-                                ? (canUseProduction ? "You haven't saved any quotes from the estimator yet." : "Save a costing from the Estimator and it will appear here.")
-                                : `No quotes with status "${filterStatus}".`
+                                ? (canUseProduction ? "You haven't saved any Quotations from Cost Estimate yet." : "Save a Cost Estimate and it will appear here.")
+                                : `No Quotations with status "${filterStatus}".`
                         }</p>
                         {filterStatus !== 'all' && (
                             <Button variant="link" size="sm" onClick={() => setFilterStatus('all')} className="mt-2 text-indigo-600 font-bold">
@@ -345,7 +346,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
 
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{canUseProduction ? 'Quoted Cost' : 'Final Cost'}</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{canUseProduction ? 'Quotation Price' : 'Final Cost'}</p>
                                             <p className="text-base font-black font-mono text-indigo-600">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
                                         </div>
                                         <div>
@@ -477,10 +478,10 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Package className="h-5 w-5 text-emerald-600" />
-                            Create active order from accepted quote
+                            Create active order from accepted Quotation
                         </DialogTitle>
                         <DialogDescription>
-                            This is the only production entry point now. The quote stays accepted and becomes linked to the new live order.
+                            This is the only production entry point now. The Quotation stays accepted and becomes linked to the new live order.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -491,11 +492,11 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mt-1">{quoteToConvert.quality_label}</p>
                                 <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                                     <div>
-                                        <p className="text-slate-400 uppercase tracking-wider font-bold">Quote Price</p>
+                                        <p className="text-slate-400 uppercase tracking-wider font-bold">Quotation Price</p>
                                         <p className="font-mono font-black text-indigo-600">₹{Number(quoteToConvert.quote_price_per_meter).toFixed(2)}/m</p>
                                     </div>
                                     <div>
-                                        <p className="text-slate-400 uppercase tracking-wider font-bold">Quoted Qty</p>
+                                        <p className="text-slate-400 uppercase tracking-wider font-bold">Quotation Quantity</p>
                                         <p className="font-mono font-black text-slate-900">{Number(quoteToConvert.meters ?? 0).toLocaleString('en-IN')} m</p>
                                     </div>
                                 </div>
@@ -560,10 +561,10 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <CheckCircle2 className="h-5 w-5 text-indigo-600" />
-                            Accept this quote?
+                            Accept this Quotation?
                         </DialogTitle>
                         <DialogDescription className="text-slate-500 text-sm leading-relaxed">
-                            Yarn rates and price will be locked. A later re-estimate creates a linked new quote without changing this record.
+                            Yarn rates and price will be locked. A later Cost Estimate creates a linked new Quotation without changing this record.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex gap-2 justify-end pt-2">
@@ -602,7 +603,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             Replace estimator draft?
                         </DialogTitle>
                         <DialogDescription className="text-slate-500 text-sm leading-relaxed">
-                            A local estimator draft already exists. Restoring this quote will replace it.
+                            A local Cost Estimate draft already exists. Restoring this Quotation will replace it.
                         </DialogDescription>
                     </DialogHeader>
                     {existingDraftForRestore && (
@@ -642,10 +643,10 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-red-600" />
-                            Delete this quote?
+                            Delete this Quotation?
                         </DialogTitle>
                         <DialogDescription className="text-sm leading-relaxed text-slate-500">
-                            This permanently removes the unconverted draft or rejected quote. Accepted, sent, and converted records remain protected.
+                            This permanently removes the unconverted draft or rejected Quotation. Accepted, sent, and converted records remain protected.
                         </DialogDescription>
                     </DialogHeader>
                     {quoteToDelete && (
@@ -668,7 +669,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             {quoteToDelete && updatingId === quoteToDelete.id
                                 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 : <Trash2 className="mr-2 h-4 w-4" />}
-                            Delete quote
+                            Delete Quotation
                         </Button>
                     </DialogFooter>
                 </DialogContent>

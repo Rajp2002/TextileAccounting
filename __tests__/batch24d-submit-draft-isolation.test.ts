@@ -43,7 +43,8 @@ describe('Batch 24D EST-017 estimator double-submit guard', () => {
         expect(saveHandler).toContain('} finally {')
         expect(saveHandler).toContain('setSavingQuote(false)')
         expect(saveHandler).toContain('saveQuoteLockRef.current = false')
-        expect(saveHandler).toContain("toast.error(error instanceof Error ? error.message : 'Failed to save quote')")
+        expect(saveHandler).toContain('getEstimatorSubmitFailureCopy(')
+        expect(saveHandler).toContain('duration: failure.retryable ? Infinity : undefined')
     })
 
     it('keeps the normal quote and market-run submit paths intact behind the guard', () => {
@@ -58,8 +59,8 @@ describe('Batch 24D EST-017 estimator double-submit guard', () => {
     })
 
     it('keeps all estimator submit buttons disabled while the guarded submit is pending', () => {
-        expect(estimatorClient).toContain('disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim()')
-        expect(estimatorClient).toContain('disabled={savingQuote || !orderQuote?.isValid}')
+        expect(estimatorClient).toContain('disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !partyName.trim() || !qualityLabel.trim()')
+        expect(estimatorClient).toContain('disabled={savingQuote || !estimatorValidation.valid || !orderQuote?.isValid}')
         expect(estimatorClient).toContain('disabled={savingQuote}')
     })
 })
@@ -208,7 +209,7 @@ describe('Batch 24D PROD-022 production draft date/shift isolation', () => {
         expect(supervisorPage).toContain('countRestoredUnsavedDraftMeters(restoredMeters, existingProductionMeters)')
         expect(supervisorPage).toContain('Restored unsaved draft')
         expect(supervisorPage).toContain('restored from this device and have not been saved yet')
-        expect(supervisorPage).toContain('Confirm large shift meters')
+        expect(supervisorPage).toContain('Confirm unusually high metres produced this shift')
         expect(supervisorPage).toContain('confirmedLargeMeters: true')
     })
 

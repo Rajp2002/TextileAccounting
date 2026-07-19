@@ -608,9 +608,9 @@ export default function SettingsPage() {
                     <SettingsPanel className="p-5">
                         <div className="flex items-center gap-2">
                             <Calculator className="h-4 w-4 text-saffron" />
-                            <h3 className="text-base font-semibold text-ink">Weavly Estimator</h3>
+                            <h3 className="text-base font-semibold text-ink">Weavly Cost Estimate</h3>
                         </div>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your Estimator Plan includes reusable qualities, saved costings, and configurable costing defaults.</p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your Cost Estimate Plan includes reusable qualities, saved costings, and configurable costing defaults.</p>
                         <div className="mt-4 space-y-2">
                             <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <CreditCard className="h-4 w-4" />

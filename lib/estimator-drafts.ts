@@ -1,6 +1,8 @@
 'use client'
 
 export const ESTIMATOR_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000
+const ESTIMATOR_CLIENT_REQUEST_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 export interface EstimatorAutosaveData<TState = unknown> {
   state: TState
@@ -11,6 +13,18 @@ export interface EstimatorAutosaveData<TState = unknown> {
   savedAt: number
   sourceQuoteId?: string
   sourceQuoteUpdatedAt?: string
+  /**
+   * Stable identity for a quote save/update attempt. Keeping it with the
+   * local draft makes a retry idempotent even if the server committed but its
+   * response was lost before the browser received it.
+   */
+  clientRequestId?: string
+  /**
+   * Marks a draft written by an explicit Saved Cost Estimate action.
+   * Generic background autosaves stay opt-in so they still require the
+   * existing recovery confirmation on the Estimator screen.
+   */
+  restoreOnEstimatorEntry?: boolean
 }
 
 export function getEstimatorDraftStorageKey(orgId: string, userId: string): string {
@@ -40,10 +54,30 @@ export function parseEstimatorDraft<TState = unknown>(
       savedAt: Number(parsed.savedAt),
       sourceQuoteId: typeof parsed.sourceQuoteId === 'string' ? parsed.sourceQuoteId : undefined,
       sourceQuoteUpdatedAt: typeof parsed.sourceQuoteUpdatedAt === 'string' ? parsed.sourceQuoteUpdatedAt : undefined,
+      clientRequestId:
+        typeof parsed.clientRequestId === 'string' &&
+        ESTIMATOR_CLIENT_REQUEST_ID_PATTERN.test(parsed.clientRequestId)
+          ? parsed.clientRequestId
+          : undefined,
+      restoreOnEstimatorEntry: parsed.restoreOnEstimatorEntry === true ? true : undefined,
     }
   } catch {
     return null
   }
+}
+
+/**
+ * Saved-costing edit sessions are safe to resume without an extra click.
+ *
+ * The explicit marker covers both edit and duplicate navigation. Once an edit
+ * session has been autosaved, sourceQuoteId keeps refresh/re-entry automatic
+ * even after the one-shot marker has naturally fallen out of later autosaves.
+ * Ordinary unsaved drafts remain manual recovery candidates.
+ */
+export function shouldAutoRestoreEstimatorDraft<TState>(
+  draft: EstimatorAutosaveData<TState> | null
+): boolean {
+  return Boolean(draft && (draft.restoreOnEstimatorEntry || draft.sourceQuoteId))
 }
 
 export function shouldWarnBeforeQuoteRestore<TState>(

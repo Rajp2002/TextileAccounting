@@ -70,11 +70,14 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(cleanup).toContain('db.mutations.clear()')
         expect(cleanup).toContain('window.sessionStorage.clear()')
         expect(logoutButton).toContain('clearClientSessionState')
-        expect(loginForm).toContain('await clearClientSessionState()')
+        expect(loginForm).toContain('await Promise.all([')
+        expect(loginForm).toContain('sessionCleanupRef.current = clearClientSessionState()')
+        expect(loginForm).toContain('const cleanupPromise = sessionCleanupRef.current ?? clearClientSessionState()')
+        expect(loginForm).toContain('signIn({ email: email.trim(), password })')
         expect(pwaSessionGuard).toContain('await clearClientSessionState()')
     })
 
-    it('awaits logout client cleanup before allowing the server logout submit to proceed', () => {
+    it('awaits logout client cleanup before allowing the native logout POST to proceed', () => {
         const logoutButton = readProjectFile('components/auth/logout-button.tsx')
         const preventDefaultIndex = logoutButton.indexOf('event.preventDefault()')
         const awaitedCleanupIndex = logoutButton.indexOf('await clearClientSessionState()')
@@ -88,7 +91,8 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(logoutButton).toContain('await clearClientSessionState()')
         expect(logoutButton).not.toContain('void clearClientSessionState()')
         expect(logoutButton).toContain('formRef.current?.requestSubmit()')
-        expect(logoutButton.match(/<form ref=\{formRef\} action=\{signOut\} onSubmit=\{handleLogout\}>/g)).toHaveLength(2)
+        expect(logoutButton).not.toContain("from '@/app/(auth)/actions'")
+        expect(logoutButton.match(/<form ref=\{formRef\} action="\/auth\/signout" method="post" onSubmit=\{handleLogout\}>/g)).toHaveLength(2)
         expect(preventDefaultIndex).toBeGreaterThan(-1)
         expect(awaitedCleanupIndex).toBeGreaterThan(preventDefaultIndex)
         expect(guardFlipIndex).toBeGreaterThan(awaitedCleanupIndex)
@@ -141,7 +145,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         const kharchi = readProjectFile('components/supervisor/KharchiDialog.tsx')
 
         expect(kharchi).toContain('Kharchi is online-only')
-        expect(kharchi).toContain('Reconnect before recording cash')
+        expect(kharchi).toContain('Reconnect before recording floor cash')
         expect(kharchi).toContain('!isOnline')
         expect(kharchi).not.toContain('queueMutation')
         expect(kharchi).not.toContain('kharchi_offline')
@@ -159,9 +163,25 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(updateNotice).toContain('navigator.serviceWorker.ready')
         expect(updateNotice).toContain('registration.update()')
         expect(updateNotice).toContain('controllerchange')
+        expect(updateNotice).toContain('if (!registration.waiting && !allowAlreadyActivatedWorker) return')
+        expect(updateNotice).toContain('if (!hadControllerAtMount) return')
+        expect(updateNotice).toContain('id: UPDATE_TOAST_ID')
         expect(updateNotice).toContain("waitingWorker.postMessage({ type: 'SKIP_WAITING' })")
         expect(updateNotice).toContain("addEventListener('controllerchange', reloadWithNewController, { once: true })")
         expect(providers).toContain('<PwaUpdateNotice />')
+    })
+
+    it('keeps dynamic authenticated responses out of service-worker caches', () => {
+        const nextConfig = readProjectFile('next.config.ts')
+
+        expect(nextConfig).toContain('dynamicStartUrl: false')
+        expect(nextConfig).toContain('extendDefaultRuntimeCaching: true')
+        for (const cacheName of ['next-data', 'apis', 'pages-rsc-prefetch', 'pages-rsc', 'pages']) {
+            expect(nextConfig).toContain(`cacheName: '${cacheName}'`)
+        }
+        expect(nextConfig.match(/handler: 'NetworkOnly'/g)).toHaveLength(5)
+        expect(nextConfig).toContain("request.mode === 'navigate'")
+        expect(nextConfig).toContain("document: '/_offline'")
     })
 
     it('aligns public and privacy copy with the online-only write model while leaving OFF-009 untouched', () => {
@@ -173,7 +193,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(privacy).toContain('Logging out clears user-specific cached data and the local offline mutation queue')
         expect(privacy).not.toContain('automatically synced to our servers upon reconnection')
         expect(privacy).not.toContain('offline production entries')
-        expect(faq).toContain('Saving production, kharchi, payroll, sale, dispatch, and payment entries requires an internet connection.')
+        expect(faq).toContain('Saving production, Kharchi, Worker Hisaab, sale, dispatch, and payment entries requires an internet connection.')
         expect(faq).not.toContain('offline queueing is supported for expenses')
         expect(matrix).toContain('| OFF-009 |')
         expect(matrix).toContain('Mutation request timeout.')

@@ -54,7 +54,7 @@ import { useTranslation } from '@/lib/i18n/context'
 const movementOptions = [
     { value: 'issue_to_warping', label: 'Issue to warping' },
     { value: 'issue_to_sizing', label: 'Issue to sizing' },
-    { value: 'issue_to_loom_weft', label: 'Issue to loom / weft' },
+    { value: 'issue_to_loom_weft', label: 'Issue to machine / weft' },
     { value: 'return_leftover', label: 'Return / leftover' },
     { value: 'adjustment', label: 'Adjustment' },
 ] as const

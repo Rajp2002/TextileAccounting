@@ -8,7 +8,7 @@ Final authority: **Weavly owner and named pilot-factory owner**
 
 This document has two decisions:
 
-1. **Part A authorizes a tightly limited first supervised pilot session only after `TECH-011`, `UX-012`, and `GOLDEN-A-03` are formally `PASS`.**
+1. **Part A authorizes a tightly limited first supervised pilot session only after the two remaining gates, `TECH-011` and `GOLDEN-A-03`, are formally `PASS`; it also verifies the recorded Founder-approved `UX-012` operating-control plan.**
 2. **Part B closes `SIGNOFF-04` only after the first pilot shift's Today meters reconcile with the independently maintained supervisor register.**
 
 A signed Part A does not make `SIGNOFF-04` `PASS`. The row stays `BLOCKED` until Part B is complete.
@@ -28,7 +28,7 @@ The authorizer must verify the canonical ledger and attach each row's actual clo
 | Required gate | Matrix status | Final evidence path/ID | Approved by/date | Verified by authorizer |
 | --- | --- | --- | --- | --- |
 | `TECH-011` automated retained/off-site production backup plus disposable restore/reconciliation |  |  |  | [ ] |
-| `UX-012` named factory-supervisor terminology approval/change completion |  |  |  | [ ] |
+| `UX-012` Founder-approved terminology plus first-pilot-run factory-operator/Gujarati review plan | `PASS` | `output/qa/pilot-gate-closure/2026-07-17/UX-012/runtime-evidence.md` | Raj / 2026-07-17 | [ ] |
 | `GOLDEN-A-03` independent real-fabric truth-sheet reconciliation and downstream snapshots |  |  |  | [ ] |
 
 Authorization rule: if any row above is not formally `PASS`, stop. Do not sign the pilot authorization.
@@ -189,7 +189,7 @@ Next-shift resume decision: ____________________
 
 ## Required closure artifacts and acceptance criteria
 
-- [ ] Part A shows actual `PASS` evidence for `TECH-011`, `UX-012`, and `GOLDEN-A-03` and is signed by both owners.
+- [ ] Part A shows actual `PASS` evidence for `TECH-011` and `GOLDEN-A-03`, records UX-012 Founder approval and its pilot-run operator-review control, and is signed by both owners.
 - [ ] Pilot scope, limits, exclusions, controls, incident roles, and rollback/fallback are complete.
 - [ ] An independent supervisor register was maintained during the first pilot shift.
 - [ ] Same-grain Weavly Today evidence and per-loom comparison are attached.
@@ -208,7 +208,7 @@ Only completion of the final four bullets can move `SIGNOFF-04` to `PASS`. Part 
 
 ## Exact human and laptop actions still required
 
-1. **Documentation owner:** confirm `TECH-011`, `UX-012`, and `GOLDEN-A-03` are genuinely `PASS` with complete artifacts; otherwise stop.
+1. **Documentation owner:** confirm `TECH-011` and `GOLDEN-A-03` are genuinely `PASS` with complete artifacts, and confirm UX-012 remains `PASS` with its factory-operator/Gujarati pilot-run review scheduled; otherwise stop.
 2. **Both owners:** fill limits/scope, assign incident roles, acknowledge exclusions/blockers, and sign Part A.
 3. **Supervisor:** maintain the independent register during the authorized first shift.
 4. **Owner laptop at shift end:** open `/owner/today` on the approved build, select the same date, and capture per-loom/total meters without editing records.

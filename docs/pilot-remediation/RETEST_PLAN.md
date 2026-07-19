@@ -705,14 +705,17 @@ Acceptance:
 - Regression-test the corrected inventory capture with zero/non-zero/malformed/missing/multiple-row JSON, numeric-type enforcement, stderr isolation, unusual whitespace/Unicode and credential non-echo. Preserve one-object SQL aggregation and `psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1`.
 - After merge, use one `workflow_dispatch` run only as a canary for valid inventory, zero Storage, SHA-256 completion, encryption and 14-day artifact upload. Label it supporting validation, not scheduled evidence, and do not use it for formal restore closure.
 - Keep the daily `17 20 * * *` schedule unchanged. Record the next successful `event=schedule` run ID and exact artifact name; only that artifact may proceed to disposable restore, exact reconciliation, measured RTO, cleanup proof and named-verifier approval.
+- 2026-07-16 result: scheduled run `29451202680` produced artifact `8357639557`; restore run `29494683840` restored it in 128 seconds with exact business/Auth/Storage/migration reconciliation, zero jobs, no production target and successful cleanup. The only compatible variance was `pg_net` `0.19.5` to `0.20.3`. Do not repeat this drill merely to manufacture evidence. Re-run from `main` only if required after merging `da272ea`/`d07a570`; otherwise the remaining retest is document review and named independent-verifier sign-off.
 
 ### UX-012 supervisor review retest — 2026-07-14
 
 - Use `UX-012_TERMINOLOGY_INVENTORY.md`, `UX-012_RECOMMENDED_GLOSSARY.md`, and `UX-012_TERMINOLOGY_DECISION_PACK.md` from the closure-pack directory.
-- Capture the required owner/supervisor/mobile/output screen contexts for every language actually used. Do not submit production forms only to make screenshots; redact identities/amounts.
-- A named pilot-factory supervisor explains and decides every canonical term plus every high-risk term visible in the pilot. Record name, real role/factory, date/time/time zone, exact choice and change request.
-- Implement only approved changes, update affected tests/docs/exports, deploy if user-facing behavior changes, recapture affected contexts, and obtain the same reviewer’s dated re-approval.
-- Keep `UX-012` blocked for blank/unclear choices, product-owner-only opinion, unsigned screenshots, unimplemented changes, or an unreviewed used locale.
+- The 2026-07-17 disposable-QA pass captured authenticated English owner and supervisor contexts indexed in `output/qa/pilot-gate-closure/2026-07-17/UX-012/screenshot-index.md`; account, organization and subscription cleanup passed. Do not repeat these screenshots merely to manufacture evidence.
+- Still capture/review the populated data-dependent contexts that the empty fixture could not render: Taka quantities, receipt reconciliation, Piece-Rate/Salaried Worker assignments and Counter Reading. Capture every language actually used. Do not submit production forms only to make screenshots; redact identities/amounts.
+- Founder decision on 2026-07-17 promotes UX-012 to pre-pilot `pass` and moves named factory-operator review into the first pilot run.
+- During the first pilot run, a named factory-side operator explains and decides every canonical/high-risk term visible in populated English contexts and verifies exact Gujarati wording. Record name, real role/factory, date/time/time zone, exact choice and change request.
+- Implement any requested correction, update affected tests/docs/exports, recapture affected contexts, and obtain operator confirmation before wider pilot use.
+- Reopen `UX-012` for any unclear/disputed term, incorrect Gujarati wording, or unimplemented pilot change request. Founder PASS must not be represented as a factory-operator signature.
 
 ### B19 external-evidence regression guard — 2026-07-14
 
@@ -732,5 +735,5 @@ Acceptance:
 - For `OFF-009`, delay exactly one shift-log server-action response beyond the 15-second client timeout. Require disabled resubmission, unknown-outcome messaging, authoritative saved-state reconciliation, exactly one matching persisted row, zero console errors/warnings, and exact fixture cleanup.
 - For `OFF-010`, use a mobile viewport and constrained 2G/3G profile. Require one persisted submission, guarded repeat submission, and usable Shift Meters, Workers, Attendance, and Machines screens. Do not add an offline-queue condition not present in the row.
 - Run fixture setup and cleanup against the same explicit target. The harness must reject target mismatch; reconcile `QA-OFF009-*` to zero.
-- Canonical runtime evidence is `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`. Current counts are 367 pass, 0 fail, 7 blocked, and 3 not applicable.
-- Reopen the verdict only for a regression or when one of `TECH-011`, `UX-012`, or `GOLDEN-A-03` receives its exact external artifact. Do not treat `OFF-001`, `SEC-011`, `SEC-018`, `SIGNOFF-04`, `WA-008`, or `WA-010` as an independent limited-pilot No-Go outside their recorded scope.
+- Canonical runtime evidence is `output/qa/remaining-gate-campaign/OFF-009-OFF-010-runtime.json`. Current counts are 368 pass, 0 fail, 6 blocked, and 3 not applicable.
+- Reopen the verdict only for a regression or when `TECH-011` or `GOLDEN-A-03` receives its exact external artifact. Reopen UX-012 if the pilot factory operator disputes a term. Do not treat `OFF-001`, `SEC-011`, `SEC-018`, `SIGNOFF-04`, `WA-008`, or `WA-010` as an independent limited-pilot No-Go outside their recorded scope.

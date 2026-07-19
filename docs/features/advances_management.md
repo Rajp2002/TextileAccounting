@@ -4,16 +4,16 @@ Last reviewed against the active documentation pass on May 31, 2026.
 
 ## Phase 1 Status
 
-Core Phase 1 pillar because advances/Upaad directly affect worker trust and payroll settlement.
+Core Phase 1 pillar because Upaad (Worker Advance) directly affects worker trust and Worker Hisaab (payroll settlement).
 
 ## What It Does
 
-Advances records money given to meter or fixed workers before settlement. Pending advances are visible on the worker profile and are recovered during payroll according to deduction caps and final settlement behavior.
+Upaad (Worker Advance) records money given specifically to Piece-Rate Workers or Salaried Workers before Worker Hisaab. Pending Upaad is visible on the worker profile and is recovered during settlement according to deduction caps and final-settlement behavior. It remains separate from Kharchi (Floor Cash).
 
 ## User Workflow
 
 1. Owner opens `/owner/advances`.
-2. Owner searches across active meter and fixed workers.
+2. Owner searches across active Piece-Rate Workers and Salaried Workers.
 3. Owner selects a worker.
 4. Owner sees pending and deducted advances.
 5. Owner sees total pending, total deducted, and debt warnings based on typical monthly pay.
@@ -53,7 +53,7 @@ Weavly workflow:
 
 ## Downstream Effects
 
-- Payroll settlement recovers advances.
+- Worker Hisaab recovers or carries forward Upaad according to the settlement rules.
 - WhatsApp advance receipts can be sent.
 - Worker exit/final settlement flows can use remaining debt.
 

@@ -1,5 +1,5 @@
 export const DUPLICATE_LOOM_NAME_ERROR =
-    'Loom names must be unique within this organization.'
+    'Machine names must be unique within this organization.'
 
 export type LoomNameRecord = {
     id?: string | null
@@ -13,7 +13,7 @@ export function normalizeLoomName(name: string) {
 export function buildDuplicateLoomNameError(name: string) {
     const trimmedName = name.trim()
     return trimmedName
-        ? `A loom named "${trimmedName}" already exists. ${DUPLICATE_LOOM_NAME_ERROR}`
+        ? `A machine named "${trimmedName}" already exists. ${DUPLICATE_LOOM_NAME_ERROR}`
         : DUPLICATE_LOOM_NAME_ERROR
 }
 
@@ -114,8 +114,8 @@ export function buildProtectedLoomActionError(action: LoomLifecycleAction, reaso
             ? 'unlink'
             : 'deactivate'
     if (action === 'unlink') {
-        return `Cannot ${actionLabel} this loom because it has ${formatReasonList(reasons)}. Resolve protected references first; looms with production or shift history must be preserved.`
+        return `Cannot ${actionLabel} this machine because it has ${formatReasonList(reasons)}. Resolve protected references first; machines with production or shift history must be preserved.`
     }
 
-    return `Cannot ${actionLabel} this loom because it has ${formatReasonList(reasons)}. Unlink active targets and assignments first; looms with production or shift history must be preserved.`
+    return `Cannot ${actionLabel} this machine because it has ${formatReasonList(reasons)}. Unlink active targets and assignments first; machines with production or shift history must be preserved.`
 }

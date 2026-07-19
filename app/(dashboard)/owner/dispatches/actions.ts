@@ -89,7 +89,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     const hasExplicitSoldTakas = input.soldTakas != null && String(input.soldTakas).trim() !== ''
     const soldTakas = hasExplicitSoldTakas ? toFiniteNumber(input.soldTakas) : null
     if (soldTakas != null && soldTakas <= 0) {
-        return { success: false, stage: 'validation', message: 'Sold takas must be greater than 0' }
+        return { success: false, stage: 'validation', message: 'Number of Taka Sold must be greater than 0' }
     }
 
     const { data, error } = await supabase.rpc('create_party_stock_sale_dispatch_v1', {

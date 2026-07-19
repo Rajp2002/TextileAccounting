@@ -86,11 +86,27 @@ import {
     startPartyOrderFromEstimator,
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
+import { useOnlineStatus } from '@/hooks/use-online-status'
 import { toast } from 'sonner'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import FactoryCostWizard from './FactoryCostWizard'
+import {
+    getEstimatorWorkflowConfig,
+    type EstimatorWorkflowMode,
+    type ProductionMode,
+} from '@/lib/production-mode'
+import {
+    getFirstEstimatorValidationMessage,
+    validateEstimatorSnapshot,
+} from '@/lib/estimator-validation'
+import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
+import {
+    ESTIMATOR_OFFLINE_SAVE_TITLE,
+    getEstimatorSubmitFailureCopy,
+} from '@/lib/estimator-submit-recovery'
+import { createClientRequestUuid } from '@/lib/client-request-id'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -586,12 +602,15 @@ function StepperField({
 
 function NumField({
     label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false,
+    inputId, error,
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
     unit?: string; step?: number; min?: number; hint?: string; warning?: string
     onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean
+    inputId?: string; error?: string
 }) {
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
+    const errorId = inputId && error ? `${inputId}-error` : undefined
     // Estimator defaults are stored as numeric zero for calculations, but an
     // empty control with a zero placeholder is a better editing experience:
     // the first digit typed replaces the visual default instead of appending
@@ -600,20 +619,27 @@ function NumField({
     const displayPlaceholder = value === 0 ? (placeholder ?? '0') : placeholder
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
+            <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
             <div className="relative group">
                 <Input
+                    id={inputId}
                     type="number"
                     step={step}
                     min={min}
                     placeholder={displayPlaceholder}
                     value={displayValue}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={errorId}
                     onChange={e => {
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-10 sm:pr-14 border focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
-                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
+                        error
+                            ? 'border-[var(--color-risk-red)] bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)] placeholder:text-[var(--color-risk-red)]'
+                            : isEmpty
+                                ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]'
+                                : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
                 />
                 {unit && (
@@ -622,8 +648,11 @@ function NumField({
                     </span>
                 )}
             </div>
-            {isEmpty && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
-            {warning ? (
+            {error ? (
+                <p id={errorId} role="alert" className="text-[10px] font-semibold leading-tight text-[var(--color-risk-red)]">{error}</p>
+            ) : isEmpty ? (
+                <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>
+            ) : warning ? (
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-[var(--color-warning-amber)] shrink-0" />
@@ -651,9 +680,13 @@ type YarnDensityField = 'linearDensityUnit' | 'cottonCountNe' | 'calcDenier'
 function YarnDensityFields({
     row,
     onChange,
+    inputId,
+    error,
 }: {
     row: YarnDensityRow
     onChange: (field: YarnDensityField, value: YarnLinearDensityUnit | number | null) => void
+    inputId?: string
+    error?: string
 }) {
     const unit = row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier'
     const countNe = Number(row.cottonCountNe ?? 0)
@@ -706,6 +739,8 @@ function YarnDensityFields({
                     ? `Converted for costing: ${effectiveDenier.toFixed(3)} D (5315 ÷ Ne)`
                     : 'Enter total linear density after any ply or doubling'}
                 attentionWhenEmpty
+                inputId={inputId}
+                error={error}
             />
         </>
     )
@@ -718,6 +753,8 @@ function WidthField({
     unit,
     hint,
     warning,
+    inputId,
+    error,
 }: {
     label: string
     value: number
@@ -725,6 +762,8 @@ function WidthField({
     unit: 'cm' | 'inch'
     hint?: string
     warning?: string
+    inputId?: string
+    error?: string
 }) {
     const displayValue = useMemo(() => {
         if (!value) return ''
@@ -755,15 +794,18 @@ function WidthField({
 
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+            <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 {label}
             </Label>
             <div className="relative group">
                 <Input
+                    id={inputId}
                     type="number"
                     step={unit === 'cm' ? 1 : 0.1}
                     min={0}
                     value={displayValue}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={inputId && error ? `${inputId}-error` : undefined}
                     onChange={e => {
                         const raw = e.target.value === '' ? 0 : Number(e.target.value)
                         if (unit === 'inch') {
@@ -773,13 +815,22 @@ function WidthField({
                             onChange(raw)
                         }
                     }}
-                    className="h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-[var(--color-hairline)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)]"
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 border focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] ${
+                        error
+                            ? 'border-[var(--color-risk-red)] bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]'
+                            : 'border-[var(--color-hairline)] bg-white text-[var(--color-yarn-orange)] group-hover:border-[var(--color-hairline-strong)]'
+                    }`}
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                     {unit}
                 </span>
             </div>
             <div className="flex flex-col gap-0.5 mt-1">
+                {error && (
+                    <p id={inputId ? `${inputId}-error` : undefined} role="alert" className="text-[10px] font-semibold leading-tight text-[var(--color-risk-red)]">
+                        {error}
+                    </p>
+                )}
                 {value > 0 && (
                     <p className="text-[10px] text-[var(--color-factory-green)] font-semibold leading-tight flex items-center gap-1 bg-[var(--color-factory-green-soft)] py-0.5 px-2 rounded-md self-start border border-[#CDE5D3]">
                         {secondaryReadout}
@@ -797,15 +848,15 @@ function WidthField({
     )
 }
 
-function SectionCostPill({ value }: { value: number }) {
-    const hasCost = value > 0
+function SectionCostPill({ value, valid = true }: { value: number; valid?: boolean }) {
+    const hasCost = valid && Number.isFinite(value) && value > 0
     return (
         <span className={`rounded-full border px-3 py-1 text-[13px] font-semibold shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
             hasCost
                 ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]'
                 : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]'
         }`}>
-            ₹{value.toFixed(2)}/m
+            {valid && Number.isFinite(value) && value >= 0 ? `₹${value.toFixed(2)}/m` : 'Correct inputs'}
         </span>
     )
 }
@@ -917,10 +968,10 @@ function trimLayerLabels<T extends WarpRow | WeftRow>(rows: T[]) {
 }
 
 function RowCard({
-    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, children, accent = 'indigo'
+    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, children, accent = 'indigo', invalid = false,
 }: {
     title: string; index: number; onRemove: () => void; canRemove: boolean
-    kgPer100m: number; costPer100m: number; adjustmentPct?: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
+    kgPer100m: number; costPer100m: number; adjustmentPct?: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'; invalid?: boolean
 }) {
     const colors = {
         indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]', dot: 'bg-[var(--color-info-blue)]' },
@@ -936,7 +987,7 @@ function RowCard({
                     </span>
                     <span className={`h-2 w-2 rounded-full ${c.dot}`} />
                     <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-semibold text-[var(--color-muted)]">
-                        {kgPer100m.toFixed(3)} kg/100m
+                        {invalid || !Number.isFinite(kgPer100m) || kgPer100m < 0 ? 'Correct inputs' : `${kgPer100m.toFixed(3)} kg/100m`}
                     </Badge>
                     {adjustmentPct != null && (
                         <Badge variant="outline" className={`h-5 rounded-[6px] px-1.5 py-0 text-[10px] font-semibold ${c.badge}`}>
@@ -946,7 +997,7 @@ function RowCard({
                 </div>
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                     <span className="text-xs font-semibold text-[var(--color-muted)]">
-                        ₹{costPer100m.toFixed(2)}/100m
+                        {invalid || !Number.isFinite(costPer100m) || costPer100m < 0 ? '—' : `₹${costPer100m.toFixed(2)}/100m`}
                     </span>
                     <ChevronUp className="h-4 w-4 text-[var(--color-muted)]" />
                     {canRemove && (
@@ -974,6 +1025,7 @@ export default function EstimatorClient({
     userId,
     orgId,
     canUseProduction,
+    productionMode,
 }: {
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
@@ -981,12 +1033,17 @@ export default function EstimatorClient({
     userId: string
     orgId: string
     canUseProduction: boolean
+    productionMode: ProductionMode
 }) {
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
     
-    const [mode, setMode] = useState<'quote' | 'market'>(canUseProduction && searchParams.get('mode') === 'market' ? 'market' : 'quote')
+    const estimatorWorkflow = getEstimatorWorkflowConfig(productionMode, searchParams.get('mode'))
+    const [mode, setMode] = useState<EstimatorWorkflowMode>(
+        canUseProduction ? estimatorWorkflow.initialMode : 'quote'
+    )
+    const { allowsPartyOrders, allowsMarketRuns } = estimatorWorkflow
 
     const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
     const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
@@ -1073,6 +1130,8 @@ export default function EstimatorClient({
     const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null)
     const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
     const quoteRequestIdRef = useRef<string | null>(null)
+    const autoRestoredDraftSavedAtRef = useRef<number | null>(null)
+    const isOnline = useOnlineStatus()
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
     const [templateName,     setTemplateName]     = useState('')
@@ -1103,9 +1162,54 @@ export default function EstimatorClient({
     const partyLookupTimerRef = useState<ReturnType<typeof setTimeout> | null>(null)
 
     // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
-    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave<EstimateState>({
+    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow } = useAutosave<EstimateState>({
         orgId, userId, debounceMs: 2000,
     })
+
+    const buildCurrentDraft = useCallback((clientRequestId = quoteRequestIdRef.current) => ({
+        state,
+        partyName,
+        qualityLabel,
+        warpInstruction,
+        weftInstruction,
+        sourceQuoteId: sourceQuoteId ?? undefined,
+        sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+        clientRequestId: clientRequestId ?? undefined,
+    }), [
+        partyName,
+        qualityLabel,
+        sourceQuoteId,
+        sourceQuoteUpdatedAt,
+        state,
+        warpInstruction,
+        weftInstruction,
+    ])
+
+    const applyEstimatorDraft = useCallback(() => {
+        const restored = restoreDraft()
+        if (!restored) return
+
+        dispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
+        setPartyName(restored.partyName)
+        setQualityLabel(restored.qualityLabel)
+        setWarpInstruction(restored.warpInstruction)
+        setWeftInstruction(restored.weftInstruction)
+        setSourceQuoteId(restored.sourceQuoteId ?? null)
+        setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
+        quoteRequestIdRef.current = restored.clientRequestId ?? null
+        toast.success(restored.sourceQuoteId ? 'Quotation specifications loaded' : 'Cost Estimate draft restored')
+    }, [restoreDraft])
+
+    useEffect(() => {
+        if (!hasDraft || !draft || !shouldAutoRestoreEstimatorDraft(draft)) return
+        if (autoRestoredDraftSavedAtRef.current === draft.savedAt) return
+
+        // React StrictMode can replay mount effects. savedAt identifies this
+        // handoff so an explicit Open & Update / Duplicate action is applied
+        // once without affecting the manual recovery flow for ordinary drafts.
+        autoRestoredDraftSavedAtRef.current = draft.savedAt
+        applyEstimatorDraft()
+    }, [applyEstimatorDraft, draft, hasDraft])
 
     // Fallback fetch: only runs if no initial data was server-provided
     useEffect(() => {
@@ -1144,17 +1248,8 @@ export default function EstimatorClient({
     // Autosave: persist on every state change (debounced)
     useEffect(() => {
         if (!orgId) return
-        saveDraft({
-            state,
-            partyName,
-            qualityLabel,
-            warpInstruction,
-            weftInstruction,
-            sourceQuoteId: sourceQuoteId ?? undefined,
-            sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
-        })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction, sourceQuoteId, sourceQuoteUpdatedAt])
+        saveDraft(buildCurrentDraft())
+    }, [buildCurrentDraft, orgId, saveDraft])
 
     // Sync partyName with qualityLabel in market mode for database/draft compatibility
     useEffect(() => {
@@ -1178,7 +1273,32 @@ export default function EstimatorClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [partyName, canUseProduction])
 
-    const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
+    const estimatorValidation = useMemo(() => validateEstimatorSnapshot(state), [state])
+    const firstEstimatorValidationMessage = useMemo(
+        () => getFirstEstimatorValidationMessage(estimatorValidation),
+        [estimatorValidation],
+    )
+    const validationIssueMap = useMemo(() => {
+        if (estimatorValidation.valid) return new Map<string, string>()
+        return new Map(estimatorValidation.issues.map(issue => [issue.field, issue.message]))
+    }, [estimatorValidation])
+    const validationMessageFor = (field: string) => validationIssueMap.get(field)
+    const hasValidationIssueFor = (prefix: string) => !estimatorValidation.valid
+        && estimatorValidation.issues.some(issue => issue.field === prefix || issue.field.startsWith(`${prefix}.`))
+
+    const totals: EstimatorV3Totals = useMemo(() => {
+        try {
+            return calcFullTotals(state)
+        } catch {
+            // A restored or manually tampered payload can contain a non-finite
+            // value. Keep the page recoverable while field validation explains
+            // what must be fixed; never let Decimal terminate the render.
+            return calcFullTotals(makeDefaultEstimateState())
+        }
+    }, [state])
+    const hasValidCostResult = estimatorValidation.valid
+        && Number.isFinite(totals.totalProductionCostPerM)
+        && totals.totalProductionCostPerM >= 0
     const scenarios = useMemo(() =>
         runScenarios(state, totals, customTargetPrice ? Number(customTargetPrice) : undefined),
     [state, totals, customTargetPrice])
@@ -1262,6 +1382,9 @@ export default function EstimatorClient({
             toast.error(message)
             return
         }
+        if (firstEstimatorValidationMessage) {
+            return toast.error(firstEstimatorValidationMessage)
+        }
         const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
@@ -1318,6 +1441,9 @@ export default function EstimatorClient({
 
     const handleUpdateTemplate = async () => {
         if (!appliedTemplate) return
+        if (firstEstimatorValidationMessage) {
+            return toast.error(firstEstimatorValidationMessage)
+        }
         const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
@@ -1468,6 +1594,15 @@ export default function EstimatorClient({
 
     const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode, status: 'draft' | 'accepted' = 'draft') => {
         if (saveQuoteLockRef.current || savingQuote) return
+        if (firstEstimatorValidationMessage) {
+            return toast.error(firstEstimatorValidationMessage)
+        }
+        if (canUseProduction && targetMode === 'quote' && !allowsPartyOrders) {
+            return toast.error('Party quotations are unavailable in Market Run only mode')
+        }
+        if (targetMode === 'market' && !allowsMarketRuns) {
+            return toast.error('Market Runs are unavailable in Order-Based only mode')
+        }
 
         const resolvedPartyName = !canUseProduction
             ? qualityLabel.trim()
@@ -1482,6 +1617,31 @@ export default function EstimatorClient({
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
             return toast.error('Set a quantity before saving')
         }
+
+        const browserIsOnline = typeof navigator === 'undefined' || navigator.onLine
+        if (!browserIsOnline) {
+            const draftSaved = saveDraftNow(buildCurrentDraft())
+            const failure = getEstimatorSubmitFailureCopy(
+                new TypeError('offline'),
+                false,
+                draftSaved
+            )
+            toast.error(failure.title, {
+                description: failure.description,
+                duration: Infinity,
+            })
+            return
+        }
+
+        const clientRequestId = targetMode === 'quote'
+            ? quoteRequestIdRef.current ?? createClientRequestUuid()
+            : null
+        if (clientRequestId) quoteRequestIdRef.current = clientRequestId
+
+        // Flush both the current inputs and request identity before the action.
+        // If the response is lost after commit, reopening and retrying reuses the
+        // same idempotency key instead of creating a duplicate.
+        const draftSavedBeforeSubmit = saveDraftNow(buildCurrentDraft(clientRequestId))
 
         saveQuoteLockRef.current = true
         setSavingQuote(true)
@@ -1510,10 +1670,8 @@ export default function EstimatorClient({
                     router.push(`/owner/market-runs/${res.marketRunId}`)
                 }
             } else {
-                const clientRequestId = quoteRequestIdRef.current ?? globalThis.crypto.randomUUID()
-                quoteRequestIdRef.current = clientRequestId
                 const res = await saveEstimatorQuoteV3({
-                    clientRequestId,
+                    clientRequestId:          clientRequestId!,
                     partyName:               resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
                     warpInstruction:         warpInstruction.trim() || undefined,
@@ -1531,16 +1689,24 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     quoteRequestIdRef.current = null
                     toast.success(canUseProduction
-                        ? (status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
+                        ? (status === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
                         : (sourceQuoteId ? 'Costing updated' : 'Costing saved'))
                     router.push('/owner/quotes')
                 } else {
-                    toast.error(res.error ?? 'Failed to save quote')
+                    toast.error(res.error ?? 'Failed to save Quotation')
                 }
             }
         } catch (error) {
             console.error('Failed to save estimator quote:', error)
-            toast.error(error instanceof Error ? error.message : 'Failed to save quote')
+            const failure = getEstimatorSubmitFailureCopy(
+                error,
+                typeof navigator === 'undefined' || navigator.onLine,
+                draftSavedBeforeSubmit
+            )
+            toast.error(failure.title, {
+                description: failure.description,
+                duration: failure.retryable ? Infinity : undefined,
+            })
         } finally {
             setSavingQuote(false)
             saveQuoteLockRef.current = false
@@ -1549,6 +1715,10 @@ export default function EstimatorClient({
 
     const handleStartPartyOrder = async () => {
         if (saveQuoteLockRef.current || savingQuote) return
+        if (firstEstimatorValidationMessage) {
+            return toast.error(firstEstimatorValidationMessage)
+        }
+        if (!allowsPartyOrders) return toast.error('Party Orders are unavailable in Market Run only mode')
         if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
@@ -1611,18 +1781,19 @@ export default function EstimatorClient({
     const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
     const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
     const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5"
+    const validationSummaryId = 'estimator-save-validation-summary'
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
     const displayMarginPct = Number.isFinite(orderQuote?.actualMarginPct)
         ? orderQuote?.actualMarginPct ?? state.profitPct
         : state.profitPct
-    const costSegments = [
+    const costSegments = hasValidCostResult ? [
         { label: 'Warp', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
         { label: 'Weft', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
         { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
         { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
         { label: 'Overhead', value: totals.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
         { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
-    ].filter(segment => segment.value > 0)
+    ].filter(segment => segment.value > 0) : []
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
     const auditLayerRows = [
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
@@ -1631,13 +1802,13 @@ export default function EstimatorClient({
     const auditCostLines = [
         { label: 'Warp yarn', value: totals.audit.warp.totalCostPerMeter },
         { label: 'Weft yarn', value: totals.audit.weft.totalCostPerMeter },
-        { label: 'Weave / loom', value: totals.audit.weaveCostPerMeter },
+        { label: 'Weaving / machine', value: totals.audit.weaveCostPerMeter },
         { label: 'Warping + sizing', value: totals.audit.warpingAndSizingCostPerMeter },
         { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
         { label: 'Factory overhead / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
     return (
-        <div className="space-y-5 pb-floating-button md:pb-20 relative">
+        <div className="estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && canUseProduction && (
                 <FactoryCostWizard 
                     initialState={state}
@@ -1679,6 +1850,17 @@ export default function EstimatorClient({
                 />
             )}
 
+            {!isOnline && (
+                <div className={pageShellClass} role="status" aria-live="polite">
+                    <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
+                        <p className="flex-1 text-sm font-medium text-amber-900">
+                            {ESTIMATOR_OFFLINE_SAVE_TITLE}. Your inputs remain editable; reconnect before saving.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (
                 <div className={pageShellClass}>
@@ -1687,10 +1869,10 @@ export default function EstimatorClient({
                         <p className="text-sm text-amber-800 flex-1">
                             {draft.sourceQuoteId ? (
                                 <>
-                                    {canUseProduction ? 'Re-estimating from quote for ' : 'Updating saved costing '}
+                                    {canUseProduction ? 'Recalculating Cost Estimate from Quotation for ' : 'Updating saved Cost Estimate '}
                                     <span className="font-bold">{canUseProduction ? (draft.partyName || 'Unknown Party') : (draft.qualityLabel || 'Untitled')}</span>
                                     {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
-                                    {canUseProduction && ' — editable quotes update in place; accepted quotes create a linked version'}
+                                    {canUseProduction && ' — editable Quotations update in place; accepted Quotations create a linked version'}
                                 </>
                             ) : (
                                 <>
@@ -1701,19 +1883,7 @@ export default function EstimatorClient({
                             )}
                         </p>
                         <button
-                            onClick={() => {
-                                const d = restoreDraft()
-                                if (!d) return
-                                dispatch({ type: 'RESTORE_DRAFT', draftState: d.state })
-                                setPartyName(d.partyName)
-                                setQualityLabel(d.qualityLabel)
-                                setWarpInstruction(d.warpInstruction)
-                                setWeftInstruction(d.weftInstruction)
-                                setSourceQuoteId(d.sourceQuoteId ?? null)
-                                setSourceQuoteUpdatedAt(d.sourceQuoteUpdatedAt ?? null)
-                                quoteRequestIdRef.current = null
-                                toast.success(draft.sourceQuoteId ? 'Quote specs loaded' : 'Draft restored')
-                            }}
+                            onClick={applyEstimatorDraft}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
                         >
                             {draft.sourceQuoteId ? 'Load Specs' : 'Restore'}
@@ -1735,25 +1905,29 @@ export default function EstimatorClient({
                                 <div className="min-w-0">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
                                     <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-ink)] sm:text-[40px]">
-                                        ₹{totals.totalProductionCostPerM.toFixed(2)}
+                                        {hasValidCostResult ? `₹${totals.totalProductionCostPerM.toFixed(2)}` : '—'}
                                     </p>
                                 </div>
                                 <ArrowRight className="hidden h-7 w-7 self-center text-[var(--color-subtle)] sm:block" />
                                 <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">
+                                        {mode === 'market' ? 'Target selling / m' : t('estimator.hud.quote_per_m')}
+                                    </p>
                                     <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[40px]">
-                                        ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
+                                        {hasValidCostResult && orderQuote?.isValid ? `₹${orderQuote.quotePricePerM.toFixed(2)}` : '—'}
                                     </p>
                                 </div>
                                 <div className="min-w-0 rounded-[12px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] px-3 py-2">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">{t('estimator.hud.margin')}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">
+                                        {mode === 'market' ? 'Target margin' : t('estimator.hud.margin')}
+                                    </p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-factory-green)]">
-                                        {displayMarginPct >= 0 ? '+' : ''}{displayMarginPct.toFixed(1)}%
+                                        {hasValidCostResult ? `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%` : '—'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
+                            {hasValidCostResult ? <div className="space-y-2">
                                 <div className="flex h-2.5 overflow-hidden rounded-full bg-[var(--color-surface-soft)]">
                                     {costSegments.length > 0 ? costSegments.map(segment => (
                                         <div
@@ -1773,7 +1947,12 @@ export default function EstimatorClient({
                                         </span>
                                     ))}
                                 </div>
-                            </div>
+                            </div> : (
+                                <div className="flex items-start gap-2 rounded-[10px] border border-[var(--color-risk-red-soft)] bg-[var(--color-risk-red-soft)] px-3 py-2 text-[11px] font-semibold text-[var(--color-risk-red)]">
+                                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <span>Cost result paused. Correct the highlighted inputs to recalculate safely.</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end 2xl:w-[520px]">
@@ -1781,20 +1960,20 @@ export default function EstimatorClient({
                             {mode === 'quote' ? (
                                 <>
                                     {/* PRIMARY: atomically create the accepted quote and live order */}
-                                    <Button
+                                    {canUseProduction && <Button
                                         id="btn-start-party-order"
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={handleStartPartyOrder}
-                                        disabled={savingQuote || !canUseProduction || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? ((!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? 'Complete party, quality, quantity, and cost result first.'
-                                            : undefined
-                                        }
+                                            : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">Start Party Order</span>
-                                    </Button>
+                                    </Button>}
 
                                     {/* SECONDARY: retain an accepted quote without starting production */}
                                     <Button
@@ -1803,11 +1982,11 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote', canUseProduction ? 'accepted' : 'draft')}
-                                        disabled={savingQuote || !hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                        title={(!hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? ((!hasOrderQty || (canUseProduction && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? (canUseProduction ? 'Complete party, quality, quantity, and cost result first.' : 'Complete quality, costing quantity, and cost result first.')
-                                            : undefined
-                                        }
+                                            : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">{canUseProduction ? 'Save & Accept' : (sourceQuoteId ? 'Update Costing' : 'Save Costing')}</span>
@@ -1820,14 +1999,16 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote', 'draft')}
-                                        disabled={savingQuote || !orderQuote?.isValid}
+                                        disabled={savingQuote || !estimatorValidation.valid || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? undefined}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">Save Quote</span>
+                                        <span className="truncate">Save Quotation</span>
                                     </Button>}
 
                                     {/* TERTIARY: Switch to Market mode */}
-                                    {canUseProduction && (
+                                    {canUseProduction && allowsMarketRuns && (
                                         <Button
                                             id="btn-switch-market"
                                             size="sm"
@@ -1848,31 +2029,33 @@ export default function EstimatorClient({
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => handleSaveQuote('market')}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? ((!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? 'Complete fabric label, quality, quantity, and cost result first.'
-                                            : undefined
-                                        }
+                                            : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Gauge className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">Start Market Run</span>
                                     </Button>
 
                                     {/* SECONDARY: Save Quote (draft) */}
-                                    <Button
+                                    {allowsPartyOrders && <Button
                                         id="btn-save-quote-market"
                                         size="sm"
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote')}
-                                        disabled={savingQuote || !orderQuote?.isValid}
+                                        disabled={savingQuote || !estimatorValidation.valid || !orderQuote?.isValid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? undefined}
                                     >
                                         <Save className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">Save Quote</span>
-                                    </Button>
+                                        <span className="truncate">Save Quotation</span>
+                                    </Button>}
 
                                     {/* TERTIARY: Transition to Party Order mode */}
-                                    <Button
+                                    {allowsPartyOrders && <Button
                                         id="btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
@@ -1882,7 +2065,7 @@ export default function EstimatorClient({
                                     >
                                         <Play className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate">Party Order</span>
-                                    </Button>
+                                    </Button>}
                                 </>
                             )}
 
@@ -1894,7 +2077,9 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="h-12 min-w-0 max-w-full flex-1 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)] sm:flex-none"
                                         onClick={handleUpdateTemplate}
-                                        disabled={savingTemplate}
+                                        disabled={savingTemplate || !estimatorValidation.valid}
+                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
+                                        title={firstEstimatorValidationMessage ?? undefined}
                                     >
                                         {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 text-brand-accent shrink-0" />}
                                         <span className="truncate">Update {appliedTemplate.name}</span>
@@ -1928,16 +2113,28 @@ export default function EstimatorClient({
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="hidden h-12 flex-none rounded-[10px] px-4 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] sm:flex"
+                                    className="h-12 min-w-0 flex-none rounded-[10px] px-3 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] sm:px-4"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setTemplateSaveError(null)
                                         setShowSaveTemplate(true)
                                     }}
+                                    aria-label="Save as New Quality"
                                 >
                                     <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="truncate hidden sm:inline">Save as New Quality</span>
+                                    <span className="truncate sm:hidden">New Quality</span>
+                                    <span className="hidden truncate sm:inline">Save as New Quality</span>
                                 </Button>
+                            )}
+                            {firstEstimatorValidationMessage && (
+                                <p
+                                    id={validationSummaryId}
+                                    role="alert"
+                                    className="col-span-2 flex basis-full items-start gap-1.5 rounded-[8px] border border-[var(--color-risk-red-soft)] bg-[var(--color-risk-red-soft)] px-2.5 py-2 text-[11px] font-semibold leading-tight text-[var(--color-risk-red)]"
+                                >
+                                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <span>Correct highlighted inputs before saving: {firstEstimatorValidationMessage}</span>
+                                </p>
                             )}
                         </div>
                     </div>
@@ -1945,7 +2142,9 @@ export default function EstimatorClient({
                     {hasOrderQty && orderQuote && (
                         <div className="mt-4 flex items-center gap-3 border-t border-[var(--color-hairline)] pt-3">
                             <div className="shrink-0">
-                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.margin')}</p>
+                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">
+                                    {mode === 'market' ? 'Target margin' : t('estimator.hud.margin')}
+                                </p>
                             </div>
                             <input
                                 type="range"
@@ -1957,7 +2156,9 @@ export default function EstimatorClient({
                             <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
                             <div className="h-6 w-px bg-[var(--color-hairline)]" />
                             <div className="shrink-0 text-right">
-                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
+                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">
+                                    {mode === 'market' ? 'Projected profit' : t('estimator.hud.net_profit')}
+                                </p>
                                 <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
                                     ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
@@ -2105,7 +2306,7 @@ export default function EstimatorClient({
                                     {partyHint && (
                                         <p className="text-[10px] text-slate-500 flex items-center gap-1">
                                             <span className="text-blue-500">💡</span>
-                                            Last quote:{' '}
+                                            Last Quotation:{' '}
                                             <span className="font-bold text-slate-700">₹{partyHint.quote_price_per_meter.toFixed(2)}/m</span>
                                             {' '}for <span className="font-medium">{partyHint.quality_label}</span>
                                             {' '}· {new Date(partyHint.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
@@ -2168,7 +2369,7 @@ export default function EstimatorClient({
                         accent="warp"
                         step={2}
                         detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
-                        badgeContent={<SectionCostPill value={totals.warpCostPerM} />}
+                        badgeContent={<SectionCostPill value={totals.warpCostPerM} valid={hasValidCostResult} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Block */}
@@ -2219,6 +2420,7 @@ export default function EstimatorClient({
                                     kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
                                     adjustmentPct={totals.warpRows[i]?.totalAdjustmentPct ?? 0}
+                                    invalid={hasValidationIssueFor(`warpRows.${i}`)}
                                 >
                                     <CalculationModeField
                                         value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -2231,17 +2433,46 @@ export default function EstimatorClient({
                                         onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
                                     />
                                     {row.calculationMode === 'manual' ? (
-                                        <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
+                                        <NumField
+                                            label="Manual kg/100m"
+                                            value={row.manualKgPer100m ?? null}
+                                            onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })}
+                                            unit="kg"
+                                            step={0.001}
+                                            hint="Kilograms required per 100 metres of fabric; base before waste/crimp"
+                                            attentionWhenEmpty
+                                            inputId={`warp-${row.id}-manual-kg`}
+                                            error={validationMessageFor(`warpRows.${i}.manualKgPer100m`)}
+                                        />
                                     ) : (
                                         <>
                                             <YarnDensityFields
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })}
+                                                inputId={`warp-${row.id}-density`}
+                                                error={validationMessageFor(`warpRows.${i}.${row.linearDensityUnit === 'cotton_count_ne' ? 'cottonCountNe' : 'calcDenier'}`)
+                                                    ?? validationMessageFor(`warpRows.${i}.effectiveDenier`)}
                                             />
-                                            <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
+                                            <NumField
+                                                label={t('estimator.field_labels.beam_ends')}
+                                                value={row.beamEnds}
+                                                onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })}
+                                                inputId={`warp-${row.id}-beam-ends`}
+                                                error={validationMessageFor(`warpRows.${i}.beamEnds`)}
+                                            />
                                         </>
                                     )}
-                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                    <NumField
+                                        label="Waste %"
+                                        value={row.shortagePct}
+                                        onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })}
+                                        unit="%"
+                                        step={0.5}
+                                        hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`}
+                                        warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined}
+                                        inputId={`warp-${row.id}-waste`}
+                                        error={validationMessageFor(`warpRows.${i}.shortagePct`)}
+                                    />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -2258,10 +2489,19 @@ export default function EstimatorClient({
                                                 attentionWhenEmpty
                                                 warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                 onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
+                                                inputId={`warp-${row.id}-rate`}
+                                                error={validationMessageFor(`warpRows.${i}.yarnRate`)}
                                             />
                                         )
                                     })()}
-                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} />
+                                    <NumField
+                                        label={t('estimator.field_labels.gst_pct')}
+                                        value={row.gstPct}
+                                        onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })}
+                                        step={0.5}
+                                        inputId={`warp-${row.id}-gst`}
+                                        error={validationMessageFor(`warpRows.${i}.gstPct`)}
+                                    />
                                 </RowCard>
                             ))}
                         </div>
@@ -2289,6 +2529,8 @@ export default function EstimatorClient({
                                                 value={state.tapeLengthM}
                                                 onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v ?? 0 })}
                                                 unit="m"
+                                                inputId="estimator-tape-length"
+                                                error={validationMessageFor('tapeLengthM')}
                                             />
                                         </div>
                                         <div className="rounded-[12px] border border-[#D7E7F1] bg-[#F7FBFD] px-4 py-3 text-right">
@@ -2370,7 +2612,7 @@ export default function EstimatorClient({
                                         inch
                                     </button>
                                 </div>
-                                <SectionCostPill value={totals.weftCostPerM} />
+                                <SectionCostPill value={totals.weftCostPerM} valid={hasValidCostResult} />
                             </div>
                         }
                     />
@@ -2415,6 +2657,7 @@ export default function EstimatorClient({
                                         kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
                                         costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
                                         adjustmentPct={totals.weftRows[i]?.totalAdjustmentPct ?? 0}
+                                        invalid={hasValidationIssueFor(`weftRows.${i}`)}
                                     >
                                         <CalculationModeField
                                             value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -2426,7 +2669,13 @@ export default function EstimatorClient({
                                             placeholder={`${t('estimator.weft.layer')} ${i + 1}`}
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
-                                        <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
+                                        <NumField
+                                            label={t('estimator.field_labels.picks_ppi')}
+                                            value={row.picks}
+                                            onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })}
+                                            inputId={`weft-${row.id}-picks`}
+                                            error={validationMessageFor(`weftRows.${i}.picks`)}
+                                        />
                                         <WidthField
                                             label="Finished / market pano"
                                             value={finishedWidthCm}
@@ -2439,6 +2688,8 @@ export default function EstimatorClient({
                                             }}
                                             unit={widthUnit}
                                             hint="Market/finished pano"
+                                            inputId={`weft-${row.id}-finished-width`}
+                                            error={validationMessageFor(`weftRows.${i}.finishedWidthCm`)}
                                         />
                                         <WidthField
                                             label="Effective costing width"
@@ -2450,16 +2701,41 @@ export default function EstimatorClient({
                                             unit={widthUnit}
                                             hint={row.calculationMode === 'manual' ? 'Saved for audit; manual kg bypasses formula' : 'Used for weft yarn formula'}
                                             warning={effectiveWidthWarning}
+                                            inputId={`weft-${row.id}-effective-width`}
+                                            error={validationMessageFor(`weftRows.${i}.effectiveCostingWidthCm`)}
                                         />
                                         {row.calculationMode === 'manual' ? (
-                                            <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
+                                            <NumField
+                                                label="Manual kg/100m"
+                                                value={row.manualKgPer100m ?? null}
+                                                onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })}
+                                                unit="kg"
+                                                step={0.001}
+                                                hint="Kilograms required per 100 metres of fabric; base before waste/crimp"
+                                                attentionWhenEmpty
+                                                inputId={`weft-${row.id}-manual-kg`}
+                                                error={validationMessageFor(`weftRows.${i}.manualKgPer100m`)}
+                                            />
                                         ) : (
                                             <YarnDensityFields
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })}
+                                                inputId={`weft-${row.id}-density`}
+                                                error={validationMessageFor(`weftRows.${i}.${row.linearDensityUnit === 'cotton_count_ne' ? 'cottonCountNe' : 'calcDenier'}`)
+                                                    ?? validationMessageFor(`weftRows.${i}.effectiveDenier`)}
                                             />
                                         )}
-                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        <NumField
+                                            label="Waste %"
+                                            value={row.shortagePct}
+                                            onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })}
+                                            unit="%"
+                                            step={0.5}
+                                            hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`}
+                                            warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined}
+                                            inputId={`weft-${row.id}-waste`}
+                                            error={validationMessageFor(`weftRows.${i}.shortagePct`)}
+                                        />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
                                             const isUnusuallyLow = templateRate !== null
@@ -2475,10 +2751,19 @@ export default function EstimatorClient({
                                                     attentionWhenEmpty
                                                     warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                     onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
+                                                    inputId={`weft-${row.id}-rate`}
+                                                    error={validationMessageFor(`weftRows.${i}.yarnRate`)}
                                                 />
                                             )
                                         })()}
-                                        <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} />
+                                        <NumField
+                                            label={t('estimator.field_labels.gst_pct')}
+                                            value={row.gstPct}
+                                            onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })}
+                                            step={0.5}
+                                            inputId={`weft-${row.id}-gst`}
+                                            error={validationMessageFor(`weftRows.${i}.gstPct`)}
+                                        />
                                     </RowCard>
                                 )
                             })}
@@ -2495,7 +2780,7 @@ export default function EstimatorClient({
 
                 {/* 4. Weave Cost */}
                 <EstimatorCard accent="weave">
-                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} />} />
+                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
 
                         {/* ── Loom Type Selector ── renders above Loom Wage ── */}
@@ -2526,7 +2811,7 @@ export default function EstimatorClient({
                                 <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-4 py-3.5">
                                     <div className="flex items-center gap-2">
                                         <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
-                                        <p className="text-[11px] font-semibold uppercase text-[var(--color-warning-amber)]">Loom Weave Wage</p>
+                                        <p className="text-[11px] font-semibold uppercase text-[var(--color-warning-amber)]">Machine Weaving Wage</p>
                                         <span className="ml-auto rounded-full bg-[var(--color-warning-amber-soft)] px-2 py-0.5 text-[10px] text-[var(--color-warning-amber)]">₹/m ↔ paise/pick</span>
                                     </div>
 
@@ -2609,10 +2894,17 @@ export default function EstimatorClient({
 
                 {/* 5. Warping & Sizing */}
                 <EstimatorCard accent="post">
-                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} />} />
+                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
+                            <NumField
+                                label={t('estimator.warping_sizing.warping_per_kg')}
+                                value={state.warpingRatePerKg}
+                                onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })}
+                                step={0.1}
+                                inputId="estimator-warping-rate"
+                                error={validationMessageFor('warpingRatePerKg')}
+                            />
                         </div>
 
                         {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
@@ -2654,6 +2946,8 @@ export default function EstimatorClient({
                                         onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
                                         step={0.5}
                                         hint="Typical Surat outsourced sizing: ₹8–15/kg"
+                                        inputId="estimator-sizing-rate"
+                                        error={validationMessageFor('sizingRatePerKg')}
                                     />
                                 </div>
                             )}
@@ -2679,7 +2973,7 @@ export default function EstimatorClient({
                         step={6}
                         badgeContent={
                             <div className="flex items-center gap-2">
-                                <SectionCostPill value={totals.overheadPerM} />
+                                <SectionCostPill value={totals.overheadPerM} valid={hasValidCostResult} />
                                 <span className="rounded-full bg-[var(--color-surface-soft)] px-2.5 py-[3px] text-[10px] font-medium text-[var(--color-muted)]">
                                     {totals.capacityUtilisationPct.toFixed(1)}% Capacity
                                 </span>
@@ -2708,10 +3002,10 @@ export default function EstimatorClient({
                             </div>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                 <CapacityMetricField
-                                    label="Loom Count" 
+                                    label="Machine Count"
                                     value={state.loomCount} 
                                     onChange={v => dispatch({ type: 'SET', field: 'loomCount', value: v ?? 0 })} 
-                                    unit="looms" 
+                                    unit="machines"
                                 />
                                 <CapacityMetricField
                                     label="Avg Daily Output" 
@@ -2769,7 +3063,7 @@ export default function EstimatorClient({
                                                         className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
                                                     />
                                                     {isLocked && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">auto-calc</span>}
-                                                    {isElectricity && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">per loom helper</span>}
+                                                    {isElectricity && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">per machine helper</span>}
                                                 </div>
 
                                                 {/* Amount Display/Input */}
@@ -2807,12 +3101,12 @@ export default function EstimatorClient({
                                                             })}
                                                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3 w-3"
                                                         />
-                                                        <span className="text-[9.5px] font-bold text-slate-500">Per Loom Helper</span>
+                                                        <span className="text-[9.5px] font-bold text-slate-500">Per Machine Helper</span>
                                                     </div>
                                                     {item.isLocked && (
                                                         <>
                                                             <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[8px] uppercase font-semibold text-slate-400">Units/Loom</span>
+                                                                <span className="text-[8px] uppercase font-semibold text-slate-400">Units/Machine</span>
                                                                 <Input 
                                                                     type="number" 
                                                                     value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth ?? 0} 
@@ -2837,7 +3131,7 @@ export default function EstimatorClient({
                                             {isDepreciation && item.meta && (
                                                 <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-indigo-100/50">
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Machine Value (avg/loom)</span>
+                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Machine Value (average/machine)</span>
                                                         <div className="relative">
                                                             <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                             <Input 
@@ -3032,17 +3326,38 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
-                                <NumField label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" />
+                                <NumField
+                                    label={t('estimator.field_labels.winding_per_kg')}
+                                    value={state.windingRatePerKg}
+                                    onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })}
+                                    unit="₹/kg"
+                                    inputId="estimator-winding-rate"
+                                    error={validationMessageFor('windingRatePerKg')}
+                                />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}
                             {state.enabledSections.processing ? (
-                                <NumField label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" />
+                                <NumField
+                                    label={t('estimator.field_labels.dyeing_processing')}
+                                    value={state.processingRatePerM}
+                                    onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })}
+                                    unit="₹/m"
+                                    inputId="estimator-processing-rate"
+                                    error={validationMessageFor('processingRatePerM')}
+                                />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
                             )}
                             {state.enabledSections.finishing ? (
-                                <NumField label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" />
+                                <NumField
+                                    label={t('estimator.field_labels.finishing_per_m')}
+                                    value={state.finishingRatePerM}
+                                    onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })}
+                                    unit="₹/m"
+                                    inputId="estimator-finishing-rate"
+                                    error={validationMessageFor('finishingRatePerM')}
+                                />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
                             )}
@@ -3058,9 +3373,16 @@ export default function EstimatorClient({
                         accent="neutral"
                         step={8}
                         detail={<p className="text-[11px] text-[var(--color-muted)]">Engine audit used for the final production cost.</p>}
-                        badgeContent={<SectionCostPill value={totals.audit.productionCostPerMeter} />}
+                        badgeContent={<SectionCostPill value={totals.audit.productionCostPerMeter} valid={hasValidCostResult} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
+                        {!hasValidCostResult ? (
+                            <div className="flex items-start gap-2 rounded-[10px] border border-[var(--color-risk-red-soft)] bg-[var(--color-risk-red-soft)] p-4 text-sm font-semibold text-[var(--color-risk-red)]">
+                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                                <span>Cost breakdown is unavailable until the highlighted estimator inputs are corrected.</span>
+                            </div>
+                        ) : (
+                        <>
                         <div className="overflow-hidden rounded-[12px] border border-[var(--color-hairline)]">
                             <div className="hidden grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)] md:grid">
                                 <span>Yarn</span>
@@ -3140,6 +3462,8 @@ export default function EstimatorClient({
                                 </div>
                             </div>
                         </div>
+                        </>
+                        )}
                     </CardContent>
                 </EstimatorCard>
 
@@ -3157,11 +3481,29 @@ export default function EstimatorClient({
                                 placeholder="1000"
                                 attentionWhenEmpty
                                 hint={t('estimator.simulation.quantity_hint')}
+                                inputId="estimator-order-quantity"
+                                error={validationMessageFor('orderQuantityM')}
                             />
                             {hasOrderQty && (
                                 <>
-                                    <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} />
-                                    <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} />
+                                    <NumField
+                                        label={t('estimator.field_labels.broker_comm')}
+                                        value={state.commissionPct}
+                                        onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })}
+                                        unit="%"
+                                        step={0.5}
+                                        inputId="estimator-commission"
+                                        error={validationMessageFor('commissionPct')}
+                                    />
+                                    <NumField
+                                        label={t('estimator.field_labels.transport_per_m')}
+                                        value={state.transportPerM}
+                                        onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })}
+                                        unit="₹/m"
+                                        step={0.1}
+                                        inputId="estimator-transport-rate"
+                                        error={validationMessageFor('transportPerM')}
+                                    />
                                 </>
                             )}
                         </div>
@@ -3249,11 +3591,11 @@ export default function EstimatorClient({
                             Start new quality / Reset?
                         </DialogTitle>
                         <DialogDescription className="text-center">
-                            Clear the current estimator inputs while keeping saved qualities.
+                            Clear the current Cost Estimate inputs while keeping saved qualities.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="text-center text-sm text-slate-500 py-2 leading-relaxed">
-                        This will clear the current estimator inputs. Saved qualities will not be affected.
+                        This will clear the current Cost Estimate inputs. Saved qualities will not be affected.
                     </div>
                     <DialogFooter className="flex sm:justify-center gap-2 mt-4">
                         <Button
@@ -3318,7 +3660,12 @@ export default function EstimatorClient({
                             setShowSaveTemplate(false)
                             setTemplateSaveError(null)
                         }}>{t('estimator.quality.cancel')}</Button>
-                        <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
+                        <Button
+                            className="bg-brand-accent text-white"
+                            onClick={handleSaveTemplate}
+                            disabled={savingTemplate || !estimatorValidation.valid}
+                            title={firstEstimatorValidationMessage ?? undefined}
+                        >
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             {t('estimator.quality.confirmSave')}
                         </Button>

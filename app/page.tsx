@@ -40,12 +40,12 @@ export default function Home() {
                 Start with one factory floor
               </p>
               <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-black tracking-normal text-white xs:text-4xl sm:text-6xl">
-                Bring your active orders, supervisors, looms, and payroll into one record.
+                Bring your active orders, supervisors, machines, and payroll into one record.
                 <br />
                 <span className="text-orange-300">See the difference in the first week.</span>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-300 sm:text-lg">
-                A focused pilot is enough: one supervisor logs shift meters, the owner sees order pace, and payroll starts from the same production data.
+                A focused pilot is enough: one supervisor enters metres produced this shift, the owner sees order pace, and payroll starts from the same production data.
               </p>
               <div className="mt-9 flex items-center justify-center gap-x-6">
                 <Link href="/signup">

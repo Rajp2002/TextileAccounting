@@ -28,6 +28,8 @@ interface UseAutosaveReturn<TState = unknown> {
   clearDraft: () => void
   /** Save current state (called automatically via debounce, but exposed for manual use) */
   saveDraft: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => void
+  /** Flush current state immediately before a network mutation. */
+  saveDraftNow: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => boolean
 }
 
 function safelyRemoveLocalStorageItem(key: string) {
@@ -58,6 +60,19 @@ export function useAutosave<TState = unknown>({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const keyRef = useRef(getEstimatorDraftStorageKey(orgId, userId))
   const draftDecisionPendingRef = useRef(false)
+
+  const persistDraft = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
+    if (draftDecisionPendingRef.current) return false
+
+    try {
+      const payload: EstimatorAutosaveData<TState> = { ...data, savedAt: Date.now() }
+      localStorage.setItem(keyRef.current, JSON.stringify(payload))
+      return true
+    } catch {
+      // localStorage can be full, blocked, or unavailable.
+      return false
+    }
+  }, [])
 
   // Check for existing draft on mount
   useEffect(() => {
@@ -90,15 +105,17 @@ export function useAutosave<TState = unknown>({
     timerRef.current = setTimeout(() => {
       // Never overwrite a recoverable draft with the blank initial screen while
       // the restore/dismiss banner is waiting for the user's decision.
-      if (draftDecisionPendingRef.current) return
-      try {
-        const payload: EstimatorAutosaveData<TState> = { ...data, savedAt: Date.now() }
-        localStorage.setItem(keyRef.current, JSON.stringify(payload))
-      } catch {
-        // localStorage full or unavailable — fail silently
-      }
+      persistDraft(data)
     }, debounceMs)
-  }, [debounceMs])
+  }, [debounceMs, persistDraft])
+
+  const saveDraftNow = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    return persistDraft(data)
+  }, [persistDraft])
 
   const clearDraft = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -130,5 +147,5 @@ export function useAutosave<TState = unknown>({
     }
   }, [])
 
-  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft }
+  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow }
 }

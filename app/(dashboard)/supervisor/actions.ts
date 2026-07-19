@@ -106,7 +106,7 @@ async function getMachineLifecycleProtectionInput(
 
     if (machineRes.error || !machineRes.data) {
         if (machineRes.error) console.error('Failed to verify loom references:', machineRes.error)
-        return { error: 'Failed to check loom references. Please try again.' }
+        return { error: 'Failed to check machine references. Please try again.' }
     }
 
     if (standingAssignmentsRes.error || shiftAssignmentsRes.error || productionLogsRes.error) {
@@ -115,7 +115,7 @@ async function getMachineLifecycleProtectionInput(
             shiftAssignmentsError: shiftAssignmentsRes.error,
             productionLogsError: productionLogsRes.error,
         })
-        return { error: 'Failed to check loom references. Please try again.' }
+        return { error: 'Failed to check machine references. Please try again.' }
     }
 
     const machine = machineRes.data as {
@@ -974,8 +974,8 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             fixed_worker_id: fixedWorkerId,
             worker_id: meterWorkerId,
             operator_name: workerType === 'meter_worker'
-                ? (meterWorkerNameById.get(meterWorkerId ?? 0) ?? 'Meter worker')
-                : (fixedWorkerNameById.get(fixedWorkerId ?? 0) ?? 'Fixed worker'),
+                ? (meterWorkerNameById.get(meterWorkerId ?? 0) ?? 'Piece-Rate Worker')
+                : (fixedWorkerNameById.get(fixedWorkerId ?? 0) ?? 'Salaried Worker'),
             operator_pay_mode: assignment.pay_mode as OperatorPayMode,
             operator_rate: Number(assignment.rate ?? 0),
             machine_type: assignment.machine_type ?? 'other',
@@ -1021,7 +1021,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                     meter_worker_id: workerId,
                     fixed_worker_id: null,
                     worker_id: workerId,
-                    operator_name: meterWorkerNameById.get(workerId) ?? 'Meter worker',
+                    operator_name: meterWorkerNameById.get(workerId) ?? 'Piece-Rate Worker',
                     operator_pay_mode: 'per_meter' as OperatorPayMode,
                     operator_rate: datedRate
                         ?? (orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
@@ -1332,7 +1332,7 @@ export async function bulkLogProduction(entries: {
 
     if (machinesRes.error) {
         console.error('bulkLogProduction – machine eligibility lookup error:', machinesRes.error)
-        return { error: 'Failed to validate loom setup. Please try again.' }
+        return { error: 'Failed to validate machine setup. Please try again.' }
     }
 
     if (standingAssignmentsRes.error || operatorAssignmentsRes.error || datedAssignmentsRes.error) {
@@ -1380,7 +1380,7 @@ export async function bulkLogProduction(entries: {
 
         if (activeFixedWorkersError) {
             console.error('bulkLogProduction – active fixed worker lookup error:', activeFixedWorkersError)
-            return { error: 'Failed to validate fixed worker assignments. Please try again.' }
+            return { error: 'Failed to validate Salaried Worker assignments. Please try again.' }
         }
 
         for (const worker of activeFixedWorkers ?? []) activeFixedWorkerIds.add(worker.id)

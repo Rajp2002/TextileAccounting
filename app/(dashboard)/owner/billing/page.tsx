@@ -100,10 +100,10 @@ function PlanCards({
     const plans = [
         {
             tier: 'base' as const,
-            name: 'Weavly Estimator',
+            name: 'Weavly Cost Estimate',
             badge: 'Standalone',
             renewal: '₹2,000/year + GST (₹2,360/year total)',
-            features: ['Estimator workspace', 'Saved qualities', 'Quote history', 'Draft recovery', 'Independent customer access'],
+            features: ['Cost Estimate workspace', 'Saved qualities', 'Quotation history', 'Draft recovery', 'Independent owner access'],
             icon: Zap,
         },
         {
@@ -111,7 +111,7 @@ function PlanCards({
             name: 'Weavly Full Suite',
             badge: 'Complete factory',
             renewal: '₹7,000/year + GST (₹8,260/year total)',
-            features: ['Everything in Estimator', 'Production & order tracking', 'Market runs and godown stock', 'Dispatches', 'Payroll, advances, and analytics'],
+            features: ['Everything in Cost Estimate', 'Production and order tracking', 'Market Runs and Godown Stock', 'Dispatches', 'Worker Hisaab, Upaad, and analytics'],
             icon: Star,
         },
     ]
@@ -276,7 +276,7 @@ export default async function BillingPage() {
                                         </div>
                                         <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Choose your Weavly workspace.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            Start with the standalone Estimator for costing and quotes, or choose Full Suite for production, stock, dispatch, and payroll.
+                                            Start with standalone Cost Estimate for internal costing and Quotations, or choose Full Suite for production, Godown Stock, dispatch, and Worker Hisaab.
                                         </p>
                                     </>
                                 )}
@@ -346,7 +346,7 @@ export default async function BillingPage() {
                                             </h2>
                                             <p className="mt-2 max-w-lg text-base leading-6 text-slate-500">
                                                 {tier === 'base'
-                                                    ? 'Your standalone Estimator plan is active and in good standing.'
+                                                    ? 'Your standalone Cost Estimate Plan is active and in good standing.'
                                                     : 'Your Full Suite plan is active and in good standing.'}
                                             </p>
                                         </div>
@@ -424,7 +424,7 @@ export default async function BillingPage() {
                                                 <div className="space-y-0.5">
                                                     <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
                                                         {subscriptionTierById.get(p.subscription_id ?? '') === 'base'
-                                                            ? 'Weavly Estimator'
+                                                            ? 'Weavly Cost Estimate'
                                                             : 'Weavly Full Suite'} {p.status !== 'captured' && '— Failed'}
                                                     </p>
                                                     <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-widest">

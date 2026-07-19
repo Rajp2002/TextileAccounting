@@ -2,7 +2,7 @@
 
 Prepared: 2026-07-14 IST
 
-Status effect: **none**. `UX-012` remains `BLOCKED` until a named pilot-factory supervisor completes and dates the decision pack.
+Status effect updated 2026-07-17: `UX-012` is Founder-approved `PASS` for pilot entry. A named pilot-factory operator must still review populated contexts and exact Gujarati wording during the first pilot run; any disagreement reopens the row.
 
 ## Method and coverage
 

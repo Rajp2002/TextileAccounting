@@ -253,12 +253,12 @@ export default function AdvancesClient({ initialData }: { initialData: OwnerAdva
             if (data.success) {
                 const notification = data.notification;
                 if (notification?.sent) {
-                    toast.success('Advance recorded and receipt sent via WhatsApp')
+                    toast.success('Upaad recorded and receipt sent via WhatsApp')
                 } else if (notification?.reason === 'no_phone') {
-                    toast.success('Advance recorded (Worker has no WhatsApp number)')
+                    toast.success('Upaad recorded (worker has no WhatsApp number)')
                 } else {
                     // WhatsApp failed or timed out
-                    toast.warning('Advance saved. WhatsApp receipt not sent.', {
+                    toast.warning('Upaad saved. WhatsApp receipt not sent.', {
                         action: {
                             label: 'Send Manually',
                             onClick: () => {
@@ -298,7 +298,7 @@ export default function AdvancesClient({ initialData }: { initialData: OwnerAdva
             return await deleteAdvance(advanceId)
         },
         onSuccess: () => {
-            toast.success('Advance deleted')
+            toast.success('Upaad deleted')
             setDeletingId(null)
             queryClient.invalidateQueries({ queryKey: ['worker_advances'] })
         },

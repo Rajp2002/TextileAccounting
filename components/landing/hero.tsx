@@ -3,12 +3,12 @@ import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2, MessageCircle, ReceiptText } from 'lucide-react'
 
 const loomRows = [
-    { loom: 'Loom 04', fabric: 'Canvas Shine 100D', shift: 'Day', output: '186 m', status: 'On pace' },
-    { loom: 'Loom 11', fabric: 'Order #214', shift: 'Night', output: '142 m', status: 'Needs worker' },
-    { loom: 'Loom 18', fabric: 'Market run', shift: 'Day', output: '201 m', status: 'Payroll ready' },
+    { loom: 'Machine 04', fabric: 'Canvas Shine 100D', shift: 'Day', output: '186 m', status: 'On pace' },
+    { loom: 'Machine 11', fabric: 'Order #214', shift: 'Night', output: '142 m', status: 'Needs worker' },
+    { loom: 'Machine 18', fabric: 'Market Run', shift: 'Day', output: '201 m', status: 'Worker Hisaab ready' },
 ]
 
-const loopSteps = ['Estimate', 'Assign looms', 'Log shift', 'Settle']
+const loopSteps = ['Cost Estimate', 'Assign machines', 'Log shift', 'Settle']
 
 const proofItems = ['7-day Premium trial', 'No credit card', 'Floor-ready PWA']
 
@@ -23,11 +23,11 @@ export default function LandingHero() {
                     </p>
 
                     <h1 className="mx-auto mt-5 max-w-6xl text-4xl font-black leading-[1.02] tracking-normal text-zinc-950 xs:mt-7 xs:text-5xl sm:text-7xl lg:text-8xl dark:text-white">
-                        One system for the whole factory floor. No notebook. No WhatsApp. No missed meters.
+                        One system for the whole factory floor. No notebook. No WhatsApp. No missed metres.
                     </h1>
 
                     <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-600 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
-                        Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing registers and WhatsApp messages.
+                        Weavly connects fabric Cost Estimates, Machine Assignments, metres produced each shift, dispatches, Upaad, and Worker Hisaab so owners know what happened on the floor without chasing registers and WhatsApp messages.
                     </p>
 
                     <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -155,7 +155,7 @@ export default function LandingHero() {
 
                                             <div className="grid grid-cols-3 border border-zinc-200 bg-zinc-50/70 dark:border-white/10 dark:bg-white/5">
                                                 {[
-                                                    ['12', 'looms'],
+                                                    ['12', 'machines'],
                                                     ['2 shifts', 'logged'],
                                                     ['₹8.40/m', 'rate'],
                                                 ].map(([value, label]) => (
@@ -173,16 +173,16 @@ export default function LandingHero() {
                                             <div className="border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900">
                                                 <ReceiptText className="h-5 w-5 text-orange-600" />
                                                 <p className="mt-3 text-3xl font-black text-zinc-950 dark:text-white">₹48,240</p>
-                                                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Payroll preview</p>
+                                                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Worker Hisaab preview</p>
                                             </div>
                                             <div className="border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900">
                                                 <MessageCircle className="h-5 w-5 text-emerald-600" />
                                                 <p className="mt-3 text-sm font-black text-zinc-950 dark:text-white">Daily brief queued</p>
-                                                <p className="mt-1 text-xs leading-5 text-zinc-500">Production, advances, and order pace sent over WhatsApp.</p>
+                                                <p className="mt-1 text-xs leading-5 text-zinc-500">Production, Upaad, and order pace sent over WhatsApp.</p>
                                             </div>
                                             <div className="border border-orange-200 bg-orange-50 p-4 dark:border-orange-500/20 dark:bg-orange-500/10">
                                                 <p className="text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400">Market run</p>
-                                                <p className="mt-2 text-sm font-black text-zinc-950 dark:text-white">Keep looms moving when client orders dip.</p>
+                                                <p className="mt-2 text-sm font-black text-zinc-950 dark:text-white">Keep machines moving when client orders dip.</p>
                                             </div>
                                         </div>
                                     </div>

@@ -318,7 +318,7 @@ function AddStockDialog({
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <Label>Meters per Taka</Label>
+                        <Label>Metres per Taka</Label>
                         <Input
                             type="number"
                             min="0.01"

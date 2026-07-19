@@ -111,10 +111,10 @@ describe('Batch 24F production worker assignment policy', () => {
         expect(getShiftSetupDataBody).not.toContain('standingAssignments?.day &&')
         expect(getShiftSetupDataBody).not.toContain('standingAssignments?.night')
 
-        expect(ownerActions).toContain('Assign at least one day or night worker before activating this loom.')
-        expect(machineManagement).toContain('Assign at least one day or night worker before activating this loom.')
+        expect(ownerActions).toContain('Assign at least one day or night worker before activating this machine.')
+        expect(machineManagement).toContain('Assign at least one day or night worker before activating this machine.')
         expect(machineManagement).toContain('const hasAnyShiftAssignment = !!dayAssignment || !!nightAssignment')
-        expect(setupPanel).toContain('Select at least one day or night worker on a loom before production.')
+        expect(setupPanel).toContain('Select at least one day or night worker on a machine before production.')
         expect(setupPanel).toContain('selected shift has an assigned worker')
     })
 
@@ -134,7 +134,7 @@ describe('Batch 24F production worker assignment policy', () => {
         expect(result.ok).toBe(false)
         if (!result.ok) {
             expect(result.message).toContain('Reassign the day worker before logging a substitute')
-            expect(result.message).toContain('production, payroll, and loom accountability')
+            expect(result.message).toContain('production, payroll, and machine accountability')
         }
     })
 

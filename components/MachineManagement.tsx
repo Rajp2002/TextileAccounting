@@ -434,7 +434,7 @@ export function MachineManagement({
                 target ? { source_type: target.source_type, source_id: target.source_id } : null
             )
             if (res.error) throw new Error(res.error)
-            toast.success(target ? 'Cost analysis linked to loom' : 'Cost analysis unlinked from loom')
+            toast.success(target ? 'Cost analysis linked to machine' : 'Cost analysis unlinked from machine')
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             queryClient.invalidateQueries({ queryKey: ['production_targets', orgId] })
         } catch (error) {
@@ -555,12 +555,12 @@ export function MachineManagement({
             const hasNightWorker = assignments?.some(a => a.machine_id === machine.id && a.shift === 'night')
 
             if (!hasDayWorker && !hasNightWorker) {
-                toast.error('Assign at least one day or night worker before activating this loom.')
+                toast.error('Assign at least one day or night worker before activating this machine.')
                 return
             }
 
             if (!machine.current_order_id || machine.orders?.status !== 'active') {
-                toast.error('Assign an active cost analysis or quality before activating this loom.')
+                toast.error('Assign an active cost analysis or quality before activating this machine.')
                 return
             }
         }
@@ -752,7 +752,7 @@ export function MachineManagement({
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="loom-type-add">Loom Type</Label>
+                                        <Label htmlFor="loom-type-add">Machine Type</Label>
                                         <select
                                             id="loom-type-add"
                                             value={newMachineLoomType}
@@ -784,7 +784,7 @@ export function MachineManagement({
                                     {/* Rate is now defined on the Quality, not the machine */}
                                     <p className="flex items-center gap-1.5 rounded-md border border-info-soft bg-info-soft p-2.5 text-xs text-info">
                                         <Tag className="h-3.5 w-3.5 shrink-0 text-info" />
-                                        Worker rates are set per fabric quality. The loom rate follows the selected cost analysis.
+                                        Worker rates are set per fabric quality. The machine rate follows the selected cost analysis.
                                     </p>
                                 </div>
                                 <DialogFooter>
@@ -808,8 +808,8 @@ export function MachineManagement({
                         return (
                             <div key={type} className="space-y-4">
                                 <div className="flex items-center justify-between border-b border-hairline pb-2">
-                                    <h3 className="text-sm font-semibold text-ink">{typeLabels[type]} Looms</h3>
-                                    <span className="text-xs text-muted-foreground">{looms.length} looms</span>
+                                    <h3 className="text-sm font-semibold text-ink">{typeLabels[type]} Machines</h3>
+                                    <span className="text-xs text-muted-foreground">{looms.length} machines</span>
                                 </div>
                                 <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                                     {looms.map(machine => {
@@ -851,7 +851,7 @@ export function MachineManagement({
                                                             <Activity className="h-5 w-5" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-semibold text-ink">{machine.name.replace(/^Machine\b/i, 'Loom')}</h3>
+                                                            <h3 className="font-semibold text-ink">{machine.name}</h3>
                                                             <div className="flex items-center gap-1.5">
                                                                 {isEffectivelyActive ? (
                                                                     <span className="flex items-center gap-1 text-[11px] font-semibold text-success">
@@ -1006,7 +1006,7 @@ export function MachineManagement({
                                                                 {productionTargets?.length === 0 && (
                                                                     <div className="p-4 text-center text-xs text-muted-foreground">
                                                                         No active cost analyses found.<br/>
-                                                                        Start a party order or market run from Estimator.
+                                                                        Start a Party Order or Market Run from Cost Estimate.
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1102,13 +1102,13 @@ export function MachineManagement({
                     <DialogHeader>
                         <DialogTitle>Assign Machine Operator</DialogTitle>
                         <DialogDescription>
-                            Set the operator, pay mode, and rate snapshot for this loom shift.
+                            Set the operator, pay mode, and rate snapshot for this machine shift.
                         </DialogDescription>
                     </DialogHeader>
                     {assignmentEditor && (
                         <div className="space-y-4 py-4">
                             <div className="rounded-md border border-hairline bg-surface-soft/70 px-3 py-2 text-sm">
-                                <div className="font-semibold text-ink">{assignmentEditor.machine.name.replace(/^Machine\b/i, 'Loom')}</div>
+                                <div className="font-semibold text-ink">{assignmentEditor.machine.name}</div>
                                 <div className="text-xs font-medium text-muted-foreground">
                                     {assignmentEditor.shift === 'day' ? 'Day shift' : 'Night shift'}
                                 </div>
@@ -1136,8 +1136,8 @@ export function MachineManagement({
                                         }}
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
-                                        <option value="meter_worker">Meter worker</option>
-                                        <option value="fixed_worker">Fixed worker</option>
+                                        <option value="meter_worker">Piece-Rate Worker</option>
+                                        <option value="fixed_worker">Salaried Worker</option>
                                     </select>
                                 </div>
 
@@ -1177,14 +1177,14 @@ export function MachineManagement({
 
                             {assignmentEditor.workerType === 'meter_worker' ? (
                                 <div className="space-y-2">
-                                    <Label htmlFor="meter-worker">Meter Worker</Label>
+                                    <Label htmlFor="meter-worker">Piece-Rate Worker</Label>
                                     <select
                                         id="meter-worker"
                                         value={assignmentEditor.meterWorkerId}
                                         onChange={(e) => setAssignmentEditor((current) => current && { ...current, meterWorkerId: e.target.value })}
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
-                                        <option value="">Select meter worker</option>
+                                        <option value="">Select piece-rate worker</option>
                                         {workers?.map((worker) => (
                                             <option key={worker.id} value={worker.id}>{tl(worker.name)}</option>
                                         ))}
@@ -1192,7 +1192,7 @@ export function MachineManagement({
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    <Label htmlFor="fixed-worker">Fixed Worker</Label>
+                                    <Label htmlFor="fixed-worker">Salaried Worker</Label>
                                     <select
                                         id="fixed-worker"
                                         value={assignmentEditor.fixedWorkerId}
@@ -1206,7 +1206,7 @@ export function MachineManagement({
                                         }}
                                         className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     >
-                                        <option value="">Select fixed worker</option>
+                                        <option value="">Select salaried worker</option>
                                         {fixedWorkers?.map((worker) => (
                                             <option key={worker.id} value={worker.id}>
                                                 {tl(worker.name)} · {worker.role}
@@ -1258,8 +1258,8 @@ export function MachineManagement({
             <Dialog open={machineToRename !== null} onOpenChange={(open) => !open && setMachineToRename(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Loom</DialogTitle>
-                        <DialogDescription>Update the name or loom type for this loom.</DialogDescription>
+                        <DialogTitle>Edit Machine</DialogTitle>
+                        <DialogDescription>Update the name or machine type for this machine.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -1271,7 +1271,7 @@ export function MachineManagement({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="edit-loom-type">Loom Type</Label>
+                            <Label htmlFor="edit-loom-type">Machine Type</Label>
                             <select
                                 id="edit-loom-type"
                                 value={renameLoomType}
@@ -1301,7 +1301,7 @@ export function MachineManagement({
                             )}
                             {!renameLoomType && (
                                 <p className="text-[11px] font-medium text-warning">
-                                    Setting the loom type enables pace index forecasting for this loom.
+                                    Setting the machine type enables pace index forecasting for this machine.
                                 </p>
                             )}
                         </div>

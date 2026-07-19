@@ -126,7 +126,7 @@ async function getMachineLifecycleProtectionInput(
 
     if (machineRes.error || !machineRes.data) {
         if (machineRes.error) console.error('Failed to verify loom references:', machineRes.error)
-        return { error: 'Failed to check loom references. Please try again.' }
+        return { error: 'Failed to check machine references. Please try again.' }
     }
 
     if (standingAssignmentsRes.error || shiftAssignmentsRes.error || productionLogsRes.error) {
@@ -135,7 +135,7 @@ async function getMachineLifecycleProtectionInput(
             shiftAssignmentsError: shiftAssignmentsRes.error,
             productionLogsError: productionLogsRes.error,
         })
-        return { error: 'Failed to check loom references. Please try again.' }
+        return { error: 'Failed to check machine references. Please try again.' }
     }
 
     const machine = machineRes.data as {
@@ -172,7 +172,7 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
 
     if (existingMachinesError) {
         console.error('Failed to check duplicate loom name:', existingMachinesError)
-        return { error: 'Failed to validate loom name. Please try again.' }
+        return { error: 'Failed to validate machine name. Please try again.' }
     }
 
     if (findDuplicateLoomName(trimmedName, existingMachines ?? [])) {
@@ -186,7 +186,7 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
         
         if (loomType === 'other') {
             if (!customLabel || !customLabel.trim()) {
-                return { error: 'Custom label is required when loom type is Other.' }
+                return { error: 'Custom label is required when machine type is Other.' }
             }
             insertData.loom_type_custom_label = customLabel.trim()
         } else {
@@ -262,7 +262,7 @@ export async function addMachinesBulk(
 
     if (existingMachinesError) {
         console.error('Failed to check duplicate loom names:', existingMachinesError)
-        return { error: 'Failed to validate loom names. Please try again.' }
+        return { error: 'Failed to validate machine names. Please try again.' }
     }
 
     const existingDuplicate = rows
@@ -306,7 +306,7 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
 
     if (existingMachinesError) {
         console.error('Failed to check duplicate loom name:', existingMachinesError)
-        return { error: 'Failed to validate loom name. Please try again.' }
+        return { error: 'Failed to validate machine name. Please try again.' }
     }
 
     if (findDuplicateLoomName(trimmedName, existingMachines ?? [], parsed.data)) {
@@ -322,7 +322,7 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
         
         if (loomType === 'other') {
             if (!customLabel || !customLabel.trim()) {
-                return { error: 'Custom label is required when loom type is Other.' }
+                return { error: 'Custom label is required when machine type is Other.' }
             }
             updateData.loom_type_custom_label = customLabel.trim()
         } else {
@@ -410,7 +410,7 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
 
         if (machineRes.error) {
             console.error('Failed to verify machine activation requirements:', machineRes.error)
-            return { error: 'Failed to check loom setup. Please try again.' }
+            return { error: 'Failed to check machine setup. Please try again.' }
         }
 
         if (assignmentsRes.error || operatorAssignmentsRes.error) {
@@ -427,11 +427,11 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
             : machineRes.data.orders
 
         if (!assignedShifts.has('day') && !assignedShifts.has('night')) {
-            return { error: 'Assign at least one day or night worker before activating this loom.' }
+            return { error: 'Assign at least one day or night worker before activating this machine.' }
         }
 
         if (!machineRes.data.current_order_id || activeOrder?.status !== 'active') {
-            return { error: 'Assign an active cost analysis or quality before activating this loom.' }
+            return { error: 'Assign an active cost analysis or quality before activating this machine.' }
         }
     }
 
@@ -485,7 +485,7 @@ export async function deleteMachine(machineId: string) {
 
     if (error) {
         console.error('Failed to delete machine:', error)
-        return { error: 'Failed to delete loom. Please try again.' }
+        return { error: 'Failed to delete machine. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -550,7 +550,7 @@ export async function upsertMachineOperatorAssignment(data: {
         (data.workerType === 'meter_worker' && !!data.meterWorkerId && !data.fixedWorkerId) ||
         (data.workerType === 'fixed_worker' && !!data.fixedWorkerId && !data.meterWorkerId)
     if (!exactlyOneWorker) {
-        return { error: 'Choose exactly one meter or fixed worker for this loom shift.' }
+        return { error: 'Choose exactly one Piece-Rate Worker or Salaried Worker for this machine shift.' }
     }
 
     const rate = numericValue(data.rate)
@@ -565,7 +565,7 @@ export async function upsertMachineOperatorAssignment(data: {
 
     if (machineError || !machine) {
         if (machineError) console.error('Failed to load loom for operator assignment:', machineError)
-        return { error: 'Loom not found for this factory.' }
+        return { error: 'Machine not found for this factory.' }
     }
 
     const machineType = normalizeMachineType(machine.loom_type)
@@ -585,7 +585,7 @@ export async function upsertMachineOperatorAssignment(data: {
 
         if (error || !worker) {
             if (error) console.error('Failed to validate meter worker assignment:', error)
-            return { error: 'Active meter worker not found for this factory.' }
+            return { error: 'Active Piece-Rate Worker not found for this factory.' }
         }
     } else {
         const { data: worker, error } = await supabase
@@ -598,7 +598,7 @@ export async function upsertMachineOperatorAssignment(data: {
 
         if (error || !worker) {
             if (error) console.error('Failed to validate fixed worker assignment:', error)
-            return { error: 'Active fixed worker not found for this factory.' }
+            return { error: 'Active Salaried Worker not found for this factory.' }
         }
     }
 
@@ -1919,7 +1919,7 @@ async function ensureActiveOrderForMarketRun(
     })
 
     if (displayStatus !== 'production') {
-        return { error: 'Only market runs still in production can be assigned to a loom.' }
+        return { error: 'Only market runs still in production can be assigned to a machine.' }
     }
 
     await assertOrgWritable(orgId)
@@ -1937,7 +1937,7 @@ async function ensureActiveOrderForMarketRun(
 
             if (reactivateError) {
                 console.error('Failed to reactivate market run backing order:', reactivateError)
-                return { error: 'Failed to activate this market run for loom production.' }
+                return { error: 'Failed to activate this market run for machine production.' }
             }
         }
 
@@ -1955,7 +1955,7 @@ async function ensureActiveOrderForMarketRun(
 
     if (existingOrderError) {
         console.error('Failed to check market run backing order:', existingOrderError)
-        return { error: 'Failed to prepare this market run for loom production.' }
+        return { error: 'Failed to prepare this market run for machine production.' }
     }
 
     if (existingOrder) {
@@ -1968,7 +1968,7 @@ async function ensureActiveOrderForMarketRun(
 
             if (reactivateError) {
                 console.error('Failed to reactivate existing market run backing order:', reactivateError)
-                return { error: 'Failed to activate this market run for loom production.' }
+                return { error: 'Failed to activate this market run for machine production.' }
             }
         }
 
@@ -2001,7 +2001,7 @@ async function ensureActiveOrderForMarketRun(
 
     if (createOrderError || !createdOrder) {
         console.error('Failed to create market run backing order:', createOrderError)
-        return { error: 'Failed to prepare this market run for loom production.' }
+        return { error: 'Failed to prepare this market run for machine production.' }
     }
 
     if (run.quote_id) {
@@ -2049,7 +2049,7 @@ export async function assignMachineProductionTarget(machineId: string, target: P
 
             if (orderError || !order) {
                 if (orderError) console.error('Failed to verify active order:', orderError)
-                return { error: 'Only active production targets can be assigned to a loom.' }
+                return { error: 'Only active production targets can be assigned to a machine.' }
             }
         }
     }

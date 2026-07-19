@@ -1,8 +1,8 @@
 # TECH-011 — Production Backup and Restore Closure Pack
 
-Prepared: 2026-07-14 IST
+Prepared: 2026-07-14 IST; runtime evidence updated 2026-07-16 IST
 
-Current status: `BLOCKED` (`pilot_core`, gating)
+Current status: `BLOCKED` (`pass_ready_pending_matrix_update`; `pilot_core`, gating)
 
 Backup owner: **Raj Patel**
 
@@ -23,7 +23,7 @@ Expected: restored organization, users, production, stock, receivables, and payr
 - A fresh read-only check on 2026-07-14 ran `npx supabase backups list --project-ref vzhwahudircrpgtitwzd --output json` and returned WAL-G enabled, PITR disabled, and no listed backups. The connected organization reports the `free` plan.
 - Supabase documents that Pro/Team/Enterprise projects receive retained daily backups and that Free projects should regularly export with `supabase db dump` and maintain off-site backups: <https://supabase.com/docs/guides/platform/backups>.
 - Current official CLI guidance uses roles, schema and data dumps, with migration history exported separately; database backups contain Storage metadata but not object bytes: <https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore>.
-- The implemented [free-tier runbook](TECH-011_BACKUP_RESTORE_RUNBOOK.md) and two GitHub Actions workflows prepare a daily encrypted logical backup and an ephemeral restore drill. All required Actions setting names are configured, but first scheduled run `29368765626` failed closed during sanitized-inventory parsing and produced no artifact. Neither workflow has produced closure evidence.
+- The implemented [free-tier runbook](TECH-011_BACKUP_RESTORE_RUNBOOK.md) and two GitHub Actions workflows provide a daily encrypted logical backup and an ephemeral restore drill. Scheduled run `29451202680` succeeded and created retained artifact `8357639557`. Restore run `29494683840` restored that exact artifact into a disposable local Supabase stack in 128 seconds and reconciled all business, Auth, Storage and migration inventories. The sole explained runtime variance was compatible `pg_net` `0.19.5` to `0.20.3`; extension names and the required HTTP signature matched, and zero effect-capable jobs were restored.
 
 The B18 fixture proves restore mechanics only. It is not a retained production backup, and it must not be cited as closure proof for this row.
 
@@ -34,13 +34,13 @@ The B18 fixture proves restore mechanics only. It is not a retained production b
 | Hosted database | Supabase project `vzhwahudircrpgtitwzd`, `ap-south-1`, healthy | Production source in scope |
 | WAL archival engine | WAL-G enabled | Platform capability exists; it does not prove accessible retention |
 | PITR | Disabled | No point-in-time restore window |
-| Retained backups exposed | None | No scheduled retained artifact can currently be selected and restored |
+| Retained backups exposed | Scheduled encrypted artifact `8357639557`, expiring 2026-07-29 | The interim Free-plan retention control has produced a selectable and successfully restored artifact |
 | Organization plan | Free | Paid managed backups/PITR/branching are not required for this pilot; Supabase recommends regular CLI exports and off-site retention for Free projects |
 | Database | Postgres `17.6.1.063`; healthy; remote migration history present | The restore target must support the current Supabase/Postgres baseline and verify the exact migration head |
 | Installed effect-capable extensions | `pg_cron` and `pg_net` are installed | Disposable restore must not carry production secrets or external side effects |
 | Supabase Storage | Read-only database query: `0` buckets, `0` objects, `0` bytes; no active Storage client found in source | Database-only coverage is currently sufficient for pilot records, but the workflow must fail if objects appear |
-| Existing CI/CD | Private GitHub repository; no Actions workflows, Actions secrets or Actions variables existed at inspection time | New workflows can use private artifacts, but owner configuration and a default-branch merge are still required |
-| Implemented off-site schedule | Daily `20:17 UTC` encrypted logical backup, private Actions artifact, 14-day retention | Workflow is active on the default branch and required setting names are configured. First scheduled run `29368765626` failed closed during sanitized-inventory parsing and produced no artifact. |
+| Existing CI/CD | Private GitHub repository with active backup/restore workflows and configured setting names | The backup schedule runs on `main`; the narrow restore-compatibility correction remains on the campaign branch pending merge |
+| Implemented off-site schedule | Daily `20:17 UTC` encrypted logical backup, private Actions artifact, 14-day retention | Scheduled run `29451202680` succeeded; artifact `8357639557` was restored and reconciled by run `29494683840` |
 | Local credentials | Management/API login and server API keys exist; no database password/connection URL is available | Read-only inventory works, but a real CLI dump cannot be run or delegated without the database URL secret |
 
 No production backup setting, plan, secret, data or schema was changed while preparing this pack. No dump was committed or retained locally.
@@ -96,15 +96,15 @@ Post-pilot hardening requires moving encrypted backups to separate object storag
 
 - [x] Dated owner approval of the interim route, 14-day retention, limitations, RPO/RTO, backup owner, and restore operator (recorded in the owner-approved policy above).
 - [x] GitHub Actions settings evidence showing the four required names exist, with values uninspected and undisclosed.
-- [ ] Default-branch workflow/schedule evidence and responsible operator’s failure-notification confirmation.
-- [ ] One completed scheduled production backup artifact created after enablement; manual “run now” alone is insufficient unless the schedule subsequently runs successfully.
-- [ ] Artifact identifier, source project ref, capture time, size/checksum where available, and retention expiry.
-- [ ] Disposable GitHub runner/local Supabase target identifier and start/stop timestamps.
-- [ ] Redacted before/after counts and canonical digests for organization, users/Auth, estimator, orders, production, stock, receivables, payroll, migration history and extensions.
-- [ ] Storage coverage statement showing the backup-time object count and, if non-zero, separate object-byte backup/restore proof.
-- [ ] Restore start/end timestamps and measured RTO.
-- [ ] Verification that production project/data was not altered.
-- [ ] Cleanup proof showing the disposable target was deleted or fully isolated according to the approved cleanup plan.
+- [ ] Default-branch workflow/schedule evidence exists; responsible operator’s failure-notification confirmation remains to be recorded.
+- [x] One completed scheduled production backup artifact created after enablement; manual “run now” alone is insufficient unless the schedule subsequently runs successfully.
+- [x] Artifact identifier, source project ref, capture time, size/checksum where available, and retention expiry.
+- [x] Disposable GitHub runner/local Supabase target identifier and start/stop timestamps.
+- [x] Redacted before/after counts and canonical digest-match results for organization, users/Auth, estimator, orders, production, stock, receivables, payroll, migration history and extensions.
+- [x] Storage coverage statement showing zero buckets, objects and bytes at capture and restore.
+- [x] Restore start/end timestamps and measured RTO.
+- [x] Verification that production project/data was not altered.
+- [x] Cleanup proof showing the disposable target was stopped with `--no-backup` by the EXIT trap.
 - [ ] Named operator and independent verifier, dated approval, and variance explanations.
 
 ## Non-destructive restore exercise
@@ -117,14 +117,14 @@ Post-pilot hardening requires moving encrypted backups to separate object storag
 
 | Domain | Source count/digest | Restored count/digest | Match | Notes |
 | --- | --- | --- | --- | --- |
-| Organization |  |  | [ ] |  |
-| Users/auth identities |  |  | [ ] |  |
-| Estimator quotes |  |  | [ ] |  |
-| Orders |  |  | [ ] |  |
-| Production |  |  | [ ] |  |
-| Stock |  |  | [ ] |  |
-| Receivables |  |  | [ ] |  |
-| Payroll |  |  | [ ] |  |
+| Organization | 66 | 66 | [x] | Identity digest matched |
+| Users/auth identities | 76 profiles; 80 Auth users/identities | Same | [x] | Identity digest matched; four Auth users without profiles on both sides |
+| Estimator quotes | 33 | 33 | [x] | Identity digest matched |
+| Orders | 42 | 42 | [x] | Identity digest matched |
+| Production | 88 | 88 | [x] | Identity digest matched |
+| Stock | 33 | 33 | [x] | Identity digest matched |
+| Receivables | 34 | 34 | [x] | Identity digest matched |
+| Payroll | 19 | 19 | [x] | Identity digest matched |
 
 6. Verify schema/migration head, required extensions, Auth record linkage, Storage object count, null/orphan tenant counts and exact pseudonymous identity digests.
 7. Explain every mismatch. A mismatch is a failure until corrected and rerun.
@@ -162,12 +162,14 @@ jq -r '.items | group_by(.status) | map({status: .[0].status, count: length})' o
 5. Update `REMAINING_GATE_REPORT.md`, `FAILURE_BACKLOG.md`, `LOOP_STATE.md`, `FIX_LOG.md`, and `PILOT_READY_DEFINITION.md` only to cite the new artifact and new calculated counts. Do not promote `UX-012`, `GOLDEN-A-03`, or `SIGNOFF-04` indirectly.
 6. Run `git diff --check`, verify the evidence paths exist, and have a second person confirm the matrix row before commit.
 
+## 2026-07-16 runtime result and approval boundary
+
+Canonical redacted evidence is stored in `output/qa/pilot-gate-closure/2026-07-16/TECH-011/`. The technical acceptance requirements are pass-ready. Formal status remains blocked because the compatibility policy commits are not yet on `main` and the independent-verifier field remains unnamed and unsigned. These governance gaps do not invalidate the successful restore, but they prevent formal matrix promotion.
+
 ## Exact human and laptop actions still required
 
 1. **Human:** owner approval of the interim private-GitHub artifact route, 14-day retention/limitations, RPO/RTO, backup owner and restore operator is recorded above. Record the individual factory-side verifier's name before closure; the verifier does not need database credentials. No paid-plan upgrade is required.
-2. **Owner laptop:** generate one standard `age` identity outside the repository, keep an encrypted/offline recovery copy, and configure the four exact GitHub Actions names from the runbook. Paste the database URL only into the secret form; never send it back in chat.
-3. **Repository owner:** merge the workflow to the default branch and enable Actions failure notifications/Issues.
-4. **Wait for automation:** observe one successful scheduled run (not only manual), then record run ID, artifact name/ID, timestamps, encrypted size/SHA-256 and 14-day expiry.
-5. **Restore operator laptop:** trigger the restore workflow with that scheduled run ID/artifact name; retain the private `restore-result.json`, measured recovery time and cleanup log.
-6. **Independent verifier:** confirm exact reconciliation, Storage coverage, production was never targeted, cleanup completed, and sign/date the pack.
-7. **Documentation operator:** apply the exact matrix procedure above. Until step 6 succeeds, keep `TECH-011` `BLOCKED`.
+2. **Owner laptop:** confirm a second approved encrypted/offline recovery-identity copy exists before moving or deleting the repository-root candidate. Never send the identity in chat.
+3. **Repository owner:** merge compatibility commits `da272ea` and `d07a570` to `main`; retain a main-ref restore rerun if required by the release process.
+4. **Independent verifier:** confirm exact reconciliation, the explained `pg_net` variance, Storage coverage, production was never targeted, cleanup completed, and sign/date the pack.
+5. **Documentation operator:** apply the exact matrix promotion procedure only after step 4. Until then, keep `TECH-011` `BLOCKED`.

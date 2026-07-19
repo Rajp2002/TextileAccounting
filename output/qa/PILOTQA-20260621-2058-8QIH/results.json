@@ -174,15 +174,19 @@
       "scenario": "Verify backup schedule and perform restore into a disposable project.",
       "expected": "Restored org, users, production, stock, receivables, and payroll reconcile.",
       "status": "blocked",
-      "actual": "A sanitized isolated-QA logical backup deleted and restored one organization, two users, production, stock, receivable, and payroll in 2478.4 ms with identical SHA-256 summaries, successful restored-owner sign-in, and zero cleanup. The encrypted production-backup workflow is active and its required setting names are configured. Scheduled run 29368765626 completed the five logical dump commands but failed closed during sanitized-inventory parsing; zero artifacts were created. No scheduled production artifact has been restored, reconciled, timed, cleaned up, or independently approved.",
+      "actual": "Scheduled production-backup run 29451202680 created encrypted artifact 8357639557 with 14-day retention. Restore run 29494683840 restored that exact artifact into a disposable local Supabase stack in 128 seconds without targeting production. Organization, profiles/Auth, estimator, orders, production, stock, receivables, payroll, Storage, tenant boundaries, identity digests and migration history reconciled; zero effect-capable jobs were restored and cleanup passed. The sole explained inventory variance was compatible pg_net 0.19.5 to 0.20.3. Technical proof is pass-ready, but the compatibility fix is not yet on main and no named independent verifier has signed.",
       "evidence": [
         "output/qa/blocked-row-campaign/B18-qa-backup-restore.json",
         "output/qa/blocked-row-campaign/B18-recovery-runtime.json",
-        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29368765626"
+        "output/qa/pilot-gate-closure/2026-07-16/TECH-011/scheduled-backup-metadata.json",
+        "output/qa/pilot-gate-closure/2026-07-16/TECH-011/restore-result-redacted.json",
+        "output/qa/pilot-gate-closure/2026-07-16/TECH-011/verification.md",
+        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29451202680",
+        "https://github.com/Rajp2002/TextileAccounting/actions/runs/29494683840"
       ],
-      "notes": "Precise remaining dependency: merge the inventory-output correction, validate it with a manual canary that receives no schedule credit, wait for a new scheduled encrypted artifact, restore and reconcile that exact artifact, measure recovery and cleanup, and obtain named-verifier approval.",
+      "notes": "pass_ready_pending_matrix_update. Precise remaining dependency: merge compatibility commits da272ea and d07a570 to main, retain a main-ref restore rerun if the release process requires it, confirm a second approved recovery-identity copy before moving the local candidate, and obtain dated approval from a named independent verifier.",
       "severity": "High",
-      "updatedAt": "2026-07-14T23:03:09.000Z",
+      "updatedAt": "2026-07-16T11:33:42.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
       "disposition_classification": "C"
@@ -5590,22 +5594,21 @@
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Factory terminology review with brother/supervisor.",
       "expected": "Labels match actual language: loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, hisaab.",
-      "status": "blocked",
-      "actual": "The required loom, shift meters, quality/run, godown, party, challan, Upaad/Kharchi, and hisaab labels exist in the product, but the B19 review found no dated brother/supervisor factory-language approval artifact.",
+      "status": "pass",
+      "actual": "Founder-requested English terminology changes are implemented and authenticated QA screenshots cover the owner navigation, Cost Estimate, Machines/Machine Type, Godown Stock, Party Ledger, Upaad, Worker Hisaab, Metres Produced This Shift, and supervisor Machine Board. On 2026-07-17 Raj explicitly approved the terminology as Founder and changed the readiness policy so factory-operator review is a mandatory pilot-run control rather than a pre-pilot gate.",
       "evidence": [
         "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1174",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1235",
-        "components/landing/faq.tsx:16",
-        "lib/i18n/locales/en.ts:101",
-        "output/qa/blocked-row-campaign/B19-external-evidence-review.json"
+        "output/qa/blocked-row-campaign/B19-external-evidence-review.json",
+        "output/qa/pilot-gate-closure/2026-07-16/UX-012/founder-preliminary-review.md",
+        "output/qa/pilot-gate-closure/2026-07-17/UX-012/runtime-evidence.md",
+        "output/qa/pilot-gate-closure/2026-07-17/UX-012/screenshot-index.md"
       ],
-      "notes": "Smallest dependency: one named factory supervisor provides a dated approve/change register for the listed terms.",
+      "notes": "PASS is based on explicit Founder acceptance and a documented scope decision, not a fabricated factory-operator signature. During the first pilot run, a named factory-side operator must review the populated English contexts and exact Gujarati wording. Any disagreement reopens UX-012 as a change request before wider pilot use.",
       "severity": "Medium",
-      "updatedAt": "2026-07-14T04:54:52.494Z",
+      "updatedAt": "2026-07-17T18:00:00.000Z",
       "release_scope": "pilot_core",
       "pilot_gating": true,
-      "disposition_classification": "C"
+      "disposition_classification": "F"
     },
     {
       "id": "GOLDEN-A-01",

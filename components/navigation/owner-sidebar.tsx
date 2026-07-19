@@ -35,8 +35,8 @@ const navGroups = [
         label: "Control",
         items: [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
-            { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
-            { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "quotes" },
+            { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+            { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "quotes" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
         ]
     },
@@ -52,7 +52,7 @@ const navGroups = [
     {
         label: "Money",
         items: [
-            { name: "Commercials", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials", workflow: "commercials" },
+            { name: "Party Ledger", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials", workflow: "commercials" },
             { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing", workflow: "billing" },
         ]
     },
@@ -60,14 +60,14 @@ const navGroups = [
         label: "Workforce",
         items: [
             { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers", workflow: "workers" },
-            { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
-            { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances", workflow: "advances" },
+            { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
+            { name: "Upaad (Worker Advance)", href: "/owner/advances", icon: HandCoins, translationKey: "advances", workflow: "advances" },
         ]
     },
     {
-        label: "Looms",
+        label: "Machines",
         items: [
-            { name: "Looms", href: "/owner/machines", icon: Server, translationKey: "machines", workflow: "looms" },
+            { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines", workflow: "looms" },
         ]
     },
     {
@@ -84,7 +84,7 @@ const bottomNavItems = [
     { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
     { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs", workflow: "marketRuns" },
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
-    { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+    { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
@@ -137,7 +137,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
                             <p className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
-                            <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Estimator Plan'}</p>
+                            <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Cost Estimate Plan'}</p>
                         </div>
                     </div>
                 )}

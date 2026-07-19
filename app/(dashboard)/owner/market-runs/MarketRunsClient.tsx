@@ -158,7 +158,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2">No market runs yet</h3>
             <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                Start a market run to keep looms productive when client orders are light, then manage physical takas from Stock.
+                Start a market run to keep machines productive when client orders are light, then manage physical takas from Stock.
             </p>
             <Button onClick={onNew} className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -249,7 +249,7 @@ export default function MarketRunsClient({
                                 <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Active</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{activeRuns}</p>
-                            <p className="text-xs text-muted-foreground">loom runs in production</p>
+                            <p className="text-xs text-muted-foreground">machine runs in production</p>
                         </CardContent>
                     </Card>
                     <Card className="border-border/50">

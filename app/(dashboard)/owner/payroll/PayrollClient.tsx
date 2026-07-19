@@ -508,8 +508,8 @@ async function fetchSettlementHistory(
 
             return {
                 ...settlement,
-                workerName: meterNameMap.get(workerId) || `Meter worker #${workerId}`,
-                workerDetail: 'Meter worker',
+                workerName: meterNameMap.get(workerId) || `Piece-rate worker #${workerId}`,
+                workerDetail: 'Piece-Rate Worker',
                 earningLines,
                 earningTotal,
             }
@@ -518,7 +518,7 @@ async function fetchSettlementHistory(
         const workerId = settlement.fixed_worker_id ?? 0
         const worker = fixedWorkerMap.get(workerId)
         const role = worker?.role || ''
-        const roleLabel = role ? (ROLE_LABELS[role] || role) : 'Fixed worker'
+        const roleLabel = role ? (ROLE_LABELS[role] || role) : 'Salaried Worker'
         const monthlySalary = toPayrollNumber(worker?.monthly_salary)
         const bounds = cycleBoundsByMonth.get(settlement.month)
         const daysWorked = bounds
@@ -547,7 +547,7 @@ async function fetchSettlementHistory(
 
         return {
             ...settlement,
-            workerName: worker?.name || `Fixed worker #${workerId}`,
+            workerName: worker?.name || `Salaried worker #${workerId}`,
             workerDetail: roleLabel,
             earningLines,
             earningTotal: earningLines.reduce((sum, line) => sum + line.amount, 0),

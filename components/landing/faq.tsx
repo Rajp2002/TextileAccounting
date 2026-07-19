@@ -1,19 +1,19 @@
 const faqs = [
     {
         question: 'Does Weavly work for grey fabric weaving factories?',
-        answer: 'Yes. The workflows are designed around fabric estimating, loom assignment, shift-wise meter logging, market runs, dispatch tracking, advances, and piece-rate payroll.',
+        answer: 'Yes. The workflows are designed around Cost Estimates, Machine Assignments, Metres Produced This Shift, Market Runs, dispatch tracking, Upaad, and Piece-Rate Worker Hisaab.',
     },
     {
         question: 'Can my supervisor use this on the factory floor?',
-        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update machine status, enter shift-total meters, and submit shift logs.',
+        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update Machine status, enter Metres Produced This Shift, and submit shift logs.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',
-        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions, with drafts kept on the device while you are signed in. Saving production, kharchi, payroll, sale, dispatch, and payment entries requires an internet connection.',
+        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions, with drafts kept on the device while you are signed in. Saving production, Kharchi, Worker Hisaab, sale, dispatch, and payment entries requires an internet connection.',
     },
     {
         question: 'What does Weavly replace?',
-        answer: 'For many factories, it replaces the production register, hajiri book, Excel costing sheet, paper challan follow-ups, WhatsApp status chasing, and parchi-style payroll calculations.',
+        answer: 'For many factories, it replaces the production register, hajiri book, Excel costing sheet, Delivery Challan follow-ups, WhatsApp status chasing, and paper Worker Hisaab calculations.',
     },
     {
         question: 'Is factory and worker data secure?',

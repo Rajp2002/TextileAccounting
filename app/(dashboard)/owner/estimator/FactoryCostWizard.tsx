@@ -151,7 +151,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                             </div>
                                             <div>
                                                 <div className="font-black text-slate-900">Help me calculate it</div>
-                                                <div className="text-xs text-slate-500">We&apos;ll guide you through loom count and monthly expenses</div>
+                                                <div className="text-xs text-slate-500">We&apos;ll guide you through machine count and monthly expenses</div>
                                             </div>
                                         </button>
                                     </div>
@@ -205,7 +205,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                     </div>
                                     <div className="grid gap-4">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Total Loom Count</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Total Machine Count</Label>
                                             <Input 
                                                 type="number" 
                                                 value={loomCount} 
@@ -224,7 +224,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Avg Meters / Loom / Day</Label>
+                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Avg Meters / Machine / Day</Label>
                                                 <Input 
                                                     type="number" 
                                                     value={avgOutput} 

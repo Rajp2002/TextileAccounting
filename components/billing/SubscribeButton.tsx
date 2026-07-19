@@ -119,7 +119,7 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
     async function handleSubscribe() {
         setLoading(true)
         try {
-            const planName = tierName ?? (planTier === 'base' ? 'Weavly Estimator' : 'Weavly Full Suite')
+            const planName = tierName ?? (planTier === 'base' ? 'Weavly Cost Estimate' : 'Weavly Full Suite')
             console.log(`[SubscribeButton] Initializing one-time checkout for ${planName}`)
 
             const isLoaded = await loadRazorpayScript()

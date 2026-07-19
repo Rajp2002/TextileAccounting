@@ -435,9 +435,9 @@ export function SellAndDispatchDialog({
                             />
                         </div>
                         <div className="hidden">
-                            <Label>Sold takas <span className="font-normal text-slate-400">(optional display count)</span></Label>
+                            <Label>Number of Taka Sold <span className="font-normal text-slate-400">(optional count)</span></Label>
                             <Input type="number" min="0" step="0.01" value={soldTakas} onChange={(event) => setSoldTakas(event.target.value)} placeholder="Leave blank if unknown" className="h-11 lg:h-9" />
-                            <p className="text-[11px] font-semibold text-slate-500">Meters reserve stock. Taka count is only adjusted when entered.</p>
+                            <p className="text-[11px] font-semibold text-slate-500">Metres Sold reserves stock. Taka Count is adjusted only when entered; the two quantities are not interchangeable.</p>
                         </div>
                         <div className="space-y-1.5">
                             <Label>Sale rate per meter</Label>

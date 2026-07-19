@@ -53,8 +53,8 @@ const actions = [
     },
     {
         id: 'settle-hisaab',
-        label: 'Settle Hisaab',
-        description: 'Process payroll',
+        label: 'Complete Worker Hisaab',
+        description: 'Payroll settlement',
         href: '/owner/payroll',
         icon: DollarSign,
         color: 'text-success bg-success-soft border-success/20',

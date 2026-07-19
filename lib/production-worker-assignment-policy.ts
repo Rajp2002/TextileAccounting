@@ -24,7 +24,7 @@ type AssignmentLike = {
 }
 
 function readableMachineName(name?: string | null) {
-  return name?.trim() || 'This loom'
+  return name?.trim() || 'This machine'
 }
 
 function shiftLabel(shift: WorkerAssignmentShift) {
@@ -49,7 +49,7 @@ export function buildMissingShiftWorkerMessage(machineName: string | null | unde
 }
 
 export function buildSubstituteWorkerReassignmentMessage(machineName: string | null | undefined, shift: WorkerAssignmentShift) {
-  return `${readableMachineName(machineName)} is assigned to another worker for this ${shift} shift. Reassign the ${shift} worker before logging a substitute so production, payroll, and loom accountability stay correct.`
+  return `${readableMachineName(machineName)} is assigned to another worker for this ${shift} shift. Reassign the ${shift} worker before logging a substitute so production, payroll, and machine accountability stay correct.`
 }
 
 export function evaluateProductionWorkerAssignmentPolicy(

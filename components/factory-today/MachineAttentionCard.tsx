@@ -23,9 +23,9 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             )}>
                 <Server className={cn('h-4 w-4 shrink-0', allAssigned ? 'text-success' : 'text-warning')} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Looms</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Machines</p>
                     <p className={cn('text-sm font-bold', allAssigned ? 'text-success' : 'text-warning')}>
-                        {allAssigned ? 'All looms assigned' : `${machines.unassigned} loom${machines.unassigned !== 1 ? 's' : ''} unassigned`}
+                        {allAssigned ? 'All machines assigned' : `${machines.unassigned} machine${machines.unassigned !== 1 ? 's' : ''} unassigned`}
                     </p>
                 </div>
             </div>
@@ -73,7 +73,7 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             {allAssigned && (
                 <div className="flex items-center gap-2 px-4 py-3">
                     <CheckCircle2 className="h-4 w-4 text-success" />
-                    <p className="text-sm text-body">All {machines.totalActive} looms are assigned and active.</p>
+                    <p className="text-sm text-body">All {machines.totalActive} machines are assigned and active.</p>
                 </div>
             )}
 
@@ -84,7 +84,7 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
                     className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
                 >
                     <Wrench className="h-4 w-4 lg:h-3 lg:w-3" />
-                    Manage Looms
+                    Manage Machines
                 </Link>
             </div>
         </div>

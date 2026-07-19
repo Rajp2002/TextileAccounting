@@ -96,8 +96,10 @@ describe('Estimator persistence safety', () => {
         expect(saveQuote).toContain('client_request_id:        params.clientRequestId')
         expect(saveQuote).toContain(".eq('updated_at', params.expectedSourceUpdatedAt!)")
         expect(saveQuote).toContain('idempotentReplay: true')
-        expect(estimatorClient).toContain('globalThis.crypto.randomUUID()')
+        expect(estimatorClient).toContain('quoteRequestIdRef.current ?? createClientRequestUuid()')
         expect(estimatorClient).toContain('expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined')
+        expect(estimatorClient).toContain('aria-label="Save as New Quality"')
+        expect(estimatorClient).toContain('<span className="truncate sm:hidden">New Quality</span>')
     })
 
     it('validates template recipes and uses optimistic concurrency on template writes', () => {
@@ -117,7 +119,7 @@ describe('Estimator persistence safety', () => {
         expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'edit')}")
         expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'duplicate')}")
         expect(quotesClient).toContain('sourceQuoteId: isDuplicate ? undefined : quote.id')
-        expect(quotesClient).toContain('Delete this quote?')
+        expect(quotesClient).toContain('Delete this Quotation?')
         expect(functionBody(estimatorActions, 'deleteEstimatorQuote')).toContain(".in('status', ['draft', 'rejected'])")
     })
 
@@ -127,7 +129,7 @@ describe('Estimator persistence safety', () => {
 
         expect(autosave).toContain('function safelyRemoveLocalStorageItem(key: string)')
         expect(autosave).toContain('safelyRemoveLocalStorageItem(keyRef.current)')
-        expect(quotesClient).toContain("toast.error('Browser storage is unavailable. The quote could not be opened in the estimator.')")
+        expect(quotesClient).toContain("toast.error('Browser storage is unavailable. The Quotation could not be opened in Cost Estimate.')")
     })
 })
 

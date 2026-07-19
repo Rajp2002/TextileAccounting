@@ -119,7 +119,7 @@ function formatMeters(value: number | null | undefined) {
 }
 
 function formatLoomName(name: string) {
-    return name.replace(/^Machine\b/i, 'Loom')
+    return name
 }
 
 const PRODUCTION_LOG_FALLBACK_ERROR = 'Could not save production log. Your entry is still saved as a draft. Check your connection and try again.'
@@ -584,7 +584,7 @@ function MachineUnifiedRow({
                 <button
                     onClick={() => onStatusClick(machine)}
                     className="absolute right-2 top-2 p-1 text-muted-foreground/35 transition-colors hover:text-saffron-deep hidden lg:block"
-                    title="Loom details"
+                    title="Machine details"
                 >
                     <ChevronRight className="h-4 w-4" />
                 </button>
@@ -627,7 +627,7 @@ function MachineDetailSheet({
         const res = await updateMachineStatus(machine.id, status)
         if (res.success) {
             onStatusChange(status)
-            toast.success(`Loom status updated to ${status}`)
+            toast.success(`Machine status updated to ${status}`)
         } else {
             toast.error(res.error)
         }
@@ -662,7 +662,7 @@ function MachineDetailSheet({
                     <MachineStatusBadge status={machine.machine_status || 'idle'} />
                 </div>
                 <SheetDescription>
-                    Manage loom status and record breakdown notes for this shift.
+                    Manage machine status and record breakdown notes for this shift.
                 </SheetDescription>
             </SheetHeader>
 
@@ -1093,9 +1093,9 @@ export default function UnifiedDashboard() {
             )
 
             if (machinesWithMetersButNoOrder.length > 0) {
-                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} looms: no cost analysis or quality is assigned.`)
+                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} machines: no cost analysis or quality is assigned.`)
             } else {
-                toast.error('No valid production metres found. Ensure both a worker and a cost analysis or quality are assigned to each loom.')
+                toast.error('No valid production metres found. Ensure both a worker and a cost analysis or quality are assigned to each machine.')
             }
             return
         }
@@ -1104,7 +1104,7 @@ export default function UnifiedDashboard() {
             .filter((entry) => isSuspiciousProductionMeters(entry.meters))
             .map((entry) => ({
                 machineId: entry.machine_id,
-                machineName: formatLoomName(machines.find((machine) => machine.id === entry.machine_id)?.name ?? 'Loom'),
+                machineName: formatLoomName(machines.find((machine) => machine.id === entry.machine_id)?.name ?? 'Machine'),
                 meters: entry.meters,
             }))
         const suspiciousKey = `${date}_${shift}:${suspiciousEntries
@@ -1165,7 +1165,7 @@ export default function UnifiedDashboard() {
             }
 
             if (outcome.status === 'completed') {
-                toast.success(`Shift meters logged (${res.logged} looms)`)
+                toast.success(`Metres produced this shift saved (${res.logged} machines)`)
             }
             setProductionMeters({}) // Reset inputs after success
             setRestoredDraftInfo(null)
@@ -1293,10 +1293,10 @@ export default function UnifiedDashboard() {
     const saveHelperText = loading
         ? 'Loading shift data...'
         : validEntryCount === 0
-            ? 'Add shift meters or downtime reasons to save.'
+            ? 'Add metres produced this shift or downtime reasons to save.'
             : pendingEntryCount > 0
                 ? `${validEntryCount} ready, ${pendingEntryCount} pending`
-                : 'All loom entries ready'
+                : 'All machine entries ready'
 
     return (
         <div
@@ -1351,7 +1351,7 @@ export default function UnifiedDashboard() {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-xl font-bold leading-tight tracking-normal text-ink">Shift Meter Log</h1>
+                            <h1 className="text-xl font-bold leading-tight tracking-normal text-ink">Metres Produced This Shift</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="secondary">
                                     {assignedCount}/{machines.length} assigned
@@ -1459,8 +1459,8 @@ export default function UnifiedDashboard() {
                 ) : machines.length === 0 ? (
                     <div className="col-span-full rounded-xl border border-dashed border-hairline bg-surface/70 py-20 text-center">
                         <AlertCircle className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-                        <p className="font-semibold text-ink">No looms found</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Activate looms in setup before logging shift meters.</p>
+                        <p className="font-semibold text-ink">No machines found</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Activate machines in setup before entering metres produced this shift.</p>
                     </div>
                 ) : (
                     machines.map((machine) => {
@@ -1548,10 +1548,10 @@ export default function UnifiedDashboard() {
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-warning">
-                            <AlertTriangle className="h-5 w-5" /> Confirm large shift meters
+                            <AlertTriangle className="h-5 w-5" /> Confirm unusually high metres produced this shift
                         </DialogTitle>
                         <DialogDescription>
-                            One or more loom totals are at least {SUSPICIOUS_PRODUCTION_METERS_THRESHOLD.toLocaleString('en-IN')} m for this shift. This is allowed, but confirm the totals before saving.
+                            One or more machine totals are at least {SUSPICIOUS_PRODUCTION_METERS_THRESHOLD.toLocaleString('en-IN')} m for this shift. This is allowed, but confirm the totals before saving.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-2 rounded-lg border border-warning-soft bg-warning-soft/60 p-3">
@@ -1590,7 +1590,7 @@ export default function UnifiedDashboard() {
                             <AlertTriangle className="h-5 w-5" /> Existing logs found
                         </DialogTitle>
                         <DialogDescription>
-                            Some looms already have production logs for this shift. Overwriting them requires an owner access code.
+                            Some machines already have production logs for this shift. Overwriting them requires an owner access code.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">

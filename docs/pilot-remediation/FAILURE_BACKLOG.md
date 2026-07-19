@@ -6,7 +6,17 @@ This backlog is grouped by root cause and ordered by the required pilot priority
 
 The historical 145-row runtime-rerun queue classified 39 pass, 9 fail, 97 blocked, and 0 not run. Subsequent remediation closed every formal failure. `OFF-009` and `OFF-010` now have exact delayed/throttled runtime proof; `WA-008` retains its live-provider acceptance test as a named post-pilot requirement without PASS credit. Historical row-level actuals remain immutable in `output/qa/runtime-rerun-20260710/results.json`; current proof is in `output/qa/runtime-remediation-20260711/` and `output/qa/remaining-gate-campaign/`.
 
-Current remediation note (2026-07-14): the active formal matrix has **367 pass, 0 fail, 7 blocked, and 3 not applicable**. `release_scope` and `pilot_gating` now distinguish verdict gates from optional, deferred, pre-public, pilot-operational, and post-pilot evidence. The three genuine limited-pilot gates are `TECH-011` production backup scheduling, `UX-012` factory terminology approval, and `GOLDEN-A-03` a business truth sheet. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest non-gating evidence debt. `WA-008` and `WA-010` link to specific post-pilot WhatsApp backlog items. `NEEDS-AUDIT-002` remains a separate legacy semantic-reconciliation audit item.
+Current remediation note (2026-07-17): the active formal matrix has **368 pass, 0 fail, 6 blocked, and 3 not applicable**. `release_scope` and `pilot_gating` distinguish verdict gates from optional, deferred, pre-public, pilot-operational, and post-pilot evidence. The two genuine limited-pilot gates are `TECH-011` recovery governance and `GOLDEN-A-03` a business truth sheet. `UX-012` passed by explicit Founder acceptance and a policy decision moving factory-operator review into the first pilot run. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain honest non-gating evidence debt.
+
+UX-012 update (2026-07-17): Raj's Founder-requested English wording is
+implemented and authenticated owner/supervisor screenshots were captured with a
+disposable QA fixture that cleaned successfully. Raj then explicitly approved
+the row as Founder and re-scoped factory-side review as a mandatory pilot-run
+control. Exact Gujarati terminology and populated factory contexts remain for
+that review; any disagreement reopens UX-012. See
+`output/qa/pilot-gate-closure/2026-07-17/UX-012/runtime-evidence.md`.
+
+TECH-011 update (2026-07-16): scheduled artifact `8357639557` from run `29451202680` was restored by run `29494683840` into disposable infrastructure in 128 seconds. Required inventories reconciled, production was not targeted, zero jobs were restored and cleanup passed. The sole explained variance was compatible `pg_net` runtime versioning. `TECH-011` is technically pass-ready but remains formally blocked until commits `da272ea`/`d07a570` reach `main` and a named independent verifier signs. Formal counts are unchanged.
 
 ## Coverage Ledger
 
@@ -24,9 +34,9 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P4 | `OFF-A` offline, cache, and public claims | None — `OFF-010` closed with constrained-3G runtime proof |
 | P5 | `REL-A` release gates and observability | None — `TECH-001`, `TECH-005`, and `TECH-006` closed |
 
-Blocked rows also remain unresolved evidence debt. Only `TECH-011`, `UX-012`, and `GOLDEN-A-03` independently gate the limited pilot. `SEC-018` gates public reliance, not the closed supervised pilot. `TECH-012`, `BILL-003`, and the Golden payroll/stock rows formerly listed here are closed by B11–B18 direct runtime proof.
+Blocked rows also remain unresolved evidence debt. Only `TECH-011` and `GOLDEN-A-03` independently gate the limited pilot. `SEC-018` gates public reliance, not the closed supervised pilot. `TECH-012`, `BILL-003`, `UX-012`, and the Golden payroll/stock rows formerly listed here are closed under their recorded evidence/scope decisions.
 
-Medium blocked rows retain exact closure procedures: `GOLDEN-A-03` and `UX-012` are pilot gates; `OFF-001` is optional device evidence; `SIGNOFF-04` is a mandatory first-shift operating control. `WA-010` is post-pilot `PP-WA-003`. `SEC-011` remains deferred to the owner’s physical laptop for read-only Sentry inspection; its token must never be transferred or exposed.
+Medium blocked rows retain exact closure procedures: `GOLDEN-A-03` is a pilot gate; `OFF-001` is optional device evidence; `SIGNOFF-04` is a mandatory first-shift operating control. UX-012 factory-operator/Gujarati review is also a first-pilot-run operating control. `WA-010` is post-pilot `PP-WA-003`. `SEC-011` remains deferred to the owner’s physical laptop for read-only Sentry inspection; its token must never be transferred or exposed.
 
 Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed. `SEC-B` is now also closed after `AUTH-008` received fail-closed source coverage and fresh QA Redis proof on 2026-07-11. Batch 20 moved the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`; Batch 21D closes them with disposable QA runtime proof.
 
@@ -469,9 +479,9 @@ Remediation direction:
 - Retain the repaired lockfile and zero-high/critical audit gate; track the two remaining moderate PostCSS/Next advisories separately.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
-- Keep the configured Free-tier encrypted schedule active, validate the sanitized-inventory correction with a manual canary, then retain a new successful scheduled production artifact and restore/reconcile that exact artifact in the disposable workflow. Scheduled run `29368765626` failed closed and produced no artifact.
+- Keep the configured Free-tier encrypted schedule active. Scheduled run `29451202680` produced artifact `8357639557`, and restore run `29494683840` restored/reconciled it successfully. Merge the narrow compatibility policy to `main`, retain a main-ref rerun if required, and obtain named independent-verifier approval before formal promotion.
 
-Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. B18 supplies rollback and sanitized restore proof. Scheduled run `29368765626` proves the schedule fired and failed closed but supplied zero artifacts. Remaining `TECH-011` proof is one newly scheduled encrypted production artifact restored and reconciled under the implemented runbook.
+Fresh proof: final `npm ci` installed 1,088 packages successfully; runtime-only and full audits both exited successfully at `--audit-level=high` with zero high/critical findings. B18 supplies rollback and sanitized fixture proof. The 2026-07-16 evidence supplies a scheduled encrypted production artifact and successful disposable restore/reconciliation. Remaining `TECH-011` work is governance: merge the compatibility fix and obtain named independent-verifier approval.
 
 ## Runtime Rerun Findings - 2026-07-10
 

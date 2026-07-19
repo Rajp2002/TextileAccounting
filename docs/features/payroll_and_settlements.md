@@ -8,7 +8,7 @@ Core Phase 1 pillar.
 
 ## What It Does
 
-Payroll converts production logs, worker rates, fixed-worker setup, attendance, advances, PF/ESI settings, manual adjustments, and payment mode into settlement records and payslips. Payroll timing is configured through cycle start day, pay date day, and reminder window. The page defaults to the current payroll month so owners can watch wages accumulate in real time, while still surfacing the active pay-date cycle for settlement.
+Worker Hisaab converts production logs, worker rates, Salaried Worker setup, attendance, Upaad, PF/ESI settings, manual adjustments, and payment mode into settlement records and payslips. Its timing is configured through cycle start day, pay date day, and reminder window. The page defaults to the current pay period so owners can watch wages accumulate in real time, while still surfacing the active pay-date cycle for settlement.
 
 ## User Workflow
 
@@ -16,9 +16,9 @@ Payroll converts production logs, worker rates, fixed-worker setup, attendance, 
 2. Owner lands on the current payroll month by default, unless opening a specific `?cycle=YYYY-MM` link.
 3. Owner sees cycle status: in progress, scheduled, approaching, due today, or overdue.
 4. Owner sees the Pay Date Overview panel showing status, bounds, and quick actions for the current/previous payroll cycle.
-5. Owner reviews meter workers and fixed workers (visible at any time once the cycle has started to track live payroll/wage updates).
-6. Meter workers show meters, machine/order rows, rate, gross pay, advances, deductions, manual adjustments, and net pay.
-7. Fixed workers show role, salary/daily earnings, fixed machine-operator earnings where applicable, attendance where applicable, advances, deductions, manual adjustments, and net pay.
+5. Owner reviews Piece-Rate Workers and Salaried Workers (visible at any time once the cycle has started to track live wage updates).
+6. Piece-Rate Workers show metres, machine/order rows, rate, gross pay, Upaad, deductions, manual adjustments, and net pay.
+7. Salaried Workers show role, salary/daily earnings, fixed machine-operator earnings where applicable, attendance where applicable, Upaad, deductions, manual adjustments, and net pay.
 8. Owner expands a worker row to inspect itemization.
 9. Owner toggles final settlement if the worker is exiting.
 10. Owner selects payment mode and verifies the payout.
@@ -27,7 +27,7 @@ Payroll converts production logs, worker rates, fixed-worker setup, attendance, 
 13. Owner opens **Past settlements** to review paid settlement history for audit or worker questions.
 14. Owner filters past settlements by worker/search, payroll month, or settlement date range.
 15. Owner opens a historical settlement to see net paid, payment mode, carried debt, manual adjustments, statutory deductions, and the earning basis.
-16. For meter workers, the historical earning basis is reconstructed as machine/order lines from `production_logs`: produced metres multiplied by `worker_rate_snapshot`.
+16. For Piece-Rate Workers, the historical earning basis is reconstructed as machine/order lines from `production_logs`: produced metres multiplied by `worker_rate_snapshot`.
 17. Owner downloads the filtered settlement audit CSV. The filename uses the factory name and exported pay-cycle/range, for example `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 
 ## Existing Workflow Translation
@@ -74,7 +74,7 @@ Weavly workflow:
 - Configurable cycle start day, pay date, and reminder window via `payroll_configs`.
 - Normal settlement is gated and disabled if the payroll window is not open, displaying a clear validation reason (e.g., normal settlement opens near the configured pay date).
 - The dashboard highlights the active pay date cycle with a dedicated `PayDateOverview` component, supporting direct toggle payment state and settlement actions. If all workers for the cycle are settled, the status badge updates to **"Paid"** or **"Clear"** with a green success indicator instead of showing a scheduled/overdue status.
-- The `SettlementHistoryDialog` reads paid `payroll_settlements`, resolves meter/fixed worker names, reconstructs meter earning lines from production logs, reconstructs fixed earning lines from salary/attendance context, and shows an audit breakdown from net revenue before deductions to final payout.
+- The `SettlementHistoryDialog` reads paid `payroll_settlements`, resolves Piece-Rate Worker and Salaried Worker names, reconstructs piece-rate earning lines from production logs, reconstructs salaried earning lines from salary/attendance context, and shows an audit breakdown from net revenue before deductions to final payout.
 - Past-settlement CSV exports include settlement metadata, worker detail, earning lines, total metres, net revenue before deductions, inam, kapaat, advance recovery, PF/ESI, net paid, carried debt, final/compliance flags, and manual adjustments.
 - Settlement export filenames are generated as `FactoryName_CycleStart-CycleEnd.csv` or `FactoryName_DateFrom-DateTo.csv`, with filename-safe date separators.
 - Owner verification is required before confirming payroll.

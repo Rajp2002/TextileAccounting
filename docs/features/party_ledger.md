@@ -1,4 +1,4 @@
-# Commercials and Party Ledger
+# Party Ledger
 
 Last analyzed from the active codebase on June 1, 2026.
 
@@ -6,12 +6,12 @@ Last analyzed from the active codebase on June 1, 2026.
 
 Split status:
 
-- `/owner/commercials` is active Phase 1 support for gross-profit visibility, receivables, dispatch status context, payment tracking, and lightweight party-level sales/profit visibility.
+- `/owner/commercials` is the active **Party Ledger** route for gross-profit visibility, receivables, dispatch status context, payment tracking, and lightweight party-level sales/profit visibility. The internal route and code identifiers remain `commercials` for compatibility.
 - `/owner/ledger` is archived/deferred for Phase 1 and represents full accounting/Tally replacement.
 
-## What Active Commercials Does
+## What the Active Party Ledger Does
 
-Commercials gives the owner a source-tagged view of expected and realized profit, as well as receivables and payments across operational work:
+Party Ledger gives the owner a source-tagged view of expected and realized profit, as well as receivables and payments across operational work:
 
 - realized order sales/invoices
 - expected order quote profit
@@ -49,12 +49,12 @@ Weavly workflow:
 - Expected and realized stages are separated.
 - Stock and market-run sales become part of the same profit story.
 - Party-first stock sales become named receivables immediately instead of anonymous accounting notes.
-- Repeat stock-sale parties can be selected from saved party records so Commercials can group profit, revenue, meters sold, and open dues across multiple sales.
+- Repeat stock-sale parties can be selected from saved party records so Party Ledger can group profit, revenue, meters sold, and open dues across multiple sales.
 - Party identity is ID-based, not name-based: duplicate names are allowed, but the sale UI asks the user to select the saved party or add phone/GSTIN before creating another same-name party.
 
-## Deferred Party Ledger
+## Deferred full-accounting depth
 
-The archived ledger includes full party ledgers, supplier ledgers, and complex payment allocations. While Commercials handles saved party selection, basic receivables, payment receipts, and party-level profit visibility for sales, the full accounting depth of a ledger is deferred.
+The archived accounting module includes supplier ledgers and complex payment allocations. While the active Party Ledger handles saved party selection, basic receivables, payment receipts, adjustments, outstanding balances, and party-level profit visibility for sales, broader accounting depth remains deferred.
 
 This is important for future ERP depth but not required for Phase 1 launch readiness.
 
@@ -90,6 +90,6 @@ Deferred:
 
 ## Readiness Notes
 
-- Commercials should remain an operational margin view, not a full accounting promise.
+- Party Ledger should remain an operational party-money and margin view, not a full accounting promise.
 - Payment recording is operational collection tracking, not bank reconciliation.
 - Ledger reactivation should happen only after Phase 1 core flows are stable.

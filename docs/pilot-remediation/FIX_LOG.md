@@ -27,7 +27,7 @@ Rules for entries:
 | `PAY-A` payroll/kharchi ledger integrity | Closed for current formal core rows through blocked-row B13 | Earlier batches closed payslip/export, statutory preview equality, settlement authorization/reversal, and online-only boundaries. B13 closes the remaining decimal rate, historical snapshot, cap, final settlement, adjustment, cycle, concurrency, reversal, exit, Kharchi, and Golden payroll rows with QA runtime/browser and production runtime proof. Provider/offline failures remain tracked under their own clusters. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Closed for the formal pilot row | `OFF-009` now has delayed-response runtime proof: unknown outcome, authoritative reconciliation, immediate resubmission guard, and exactly one persisted row. Other domain-specific idempotency rows retain their own existing evidence. |
 | `OFF-A` offline/cache/PWA claims | Pilot-critical rows closed / optional install evidence retained | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`; runtime remediation closes `OFF-007`; B15 proves manifest/icon/scope/start/update readiness. `OFF-009` and `OFF-010` now pass production-targeted delayed/throttled runtime proof. `OFF-001` remains optional, non-gating physical-device install evidence. |
-| `REL-A` release gates | Free-tier backup control implemented / real artifact and restore still blocked | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. B18 closed rollback/forward-fix and proved sanitized restore mechanics. The 2026-07-14 focused sprint adds a daily encrypted Supabase CLI backup and ephemeral restore drill, but `TECH-011` remains blocked until owner configuration produces a scheduled artifact and that exact artifact restores/reconciles. |
+| `REL-A` release gates | TECH-011 technically pass-ready / formal approval blocked | Earlier batches closed `TECH-007`, `TECH-010`, `TECH-013`, and deployed signoff evidence. Runtime remediation closed clean install/audit gates `TECH-001`, `TECH-005`, `TECH-006`, and missing-environment fail-closed gate `TECH-009`. Scheduled run `29451202680` produced retained artifact `8357639557`; restore run `29494683840` restored and reconciled it in 128 seconds without targeting production. Formal `TECH-011` remains blocked until the compatibility fix reaches `main` and a named independent verifier signs. |
 
 ## Entry Template
 
@@ -44,6 +44,17 @@ Rules for entries:
 | Data safety | QA tenant/disposable/rollback-only proof. |
 | Result | `open`, `blocked`, `retest_needed`, or `resolved_with_evidence`. |
 | Matrix update | Rows promoted and evidence references. |
+
+## TECH-011 retained-artifact restore — 2026-07-16
+
+Status: `pass_ready_pending_matrix_update`; canonical `TECH-011` remains `blocked`.
+
+- Scheduled backup: run `29451202680`, artifact `8357639557`, source commit `e4d10a9958fefa1b9da40807360276f80b1ba43e`, 14-day retention.
+- Restore: run `29494683840` on workflow commit `d07a570edebae2349cd22b951de2ca84095e4e6d` restored the exact artifact into an ephemeral local Supabase stack in 128 seconds. Production was not targeted and cleanup stopped the disposable stack with `--no-backup`.
+- Reconciliation: business domains, Auth, Storage, migration history, tenant boundaries and identity digests matched. Zero effect-capable jobs were restored. The only inventory variance was compatible `pg_net` `0.19.5` to `0.20.3`, with extension names and the required HTTP signature verified.
+- Regression: `__tests__/backup-inventory-comparison.test.ts` and `__tests__/backup-sanitized-inventory.test.ts` passed 16 tests; Bash syntax and `git diff --check` passed before runtime execution.
+- Evidence: `output/qa/pilot-gate-closure/2026-07-16/TECH-011/` and the two Actions run URLs recorded there.
+- Matrix: actual/evidence/notes are current, but status and totals remain unchanged at 367 pass, 0 fail, 7 blocked and 3 not applicable. Promotion requires merge to `main` and named independent-verifier approval.
 
 ## Remaining-gate campaign — 2026-07-14
 
@@ -2499,3 +2510,40 @@ Date: 2026-07-14 IST. Documentation preparation only; application baseline `5a66
 - The SIGNOFF pack makes limited-pilot authorization conditional on `TECH-011`, `UX-012`, and `GOLDEN-A-03` being formally `PASS`; it retains the canonical first-shift Today/register reconciliation as the only way to close `SIGNOFF-04`.
 - Fresh read-only Supabase evidence still reports organization plan Free, production WAL-G enabled, PITR disabled, and no retained backup. No remote setting, billing plan, secret, schema, data, backup, or restore was changed. No restore proof is claimed.
 - Status changes: none. Formal matrix remains **367 pass, 0 fail, 7 blocked, and 3 not applicable**; all four requested rows remain `blocked`.
+
+## UX-012 authenticated screenshot and cleanup pass
+
+Date: 2026-07-17 IST. QA-only evidence pass; no production or deployment action.
+
+- Disposable fixture `FORMAL-B2-1784310076133-C262F7` created isolated Premium
+  owner/supervisor and Base owner accounts in confirmed QA project
+  `eutycrtzzxmlkcpipgod`.
+- The first apparent login failure was a local origin mismatch:
+  `127.0.0.1` caused Next.js to block the development client, leaving a plain
+  unhydrated `GET /login?` form. Repeating through `localhost` established both
+  owner and supervisor sessions without an Auth/code fix.
+- Thirteen public/authenticated screenshots now cover the principal English
+  owner/supervisor terminology contexts. The empty tenant could not render Taka
+  quantities, receipt reconciliation, worker-type assignments or Counter
+  Reading, so those exact contexts receive no runtime PASS.
+- Cleanup deleted and reconciled the disposable accounts, profiles,
+  organizations and test subscriptions; the private credential file was
+  removed and the local server stopped.
+- Evidence:
+  `output/qa/pilot-gate-closure/2026-07-17/UX-012/runtime-evidence.md` and
+  `screenshot-index.md`.
+- Initial status at screenshot closeout: `blocked` because Raj reviewed as
+  Founder and Gujarati terminology was pending.
+
+### Founder approval and gate reclassification
+
+- Raj then explicitly approved UX-012 as Founder and directed that
+  factory-operator review occur as part of the pilot run.
+- `UX-012` moved from `blocked` to `pass` as a transparent requirement/scope
+  correction. No factory-operator signature or Gujarati approval was invented.
+- Mandatory pilot-run control: review populated English contexts and exact
+  Gujarati wording with a named factory-side operator; record corrections and
+  reopen UX-012 before wider pilot use if any term is disputed.
+- Formal matrix: **368 pass, 0 fail, 6 blocked, 3 not applicable**.
+- Code, schema, migration, deployment and production changes for this status
+  decision: none.

@@ -32,8 +32,14 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === 'development',
   register: true,
   cacheStartUrl: false,
-  dynamicStartUrl: true,
+  // cacheStartUrl is disabled because "/" can redirect differently by auth
+  // state. Keep dynamicStartUrl disabled too: the plugin otherwise adds its
+  // own NetworkFirst cache for "/" even when cacheStartUrl is false.
+  dynamicStartUrl: false,
   reloadOnOnline: false,
+  // Keep the package's static asset strategies, while replacing only the
+  // dynamic response caches below by their stable cache names.
+  extendDefaultRuntimeCaching: true,
   fallbacks: {
     document: '/_offline',
   },
@@ -47,6 +53,50 @@ const withPWA = withPWAInit({
     skipWaiting: false,
     clientsClaim: false,
     cleanupOutdatedCaches: true,
+    runtimeCaching: [
+      {
+        urlPattern: /\/_next\/data\/.+\/.+\.json$/i,
+        handler: 'NetworkOnly',
+        options: { cacheName: 'next-data' },
+      },
+      {
+        urlPattern: ({ sameOrigin, url: { pathname } }) =>
+          sameOrigin &&
+          pathname.startsWith('/api/') &&
+          !pathname.startsWith('/api/auth/callback'),
+        handler: 'NetworkOnly',
+        method: 'GET',
+        options: { cacheName: 'apis' },
+      },
+      {
+        urlPattern: ({ request, url: { pathname }, sameOrigin }) =>
+          request.headers.get('RSC') === '1' &&
+          request.headers.get('Next-Router-Prefetch') === '1' &&
+          sameOrigin &&
+          !pathname.startsWith('/api/'),
+        handler: 'NetworkOnly',
+        options: { cacheName: 'pages-rsc-prefetch' },
+      },
+      {
+        urlPattern: ({ request, url: { pathname }, sameOrigin }) =>
+          request.headers.get('RSC') === '1' &&
+          sameOrigin &&
+          !pathname.startsWith('/api/'),
+        handler: 'NetworkOnly',
+        options: { cacheName: 'pages-rsc' },
+      },
+      {
+        // Restrict this override to real document navigations. Custom runtime
+        // rules are evaluated before the retained defaults, so a broad
+        // same-origin matcher here would accidentally bypass static caches.
+        urlPattern: ({ request, url: { pathname }, sameOrigin }) =>
+          request.mode === 'navigate' &&
+          sameOrigin &&
+          !pathname.startsWith('/api/'),
+        handler: 'NetworkOnly',
+        options: { cacheName: 'pages' },
+      },
+    ],
   },
 })
 

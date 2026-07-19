@@ -20,8 +20,8 @@ export default function SupervisorMachinesPage() {
     return (
         <div className="mx-auto max-w-5xl space-y-6">
             <div className="weavly-canvas rounded-xl p-4">
-                <h1 className="text-2xl font-semibold text-ink">Loom Board</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Review running, idle, and assigned looms for the factory floor.</p>
+                <h1 className="text-2xl font-semibold text-ink">Machine Board</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Review running, idle, and assigned machines for the factory floor.</p>
             </div>
 
             {/* Supervisors can pause/resume looms without owner-only edit controls. */}

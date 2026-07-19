@@ -369,7 +369,7 @@ export function CreateDispatchModal({
                         />
                     </div>
                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 text-[11px] text-indigo-700">
-                        Record the challan number from your own paperwork. Mark receipt later when the party returns their confirmation.
+                        Record the Delivery Challan number from your own paperwork. Mark receipt later when the party returns their confirmation.
                     </div>
                 </div>
 

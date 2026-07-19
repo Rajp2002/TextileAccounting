@@ -9,25 +9,25 @@ const planDetails: Record<PurchasablePlanTier, {
 }> = {
     base: {
         badge: 'Costing desk',
-        description: 'For owners who want reliable costing, quote history, and margin control without moving factory-floor operations yet.',
+        description: 'For owners who want reliable Cost Estimates, Quotation history, and margin control without moving factory-floor operations yet.',
         features: [
-            'Warp and weft cost estimator',
+            'Warp Yarn and Weft Yarn Cost Estimate',
             'Fabric templates and saved qualities',
-            'Quote history and draft recovery',
+            'Quotation history and draft recovery',
             'Margin and landed-cost visibility',
             'Independent owner access',
         ],
     },
     premium: {
         badge: 'Complete factory',
-        description: 'For factories ready to connect quotes, looms, shift logs, stock, dispatches, payroll, and owner visibility.',
+        description: 'For factories ready to connect Quotations, Machines, shift logs, Godown Stock, dispatches, Worker Hisaab, and owner visibility.',
         features: [
-            'Everything in Weavly Estimator',
+            'Everything in Weavly Cost Estimate',
             'Production and order tracking',
-            'Shift production logs with shift-total meters',
-            'Market runs and godown stock',
+            'Metres Produced This Shift logs',
+            'Market Runs and Godown Stock',
             'Dispatches and sale records',
-            'Payroll, advances, and settlement',
+            'Worker Hisaab and Upaad',
             'Operational analytics for owners',
             'Unlimited machines and workers',
         ],
@@ -56,7 +56,7 @@ export default function LandingPricing() {
                     </div>
                     <div className="max-w-2xl lg:ml-auto">
                         <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                            Start with the Estimator or bring the full factory workflow into Weavly. Both plans include a full year of access, with a lower annual renewal from year two.
+                            Start with Cost Estimate or bring the full factory workflow into Weavly. Both plans include a full year of access, with a lower annual renewal from year two.
                         </p>
                         <p className="mt-3 text-sm text-zinc-400 dark:text-zinc-500">
                             Start with a 7-day Premium trial. Prices below show 18% GST separately and include one factory.
@@ -124,7 +124,7 @@ export default function LandingPricing() {
                 </div>
 
                 <div className="mt-5 flex flex-col gap-2 border border-orange-200 bg-orange-50/80 px-5 py-4 text-sm text-zinc-700 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-zinc-300">
-                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> Multi-factory pricing is quoted after a workflow review.</p>
+                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> Multi-factory pricing is set after a workflow review.</p>
                     <a className="font-bold text-orange-700 underline decoration-orange-300 underline-offset-4 hover:text-orange-800 dark:text-orange-300" href="/signup">Request pilot access</a>
                 </div>
             </div>

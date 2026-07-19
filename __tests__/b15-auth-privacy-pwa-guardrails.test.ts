@@ -73,7 +73,7 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
     })
 
     it('retains install scope, icons, standalone mode, and explicit update activation', () => {
-        expect(manifest).toContain("start_url: '/login'")
+        expect(manifest).toContain("start_url: '/owner/estimator'")
         expect(manifest).toContain("scope: '/'")
         expect(manifest).toContain("display: 'standalone'")
         expect(manifest).toContain("src: '/icon-192x192.png?v=3'")

@@ -24,10 +24,12 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('!canUseProduction || mode === \'market\'')
         expect(estimator).toContain("? qualityLabel.trim()")
         expect(estimator).toContain("'Update Costing' : 'Save Costing'")
+        expect(estimator).toContain('{canUseProduction && <Button')
+        expect(estimator).toContain('id="btn-start-party-order"')
+        expect(estimator).not.toContain('!canUseProduction || !hasOrderQty')
         expect(estimator).toContain("t('estimator.hud.quote_per_m')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("t('estimator.simulation.title')")
-        expect(estimator).toContain('{canUseProduction && <Button')
     })
 
     it('keeps the costing backbone and terminology shared with Full Suite', () => {
@@ -42,18 +44,18 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('presents persisted quote entities as saved costings without forking persistence', () => {
-        expect(quotes).toContain("canUseProduction ? 'Quote History' : 'Saved Costings'")
+        expect(quotes).toContain("canUseProduction ? 'Quotation History' : 'Saved Cost Estimates'")
         expect(quotes).toContain("'Open & Update'")
         expect(quotes).toContain("'Duplicate Costing'")
         expect(estimator).toContain('saveEstimatorQuoteV3({')
     })
 
-    it('does not mount full-suite settings for the Estimator Plan', () => {
+    it('does not mount full-suite settings for the Cost Estimate Plan', () => {
         expect(settingsLayout).toContain('requiredTier="base"')
         expect(settings).toContain('{hasPremium && <div')
         expect(settings).toContain('{hasPremium && <SettingsSection id="automations"')
         expect(settings).toContain("hasPremium ? 'Production Costing & Templates' : 'Estimator Defaults'")
-        expect(settings).toContain('Weavly Estimator')
+        expect(settings).toContain('Weavly Cost Estimate')
         expect(settings).toContain('<FactoryCostProfile standaloneEstimator={!hasPremium} />')
         expect(settings).toContain('Password & Security')
         expect(settings).toContain('</aside> : <aside className="sticky top-6 space-y-4">')
@@ -65,8 +67,8 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('uses an intentional deep-link explanation with a return path', () => {
-        expect(gate).toContain('Continue with Weavly Estimator')
-        expect(gate).toContain('Return to Estimator')
+        expect(gate).toContain('Continue with Weavly Cost Estimate')
+        expect(gate).toContain('Return to Cost Estimate')
         expect(gate).not.toContain('Lock className=')
     })
 })

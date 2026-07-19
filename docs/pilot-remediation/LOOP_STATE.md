@@ -12,7 +12,7 @@ Source-of-truth artifacts:
 
 ## Current Verdict
 
-Status: No-Go pending three genuine pilot gates: `TECH-011`, `UX-012`, and `GOLDEN-A-03`.
+Status: No-Go pending two genuine pilot gates: `TECH-011` and `GOLDEN-A-03`.
 
 Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, Batch 24C Factory Today setup and historical analytics state closeout, Batch 24D estimator submit and production draft isolation source-fix closeout, and Batch 24E master data loom guardrails source-fix closeout:
 
@@ -28,6 +28,8 @@ Current classification after Batch 1 security foundation closeout, Batch 2 docum
 Current formal totals are 377 rows. The verdict remains No-Go only because production backup scheduling, factory terminology approval, and a real-fabric estimator truth comparison are genuine limited-pilot gates. Post-pilot WhatsApp rows, optional PWA install proof, deferred live-Sentry inspection, pre-public counsel review, and first-shift register reconciliation do not independently create a No-Go. `NEEDS-AUDIT-002` remains a separate semantic-reconciliation audit item.
 
 TECH-011 scheduled-run update (2026-07-15): all four required Actions setting names are configured, and run `29368765626` was a genuine `schedule` event. It failed closed after all five dump commands because aligned psql display formatting made the multiline sanitized inventory invalid JSON. No encrypted artifact was created, so no restore evidence or status credit exists. The source correction is code-verified pending a manual canary and a later scheduled run; `TECH-011` remains `blocked`, and formal counts are unchanged.
+
+TECH-011 retained-artifact update (2026-07-16): scheduled run `29451202680` produced encrypted artifact `8357639557`, and restore run `29494683840` restored that exact artifact into a disposable local Supabase stack in 128 seconds. Business, Auth, Storage, migration, tenant-boundary and identity-digest reconciliation passed; zero jobs were restored and cleanup passed. The only explained variance was compatible `pg_net` `0.19.5` to `0.20.3`. Technical status is `pass_ready_pending_matrix_update`; formal status remains `blocked`. After the separate 2026-07-17 UX-012 Founder approval, current counts are **368 pass, 0 fail, 6 blocked, and 3 not applicable** pending TECH-011 merge/governance closure and named independent-verifier sign-off.
 
 Formal blocked-row Batch 2 (2026-07-13) moved `SETUP-012`, `DASH-001`, `BILL-002`, `UX-004`, and `UX-011` from blocked to pass using isolated active Base/Premium tenants, a Premium supervisor, mobile browser proof, join-code boundary proof, exact service-role reconciliation, and complete fixture cleanup. The Premium Settings blank-content observation did not receive pass credit; `SEC-009` remains blocked under formal audit/debugging.
 
@@ -2083,3 +2085,22 @@ The two preparation tracks are complete without status promotion. `TECH-011` now
 `UX-012` now has a complete cross-surface terminology inventory, proposed canonical glossary, decision-only sheet, Gujarati discussion terms and reproducible screenshot/approval flow. Loom/machine, shift total/counter reading, quality/run, party/Commercials, Taka units, sold/sent/received metres, worker types, Upaad/Kharchi/Hisaab and inverse textile units remain genuine human choices. No product wording or application behavior changed, so no Vercel deployment was performed.
 
 Evidence: `output/qa/remaining-gate-campaign/TECH-011-UX-012-preparation.json`. Counts remain **367 pass, 0 fail, 7 blocked, and 3 not applicable**; the verdict remains No-Go pending `TECH-011`, `UX-012`, and unchanged/deferred `GOLDEN-A-03`.
+
+## UX-012 authenticated evidence continuation — 2026-07-17
+
+The Founder-requested English terminology is implemented and now has
+authenticated QA screenshots across principal owner and supervisor contexts.
+Disposable owner and supervisor application login passed through the correct
+`localhost` development origin; the earlier `127.0.0.1` attempt was an
+unhydrated dev-origin mismatch, not an application Auth defect. The QA fixture
+cleaned successfully and production was not accessed or mutated.
+
+Raj subsequently gave explicit Founder approval and changed the readiness
+policy: factory-operator review is now a mandatory first-pilot-run control
+rather than a pre-pilot gate. `UX-012` is `pass`. This does not claim a
+factory-operator signature or Gujarati validation; disagreement during pilot
+reopens the row.
+
+Evidence:
+`output/qa/pilot-gate-closure/2026-07-17/UX-012/runtime-evidence.md`.
+Formal counts are **368 pass, 0 fail, 6 blocked, and 3 not applicable**.

@@ -447,5 +447,5 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 6. A timed-out mutation has an unknown outcome until authoritative state is checked. The control remains guarded against blind repeat submission, and a reconciled success requires exactly one matching persisted grain.
 7. Slow-network PASS requires usable core mobile screens and repeat-submit prevention; it does not claim offline write queuing or background sync.
 8. Fixture cleanup must verify the same target used for setup. QA/production target mismatches fail closed, and an exact disposable prefix must reconcile to zero before evidence is accepted.
-9. `TECH-011`, `UX-012`, and `GOLDEN-A-03` remain genuine limited-pilot gates because they protect recovery, operational comprehension, and financial truth respectively.
+9. `TECH-011` and `GOLDEN-A-03` remain genuine limited-pilot gates because they protect recovery and financial truth. `UX-012` is Founder-approved for pilot entry; named factory-operator terminology review, including exact Gujarati wording, is a mandatory first-pilot-run control and any disagreement reopens the row.
 10. `SIGNOFF-04` is a mandatory first-shift operating control. An unexplained app/register variance pauses pilot operation even though the row does not block the first supervised session.

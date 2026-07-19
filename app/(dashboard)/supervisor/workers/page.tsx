@@ -162,7 +162,7 @@ export default function SupervisorWorkersPage() {
             <div className="weavly-canvas flex flex-col items-start justify-between gap-4 rounded-xl p-4 xs:flex-row xs:items-center">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-normal text-ink">Worker Directory</h1>
-                    <p className="mt-1 text-xs font-medium text-muted-foreground">Meter workers, Upaad, and payroll records</p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">Piece-Rate Workers, Upaad (Worker Advance), and Worker Hisaab records</p>
                 </div>
                 <AddWorkerDialog
                     orgId={userProfile.org_id}
@@ -245,8 +245,8 @@ export default function SupervisorWorkersPage() {
                         {workers?.length === 0 && (
                             <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-hairline bg-surface/70 py-16 text-center">
                                 <Users className="h-10 w-10 text-muted-foreground/30" />
-                                <p className="text-sm font-semibold text-ink">No meter workers yet.</p>
-                                <p className="max-w-sm text-xs text-muted-foreground">Add workers to start linking shift meters, Upaad, and payroll records.</p>
+                                <p className="text-sm font-semibold text-ink">No piece-rate workers yet.</p>
+                                <p className="max-w-sm text-xs text-muted-foreground">Add workers to connect metres produced this shift, Upaad, and Worker Hisaab records.</p>
                             </div>
                         )}
                     </div>

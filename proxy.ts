@@ -2,6 +2,11 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { checkAuthRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
+import {
+    getSupabaseAuthSessionCookieNames,
+    isStaleSupabaseAuthSessionError,
+    isSupabaseAuthSessionCookie,
+} from '@/lib/supabase/auth-cookie'
 import type { User } from '@supabase/supabase-js'
 
 function getRoleHomePath(role?: string): string {
@@ -110,6 +115,17 @@ function isPublicRoute(pathname: string): boolean {
     )
 }
 
+function hasSupabaseAuthSessionCookie(request: NextRequest): boolean {
+    return request.cookies.getAll().some(({ name }) => isSupabaseAuthSessionCookie(name))
+}
+
+function expireSupabaseAuthSessionCookies(response: NextResponse, request: NextRequest): NextResponse {
+    getSupabaseAuthSessionCookieNames(request.cookies.getAll())
+        .forEach((name) => response.cookies.delete(name))
+    response.cookies.delete('last_activity')
+    return response
+}
+
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
 export async function updateSession(request: NextRequest) {
@@ -118,29 +134,11 @@ export async function updateSession(request: NextRequest) {
     })
 
     const { pathname } = request.nextUrl
-
-    // ── 0. API Route Protection (CRITICAL FOR SAFARI) ──────────────────────────
-    // API routes MUST return JSON, never HTML redirects.
-    // We check this first to prevent any later redirects from sending HTML to fetch().
-    if (pathname.startsWith('/api/') && !isPublicRoute(pathname)) {
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() { return request.cookies.getAll() },
-                    setAll() {},
-                },
-            }
-        )
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
-        }
-    }
+    const hasAuthSessionCookie = hasSupabaseAuthSessionCookie(request)
+    const isSignOutRequest = request.method === 'POST' && pathname === '/auth/signout'
 
     // ── IP-based rate limiting for auth routes ─────────────────────────────
-    if (isAuthRoute(pathname)) {
+    if (isAuthRoute(pathname) && !isSignOutRequest) {
         const ip = getClientIpFromHeaders(request.headers)
 
         const isSignup = pathname.startsWith('/signup') || pathname.startsWith('/join')
@@ -157,6 +155,30 @@ export async function updateSession(request: NextRequest) {
                 },
             })
         }
+    }
+
+    // Auth mutations manage their own cookie lifecycle. Let them run directly
+    // instead of validating or redirecting the session before their handlers run.
+    const isLoginActionRequest = request.method === 'POST' && pathname === '/login'
+    if (isLoginActionRequest || isSignOutRequest) {
+        return response
+    }
+
+    // A browser without a Supabase session cookie cannot be authenticated. Avoid
+    // a remote Auth lookup for the login page/server action and for anonymous
+    // public traffic. Invalid or expired cookies still flow through getUser()
+    // below so they are cryptographically validated before any protected render.
+    if (!hasAuthSessionCookie) {
+        if (!isPublicRoute(pathname)) {
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            }
+            const url = request.nextUrl.clone()
+            url.pathname = '/login'
+            return NextResponse.redirect(url)
+        }
+
+        return response
     }
 
     const supabase = createServerClient(
@@ -182,7 +204,35 @@ export async function updateSession(request: NextRequest) {
 
     const {
         data: { user },
+        error: authError,
     } = await supabase.auth.getUser()
+
+    // A non-retryable session error means the cookie cannot recover. Expire all
+    // chunks on this response so public auth pages do not retry the same invalid
+    // refresh token forever. Explicit sign-in also starts from a clean client as
+    // a second line of defense if the browser has not applied this response yet.
+    if (!user && hasAuthSessionCookie && isStaleSupabaseAuthSessionError(authError)) {
+        if (pathname.startsWith('/api/') && !isPublicRoute(pathname)) {
+            return expireSupabaseAuthSessionCookies(
+                NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 }),
+                request
+            )
+        }
+
+        if (!isPublicRoute(pathname)) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/login'
+            return expireSupabaseAuthSessionCookies(NextResponse.redirect(url), request)
+        }
+
+        return expireSupabaseAuthSessionCookies(response, request)
+    }
+
+    // API routes must return JSON, never an HTML login redirect. Keep this check
+    // immediately after the single validated user lookup.
+    if (pathname.startsWith('/api/') && !isPublicRoute(pathname) && !user) {
+        return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
+    }
 
     // ── Check Instant Session Revocation ──────────────────────────────────
     if (user) {

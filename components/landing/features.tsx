@@ -2,37 +2,37 @@ import { Calculator, ClipboardList, Factory, MessageCircle, ReceiptIndianRupee, 
 
 const painPoints = [
     'Shift production arrives late from notebooks or WhatsApp.',
-    'Payroll depends on meter totals that workers can dispute.',
+    'Worker Hisaab depends on production totals that workers can dispute.',
     'Orders fall behind pace before the owner notices.',
-    'Challans, shortages, and party follow-ups live in separate places.',
-    'Yarn price changes make quote margins hard to trust.',
+    'Delivery Challans, shortages, and Party follow-ups live in separate places.',
+    'Yarn price changes make quotation margins hard to trust.',
 ]
 
-const replaces = ['Production register', 'Hajiri book', 'Excel costing sheet', 'Paper challan', 'WhatsApp follow-ups', 'Parchi payroll slips']
+const replaces = ['Production register', 'Hajiri book', 'Excel costing sheet', 'Delivery Challan', 'WhatsApp follow-ups', 'Worker Hisaab slips']
 
 const workflow = [
     {
-        title: 'Estimate the job',
-        description: 'Enter yarn specs, crimp, conversion, overhead, GST, shortage, and margin before the order reaches the loom.',
-        outcome: 'Know the quote price per meter and protect margin before saying yes.',
+        title: 'Create a Cost Estimate',
+        description: 'Enter yarn specs, crimp, conversion, overhead, GST, shortage, and margin before the order reaches the machine.',
+        outcome: 'Know the internal cost and quotation price per metre before saying yes.',
         icon: Calculator,
     },
     {
-        title: 'Assign looms and workers',
-        description: 'Turn accepted quotes or market runs into live factory work with machine, worker, shift, and order visibility.',
-        outcome: 'See idle looms, missing assignments, and active orders without asking the floor.',
+        title: 'Assign machines and workers',
+        description: 'Turn accepted quotations or market runs into live factory work with machine, worker, shift, and order visibility.',
+        outcome: 'See idle machines, missing assignments, and active orders without asking the floor.',
         icon: Factory,
     },
     {
         title: 'Log every shift',
         description: 'Supervisors enter total metres produced per shift from the floor. Designed for quick mobile entry in patchy factory conditions.',
-        outcome: 'Create one source of truth for production, payroll, and order progress.',
+        outcome: 'Create one source of truth for production, Worker Hisaab, and order progress.',
         icon: ClipboardList,
     },
     {
         title: 'Dispatch and settle',
-        description: 'Record challan references, returned receipt confirmations, shortages, advances, and payroll summaries.',
-        outcome: 'Close the loop from produced meters to party records and worker payments.',
+        description: 'Record Delivery Challan references, returned receipt confirmations, shortages, Upaad, and Worker Hisaab summaries.',
+        outcome: 'Close the loop from metres produced to Party records and worker payments.',
         icon: Truck,
     },
 ]
@@ -40,7 +40,7 @@ const workflow = [
 const trustItems = [
     {
         title: 'Factory vocabulary inside the product',
-        copy: 'Market runs, Upaad, Kharchi, shift meters, loom assignments, worker rates, and dispatch shortages are first-class workflows.',
+        copy: 'Market runs, Upaad, Kharchi, metres produced each shift, machine assignments, worker rates, and dispatch shortages are first-class workflows.',
         icon: ReceiptIndianRupee,
     },
     {
@@ -50,7 +50,7 @@ const trustItems = [
     },
     {
         title: 'WhatsApp where it actually helps',
-        copy: 'Daily briefs, payslips, advance receipts, and access-code requests reach owners and workers without replacing core records.',
+        copy: 'Daily briefs, payslips, Upaad receipts, and access-code requests reach owners and workers without replacing core records.',
         icon: MessageCircle,
     },
 ]
@@ -67,7 +67,7 @@ export default function LandingFeatures() {
                                 Stop running the factory from registers, memory, and missed calls.
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                                Weavly is built for owners who need production, dispatch, and payroll to agree with each other before small mistakes become expensive disputes.
+                                Weavly is built for owners who need production, dispatch, and Worker Hisaab to agree with each other before small mistakes become expensive disputes.
                             </p>
                         </div>
 
@@ -114,7 +114,7 @@ export default function LandingFeatures() {
                             </h2>
                         </div>
                         <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
-                            Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log shift totals, dispatch stock, and settle people correctly.
+                            Weavly follows how a weaving unit actually moves work: calculate the Cost Estimate, issue the Quotation, assign the floor, log shift totals, dispatch stock, and settle people correctly.
                         </p>
                     </div>
 

@@ -5,13 +5,13 @@
 - Matrix: `TEST_MATRIX.md`
 - Results ledger: `results.json`
 - Final rendered count: 377 / 377 classified
-- Current status counts: 367 pass, 0 fail, 7 blocked, 3 not_applicable, 0 code_verified, 0 not_run
+- Current status counts: 368 pass, 0 fail, 6 blocked, 3 not_applicable, 0 code_verified, 0 not_run
 
 ## Current superseding checkpoint — 2026-07-14
 
-The canonical `results.json`, `TEST_MATRIX.md`, and `docs/pilot-remediation/REMAINING_GATE_REPORT.md` supersede the original closeout narrative below. Current counts are **367 pass, 0 fail, 7 blocked, and 3 not applicable** across all 377 rows. Historical failure/blocker language below is retained only as provenance and must not be read as current status.
+The canonical `results.json`, `TEST_MATRIX.md`, and `docs/pilot-remediation/REMAINING_GATE_REPORT.md` supersede the original closeout narrative below. Current counts are **368 pass, 0 fail, 6 blocked, and 3 not applicable** across all 377 rows. Historical failure/blocker language below is retained only as provenance and must not be read as current status.
 
-The limited-pilot verdict remains **No-Go pending three genuine gates only**: `TECH-011` automated retained/off-site production backup, `UX-012` named factory-supervisor terminology acceptance, and `GOLDEN-A-03` independent real-fabric truth-sheet reconciliation. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain precise non-gating evidence debt. `WA-008` and `WA-010` are named post-pilot requirements and receive no PASS credit. `OFF-009` and `OFF-010` passed exact delayed-response and constrained-3G runtime/database proof.
+The limited-pilot verdict remains **No-Go pending two genuine gates only**: `TECH-011` recovery governance closure and `GOLDEN-A-03` independent real-fabric truth-sheet reconciliation. `UX-012` passed by explicit Founder acceptance and a readiness-policy decision that moves factory-operator/Gujarati review into the mandatory first-pilot-run controls. `OFF-001`, `SEC-011`, `SEC-018`, and `SIGNOFF-04` retain precise non-gating evidence debt. `WA-008` and `WA-010` are named post-pilot requirements and receive no PASS credit.
 
 Focused preparation update: `TECH-011` now has a Free-plan-compatible daily encrypted Supabase CLI workflow, private 14-day off-Supabase artifact destination, fail-closed Storage guard, and ephemeral restore drill. Required GitHub settings are absent, so no real scheduled artifact or restore result exists. `UX-012` now has a complete 42-concept inventory, proposed glossary and dated supervisor decision/re-approval pack; no supervisor approval exists and no product wording changed. Both rows and the 367/0/7/3 counts remain unchanged. `GOLDEN-A-03` was intentionally left untouched.
 

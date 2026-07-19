@@ -118,15 +118,15 @@ function getModeLabel(productionMode: ProductionMode) {
 function getRunLabels(productionMode: ProductionMode) {
     if (productionMode === 'order_based') {
         return {
-            qualityTitle: 'Create first quote and quality',
-            qualityDescription: 'Build a costed quote with the fabric quality and worker rate.',
-            qualityCta: 'Open estimator',
-            runTitle: 'Convert quote to order',
+            qualityTitle: 'Create first Cost Estimate and Fabric Quality',
+            qualityDescription: 'Build the internal Cost Estimate, then save the customer Quotation.',
+            qualityCta: 'Open Cost Estimate',
+            runTitle: 'Convert Quotation to order',
             runDescription: 'Create the live party order that production will run against.',
-            runCta: 'Open quotes',
+            runCta: 'Open Quotations',
             runHref: '/owner/quotes',
-            linkTitle: 'Link order to looms',
-            linkDescription: 'Select the order as the active cost analysis on the looms that will run it.',
+            linkTitle: 'Link order to machines',
+            linkDescription: 'Select the order as the active cost analysis on the machines that will run it.',
             dispatchTitle: 'Create first order dispatch',
             dispatchDescription: 'Owner records dispatch sent. Owner records received quantity after confirmation.',
             stockStep: null as SetupStep | null,
@@ -137,13 +137,13 @@ function getRunLabels(productionMode: ProductionMode) {
         return {
             qualityTitle: 'Create first costing',
             qualityDescription: 'Define the fabric quality, costing, and worker rate for your first run.',
-            qualityCta: 'Open estimator',
+            qualityCta: 'Open Cost Estimate',
             runTitle: 'Start first order or market run',
-            runDescription: 'Pick one path for your first run: convert a quote to an order or start market maal.',
+            runDescription: 'Pick one path for your first run: convert a Quotation to an order or start market maal.',
             runCta: 'Start run',
             runHref: '/owner/estimator',
-            linkTitle: 'Link run to looms',
-            linkDescription: 'Assign the selected order or market run to the looms that will produce it.',
+            linkTitle: 'Link run to machines',
+            linkDescription: 'Assign the selected order or market run to the machines that will produce it.',
             dispatchTitle: 'Create first dispatch',
             dispatchDescription: 'Owner records dispatch sent. Owner records received quantity after confirmation.',
             stockStep: null as SetupStep | null,
@@ -153,13 +153,13 @@ function getRunLabels(productionMode: ProductionMode) {
     return {
         qualityTitle: 'Create first market costing',
         qualityDescription: 'Define the fabric quality, costing, and worker rate for market production.',
-        qualityCta: 'Open estimator',
+        qualityCta: 'Open Cost Estimate',
         runTitle: 'Start market run',
         runDescription: 'Create the market maal run that will move from production into godown stock.',
         runCta: 'Start market run',
         runHref: '/owner/estimator?mode=market',
-        linkTitle: 'Link market run to looms',
-        linkDescription: 'Select the market run as the active cost analysis on the looms that will run it.',
+        linkTitle: 'Link market run to machines',
+        linkDescription: 'Select the market run as the active cost analysis on the machines that will run it.',
         dispatchTitle: 'Sell and dispatch stock',
         dispatchDescription: 'Owner records dispatch sent. Owner records received quantity after confirmation.',
         stockStep: null as SetupStep | null,
@@ -197,25 +197,25 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
         {
             id: 'looms',
             icon: Server,
-            title: 'Add your looms',
-            description: 'Add all active looms or machines before assigning work.',
+            title: 'Add your machines',
+            description: 'Add all active production machines before assigning work.',
             href: '/owner/machines',
-            ctaLabel: 'Add looms',
+            ctaLabel: 'Add machines',
             isComplete: ({ checklist }) => checklist.hasMachine,
             help: {
-                intro: 'Looms are the production units that receive qualities, workers, and daily shift-meter totals.',
+                intro: 'Machines are the production units that receive qualities, workers, and daily shift-meter totals.',
                 why: [
-                    'Production logs need a loom so output can be traced to the right machine.',
-                    'Loom status helps the owner see idle, active, and attention-needed machines.',
-                    'Rates and assignments become clearer when every physical loom exists in the system.',
+                    'Production logs need a machine so output can be traced to the right factory asset.',
+                    'Machine status helps the owner see idle, active, and attention-needed machines.',
+                    'Rates and assignments become clearer when every physical machine exists in the system.',
                 ],
                 actions: [
-                    'Add each active loom with a practical factory label.',
-                    'Set loom type where possible so reporting and grouping are cleaner.',
-                    'Keep unused looms inactive instead of deleting production history later.',
+                    'Add each active machine with a practical factory label.',
+                    'Set machine type where possible so reporting and grouping are cleaner.',
+                    'Keep unused machines inactive instead of deleting production history later.',
                 ],
-                clickPath: ['Owner sidebar', 'Looms', 'Add loom'],
-                doneWhen: 'At least one loom exists in the factory.',
+                clickPath: ['Owner sidebar', 'Machines', 'Add machine'],
+                doneWhen: 'At least one machine exists in the factory.',
             },
         },
         {
@@ -227,9 +227,9 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             ctaLabel: 'Add workers',
             isComplete: ({ checklist }) => checklist.hasMeterWorker,
             help: {
-                intro: 'Piece-rate workers are the workers assigned to looms and paid from logged production.',
+                intro: 'Piece-rate workers are assigned to machines and paid from logged production.',
                 why: [
-                    'Supervisor production entry requires a worker on the loom.',
+                    'Supervisor production entry requires a worker on the machine.',
                     'Payroll uses production logs to calculate worker hisaab.',
                     'Worker history remains accurate when workers are created before the first shift.',
                 ],
@@ -245,26 +245,26 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
         {
             id: 'loom-workers',
             icon: Link2,
-            title: 'Assign workers to looms',
-            description: 'Select at least one day or night worker on a loom before production.',
+            title: 'Assign workers to machines',
+            description: 'Select at least one day or night worker on a machine before production.',
             href: '/owner/machines',
             ctaLabel: 'Assign workers',
             isComplete: ({ checklist }) => checklist.hasLoomAssignment,
             help: {
-                intro: 'This connects a worker to a loom shift so Weavly knows who produced the meters.',
+                intro: 'This connects a worker to a machine shift so Weavly knows who produced the meters.',
                 why: [
-                    'A loom can be activated once at least one shift has an assigned worker.',
+                    'A machine can be activated once at least one shift has an assigned worker.',
                     'The production log needs the assigned worker to calculate wages correctly.',
                     'Owners can review who was responsible for output, shortages, or idle shifts.',
                 ],
                 actions: [
-                    'Open the Looms page and find the loom card.',
+                    'Open the Machines page and find the machine card.',
                     'Use the Day and Night worker selectors on the card.',
                     'Select the normal worker for each shift the factory actually runs.',
                 ],
-                clickPath: ['Owner sidebar', 'Looms', 'Loom card', 'Day worker / Night worker selectors'],
-                doneWhen: 'At least one loom has a day or night worker assigned.',
-                note: 'This step is separate from linking the order or market run. Workers answer "who runs the loom"; the active cost analysis answers "what is being produced".',
+                clickPath: ['Owner sidebar', 'Machines', 'Machine card', 'Day worker / Night worker selectors'],
+                doneWhen: 'At least one machine has a day or night worker assigned.',
+                note: 'This step is separate from linking the order or market run. Workers answer "who runs the machine"; the active cost analysis answers "what is being produced".',
             },
         },
         {
@@ -281,16 +281,16 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             help: {
                 intro: 'A costing gives the first run its fabric quality, construction details, expected cost, and worker rate.',
                 why: [
-                    'Production needs a quality or cost analysis before a loom can be linked to work.',
-                    'Commercials uses the costing to compare revenue against expected cost.',
+                    'Production needs a quality or cost analysis before a machine can be linked to work.',
+                    'Party Ledger uses the costing to compare revenue against expected cost.',
                     'Worker wage rates flow from the selected quality or costing into production logs.',
                 ],
                 actions: [
-                    'Open Estimator and create the first fabric quality.',
-                    'Fill enough costing details to save the quote or market costing.',
+                    'Open Cost Estimate and create the first Fabric Quality.',
+                    'Fill enough costing details to save the Quotation or market costing.',
                     'Confirm the worker rate per meter before starting production.',
                 ],
-                clickPath: ['Owner sidebar', 'Estimator', 'Create quality or quote', 'Save costing'],
+                clickPath: ['Owner sidebar', 'Cost Estimate', 'Create Fabric Quality or Quotation', 'Save costing'],
                 doneWhen: 'A quality exists and at least one estimate, order, or market run has been created.',
             },
         },
@@ -314,13 +314,13 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                     'Factory Today can only track pace and idle work after a run exists.',
                 ],
                 actions: productionMode === 'order_based'
-                    ? ['Open Quotes after saving a quote.', 'Convert the accepted quote to an order.', 'Check party name, target meters, and deadline before saving.']
+                    ? ['Open Quotations after saving a Quotation.', 'Convert the accepted Quotation to an order.', 'Check party name, target metres, and deadline before saving.']
                     : productionMode === 'market_run'
-                        ? ['Open Estimator in market mode.', 'Create a market run from the costing.', 'Check fabric label, target meters, and planned quantity before saving.']
-                        : ['Create either a party order from Quotes or a market run from Estimator.', 'Use the workflow the factory will run first.', 'Finish one path end to end before starting the second path.'],
+                        ? ['Open Cost Estimate in market mode.', 'Create a market run from the costing.', 'Check fabric label, target metres, and planned quantity before saving.']
+                        : ['Create either a Party Order from Quotations or a Market Run from Cost Estimate.', 'Use the workflow the factory will run first.', 'Finish one path end to end before starting the second path.'],
                 clickPath: productionMode === 'order_based'
-                    ? ['Owner sidebar', 'Quotes', 'Quote row', 'Convert to order']
-                    : ['Owner sidebar', 'Estimator', 'Market mode', 'Start market run'],
+                    ? ['Owner sidebar', 'Quotations', 'Quotation row', 'Convert to order']
+                    : ['Owner sidebar', 'Cost Estimate', 'Market mode', 'Start market run'],
                 doneWhen: productionMode === 'order_based'
                     ? 'At least one order exists.'
                     : productionMode === 'market_run'
@@ -334,22 +334,22 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             title: labels.linkTitle,
             description: labels.linkDescription,
             href: '/owner/machines',
-            ctaLabel: 'Link to looms',
+            ctaLabel: 'Link to machines',
             isComplete: ({ checklist }) => checklist.hasLoomTarget,
             help: {
-                intro: 'This links the live order or market run to the loom that will produce it.',
+                intro: 'This links the live order or market run to the machine that will produce it.',
                 why: [
-                    'The loom needs an active cost analysis before production can be saved.',
+                    'The machine needs an active cost analysis before production can be saved.',
                     'Factory Today uses this link to show assigned and unassigned machines.',
                     'Production logs inherit the correct quality and rate from the linked work.',
                 ],
                 actions: [
-                    'Open the Looms page after creating the order or market run.',
-                    'On the loom card, click Cost analysis / quality.',
-                    'Select the order or market run that loom should produce.',
+                    'Open the Machines page after creating the order or market run.',
+                    'On the machine card, click Cost analysis / quality.',
+                    'Select the order or market run that machine should produce.',
                 ],
-                clickPath: ['Owner sidebar', 'Looms', 'Loom card', 'Cost analysis / quality selector'],
-                doneWhen: 'At least one loom is linked to an active order or market run.',
+                clickPath: ['Owner sidebar', 'Machines', 'Machine card', 'Cost analysis / quality selector'],
+                doneWhen: 'At least one machine is linked to an active order or market run.',
             },
         },
         {
@@ -361,7 +361,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             ctaLabel: 'Get join code',
             isComplete: ({ checklist }) => checklist.hasSupervisor,
             help: {
-                intro: 'The supervisor account is the daily entry point for loom status, assignments, and production logs.',
+                intro: 'The supervisor account is the daily entry point for machine status, assignments, and production logs.',
                 why: [
                     'The supervisor flow is optimized for mobile shop-floor entry.',
                     'Separating owner and supervisor roles keeps commercials and payroll controls protected.',
@@ -380,7 +380,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             id: 'production-log',
             icon: Activity,
             title: 'Log first production',
-            description: 'Enter the first shift meters after loom, worker, and run are linked.',
+            description: 'Enter the first metres produced this shift after machine, worker, and run are linked.',
             href: '/supervisor/production',
             ctaLabel: 'Log production',
             isComplete: ({ activationChecklist }) => activationChecklist.hasProductionLog,
@@ -388,17 +388,17 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                 intro: 'The first production log proves the setup can run from costing to actual output.',
                 why: [
                     'Meters drive progress, stock movement, payroll, and daily owner alerts.',
-                    'The log captures loom, worker, shift, quality, and shift-total meters in one record.',
+                    'The log captures machine, worker, shift, quality, and shift-total meters in one record.',
                     'Commercial and dispatch readiness depends on production being recorded first.',
                 ],
                 actions: [
                     'Sign in as supervisor or use the supervisor flow.',
-                    'Open Production and choose the loom/shift.',
+                    'Open Production and choose the machine/shift.',
                     'Enter the shift-total meters produced, then save.',
                 ],
-                clickPath: ['Supervisor app', 'Production', 'Select loom and shift', 'Save production'],
+                clickPath: ['Supervisor app', 'Production', 'Select machine and shift', 'Save production'],
                 doneWhen: 'At least one production log exists.',
-                note: 'If saving is blocked, check that the selected shift has an assigned worker and the loom has an active order or market run selected.',
+                note: 'If saving is blocked, check that the selected shift has an assigned worker and the machine has an active order or market run selected.',
             },
         },
     ]
@@ -448,7 +448,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                 ],
                 actions: productionMode === 'market_run'
                     ? ['Sell stock to a named party from Godown Ledger or Dispatches.', 'Create the dispatch for the sold stock.', 'Owner records received quantity after confirmation.']
-                    : ['Open Dispatches for the order.', 'Create a dispatch batch with sent meters.', 'Owner records received quantity after confirmation.'],
+                    : ['Open Dispatches for the order.', 'Create a dispatch batch with Metres Dispatched.', 'Owner records Metres Received by Party after confirmation.'],
                 clickPath: productionMode === 'market_run'
                     ? ['Owner sidebar', 'Dispatches', 'Pending dispatches', 'Sell and dispatch stock']
                     : ['Owner sidebar', 'Dispatches', 'Create dispatch'],
@@ -464,18 +464,18 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             ctaLabel: 'Open commercials',
             isComplete: ({ activationChecklist }) => activationChecklist.hasCommercial,
             help: {
-                intro: 'Commercials is where the owner reviews whether the run made money and what the party still owes.',
+                intro: 'Party Ledger is where the owner reviews what the party owes, payments received, adjustments, and booked profit.',
                 why: [
                     'Expected and realized profit help catch pricing or costing mistakes early.',
                     'Receivables show unpaid, partial, and collected amounts by party.',
                     'The first review confirms that costing, stock, dispatch, and payment data are connected.',
                 ],
                 actions: [
-                    'Open Commercials after the first sale, dispatch, or invoice-linked event.',
+                    'Open Party Ledger after the first sale, dispatch, or invoice-linked event.',
                     'Review the profit snapshot and receivables list.',
                     'Record payment when the party pays so outstanding balance stays current.',
                 ],
-                clickPath: ['Owner sidebar', 'Commercials', 'Profit snapshot / Receivables', 'Record payment'],
+                clickPath: ['Owner sidebar', 'Party Ledger', 'Profit snapshot / Receivables', 'Record payment'],
                 doneWhen: 'At least one commercial profit entry exists.',
             },
         },
@@ -489,7 +489,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             skippable: true,
             isComplete: ({ checklist, skippedFixed }) => skippedFixed || checklist.hasFixedWorker,
             help: {
-                intro: 'Fixed staff are salaried or attendance-paid people, separate from piece-rate loom workers.',
+                intro: 'Fixed staff are salaried or attendance-paid people, separate from piece-rate machine workers.',
                 why: [
                     'Payroll can handle both production wages and fixed staff salary.',
                     'Attendance-based pay needs staff records before the payroll period closes.',
@@ -501,7 +501,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                     'Skip the step if your factory only pays piece-rate workers.',
                 ],
                 clickPath: ['Owner sidebar', 'Workers', 'Fixed/salary staff', 'Add staff'],
-                doneWhen: 'At least one fixed worker exists, or the owner has skipped this optional step on this device.',
+                doneWhen: 'At least one Salaried Worker exists, or the owner has skipped this optional step on this device.',
             },
         },
         {

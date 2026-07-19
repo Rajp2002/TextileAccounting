@@ -45,7 +45,7 @@ describe('Batch 24B supervisor production UX fixes', () => {
         expect(copySources).not.toContain('Shift production logs with meter readings')
 
         expect(copySources).toContain('enter shift-total meters')
-        expect(copySources).toContain('Shift production logs with shift-total meters')
+        expect(copySources).toContain('Metres Produced This Shift logs')
         expect(copySources).toContain('daily shift-meter totals')
         expect(copySources).toContain('log shift totals')
     })
@@ -64,7 +64,7 @@ describe('Batch 24B supervisor production UX fixes', () => {
         }
 
         expect(validateEntry(validLargeEntry).valid).toBe(true)
-        expect(supervisorPage).toContain('Confirm large shift meters')
+        expect(supervisorPage).toContain('Confirm unusually high metres produced this shift')
         expect(supervisorPage).toContain('This is allowed, but confirm the totals before saving.')
         expect(supervisorPage).toContain('confirmedLargeMeters: true')
     })

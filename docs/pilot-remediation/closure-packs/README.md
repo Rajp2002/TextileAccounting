@@ -4,7 +4,7 @@ Prepared: 2026-07-14 IST
 
 Repository baseline: documentation commit `bb0380f`; application commit `5a66eca`
 
-These packs prepare evidence collection; they do not supply the missing human, business, or restore evidence. The formal matrix remains **367 PASS / 0 FAIL / 7 BLOCKED / 3 NOT APPLICABLE**. All four rows below remain `BLOCKED`.
+These packs prepare evidence collection; they do not fabricate missing human, business, or restore evidence. After explicit Founder approval of UX-012 on 2026-07-17, the formal matrix is **368 PASS / 0 FAIL / 6 BLOCKED / 3 NOT APPLICABLE**. TECH-011, GOLDEN-A-03 and SIGNOFF-04 retain their recorded statuses; UX-012 factory-operator review is a mandatory pilot-run control.
 
 | Row | Canonical requirement | Current classification | Closure pack |
 | --- | --- | --- | --- |

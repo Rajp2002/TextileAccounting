@@ -68,7 +68,7 @@ export function TodayKpiStrip({ productionMode, production, machines, dispatch, 
                 : production.nightShiftLogged
                     ? 'Night shift logged'
                     : 'Partial shift logged'
-        : 'Log shift meters'
+        : 'Enter metres produced this shift'
 
     return (
         <div className="space-y-3">
@@ -96,7 +96,7 @@ export function TodayKpiStrip({ productionMode, production, machines, dispatch, 
                 />
                 <KpiCard
                     icon={Server}
-                    label="Active Looms"
+                    label="Active Machines"
                     value={`${machines.assigned} / ${machines.totalActive}`}
                     sub={machines.unassigned > 0 ? `${machines.unassigned} unassigned` : 'All assigned'}
                     color={machineColor}

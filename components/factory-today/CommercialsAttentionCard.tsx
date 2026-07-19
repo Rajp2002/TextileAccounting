@@ -35,7 +35,7 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                 <ReceiptText className="h-4 w-4 shrink-0" />
                 <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Commercials</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Party Ledger</p>
                         {hasIssues && (
                             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF3B30] text-[10px] font-bold text-white">
                                 {commercial.blockingIssues.length}
@@ -102,7 +102,7 @@ export function CommercialsAttentionCard({ commercial }: CommercialsAttentionCar
                             : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
                     )}
                 >
-                    Review Commercials
+                    Review Party Ledger
                     <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
             </div>

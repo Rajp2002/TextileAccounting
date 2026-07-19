@@ -4,16 +4,27 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 
 const UPDATE_REFRESH_FLAG = 'weavly_pwa_update_refreshing'
+const UPDATE_TOAST_ID = 'weavly-pwa-update-ready'
 
 export function PwaUpdateNotice() {
     useEffect(() => {
         if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
         let disposed = false
+        const hadControllerAtMount = Boolean(navigator.serviceWorker.controller)
 
-        const showUpdateToast = (registration: ServiceWorkerRegistration) => {
+        const showUpdateToast = (
+            registration: ServiceWorkerRegistration,
+            allowAlreadyActivatedWorker = false
+        ) => {
             if (disposed) return
+            // A first install can emit controllerchange without there being an
+            // update to accept. Only the controllerchange path for a page that
+            // was already controlled may offer a refresh after activation.
+            if (!registration.waiting && !allowAlreadyActivatedWorker) return
+
             toast.info('App update ready', {
+                id: UPDATE_TOAST_ID,
                 description: 'Save any drafts, then refresh to load the latest version.',
                 duration: Infinity,
                 action: {
@@ -70,7 +81,10 @@ export function PwaUpdateNotice() {
                 sessionStorage.removeItem(UPDATE_REFRESH_FLAG)
                 return
             }
-            void navigator.serviceWorker.ready.then(showUpdateToast)
+            if (!hadControllerAtMount) return
+            void navigator.serviceWorker.ready.then((registration) => {
+                showUpdateToast(registration, true)
+            })
         }
 
         navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)

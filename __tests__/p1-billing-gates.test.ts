@@ -15,28 +15,34 @@ describe('P1 Billing Gates Coverage', () => {
         expect(content).toContain('requiredTier="base"')
     })
 
-    it('verifies /owner/market-runs has AccessGate with premium tier', () => {
-        const content = readProjectFile('app/(dashboard)/owner/market-runs/layout.tsx')
+    it.each([
+        ['/owner/today', 'app/(dashboard)/owner/today/layout.tsx'],
+        ['/owner/machines', 'app/(dashboard)/owner/machines/layout.tsx'],
+        ['/owner/payroll', 'app/(dashboard)/owner/payroll/layout.tsx'],
+        ['/owner/analytics', 'app/(dashboard)/owner/analytics/layout.tsx'],
+        ['/owner/market-runs', 'app/(dashboard)/owner/market-runs/layout.tsx'],
+        ['/owner/stock', 'app/(dashboard)/owner/stock/layout.tsx'],
+        ['/owner/dispatches', 'app/(dashboard)/owner/dispatches/layout.tsx'],
+        ['/owner/commercials', 'app/(dashboard)/owner/commercials/layout.tsx'],
+    ])('verifies %s has AccessGate with premium tier', (_route, layoutPath) => {
+        const content = readProjectFile(layoutPath)
         expect(content).toContain('AccessGate')
         expect(content).toContain('requiredTier="premium"')
     })
 
-    it('verifies /owner/stock has AccessGate with premium tier', () => {
-        const content = readProjectFile('app/(dashboard)/owner/stock/layout.tsx')
-        expect(content).toContain('AccessGate')
-        expect(content).toContain('requiredTier="premium"')
-    })
+    it('keeps Factory Today on the shared Base upgrade wall without a route-local redirect', () => {
+        const todayLayout = readProjectFile('app/(dashboard)/owner/today/layout.tsx')
+        const todayPage = readProjectFile('app/(dashboard)/owner/today/page.tsx')
+        const gate = readProjectFile('components/billing/AccessGate.tsx')
 
-    it('verifies /owner/dispatches has AccessGate with premium tier', () => {
-        const content = readProjectFile('app/(dashboard)/owner/dispatches/layout.tsx')
-        expect(content).toContain('AccessGate')
-        expect(content).toContain('requiredTier="premium"')
-    })
-
-    it('verifies /owner/commercials has AccessGate with premium tier', () => {
-        const content = readProjectFile('app/(dashboard)/owner/commercials/layout.tsx')
-        expect(content).toContain('AccessGate')
-        expect(content).toContain('requiredTier="premium"')
+        expect(todayLayout).toContain('routeName="/owner/today"')
+        expect(todayLayout).not.toContain('redirect(')
+        expect(todayLayout).not.toContain('/owner/estimator')
+        expect(todayPage).not.toContain('redirect(')
+        expect(todayPage).not.toContain("router.replace('/owner/estimator")
+        expect(gate).toContain('return <UpgradeWall currentTier={tier} />')
+        expect(gate).toContain('Return to Cost Estimate')
+        expect(gate).not.toContain("redirect('/owner/estimator')")
     })
 
     it('verifies /owner/billing is not accidentally gated by this change', () => {

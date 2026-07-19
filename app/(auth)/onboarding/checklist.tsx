@@ -131,13 +131,13 @@ function MachineForm({ onDone }: { onDone: () => void }) {
         const validGroups = loomGroups.filter(g => g.loomType)
 
         if (validGroups.length === 0) {
-            toast.error('Please configure at least one loom type')
+            toast.error('Please configure at least one machine type')
             return
         }
 
         for (const g of validGroups) {
             if (g.loomType === 'other' && !g.customLabel.trim()) {
-                toast.error('Custom label is required for Other loom type')
+                toast.error('Custom label is required for Other machine type')
                 return
             }
             const count = parseInt(String(g.count), 10)
@@ -197,7 +197,7 @@ function MachineForm({ onDone }: { onDone: () => void }) {
     return (
         <div className="space-y-4 pt-4 border-t border-gray-100">
             <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Specify the quantity of each loom type in your factory</p>
+                <p className="text-sm text-gray-500">Specify the quantity of each machine type in your factory</p>
             </div>
 
             <div className="space-y-3">
@@ -210,7 +210,7 @@ function MachineForm({ onDone }: { onDone: () => void }) {
                                     onChange={e => updateGroup(i, 'loomType', e.target.value)}
                                     className="w-full h-9 text-sm rounded-lg border border-gray-200 bg-white px-3 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                                 >
-                                    <option value="">Select Loom Type</option>
+                                    <option value="">Select Machine Type</option>
                                     <option value="jacquard">Jacquard</option>
                                     <option value="rapier">Rapier</option>
                                     <option value="water_jet">Water Jet</option>
@@ -264,7 +264,7 @@ function MachineForm({ onDone }: { onDone: () => void }) {
                     onClick={addGroup}
                     className="flex items-center gap-1 text-xs text-amber-700 hover:text-amber-800 font-semibold mt-1 px-1 py-0.5 rounded hover:bg-amber-50 transition-colors"
                 >
-                    <Plus className="h-3.5 w-3.5" /> Add another loom type
+                    <Plus className="h-3.5 w-3.5" /> Add another machine type
                 </button>
             </div>
 
@@ -716,7 +716,7 @@ const STEPS = [
         key: 'hasMachine' as keyof OnboardingStatus,
         icon: Cpu,
         title: 'Add your machines',
-        description: 'Machines are the primary production units. Add all looms/machines in your factory.',
+        description: 'Machines are the primary production units. Add all production machines in your factory.',
         accentColor: 'amber',
         form: MachineForm,
     },
@@ -763,13 +763,13 @@ const TOUR_STEPS = [
         icon: ClipboardList,
         label: 'First run',
         title: 'Start an order or market run.',
-        body: 'This becomes the live work item that gets linked to looms, workers, and daily meters.',
+        body: 'This becomes the live work item that gets linked to machines, workers, and daily meters.',
     },
     {
         icon: Link2,
-        label: 'Loom link',
-        title: 'Connect the run to the loom floor.',
-        body: 'Assignments answer who is running the loom and what fabric the loom is producing.',
+        label: 'Machine link',
+        title: 'Connect the run to the machine floor.',
+        body: 'Assignments answer who is running the machine and what fabric the machine is producing.',
     },
     {
         icon: Activity,
@@ -780,7 +780,7 @@ const TOUR_STEPS = [
     {
         icon: IndianRupee,
         label: 'Dispatch',
-        title: 'Finish with dispatch and commercials.',
+        title: 'Finish with dispatch and Party Ledger.',
         body: 'Once fabric leaves the factory, Weavly helps track receipt, receivables, and profit.',
     },
 ]
