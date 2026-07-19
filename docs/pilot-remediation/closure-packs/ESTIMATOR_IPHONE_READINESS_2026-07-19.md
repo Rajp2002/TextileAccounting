@@ -48,7 +48,19 @@ payment was made and no non-QA factory was used.
 
 ## Release state
 
-`fixed_pending_runtime_proof`: physical-device QA and the integrated release
-gate pass. Promotion to `pass` requires the exact merged commit to become the
-READY production deployment, a disposable Base-account production save/reopen
-smoke, and zero-residue cleanup.
+`pass`: PR `#24` merged as commit
+`60005bc1db5d07a8655d3dc2e61d8a9080b47c27`. Vercel production deployment
+`dpl_92ja3kPm6xb2idwWa84NzaC3Feya` reached `READY` and serves the canonical
+alias `https://textile-accounting.vercel.app`.
+
+The disposable Base-account production smoke (`ESTPROD-1784461234425-CB8F64`)
+proved sign-in, Estimator calculation, Save, Saved Cost Estimates persistence,
+Load Specs reopen, and Update Cost Estimate readiness. The live values included
+`40 Ne` to `132.875 D`, approximately `952 m` beam capacity, `2` beams for a
+`1,000 m` order, and one persisted costing. Production error logs for the
+deployment contained zero errors during the smoke window; `/`, `/login`,
+`/manifest.webmanifest`, and `/sw.js` returned HTTP 200.
+
+Cleanup deleted the disposable organization, profile, Base subscription,
+costing, and Auth user. The post-cleanup reconciliation returned zero for all
+five record classes. No payment was made and no non-QA tenant was changed.

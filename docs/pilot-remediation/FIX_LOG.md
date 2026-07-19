@@ -2580,9 +2580,9 @@ Date: 2026-07-17 IST.
 - Formal matrix status/count change: none. Counts remain **368 pass, 0 fail,
   6 blocked and 3 not applicable**.
 
-## Estimator physical-iPhone remediation candidate
+## Estimator physical-iPhone remediation release
 
-Date: 2026-07-19 IST. Status: `fixed_pending_runtime_proof`.
+Date: 2026-07-19 IST. Status: `pass`.
 
 - Physical iPhone Safari passed the 24-row Estimator matrix after three scoped
   fixes: browser-safe UUID request IDs, a mobile-only 16 px text-control rule,
@@ -2596,6 +2596,15 @@ Date: 2026-07-19 IST. Status: `fixed_pending_runtime_proof`.
   build with 43 generated routes/pages.
 - Both disposable QA tenants were removed; organization, profile,
   subscription and Auth user reconciliation returned zero.
-- Formal wider-pilot matrix status/count change: none. Exact merged production
-  deployment, disposable Base smoke and cleanup remain the release proof gap.
+- PR `#24` merged as `60005bc1db5d07a8655d3dc2e61d8a9080b47c27`.
+  Vercel deployment `dpl_92ja3kPm6xb2idwWa84NzaC3Feya` is `READY` on the
+  canonical production alias.
+- Disposable Base production run `ESTPROD-1784461234425-CB8F64` passed sign-in,
+  calculation, Save, persistence, Load Specs reopen, and Update Cost Estimate
+  readiness. The database contained exactly one costing before cleanup.
+- Cleanup reconciled the disposable organization, profile, subscription,
+  costing and Auth user to zero. Production deployment error logs contained
+  zero errors in the smoke window, and four public routes returned HTTP 200.
+- Formal wider-pilot matrix status/count change: none; this promotes only the
+  scoped Estimator release proof from candidate to production pass.
 - Detailed evidence: `closure-packs/ESTIMATOR_IPHONE_READINESS_2026-07-19.md`.
