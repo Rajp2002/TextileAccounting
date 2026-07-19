@@ -2104,7 +2104,7 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 
 ## Active Estimator physical-iPhone release — 2026-07-19
 
-- State: `fixed_pending_runtime_proof`.
+- State: `pass`; release closed on production.
 - Branch: `codex/estimator-readiness-production`, based on current
   `origin/main` rather than the stale broad remediation branch.
 - Physical-device result: Estimator continued-step matrix is 24 pass, 0 fail,
@@ -2114,9 +2114,16 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
   TypeScript, ESLint and the production build passed.
 - Data safety: the automated and physical-iPhone QA tenants were deleted and
   their account/tenant records reconciled to zero.
-- Next action: commit and push the focused delta, merge the clean PR, wait for
-  the exact READY Vercel production deployment, run a disposable Base-account
-  save/reopen smoke, delete it, and record deployment plus cleanup evidence.
+- Source: PR `#24`, focused commit `487c6a2`, merge commit
+  `60005bc1db5d07a8655d3dc2e61d8a9080b47c27`.
+- Production: Vercel deployment `dpl_92ja3kPm6xb2idwWa84NzaC3Feya` is `READY`
+  on `https://textile-accounting.vercel.app`; deployment error-log query
+  returned zero rows and four public routes returned HTTP 200.
+- Runtime after evidence: disposable Base run
+  `ESTPROD-1784461234425-CB8F64` saved one live costing, listed it, reopened it
+  through Load Specs with the same values, and exposed Update Cost Estimate.
+- Cleanup after evidence: organization, profile, subscription, costing and Auth
+  user counts all reconciled to zero.
 - Formal wider-pilot matrix/readiness: unchanged.
 
 ### Release closed on production
