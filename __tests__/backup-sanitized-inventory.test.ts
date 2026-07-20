@@ -15,6 +15,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 const captureScript = join(process.cwd(), 'scripts/backup/capture-sanitized-inventory.sh')
 const temporaryDirectories: string[] = []
 
+// Skip the entire suite when jq is not available (e.g. Vercel build containers).
+const jqAvailable = spawnSync('jq', ['--version'], { encoding: 'utf8' }).status === 0
+
 type StorageCounts = {
   bucket_count: number
   object_count: number
@@ -85,7 +88,7 @@ afterEach(() => {
   }
 })
 
-describe('sanitized backup inventory capture', () => {
+describe.skipIf(!jqAvailable)('sanitized backup inventory capture', () => {
   it('generates one compact JSON object at the SQL source and shares capture logic', () => {
     const sql = readFileSync('scripts/backup/sql/sanitized_inventory.sql', 'utf8')
     const backup = readFileSync('scripts/backup/create-supabase-logical-backup.sh', 'utf8')

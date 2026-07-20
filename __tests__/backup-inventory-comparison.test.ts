@@ -7,6 +7,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 const comparisonScript = join(process.cwd(), 'scripts/backup/compare-sanitized-inventories.sh')
 const temporaryDirectories: string[] = []
 
+// Skip the entire suite when jq is not available (e.g. Vercel build containers).
+const jqAvailable = spawnSync('jq', ['--version'], { encoding: 'utf8' }).status === 0
+
 function inventory(overrides: Record<string, unknown> = {}) {
   return {
     format_version: 1,
@@ -66,7 +69,7 @@ afterEach(() => {
   }
 })
 
-describe('sanitized backup inventory comparison', () => {
+describe.skipIf(!jqAvailable)('sanitized backup inventory comparison', () => {
   it('passes only when normalized inventories are exactly equal', () => {
     const expected = inventory()
     const { result, comparison } = compare(expected, expected)
