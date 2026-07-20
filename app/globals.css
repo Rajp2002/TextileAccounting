@@ -393,36 +393,39 @@
 
   /* ── Lava-lamp blob drift animations ───────────────────────────────── */
   @keyframes blob-drift-1 {
-    0%   { transform: translate(0, 0)      scale(1)    rotate(30deg);  }
-    25%  { transform: translate(40px, -30px) scale(1.05) rotate(35deg); }
-    50%  { transform: translate(-20px, 20px) scale(0.97) rotate(25deg); }
-    75%  { transform: translate(30px, 10px)  scale(1.03) rotate(32deg); }
-    100% { transform: translate(0, 0)       scale(1)    rotate(30deg);  }
+    0%   { transform: translate(0, 0)         scale(1)    rotate(0deg);   }
+    20%  { transform: translate(150px, -80px)  scale(1.12) rotate(8deg);  }
+    40%  { transform: translate(-100px, 60px)  scale(0.9)  rotate(-5deg); }
+    60%  { transform: translate(200px, 40px)   scale(1.08) rotate(12deg); }
+    80%  { transform: translate(-60px, -100px) scale(0.95) rotate(-3deg); }
+    100% { transform: translate(0, 0)          scale(1)    rotate(0deg);  }
   }
   @keyframes blob-drift-2 {
-    0%   { transform: translate(0, 0)       scale(1)    rotate(-20deg); }
-    30%  { transform: translate(-35px, 25px) scale(1.04) rotate(-15deg);}
-    60%  { transform: translate(25px, -20px) scale(0.96) rotate(-25deg);}
-    100% { transform: translate(0, 0)       scale(1)    rotate(-20deg); }
+    0%   { transform: translate(0, 0)          scale(1)    rotate(0deg);   }
+    25%  { transform: translate(-180px, 100px) scale(1.1)  rotate(-10deg); }
+    50%  { transform: translate(120px, -70px)  scale(0.88) rotate(6deg);   }
+    75%  { transform: translate(-80px, -120px) scale(1.06) rotate(-8deg);  }
+    100% { transform: translate(0, 0)          scale(1)    rotate(0deg);   }
   }
   @keyframes blob-drift-3 {
-    0%   { transform: translate(0, 0)       scale(1)    rotate(15deg);  }
-    20%  { transform: translate(30px, 25px)  scale(1.06) rotate(20deg); }
-    50%  { transform: translate(-25px, -15px)scale(0.95) rotate(10deg); }
-    80%  { transform: translate(15px, -25px) scale(1.02) rotate(18deg); }
-    100% { transform: translate(0, 0)       scale(1)    rotate(15deg);  }
+    0%   { transform: translate(0, 0)          scale(1)    rotate(0deg);    }
+    15%  { transform: translate(100px, 120px)  scale(1.15) rotate(10deg);  }
+    45%  { transform: translate(-200px, -50px) scale(0.85) rotate(-12deg); }
+    70%  { transform: translate(160px, -90px)  scale(1.05) rotate(7deg);   }
+    100% { transform: translate(0, 0)          scale(1)    rotate(0deg);   }
   }
   @keyframes blob-drift-4 {
-    0%   { transform: translate(0, 0)       scale(1)    rotate(45deg);  }
-    35%  { transform: translate(-30px, -20px)scale(1.05) rotate(50deg); }
-    65%  { transform: translate(20px, 30px)  scale(0.97) rotate(40deg); }
-    100% { transform: translate(0, 0)       scale(1)    rotate(45deg);  }
+    0%   { transform: translate(0, 0)          scale(1)    rotate(0deg);   }
+    30%  { transform: translate(-150px, -100px)scale(1.1)  rotate(-6deg);  }
+    55%  { transform: translate(180px, 80px)   scale(0.9)  rotate(14deg);  }
+    80%  { transform: translate(-100px, 130px) scale(1.08) rotate(-10deg); }
+    100% { transform: translate(0, 0)          scale(1)    rotate(0deg);   }
   }
 
-  .animate-blob-drift-1 { animation: blob-drift-1 20s ease-in-out infinite; }
-  .animate-blob-drift-2 { animation: blob-drift-2 25s ease-in-out infinite; }
-  .animate-blob-drift-3 { animation: blob-drift-3 22s ease-in-out infinite; }
-  .animate-blob-drift-4 { animation: blob-drift-4 28s ease-in-out infinite; }
+  .animate-blob-drift-1 { animation: blob-drift-1 14s ease-in-out infinite; }
+  .animate-blob-drift-2 { animation: blob-drift-2 18s ease-in-out infinite; }
+  .animate-blob-drift-3 { animation: blob-drift-3 16s ease-in-out infinite; }
+  .animate-blob-drift-4 { animation: blob-drift-4 12s ease-in-out infinite; }
 
   /* Respect reduced-motion preference */
   @media (prefers-reduced-motion: reduce) {
