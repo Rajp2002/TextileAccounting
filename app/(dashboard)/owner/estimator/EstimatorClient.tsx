@@ -906,7 +906,7 @@ function CalculationModeField({
     onChange: (value: YarnCalculationMode) => void
 }) {
     return (
-        <div className="space-y-1.5 min-w-0">
+        <div className="space-y-1.5 min-w-[140px]">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 Mode
             </Label>
