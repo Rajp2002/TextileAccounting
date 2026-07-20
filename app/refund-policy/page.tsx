@@ -70,20 +70,24 @@ export default function RefundPolicyPage() {
             </PolicySection>
 
             <PolicySection id="refunds" title="3. Refund Policy">
-                <h3>3.1 Setup &amp; Implementation Fee (₹49,999 + GST)</h3>
+                <h3>3.1 First-Year Plan Subscriptions</h3>
+                <p>
+                    First-year payments include platform access and setup assistance (₹7,000 + GST for Weavly Cost Estimate; ₹25,000 + GST for Weavly Full Suite).
+                </p>
                 <ul>
-                    <li><strong>Before onboarding work starts</strong> — The setup and implementation fee is fully refundable.</li>
-                    <li><strong>After account configuration starts, but before substantive delivery</strong> — A partial refund may be issued after deducting the reasonable value of work already completed and any non-recoverable third-party costs disclosed to you.</li>
-                    <li><strong>After training, data setup, workflow configuration, or production handover is delivered</strong> — The fee is non-refundable because the implementation service has been substantially delivered.</li>
-                    <li>If Weavly cannot complete the agreed implementation, we will refund the undelivered portion after accounting for work you have accepted.</li>
+                    <li><strong>Before setup or onboarding work starts</strong> — The fee is fully refundable if requested within 7 days of payment and before workspace activation.</li>
+                    <li><strong>After setup or configuration starts, but before substantive delivery</strong> — A partial refund may be issued after deducting the reasonable value of configuration work completed and any non-recoverable third-party costs.</li>
+                    <li><strong>After training, data setup, workflow configuration, or active use begins</strong> — The fee is non-refundable because the setup and onboarding services have been substantially delivered.</li>
                 </ul>
 
-                <h3>3.2 Annual Maintenance (₹19,999/year + GST)</h3>
+                <h3>3.2 Annual Renewals</h3>
+                <p>
+                    Subsequent annual renewal fees are ₹2,000/year + GST for Weavly Cost Estimate and ₹7,000/year + GST for Weavly Full Suite.
+                </p>
                 <ul>
-                    <li><strong>First annual payment</strong> — Fully refundable when requested within 7 days of payment if onboarding has not started and the production workspace has not been activated.</li>
-                    <li><strong>After onboarding or active use starts</strong> — No pro-rata refund applies to the remaining annual period, except for a verified billing error, a service Weavly cannot provide, or where a refund is required by law.</li>
-                    <li><strong>Renewal payments</strong> — Refundable if charged after a cancellation confirmed before the renewal date or if charged in error.</li>
-                    <li><strong>Service outage</strong> — For a material outage attributable to Weavly, we may provide a proportionate service credit or other remedy under the applicable order form.</li>
+                    <li><strong>Cancellation before renewal</strong> — You may cancel renewal at any time. If cancelled before the renewal date, no charges will be made.</li>
+                    <li><strong>Renewal payments</strong> — Renewal charges are refundable only if charged after a confirmed cancellation or in case of a billing error. Once the new annual period starts, no pro-rata refunds are provided.</li>
+                    <li><strong>Service outage</strong> — For any material outage attributable to Weavly, we may provide a proportionate service credit or other remedy under the applicable order terms.</li>
                 </ul>
 
                 <h3>3.3 How Refunds Are Processed</h3>
