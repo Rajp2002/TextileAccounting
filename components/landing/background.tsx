@@ -18,7 +18,7 @@ export default function LandingBackground() {
                 <rect width="100%" height="100%" strokeWidth={0} fill="url(#grid-pattern-global)" />
             </svg>
 
-            {/* Blob 1: Top (Original Hero Blob) */}
+            {/* Blob 1: Hero Section (Left-aligned) */}
             <div className="animate-blob-drift-1 absolute inset-x-0 -top-40 transform-gpu blur-3xl will-change-transform sm:-top-80" aria-hidden="true">
                 <div
                     className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-65 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] dark:opacity-75"
@@ -26,24 +26,56 @@ export default function LandingBackground() {
                 />
             </div>
 
-            {/* Blob 2: Features Section (around 25% down) */}
-            <div className="animate-blob-drift-2 absolute inset-x-0 top-[25%] transform-gpu blur-3xl will-change-transform" aria-hidden="true">
+            {/* Blob 2: Hero/Features transition (Right-aligned) */}
+            <div className="animate-blob-drift-2 absolute inset-x-0 top-[12%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-3s' }}>
                 <div
                     className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f59e0b] to-[#c2410c] opacity-65 sm:left-[calc(50%+20rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
 
-            {/* Blob 3: Pricing Section (around 55% down) */}
-            <div className="animate-blob-drift-3 absolute inset-x-0 top-[55%] transform-gpu blur-3xl will-change-transform" aria-hidden="true">
+            {/* Blob 3: Features upper part (Left-aligned) */}
+            <div className="animate-blob-drift-3 absolute inset-x-0 top-[25%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-6s' }}>
                 <div
                     className="relative left-[calc(50%-15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f59e0b] opacity-65 sm:left-[calc(50%-25rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
 
-            {/* Blob 4: FAQ / Pre-footer Section (Bottom) */}
-            <div className="animate-blob-drift-4 absolute inset-x-0 bottom-[5%] transform-gpu blur-3xl will-change-transform" aria-hidden="true">
+            {/* Blob 4: Features lower part (Right-aligned) */}
+            <div className="animate-blob-drift-4 absolute inset-x-0 top-[38%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-9s' }}>
+                <div
+                    className="relative left-[calc(50%+15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f59e0b] to-[#ea580c] opacity-65 sm:left-[calc(50%+25rem)] sm:w-[72.1875rem] dark:opacity-75"
+                    style={{ clipPath: blobPolygon }}
+                />
+            </div>
+
+            {/* Blob 5: Pricing upper part (Left-aligned) */}
+            <div className="animate-blob-drift-1 absolute inset-x-0 top-[50%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-12s' }}>
+                <div
+                    className="relative left-[calc(50%-20rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-65 sm:left-[calc(50%-35rem)] sm:w-[72.1875rem] dark:opacity-75"
+                    style={{ clipPath: blobPolygon }}
+                />
+            </div>
+
+            {/* Blob 6: Pricing lower part (Right-aligned) */}
+            <div className="animate-blob-drift-2 absolute inset-x-0 top-[63%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-15s' }}>
+                <div
+                    className="relative left-[calc(50%+10rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f59e0b] to-[#c2410c] opacity-65 sm:left-[calc(50%+20rem)] sm:w-[72.1875rem] dark:opacity-75"
+                    style={{ clipPath: blobPolygon }}
+                />
+            </div>
+
+            {/* Blob 7: FAQ area (Left-aligned) */}
+            <div className="animate-blob-drift-3 absolute inset-x-0 top-[75%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-18s' }}>
+                <div
+                    className="relative left-[calc(50%-10rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f59e0b] opacity-65 sm:left-[calc(50%-28rem)] sm:w-[72.1875rem] dark:opacity-75"
+                    style={{ clipPath: blobPolygon }}
+                />
+            </div>
+
+            {/* Blob 8: Pre-footer/CTA/Footer area (Right-aligned) */}
+            <div className="animate-blob-drift-4 absolute inset-x-0 bottom-[5%] transform-gpu blur-3xl will-change-transform" aria-hidden="true" style={{ animationDelay: '-21s' }}>
                 <div
                     className="relative left-[calc(50%+5rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f59e0b] to-[#ea580c] opacity-65 sm:left-[calc(50%+30rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
@@ -52,4 +84,3 @@ export default function LandingBackground() {
         </div>
     )
 }
-
