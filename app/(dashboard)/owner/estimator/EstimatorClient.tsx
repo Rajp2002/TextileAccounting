@@ -2941,7 +2941,56 @@ export default function EstimatorClient({
                                         className="accent-[var(--color-yarn-orange)] h-3.5 w-3.5"
                                     />
                                     <span className="text-xs font-semibold text-[var(--color-body)] group-hover:text-[var(--color-ink)]">Outsourced</span>
-                                                <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct overhead override</p>
+                                </label>
+                            </div>
+                            {state.sizingMode === 'outsourced' && (
+                                <div className="space-y-1.5 pt-1">
+                                    <NumField
+                                        label="Sizing Rate (₹/kg)"
+                                        value={state.sizingRatePerKg}
+                                        onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
+                                        step={0.5}
+                                        hint="Typical Surat outsourced sizing: ₹8–15/kg"
+                                    />
+                                </div>
+                            )}
+                            {state.sizingMode === 'in_house' && (
+                                <p className="text-[11px] text-[var(--color-muted)] font-medium italic">
+                                    Sizing cost is ₹0 — treated as part of factory overhead above.
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="text-[10px] font-medium text-slate-400 italic">
+                            {t('estimator.warping_sizing.applied_on')} {totals.totalWarpKgPer100m.toFixed(2)} {t('estimator.warping_sizing.warp_consumption')}
+                        </div>
+                    </CardContent>
+                </EstimatorCard>
+
+                {/* 5b. Factory Overhead — Itemized Breakdown */}
+                <EstimatorCard accent="overhead">
+                    <SectionHeader
+                        title={t('estimator.overhead.title')}
+                        icon={Calculator}
+                        accent="overhead"
+                        step={6}
+                        badgeContent={
+                            <div className="flex items-center gap-2">
+                                <SectionCostPill value={totals.overheadPerM} />
+                            </div>
+                        }
+                    />
+                    <CardContent className="p-5 sm:p-6 space-y-6">
+                        {/* Direct Overhead Input / Override (Improved UI) */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)] leading-none">Direct Overhead Rate</h4>
+                            </div>
+
+                            <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3.5">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct overhead override</p>
                                                 <p className="text-[11px] text-[var(--color-muted)]">Force a specific overhead rate from historical data</p>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -2984,53 +3033,6 @@ export default function EstimatorClient({
                                     </div>
                                 </div>
 
-                                {/* Advanced Settings Collapsible Toggle */}
-                                <div className="border-t border-[var(--color-hairline)] pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAdvancedOverhead(!showAdvancedOverhead)}
-                                        className="flex items-center justify-between w-full rounded-lg bg-[var(--color-surface-soft)] px-3 py-2 text-xs font-bold text-[var(--color-body)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] transition-all"
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            <Calculator className="h-3.5 w-3.5 text-[var(--color-yarn-orange)]" />
-                                            <span>Advanced Capacity & Fixed Cost Breakdown</span>
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                            {!showAdvancedOverhead && totals.overheadTotalMonthly > 0 && (
-                                                <span className="text-[10px] font-mono text-[var(--color-muted)] font-normal mr-2">
-                                                    Total: ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo
-                                                </span>
-                                            )}
-                                            {showAdvancedOverhead ? (
-                                                <ChevronUp className="h-4 w-4 text-slate-400" />
-                                            ) : (
-                                                <ChevronDown className="h-4 w-4 text-slate-400" />
-                                            )}
-                                        </div>
-                                    </button>
-                                </div>
-
-                                {/* Advanced Capacity & Fixed Cost Section (Collapsible) */}
-                                {showAdvancedOverhead && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="space-y-6 pt-2"
-                                    >
-                                        {/* A. Factory Capacity Section */}
-                                        <div className="space-y-3">
-
-                                                {state.overheadOverridePerM != null && state.overheadOverridePerM < totals.overheadPerM && (
-                                                    <div className="flex items-center gap-2 pt-2 mt-2 border-t border-dashed border-[var(--color-hairline)]">
-                                                        <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
-                                                        <p className="text-[10px] font-bold text-amber-700 leading-tight">
-                                                            Safety Alert: Override (₹{state.overheadOverridePerM}) is LOWER than actual computed cost (₹{totals.overheadPerM.toFixed(2)}).
-                                                            This order will NOT recover ₹{(totals.overheadPerM - state.overheadOverridePerM).toFixed(2)} in overhead per metre.
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
 
                                         {/* Advanced Settings Collapsible Toggle */}
                                         <div className="border-t border-[var(--color-hairline)] pt-4">
