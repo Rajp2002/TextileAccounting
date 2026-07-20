@@ -146,25 +146,25 @@ export default function LandingFeatures() {
 
             <section className="landing-section relative z-10 py-20 sm:py-28 lg:py-12" id="features">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="overflow-hidden border border-zinc-900 bg-zinc-950 text-white shadow-[0_28px_90px_rgba(24,24,27,0.18)]">
-                        <div className="grid gap-10 border-b border-white/10 p-6 sm:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:p-12">
+                    <div className="overflow-hidden border border-orange-200 bg-orange-50/60 shadow-[0_28px_90px_rgba(154,52,18,0.08)]">
+                        <div className="grid gap-10 border-b border-orange-200/70 p-6 sm:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:p-12">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-300">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
-                                <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">
+                                <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
+                                <h2 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl">
                                     Every term in the product is a term from your factory floor.
                                 </h2>
                             </div>
-                            <p className="text-lg leading-8 text-zinc-300 lg:pt-12">
+                            <p className="text-lg leading-8 text-zinc-600 lg:pt-12">
                                 The product vocabulary, mobile workflows, and WhatsApp touchpoints are designed around the operating reality of Indian weaving units.
                             </p>
                         </div>
 
-                        <div className="grid divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+                        <div className="grid divide-y divide-orange-200/60 md:grid-cols-3 md:divide-x md:divide-y-0">
                             {trustItems.map((item) => (
                                 <div key={item.title} className="p-6 sm:p-8">
-                                    <item.icon className="h-7 w-7 text-orange-300" aria-hidden="true" />
-                                    <h3 className="mt-6 text-xl font-black text-white">{item.title}</h3>
-                                    <p className="mt-4 text-sm leading-6 text-zinc-300">{item.copy}</p>
+                                    <item.icon className="h-7 w-7 text-orange-600" aria-hidden="true" />
+                                    <h3 className="mt-6 text-xl font-black text-zinc-950">{item.title}</h3>
+                                    <p className="mt-4 text-sm leading-6 text-zinc-600">{item.copy}</p>
                                 </div>
                             ))}
                         </div>

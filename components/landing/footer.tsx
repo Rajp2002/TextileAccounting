@@ -41,7 +41,7 @@ export default function LandingFooter() {
 
     return (
         <div className="snap-end shrink-0 w-full relative z-10">
-            <footer className="bg-zinc-950 pt-16 pb-8 px-6 border-t border-white/10 text-white w-full">
+            <footer className="bg-zinc-900 pt-16 pb-8 px-6 border-t border-orange-900/30 text-white w-full">
                 <div className="mx-auto max-w-7xl">
                     {/* Top part: grid on desktop, flex-col on mobile */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-16">

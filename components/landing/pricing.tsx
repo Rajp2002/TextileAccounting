@@ -77,43 +77,43 @@ export default function LandingPricing() {
                         return (
                             <div
                                 key={plan.tier}
-                                className={`flex flex-col border p-6 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur sm:p-8 ${isPremium ? 'border-zinc-950 bg-zinc-950 text-white shadow-[0_30px_90px_rgba(24,24,27,0.2)]' : 'border-zinc-200 bg-white/92 dark:border-white/10 dark:bg-zinc-950/75'}`}
+                                className={`flex flex-col border p-6 backdrop-blur sm:p-8 ${isPremium ? 'border-orange-300 bg-orange-50/80 shadow-[0_30px_90px_rgba(154,52,18,0.14)]' : 'border-zinc-200 bg-white/92 shadow-[0_24px_70px_rgba(154,52,18,0.08)] dark:border-white/10 dark:bg-zinc-950/75'}`}
                             >
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <h3 className={`text-2xl font-black ${isPremium ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{plan.name}</h3>
-                                    <span className={`border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${isPremium ? 'border-orange-300/30 bg-orange-400/10 text-orange-200' : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300'}`}>
+                                    <h3 className="text-2xl font-black text-zinc-950">{plan.name}</h3>
+                                    <span className={`border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${isPremium ? 'border-orange-400 bg-orange-100 text-orange-700' : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300'}`}>
                                         {plan.badge}
                                     </span>
                                 </div>
-                                <p className={`mt-4 max-w-xl text-sm leading-6 ${isPremium ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>{plan.description}</p>
+                                <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">{plan.description}</p>
 
                                 <div className="mt-7 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
-                                    <div className={`border p-5 ${isPremium ? 'border-white/10 bg-white/5' : 'border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5'}`}>
-                                        <p className={`text-xs font-black uppercase tracking-[0.18em] ${isPremium ? 'text-orange-300' : 'text-orange-700 dark:text-orange-400'}`}>First year</p>
+                                    <div className={`border p-5 ${isPremium ? 'border-orange-200 bg-white/70' : 'border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5'}`}>
+                                        <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">First year</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
-                                            <span className={`text-5xl font-black tracking-tight ${isPremium ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{firstYearBase}</span>
-                                            <span className={`text-sm font-semibold ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>+ GST</span>
+                                            <span className="text-5xl font-black tracking-tight text-zinc-950">{firstYearBase}</span>
+                                            <span className="text-sm font-semibold text-zinc-500">+ GST</span>
                                         </p>
-                                        <p className={`mt-2 text-xs ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
+                                        <p className="mt-2 text-xs text-zinc-500">{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
                                     </div>
-                                    <div className={`border p-5 ${isPremium ? 'border-orange-300/25 bg-orange-400/10' : 'border-orange-200 bg-orange-50/70 dark:border-orange-500/20 dark:bg-orange-500/10'}`}>
-                                        <p className={`text-xs font-black uppercase tracking-[0.18em] ${isPremium ? 'text-orange-300' : 'text-orange-700 dark:text-orange-400'}`}>Renewal from year 2</p>
+                                    <div className={`border p-5 ${isPremium ? 'border-orange-300 bg-orange-100/60' : 'border-orange-200 bg-orange-50/70 dark:border-orange-500/20 dark:bg-orange-500/10'}`}>
+                                        <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">Renewal from year 2</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-1">
-                                            <span className={`text-3xl font-black tracking-tight ${isPremium ? 'text-white' : 'text-zinc-950 dark:text-white'}`}>{renewalBase}</span>
-                                            <span className={`text-sm font-semibold ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>/year + GST</span>
+                                            <span className="text-3xl font-black tracking-tight text-zinc-950">{renewalBase}</span>
+                                            <span className="text-sm font-semibold text-zinc-500">/year + GST</span>
                                         </p>
-                                        <p className={`mt-2 text-xs ${isPremium ? 'text-zinc-400' : 'text-zinc-500'}`}>{renewalGst} GST · {renewalTotal} total</p>
+                                        <p className="mt-2 text-xs text-zinc-500">{renewalGst} GST · {renewalTotal} total</p>
                                     </div>
                                 </div>
 
-                                <Button asChild className={`mt-6 w-full rounded-md py-6 font-bold ${isPremium ? 'bg-white text-zinc-950 hover:bg-orange-50' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
+                                <Button asChild className={`mt-6 w-full rounded-md py-6 font-bold ${isPremium ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md shadow-orange-500/20' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
                                     <a href="/signup">Start 7-day trial</a>
                                 </Button>
 
-                                <div className={`mt-7 grid gap-3 text-sm leading-6 sm:grid-cols-2 ${isPremium ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-300'}`}>
+                                <div className="mt-7 grid gap-3 text-sm leading-6 text-zinc-600 sm:grid-cols-2">
                                     {plan.features.map((feature) => (
                                         <div key={feature} className="flex gap-3">
-                                            <Check className={`mt-0.5 h-5 w-5 flex-none ${isPremium ? 'text-orange-300' : 'text-orange-600'}`} aria-hidden="true" />
+                                            <Check className="mt-0.5 h-5 w-5 flex-none text-orange-600" aria-hidden="true" />
                                             <span>{feature}</span>
                                         </div>
                                     ))}
