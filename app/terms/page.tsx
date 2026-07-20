@@ -33,14 +33,14 @@ const plans = [
         details: '7 days, all features, no credit card required',
     },
     {
-        name: 'Factory digitisation & implementation',
-        price: '₹49,999 one-time + GST',
-        details: 'Factory configuration, data setup, workflow mapping, and team training',
+        name: 'Weavly Cost Estimate (Base Plan)',
+        price: '₹7,000 + GST first year, then ₹2,000/year + GST renewal',
+        details: 'Warp and Weft yarn cost estimates, fabric templates, quotation history, margin and landed-cost visibility',
     },
     {
-        name: 'Annual maintenance',
-        price: '₹19,999/year + GST',
-        details: 'Continued platform access, maintenance, updates, and standard support',
+        name: 'Weavly Full Suite (Premium Plan)',
+        price: '₹25,000 + GST first year, then ₹7,000/year + GST renewal',
+        details: 'Complete factory operations including quotes, production tracking, shift logs, godown stock, dispatches, worker payroll, and owner analytics',
     },
 ]
 
@@ -126,17 +126,17 @@ export default function TermsOfServicePage() {
                     Listed prices are exclusive of Goods and Services Tax (GST). GST will be added at the rate applicable on the invoice date. Final tax treatment, invoice description, and place of supply may vary as required by law.
                 </p>
 
-                <h3>3.2 Implementation and Billing</h3>
+                <h3>3.2 Subscription and Billing</h3>
                 <ul>
-                    <li>The setup and implementation fee is billed separately from annual maintenance and covers agreed onboarding work, including configuration, data setup, workflow mapping, and training.</li>
-                    <li>Implementation begins only after the scope, delivery plan, and payment terms are confirmed with you.</li>
-                    <li>Annual maintenance is billed in advance for each 12-month service period. Unless otherwise stated in your order form, the first annual period begins when the production workspace is activated.</li>
-                    <li>The free trial does not automatically convert to a paid service. You must explicitly accept the commercial proposal and complete payment.</li>
+                    <li>First-year subscription fees are billed upfront and cover platform access, initial setup assistance, training, and standard workflow configuration.</li>
+                    <li>Subscription activation and setup begin only after the selected plan and payment terms are confirmed.</li>
+                    <li>Subsequent annual renewals are billed in advance for each 12-month service period. Unless otherwise stated, the renewal cycle is based on the initial payment and activation date.</li>
+                    <li>The free trial does not automatically convert to a paid service. You must explicitly select a plan and complete payment to continue.</li>
                     <li>Renewal may be cancelled before the next annual billing cycle. Cancellation stops the next renewal; it does not shorten an already paid service period.</li>
                     <li>All payments are processed through RBI-authorized payment aggregators.</li>
                 </ul>
                 <p>
-                    Refund eligibility depends on the implementation stage and active use of the platform. See our <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link> for the applicable rules.
+                    Refund eligibility depends on the onboarding status and active use of the platform. See our <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link> for the applicable rules.
                 </p>
             </PolicySection>
 

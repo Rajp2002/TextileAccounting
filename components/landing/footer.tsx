@@ -10,9 +10,9 @@ const footerSections = [
     {
         title: 'Product',
         links: [
+            { name: 'Real Product View', href: '/#product' },
             { name: 'Workflow', href: '/#workflow' },
             { name: 'Pricing', href: '/#pricing' },
-            { name: 'Production Tracking', href: '/#workflow' },
             { name: 'Worker Hisaab', href: '/#features' },
         ]
     },

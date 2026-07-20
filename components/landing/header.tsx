@@ -10,6 +10,7 @@ export default function LandingHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     const navLinks = [
+        { name: 'Product', href: '#product' },
         { name: 'Workflow', href: '#workflow' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },

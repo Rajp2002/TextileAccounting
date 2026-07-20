@@ -4,7 +4,7 @@ const painPoints = [
     'Shift production arrives late from notebooks or WhatsApp.',
     'Worker Hisaab depends on production totals that workers can dispute.',
     'Orders fall behind pace before the owner notices.',
-    'Delivery Challans, shortages, and Party follow-ups live in separate places.',
+    'Godown Stock, Delivery Challans, shortages, and Party collections live in separate places.',
     'Yarn price changes make quotation margins hard to trust.',
 ]
 
@@ -13,26 +13,26 @@ const replaces = ['Production register', 'Hajiri book', 'Excel costing sheet', '
 const workflow = [
     {
         title: 'Create a Cost Estimate',
-        description: 'Enter yarn specs, crimp, conversion, overhead, GST, shortage, and margin before the order reaches the machine.',
-        outcome: 'Know the internal cost and quotation price per metre before saying yes.',
+        description: 'Enter warp and weft details, factory costs, GST, shortage, and margin. Save the costing as a reusable quality or lock it into a Quotation.',
+        outcome: 'Know landed cost, selling price, and expected margin before saying yes.',
         icon: Calculator,
     },
     {
-        title: 'Assign machines and workers',
-        description: 'Turn accepted quotations or market runs into live factory work with machine, worker, shift, and order visibility.',
-        outcome: 'See idle machines, missing assignments, and active orders without asking the floor.',
+        title: 'Start an Order or Market Run',
+        description: 'Convert an accepted Quotation into a Party Order, or start market maal when client demand is light. Then assign machines and workers.',
+        outcome: 'Every running machine is tied to a costed production target.',
         icon: Factory,
     },
     {
         title: 'Log every shift',
-        description: 'Supervisors enter total metres produced per shift from the floor. Designed for quick mobile entry in patchy factory conditions.',
-        outcome: 'Create one source of truth for production, Worker Hisaab, and order progress.',
+        description: 'Supervisors enter machine status, worker assignment, and total metres produced from the mobile floor workflow.',
+        outcome: 'The same shift record updates progress, expected stock, and Worker Hisaab.',
         icon: ClipboardList,
     },
     {
-        title: 'Dispatch and settle',
-        description: 'Record Delivery Challan references, returned receipt confirmations, shortages, Upaad, and Worker Hisaab summaries.',
-        outcome: 'Close the loop from metres produced to Party records and worker payments.',
+        title: 'Sell, dispatch, and settle',
+        description: 'Track Godown Stock, Party sales, Delivery Challan batches, received metres, shortages, collections, Upaad, and Worker Hisaab.',
+        outcome: 'Close the loop from metres produced to cash collected and workers paid.',
         icon: Truck,
     },
 ]
@@ -110,11 +110,11 @@ export default function LandingFeatures() {
                         <div>
                             <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Factory workflow</p>
                             <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                                One operating loop from costing to settlement.
+                                One operating loop from costing to collection.
                             </h2>
                         </div>
                         <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
-                            Weavly follows how a weaving unit actually moves work: calculate the Cost Estimate, issue the Quotation, assign the floor, log shift totals, dispatch stock, and settle people correctly.
+                            Weavly follows how a weaving unit actually moves work: calculate the Cost Estimate, issue the Quotation, run an Order or market maal, log shift totals, manage Godown Stock, dispatch, collect, and settle workers.
                         </p>
                     </div>
 

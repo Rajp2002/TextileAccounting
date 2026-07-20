@@ -13,11 +13,11 @@ const faqs = [
     },
     {
         question: 'What does Weavly replace?',
-        answer: 'For many factories, it replaces the production register, hajiri book, Excel costing sheet, Delivery Challan follow-ups, WhatsApp status chasing, and paper Worker Hisaab calculations.',
+        answer: 'It brings the production register, Excel costing sheet, order list, Godown Stock ledger, Delivery Challan follow-ups, Party receivables, Upaad, and Worker Hisaab into one connected record.',
     },
     {
         question: 'Is factory and worker data secure?',
-        answer: 'Weavly uses tenant isolation, row-level security, and DPDP-aware privacy controls so each factory can access only its own data and authorized staff records.',
+        answer: 'Weavly uses tenant isolation, row-level security, role-based access, and DPDP-aware privacy controls so each factory can access only its own data and authorized staff records.',
     },
     {
         question: 'Can I start with only one floor or supervisor?',
