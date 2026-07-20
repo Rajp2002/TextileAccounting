@@ -21,7 +21,7 @@ export default function LandingBackground() {
             {/* Blob 1: Top (Original Hero Blob) */}
             <div className="animate-blob-drift-1 absolute inset-x-0 -top-40 transform-gpu blur-3xl will-change-transform sm:-top-80" aria-hidden="true">
                 <div
-                    className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-35 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] dark:opacity-50"
+                    className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-65 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
@@ -29,7 +29,7 @@ export default function LandingBackground() {
             {/* Blob 2: Features Section (around 25% down) */}
             <div className="animate-blob-drift-2 absolute inset-x-0 top-[25%] transform-gpu blur-3xl will-change-transform" aria-hidden="true">
                 <div
-                    className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f59e0b] to-[#c2410c] opacity-35 sm:left-[calc(50%+20rem)] sm:w-[72.1875rem] dark:opacity-50"
+                    className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f59e0b] to-[#c2410c] opacity-65 sm:left-[calc(50%+20rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
@@ -37,7 +37,7 @@ export default function LandingBackground() {
             {/* Blob 3: Pricing Section (around 55% down) */}
             <div className="animate-blob-drift-3 absolute inset-x-0 top-[55%] transform-gpu blur-3xl will-change-transform" aria-hidden="true">
                 <div
-                    className="relative left-[calc(50%-15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f59e0b] opacity-35 sm:left-[calc(50%-25rem)] sm:w-[72.1875rem] dark:opacity-50"
+                    className="relative left-[calc(50%-15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f59e0b] opacity-65 sm:left-[calc(50%-25rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
@@ -45,10 +45,11 @@ export default function LandingBackground() {
             {/* Blob 4: FAQ / Pre-footer Section (Bottom) */}
             <div className="animate-blob-drift-4 absolute inset-x-0 bottom-[5%] transform-gpu blur-3xl will-change-transform" aria-hidden="true">
                 <div
-                    className="relative left-[calc(50%+5rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f59e0b] to-[#ea580c] opacity-35 sm:left-[calc(50%+30rem)] sm:w-[72.1875rem] dark:opacity-50"
+                    className="relative left-[calc(50%+5rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f59e0b] to-[#ea580c] opacity-65 sm:left-[calc(50%+30rem)] sm:w-[72.1875rem] dark:opacity-75"
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
         </div>
     )
 }
+
