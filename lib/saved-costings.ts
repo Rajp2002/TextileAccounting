@@ -1,3 +1,5 @@
+import type { WarpRow, WeftRow } from '@/lib/estimator'
+
 export type SavedCostingSort = 'recent' | 'oldest' | 'margin_desc' | 'cost_asc'
 export type SavedCostingMarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
 
@@ -16,6 +18,88 @@ export type SavedCostingListItem = {
 export type VersionedSavedCostingListItem = SavedCostingListItem & {
   costing_group_id?: string | null
   version_number?: number | null
+}
+
+export type LegacySavedCostingYarnFallbacks = {
+  beamEnds?: unknown
+  reedSpace?: unknown
+  warpDenier?: unknown
+  weftDenier?: unknown
+  yarnRate?: unknown
+  picks?: unknown
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === 'object' ? value as Record<string, unknown> : {}
+}
+
+function finiteNumber(value: unknown, fallback: number): number {
+  if (value === null || value === undefined || value === '') return fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function nullableFiniteNumber(value: unknown, fallback: number | null): number | null {
+  if (value === null) return null
+  if (value === undefined || value === '') return fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+/**
+ * Saved costing snapshots created before the multi-yarn estimator used
+ * `denier`/`ends` instead of `calcDenier`/`beamEnds`. Normalize those rows at
+ * the read boundary so one legacy snapshot cannot crash the costing library.
+ */
+export function normalizeSavedWarpRows(
+  rows: unknown,
+  fallbackRow: WarpRow,
+  legacy: LegacySavedCostingYarnFallbacks = {},
+): WarpRow[] {
+  const sourceRows = Array.isArray(rows) && rows.length > 0 ? rows : [{}]
+  return sourceRows.map((value, index) => {
+    const row = asRecord(value)
+    return {
+      id: typeof row.id === 'string' && row.id ? row.id : `legacy-warp-${index}`,
+      label: typeof row.label === 'string' ? row.label : fallbackRow.label,
+      calculationMode: row.calculationMode === 'manual' ? 'manual' : 'formula',
+      manualKgPer100m: nullableFiniteNumber(row.manualKgPer100m, fallbackRow.manualKgPer100m ?? null),
+      linearDensityUnit: row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier',
+      cottonCountNe: nullableFiniteNumber(row.cottonCountNe, fallbackRow.cottonCountNe ?? null),
+      calcDenier: finiteNumber(row.calcDenier ?? row.denier ?? legacy.warpDenier, fallbackRow.calcDenier),
+      beamEnds: finiteNumber(row.beamEnds ?? row.ends ?? legacy.beamEnds, fallbackRow.beamEnds),
+      yarnRate: finiteNumber(row.yarnRate ?? legacy.yarnRate, fallbackRow.yarnRate),
+      gstPct: finiteNumber(row.gstPct, fallbackRow.gstPct),
+      shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
+    }
+  })
+}
+
+export function normalizeSavedWeftRows(
+  rows: unknown,
+  fallbackRow: WeftRow,
+  legacy: LegacySavedCostingYarnFallbacks = {},
+): WeftRow[] {
+  const sourceRows = Array.isArray(rows) && rows.length > 0 ? rows : [{}]
+  return sourceRows.map((value, index) => {
+    const row = asRecord(value)
+    return {
+      id: typeof row.id === 'string' && row.id ? row.id : `legacy-weft-${index}`,
+      label: typeof row.label === 'string' ? row.label : fallbackRow.label,
+      calculationMode: row.calculationMode === 'manual' ? 'manual' : 'formula',
+      manualKgPer100m: nullableFiniteNumber(row.manualKgPer100m, fallbackRow.manualKgPer100m ?? null),
+      picks: finiteNumber(row.picks ?? legacy.picks, fallbackRow.picks),
+      reedSpace: finiteNumber(row.reedSpace ?? legacy.reedSpace, fallbackRow.reedSpace),
+      finishedWidthCm: nullableFiniteNumber(row.finishedWidthCm, fallbackRow.finishedWidthCm ?? null),
+      effectiveCostingWidthCm: nullableFiniteNumber(row.effectiveCostingWidthCm, fallbackRow.effectiveCostingWidthCm ?? null),
+      linearDensityUnit: row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier',
+      cottonCountNe: nullableFiniteNumber(row.cottonCountNe, fallbackRow.cottonCountNe ?? null),
+      calcDenier: finiteNumber(row.calcDenier ?? row.denier ?? legacy.weftDenier, fallbackRow.calcDenier),
+      yarnRate: finiteNumber(row.yarnRate ?? legacy.yarnRate, fallbackRow.yarnRate),
+      gstPct: finiteNumber(row.gstPct, fallbackRow.gstPct),
+      shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
+    }
+  })
 }
 
 function matchesMargin(value: number, filter: SavedCostingMarginFilter) {

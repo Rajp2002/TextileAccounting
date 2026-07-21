@@ -56,6 +56,8 @@ import {
     filterAndSortSavedCostings,
     getCostingVersionMovement,
     getPreviousCostingVersion,
+    normalizeSavedWarpRows,
+    normalizeSavedWeftRows,
     type SavedCostingMarginFilter,
     type SavedCostingSort,
 } from '@/lib/saved-costings'
@@ -115,6 +117,12 @@ type QuoteRow = {
     weft_instruction?: string | null
     warp_rows?: QuoteDraftState['warpRows']
     weft_rows?: QuoteDraftState['weftRows']
+    beam_ends?: number | null
+    reed_space?: number | null
+    weft_denier?: number | null
+    yarn_denier?: number | null
+    yarn_rate_per_kg?: number | null
+    ppi?: number | null
     tape_length_m?: number | null
     per_pick_cost_paise?: number | null
     warping_rate_per_kg?: number | null
@@ -164,42 +172,66 @@ type SavedQualityGroup = {
 }
 
 function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
-    if (quote.snapshot_data) return quote.snapshot_data
-
     const base = makeDefaultEstimateState()
+    const snapshot = quote.snapshot_data ?? ({} as Partial<QuoteDraftState>)
+    const warpRows = Array.isArray(snapshot.warpRows) && snapshot.warpRows.length > 0 ? snapshot.warpRows : quote.warp_rows
+    const weftRows = Array.isArray(snapshot.weftRows) && snapshot.weftRows.length > 0 ? snapshot.weftRows : quote.weft_rows
+    const numberOr = (value: unknown, fallback: number) => {
+        const parsed = Number(value)
+        return value !== null && value !== undefined && value !== '' && Number.isFinite(parsed) ? parsed : fallback
+    }
     return {
         ...base,
-        warpRows: Array.isArray(quote.warp_rows) && quote.warp_rows.length > 0 ? quote.warp_rows : base.warpRows,
-        weftRows: Array.isArray(quote.weft_rows) && quote.weft_rows.length > 0 ? quote.weft_rows : base.weftRows,
-        tapeLengthM: Number(quote.tape_length_m ?? base.tapeLengthM),
-        perPickCostPaisa: Number(quote.per_pick_cost_paise ?? base.perPickCostPaisa),
-        warpingRatePerKg: Number(quote.warping_rate_per_kg ?? base.warpingRatePerKg),
-        sizingRatePerKg: Number(quote.sizing_rate_per_kg ?? base.sizingRatePerKg),
-        windingRatePerKg: Number(quote.winding_rate_per_kg ?? base.windingRatePerKg),
-        processingRatePerM: Number(quote.processing_rate_per_m ?? base.processingRatePerM),
-        finishingRatePerM: Number(quote.finishing_rate_per_m ?? base.finishingRatePerM),
-        yarnShortagePct: Number(quote.yarn_shortage_pct ?? base.yarnShortagePct),
-        warpCrimpPct: Number(quote.warp_crimp_pct ?? base.warpCrimpPct),
-        overheadItems: Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
-        monthlyOutputM: Number(quote.monthly_output_m ?? base.monthlyOutputM),
-        overheadOverridePerM: quote.overhead_override_per_m != null ? Number(quote.overhead_override_per_m) : base.overheadOverridePerM,
-        overheadPct: Number(quote.overhead_pct ?? base.overheadPct),
-        commissionPct: Number(quote.commission_pct ?? base.commissionPct),
-        transportPerM: Number(quote.transport_per_m ?? base.transportPerM),
-        profitPct: Number(quote.profit_margin_pct ?? quote.intended_margin_percent ?? base.profitPct),
-        orderQuantityM: Number(quote.meters ?? 0) || null,
-        enabledSections: quote.enabled_sections ?? base.enabledSections,
-        loomType: quote.loom_type ?? base.loomType,
-        loomRpm: quote.estimator_rpm != null ? Number(quote.estimator_rpm) : base.loomRpm,
-        loomPowerKw: quote.estimator_power_kw != null ? Number(quote.estimator_power_kw) : base.loomPowerKw,
-        loomRpmIsCustomised: quote.estimator_rpm != null,
-        loomPowerKwIsCustomised: quote.estimator_power_kw != null,
-        hoursPerShift: Number(quote.hours_per_shift ?? base.hoursPerShift),
-        sizingMode: quote.sizing_mode ?? base.sizingMode,
-        loomCount: Number(quote.loom_count ?? base.loomCount),
-        monthlyWorkingDays: Number(quote.monthly_working_days ?? base.monthlyWorkingDays),
-        avgOutputPerLoomPerDay: Number(quote.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
+        ...snapshot,
+        warpRows: normalizeSavedWarpRows(warpRows, base.warpRows[0], {
+            beamEnds: quote.beam_ends,
+            warpDenier: quote.yarn_denier,
+            yarnRate: quote.yarn_rate_per_kg,
+        }),
+        weftRows: normalizeSavedWeftRows(weftRows, base.weftRows[0], {
+            picks: quote.ppi,
+            reedSpace: quote.reed_space,
+            weftDenier: quote.weft_denier ?? quote.yarn_denier,
+            yarnRate: quote.yarn_rate_per_kg,
+        }),
+        tapeLengthM: numberOr(snapshot.tapeLengthM ?? quote.tape_length_m, base.tapeLengthM),
+        perPickCostPaisa: numberOr(snapshot.perPickCostPaisa ?? quote.per_pick_cost_paise, base.perPickCostPaisa),
+        warpingRatePerKg: numberOr(snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg, base.warpingRatePerKg),
+        sizingRatePerKg: numberOr(snapshot.sizingRatePerKg ?? quote.sizing_rate_per_kg, base.sizingRatePerKg),
+        windingRatePerKg: numberOr(snapshot.windingRatePerKg ?? quote.winding_rate_per_kg, base.windingRatePerKg),
+        processingRatePerM: numberOr(snapshot.processingRatePerM ?? quote.processing_rate_per_m, base.processingRatePerM),
+        finishingRatePerM: numberOr(snapshot.finishingRatePerM ?? quote.finishing_rate_per_m, base.finishingRatePerM),
+        yarnShortagePct: numberOr(snapshot.yarnShortagePct ?? quote.yarn_shortage_pct, base.yarnShortagePct),
+        warpCrimpPct: numberOr(snapshot.warpCrimpPct ?? quote.warp_crimp_pct, base.warpCrimpPct),
+        overheadItems: Array.isArray(snapshot.overheadItems) ? snapshot.overheadItems : Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
+        monthlyOutputM: numberOr(snapshot.monthlyOutputM ?? quote.monthly_output_m, base.monthlyOutputM),
+        overheadOverridePerM: snapshot.overheadOverridePerM ?? (quote.overhead_override_per_m != null ? numberOr(quote.overhead_override_per_m, 0) : base.overheadOverridePerM),
+        overheadPct: numberOr(snapshot.overheadPct ?? quote.overhead_pct, base.overheadPct),
+        commissionPct: numberOr(snapshot.commissionPct ?? quote.commission_pct, base.commissionPct),
+        transportPerM: numberOr(snapshot.transportPerM ?? quote.transport_per_m, base.transportPerM),
+        profitPct: numberOr(snapshot.profitPct ?? quote.profit_margin_pct ?? quote.intended_margin_percent, base.profitPct),
+        orderQuantityM: numberOr(snapshot.orderQuantityM ?? quote.meters, 0) || null,
+        enabledSections: { ...base.enabledSections, ...(quote.enabled_sections ?? {}), ...(snapshot.enabledSections ?? {}) },
+        loomType: snapshot.loomType ?? quote.loom_type ?? base.loomType,
+        loomRpm: snapshot.loomRpm ?? (quote.estimator_rpm != null ? numberOr(quote.estimator_rpm, 0) : base.loomRpm),
+        loomPowerKw: snapshot.loomPowerKw ?? (quote.estimator_power_kw != null ? numberOr(quote.estimator_power_kw, 0) : base.loomPowerKw),
+        loomRpmIsCustomised: snapshot.loomRpmIsCustomised ?? (quote.estimator_rpm != null),
+        loomPowerKwIsCustomised: snapshot.loomPowerKwIsCustomised ?? (quote.estimator_power_kw != null),
+        hoursPerShift: numberOr(snapshot.hoursPerShift ?? quote.hours_per_shift, base.hoursPerShift ?? 12),
+        sizingMode: snapshot.sizingMode ?? quote.sizing_mode ?? base.sizingMode,
+        loomCount: numberOr(snapshot.loomCount ?? quote.loom_count, base.loomCount),
+        monthlyWorkingDays: numberOr(snapshot.monthlyWorkingDays ?? quote.monthly_working_days, base.monthlyWorkingDays),
+        avgOutputPerLoomPerDay: numberOr(snapshot.avgOutputPerLoomPerDay ?? quote.avg_output_per_loom_per_day, base.avgOutputPerLoomPerDay),
         isConfigured: true,
+    }
+}
+
+function getSavedCostingTotals(quote: QuoteRow) {
+    try {
+        return calcFullTotals(buildDraftStateFromQuote(quote))
+    } catch (error) {
+        console.error('Unable to calculate a saved costing snapshot', quote.id, error)
+        return null
     }
 }
 
@@ -231,7 +263,7 @@ function SavedQualityLibraryView({
             {groups.map(group => {
                 const isExpanded = expandedKey === group.key
                 const latest = group.records[0] ?? null
-                const latestTotals = latest ? calcFullTotals(buildDraftStateFromQuote(latest)) : null
+                const latestTotals = latest ? getSavedCostingTotals(latest) : null
                 const usages = group.records
                     .map(record => ({ record, order: getLinkedOrder(record) }))
                     .filter((item): item is { record: QuoteRow; order: QuoteLinkedOrder } => Boolean(item.order))
@@ -294,9 +326,11 @@ function SavedQualityLibraryView({
                                 <div className="border-t border-slate-200 bg-slate-50/60 p-4 sm:p-5">
                                     {!latest || !latestTotals ? (
                                         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
-                                            <FileText className="h-6 w-6 text-slate-400" />
-                                            <p className="mt-3 text-sm font-bold text-slate-700">No costing saved for this quality yet</p>
-                                            <p className="mt-1 max-w-md text-xs text-slate-500">Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.</p>
+                                            {latest ? <AlertTriangle className="h-6 w-6 text-amber-500" /> : <FileText className="h-6 w-6 text-slate-400" />}
+                                            <p className="mt-3 text-sm font-bold text-slate-700">{latest ? 'Detailed breakdown unavailable for this legacy snapshot' : 'No costing saved for this quality yet'}</p>
+                                            <p className="mt-1 max-w-md text-xs text-slate-500">{latest
+                                                ? 'The saved commercial totals remain available in costing history. Open and save this snapshot once to refresh its detailed analysis.'
+                                                : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'}</p>
                                         </div>
                                     ) : (
                                         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
