@@ -392,40 +392,58 @@
   }
 
   /* ── Lava-lamp blob drift animations ───────────────────────────────── */
+  /* More waypoints + linear timing = continuous fluid motion, no stop-start */
   @keyframes blob-drift-1 {
-    0%   { transform: translate(0, 0)         scale(1)   rotate(0deg); }
-    20%  { transform: translate(250px, -150px) scale(1.15) rotate(15deg); }
-    40%  { transform: translate(450px, 100px)  scale(0.85) rotate(-10deg); }
-    60%  { transform: translate(150px, 350px)  scale(1.1)  rotate(25deg); }
-    80%  { transform: translate(-200px, 120px) scale(0.9)  rotate(-5deg); }
-    100% { transform: translate(0, 0)          scale(1)   rotate(0deg); }
+    0%    { transform: translate(0, 0)          scale(1)    rotate(0deg); }
+    10%   { transform: translate(120px, -80px)  scale(1.08) rotate(7deg); }
+    22%   { transform: translate(280px, -120px) scale(1.15) rotate(15deg); }
+    35%   { transform: translate(400px, 30px)   scale(1.02) rotate(4deg); }
+    48%   { transform: translate(320px, 200px)  scale(0.88) rotate(-8deg); }
+    60%   { transform: translate(150px, 320px)  scale(1.1)  rotate(20deg); }
+    72%   { transform: translate(-50px, 250px)  scale(0.95) rotate(8deg); }
+    84%   { transform: translate(-180px, 100px) scale(0.92) rotate(-4deg); }
+    94%   { transform: translate(-80px, 30px)   scale(0.98) rotate(-1deg); }
+    100%  { transform: translate(0, 0)          scale(1)    rotate(0deg); }
   }
   @keyframes blob-drift-2 {
-    0%   { transform: translate(0, 0)          scale(1)   rotate(0deg); }
-    25%  { transform: translate(-300px, 200px) scale(1.2)  rotate(-20deg); }
-    50%  { transform: translate(200px, -150px)  scale(0.8)  rotate(15deg); }
-    75%  { transform: translate(-150px, -250px) scale(1.1)  rotate(-10deg); }
-    100% { transform: translate(0, 0)          scale(1)   rotate(0deg); }
+    0%    { transform: translate(0, 0)           scale(1)    rotate(0deg); }
+    12%   { transform: translate(-150px, 100px)  scale(1.1)  rotate(-10deg); }
+    25%   { transform: translate(-280px, 200px)  scale(1.18) rotate(-18deg); }
+    38%   { transform: translate(-120px, 80px)   scale(1.05) rotate(-5deg); }
+    50%   { transform: translate(180px, -120px)  scale(0.85) rotate(12deg); }
+    62%   { transform: translate(100px, -220px)  scale(0.92) rotate(5deg); }
+    75%   { transform: translate(-130px, -230px) scale(1.08) rotate(-8deg); }
+    87%   { transform: translate(-60px, -100px)  scale(1.02) rotate(-3deg); }
+    100%  { transform: translate(0, 0)           scale(1)    rotate(0deg); }
   }
   @keyframes blob-drift-3 {
-    0%   { transform: translate(0, 0)          scale(1)   rotate(0deg); }
-    15%  { transform: translate(200px, 250px)  scale(1.25) rotate(30deg); }
-    45%  { transform: translate(-350px, -100px) scale(0.75) rotate(-25deg); }
-    70%  { transform: translate(300px, -180px)  scale(1.05) rotate(15deg); }
-    100% { transform: translate(0, 0)          scale(1)   rotate(0deg); }
+    0%    { transform: translate(0, 0)           scale(1)    rotate(0deg); }
+    8%    { transform: translate(80px, 120px)    scale(1.1)  rotate(12deg); }
+    18%   { transform: translate(200px, 240px)   scale(1.22) rotate(26deg); }
+    30%   { transform: translate(100px, 160px)   scale(1.08) rotate(14deg); }
+    45%   { transform: translate(-300px, -60px)  scale(0.8)  rotate(-20deg); }
+    58%   { transform: translate(-100px, -150px) scale(0.9)  rotate(-10deg); }
+    70%   { transform: translate(260px, -160px)  scale(1.04) rotate(12deg); }
+    82%   { transform: translate(180px, -60px)   scale(1.0)  rotate(6deg); }
+    92%   { transform: translate(60px, -20px)    scale(0.98) rotate(2deg); }
+    100%  { transform: translate(0, 0)           scale(1)    rotate(0deg); }
   }
   @keyframes blob-drift-4 {
-    0%   { transform: translate(0, 0)          scale(1)   rotate(0deg); }
-    30%  { transform: translate(-250px, -200px) scale(1.18) rotate(-15deg); }
-    55%  { transform: translate(350px, 150px)   scale(0.82) rotate(20deg); }
-    80%  { transform: translate(-150px, 250px)  scale(1.08) rotate(-25deg); }
-    100% { transform: translate(0, 0)          scale(1)   rotate(0deg); }
+    0%    { transform: translate(0, 0)           scale(1)    rotate(0deg); }
+    14%   { transform: translate(-120px, -100px) scale(1.08) rotate(-7deg); }
+    28%   { transform: translate(-230px, -190px) scale(1.16) rotate(-14deg); }
+    40%   { transform: translate(-80px, -50px)   scale(1.02) rotate(-3deg); }
+    52%   { transform: translate(300px, 80px)    scale(0.85) rotate(16deg); }
+    65%   { transform: translate(200px, 180px)   scale(0.92) rotate(10deg); }
+    78%   { transform: translate(-100px, 230px)  scale(1.06) rotate(-18deg); }
+    90%   { transform: translate(-50px, 100px)   scale(1.02) rotate(-8deg); }
+    100%  { transform: translate(0, 0)           scale(1)    rotate(0deg); }
   }
 
-  .animate-blob-drift-1 { animation: blob-drift-1 13.71s ease-in-out infinite; }
-  .animate-blob-drift-2 { animation: blob-drift-2 16s ease-in-out infinite; }
-  .animate-blob-drift-3 { animation: blob-drift-3 18.29s ease-in-out infinite; }
-  .animate-blob-drift-4 { animation: blob-drift-4 14.86s ease-in-out infinite; }
+  .animate-blob-drift-1 { animation: blob-drift-1 13.71s linear infinite; }
+  .animate-blob-drift-2 { animation: blob-drift-2 16s linear infinite; }
+  .animate-blob-drift-3 { animation: blob-drift-3 18.29s linear infinite; }
+  .animate-blob-drift-4 { animation: blob-drift-4 14.86s linear infinite; }
 
   /* Respect reduced-motion preference */
   @media (prefers-reduced-motion: reduce) {
