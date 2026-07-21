@@ -2134,3 +2134,12 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Owner/role evidence: six owner workflow routes plus Factory Today rendered read-only; supervisor owner-route access redirected without exposing owner content.
 - Database: 212 migrations aligned through `20260715113013`, no pending dry-run migration, six protected views use invoker security, and no production business row changed.
 - Remaining work: deployed Core Web Vitals/waterfalls, cold quotation/dispatch attribution, payroll export click fixture, and the six separately documented legacy stored-function audits. None blocks this scoped release closeout or changes formal pilot-gate counts.
+
+## Active Base Estimator go-readiness closeout — 2026-07-22
+
+- State: `conditional_go_controlled_base_pilot`; paid self-serve production remains `no_go`.
+- Main commits: `6b62762` (readiness implementation) and `31cac88` (production-found Rate Book reconciliation).
+- Production: reviewed migration `20260721183000` is aligned. Commit `31cac88` is READY as `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ` on the canonical alias, and both saved yarns promoted from ₹0 to ₹120/kg with Saved qualities provenance.
+- Proven owner path: authenticated Base shell, direct overhead setup, estimate calculation, quality save, costing snapshot `v1`, correct ₹26.50/m Saved Costings display, Base Rate Book route, and owner data-export preparation.
+- Open gates: transactional rate propagation, physical downloaded-PDF proof, self-serve signup/email-confirmation recovery, current-release Sentry/log inspection, and paid lifecycle/operations evidence.
+- Cleanup: the exact main fixture and the failed-signup QA account/organization reconciled to zero. Next work is limited to the open gates; do not promote unresolved evidence.

@@ -96,3 +96,23 @@ Promote the standalone Base Estimator from the 2026-07-21 **No-Go** assessment t
 - **Factory-pilot Go:** BE-GO-01 through BE-GO-07, BE-GO-09 through BE-GO-12 pass in production; no P0/P1 owner-flow failures remain.
 - **Paid-production Go:** Factory-pilot Go plus BE-GO-08 and BE-GO-13 external lifecycle/operations proof.
 - Any missing payment, restore, rollback, or Sentry proof keeps paid production at Conditional Go or No-Go even if the factory workflow passes.
+
+## Execution closeout — 2026-07-22
+
+| Item | Result | Evidence / residual condition |
+| --- | --- | --- |
+| BE-GO-01 | Pass | Production Base tenant showed ₹26.50/m production cost consistently in the Estimator and Saved Costings, with the cost breakdown preserved. |
+| BE-GO-02 | Code and local render pass; production download proof inconclusive | Export state/canvas/print fixes are deployed and the production dialog opened with the privacy modes intact. The in-app download observer timed out without a console error, so a physical-browser downloaded-file inspection remains required. |
+| BE-GO-03 | Pass | Migration `20260721183000` is applied and aligned; revision identity is serialized and the deployed first snapshot displayed `v1` plus date. |
+| BE-GO-04 | Pass | Application and database entitlement semantics are aligned and regression covered. |
+| BE-GO-05 | Pass after deployed-pilot correction | Base route/action/RLS gates are deployed. A production run found pre-seeded ₹0/kg placeholders; commit `31cac88` promoted both saved-quality rates to ₹120/kg on final production deployment `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ`. |
+| BE-GO-06 | Mitigated, not complete | Partial propagation is explicitly reported, but one database transaction/RPC still needs to replace the multi-write workflow. |
+| BE-GO-07 | Pass for repaired function | The reviewed migration fixed `lockdown_tenant`; five unrelated Premium/legacy function lint errors remain. |
+| BE-GO-08 | Code pass; commercial lifecycle not rerun | Official Razorpay CDN loading is deployed and the rewriting proxy is retired. No real-money checkout was performed. Existing TEST lifecycle evidence remains the provider baseline. |
+| BE-GO-09 | Pass | Client/server checks and forward `NOT VALID` database constraints reject invalid economics without rewriting legacy rows. |
+| BE-GO-10 | Pass | Owner-only post-expiry export route is live; the production Base run completed the export preparation cycle without console errors. |
+| BE-GO-11 | Partial | Billing debug logging was removed, but current-release production Sentry payload inspection was not available. |
+| BE-GO-12 | Code/test pass | Saved Costings responsive wrapping and Base terminology are deployed; physical multi-device retest remains an operating check. |
+| BE-GO-13 | Conditional | No high runtime advisory remains. Two unavoidable Next/PostCSS runtime moderates and dev-tool advisories are recorded; migration alignment and build pass, while current-release restore/rollback attribution was not repeated. |
+
+Release outcome: **Controlled Base factory pilot — Conditional Go**. Paid self-serve production remains **No-Go** until the residual P0/P1 evidence and transaction work in the readiness report are closed.

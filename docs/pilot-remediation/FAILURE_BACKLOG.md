@@ -617,3 +617,12 @@ Retain `TECH-011` as blocked. Production reports WAL-G enabled, PITR disabled, a
 Retain all five B19 IDs as blocked. `SEC-011` needs a locally configured read-only Sentry token and direct inspection of a live production event payload. `SEC-018` needs a dated qualified-counsel approval or redline. `UX-012` needs a named factory supervisor's terminology approve/change register. `GOLDEN-A-03` needs one business-accepted real-fabric truth sheet. `SIGNOFF-04` needs one dated supervisor meter register. Workspace and generated-artifact review found none of these closure artifacts, and source/test evidence was not substituted.
 
 The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no independent executable batch remains. Existing failures remain `WA-008`, `OFF-009`, and `OFF-010`; B19 does not reclassify them or relax the No-Go gate.
+
+### Base Estimator residual backlog — 2026-07-22
+
+- `BASE-RATE-ATOMIC-P1`: replace the rate-book row, history, factory-default, and saved-quality writes with one tenant-scoped transaction/RPC; prove rollback on every injected failure.
+- `BASE-PDF-PROD-P0`: download internal and customer PDFs in a physical production browser, render both, require nonblank A4 output, and prove the customer copy contains no internal cost, margin, overhead, or break-even details.
+- `BASE-SIGNUP-P0`: prove a new owner can complete signup/email confirmation and authenticate without admin intervention; make the UI state explicit when confirmation is required.
+- `BASE-OBS-P1`: inspect one current-release production error/Sentry event with redacted fields and release attribution; never print credentials or PII.
+- `BASE-BILLING-PROD-P0`: rerun approved Razorpay TEST lifecycle against the exact release before paid self-serve promotion; no real-money charge is required or authorized.
+- `BASE-DB-LINT-P2`: repair or retire five Premium/legacy functions referencing removed relations/columns. These do not receive Base pilot pass/fail credit but block a clean whole-database lint gate.

@@ -2608,3 +2608,13 @@ Date: 2026-07-19 IST. Status: `pass`.
 - Formal wider-pilot matrix status/count change: none; this promotes only the
   scoped Estimator release proof from candidate to production pass.
 - Detailed evidence: `closure-packs/ESTIMATOR_IPHONE_READINESS_2026-07-19.md`.
+
+## Base Estimator go-readiness implementation — 2026-07-22
+
+- Batch: `BASE-ESTIMATOR-GO-READINESS`; result: `conditional_go` for a controlled factory pilot.
+- Implemented financial-label consistency, saved-costing revision identity, Base Rate Book entitlement/RLS, canonical paid-through access, safe checkout loading, factory-cost validation, owner post-expiry export, responsive controls, and linked-database lockdown repair.
+- Production runtime used exact disposable prefix `BASEGO-1784662022802-4412AD`: Base authentication, overhead setup, representative 50D/9000-end/68-PPI costing, saved quality, saved snapshot, Saved Costings breakdown, Rate Book access, and data-export preparation were exercised. The displayed production cost was ₹26.50/m in both owner surfaces.
+- The runtime pass found a zero-placeholder Rate Book defect after a saved quality existed. Commit `31cac88` promotes zero placeholders from positive saved-quality rates and adds an exact production fixture/cleanup harness. Final production deployment `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ` displayed ₹120/kg for both yarns with Saved qualities provenance; no false pass was recorded before that correction.
+- Local gates passed: ESLint, TypeScript, full Vitest (110 files, 745 passed, one intentional skip), optimized Next build (45 static pages), and high runtime dependency audit. Migration `20260721183000` is applied and local/remote history is aligned.
+- Residuals: rate propagation is explicit but not atomic; production PDF file inspection, current-release Sentry payload proof, self-serve signup/email-confirmation UX, and paid lifecycle proof remain open. Five database lint errors belong to removed Premium/legacy schema paths, not the Base owner workflow.
+- Data safety: only reviewed migration `20260721183000` and exact prefixed disposable QA records were permitted. Both the main `BASEGO-1784662022802-4412AD` fixture and failed-signup `BASEGO-20260722-VK6WBT MILL` reconciled organizations, profiles, subscriptions where applicable, and Auth users to zero.

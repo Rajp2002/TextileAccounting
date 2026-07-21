@@ -104,8 +104,12 @@ async function cleanup() {
         throw new Error('Cleanup refused: fixture identity is not exact.')
     }
     const errors = []
-    for (const table of ['cost_rate_history', 'cost_rate_book', 'estimator_quotes', 'estimator_templates', 'factory_cost_profile', 'org_subscriptions', 'audit_log']) {
-        const result = await admin.from(table).delete().eq('org_id', fixture.orgId)
+    for (const [table, column] of [
+        ['cost_rate_history', 'org_id'], ['cost_rate_book', 'org_id'], ['estimator_quotes', 'org_id'],
+        ['estimator_templates', 'org_id'], ['factory_cost_profile', 'factory_id'],
+        ['org_subscriptions', 'org_id'], ['audit_log', 'org_id'],
+    ]) {
+        const result = await admin.from(table).delete().eq(column, fixture.orgId)
         if (result.error) errors.push(`${table}: ${result.error.message}`)
     }
     const profile = await admin.from('profiles').delete().eq('id', fixture.userId)
@@ -134,7 +138,54 @@ async function cleanup() {
     process.stdout.write(`${JSON.stringify({ runId: fixture.runId, cleaned: true, reconciliation })}\n`)
 }
 
+async function cleanupSignup(email, organizationName) {
+    if (!/^weavly\.qa\+[a-z0-9]+@gmail\.com$/i.test(email ?? '')) {
+        throw new Error('Signup cleanup refused: exact QA email pattern is required.')
+    }
+    if (!/^BASEGO-[A-Z0-9-]+ MILL$/.test(organizationName ?? '')) {
+        throw new Error('Signup cleanup refused: exact BASEGO organization name is required.')
+    }
+
+    const users = await requireData(await admin.auth.admin.listUsers({ page: 1, perPage: 1000 }), 'List Auth users')
+    const user = users.users.find(candidate => candidate.email?.toLowerCase() === email.toLowerCase())
+    if (!user) throw new Error('Signup cleanup refused: exact Auth user was not found.')
+    const organization = await requireData(await admin.from('organizations')
+        .select('id, name, owner_id').eq('owner_id', user.id).eq('name', organizationName).single(), 'Load exact signup organization')
+
+    const errors = []
+    for (const [table, column] of [
+        ['cost_rate_history', 'org_id'], ['cost_rate_book', 'org_id'], ['estimator_quotes', 'org_id'],
+        ['estimator_templates', 'org_id'], ['factory_cost_profile', 'factory_id'],
+        ['org_subscriptions', 'org_id'], ['audit_log', 'org_id'],
+    ]) {
+        const result = await admin.from(table).delete().eq(column, organization.id)
+        if (result.error) errors.push(`${table}: ${result.error.message}`)
+    }
+    const profile = await admin.from('profiles').delete().eq('id', user.id).eq('org_id', organization.id)
+    if (profile.error) errors.push(`profiles: ${profile.error.message}`)
+    const orgDelete = await admin.from('organizations').delete().eq('id', organization.id).eq('owner_id', user.id)
+    if (orgDelete.error) errors.push(`organizations: ${orgDelete.error.message}`)
+    const authDelete = await admin.auth.admin.deleteUser(user.id)
+    if (authDelete.error && authDelete.error.code !== 'user_not_found') errors.push(`auth: ${authDelete.error.message}`)
+
+    const [orgCount, profileCount, authRead] = await Promise.all([
+        admin.from('organizations').select('id', { count: 'exact', head: true }).eq('id', organization.id),
+        admin.from('profiles').select('id', { count: 'exact', head: true }).eq('id', user.id),
+        admin.auth.admin.getUserById(user.id),
+    ])
+    const reconciliation = {
+        organizations: orgCount.count,
+        profiles: profileCount.count,
+        authUsers: authRead.data.user ? 1 : 0,
+    }
+    if (errors.length || Object.values(reconciliation).some((count) => count !== 0)) {
+        throw new Error(`Signup cleanup reconciliation failed: ${JSON.stringify({ errors, reconciliation })}`)
+    }
+    process.stdout.write(`${JSON.stringify({ organizationName, cleaned: true, reconciliation })}\n`)
+}
+
 const command = process.argv[2]
 if (command === 'setup') await setup()
 else if (command === 'cleanup') await cleanup()
-else throw new Error('Usage: base-estimator-pilot-fixture.mjs setup|cleanup')
+else if (command === 'cleanup-signup') await cleanupSignup(process.argv[3], process.argv[4])
+else throw new Error('Usage: base-estimator-pilot-fixture.mjs setup|cleanup|cleanup-signup <email> <organization-name>')

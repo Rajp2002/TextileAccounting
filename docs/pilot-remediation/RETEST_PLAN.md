@@ -776,3 +776,13 @@ Acceptance:
 - Before release, also run the full suite, TypeScript, ESLint and the production
   build. Production proof must identify the exact merged commit/deployment and
   reconcile the disposable Base account and tenant to zero.
+
+### Base Estimator go-readiness regression guard — 2026-07-22
+
+- Run `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`, `npm audit --omit=dev --audit-level=high`, and `npm audit --audit-level=high`; record runtime and dev-only advisories separately.
+- Require linked migration list/dry-run alignment through `20260721183000`. Database lint must distinguish Base-path defects from unrelated legacy/Premium functions.
+- In one exact prefixed Base tenant, configure direct overhead, calculate a representative fabric, save a reusable quality and two costing revisions, update a yarn rate, compare the revisions, and verify production cost versus commercial break-even on every surface.
+- Open the Rate Book after a saved quality exists. If zero placeholders were seeded first, they must be promoted to the saved positive rates and retain tenant/Base enforcement.
+- Download and render both PDF modes. Require nonblank A4 content and customer privacy. Exercise owner organization export and require all dataset queries to succeed.
+- Confirm a no-plan owner is gated from Estimator/Rate Book but can still reach the owner-only data-export route. Confirm Premium retains Base access and a foreign tenant sees no rows.
+- Record exact commit/deployment identity, browser console results, database reconciliation, and exact `BASEGO-*` cleanup to zero before promotion.
