@@ -1173,8 +1173,10 @@ export default function EstimatorClient({
         sourceQuoteId: sourceQuoteId ?? undefined,
         sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
         sourceRecordKind: recordKindOverride ?? sourceRecordKind ?? undefined,
+        templateId: appliedTemplate?.id,
         clientRequestId: clientRequestId ?? undefined,
     }), [
+        appliedTemplate?.id,
         partyName,
         qualityLabel,
         sourceQuoteId,
@@ -1199,11 +1201,12 @@ export default function EstimatorClient({
         setSourceQuoteId(restored.sourceQuoteId ?? null)
         setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
         setSourceRecordKind(restored.sourceRecordKind ?? null)
+        setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
         toast.success(restored.sourceQuoteId
             ? restored.sourceRecordKind === 'costing' ? 'Costing specifications loaded' : 'Quotation specifications loaded'
             : 'Cost Estimate draft restored')
-    }, [restoreDraft])
+    }, [restoreDraft, templates])
 
     useEffect(() => {
         if (!hasDraft || !draft || !shouldAutoRestoreEstimatorDraft(draft)) return
@@ -1729,7 +1732,8 @@ export default function EstimatorClient({
                     estimate:                state,
                     totalProductionCostPerM: totals.totalProductionCostPerM,
                     notes:                   '',
-                    deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0] // 30 days default
+                    deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0], // 30 days default
+                    templateId:              appliedTemplate?.id,
                 })
                 if (res.error) {
                     toast.error(res.error)
@@ -1756,6 +1760,7 @@ export default function EstimatorClient({
                     recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
                     sourceQuoteId:           sourceQuoteId ?? undefined,
                     expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+                    templateId:              appliedTemplate?.id,
                 })
                 if (res.success) {
                     clearDraft()

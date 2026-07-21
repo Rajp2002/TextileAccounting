@@ -45,6 +45,11 @@ import {
     Star,
     Archive,
     ArchiveRestore,
+    ChevronDown,
+    ChevronRight,
+    Factory,
+    Layers3,
+    ExternalLink,
 } from 'lucide-react'
 import {
     compareSavedCostings,
@@ -70,8 +75,20 @@ type QuoteDraftState = ReturnType<typeof makeDefaultEstimateState>
 type QuoteLinkedOrder = {
     id: string
     status: string
+    party_name?: string | null
+    quality_label?: string | null
+    total_target_meters?: number | null
+    market_run_id?: string | null
+    production_logs?: { meters: number | string | null }[] | null
     warp_instruction?: string | null
     weft_instruction?: string | null
+}
+
+type SavedQuality = {
+    id: string
+    name: string
+    updated_at: string
+    is_active?: boolean
 }
 
 type QuoteRow = {
@@ -92,6 +109,8 @@ type QuoteRow = {
     is_archived?: boolean
     is_favorite?: boolean
     record_kind?: CostingRecordKind | null
+    template_id?: string | null
+    market_run_id?: string | null
     warp_instruction?: string | null
     weft_instruction?: string | null
     warp_rows?: QuoteDraftState['warpRows']
@@ -126,6 +145,22 @@ type QuoteRow = {
 
 function getLinkedOrder(quote: QuoteRow) {
     return Array.isArray(quote.orders) ? quote.orders[0] : quote.orders
+}
+
+function getProducedMeters(order: QuoteLinkedOrder | null | undefined) {
+    return (order?.production_logs ?? []).reduce((sum, log) => sum + Number(log.meters ?? 0), 0)
+}
+
+function normalizeQualityKey(value: string | null | undefined) {
+    return (value ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-IN')
+}
+
+type SavedQualityGroup = {
+    key: string
+    name: string
+    template: SavedQuality | null
+    records: QuoteRow[]
+    updatedAt: string
 }
 
 function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
@@ -168,7 +203,211 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
     }
 }
 
-export default function QuotesClient({ initialQuotes, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
+function SavedQualityLibraryView({
+    groups,
+    expandedKey,
+    selectedCostingIds,
+    updatingId,
+    onToggleExpanded,
+    onToggleComparison,
+    onOpen,
+    onStartFrom,
+    onExport,
+    onOpenUsage,
+}: {
+    groups: SavedQualityGroup[]
+    expandedKey: string | null
+    selectedCostingIds: string[]
+    updatingId: string | null
+    onToggleExpanded: (key: string) => void
+    onToggleComparison: (id: string) => void
+    onOpen: (quote: QuoteRow) => void
+    onStartFrom: (quote: QuoteRow) => void
+    onExport: (quote: QuoteRow) => void
+    onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
+}) {
+    return (
+        <div className="space-y-3">
+            {groups.map(group => {
+                const isExpanded = expandedKey === group.key
+                const latest = group.records[0] ?? null
+                const latestTotals = latest ? calcFullTotals(buildDraftStateFromQuote(latest)) : null
+                const usages = group.records
+                    .map(record => ({ record, order: getLinkedOrder(record) }))
+                    .filter((item): item is { record: QuoteRow; order: QuoteLinkedOrder } => Boolean(item.order))
+                    .filter((item, index, all) => all.findIndex(other => other.order.id === item.order.id) === index)
+                const totalProduced = usages.reduce((sum, usage) => sum + getProducedMeters(usage.order), 0)
+
+                return (
+                    <Card key={group.key} className={isExpanded ? 'border-orange-200 bg-white shadow-md' : 'border-slate-200 bg-white shadow-sm'}>
+                        <CardContent className="p-0">
+                            <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+                                <button
+                                    type="button"
+                                    onClick={() => onToggleExpanded(group.key)}
+                                    aria-expanded={isExpanded}
+                                    className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                                >
+                                    <span className="mt-0.5 rounded-lg bg-orange-50 p-2 text-orange-700">
+                                        <Layers3 className="h-5 w-5" />
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="flex flex-wrap items-center gap-2">
+                                            <span className="truncate text-base font-black text-slate-950">{group.name}</span>
+                                            {group.template && <Badge variant="outline" className="border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700">Saved quality</Badge>}
+                                            {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
+                                        </span>
+                                        <span className="mt-1 block text-xs text-slate-500">
+                                            {group.records.length > 0
+                                                ? `${group.records.length} costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${format(new Date(group.updatedAt), 'MMM d, yyyy')}`
+                                                : 'Saved recipe · no costing snapshot yet'}
+                                        </span>
+                                    </span>
+                                </button>
+
+                                <div className="grid grid-cols-3 gap-2 sm:min-w-[420px]">
+                                    <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Latest cost</p>
+                                        <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest ? `₹${Number(latest.landed_cost_per_meter).toFixed(2)}/m` : '—'}</p>
+                                    </div>
+                                    <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Used for</p>
+                                        <p className="mt-1 text-sm font-black text-slate-900">{usages.length} {usages.length === 1 ? 'run' : 'runs'}</p>
+                                    </div>
+                                    <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Produced</p>
+                                        <p className="mt-1 text-sm font-black text-slate-900">{totalProduced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m</p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => onToggleExpanded(group.key)}
+                                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.name}`}
+                                    className="hidden rounded-md p-2 text-slate-500 hover:bg-slate-100 sm:block"
+                                >
+                                    {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                                </button>
+                            </div>
+
+                            {isExpanded && (
+                                <div className="border-t border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+                                    {!latest || !latestTotals ? (
+                                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+                                            <FileText className="h-6 w-6 text-slate-400" />
+                                            <p className="mt-3 text-sm font-bold text-slate-700">No costing saved for this quality yet</p>
+                                            <p className="mt-1 max-w-md text-xs text-slate-500">Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+                                            <section className="rounded-xl border border-slate-200 bg-white p-4">
+                                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-black text-slate-950">Latest costing breakdown</p>
+                                                        <p className="mt-1 text-xs text-slate-500">Snapshot v{Number(latest.version_number ?? 1)} · {format(new Date(latest.created_at), 'MMM d, yyyy')}</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id}>Open & Update</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Start From</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> Export</Button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 divide-y divide-slate-100 text-sm">
+                                                    {[
+                                                        ['Warp yarn', latestTotals.warpCostPerM],
+                                                        ['Weft yarn', latestTotals.weftCostPerM],
+                                                        ['Weaving', latestTotals.weaveCostPerM],
+                                                        ['Warping & sizing', latestTotals.warpingAndSizingPerM],
+                                                        ['Processing & finishing', latestTotals.windingPerM + latestTotals.processingPerM + latestTotals.finishingPerM],
+                                                        ['Factory overhead', latestTotals.overheadPerM],
+                                                    ].map(([label, value]) => (
+                                                        <div key={String(label)} className="flex items-center justify-between py-2">
+                                                            <span className="text-slate-600">{label}</span>
+                                                            <span className="font-mono font-semibold text-slate-800">₹{Number(value).toFixed(2)}/m</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-slate-950 p-3 text-white">
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Production cost</p><p className="mt-1 font-mono text-sm font-black">₹{Number(latest.landed_cost_per_meter).toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latest.quote_price_per_meter).toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latest.intended_margin_percent).toFixed(1)}%</p></div>
+                                                </div>
+                                            </section>
+
+                                            <section className="rounded-xl border border-slate-200 bg-white p-4">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-black text-slate-950">Applied production</p>
+                                                        <p className="mt-1 text-xs text-slate-500">Orders and market runs created from this quality&apos;s costing snapshots.</p>
+                                                    </div>
+                                                    <Factory className="h-5 w-5 text-slate-400" />
+                                                </div>
+                                                {usages.length === 0 ? (
+                                                    <div className="mt-4 rounded-lg border border-dashed border-slate-200 px-4 py-8 text-center text-xs text-slate-500">This costing has not been applied to an order or market run yet.</div>
+                                                ) : (
+                                                    <div className="mt-4 space-y-2">
+                                                        {usages.map(({ record, order }) => {
+                                                            const produced = getProducedMeters(order)
+                                                            const target = Number(order.total_target_meters ?? record.meters ?? 0)
+                                                            const isMarketRun = Boolean(record.market_run_id || order.market_run_id || record.record_kind === 'market_run')
+                                                            return (
+                                                                <button key={order.id} type="button" onClick={() => onOpenUsage(record, order)} className="w-full rounded-lg border border-slate-200 p-3 text-left hover:border-blue-300 hover:bg-blue-50/40">
+                                                                    <div className="flex items-start justify-between gap-3">
+                                                                        <div className="min-w-0">
+                                                                            <p className="truncate text-xs font-bold text-slate-900">{isMarketRun ? 'Market run' : 'Party order'} · {record.party_name || order.party_name || group.name}</p>
+                                                                            <p className="mt-1 text-[11px] text-slate-500">{produced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m produced of {target.toLocaleString('en-IN')} m · {order.status}</p>
+                                                                        </div>
+                                                                        <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" />
+                                                                    </div>
+                                                                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                                                                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${target > 0 ? Math.min(100, (produced / target) * 100) : 0}%` }} />
+                                                                    </div>
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </section>
+                                        </div>
+                                    )}
+
+                                    {group.records.length > 0 && (
+                                        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                                            <p className="text-sm font-black text-slate-950">Costing history</p>
+                                            <p className="mt-1 text-xs text-slate-500">Select any two snapshots to compare their commercial assumptions.</p>
+                                            <div className="mt-3 overflow-x-auto">
+                                                <table className="w-full min-w-[720px] text-left text-xs">
+                                                    <thead className="border-b border-slate-200 text-[10px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="w-10 py-2"><span className="sr-only">Compare</span></th><th className="py-2">Snapshot</th><th className="py-2">Context</th><th className="py-2">Cost</th><th className="py-2">Selling price</th><th className="py-2">Margin</th><th className="py-2">Costing qty.</th><th className="py-2 text-right">Actions</th></tr></thead>
+                                                    <tbody className="divide-y divide-slate-100">
+                                                        {group.records.map(record => (
+                                                            <tr key={record.id}>
+                                                                <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
+                                                                <td className="py-3 font-bold text-slate-900">v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></td>
+                                                                <td className="py-3 capitalize text-slate-600">{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name}` : 'Internal costing'}</td>
+                                                                <td className="py-3 font-mono text-slate-700">₹{Number(record.landed_cost_per_meter).toFixed(2)}/m</td>
+                                                                <td className="py-3 font-mono font-bold text-orange-700">₹{Number(record.quote_price_per_meter).toFixed(2)}/m</td>
+                                                                <td className="py-3 font-mono font-bold text-emerald-700">{Number(record.intended_margin_percent).toFixed(1)}%</td>
+                                                                <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
+                                                                <td className="py-3 text-right"><Button variant="ghost" size="sm" onClick={() => onOpen(record)}>Open</Button></td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </section>
+                                    )}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )
+            })}
+        </div>
+    )
+}
+
+export default function QuotesClient({ initialQuotes, initialTemplates, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -189,6 +428,8 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
     const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
     const [showArchived, setShowArchived] = useState(false)
+    const [expandedQualityKey, setExpandedQualityKey] = useState<string | null>(null)
+    const showQualityLibrary = !canUseQuotationWorkflow
 
     const filteredQuotes = useMemo(() => {
         const library = filterAndSortSavedCostings(quotes.filter(quote => (
@@ -205,6 +446,56 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         return library.filter(quote => canUseQuotationLifecycle(quote.record_kind, canUseProduction) && quote.status === filterStatus)
     },
     [canUseProduction, canUseQuotationWorkflow, costingSort, filterStatus, marginFilter, quotes, searchQuery, showArchived])
+    const qualityGroups = useMemo(() => {
+        const groups = new Map<string, SavedQualityGroup>()
+        const labelIndex = new Map<string, string>()
+
+        if (!showArchived) {
+            for (const template of initialTemplates.filter(item => item.is_active !== false)) {
+                const key = `template:${template.id}`
+                groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at })
+                labelIndex.set(normalizeQualityKey(template.name), key)
+            }
+        }
+
+        for (const record of quotes.filter(item => Boolean(item.is_archived) === showArchived)) {
+            const normalizedLabel = normalizeQualityKey(record.quality_label)
+            const explicitTemplateKey = record.template_id ? `template:${record.template_id}` : null
+            const key = explicitTemplateKey && groups.has(explicitTemplateKey)
+                ? explicitTemplateKey
+                : labelIndex.get(normalizedLabel) ?? `label:${normalizedLabel || record.id}`
+            const existing = groups.get(key)
+            if (existing) {
+                existing.records.push(record)
+                if (Date.parse(record.updated_at) > Date.parse(existing.updatedAt)) existing.updatedAt = record.updated_at
+            } else {
+                groups.set(key, {
+                    key,
+                    name: record.quality_label || 'Untitled costing',
+                    template: initialTemplates.find(template => template.id === record.template_id) ?? null,
+                    records: [record],
+                    updatedAt: record.updated_at,
+                })
+                if (normalizedLabel) labelIndex.set(normalizedLabel, key)
+            }
+        }
+
+        const query = normalizeQualityKey(searchQuery)
+        const visible = [...groups.values()]
+            .map(group => ({
+                ...group,
+                records: filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: 'all' }),
+            }))
+            .filter(group => !query || normalizeQualityKey(`${group.name} ${group.records.map(record => record.party_name).join(' ')}`).includes(query))
+            .filter(group => marginFilter === 'all' || filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: marginFilter }).length > 0)
+
+        return visible.sort((a, b) => {
+            if (costingSort === 'oldest') return Date.parse(a.updatedAt) - Date.parse(b.updatedAt)
+            if (costingSort === 'margin_desc') return Number(b.records[0]?.intended_margin_percent ?? Number.NEGATIVE_INFINITY) - Number(a.records[0]?.intended_margin_percent ?? Number.NEGATIVE_INFINITY)
+            if (costingSort === 'cost_asc') return Number(a.records[0]?.landed_cost_per_meter ?? Number.POSITIVE_INFINITY) - Number(b.records[0]?.landed_cost_per_meter ?? Number.POSITIVE_INFINITY)
+            return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
+        })
+    }, [costingSort, initialTemplates, marginFilter, quotes, searchQuery, showArchived])
     const selectedCostings = useMemo(
         () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
         [quotes, selectedCostingIds],
@@ -236,6 +527,11 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
             if (current.includes(id)) return current.filter(currentId => currentId !== id)
             return current.length >= 2 ? [current[1], id] : [...current, id]
         })
+    }
+
+    const openAppliedProduction = (quote: QuoteRow, order: QuoteLinkedOrder) => {
+        const marketRunId = quote.market_run_id || order.market_run_id
+        router.push(marketRunId ? `/owner/market-runs/${marketRunId}` : `/owner/orders?orderId=${order.id}`)
     }
 
     const handleStatusChange = async (id: string, newStatus: 'draft' | 'sent' | 'accepted' | 'rejected') => {
@@ -307,6 +603,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 sourceRecordKind: createsQuotationFromCosting
                     ? undefined
                     : quote.record_kind ?? (canUseQuotationWorkflow ? 'quotation' : 'costing'),
+                templateId: quote.template_id ?? undefined,
                 restoreOnEstimatorEntry: true,
             }
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
@@ -380,7 +677,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         <History className="h-6 w-6 text-indigo-500" />
                         {canUseQuotationWorkflow ? 'Costings & Quotations' : 'Saved Costings'}
                     </h1>
-                    <p className="text-sm text-slate-500 font-medium">{canUseQuotationWorkflow ? 'Keep costing intelligence while adding customer quotation and production workflows.' : 'Find, compare, reopen, duplicate, and export your costing history.'}</p>
+                    <p className="text-sm text-slate-500 font-medium">{canUseQuotationWorkflow ? 'Keep costing intelligence while adding customer quotation and production workflows.' : 'Saved qualities with costing history, breakdowns, and production usage in one place.'}</p>
                 </div>
                 <Button onClick={() => router.push('/owner/estimator')} className="h-11 bg-orange-600 text-white hover:bg-orange-700">
                     <Plus className="h-4 w-4" /> {canUseQuotationWorkflow ? 'New Estimate' : 'New Costing'}
@@ -452,20 +749,22 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         </Button>
                     </div>
                     <p className="mt-2 text-xs text-slate-500">
-                        {filteredQuotes.length} {showArchived ? 'archived ' : ''}{filteredQuotes.length === 1 ? 'record' : 'records'} shown · select any two to compare.
+                        {showQualityLibrary
+                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · expand a quality to review its costing and production.`
+                            : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'} shown · select any two to compare.`}
                     </p>
                 </div>
 
-            {filteredQuotes.length === 0 ? (
+            {(showQualityLibrary ? qualityGroups.length === 0 : filteredQuotes.length === 0) ? (
                 <Card className="border-dashed border-2 border-slate-200 bg-slate-50/50">
                     <CardContent className="py-12 flex flex-col items-center justify-center text-center space-y-3">
                         <div className="p-3 bg-white rounded-full shadow-sm shadow-slate-200/50">
                             <FileText className="h-6 w-6 text-slate-400" />
                         </div>
-                        <p className="text-sm font-bold text-slate-600">{canUseQuotationWorkflow ? 'No costings or quotations found' : 'No saved Cost Estimates yet'}</p>
+                        <p className="text-sm font-bold text-slate-600">{canUseQuotationWorkflow ? 'No costings or quotations found' : 'No saved qualities or costings found'}</p>
                         <p className="text-xs text-slate-500 max-w-xs">{
                             filterStatus === 'all'
-                                ? (canUseQuotationWorkflow ? "You haven't saved any costings or quotations yet." : "Save a Cost Estimate and it will appear here.")
+                                ? (canUseQuotationWorkflow ? "You haven't saved any costings or quotations yet." : "Save a quality or Cost Estimate and it will appear here.")
                                 : `No Quotations with status "${filterStatus}".`
                         }</p>
                         {(searchQuery || marginFilter !== 'all') && (
@@ -485,6 +784,19 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                         )}
                     </CardContent>
                 </Card>
+            ) : showQualityLibrary ? (
+                <SavedQualityLibraryView
+                    groups={qualityGroups}
+                    expandedKey={expandedQualityKey}
+                    selectedCostingIds={selectedCostingIds}
+                    updatingId={updatingId}
+                    onToggleExpanded={key => setExpandedQualityKey(current => current === key ? null : key)}
+                    onToggleComparison={toggleCostingSelection}
+                    onOpen={quote => handleRestore(quote, 'edit')}
+                    onStartFrom={quote => handleRestore(quote, 'duplicate')}
+                    onExport={setQuoteToExport}
+                    onOpenUsage={openAppliedProduction}
+                />
             ) : !canUseProduction || !canUseQuotationWorkflow ? (
                 <div>
                     <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">

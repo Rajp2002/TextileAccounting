@@ -562,6 +562,7 @@ export async function saveEstimatorQuoteV3(params: {
     recordKind?:        'costing' | 'quotation'
     sourceQuoteId?:     string
     expectedSourceUpdatedAt?: string
+    templateId?:         string
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -596,6 +597,18 @@ export async function saveEstimatorQuoteV3(params: {
     const { estimate } = params
     if (!params.partyName.trim()) return { error: 'Party name is required.' }
     if (!params.qualityLabel.trim()) return { error: 'Quality label is required.' }
+    if (params.templateId && !UUID_PATTERN.test(params.templateId)) return { error: 'Saved quality identifier is invalid.' }
+    if (params.templateId) {
+        const { data: template, error: templateError } = await supabase
+            .from('estimator_templates')
+            .select('id')
+            .eq('id', params.templateId)
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .maybeSingle()
+        if (templateError) return { error: templateError.message }
+        if (!template) return { error: 'The selected saved quality is no longer available.' }
+    }
     const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate))
     if (snapshotError) return { error: snapshotError }
     const authoritative = getAuthoritativeQuoteTotals(estimate)
@@ -619,6 +632,7 @@ export async function saveEstimatorQuoteV3(params: {
             record_kind:          newRecordKind,
             party_name:           params.partyName.trim(),
             quality_label:        params.qualityLabel.trim(),
+            template_id:          params.templateId ?? null,
             warp_instruction:     params.warpInstruction?.trim() || null,
             weft_instruction:     params.weftInstruction?.trim() || null,
             // V3 full recipe snapshots
@@ -1082,7 +1096,15 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
         .from('estimator_quotes')
         .select(`
             *,
-            orders!estimator_quotes_order_id_fkey ( id, status )
+            orders!estimator_quotes_order_id_fkey (
+                id,
+                status,
+                party_name,
+                quality_label,
+                total_target_meters,
+                market_run_id,
+                production_logs ( meters )
+            )
         `)
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false })
@@ -1237,6 +1259,7 @@ export async function createMarketRunFromEstimator(params: {
     totalProductionCostPerM: number
     notes?:                  string
     deadline:                string
+    templateId?:             string
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -1250,6 +1273,18 @@ export async function createMarketRunFromEstimator(params: {
     }
     if (!params.fabricLabel.trim()) {
         return { error: 'Fabric label is required.' }
+    }
+    if (params.templateId && !UUID_PATTERN.test(params.templateId)) return { error: 'Saved quality identifier is invalid.' }
+    if (params.templateId) {
+        const { data: template, error: templateError } = await supabase
+            .from('estimator_templates')
+            .select('id')
+            .eq('id', params.templateId)
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .maybeSingle()
+        if (templateError) return { error: templateError.message }
+        if (!template) return { error: 'The selected saved quality is no longer available.' }
     }
 
     const estimate = { ...params.estimate, orderQuantityM: targetMeters }
@@ -1282,6 +1317,7 @@ export async function createMarketRunFromEstimator(params: {
             record_kind:          'market_run',
             party_name:           params.fabricLabel.trim(),   // fabric label used as party placeholder
             quality_label:        params.qualityLabel.trim(),
+            template_id:          params.templateId ?? null,
             warp_instruction:     params.warpInstruction?.trim(),
             weft_instruction:     params.weftInstruction?.trim(),
             warp_rows:            estimate.warpRows,
