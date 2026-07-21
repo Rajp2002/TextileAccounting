@@ -21,11 +21,11 @@ export default function LandingHeader() {
             className="fixed top-0 left-0 right-0 z-50 px-3 pb-3 pt-safe xs:px-4 xs:pb-4 sm:px-6 lg:px-8"
         >
             <div className="mx-auto max-w-7xl">
-                <div className="rounded-b-xl border border-t-0 border-gray-200/80 bg-white/85 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/85 transition-all dark:bg-zinc-950/80 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
+                <div className="rounded-b-xl border border-t-0 border-gray-800/60 bg-black shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all">
                     <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center group">
                             <div className="relative h-12 w-32 xs:h-16 xs:w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
-                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="object-contain object-left" priority />
+                                <Image src="/images/WeavlyLogoBlack.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="object-contain object-left" priority />
                             </div>
                         </Link>
 
@@ -35,7 +35,7 @@ export default function LandingHeader() {
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className="relative text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors group"
+                                    className="relative text-sm font-semibold text-gray-300 hover:text-white transition-colors group"
                                 >
                                     {link.name}
                                     <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
@@ -45,12 +45,12 @@ export default function LandingHeader() {
 
                         <div className="hidden md:flex items-center gap-4">
                             <Link href="/login">
-                                <Button variant="ghost" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-zinc-800/50 font-semibold rounded-full px-6 transition-all">
+                                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-white/10 font-semibold rounded-full px-6 transition-all">
                                     Log in
                                 </Button>
                             </Link>
                             <Link href="/signup">
-                                <Button className="bg-gray-950 hover:bg-gray-800 text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 shadow-lg shadow-gray-900/10 dark:shadow-white/10 rounded-md px-6 font-semibold">
+                                <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-orange-500/20 rounded-md px-6 font-semibold transition-all">
                                     Request Pilot
                                 </Button>
                             </Link>
@@ -60,7 +60,7 @@ export default function LandingHeader() {
                         <div className="flex md:hidden">
                             <button
                                 type="button"
-                                className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800/50 transition-colors"
+                                className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-gray-200 hover:bg-white/10 transition-colors"
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             >
                                 <span className="sr-only">Open main menu</span>
@@ -77,25 +77,25 @@ export default function LandingHeader() {
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
                     <div className="absolute left-3 right-3 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-50 xs:left-4 xs:right-4 xs:top-[calc(6rem+env(safe-area-inset-top,0px))] md:hidden">
-                        <div className="overflow-hidden rounded-xl bg-white/95 shadow-2xl ring-1 ring-gray-900/5 backdrop-blur-2xl dark:bg-zinc-900/95 dark:ring-zinc-800">
+                        <div className="overflow-hidden rounded-xl bg-black/95 shadow-2xl ring-1 ring-gray-700/50 backdrop-blur-2xl">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (
                                     <Link
                                         key={link.name}
                                         href={link.href}
-                                        className="block text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50/80 rounded-xl px-4 py-3 dark:text-white dark:hover:bg-zinc-800/80 transition-colors"
+                                        className="block text-base font-semibold leading-7 text-gray-200 hover:bg-white/10 rounded-xl px-4 py-3 transition-colors"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
                                         {link.name}
                                     </Link>
                                 ))}
-                                <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
+                                <div className="h-px bg-gray-700 my-2" />
                                 <div className="flex flex-col gap-3">
                                     <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-900 dark:text-white">Log in</Button>
+                                        <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-gray-600 hover:bg-white/10 text-gray-200">Log in</Button>
                                     </Link>
                                     <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button className="w-full bg-gray-950 text-white dark:bg-white dark:text-gray-900 hover:opacity-90 rounded-md py-6 font-semibold shadow-md">Request Pilot</Button>
+                                        <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-md py-6 font-semibold shadow-md">Request Pilot</Button>
                                     </Link>
                                 </div>
                             </div>
