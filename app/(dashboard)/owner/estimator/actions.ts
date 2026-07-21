@@ -4,7 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
-import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary, validateEstimatorSnapshot } from '@/lib/estimator-validation'
+import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -246,6 +246,8 @@ export async function upsertFactoryCostProfile(data: {
     warp_crimp_pct?:         number
     is_configured?:          boolean
 }) {
+    const validationError = getFirstEstimatorValidationMessage(validateFactoryCostProfile(data))
+    if (validationError) return { error: validationError }
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -739,13 +741,35 @@ export async function saveEstimatorQuoteV3(params: {
         }
     }
 
+    let costingVersion: { costing_group_id: string; version_number: number } | Record<string, never> = {}
+    if (newRecordKind === 'costing' && !params.sourceQuoteId) {
+        let previousQuery = supabase
+            .from('estimator_quotes')
+            .select('id, costing_group_id, version_number')
+            .eq('org_id', profile.org_id)
+            .eq('record_kind', 'costing')
+            .order('created_at', { ascending: false })
+            .limit(1)
+        previousQuery = params.templateId
+            ? previousQuery.eq('template_id', params.templateId)
+            : previousQuery.eq('quality_label', params.qualityLabel.trim())
+        const { data: previousRows, error: previousError } = await previousQuery
+        if (previousError) return { error: previousError.message }
+        const previous = previousRows?.[0]
+        costingVersion = {
+            costing_group_id: previous?.costing_group_id ?? previous?.id ?? crypto.randomUUID(),
+            version_number: Number(previous?.version_number ?? 0) + 1,
+        }
+    }
+
     const { data: saved, error } = await supabase
         .from('estimator_quotes')
         .insert({
             ...quotePayload,
             source_quote_id: params.sourceQuoteId ?? null,
+            ...costingVersion,
         })
-        .select('id, updated_at')
+        .select('id, updated_at, version_number')
         .single()
 
     if (error) {
@@ -762,7 +786,7 @@ export async function saveEstimatorQuoteV3(params: {
         }
         return { error: error.message }
     }
-    return { success: true, quoteId: saved.id, updatedAt: saved.updated_at }
+    return { success: true, quoteId: saved.id, updatedAt: saved.updated_at, versionNumber: saved.version_number }
 }
 
 // ─── Convert Quote to Order ───────────────────────────────────────────────────

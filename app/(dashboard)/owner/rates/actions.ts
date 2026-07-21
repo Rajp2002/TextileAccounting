@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import {
     applyYarnRateToTemplate,
     getMissingYarnRateCandidates,
@@ -45,6 +46,12 @@ const CATEGORIES = new Set<CostRateCategory>([
 ])
 const UNITS = new Set<CostRateUnit>(['per_kg', 'per_m', 'percent'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+async function requireBaseTier(orgId: string) {
+    return tierSatisfies(await getOrgTier(orgId), 'base')
+        ? null
+        : 'An active Weavly Estimator or Full Suite subscription is required.'
+}
 
 function validateRate(input: CostRateInput) {
     if (input.id && !UUID_PATTERN.test(input.id)) return 'Rate identifier is invalid.'
@@ -94,15 +101,20 @@ async function applyProfileDefault(
     }
     const values = mapping[input.category]
     if (!values) return null
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('factory_cost_profile')
         .update({ ...values, updated_at: new Date().toISOString() })
         .eq('factory_id', orgId)
-    return error?.message ?? null
+        .select('id')
+        .maybeSingle()
+    if (error) return error.message
+    return data ? null : 'Factory defaults were not updated because the cost profile has not been configured yet.'
 }
 
 export async function getCostRates() {
     const { user, profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
     const supabase = await createServerClient()
 
     const { data: existingRates, error } = await supabase
@@ -114,6 +126,14 @@ export async function getCostRates() {
         .order('name')
     if (error) return { error: error.message }
 
+    const { data: templates, error: templatesError } = await supabase
+        .from('estimator_templates')
+        .select('id, name, warp_rows, weft_rows')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+    if (templatesError) return { error: templatesError.message }
+
+    const qualityTemplates = (templates ?? []) as YarnRateTemplate[]
     const today = new Date().toISOString().slice(0, 10)
     let rates = existingRates ?? []
 
@@ -125,9 +145,13 @@ export async function getCostRates() {
             .maybeSingle()
         if (profileError) return { error: profileError.message }
 
+        const defaultWarpName = costProfile?.default_warp_yarn_name || 'Warp yarn'
+        const defaultWeftName = costProfile?.default_weft_yarn_name || 'Weft yarn'
+        const savedQualityRates = getMissingYarnRateCandidates(qualityTemplates, [])
+        const savedRate = (name: string, category: CostRateCategory, fallback: number) => savedQualityRates.find(candidate => candidate.category === category && normalizeYarnName(candidate.yarnName) === normalizeYarnName(name))?.currentValue ?? fallback
         const defaults = [
-            { name: costProfile?.default_warp_yarn_name || 'Warp yarn', category: 'yarn_warp', unit: 'per_kg', current_value: Number(costProfile?.default_warp_yarn_rate_per_kg ?? 0), apply_as_default: true },
-            { name: costProfile?.default_weft_yarn_name || 'Weft yarn', category: 'yarn_weft', unit: 'per_kg', current_value: Number(costProfile?.default_weft_yarn_rate_per_kg ?? 0), apply_as_default: true },
+            { name: defaultWarpName, category: 'yarn_warp', unit: 'per_kg', current_value: savedRate(defaultWarpName, 'yarn_warp', Number(costProfile?.default_warp_yarn_rate_per_kg ?? 0)), apply_as_default: true },
+            { name: defaultWeftName, category: 'yarn_weft', unit: 'per_kg', current_value: savedRate(defaultWeftName, 'yarn_weft', Number(costProfile?.default_weft_yarn_rate_per_kg ?? 0)), apply_as_default: true },
             { name: 'Warping', category: 'warping', unit: 'per_kg', current_value: Number(costProfile?.warping_rate_per_kg ?? 2), apply_as_default: true },
             { name: 'Sizing', category: 'sizing', unit: 'per_kg', current_value: Number(costProfile?.sizing_rate_per_kg ?? 1.5), apply_as_default: true },
             { name: 'Transport', category: 'transport', unit: 'per_m', current_value: Number(costProfile?.default_transport_per_m ?? 0), apply_as_default: true },
@@ -151,14 +175,6 @@ export async function getCostRates() {
         rates = seeded ?? []
     }
 
-    const { data: templates, error: templatesError } = await supabase
-        .from('estimator_templates')
-        .select('id, name, warp_rows, weft_rows')
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-    if (templatesError) return { error: templatesError.message }
-
-    const qualityTemplates = (templates ?? []) as YarnRateTemplate[]
     const missingYarns = getMissingYarnRateCandidates(qualityTemplates, rates)
     if (missingYarns.length) {
         const discoveredRates = missingYarns.map(candidate => ({
@@ -241,6 +257,8 @@ async function syncYarnRateToSavedQualities(
 export async function getCostRateHistory(rateId: string) {
     if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
     const { profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     const { data, error } = await supabase
         .from('cost_rate_history')
@@ -256,6 +274,8 @@ export async function saveCostRate(input: CostRateInput) {
     const validationError = validateRate(input)
     if (validationError) return { error: validationError }
     const { user, profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     await setAuditActor(supabase, user.id)
 
@@ -313,10 +333,24 @@ export async function saveCostRate(input: CostRateInput) {
         notes: input.notes?.trim() || null,
         changed_by: user.id,
     })
-    if (historyError) return { error: historyError.message }
+    if (historyError) {
+        return {
+            data: saved,
+            syncedQualityCount: 0,
+            syncWarning: `The current rate was saved, but its history entry failed: ${historyError.message}`,
+            partialSuccess: true,
+        }
+    }
 
     const profileError = await applyProfileDefault(supabase, profile.org_id, input)
-    if (profileError) return { error: profileError }
+    if (profileError) {
+        return {
+            data: saved,
+            syncedQualityCount: 0,
+            syncWarning: `The current rate was saved, but the factory default was not updated: ${profileError}`,
+            partialSuccess: true,
+        }
+    }
 
     const isYarnRate = input.category === 'yarn_warp' || input.category === 'yarn_weft'
     const qualitySync = isYarnRate
@@ -336,6 +370,8 @@ export async function saveCostRate(input: CostRateInput) {
 export async function archiveCostRate(rateId: string) {
     if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
     const { user, profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     await setAuditActor(supabase, user.id)
     const { data, error } = await supabase

@@ -23,7 +23,7 @@ export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
 
     const { data } = await supabase
         .from('org_subscriptions')
-        .select('status, plan_tier, current_end, created_at')
+        .select('status, plan_tier, current_start, current_end, created_at')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false })
 

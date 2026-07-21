@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import {
     getBillingPlan,
     getBillingPrice,
@@ -233,7 +234,10 @@ export default async function BillingPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">Billing & Subscription</h1>
                     <p className="mt-2 text-sm text-slate-500">Manage your plan, renewal, rewards, and payment history.</p>
                 </div>
-                {tier !== 'none' && <StatusBadge status={subscription?.status ?? 'active'} />}
+                <div className="flex items-center gap-3">
+                    <Link href="/owner/data-export" className="text-sm font-semibold text-blue-700 underline-offset-4 hover:underline">Export organization data</Link>
+                    {tier !== 'none' && <StatusBadge status={subscription?.status ?? 'active'} />}
+                </div>
             </div>
 
             {/* Main Content Grid */}

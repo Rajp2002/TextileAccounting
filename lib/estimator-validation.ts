@@ -33,6 +33,22 @@ const MAX_LOOMS = 100_000
 const MAX_WORKING_DAYS = 366
 const MAX_OUTPUT_PER_LOOM_PER_DAY = 1_000_000
 
+export type FactoryCostProfileInput = {
+  warping_rate_per_kg: number
+  sizing_rate_per_kg: number
+  winding_rate_per_kg: number
+  overhead_pct: number
+  default_commission_pct: number
+  default_transport_per_m: number
+  monthly_output_m?: number
+  overhead_override_per_m?: number | null
+  loom_count?: number
+  monthly_working_days?: number
+  avg_output_per_loom_per_day?: number
+  yarn_shortage_pct?: number
+  warp_crimp_pct?: number
+}
+
 function resultFromIssues(issues: EstimatorValidationIssue[]): EstimatorValidationResult {
   return issues.length > 0 ? { valid: false, issues } : { valid: true, issues: [] }
 }
@@ -71,6 +87,24 @@ function addNumberIssue(
   if (numberValue > options.max) {
     issues.push({ field, message: `${label} is outside the supported range.` })
   }
+}
+
+export function validateFactoryCostProfile(input: FactoryCostProfileInput): EstimatorValidationResult {
+  const issues: EstimatorValidationIssue[] = []
+  addNumberIssue(issues, 'warping_rate_per_kg', 'Warping rate', input.warping_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
+  addNumberIssue(issues, 'sizing_rate_per_kg', 'Sizing rate', input.sizing_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
+  addNumberIssue(issues, 'winding_rate_per_kg', 'Winding rate', input.winding_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
+  addNumberIssue(issues, 'overhead_pct', 'Overhead %', input.overhead_pct, { max: 100, allowZero: true })
+  addNumberIssue(issues, 'default_commission_pct', 'Default commission %', input.default_commission_pct, { max: 99.99, allowZero: true })
+  addNumberIssue(issues, 'default_transport_per_m', 'Default transport', input.default_transport_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.overhead_override_per_m != null) addNumberIssue(issues, 'overhead_override_per_m', 'Overhead override', input.overhead_override_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.monthly_output_m != null) addNumberIssue(issues, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS })
+  if (input.loom_count != null) addNumberIssue(issues, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })
+  if (input.monthly_working_days != null) addNumberIssue(issues, 'monthly_working_days', 'Monthly working days', input.monthly_working_days, { max: 31 })
+  if (input.avg_output_per_loom_per_day != null) addNumberIssue(issues, 'avg_output_per_loom_per_day', 'Average output per loom per day', input.avg_output_per_loom_per_day, { max: MAX_OUTPUT_PER_LOOM_PER_DAY })
+  if (input.yarn_shortage_pct != null) addNumberIssue(issues, 'yarn_shortage_pct', 'Default yarn waste %', input.yarn_shortage_pct, { max: MAX_WASTE_PERCENT, allowZero: true })
+  if (input.warp_crimp_pct != null) addNumberIssue(issues, 'warp_crimp_pct', 'Warp crimp %', input.warp_crimp_pct, { max: MAX_PERCENT, allowZero: true })
+  return resultFromIssues(issues)
 }
 
 function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidationIssue[]) {

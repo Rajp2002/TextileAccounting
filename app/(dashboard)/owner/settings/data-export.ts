@@ -58,39 +58,7 @@ export async function exportOrganizationData() {
     const exportedAt = new Date().toISOString()
 
     // Query all org-scoped tables in parallel
-    const [
-        { data: workers },
-        { data: fixedWorkers },
-        { data: machines },
-        { data: productionLogs },
-        { data: payrollPayments },
-        { data: payrollSettlements },
-        { data: payrollAdjustments },
-        { data: workerAdvances },
-        { data: supervisorFloatTransactions },
-        { data: attendance },
-        { data: orders },
-        { data: qualities },
-        { data: yarnBatches },
-        { data: yarnLots },
-        { data: yarnMovements },
-        { data: beamCards },
-        { data: beamCardLots },
-        { data: orderYarnRequirements },
-        { data: dispatches },
-        { data: estimatorQuotes },
-        { data: estimatorTemplates },
-        { data: factoryCostProfile },
-        { data: costRateBook },
-        { data: costRateHistory },
-        { data: payrollConfigs },
-        { data: workerConsentArtifacts },
-        { data: languageRequests },
-        { data: grievances },
-        { data: organizationDpas },
-        { data: organization },
-        { data: profiles },
-    ] = await Promise.all([
+    const queryResults = await Promise.all([
         supabase.from('workers').select('id, org_id, name, is_active, start_date, pf_esi_eligible, pf_esi_enrolled').eq('org_id', orgId),
         supabase.from('fixed_workers').select('id, org_id, name, role, monthly_salary, is_active, start_date, pf_esi_eligible, pf_esi_enrolled').eq('org_id', orgId),
         supabase.from('machines').select('*').eq('org_id', orgId),
@@ -123,6 +91,19 @@ export async function exportOrganizationData() {
         supabase.from('organizations').select('*').eq('id', orgId),
         supabase.from('profiles').select('id, full_name, role').eq('org_id', orgId),
     ])
+    const failedQuery = queryResults.find(result => result.error)
+    if (failedQuery?.error) {
+        console.error('Organization export query failed', { code: failedQuery.error.code })
+        throw new Error('The organization export is incomplete. No export was generated; please try again.')
+    }
+    const [
+        workers, fixedWorkers, machines, productionLogs, payrollPayments,
+        payrollSettlements, payrollAdjustments, workerAdvances, supervisorFloatTransactions,
+        attendance, orders, qualities, yarnBatches, yarnLots, yarnMovements, beamCards,
+        beamCardLots, orderYarnRequirements, dispatches, estimatorQuotes, estimatorTemplates,
+        factoryCostProfile, costRateBook, costRateHistory, payrollConfigs, workerConsentArtifacts,
+        languageRequests, grievances, organizationDpas, organization, profiles,
+    ] = queryResults.map(result => result.data)
 
     const { error: auditError } = await supabase.rpc('log_export_event', {
         p_org_id: orgId,

@@ -4,6 +4,7 @@ export type SubscriptionTier = 'none' | 'trial' | 'base' | 'premium'
 type SubscriptionAccessRow = {
   status: string
   plan_tier: string | null
+  current_start?: string | null
   current_end: string | null
   created_at?: string | null
 }
@@ -30,6 +31,10 @@ function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): bo
   // that was already purchased. `expired` is intentionally excluded because
   // it is the provider's terminal no-access state.
   if (!ACCESS_BEARING_STATUSES.has(row.status)) return false
+  if (row.current_start) {
+    const startMs = new Date(row.current_start).getTime()
+    if (!Number.isFinite(startMs) || startMs > nowMs) return false
+  }
   if (!row.current_end) return ['active', 'authenticated'].includes(row.status)
 
   const endMs = new Date(row.current_end).getTime()

@@ -76,11 +76,9 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
             script.src = url
             script.onload = () => {
                 const available = typeof window !== 'undefined' && !!window.Razorpay
-                console.log(`[SubscribeButton] Script loaded from ${url}. window.Razorpay:`, available)
                 resolve(available)
             }
             script.onerror = () => {
-                console.warn(`[SubscribeButton] Script blocked/failed from: ${url}`)
                 resolve(false)
             }
             document.body.appendChild(script)
@@ -88,40 +86,21 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
     }
 
     /**
-     * Load Razorpay Checkout with ad-blocker bypass.
-     *
-     * Strategy:
-     * 1. If Razorpay is already on window → done
-     * 2. Try our same-origin proxy (/api/billing/checkout-script) — ad blockers
-     *    won't block this because it's a first-party request
-     * 3. Fall back to the direct Razorpay CDN URL (for users without ad blockers,
-     *    this is faster since it may already be in browser cache)
+     * Load Razorpay Checkout only from Razorpay's official origin. Vendor code
+     * must never be proxied or rewritten because that bypasses provider source
+     * validation and makes the payment boundary impossible to audit.
      */
     const loadRazorpayScript = async (): Promise<boolean> => {
         if (typeof window !== 'undefined' && window.Razorpay) {
-            console.log('[SubscribeButton] Razorpay already available on window')
             return true
         }
-
-        // Try #1: Same-origin proxy (bypasses ad blockers)
-        console.log('[SubscribeButton] Attempting load via proxy...')
-        const proxyLoaded = await tryLoadScript('/api/billing/checkout-script')
-        if (proxyLoaded) return true
-
-        // Try #2: Direct CDN (fallback — may be blocked by ad blockers)
-        console.log('[SubscribeButton] Proxy failed, trying direct CDN...')
-        const cdnLoaded = await tryLoadScript('https://checkout.razorpay.com/v1/checkout.js')
-        if (cdnLoaded) return true
-
-        return false
+        return tryLoadScript('https://checkout.razorpay.com/v1/checkout.js')
     }
 
     async function handleSubscribe() {
         setLoading(true)
         try {
             const planName = tierName ?? (planTier === 'base' ? 'Weavly Estimator' : 'Weavly Full Suite')
-            console.log(`[SubscribeButton] Initializing one-time checkout for ${planName}`)
-
             const isLoaded = await loadRazorpayScript()
             if (!isLoaded) {
                 throw new Error(

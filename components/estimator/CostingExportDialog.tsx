@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { addDays, format } from 'date-fns'
 import { Download, FileText, Loader2, Printer, ReceiptText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -44,6 +44,16 @@ export function CostingExportDialog({
   const [showGstNote, setShowGstNote] = useState(true)
   const [generating, setGenerating] = useState(false)
 
+  useEffect(() => {
+    if (!open || !model) return
+    setMode('internal')
+    setBusinessName(defaultBusinessName)
+    setCustomerName(defaultCustomerName)
+    setValidUntil(format(addDays(new Date(), 15), 'yyyy-MM-dd'))
+    setNotes('')
+    setShowGstNote(true)
+  }, [defaultBusinessName, defaultCustomerName, model, open])
+
   const options = useMemo(() => ({
     mode,
     businessName,
@@ -58,11 +68,12 @@ export function CostingExportDialog({
   const handlePrint = () => {
     const html = buildHtml()
     if (!html) return
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+    const printWindow = window.open('', '_blank')
     if (!printWindow) {
       toast.error('Allow pop-ups to print the costing sheet.')
       return
     }
+    printWindow.opener = null
     printWindow.document.open()
     printWindow.document.write(html)
     printWindow.document.close()
@@ -80,7 +91,11 @@ export function CostingExportDialog({
       const host = document.createElement('div')
       host.style.width = '760px'
       host.style.position = 'fixed'
-      host.style.left = '-10000px'
+      host.style.left = '0'
+      host.style.top = '0'
+      host.style.zIndex = '-1'
+      host.style.pointerEvents = 'none'
+      host.style.background = '#ffffff'
       host.innerHTML = html.match(/<body>([\s\S]*)<\/body>/)?.[1] ?? html
       document.body.appendChild(host)
       await pdf.html(host, {

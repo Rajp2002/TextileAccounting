@@ -55,7 +55,6 @@ import {
     compareSavedCostings,
     buildSavedQualityRecipeState,
     filterAndSortSavedCostings,
-    getCostingVersionMovement,
     getPreviousCostingVersion,
     normalizeSavedWarpRows,
     normalizeSavedWeftRows,
@@ -240,6 +239,14 @@ function getSavedCostingTotals(quote: QuoteRow) {
     }
 }
 
+function getProductionCostPerM(quote: QuoteRow) {
+    return getSavedCostingTotals(quote)?.totalProductionCostPerM ?? Number(quote.landed_cost_per_meter)
+}
+
+function getProductionCostMovement(current: QuoteRow, previous: QuoteRow | null) {
+    return previous ? getProductionCostPerM(current) - getProductionCostPerM(previous) : null
+}
+
 function getCurrentRecipeCostPerM(
     template: SavedQuality,
     profile?: SavedQualityFactoryProfile,
@@ -291,7 +298,7 @@ function SavedQualityLibraryView({
                 return (
                     <Card key={group.key} className={isExpanded ? 'border-orange-200 bg-white shadow-md' : 'border-slate-200 bg-white shadow-sm'}>
                         <CardContent className="p-0">
-                            <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+                            <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
                                 <button
                                     type="button"
                                     onClick={() => onToggleExpanded(group.key)}
@@ -319,7 +326,7 @@ function SavedQualityLibraryView({
                                     <div className="rounded-lg bg-slate-50 px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{latest ? 'Latest cost' : 'Current recipe'}</p>
                                         <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest
-                                            ? `₹${Number(latest.landed_cost_per_meter).toFixed(2)}/m`
+                                            ? `₹${getProductionCostPerM(latest).toFixed(2)}/m`
                                             : group.currentRecipeCostPerM != null
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                 : '—'}</p>
@@ -391,7 +398,7 @@ function SavedQualityLibraryView({
                                                     ))}
                                                 </div>
                                                 <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-slate-950 p-3 text-white">
-                                                    <div><p className="text-[10px] uppercase text-slate-400">Production cost</p><p className="mt-1 font-mono text-sm font-black">₹{Number(latest.landed_cost_per_meter).toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Production cost</p><p className="mt-1 font-mono text-sm font-black">₹{latestTotals.totalProductionCostPerM.toFixed(2)}/m</p></div>
                                                     <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latest.quote_price_per_meter).toFixed(2)}/m</p></div>
                                                     <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latest.intended_margin_percent).toFixed(1)}%</p></div>
                                                 </div>
@@ -447,7 +454,7 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
                                                                 <td className="py-3 font-bold text-slate-900">v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></td>
                                                                 <td className="py-3 capitalize text-slate-600">{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name}` : 'Internal costing'}</td>
-                                                                <td className="py-3 font-mono text-slate-700">₹{Number(record.landed_cost_per_meter).toFixed(2)}/m</td>
+                                                                <td className="py-3 font-mono text-slate-700">₹{getProductionCostPerM(record).toFixed(2)}/m</td>
                                                                 <td className="py-3 font-mono font-bold text-orange-700">₹{Number(record.quote_price_per_meter).toFixed(2)}/m</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{Number(record.intended_margin_percent).toFixed(1)}%</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
@@ -558,7 +565,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         return visible.sort((a, b) => {
             if (costingSort === 'oldest') return Date.parse(a.updatedAt) - Date.parse(b.updatedAt)
             if (costingSort === 'margin_desc') return Number(b.records[0]?.intended_margin_percent ?? Number.NEGATIVE_INFINITY) - Number(a.records[0]?.intended_margin_percent ?? Number.NEGATIVE_INFINITY)
-            if (costingSort === 'cost_asc') return Number(a.records[0]?.landed_cost_per_meter ?? Number.POSITIVE_INFINITY) - Number(b.records[0]?.landed_cost_per_meter ?? Number.POSITIVE_INFINITY)
+            if (costingSort === 'cost_asc') return (a.records[0] ? getProductionCostPerM(a.records[0]) : Number.POSITIVE_INFINITY) - (b.records[0] ? getProductionCostPerM(b.records[0]) : Number.POSITIVE_INFINITY)
             return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
     }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived])
@@ -884,7 +891,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 {filteredQuotes.map(quote => {
                                     const selected = selectedCostingIds.includes(quote.id)
                                     const previousVersion = getPreviousCostingVersion(quote, quotes)
-                                    const costMovement = getCostingVersionMovement(quote, previousVersion)
+                                    const costMovement = getProductionCostMovement(quote, previousVersion)
                                     return (
                                         <tr key={quote.id} className={selected ? 'bg-blue-50/60' : 'hover:bg-slate-50/70'}>
                                             <td className="px-4 py-4 align-middle">
@@ -901,7 +908,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <p className="mt-1 text-xs text-slate-500">Saved {format(new Date(quote.created_at), 'MMM d, yyyy')}</p>
                                             </td>
                                             <td className="px-4 py-4">
-                                                <p className="font-mono text-sm font-semibold text-slate-700">₹{Number(quote.landed_cost_per_meter).toFixed(2)}/m</p>
+                                                <p className="font-mono text-sm font-semibold text-slate-700">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
                                                 {costMovement !== null && (
                                                     <p className={`mt-1 text-[11px] font-semibold ${costMovement > 0 ? 'text-amber-700' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                         {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
@@ -948,7 +955,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             const selected = selectedCostingIds.includes(quote.id)
                             const quality = quote.quality_label || 'Untitled costing'
                             const previousVersion = getPreviousCostingVersion(quote, quotes)
-                            const costMovement = getCostingVersionMovement(quote, previousVersion)
+                            const costMovement = getProductionCostMovement(quote, previousVersion)
                             return (
                                 <Card key={quote.id} className={selected ? 'border-blue-300 bg-blue-50/40 shadow-sm' : 'border-slate-200 bg-white shadow-sm'}>
                                     <CardContent className="p-4">
@@ -968,7 +975,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3">
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Production cost</p>
-                                                <p className="mt-1 font-mono text-sm font-bold text-slate-800">₹{Number(quote.landed_cost_per_meter).toFixed(2)}/m</p>
+                                                <p className="mt-1 font-mono text-sm font-bold text-slate-800">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
                                                 {costMovement !== null && (
                                                     <p className={`mt-1 text-[10px] font-semibold ${costMovement > 0 ? 'text-amber-700' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                         {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
@@ -1024,7 +1031,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         const hasQuotationLifecycle = canUseQuotationLifecycle(quote.record_kind, canUseQuotationWorkflow)
                         const canCreateOrder = hasQuotationLifecycle && quote.status === 'accepted' && !linkedOrder
                         const previousVersion = getPreviousCostingVersion(quote, quotes)
-                        const costMovement = getCostingVersionMovement(quote, previousVersion)
+                        const costMovement = getProductionCostMovement(quote, previousVersion)
 
                         return (
                             <Card key={quote.id} className="border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative group">
@@ -1056,7 +1063,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         </div>
                                         <div>
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Production Cost</p>
-                                            <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">₹{Number(quote.landed_cost_per_meter).toFixed(2)}/m</p>
+                                            <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
                                             {isCosting && costMovement != null && (
                                                 <p className={`mt-1 text-[10px] font-bold ${costMovement > 0 ? 'text-red-600' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                     {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
@@ -1212,14 +1219,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                     <tr>
                                         <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Metric</th>
                                         {selectedCostings.map(costing => (
-                                            <th key={costing.id} className="px-4 py-3 font-bold text-slate-950">{costing.quality_label || 'Untitled costing'}</th>
+                                            <th key={costing.id} className="px-4 py-3 font-bold text-slate-950">{costing.quality_label || 'Untitled costing'} · v{Number(costing.version_number ?? 1)} · {format(new Date(costing.created_at), 'MMM d, yyyy')}</th>
                                         ))}
                                         <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Change</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {[
-                                        ['Production cost', `₹${Number(selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, comparison.productionCostDelta, '₹', '/m'],
+                                        ['Production cost', `₹${Number(selectedCostingStates[0]?.totals.totalProductionCostPerM ?? selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.totalProductionCostPerM ?? selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.totalProductionCostPerM ?? selectedCostings[1].landed_cost_per_meter) - Number(selectedCostingStates[0]?.totals.totalProductionCostPerM ?? selectedCostings[0].landed_cost_per_meter), '₹', '/m'],
+                                        ['Commercial break-even', `₹${Number(selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, comparison.productionCostDelta, '₹', '/m'],
                                         ['Suggested selling price', `₹${Number(selectedCostings[0].quote_price_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostings[1].quote_price_per_meter).toFixed(2)}/m`, comparison.sellingPriceDelta, '₹', '/m'],
                                         ['Margin', `${Number(selectedCostings[0].intended_margin_percent).toFixed(1)}%`, `${Number(selectedCostings[1].intended_margin_percent).toFixed(1)}%`, comparison.marginDelta, '', ' pp'],
                                         ['Quantity', `${Number(selectedCostings[0].meters).toLocaleString('en-IN')} m`, `${Number(selectedCostings[1].meters).toLocaleString('en-IN')} m`, comparison.quantityDelta, '', ' m'],
