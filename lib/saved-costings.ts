@@ -1,4 +1,11 @@
-import type { WarpRow, WeftRow } from '@/lib/estimator'
+import {
+  ensureOverheadIntegrity,
+  makeDefaultEstimateState,
+  type FactorySections,
+  type LoomType,
+  type WarpRow,
+  type WeftRow,
+} from './estimator'
 
 export type SavedCostingSort = 'recent' | 'oldest' | 'margin_desc' | 'cost_asc'
 export type SavedCostingMarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
@@ -27,6 +34,58 @@ export type LegacySavedCostingYarnFallbacks = {
   weftDenier?: unknown
   yarnRate?: unknown
   picks?: unknown
+}
+
+export type SavedQualityRecipe = {
+  id: string
+  name: string
+  warp_rows?: unknown
+  weft_rows?: unknown
+  loom_type?: LoomType | null
+  loom_rpm?: unknown
+  loom_power_kw?: unknown
+  sizing_mode?: 'in_house' | 'outsourced' | null
+  hours_per_shift?: unknown
+  tape_length_m?: unknown
+  warp_crimp_pct?: unknown
+  per_pick_cost_paise?: unknown
+  yarn_shortage_pct?: unknown
+  overhead_override_per_m?: unknown
+  calculated_yarn_denier?: unknown
+  yarn_denier?: unknown
+  beam_ends?: unknown
+  ppi?: unknown
+  reed_space?: unknown
+  weft_denier?: unknown
+  default_yarn_rate?: unknown
+}
+
+export type SavedQualityFactoryProfile = Partial<{
+  warping_rate_per_kg: unknown
+  sizing_rate_per_kg: unknown
+  winding_rate_per_kg: unknown
+  default_processing_rate_per_m: unknown
+  default_finishing_rate_per_m: unknown
+  overhead_pct: unknown
+  default_commission_pct: unknown
+  default_transport_per_m: unknown
+  enabled_sections: FactorySections
+  overhead_items: unknown[]
+  monthly_output_m: unknown
+  overhead_override_per_m: unknown
+  loom_count: unknown
+  monthly_working_days: unknown
+  avg_output_per_loom_per_day: unknown
+  yarn_shortage_pct: unknown
+  warp_crimp_pct: unknown
+  is_configured: boolean
+}>
+
+export type SavedQualityFixedWorker = {
+  id: number
+  name: string
+  role: string
+  monthly_salary: number
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -100,6 +159,87 @@ export function normalizeSavedWeftRows(
       shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
     }
   })
+}
+
+/** Build the same live recipe state shown when a saved quality is applied in Cost Estimate. */
+export function buildSavedQualityRecipeState(
+  recipe: SavedQualityRecipe,
+  profile?: SavedQualityFactoryProfile,
+  fixedWorkers: SavedQualityFixedWorker[] = [],
+) {
+  const base = makeDefaultEstimateState()
+  let state = {
+    ...base,
+    warpingRatePerKg: finiteNumber(profile?.warping_rate_per_kg, base.warpingRatePerKg),
+    sizingRatePerKg: finiteNumber(profile?.sizing_rate_per_kg, base.sizingRatePerKg),
+    windingRatePerKg: finiteNumber(profile?.winding_rate_per_kg, base.windingRatePerKg),
+    processingRatePerM: finiteNumber(profile?.default_processing_rate_per_m, base.processingRatePerM),
+    finishingRatePerM: finiteNumber(profile?.default_finishing_rate_per_m, base.finishingRatePerM),
+    overheadPct: finiteNumber(profile?.overhead_pct, base.overheadPct),
+    commissionPct: finiteNumber(profile?.default_commission_pct, base.commissionPct),
+    transportPerM: finiteNumber(profile?.default_transport_per_m, base.transportPerM),
+    enabledSections: { ...base.enabledSections, ...(profile?.enabled_sections ?? {}) },
+    monthlyOutputM: finiteNumber(profile?.monthly_output_m, base.monthlyOutputM),
+    overheadOverridePerM: nullableFiniteNumber(profile?.overhead_override_per_m, base.overheadOverridePerM),
+    loomCount: finiteNumber(profile?.loom_count, base.loomCount),
+    monthlyWorkingDays: finiteNumber(profile?.monthly_working_days, base.monthlyWorkingDays),
+    avgOutputPerLoomPerDay: finiteNumber(profile?.avg_output_per_loom_per_day, base.avgOutputPerLoomPerDay),
+    yarnShortagePct: finiteNumber(profile?.yarn_shortage_pct, base.yarnShortagePct),
+    warpCrimpPct: finiteNumber(profile?.warp_crimp_pct, base.warpCrimpPct),
+    isConfigured: profile?.is_configured ?? base.isConfigured,
+  }
+
+  if (Array.isArray(profile?.overhead_items) && profile.overhead_items.length > 0) {
+    state = { ...state, overheadItems: ensureOverheadIntegrity(profile.overhead_items) }
+  } else if (fixedWorkers.length > 0) {
+    state = {
+      ...state,
+      overheadItems: [
+        ...state.overheadItems,
+        ...ensureOverheadIntegrity(fixedWorkers.map(worker => ({
+          id: `fw-${worker.id}`,
+          label: `${worker.name} (${worker.role})`,
+          monthlyAmount: Number(worker.monthly_salary),
+          source: 'fixed_worker_derived',
+          workerId: worker.id,
+          category: 'custom',
+          isPreset: false,
+          isLocked: false,
+        }))),
+      ],
+    }
+  }
+
+  const fallbackRate = recipe.default_yarn_rate
+  const warpRows = normalizeSavedWarpRows(recipe.warp_rows, state.warpRows[0], {
+    beamEnds: recipe.beam_ends,
+    warpDenier: recipe.calculated_yarn_denier ?? recipe.yarn_denier,
+    yarnRate: fallbackRate,
+  })
+  const weftRows = normalizeSavedWeftRows(recipe.weft_rows, state.weftRows[0], {
+    picks: recipe.ppi,
+    reedSpace: recipe.reed_space,
+    weftDenier: recipe.weft_denier,
+    yarnRate: fallbackRate,
+  })
+
+  return {
+    ...state,
+    warpRows,
+    weftRows,
+    tapeLengthM: finiteNumber(recipe.tape_length_m, state.tapeLengthM),
+    warpCrimpPct: finiteNumber(recipe.warp_crimp_pct, state.warpCrimpPct),
+    perPickCostPaisa: finiteNumber(recipe.per_pick_cost_paise, state.perPickCostPaisa),
+    yarnShortagePct: finiteNumber(recipe.yarn_shortage_pct, state.yarnShortagePct),
+    overheadOverridePerM: nullableFiniteNumber(recipe.overhead_override_per_m, state.overheadOverridePerM),
+    loomType: recipe.loom_type ?? null,
+    loomRpm: nullableFiniteNumber(recipe.loom_rpm, null),
+    loomPowerKw: nullableFiniteNumber(recipe.loom_power_kw, null),
+    loomRpmIsCustomised: false,
+    loomPowerKwIsCustomised: false,
+    sizingMode: recipe.sizing_mode ?? 'in_house',
+    hoursPerShift: nullableFiniteNumber(recipe.hours_per_shift, state.hoursPerShift),
+  }
 }
 
 function matchesMargin(value: number, filter: SavedCostingMarginFilter) {
