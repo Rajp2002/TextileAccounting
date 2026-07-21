@@ -53,11 +53,15 @@ import {
 } from 'lucide-react'
 import {
     compareSavedCostings,
+    buildSavedQualityRecipeState,
     filterAndSortSavedCostings,
     getCostingVersionMovement,
     getPreviousCostingVersion,
     normalizeSavedWarpRows,
     normalizeSavedWeftRows,
+    type SavedQualityFactoryProfile,
+    type SavedQualityFixedWorker,
+    type SavedQualityRecipe,
     type SavedCostingMarginFilter,
     type SavedCostingSort,
 } from '@/lib/saved-costings'
@@ -86,7 +90,7 @@ type QuoteLinkedOrder = {
     weft_instruction?: string | null
 }
 
-type SavedQuality = {
+type SavedQuality = SavedQualityRecipe & {
     id: string
     name: string
     updated_at: string
@@ -169,6 +173,7 @@ type SavedQualityGroup = {
     template: SavedQuality | null
     records: QuoteRow[]
     updatedAt: string
+    currentRecipeCostPerM: number | null
 }
 
 function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
@@ -235,6 +240,19 @@ function getSavedCostingTotals(quote: QuoteRow) {
     }
 }
 
+function getCurrentRecipeCostPerM(
+    template: SavedQuality,
+    profile?: SavedQualityFactoryProfile,
+    fixedWorkers: SavedQualityFixedWorker[] = [],
+) {
+    try {
+        return calcFullTotals(buildSavedQualityRecipeState(template, profile, fixedWorkers)).totalProductionCostPerM
+    } catch (error) {
+        console.error('Unable to calculate a saved quality recipe', template.id, error)
+        return null
+    }
+}
+
 function SavedQualityLibraryView({
     groups,
     expandedKey,
@@ -292,15 +310,19 @@ function SavedQualityLibraryView({
                                         <span className="mt-1 block text-xs text-slate-500">
                                             {group.records.length > 0
                                                 ? `${group.records.length} costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${format(new Date(group.updatedAt), 'MMM d, yyyy')}`
-                                                : 'Saved recipe · no costing snapshot yet'}
+                                                : 'Saved recipe · no costing history yet'}
                                         </span>
                                     </span>
                                 </button>
 
                                 <div className="grid grid-cols-3 gap-2 sm:min-w-[420px]">
                                     <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Latest cost</p>
-                                        <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest ? `₹${Number(latest.landed_cost_per_meter).toFixed(2)}/m` : '—'}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{latest ? 'Latest cost' : 'Current recipe'}</p>
+                                        <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest
+                                            ? `₹${Number(latest.landed_cost_per_meter).toFixed(2)}/m`
+                                            : group.currentRecipeCostPerM != null
+                                                ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
+                                                : '—'}</p>
                                     </div>
                                     <div className="rounded-lg bg-slate-50 px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Used for</p>
@@ -327,10 +349,16 @@ function SavedQualityLibraryView({
                                     {!latest || !latestTotals ? (
                                         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
                                             {latest ? <AlertTriangle className="h-6 w-6 text-amber-500" /> : <FileText className="h-6 w-6 text-slate-400" />}
-                                            <p className="mt-3 text-sm font-bold text-slate-700">{latest ? 'Detailed breakdown unavailable for this legacy snapshot' : 'No costing saved for this quality yet'}</p>
+                                            <p className="mt-3 text-sm font-bold text-slate-700">{latest
+                                                ? 'Detailed breakdown unavailable for this legacy snapshot'
+                                                : group.currentRecipeCostPerM != null
+                                                    ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
+                                                    : 'No costing saved for this quality yet'}</p>
                                             <p className="mt-1 max-w-md text-xs text-slate-500">{latest
                                                 ? 'The saved commercial totals remain available in costing history. Open and save this snapshot once to refresh its detailed analysis.'
-                                                : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'}</p>
+                                                : group.currentRecipeCostPerM != null
+                                                    ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
+                                                    : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'}</p>
                                         </div>
                                     ) : (
                                         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
@@ -441,7 +469,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -487,7 +515,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialS
         if (!showArchived) {
             for (const template of initialTemplates.filter(item => item.is_active !== false)) {
                 const key = `template:${template.id}`
-                groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at })
+                groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at, currentRecipeCostPerM: null })
                 labelIndex.set(normalizeQualityKey(template.name), key)
             }
         }
@@ -509,6 +537,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialS
                     template: initialTemplates.find(template => template.id === record.template_id) ?? null,
                     records: [record],
                     updatedAt: record.updated_at,
+                    currentRecipeCostPerM: null,
                 })
                 if (normalizedLabel) labelIndex.set(normalizedLabel, key)
             }
@@ -519,6 +548,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialS
             .map(group => ({
                 ...group,
                 records: filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: 'all' }),
+                currentRecipeCostPerM: group.template && group.records.length === 0
+                    ? getCurrentRecipeCostPerM(group.template, initialProfile, initialWorkers)
+                    : null,
             }))
             .filter(group => !query || normalizeQualityKey(`${group.name} ${group.records.map(record => record.party_name).join(' ')}`).includes(query))
             .filter(group => marginFilter === 'all' || filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: marginFilter }).length > 0)
@@ -529,7 +561,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialS
             if (costingSort === 'cost_asc') return Number(a.records[0]?.landed_cost_per_meter ?? Number.POSITIVE_INFINITY) - Number(b.records[0]?.landed_cost_per_meter ?? Number.POSITIVE_INFINITY)
             return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
-    }, [costingSort, initialTemplates, marginFilter, quotes, searchQuery, showArchived])
+    }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived])
     const selectedCostings = useMemo(
         () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
         [quotes, selectedCostingIds],

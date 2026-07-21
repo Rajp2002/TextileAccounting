@@ -1,4 +1,4 @@
-import { getEstimatorQuotes, getEstimatorTemplates } from '../estimator/actions'
+import { getEstimatorQuotes, getEstimatorTemplates, getFactoryCostProfile, getFixedWorkersForOverhead } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
@@ -10,9 +10,10 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const status = requestedStatus && ['costings', 'draft', 'sent', 'accepted', 'rejected'].includes(requestedStatus)
         ? requestedStatus
         : undefined
-    const [{ data: quotes }, { data: templates }, auth] = await Promise.all([
+    const [{ data: quotes }, { data: templates }, { data: costProfile }, auth] = await Promise.all([
         getEstimatorQuotes(),
         getEstimatorTemplates(),
+        getFactoryCostProfile(),
         getAuthenticatedUser(),
     ])
     const { user, profile, supabase } = auth
@@ -22,6 +23,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         getOrganizationProductionMode(supabase, profile.org_id),
     ])
     const canUseProduction = tierSatisfies(tier, 'premium')
+    const { data: fixedWorkers } = canUseProduction ? await getFixedWorkersForOverhead() : { data: [] }
     const canUseQuotationWorkflow = canUseProduction
         && getEstimatorWorkflowConfig(productionModeRes.productionMode).allowsPartyOrders
 
@@ -29,6 +31,8 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         <QuotesClient 
             initialQuotes={quotes ?? []} 
             initialTemplates={templates ?? []}
+            initialProfile={costProfile}
+            initialWorkers={fixedWorkers ?? []}
             initialStatus={status}
             userId={user.id}
             orgId={profile.org_id}

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
-import { normalizeSavedWarpRows, normalizeSavedWeftRows } from '../lib/saved-costings'
+import { buildSavedQualityRecipeState, normalizeSavedWarpRows, normalizeSavedWeftRows } from '../lib/saved-costings'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -18,6 +18,8 @@ describe('saved quality costing library', () => {
     expect(client).toContain('Applied production')
     expect(client).toContain('Costing history')
     expect(client).toContain('No costing saved for this quality yet')
+    expect(client).toContain('Current recipe')
+    expect(client).toContain('live estimate from the saved yarn recipe and current factory costs')
   })
 
   it('links new costing and market-run snapshots to the selected quality', () => {
@@ -64,5 +66,26 @@ describe('saved quality costing library', () => {
 
     expect(warp[0]).toMatchObject({ beamEnds: 3200, calcDenier: 60, yarnRate: 105 })
     expect(weft[0]).toMatchObject({ picks: 72, reedSpace: 165, calcDenier: 80, yarnRate: 110 })
+  })
+
+  it('calculates a current recipe cost without creating a costing snapshot', () => {
+    const state = buildSavedQualityRecipeState({
+      id: 'quality-1',
+      name: 'D.NO:246N AASHAM SILK',
+      warp_rows: [{ id: 'warp-1', calcDenier: 75, beamEnds: 3444, yarnRate: 116, gstPct: 0, shortagePct: null }],
+      weft_rows: [{ id: 'weft-1', picks: 82, reedSpace: 170, calcDenier: 75, yarnRate: 118, gstPct: 0, shortagePct: null }],
+      per_pick_cost_paise: 0.16,
+      warp_crimp_pct: 5,
+      yarn_shortage_pct: 2,
+    }, {
+      warping_rate_per_kg: 2,
+      sizing_rate_per_kg: 1.5,
+      overhead_override_per_m: 5,
+      enabled_sections: { winding: false, processing: false, finishing: false, commission: true, transport: false },
+    })
+
+    const totals = calcFullTotals(state)
+    expect(totals.totalProductionCostPerM).toBeGreaterThan(0)
+    expect(totals.overheadPerM).toBe(5)
   })
 })
