@@ -16,6 +16,7 @@ export interface EstimatorAutosaveData<TState = unknown> {
   sourceQuoteId?: string
   sourceQuoteUpdatedAt?: string
   sourceRecordKind?: CostingRecordKind
+  templateId?: string
   /**
    * Stable identity for a quote save/update attempt. Keeping it with the
    * local draft makes a retry idempotent even if the server committed but its
@@ -60,6 +61,7 @@ export function parseEstimatorDraft<TState = unknown>(
       sourceRecordKind: parsed.sourceRecordKind === 'costing' || parsed.sourceRecordKind === 'quotation' || parsed.sourceRecordKind === 'market_run'
         ? parsed.sourceRecordKind
         : undefined,
+      templateId: typeof parsed.templateId === 'string' ? parsed.templateId : undefined,
       clientRequestId:
         typeof parsed.clientRequestId === 'string' &&
         ESTIMATOR_CLIENT_REQUEST_ID_PATTERN.test(parsed.clientRequestId)

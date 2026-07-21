@@ -1,4 +1,4 @@
-import { getEstimatorQuotes } from '../estimator/actions'
+import { getEstimatorQuotes, getEstimatorTemplates } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
@@ -10,8 +10,12 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const status = requestedStatus && ['costings', 'draft', 'sent', 'accepted', 'rejected'].includes(requestedStatus)
         ? requestedStatus
         : undefined
-    const { data: quotes } = await getEstimatorQuotes()
-    const { user, profile, supabase } = await getAuthenticatedUser()
+    const [{ data: quotes }, { data: templates }, auth] = await Promise.all([
+        getEstimatorQuotes(),
+        getEstimatorTemplates(),
+        getAuthenticatedUser(),
+    ])
+    const { user, profile, supabase } = auth
     const [tier, organizationRes, productionModeRes] = await Promise.all([
         getOrgTier(profile.org_id),
         supabase.from('organizations').select('name').eq('id', profile.org_id).maybeSingle(),
@@ -24,6 +28,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     return (
         <QuotesClient 
             initialQuotes={quotes ?? []} 
+            initialTemplates={templates ?? []}
             initialStatus={status}
             userId={user.id}
             orgId={profile.org_id}

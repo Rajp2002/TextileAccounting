@@ -13,12 +13,22 @@ describe('Estimator-only product presentation', () => {
     const settingsLayout = read('app/(dashboard)/owner/settings/layout.tsx')
     const gate = read('components/billing/AccessGate.tsx')
     const costProfile = read('components/settings/factory-cost-profile.tsx')
+    const rateBook = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
     it('limits Base navigation to estimator destinations and account billing', () => {
         expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings'])")
         expect(sidebar).toContain("? 'Saved Costings'")
-        expect(sidebar).toContain('Rates & Qualities')
+        expect(sidebar).toContain('Yarn Rate Book')
         expect(sidebar).toContain('Subscription & Billing')
+    })
+
+    it('presents rates as a single-purpose yarn rate book', () => {
+        expect(rateBook).toContain('Yarn Rate Book')
+        expect(rateBook).toContain('Add Yarn Rate')
+        expect(rateBook).toContain("const YARN_CATEGORIES: YarnRateCategory[] = ['yarn_warp', 'yarn_weft']")
+        expect(rateBook).not.toContain("['processing', 'Processing']")
+        expect(rateBook).not.toContain("['commercial', 'Commercial Defaults']")
+        expect(rateBook).not.toContain('>Saved Qualities</button>')
     })
 
     it('removes party requirements and quote workflow actions from Base costing', () => {

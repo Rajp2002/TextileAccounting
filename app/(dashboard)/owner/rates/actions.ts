@@ -3,6 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import {
+    applyYarnRateToTemplate,
+    getMissingYarnRateCandidates,
+    getYarnRateConflicts,
+    normalizeYarnName,
+    type YarnRateTemplate,
+} from '@/lib/yarn-rate-reconciliation'
 
 export type CostRateCategory =
     | 'yarn_warp'
@@ -98,7 +105,7 @@ export async function getCostRates() {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const { data, error } = await supabase
+    const { data: existingRates, error } = await supabase
         .from('cost_rate_book')
         .select('*')
         .eq('org_id', profile.org_id)
@@ -106,40 +113,129 @@ export async function getCostRates() {
         .order('category')
         .order('name')
     if (error) return { error: error.message }
-    if (data?.length) return { data }
-
-    const { data: costProfile, error: profileError } = await supabase
-        .from('factory_cost_profile')
-        .select('*')
-        .eq('factory_id', profile.org_id)
-        .maybeSingle()
-    if (profileError) return { error: profileError.message }
 
     const today = new Date().toISOString().slice(0, 10)
-    const defaults = [
-        { name: costProfile?.default_warp_yarn_name || 'Warp yarn', category: 'yarn_warp', unit: 'per_kg', current_value: Number(costProfile?.default_warp_yarn_rate_per_kg ?? 0), apply_as_default: true },
-        { name: costProfile?.default_weft_yarn_name || 'Weft yarn', category: 'yarn_weft', unit: 'per_kg', current_value: Number(costProfile?.default_weft_yarn_rate_per_kg ?? 0), apply_as_default: true },
-        { name: 'Warping', category: 'warping', unit: 'per_kg', current_value: Number(costProfile?.warping_rate_per_kg ?? 2), apply_as_default: true },
-        { name: 'Sizing', category: 'sizing', unit: 'per_kg', current_value: Number(costProfile?.sizing_rate_per_kg ?? 1.5), apply_as_default: true },
-        { name: 'Transport', category: 'transport', unit: 'per_m', current_value: Number(costProfile?.default_transport_per_m ?? 0), apply_as_default: true },
-    ].map(item => ({
-        ...item,
-        org_id: profile.org_id,
-        effective_date: today,
-        last_reviewed_at: today,
-        review_interval_days: 90,
-        source: 'Estimator defaults',
-        created_by: user.id,
-        updated_by: user.id,
-    }))
+    let rates = existingRates ?? []
 
-    await setAuditActor(supabase, user.id)
-    const { data: seeded, error: seedError } = await supabase
-        .from('cost_rate_book')
-        .upsert(defaults, { onConflict: 'org_id,name,category', ignoreDuplicates: true })
-        .select('*')
-    if (seedError) return { error: seedError.message }
-    return { data: seeded ?? [] }
+    if (!rates.length) {
+        const { data: costProfile, error: profileError } = await supabase
+            .from('factory_cost_profile')
+            .select('*')
+            .eq('factory_id', profile.org_id)
+            .maybeSingle()
+        if (profileError) return { error: profileError.message }
+
+        const defaults = [
+            { name: costProfile?.default_warp_yarn_name || 'Warp yarn', category: 'yarn_warp', unit: 'per_kg', current_value: Number(costProfile?.default_warp_yarn_rate_per_kg ?? 0), apply_as_default: true },
+            { name: costProfile?.default_weft_yarn_name || 'Weft yarn', category: 'yarn_weft', unit: 'per_kg', current_value: Number(costProfile?.default_weft_yarn_rate_per_kg ?? 0), apply_as_default: true },
+            { name: 'Warping', category: 'warping', unit: 'per_kg', current_value: Number(costProfile?.warping_rate_per_kg ?? 2), apply_as_default: true },
+            { name: 'Sizing', category: 'sizing', unit: 'per_kg', current_value: Number(costProfile?.sizing_rate_per_kg ?? 1.5), apply_as_default: true },
+            { name: 'Transport', category: 'transport', unit: 'per_m', current_value: Number(costProfile?.default_transport_per_m ?? 0), apply_as_default: true },
+        ].map(item => ({
+            ...item,
+            org_id: profile.org_id,
+            effective_date: today,
+            last_reviewed_at: today,
+            review_interval_days: 90,
+            source: 'Estimator defaults',
+            created_by: user.id,
+            updated_by: user.id,
+        }))
+
+        await setAuditActor(supabase, user.id)
+        const { data: seeded, error: seedError } = await supabase
+            .from('cost_rate_book')
+            .upsert(defaults, { onConflict: 'org_id,name,category', ignoreDuplicates: true })
+            .select('*')
+        if (seedError) return { error: seedError.message }
+        rates = seeded ?? []
+    }
+
+    const { data: templates, error: templatesError } = await supabase
+        .from('estimator_templates')
+        .select('id, name, warp_rows, weft_rows')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+    if (templatesError) return { error: templatesError.message }
+
+    const qualityTemplates = (templates ?? []) as YarnRateTemplate[]
+    const missingYarns = getMissingYarnRateCandidates(qualityTemplates, rates)
+    if (missingYarns.length) {
+        const discoveredRates = missingYarns.map(candidate => ({
+            org_id: profile.org_id,
+            name: candidate.yarnName,
+            category: candidate.category,
+            unit: 'per_kg',
+            current_value: candidate.currentValue,
+            effective_date: today,
+            last_reviewed_at: today,
+            review_interval_days: 90,
+            source: candidate.conflict ? 'Saved qualities — review needed' : 'Saved qualities',
+            notes: (candidate.conflict
+                ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
+                : `Discovered from ${candidate.yarnName} layers in saved qualities.`).slice(0, 500),
+            apply_as_default: false,
+            created_by: user.id,
+            updated_by: user.id,
+        }))
+        await setAuditActor(supabase, user.id)
+        const { error: discoveredError } = await supabase
+            .from('cost_rate_book')
+            .upsert(discoveredRates, { onConflict: 'org_id,name,category', ignoreDuplicates: true })
+        if (discoveredError) return { error: discoveredError.message }
+
+        const { data: refreshed, error: refreshError } = await supabase
+            .from('cost_rate_book')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .order('category')
+            .order('name')
+        if (refreshError) return { error: refreshError.message }
+        rates = refreshed ?? []
+    }
+
+    return { data: rates, conflicts: getYarnRateConflicts(qualityTemplates) }
+}
+
+async function syncYarnRateToSavedQualities(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    yarnName: string,
+    yarnRate: number,
+) {
+    const { data, error } = await supabase
+        .from('estimator_templates')
+        .select('id, name, warp_rows, weft_rows, updated_at')
+        .eq('org_id', orgId)
+        .eq('is_active', true)
+    if (error) return { count: 0, warning: error.message }
+
+    let count = 0
+    for (const template of data ?? []) {
+        const updated = applyYarnRateToTemplate(template as YarnRateTemplate, yarnName, yarnRate)
+        if (!updated.changed) continue
+
+        const { data: saved, error: updateError } = await supabase
+            .from('estimator_templates')
+            .update({
+                warp_rows: updated.warpRows,
+                weft_rows: updated.weftRows,
+                default_yarn_rate: updated.warpRows[0]?.yarnRate ?? 0,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', template.id)
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .eq('updated_at', template.updated_at)
+            .select('id')
+            .maybeSingle()
+        if (updateError) return { count, warning: updateError.message }
+        if (!saved) return { count, warning: `${template.name} changed in another tab and was not updated.` }
+        count += 1
+    }
+
+    return { count, warning: null }
 }
 
 export async function getCostRateHistory(rateId: string) {
@@ -167,13 +263,21 @@ export async function saveCostRate(input: CostRateInput) {
     if (input.id) {
         const { data: existing, error: existingError } = await supabase
             .from('cost_rate_book')
-            .select('id, current_value')
+            .select('id, name, category, unit, current_value')
             .eq('id', input.id)
             .eq('org_id', profile.org_id)
             .eq('is_active', true)
             .maybeSingle()
         if (existingError) return { error: existingError.message }
         if (!existing) return { error: 'Rate no longer exists.' }
+        const existingIsYarn = existing.category === 'yarn_warp' || existing.category === 'yarn_weft'
+        if (existingIsYarn && (
+            normalizeYarnName(existing.name) !== normalizeYarnName(input.name)
+            || existing.category !== input.category
+            || existing.unit !== input.unit
+        )) {
+            return { error: 'A yarn rate name, category, and unit cannot be changed because they match saved quality layers.' }
+        }
         previousValue = Number(existing.current_value)
     }
 
@@ -214,10 +318,19 @@ export async function saveCostRate(input: CostRateInput) {
     const profileError = await applyProfileDefault(supabase, profile.org_id, input)
     if (profileError) return { error: profileError }
 
+    const isYarnRate = input.category === 'yarn_warp' || input.category === 'yarn_weft'
+    const qualitySync = isYarnRate
+        ? await syncYarnRateToSavedQualities(supabase, profile.org_id, input.name.trim(), input.currentValue)
+        : { count: 0, warning: null }
+
     revalidatePath('/owner/rates')
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { data: saved }
+    return {
+        data: saved,
+        syncedQualityCount: qualitySync.count,
+        syncWarning: qualitySync.warning,
+    }
 }
 
 export async function archiveCostRate(rateId: string) {

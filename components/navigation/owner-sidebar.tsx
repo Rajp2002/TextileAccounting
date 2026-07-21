@@ -37,7 +37,7 @@ const navGroups = [
         items: [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
             { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
-            { name: "Rates & Qualities", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
+            { name: "Yarn Rate Book", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
             { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
         ]
@@ -175,8 +175,8 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                     <Icon className="h-[18px] w-[18px]" />
                 {!hasPremium && item.href === '/owner/quotes'
                   ? 'Saved Costings'
-                  : item.name === 'Rates & Qualities'
-                    ? 'Rates & Qualities'
+                  : item.name === 'Yarn Rate Book'
+                    ? 'Yarn Rate Book'
                     : getNavLabel(item, productionMode, t)}
                                 </Link>
                             )
