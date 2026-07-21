@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
-import factoryTodayScreenshot from '@/output/qa/pilot-gate-closure/2026-07-17/UX-012/03-owner-navigation-terminology.png'
 
 const proofItems = ['7-day Premium trial', 'No credit card', 'Works as an installable PWA']
 
@@ -112,7 +111,7 @@ export default function LandingHero() {
                             </div>
                             <div className="relative aspect-[16/10] overflow-hidden bg-[#fff8ea]">
                                 <Image
-                                    src={factoryTodayScreenshot}
+                                    src="/images/factory-today-owner.png"
                                     alt="Current Weavly Factory Today owner dashboard showing production, machines, stock, dispatch, party ledger, and worker Hisaab status"
                                     fill
                                     priority

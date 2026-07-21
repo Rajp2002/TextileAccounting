@@ -93,6 +93,7 @@ const bottomNavItems = [
 function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
     if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Stock'
     if (item.name === 'Quotations') return productionMode === 'market_run' ? 'Saved Costings' : 'Costings & Quotations'
+    if (item.name === 'Analytics') return 'Analytics'
     return t(`nav.${item.translationKey}`) || item.name
 }
 
