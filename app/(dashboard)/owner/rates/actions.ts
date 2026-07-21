@@ -6,6 +6,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import {
     applyYarnRateToTemplate,
+    collectYarnRateCandidates,
     getMissingYarnRateCandidates,
     getYarnRateConflicts,
     normalizeYarnName,
@@ -173,6 +174,52 @@ export async function getCostRates() {
             .select('*')
         if (seedError) return { error: seedError.message }
         rates = seeded ?? []
+    }
+
+    // A cost profile can seed zero-value yarn placeholders before the owner saves
+    // their first quality. Promote those placeholders from the saved recipe so the
+    // Rate Book never hides a known market rate behind ₹0/kg.
+    const savedCandidates = collectYarnRateCandidates(qualityTemplates)
+    const placeholderUpgrades = savedCandidates.flatMap(candidate => {
+        const existing = rates.find(rate =>
+            rate.category === candidate.category
+            && normalizeYarnName(rate.name) === candidate.normalizedName
+            && Number(rate.current_value) === 0
+            && candidate.currentValue > 0
+        )
+        return existing ? [{ existing, candidate }] : []
+    })
+    if (placeholderUpgrades.length) {
+        await setAuditActor(supabase, user.id)
+        for (const { existing, candidate } of placeholderUpgrades) {
+            const { error: promoteError } = await supabase
+                .from('cost_rate_book')
+                .update({
+                    current_value: candidate.currentValue,
+                    effective_date: today,
+                    last_reviewed_at: today,
+                    source: candidate.conflict ? 'Saved qualities — review needed' : 'Saved qualities',
+                    notes: (candidate.conflict
+                        ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
+                        : `Promoted from ${candidate.yarnName} layers in saved qualities.`).slice(0, 500),
+                    updated_by: user.id,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', existing.id)
+                .eq('org_id', profile.org_id)
+                .eq('current_value', 0)
+            if (promoteError) return { error: promoteError.message }
+        }
+
+        const { data: refreshed, error: refreshError } = await supabase
+            .from('cost_rate_book')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .order('category')
+            .order('name')
+        if (refreshError) return { error: refreshError.message }
+        rates = refreshed ?? []
     }
 
     const missingYarns = getMissingYarnRateCandidates(qualityTemplates, rates)
