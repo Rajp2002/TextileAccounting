@@ -114,7 +114,6 @@ export interface WeftRow {
   manualKgPer100m?: number | null
   picks: number         // picks per inch (PPI) — industry standard in Surat
   reedSpace: number     // legacy effective costing width in cm; use effectiveCostingWidthCm when present
-  finishedWidthCm?: number | null // market pano / finished width in cm
   effectiveCostingWidthCm?: number | null // loom/costing width in cm; used for weft formula
   linearDensityUnit?: YarnLinearDensityUnit
   cottonCountNe?: number | null
@@ -455,7 +454,6 @@ export function getEffectiveCostingWidthCm(row: Pick<WeftRow, 'reedSpace' | 'eff
 export type WidthWarningCode =
   | 'suspicious_narrow_width'
   | 'cm_value_looks_like_inches'
-  | 'effective_width_below_finished_width'
 
 export interface WidthWarning {
   code: WidthWarningCode
@@ -463,14 +461,12 @@ export interface WidthWarning {
 }
 
 export function getWidthWarnings(params: {
-  finishedWidthCm?: number | null
   effectiveCostingWidthCm?: number | null
   inputUnit?: WidthUnit
   rawInputValue?: number
 }): WidthWarning[] {
   const warnings: WidthWarning[] = []
   const effectiveCm = Number(params.effectiveCostingWidthCm ?? 0)
-  const finishedCm = Number(params.finishedWidthCm ?? 0)
   const effectiveInches = cmToInches(effectiveCm)
   const rawInput = Number(params.rawInputValue ?? 0)
 
@@ -489,14 +485,7 @@ export function getWidthWarnings(params: {
   ) {
     warnings.push({
       code: 'cm_value_looks_like_inches',
-      message: `${rawInput.toFixed(rawInput % 1 === 0 ? 0 : 1)} cm looks like an inch/pano width. Confirm the unit before costing.`,
-    })
-  }
-
-  if (finishedCm > 0 && effectiveCm > 0 && effectiveCm < finishedCm) {
-    warnings.push({
-      code: 'effective_width_below_finished_width',
-      message: `Effective costing width is below finished width. Add loom allowance or confirm this fabric narrows after finishing.`,
+      message: `${rawInput.toFixed(rawInput % 1 === 0 ? 0 : 1)} cm looks like an inch width. Confirm the unit before costing.`,
     })
   }
 
@@ -1027,7 +1016,6 @@ export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
   cottonCountNe: null,
   picks:       0,
   reedSpace:   0,   // legacy effective costing width in cm
-  finishedWidthCm: null,
   effectiveCostingWidthCm: null,
   calcDenier:  0,
   yarnRate:    0,

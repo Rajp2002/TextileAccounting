@@ -33,6 +33,21 @@ describe('saved quality costing library', () => {
     expect(drafts).toContain('templateId?: string')
   })
 
+  it('creates a first costing snapshot whenever a quality is saved and repairs legacy gaps', () => {
+    const page = read('app/(dashboard)/owner/quotes/page.tsx')
+    const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+    const actions = read('app/(dashboard)/owner/estimator/actions.ts')
+
+    expect(estimator).toContain('estimate:         { ...state, warpRows, weftRows }')
+    expect(actions).toContain('const snapshot = await saveEstimatorQuoteV3({')
+    expect(actions).toContain('getInitialQualitySnapshotRequestId(saved.id)')
+    expect(actions).toContain('getInitialQualitySnapshotRequestId(template.id)')
+    expect(actions).toContain("recordKind: 'costing'")
+    expect(actions).toContain(".from('estimator_templates')\n            .delete()")
+    expect(actions).toContain('export async function ensureCostingSnapshotsForSavedQualities()')
+    expect(page).toContain('await ensureCostingSnapshotsForSavedQualities()')
+  })
+
   it('normalizes legacy yarn rows before calculating their breakdown', () => {
     const state = makeDefaultEstimateState()
     state.warpRows = normalizeSavedWarpRows(
@@ -66,6 +81,17 @@ describe('saved quality costing library', () => {
 
     expect(warp[0]).toMatchObject({ beamEnds: 3200, calcDenier: 60, yarnRate: 105 })
     expect(weft[0]).toMatchObject({ picks: 72, reedSpace: 165, calcDenier: 80, yarnRate: 110 })
+  })
+
+  it('restores retired finished-width snapshots as costing width without retaining the old field', () => {
+    const state = makeDefaultEstimateState()
+    const [weft] = normalizeSavedWeftRows(
+      [{ finishedWidthCm: 157.48, picks: 72, calcDenier: 80, yarnRate: 110 }],
+      state.weftRows[0],
+    )
+
+    expect(weft).toMatchObject({ reedSpace: 157.48, effectiveCostingWidthCm: 157.48 })
+    expect(weft).not.toHaveProperty('finishedWidthCm')
   })
 
   it('calculates a current recipe cost without creating a costing snapshot', () => {
