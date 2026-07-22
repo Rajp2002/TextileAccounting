@@ -147,17 +147,16 @@ export default function RatesClient({
                 toast.error(result.error ?? 'Rate could not be saved.')
                 return
             }
+            const savedRate = result.data as CostRateRow
             setRates(current => {
-                const next = current.filter(rate => rate.id !== result.data.id)
-                return [...next, result.data as CostRateRow]
+                const next = current.filter(rate => rate.id !== savedRate.id)
+                return [...next, savedRate]
             })
             const savedYarnName = normalizeYarnName(draft.name)
             if (draft.category === 'yarn_warp' || draft.category === 'yarn_weft') {
                 setConflicts(current => current.filter(conflict => conflict.normalizedName !== savedYarnName))
             }
-            if (result.syncWarning) {
-                toast.warning(`Rate saved, but not every saved quality was updated: ${result.syncWarning}`)
-            } else if (result.syncedQualityCount) {
+            if (result.syncedQualityCount) {
                 toast.success(`Rate saved and updated in ${result.syncedQualityCount} saved ${result.syncedQualityCount === 1 ? 'quality' : 'qualities'}. Saved costings were not changed.`)
             } else {
                 toast.success(draft.id ? 'Rate updated. Saved costings were not changed.' : 'Rate added for new costings.')

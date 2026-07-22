@@ -984,7 +984,7 @@ function RowCard({
                     )}
                 </div>
             </div>
-            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-9'}`}>
+            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-5'}`}>
                 {children}
             </div>
         </div>
@@ -1145,9 +1145,6 @@ export default function EstimatorClient({
     // Template search
     const [templateSearch,   setTemplateSearch]   = useState('')
 
-    // Scenario panel
-    const [showScenarios,      setShowScenarios]      = useState(false)
-    const [customTargetPrice,  setCustomTargetPrice]  = useState<string>('')
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
 
     // Party rate memory — debounced with 800ms + 3-char min
@@ -1361,9 +1358,7 @@ export default function EstimatorClient({
         ? createCostingExportModel({ qualityLabel, state, totals })
         : null,
     [hasValidCostResult, qualityLabel, state, totals])
-    const scenarios = useMemo(() =>
-        runScenarios(state, totals, customTargetPrice ? Number(customTargetPrice) : undefined),
-    [state, totals, customTargetPrice])
+    const scenarios = useMemo(() => runScenarios(state, totals), [state, totals])
     const breakEvenScenario = useMemo(
         () => scenarios.find(scenario => scenario.id === 'break-even'),
         [scenarios],
@@ -1422,6 +1417,8 @@ export default function EstimatorClient({
                 overhead_pct:            state.overheadPct,
                 default_commission_pct:  state.commissionPct,
                 default_transport_per_m: state.transportPerM,
+                default_processing_rate_per_m: state.processingRatePerM,
+                default_finishing_rate_per_m: state.finishingRatePerM,
                 enabled_sections:        state.enabledSections,
                 overhead_items:          state.overheadItems,
                 monthly_output_m:        state.monthlyOutputM,
@@ -1572,7 +1569,6 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
-        setCustomTargetPrice('')
         clearDraft()
         setShowConfirmNewQuality(false)
         toast.success(tx('Started blank quality recipe'))
@@ -1889,15 +1885,17 @@ export default function EstimatorClient({
                         setSaving(true)
                         // Map camelCase EstimateState keys to snake_case DB keys
                         const res = await upsertFactoryCostProfile({
-                            warping_rate_per_kg:     state.warpingRatePerKg,
-                            sizing_rate_per_kg:      state.sizingRatePerKg,
+                            warping_rate_per_kg:     data.warpingRatePerKg ?? state.warpingRatePerKg,
+                            sizing_rate_per_kg:      data.sizingRatePerKg ?? state.sizingRatePerKg,
                             winding_rate_per_kg:     state.windingRatePerKg,
                             overhead_pct:            state.overheadPct,
-                            default_commission_pct:  state.commissionPct,
-                            default_transport_per_m: state.transportPerM,
-                            enabled_sections:        state.enabledSections,
-                            yarn_shortage_pct:       state.yarnShortagePct,
-                            warp_crimp_pct:          state.warpCrimpPct,
+                            default_commission_pct:  data.commissionPct ?? state.commissionPct,
+                            default_transport_per_m: data.transportPerM ?? state.transportPerM,
+                            default_processing_rate_per_m: data.processingRatePerM ?? state.processingRatePerM,
+                            default_finishing_rate_per_m: data.finishingRatePerM ?? state.finishingRatePerM,
+                            enabled_sections:        data.enabledSections ?? state.enabledSections,
+                            yarn_shortage_pct:       data.yarnShortagePct ?? state.yarnShortagePct,
+                            warp_crimp_pct:          data.warpCrimpPct ?? state.warpCrimpPct,
                             // Overridden by wizard data
                             overhead_items:          data.overheadItems ?? state.overheadItems,
                             monthly_output_m:        data.monthlyOutputM ?? state.monthlyOutputM,
@@ -2051,12 +2049,14 @@ export default function EstimatorClient({
                                         <span className="truncate">Start Party Order</span>
                                     </Button>}
 
-                                    {/* SECONDARY: retain an accepted quote without starting production */}
+                                    {/* Base keeps costing as the primary action; Full Suite retains quote acceptance styling. */}
                                     <Button
                                         id="btn-save-accept"
                                         size="sm"
-                                        variant="outline"
-                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                                        variant={isStandaloneCostingSession ? 'default' : 'outline'}
+                                        className={isStandaloneCostingSession
+                                            ? 'col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1'
+                                            : 'h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]'}
                                         onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
                                         disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
@@ -3516,73 +3516,6 @@ export default function EstimatorClient({
                     </CardContent>
                 </EstimatorCard>
             </div>
-
-            {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}
-            {hasOrderQty && totals.orderQuote && (
-                <div className={`${pageShellClass} space-y-2`}>
-                    <button
-                        onClick={() => setShowScenarios(!showScenarios)}
-                        className="flex items-center gap-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-200 transition-colors"
-                    >
-                        <Zap className="h-4 w-4 text-indigo-500" />
-                        <span className="text-sm font-bold text-slate-700">Scenario Analysis (Stress Tests)</span>
-                        <Badge variant="outline" className="ml-2 bg-indigo-50 text-indigo-700 border-indigo-200">{scenarios.length} scenarios</Badge>
-                        {showScenarios ? <ChevronUp className="h-4 w-4 text-slate-400 ml-auto" /> : <ChevronDown className="h-4 w-4 text-slate-400 ml-auto" />}
-                    </button>
-                    
-                    {showScenarios && (
-                        <Card className="border-indigo-100 shadow-sm overflow-hidden bg-indigo-50/20">
-                            <CardContent className="p-5 sm:p-6 space-y-5">
-                                <div className="space-y-3">
-                                    {scenarios.map(scen => (
-                                        <div key={scen.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white border border-slate-100 rounded-lg shadow-sm gap-2">
-                                            <div className="space-y-0.5">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-slate-800">{scen.label}</span>
-                                                    {scen.costDeltaPct !== 0 && (
-                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${scen.costDeltaPct > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                                            {scen.costDeltaPct > 0 ? '+' : ''}{scen.costDeltaPct.toFixed(1)}% cost
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[11px] text-slate-500">{scen.description}</p>
-                                            </div>
-                                            <div className="flex gap-4 sm:text-right shrink-0">
-                                                <div>
-                                                    <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Prod Cost</p>
-                                                    <p className="text-sm font-mono font-bold text-slate-700">₹{scen.totalProductionCostPerM.toFixed(2)}/m</p>
-                                                </div>
-                                                {scen.profitDelta !== null && (
-                                                    <div>
-                                                        <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Profit Impact</p>
-                                                        <p className={`text-sm font-mono font-bold ${scen.profitDelta < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                                            {scen.profitDelta > 0 ? '+' : ''}{scen.profitDelta < 0 ? '-' : ''}₹{Math.abs(scen.profitDelta).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex items-center gap-3 pt-3 border-t border-indigo-100">
-                                    <Label className="text-xs font-bold text-indigo-700 whitespace-nowrap">Test Custom Price:</Label>
-                                    <div className="relative flex-1 max-w-[150px]">
-                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                                        <Input 
-                                            type="number"
-                                            value={customTargetPrice}
-                                            onChange={e => setCustomTargetPrice(e.target.value)}
-                                            placeholder="e.g. 21.50"
-                                            className="h-8 pl-6 pr-2 text-xs font-mono font-bold border-indigo-200"
-                                        />
-                                    </div>
-                                    <span className="text-[10px] text-indigo-400">Owner sets price, we show resulting margin</span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
-            )}
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
 

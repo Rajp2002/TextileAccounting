@@ -147,6 +147,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         overhead_pct:            8.00,
         default_commission_pct:  2.00,
         default_transport_per_m: 0,
+        default_processing_rate_per_m: 0,
+        default_finishing_rate_per_m: 0,
     })
 
     const [sections, setSections] = useState<FactorySections>({
@@ -170,6 +172,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     overhead_pct:            Number(d.overhead_pct           ?? 8.00),
                     default_commission_pct:  Number(d.default_commission_pct ?? 2.00),
                     default_transport_per_m: Number(d.default_transport_per_m ?? 0),
+                    default_processing_rate_per_m: Number(d.default_processing_rate_per_m ?? 0),
+                    default_finishing_rate_per_m: Number(d.default_finishing_rate_per_m ?? 0),
                 })
                 if (d.enabled_sections) {
                     setSections(d.enabled_sections as FactorySections)
@@ -308,6 +312,37 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         hint="Applied as % of direct production cost. Scales naturally with fabric complexity."
                         icon={Percent}
                     />
+                </div>
+
+                {/* ── Post-Weaving Defaults ── */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                        <Sparkles className="h-4 w-4 text-saffron" />
+                        <Label className="text-sm font-semibold text-body">Post-Weaving Rates</Label>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {sections.processing && (
+                            <RateInput
+                                label="Processing / Dyeing"
+                                value={rates.default_processing_rate_per_m}
+                                onChange={updateRate('default_processing_rate_per_m')}
+                                unit="₹/m"
+                                step={0.1}
+                            />
+                        )}
+                        {sections.finishing && (
+                            <RateInput
+                                label="Finishing"
+                                value={rates.default_finishing_rate_per_m}
+                                onChange={updateRate('default_finishing_rate_per_m')}
+                                unit="₹/m"
+                                step={0.1}
+                            />
+                        )}
+                        {!sections.processing && !sections.finishing && (
+                            <p className="text-xs italic text-muted-foreground">Enable processing or finishing below to configure its default rate.</p>
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Selling Defaults ── */}

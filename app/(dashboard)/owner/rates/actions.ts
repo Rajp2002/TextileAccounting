@@ -5,7 +5,6 @@ import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import {
-    applyYarnRateToTemplate,
     collectYarnRateCandidates,
     getMissingYarnRateCandidates,
     getYarnRateConflicts,
@@ -73,43 +72,6 @@ async function setAuditActor(supabase: Awaited<ReturnType<typeof createServerCli
     } catch {
         // Audit triggers fall back to auth.uid().
     }
-}
-
-async function applyProfileDefault(
-    supabase: Awaited<ReturnType<typeof createServerClient>>,
-    orgId: string,
-    input: CostRateInput,
-) {
-    if (!input.applyAsDefault) return null
-
-    const mapping: Partial<Record<CostRateCategory, Record<string, string | number>>> = {
-        yarn_warp: {
-            default_warp_yarn_name: input.name.trim(),
-            default_warp_yarn_rate_per_kg: input.currentValue,
-        },
-        yarn_weft: {
-            default_weft_yarn_name: input.name.trim(),
-            default_weft_yarn_rate_per_kg: input.currentValue,
-        },
-        warping: { warping_rate_per_kg: input.currentValue },
-        sizing: { sizing_rate_per_kg: input.currentValue },
-        winding: { winding_rate_per_kg: input.currentValue },
-        processing: { default_processing_rate_per_m: input.currentValue },
-        finishing: { default_finishing_rate_per_m: input.currentValue },
-        transport: { default_transport_per_m: input.currentValue },
-        commission: { default_commission_pct: input.currentValue },
-        overhead: { overhead_pct: input.currentValue },
-    }
-    const values = mapping[input.category]
-    if (!values) return null
-    const { data, error } = await supabase
-        .from('factory_cost_profile')
-        .update({ ...values, updated_at: new Date().toISOString() })
-        .eq('factory_id', orgId)
-        .select('id')
-        .maybeSingle()
-    if (error) return error.message
-    return data ? null : 'Factory defaults were not updated because the cost profile has not been configured yet.'
 }
 
 export async function getCostRates() {
@@ -261,46 +223,6 @@ export async function getCostRates() {
     return { data: rates, conflicts: getYarnRateConflicts(qualityTemplates) }
 }
 
-async function syncYarnRateToSavedQualities(
-    supabase: Awaited<ReturnType<typeof createServerClient>>,
-    orgId: string,
-    yarnName: string,
-    yarnRate: number,
-) {
-    const { data, error } = await supabase
-        .from('estimator_templates')
-        .select('id, name, warp_rows, weft_rows, updated_at')
-        .eq('org_id', orgId)
-        .eq('is_active', true)
-    if (error) return { count: 0, warning: error.message }
-
-    let count = 0
-    for (const template of data ?? []) {
-        const updated = applyYarnRateToTemplate(template as YarnRateTemplate, yarnName, yarnRate)
-        if (!updated.changed) continue
-
-        const { data: saved, error: updateError } = await supabase
-            .from('estimator_templates')
-            .update({
-                warp_rows: updated.warpRows,
-                weft_rows: updated.weftRows,
-                default_yarn_rate: updated.warpRows[0]?.yarnRate ?? 0,
-                updated_at: new Date().toISOString(),
-            })
-            .eq('id', template.id)
-            .eq('org_id', orgId)
-            .eq('is_active', true)
-            .eq('updated_at', template.updated_at)
-            .select('id')
-            .maybeSingle()
-        if (updateError) return { count, warning: updateError.message }
-        if (!saved) return { count, warning: `${template.name} changed in another tab and was not updated.` }
-        count += 1
-    }
-
-    return { count, warning: null }
-}
-
 export async function getCostRateHistory(rateId: string) {
     if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
     const { profile } = await requireRole(['owner'])
@@ -325,92 +247,29 @@ export async function saveCostRate(input: CostRateInput) {
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     await setAuditActor(supabase, user.id)
-
-    let previousValue: number | null = null
-    if (input.id) {
-        const { data: existing, error: existingError } = await supabase
-            .from('cost_rate_book')
-            .select('id, name, category, unit, current_value')
-            .eq('id', input.id)
-            .eq('org_id', profile.org_id)
-            .eq('is_active', true)
-            .maybeSingle()
-        if (existingError) return { error: existingError.message }
-        if (!existing) return { error: 'Rate no longer exists.' }
-        const existingIsYarn = existing.category === 'yarn_warp' || existing.category === 'yarn_weft'
-        if (existingIsYarn && (
-            normalizeYarnName(existing.name) !== normalizeYarnName(input.name)
-            || existing.category !== input.category
-            || existing.unit !== input.unit
-        )) {
-            return { error: 'A yarn rate name, category, and unit cannot be changed because they match saved quality layers.' }
-        }
-        previousValue = Number(existing.current_value)
-    }
-
-    const payload = {
-        org_id: profile.org_id,
-        name: input.name.trim(),
-        category: input.category,
-        unit: input.unit,
-        current_value: input.currentValue,
-        previous_value: previousValue,
-        effective_date: input.effectiveDate,
-        last_reviewed_at: input.lastReviewedAt,
-        review_interval_days: input.reviewIntervalDays,
-        source: input.source?.trim() || null,
-        notes: input.notes?.trim() || null,
-        apply_as_default: input.applyAsDefault,
-        updated_by: user.id,
-        updated_at: new Date().toISOString(),
-    }
-
-    const query = input.id
-        ? supabase.from('cost_rate_book').update(payload).eq('id', input.id).eq('org_id', profile.org_id)
-        : supabase.from('cost_rate_book').insert({ ...payload, created_by: user.id })
-    const { data: saved, error } = await query.select('*').single()
-    if (error) return { error: error.code === '23505' ? 'A rate with this name and category already exists.' : error.message }
-
-    const { error: historyError } = await supabase.from('cost_rate_history').insert({
-        org_id: profile.org_id,
-        rate_id: saved.id,
-        value: input.currentValue,
-        effective_date: input.effectiveDate,
-        source: input.source?.trim() || null,
-        notes: input.notes?.trim() || null,
-        changed_by: user.id,
+    const { data, error } = await supabase.rpc('save_cost_rate_atomic', {
+        p_rate_id: input.id ?? null,
+        p_name: input.name.trim(),
+        p_category: input.category,
+        p_unit: input.unit,
+        p_current_value: input.currentValue,
+        p_effective_date: input.effectiveDate,
+        p_last_reviewed_at: input.lastReviewedAt,
+        p_review_interval_days: input.reviewIntervalDays,
+        p_source: input.source?.trim() || null,
+        p_notes: input.notes?.trim() || null,
+        p_apply_as_default: input.applyAsDefault,
     })
-    if (historyError) {
-        return {
-            data: saved,
-            syncedQualityCount: 0,
-            syncWarning: `The current rate was saved, but its history entry failed: ${historyError.message}`,
-            partialSuccess: true,
-        }
-    }
-
-    const profileError = await applyProfileDefault(supabase, profile.org_id, input)
-    if (profileError) {
-        return {
-            data: saved,
-            syncedQualityCount: 0,
-            syncWarning: `The current rate was saved, but the factory default was not updated: ${profileError}`,
-            partialSuccess: true,
-        }
-    }
-
-    const isYarnRate = input.category === 'yarn_warp' || input.category === 'yarn_weft'
-    const qualitySync = isYarnRate
-        ? await syncYarnRateToSavedQualities(supabase, profile.org_id, input.name.trim(), input.currentValue)
-        : { count: 0, warning: null }
+    if (error) return { error: error.message }
+    const result = data as { rate?: unknown; synced_quality_count?: number } | null
+    if (!result?.rate) return { error: 'The rate update completed without returning the saved rate.' }
 
     revalidatePath('/owner/rates')
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
     return {
-        data: saved,
-        syncedQualityCount: qualitySync.count,
-        syncWarning: qualitySync.warning,
+        data: result.rate,
+        syncedQualityCount: Number(result.synced_quality_count ?? 0),
     }
 }
 

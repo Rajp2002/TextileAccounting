@@ -25,7 +25,8 @@ interface FactoryCostWizardProps {
 }
 
 export default function FactoryCostWizard({ initialState, onComplete, saving }: FactoryCostWizardProps) {
-    const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'summary'>('intro')
+    const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
+    const [setupPath, setSetupPath] = useState<'fast' | 'detailed'>('fast')
     
     // Local state for the wizard inputs
     const [overheadPerM, setOverheadPerM] = useState<number>(13.5)
@@ -38,16 +39,19 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
     const [electricity, setElectricity] = useState<number>(0)
     const [staff, setStaff] = useState<number>(0)
     const [others, setOthers] = useState<number>(0)
+    const [warpingRate, setWarpingRate] = useState<number>(initialState.warpingRatePerKg)
+    const [sizingRate, setSizingRate] = useState<number>(initialState.sizingRatePerKg)
+    const [processingRate, setProcessingRate] = useState<number>(initialState.processingRatePerM)
+    const [finishingRate, setFinishingRate] = useState<number>(initialState.finishingRatePerM)
+    const [commissionPct, setCommissionPct] = useState<number>(initialState.commissionPct)
+    const [transportRate, setTransportRate] = useState<number>(initialState.transportPerM)
+    const [warpCrimpPct, setWarpCrimpPct] = useState<number>(initialState.warpCrimpPct)
+    const [yarnWastePct, setYarnWastePct] = useState<number>(initialState.yarnShortagePct)
 
-    const handleFastPathFinish = async () => {
-        await onComplete({
-            overheadOverridePerM: overheadPerM,
-            isConfigured: true
-        })
-    }
-
-    const handleDetailedPathFinish = async () => {
-        // Build overhead items from inputs
+    const getOverheadSetup = (): Partial<EstimateState> => {
+        if (setupPath === 'fast') {
+            return { overheadOverridePerM: overheadPerM }
+        }
         const items: OverheadItem[] = [
             { id: nanoid(), label: 'Rent / Lease', monthlyAmount: rent, category: 'rent', isPreset: true, isLocked: false, source: 'manual' },
             { id: nanoid(), label: 'Electricity', monthlyAmount: electricity, category: 'electricity', isPreset: true, isLocked: false, source: 'manual' },
@@ -55,17 +59,36 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
             { id: nanoid(), label: 'Other Expenses', monthlyAmount: others, category: 'custom', isPreset: true, isLocked: false, source: 'manual' },
         ]
         
-        // Calculate monthly output
         const monthlyOutput = loomCount * avgOutput * workingDays
-
-        await onComplete({
+        return {
             loomCount,
             monthlyWorkingDays: workingDays,
             avgOutputPerLoomPerDay: avgOutput,
             overheadItems: ensureOverheadIntegrity(items),
             monthlyOutputM: monthlyOutput,
             overheadOverridePerM: null,
-            isConfigured: true
+        }
+    }
+
+    const handleFinish = async () => {
+        await onComplete({
+            ...getOverheadSetup(),
+            warpingRatePerKg: warpingRate,
+            sizingRatePerKg: sizingRate,
+            processingRatePerM: processingRate,
+            finishingRatePerM: finishingRate,
+            commissionPct,
+            transportPerM: transportRate,
+            warpCrimpPct,
+            yarnShortagePct: yarnWastePct,
+            enabledSections: {
+                ...initialState.enabledSections,
+                processing: processingRate > 0,
+                finishing: finishingRate > 0,
+                commission: commissionPct > 0,
+                transport: transportRate > 0,
+            },
+            isConfigured: true,
         })
     }
 
@@ -94,9 +117,9 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                 style={{ width: `${
                                     step === 'intro' ? 10 : 
                                     step === 'choice' ? 30 : 
-                                    step === 'fast' ? 70 : 
-                                    step === 'detailed' ? 50 : 
-                                    step === 'detailed-expenses' ? 80 : 100
+                                    step === 'fast' ? 55 :
+                                    step === 'detailed' ? 50 :
+                                    step === 'detailed-expenses' ? 70 : 100
                                 }%` }} 
                             />
                         </div>
@@ -131,7 +154,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                     </div>
                                     <div className="grid gap-4">
                                         <button 
-                                            onClick={() => setStep('fast')}
+                                            onClick={() => { setSetupPath('fast'); setStep('fast') }}
                                             className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all text-left group"
                                         >
                                             <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
@@ -143,7 +166,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                             </div>
                                         </button>
                                         <button 
-                                            onClick={() => setStep('detailed')}
+                                            onClick={() => { setSetupPath('detailed'); setStep('detailed') }}
                                             className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all text-left group"
                                         >
                                             <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
@@ -185,12 +208,11 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                         </p>
                                     </div>
                                     <Button 
-                                        onClick={handleFastPathFinish}
-                                        disabled={saving}
+                                        onClick={() => setStep('defaults')}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200"
                                     >
-                                        {saving ? 'Saving...' : 'Finish Setup'}
-                                        {!saving && <CheckCircle2 className="ml-2 h-4 w-4" />}
+                                        Next: Cost Defaults
+                                        <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </div>
                             )}
@@ -331,11 +353,63 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                     </div>
 
                                     <Button 
-                                        onClick={handleDetailedPathFinish}
-                                        disabled={saving}
+                                        onClick={() => setStep('defaults')}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200"
                                     >
-                                        {saving ? 'Saving...' : 'Complete Setup'}
+                                        Next: Cost Defaults
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
+
+                            {step === 'defaults' && (
+                                <div className="space-y-5">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => setStep(setupPath === 'fast' ? 'fast' : 'detailed-expenses')} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+                                            <ArrowRight className="h-4 w-4 rotate-180" />
+                                        </button>
+                                        <div>
+                                            <h2 className="text-lg font-black text-slate-900">Cost Estimate Defaults</h2>
+                                            <p className="text-xs text-slate-500">These values pre-fill every new costing. Enter 0 for charges you do not use.</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid max-h-[55vh] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+                                        {[
+                                            ['Warping', warpingRate, setWarpingRate, '₹/kg', 0.25],
+                                            ['Sizing', sizingRate, setSizingRate, '₹/kg', 0.25],
+                                            ['Processing', processingRate, setProcessingRate, '₹/m', 0.1],
+                                            ['Finishing', finishingRate, setFinishingRate, '₹/m', 0.1],
+                                            ['Commission', commissionPct, setCommissionPct, '%', 0.5],
+                                            ['Transport', transportRate, setTransportRate, '₹/m', 0.1],
+                                            ['Warp crimp', warpCrimpPct, setWarpCrimpPct, '%', 0.5],
+                                            ['Default yarn waste', yarnWastePct, setYarnWastePct, '%', 0.5],
+                                        ].map(([label, value, setter, unit, inputStep]) => (
+                                            <div key={String(label)} className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">{String(label)}</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        min={0}
+                                                        max={label === 'Commission' ? 99.99 : undefined}
+                                                        step={Number(inputStep)}
+                                                        value={Number(value)}
+                                                        onChange={event => (setter as (next: number) => void)(Number(event.target.value))}
+                                                        className="h-11 pr-14 font-mono font-bold"
+                                                    />
+                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{String(unit)}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[11px] leading-relaxed text-indigo-700">
+                                        Positive processing, finishing, commission, and transport defaults automatically enable those sections. You can change all defaults later in Settings.
+                                    </p>
+                                    <Button
+                                        onClick={handleFinish}
+                                        disabled={saving}
+                                        className="h-12 w-full rounded-full bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700"
+                                    >
+                                        {saving ? 'Saving...' : 'Finish Setup'}
                                         {!saving && <CheckCircle2 className="ml-2 h-4 w-4" />}
                                     </Button>
                                 </div>

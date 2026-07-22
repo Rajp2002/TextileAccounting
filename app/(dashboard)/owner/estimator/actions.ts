@@ -235,6 +235,8 @@ export async function upsertFactoryCostProfile(data: {
     overhead_pct:            number
     default_commission_pct:  number
     default_transport_per_m: number
+    default_processing_rate_per_m?: number
+    default_finishing_rate_per_m?: number
     enabled_sections:        FactorySections
     overhead_items?:         OverheadItem[]
     monthly_output_m?:       number

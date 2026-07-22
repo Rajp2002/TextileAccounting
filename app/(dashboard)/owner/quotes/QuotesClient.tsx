@@ -262,6 +262,7 @@ function getCurrentRecipeCostPerM(
 
 function SavedQualityLibraryView({
     groups,
+    canUseProduction,
     expandedKey,
     selectedCostingIds,
     updatingId,
@@ -273,6 +274,7 @@ function SavedQualityLibraryView({
     onOpenUsage,
 }: {
     groups: SavedQualityGroup[]
+    canUseProduction: boolean
     expandedKey: string | null
     selectedCostingIds: string[]
     updatingId: string | null
@@ -322,7 +324,7 @@ function SavedQualityLibraryView({
                                     </span>
                                 </button>
 
-                                <div className="grid grid-cols-3 gap-2 sm:min-w-[420px]">
+                                <div className={`grid gap-2 ${canUseProduction ? 'grid-cols-3 sm:min-w-[420px]' : 'grid-cols-2 sm:min-w-[300px]'}`}>
                                     <div className="rounded-lg bg-slate-50 px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{latest ? 'Latest cost' : 'Current recipe'}</p>
                                         <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest
@@ -331,14 +333,21 @@ function SavedQualityLibraryView({
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                 : '—'}</p>
                                     </div>
-                                    <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Used for</p>
-                                        <p className="mt-1 text-sm font-black text-slate-900">{usages.length} {usages.length === 1 ? 'run' : 'runs'}</p>
-                                    </div>
-                                    <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Produced</p>
-                                        <p className="mt-1 text-sm font-black text-slate-900">{totalProduced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m</p>
-                                    </div>
+                                    {canUseProduction ? <>
+                                        <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Used for</p>
+                                            <p className="mt-1 text-sm font-black text-slate-900">{usages.length} {usages.length === 1 ? 'run' : 'runs'}</p>
+                                        </div>
+                                        <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Produced</p>
+                                            <p className="mt-1 text-sm font-black text-slate-900">{totalProduced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m</p>
+                                        </div>
+                                    </> : (
+                                        <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">History</p>
+                                            <p className="mt-1 text-sm font-black text-slate-900">{group.records.length} {group.records.length === 1 ? 'snapshot' : 'snapshots'}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <button
@@ -365,11 +374,13 @@ function SavedQualityLibraryView({
                                                 ? 'The saved commercial totals remain available in costing history. Open and save this snapshot once to refresh its detailed analysis.'
                                                 : group.currentRecipeCostPerM != null
                                                     ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
-                                                    : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'}</p>
+                                                    : canUseProduction
+                                                        ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
+                                                        : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'}</p>
                                         </div>
                                     ) : (
-                                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-                                            <section className="rounded-xl border border-slate-200 bg-white p-4">
+                                        <div className={`grid gap-4 ${canUseProduction ? 'xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
+                                            {canUseProduction && <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
                                                         <p className="text-sm font-black text-slate-950">Latest costing breakdown</p>
@@ -402,7 +413,7 @@ function SavedQualityLibraryView({
                                                     <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latest.quote_price_per_meter).toFixed(2)}/m</p></div>
                                                     <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latest.intended_margin_percent).toFixed(1)}%</p></div>
                                                 </div>
-                                            </section>
+                                            </section>}
 
                                             <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex items-center justify-between gap-3">
@@ -750,7 +761,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <History className="h-6 w-6 text-indigo-500" />
                         {canUseQuotationWorkflow ? 'Costings & Quotations' : 'Saved Costings'}
                     </h1>
-                    <p className="text-sm text-slate-500 font-medium">{canUseQuotationWorkflow ? 'Keep costing intelligence while adding customer quotation and production workflows.' : 'Saved qualities with costing history, breakdowns, and production usage in one place.'}</p>
+                    <p className="text-sm text-slate-500 font-medium">{canUseQuotationWorkflow ? 'Keep costing intelligence while adding customer quotation and production workflows.' : 'Saved qualities with costing history, breakdowns, and comparison in one place.'}</p>
                 </div>
                 <Button onClick={() => router.push('/owner/estimator')} className="h-11 bg-orange-600 text-white hover:bg-orange-700">
                     <Plus className="h-4 w-4" /> {canUseQuotationWorkflow ? 'New Estimate' : 'New Costing'}
@@ -823,7 +834,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                     <p className="mt-2 text-xs text-slate-500">
                         {showQualityLibrary
-                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · expand a quality to review its costing and production.`
+                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · expand a quality to review its costing history.`
                             : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'} shown · select any two to compare.`}
                     </p>
                 </div>
@@ -860,6 +871,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             ) : showQualityLibrary ? (
                 <SavedQualityLibraryView
                     groups={qualityGroups}
+                    canUseProduction={canUseProduction}
                     expandedKey={expandedQualityKey}
                     selectedCostingIds={selectedCostingIds}
                     updatingId={updatingId}

@@ -40,6 +40,8 @@ export type FactoryCostProfileInput = {
   overhead_pct: number
   default_commission_pct: number
   default_transport_per_m: number
+  default_processing_rate_per_m?: number
+  default_finishing_rate_per_m?: number
   monthly_output_m?: number
   overhead_override_per_m?: number | null
   loom_count?: number
@@ -97,6 +99,8 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   addNumberIssue(issues, 'overhead_pct', 'Overhead %', input.overhead_pct, { max: 100, allowZero: true })
   addNumberIssue(issues, 'default_commission_pct', 'Default commission %', input.default_commission_pct, { max: 99.99, allowZero: true })
   addNumberIssue(issues, 'default_transport_per_m', 'Default transport', input.default_transport_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.default_processing_rate_per_m != null) addNumberIssue(issues, 'default_processing_rate_per_m', 'Default processing rate', input.default_processing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.default_finishing_rate_per_m != null) addNumberIssue(issues, 'default_finishing_rate_per_m', 'Default finishing rate', input.default_finishing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.overhead_override_per_m != null) addNumberIssue(issues, 'overhead_override_per_m', 'Overhead override', input.overhead_override_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.monthly_output_m != null) addNumberIssue(issues, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS })
   if (input.loom_count != null) addNumberIssue(issues, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })

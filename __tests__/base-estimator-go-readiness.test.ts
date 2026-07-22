@@ -17,6 +17,7 @@ describe('Base Estimator Go-readiness hardening', () => {
   it('rejects invalid factory economics before persistence', () => {
     const valid = {
       warping_rate_per_kg: 2, sizing_rate_per_kg: 1.5, winding_rate_per_kg: 0,
+      default_processing_rate_per_m: 3.5, default_finishing_rate_per_m: 1.25,
       overhead_pct: 8, default_commission_pct: 2, default_transport_per_m: 0,
       monthly_output_m: 10_000, loom_count: 8, monthly_working_days: 26,
       avg_output_per_loom_per_day: 50,
@@ -26,6 +27,8 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(validateFactoryCostProfile({ ...valid, monthly_working_days: 0 }).valid).toBe(false)
     expect(validateFactoryCostProfile({ ...valid, avg_output_per_loom_per_day: 0 }).valid).toBe(false)
     expect(validateFactoryCostProfile({ ...valid, default_commission_pct: 100 }).valid).toBe(false)
+    expect(validateFactoryCostProfile({ ...valid, default_processing_rate_per_m: -1 }).valid).toBe(false)
+    expect(validateFactoryCostProfile({ ...valid, default_finishing_rate_per_m: Number.NaN }).valid).toBe(false)
   })
 
   it('uses on-canvas PDF rendering, resets recipient state, and avoids the null noopener print handle', () => {
@@ -52,6 +55,45 @@ describe('Base Estimator Go-readiness hardening', () => {
     const migration = source('supabase/migrations/20260721183000_base_estimator_go_readiness.sql')
     expect(migration).toContain("public.org_has_subscription_tier(org_id, 'base')")
     expect(migration).toContain('NOT public.check_org_lockdown(org_id)')
+  })
+
+  it('saves rate book, history, factory defaults, and matching qualities in one database transaction', () => {
+    const actions = source('app/(dashboard)/owner/rates/actions.ts')
+    expect(actions).toContain("supabase.rpc('save_cost_rate_atomic'")
+    expect(actions).not.toContain('applyProfileDefault')
+    expect(actions).not.toContain('syncYarnRateToSavedQualities')
+
+    const migration = source('supabase/migrations/20260721203000_atomic_base_rate_updates.sql')
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.save_cost_rate_atomic')
+    expect(migration).toContain('INSERT INTO public.cost_rate_history')
+    expect(migration).toContain('UPDATE public.factory_cost_profile')
+    expect(migration).toContain('UPDATE public.estimator_templates')
+    expect(migration).toContain('SECURITY DEFINER')
+    expect(migration).toContain('FOR UPDATE')
+    expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.save_cost_rate_atomic')
+  })
+
+  it('keeps Base focused on saved costing analysis and removes scenario testing', () => {
+    const estimator = source('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+    expect(estimator).not.toContain('Scenario Analysis')
+    expect(estimator).not.toContain('customTargetPrice')
+    expect(estimator).toContain("accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-5'")
+    expect(estimator).toContain("variant={isStandaloneCostingSession ? 'default' : 'outline'}")
+
+    const savedCostings = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+    expect(savedCostings).toContain('canUseProduction && <section')
+    expect(savedCostings).toContain('breakdowns, and comparison in one place')
+    expect(savedCostings).toContain('expand a quality to review its costing history')
+  })
+
+  it('collects the main factory costing defaults during first-run setup', () => {
+    const wizard = source('app/(dashboard)/owner/estimator/FactoryCostWizard.tsx')
+    for (const label of ['Warping', 'Sizing', 'Processing', 'Finishing', 'Commission', 'Transport', 'Warp crimp', 'Default yarn waste']) {
+      expect(wizard).toContain(`'${label}'`)
+    }
+    expect(wizard).toContain('processing: processingRate > 0')
+    expect(wizard).toContain('finishing: finishingRate > 0')
+    expect(wizard).toContain("step === 'defaults'")
   })
 
   it('uses only the official Razorpay loader and tombstones the legacy proxy', () => {
