@@ -7,11 +7,11 @@ Scope: standalone Weavly Estimator/Base tier, evaluated as a weaving-factory own
 
 | Release mode | Status | Meaning |
 | --- | --- | --- |
-| Controlled factory pilot | **Conditional Go** | Use one named factory, owner-led onboarding, no live payment dependency, daily support, and the controls below. |
-| Unassisted/self-serve pilot | **No-Go** | Fresh signup/email-confirmation authentication was not proven without admin intervention. |
-| Paid production | **No-Go** | Atomic rate propagation, physical production PDF proof, exact-release billing/observability, and operations evidence remain open. |
+| Controlled factory pilot | **Go** | The Base costing workflow, first-run defaults, saved costings, and atomic rate propagation are ready for an owner-led pilot. |
+| Self-serve pilot | **Go with first-user monitoring** | The product owner has successfully created multiple accounts. Keep the first external signup under observation because this release did not repeat email-provider delivery proof. |
+| Live commercial launch | **Conditional Go** | Razorpay TEST mode is sufficient for the pilot. Live Razorpay activation waits for post-incorporation business details and is not a pilot blocker. |
 
-The costing core is materially safer and suitable for a tightly controlled owner pilot. It is not yet honest to call the standalone plan fully production-ready.
+The standalone estimator is ready for a real factory pilot. Its core financial writes now have a proven all-or-nothing boundary, and the Base interface is consistently framed as costing rather than production management.
 
 ## Owner workflow result
 
@@ -24,6 +24,11 @@ The costing core is materially safer and suitable for a tightly controlled owner
 | Save reusable quality | Pass |
 | Save and reopen costing history | Pass: first snapshot shown as `v1` with date and ₹26.50/m |
 | Rate Book access on Base | Pass |
+| Atomic rate propagation | Pass: induced production failure left zero partial rows; success committed rate, history, default, and one saved quality together |
+| First-run costing defaults | Pass: processing, finishing, commission, transport, warping, sizing, crimp, waste, and overhead persisted and reloaded |
+| Costing-only product framing | Pass: no Base Party Order, Market Run, or applied-production action; Save Costing is primary |
+| Weft input layout | Pass: ten inputs rendered as two rows of five at the 2XL breakpoint |
+| Scenario testing | Removed as requested; break-even summary retained |
 | Saved-quality rate discovery | Pass after production-found fix: both yarns promoted from ₹0 to ₹120/kg with saved-quality provenance |
 | Customer/internal export dialog | Pass for mode/privacy UI; downloaded-file production inspection inconclusive |
 | Organization data export | Pass for owner-only route and export preparation with no console error |
@@ -42,34 +47,39 @@ The costing core is materially safer and suitable for a tightly controlled owner
 - Production `lockdown_tenant` repair and execute restriction.
 - Runtime dependency remediation: no high production advisory remains.
 - Production-found zero-placeholder Yarn Rate Book reconciliation and an exact setup/cleanup fixture harness.
+- Atomic `save_cost_rate_atomic` database boundary with advisory locking, tenant/Base/lockdown checks, transactional history/default/quality propagation, and rollback proof.
+- First-run factory defaults for the main costing assumptions, with matching Settings controls for processing and finishing.
+- Base-only Save Costing emphasis, production-language removal from Saved Costings, two-row weft layout, and Scenario Analysis removal.
 
 ## Verification evidence
 
-- Main commits: `6b62762` and `31cac88`.
+- Main commits: `6b62762`, `31cac88`, and follow-up implementation `dfd49b3`.
 - Final deployment: `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ`, READY on `https://textile-accounting.vercel.app`.
-- Migration: `20260721183000_base_estimator_go_readiness.sql`, applied to linked production; local/remote history aligned.
-- Local gates: ESLint pass; TypeScript pass; 110 test files with 745 passed and one intentional skip; optimized Next 16.2.11 build pass with 45 static pages.
+- Migrations: `20260721183000_base_estimator_go_readiness.sql` and `20260721203000_atomic_base_rate_updates.sql`, applied to linked production; local/remote history aligned through `20260721203000`.
+- Local gates: focused ESLint pass; TypeScript pass; 110 test files with 748 passed and one intentional skip; optimized Next 16.2.11 build pass with 45 static pages.
 - Dependency audit: zero high runtime advisories; two moderate runtime advisories remain in Next's bundled PostCSS path with no non-breaking available fix. Remaining high findings are dev-tool dependency paths requiring breaking forced downgrades.
 - Deployed Base run: `BASEGO-1784662022802-4412AD` on the canonical production application; final Rate Book showed ₹120/kg for warp and weft.
 - Cleanup: the main fixture and failed-signup QA tenant both reconciled their organizations, profiles, subscriptions where applicable, and Auth users to zero.
 - Database lint: repaired Base lockdown error; five unrelated legacy/Premium function errors remain documented.
+- Follow-up browser run: isolated Base tenant `BASEGO-1784675775346-874401` completed first-run defaults, Base-only action/language inspection, Settings persistence, 1600px two-row weft proof, Scenario Analysis absence, and clean console; cleanup reconciled organization/profile/subscription/Auth to zero.
+- Atomic production run: isolated tenant `BASEGO-1784707134907-67E9DE` proved rollback `{rateRows: 0, historyDelta: 0}` and commit `{rate: 321.25, historyRows: 1, profileDefault: 321.25, savedQualities: 1}`; cleanup reconciled organization/profile/subscription/Auth to zero.
 
 ## Conditions for the controlled pilot
 
-1. Provision and confirm the pilot owner's account before the session; do not rely on self-serve signup yet.
-2. Do not use live billing for access. Apply the approved pilot entitlement and reconcile it after the session.
+1. Monitor the first external self-serve signup and confirmation email; retain the existing account-provisioning fallback for the pilot session.
+2. Use Razorpay TEST mode or an approved pilot entitlement. Do not wait for live Razorpay business verification to begin the pilot.
 3. Have the owner verify the first estimate against an independent factory costing sheet before using it commercially.
 4. Inspect the first downloaded internal and customer PDFs in a physical browser; stop if blank or if customer output exposes internal economics.
-5. Treat a rate update warning as requiring reconciliation; do not assume all saved qualities changed until the Rate Book and selected quality agree.
+5. Treat any failed rate update as a full rollback. There is no partial-success state; reconcile if the UI ever suggests otherwise.
 6. Export organization data after the session and verify the file is readable.
 7. Keep exact `BASEGO-*` cleanup and zero-residue reconciliation as a release control.
 
-## Smallest path to full Go
+## Post-pilot production follow-ups
 
-1. Move Rate Book propagation into one database transaction/RPC and inject failures to prove rollback.
-2. Fix/prove self-serve signup and email-confirmation recovery in production.
-3. Download, render, and privacy-inspect both PDF modes from the exact production release.
-4. Run the approved Razorpay TEST lifecycle and redacted Sentry/release-attribution check on the exact release.
-5. Complete exact QA cleanup and a current deployment/rollback or forward-fix operations check.
+1. Activate live Razorpay only after incorporation details are available; retain the already-proven TEST lifecycle for pilot use.
+2. Download, render, and privacy-inspect the first internal and customer PDFs in the pilot's physical browser.
+3. Observe one external signup/email-confirmation cycle and retain redacted evidence.
+4. Capture current-release Sentry/release attribution if an error occurs; do not manufacture a production failure.
+5. Retire or repair the five unrelated Premium/legacy database lint findings before claiming a clean whole-database gate.
 
-Until those items close, the correct status is **Conditional Go for a controlled Base factory pilot; No-Go for paid or unassisted production**.
+Current status: **Go for the Base factory pilot**. Live commercial billing remains intentionally conditional on incorporation and Razorpay production credentials.

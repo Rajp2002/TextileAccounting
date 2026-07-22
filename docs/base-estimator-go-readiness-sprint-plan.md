@@ -106,7 +106,7 @@ Promote the standalone Base Estimator from the 2026-07-21 **No-Go** assessment t
 | BE-GO-03 | Pass | Migration `20260721183000` is applied and aligned; revision identity is serialized and the deployed first snapshot displayed `v1` plus date. |
 | BE-GO-04 | Pass | Application and database entitlement semantics are aligned and regression covered. |
 | BE-GO-05 | Pass after deployed-pilot correction | Base route/action/RLS gates are deployed. A production run found pre-seeded ₹0/kg placeholders; commit `31cac88` promoted both saved-quality rates to ₹120/kg on final production deployment `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ`. |
-| BE-GO-06 | Mitigated, not complete | Partial propagation is explicitly reported, but one database transaction/RPC still needs to replace the multi-write workflow. |
+| BE-GO-06 | Pass | Migration `20260721203000` moves Rate Book, history, optional factory-default, and matching saved-quality writes into one tenant-scoped transaction. Production failure injection left zero rate rows and zero history delta; the success path committed all four surfaces together. |
 | BE-GO-07 | Pass for repaired function | The reviewed migration fixed `lockdown_tenant`; five unrelated Premium/legacy function lint errors remain. |
 | BE-GO-08 | Code pass; commercial lifecycle not rerun | Official Razorpay CDN loading is deployed and the rewriting proxy is retired. No real-money checkout was performed. Existing TEST lifecycle evidence remains the provider baseline. |
 | BE-GO-09 | Pass | Client/server checks and forward `NOT VALID` database constraints reject invalid economics without rewriting legacy rows. |
@@ -115,4 +115,16 @@ Promote the standalone Base Estimator from the 2026-07-21 **No-Go** assessment t
 | BE-GO-12 | Code/test pass | Saved Costings responsive wrapping and Base terminology are deployed; physical multi-device retest remains an operating check. |
 | BE-GO-13 | Conditional | No high runtime advisory remains. Two unavoidable Next/PostCSS runtime moderates and dev-tool advisories are recorded; migration alignment and build pass, while current-release restore/rollback attribution was not repeated. |
 
-Release outcome: **Controlled Base factory pilot — Conditional Go**. Paid self-serve production remains **No-Go** until the residual P0/P1 evidence and transaction work in the readiness report are closed.
+Release outcome after the follow-up sprint: **Base factory pilot — Go**. Razorpay TEST mode is the approved pilot payment boundary; live provider activation is intentionally deferred until incorporation. Paid live commercial launch remains conditional on those business credentials and the operating checks in the readiness report.
+
+## Pilot usability follow-up — 2026-07-22
+
+| Requested change | Result | Verification |
+| --- | --- | --- |
+| Atomic rate updates | Pass | Production RPC rollback/commit proof on `BASEGO-1784707134907-67E9DE`; exact cleanup reconciled to zero. |
+| Costing-only Base workflow | Pass | Base exposes Save Costing and Export Cost Sheet as the commercial actions; Party Order, Market Run, and applied-production panels remain Premium-only. |
+| Factory-default onboarding | Pass | First-run wizard collected warping, sizing, processing, finishing, commission, transport, warp crimp, yarn waste, and overhead; persisted values reappeared in Settings. |
+| Weft density | Pass | At 1600px the ten weft formula fields rendered as two rows of five. |
+| Scenario testing | Pass | Scenario Analysis and custom target-price UI were removed; break-even remains available as a concise result. |
+
+Implementation commit: `dfd49b3`. Production migration history is aligned through `20260721203000`.

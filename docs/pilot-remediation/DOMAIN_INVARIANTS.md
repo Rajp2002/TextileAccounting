@@ -460,7 +460,7 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 2. A costing revision keeps its historical yarn rates, cost breakdown, quantity, selling assumptions, group identity, monotonic version, and creation date after later rate changes.
 3. A known positive yarn rate in a saved quality cannot be masked by a pre-seeded zero Rate Book placeholder.
 4. Base entitlement semantics are identical in application checks, server actions, routes, and RLS, including start/end times and grace behavior.
-5. Rate propagation either commits every dependent row or reports partial success explicitly; paid-production promotion additionally requires a single transaction.
+5. A reviewed rate update is all-or-nothing across the Rate Book, history, optional factory default, and every matching saved-quality layer. A failure leaves every surface unchanged; partial success is forbidden.
 6. Customer PDF output cannot contain internal costs, overhead, margin, break-even, or expected-profit data.
 7. Organization export fails if any promised dataset fails and remains owner-accessible after plan expiry without widening tenant scope.
 8. Disposable production QA uses an exact `BASEGO-*` identity and must reconcile organizations, profiles, subscriptions, estimator data, rates, audit rows, and Auth users to zero.

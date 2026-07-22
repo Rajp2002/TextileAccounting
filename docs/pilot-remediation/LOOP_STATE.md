@@ -2142,4 +2142,13 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Production: reviewed migration `20260721183000` is aligned. Commit `31cac88` is READY as `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ` on the canonical alias, and both saved yarns promoted from ₹0 to ₹120/kg with Saved qualities provenance.
 - Proven owner path: authenticated Base shell, direct overhead setup, estimate calculation, quality save, costing snapshot `v1`, correct ₹26.50/m Saved Costings display, Base Rate Book route, and owner data-export preparation.
 - Open gates: transactional rate propagation, physical downloaded-PDF proof, self-serve signup/email-confirmation recovery, current-release Sentry/log inspection, and paid lifecycle/operations evidence.
+
+## Base Estimator follow-up state — 2026-07-22
+
+- State: `go_base_factory_pilot`; live commercial billing remains `conditional_go_pending_incorporation`.
+- Implementation commit: `dfd49b3`; production schema aligns through migration `20260721203000`.
+- Atomic production proof: forced failure returned zero partial rate/history rows; success committed rate/history/profile/default-quality synchronization together. Exact fixture cleanup returned zero organizations, profiles, subscriptions, and Auth users.
+- Base product proof: first-run costing defaults persist, Save Costing is primary, Party Order/Market Run actions and production-usage language are absent, Scenario Analysis is removed, and weft fields render in two rows at the 2XL breakpoint.
+- Pilot billing policy: existing Razorpay TEST lifecycle evidence is sufficient. Live provider activation intentionally waits for post-incorporation business verification.
+- Monitored checks: observe the first external signup/email confirmation and physically inspect the first internal/customer PDFs. Current-release Sentry evidence remains event-driven; legacy Premium database lint is outside Base pilot scope.
 - Cleanup: the exact main fixture and the failed-signup QA account/organization reconciled to zero. Next work is limited to the open gates; do not promote unresolved evidence.

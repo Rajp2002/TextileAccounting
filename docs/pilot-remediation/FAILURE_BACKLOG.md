@@ -626,3 +626,11 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
 - `BASE-OBS-P1`: inspect one current-release production error/Sentry event with redacted fields and release attribution; never print credentials or PII.
 - `BASE-BILLING-PROD-P0`: rerun approved Razorpay TEST lifecycle against the exact release before paid self-serve promotion; no real-money charge is required or authorized.
 - `BASE-DB-LINT-P2`: repair or retire five Premium/legacy functions referencing removed relations/columns. These do not receive Base pilot pass/fail credit but block a clean whole-database lint gate.
+
+### Base Estimator follow-up disposition — 2026-07-22
+
+- Remove `BASE-RATE-ATOMIC-P1`: production migration `20260721203000` is aligned, an induced missing-profile failure left zero rate rows and zero history delta, and the success path committed one rate/history/default/quality update together.
+- Reclassify `BASE-SIGNUP-P0` as a monitored pilot operating check. The product owner reports multiple successful self-service accounts; the first external pilot signup remains an evidence capture, not a launch blocker.
+- Reclassify `BASE-BILLING-PROD-P0` outside the pilot gate. Razorpay TEST mode is explicitly accepted for the pilot; live activation waits for incorporation details.
+- Keep `BASE-PDF-PROD-P0` as a first-pilot physical-browser acceptance check and `BASE-OBS-P1` as an exact-release operational evidence item. Neither blocks opening the owner-led costing pilot, but a PDF privacy/blank-output failure would pause use of that output.
+- Keep `BASE-DB-LINT-P2` outside Base scope; it blocks only a clean whole-database claim.

@@ -786,3 +786,12 @@ Acceptance:
 - Download and render both PDF modes. Require nonblank A4 content and customer privacy. Exercise owner organization export and require all dataset queries to succeed.
 - Confirm a no-plan owner is gated from Estimator/Rate Book but can still reach the owner-only data-export route. Confirm Premium retains Base access and a foreign tenant sees no rows.
 - Record exact commit/deployment identity, browser console results, database reconciliation, and exact `BASEGO-*` cleanup to zero before promotion.
+
+### Base Estimator costing-only and atomic-rate regression guard — 2026-07-22
+
+- Run `node scripts/qa/base-estimator-atomic-rate-proof.mjs` only against the exact `BASEGO-*` production fixture. Require rollback `{rateRows: 0, historyDelta: 0}`, then one matching Rate Book value, one history row, the same factory default, one updated saved quality, and exact cleanup to zero.
+- Require migration list/dry-run alignment through `20260721203000`; the RPC must remain owner-only, Base-entitled, tenant-scoped, lockdown-aware, and SECURITY DEFINER with an explicit search path.
+- On a fresh Base tenant, complete both fast-overhead and costing-default steps. Verify warping, sizing, processing, finishing, commission, transport, warp crimp, and yarn waste persist in Settings and positive optional values enable their sections.
+- At 1600px require ten weft inputs to occupy two rows of five. At normal mobile/tablet sizes require no clipped input, blocking horizontal overflow, or unreachable Save Costing action.
+- Base must expose Save Costing and Export Cost Sheet without Party Order, Market Run, applied-production panels, or Scenario Analysis. Premium behavior must remain unchanged.
+- Accept Razorpay TEST mode for pilot evidence. Do not make live-provider credentials a pilot prerequisite before incorporation; observe the first external signup and physical PDF outputs as pilot operating checks.
