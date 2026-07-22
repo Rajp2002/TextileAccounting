@@ -971,6 +971,7 @@ export const hi = {
       finishing_per_m: "फिनिशिंग / मी"
     },
     simulation: {
+      base_title: "कोटेशन मूल्य की धारणाएँ",
       title: "लागत मात्रा",
       market_title: "मार्केट रन और मात्रा",
       quantity: "लागत मात्रा",

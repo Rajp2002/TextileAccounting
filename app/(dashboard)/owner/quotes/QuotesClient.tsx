@@ -380,7 +380,7 @@ function SavedQualityLibraryView({
                                         </div>
                                     ) : (
                                         <div className={`grid gap-4 ${canUseProduction ? 'xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
-                                            {canUseProduction && <section className="rounded-xl border border-slate-200 bg-white p-4">
+                                            <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
                                                         <p className="text-sm font-black text-slate-950">Latest costing breakdown</p>
@@ -413,9 +413,9 @@ function SavedQualityLibraryView({
                                                     <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latest.quote_price_per_meter).toFixed(2)}/m</p></div>
                                                     <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latest.intended_margin_percent).toFixed(1)}%</p></div>
                                                 </div>
-                                            </section>}
+                                            </section>
 
-                                            <section className="rounded-xl border border-slate-200 bg-white p-4">
+                                            {canUseProduction && <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex items-center justify-between gap-3">
                                                     <div>
                                                         <p className="text-sm font-black text-slate-950">Applied production</p>
@@ -448,7 +448,7 @@ function SavedQualityLibraryView({
                                                         })}
                                                     </div>
                                                 )}
-                                            </section>
+                                            </section>}
                                         </div>
                                     )}
 

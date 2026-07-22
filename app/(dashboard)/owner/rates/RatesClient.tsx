@@ -126,6 +126,7 @@ export default function RatesClient({
         [rates],
     )
     const visibleRates = useMemo(() => filterCostRates(yarnRates, { query, category, status: reviewStatus }), [category, query, reviewStatus, yarnRates])
+    const hasActiveFilters = Boolean(query.trim()) || category !== 'all' || reviewStatus !== 'all'
     const dueCount = yarnRates.filter(rate => getRateReviewStatus(rate) !== 'current').length
     const mostRecentReview = yarnRates.length
         ? yarnRates.reduce((latest, rate) => rate.last_reviewed_at > latest ? rate.last_reviewed_at : latest, yarnRates[0].last_reviewed_at)
@@ -214,7 +215,7 @@ export default function RatesClient({
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> Yarn Rate Book</h1>
-                    <p className="mt-1 text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your saved qualities.</p>
+                    <p className="mt-1 text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your saved qualities and costings.</p>
                 </div>
                 <Button onClick={() => setDraft(defaultDraft())} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
             </div>
@@ -243,7 +244,7 @@ export default function RatesClient({
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div className="border-b border-slate-200 px-4 py-4">
                     <p className="font-bold text-slate-950">Yarn rates</p>
-                    <p className="mt-1 text-xs text-slate-500">Rates discovered from saved quality warp and weft layers appear here automatically.</p>
+                    <p className="mt-1 text-xs text-slate-500">Rates appear automatically after you save a quality or costing with warp and weft yarn layers.</p>
                 </div>
 
                 <div className="grid gap-3 border-b border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_220px_180px]">
@@ -253,7 +254,7 @@ export default function RatesClient({
                 </div>
 
                 {visibleRates.length === 0 ? (
-                    <div className="px-6 py-14 text-center"><Tags className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-bold text-slate-700">No matching yarn rates</p><p className="mt-1 text-sm text-slate-500">Add a yarn rate or clear the filters to continue.</p></div>
+                    <div className="px-6 py-14 text-center"><Tags className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-bold text-slate-700">{yarnRates.length === 0 ? 'No yarn rates yet' : 'No matching yarn rates'}</p><p className="mt-1 text-sm text-slate-500">{yarnRates.length === 0 ? 'Save a quality or costing and its yarn rates will appear here automatically.' : hasActiveFilters ? 'Clear or adjust the filters to see more yarn rates.' : 'Add a yarn rate to continue.'}</p></div>
                 ) : (
                     <>
                         <div className="hidden overflow-x-auto md:block">

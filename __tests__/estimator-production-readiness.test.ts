@@ -18,6 +18,12 @@ const estimatorClientSource = readFileSync(
 const globalStylesSource = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
 
 describe('Estimator production-readiness regressions', () => {
+  it('visually identifies tape length as required when it is empty', () => {
+    expect(estimatorClientSource).toMatch(
+      /label=\{t\('estimator\.warp\.tape_len'\)\}[\s\S]*?value=\{state\.tapeLengthM\}[\s\S]*?attentionWhenEmpty/,
+    )
+  })
+
   it('converts loom output from inches per minute to metres per day', () => {
     const output = calcDailyOutputM(700, 60, 12, 85)
     expect(output).not.toBeNull()

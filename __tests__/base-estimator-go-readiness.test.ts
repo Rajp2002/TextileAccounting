@@ -73,6 +73,17 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.save_cost_rate_atomic')
   })
 
+  it('learns warp and weft yarn rates in the same transaction that saves a costing', () => {
+    const migration = source('supabase/migrations/20260722113210_sync_costing_yarns_to_rate_book.sql')
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.sync_saved_costing_yarns_to_rate_book')
+    expect(migration).toContain("SELECT 'yarn_warp'::text AS category")
+    expect(migration).toContain("SELECT 'yarn_weft'::text AS category")
+    expect(migration).toContain('INSERT INTO public.cost_rate_book')
+    expect(migration).toContain("WHEN (NEW.record_kind = 'costing')")
+    expect(migration).toContain('SECURITY INVOKER')
+    expect(migration).not.toContain('SECURITY DEFINER')
+  })
+
   it('keeps Base focused on saved costing analysis and removes scenario testing', () => {
     const estimator = source('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     expect(estimator).not.toContain('Scenario Analysis')

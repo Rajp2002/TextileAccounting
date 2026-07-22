@@ -1685,7 +1685,7 @@ export default function EstimatorClient({
             return toast.error(saveAsStandaloneCosting ? 'Quality name is required' : effectiveTargetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
-        if (!state.orderQuantityM || state.orderQuantityM <= 0) {
+        if (canUseProduction && (!state.orderQuantityM || state.orderQuantityM <= 0)) {
             return toast.error('Set a quantity before saving')
         }
         if (staleDefaultRateNames.length > 0 && !staleRatesAcknowledged) {
@@ -1720,12 +1720,17 @@ export default function EstimatorClient({
 
         try {
             if (effectiveTargetMode === 'market') {
+                const targetMeters = state.orderQuantityM
+                if (!targetMeters || targetMeters <= 0) {
+                    toast.error('Set a quantity before saving')
+                    return
+                }
                 const res = await createMarketRunFromEstimator({
                     fabricLabel:             resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
                     warpInstruction:         warpInstruction.trim() || undefined,
                     weftInstruction:         weftInstruction.trim() || undefined,
-                    targetMeters:            state.orderQuantityM,
+                    targetMeters,
                     estimate:                state,
                     totalProductionCostPerM: totals.totalProductionCostPerM,
                     notes:                   '',
@@ -1962,7 +1967,7 @@ export default function EstimatorClient({
                 <div className={hudShellClass}>
                     <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
                         <div className="min-w-0 space-y-3">
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5 xl:items-end 2xl:gap-1.5">
+                            <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 xl:items-end 2xl:gap-1.5 ${canUseProduction ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
                                 <div className="min-w-0">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-ink)] sm:text-[32px] 2xl:text-[22px]">
@@ -1994,17 +1999,19 @@ export default function EstimatorClient({
                                     </p>
                                     <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">minimum at 0% margin</p>
                                 </div>
-                                <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
-                                    <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
-                                        {hasValidCostResult && hasOrderQty && orderQuote?.isValid
-                                            ? `₹${orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
-                                            : '—'}
-                                    </p>
-                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">
-                                        {hasOrderQty ? `for ${Number(state.orderQuantityM).toLocaleString('en-IN')} m` : 'set costing quantity'}
-                                    </p>
-                                </div>
+                                {canUseProduction && (
+                                    <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
+                                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
+                                        <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
+                                            {hasValidCostResult && hasOrderQty && orderQuote?.isValid
+                                                ? `₹${orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+                                                : '—'}
+                                        </p>
+                                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">
+                                            {hasOrderQty ? `for ${Number(state.orderQuantityM).toLocaleString('en-IN')} m` : 'set costing quantity'}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -2059,10 +2066,10 @@ export default function EstimatorClient({
                                             ? 'col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1'
                                             : 'h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]'}
                                         onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
-                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        disabled={savingQuote || !estimatorValidation.valid || (canUseProduction && !hasOrderQty) || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
-                                        title={firstEstimatorValidationMessage ?? ((!hasOrderQty || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
-                                            ? (!isStandaloneCostingSession ? 'Complete party, quality, quantity, and cost result first.' : 'Complete quality, costing quantity, and cost result first.')
+                                        title={firstEstimatorValidationMessage ?? (((canUseProduction && !hasOrderQty) || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                            ? (!isStandaloneCostingSession ? 'Complete party, quality, quantity, and cost result first.' : canUseProduction ? 'Complete quality, costing quantity, and cost result first.' : 'Complete quality and cost result first.')
                                             : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
@@ -2215,7 +2222,7 @@ export default function EstimatorClient({
                         </div>
                     </div>
 
-                    {hasOrderQty && orderQuote && (
+                    {(!canUseProduction || hasOrderQty) && orderQuote && (
                         <div className="mt-4 flex items-center gap-3 border-t border-[var(--color-hairline)] pt-3">
                             <div className="shrink-0">
                                 <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.margin')}</p>
@@ -2228,13 +2235,17 @@ export default function EstimatorClient({
                                 className="h-5 flex-1 modern-slider"
                             />
                             <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
-                            <div className="h-6 w-px bg-[var(--color-hairline)]" />
-                            <div className="shrink-0 text-right">
-                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
-                                <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
-                                    ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                </p>
-                            </div>
+                            {canUseProduction && (
+                                <>
+                                    <div className="h-6 w-px bg-[var(--color-hairline)]" />
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
+                                        <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
+                                            ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                        </p>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
@@ -2562,6 +2573,7 @@ export default function EstimatorClient({
                                                 value={state.tapeLengthM}
                                                 onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v ?? 0 })}
                                                 unit="m"
+                                                attentionWhenEmpty
                                             />
                                         </div>
                                         <div className="rounded-[12px] border border-[#D7E7F1] bg-[#F7FBFD] px-4 py-3 text-right">
@@ -3447,22 +3459,24 @@ export default function EstimatorClient({
                     </CardContent>
                 </EstimatorCard>
 
-                {/* 9. Simulation / Order */}
+                {/* 9. Quotation assumptions / Order simulation */}
                 <EstimatorCard accent="weft">
-                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
+                    <SectionHeader title={!canUseProduction ? t('estimator.simulation.base_title') : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <NumField 
-                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
-                                value={state.orderQuantityM} 
-                                onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })} 
-                                unit="m" 
-                                step={100}
-                                placeholder="1000"
-                                attentionWhenEmpty
-                                hint={t('estimator.simulation.quantity_hint')}
-                            />
-                            {hasOrderQty && (
+                        <div className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${canUseProduction ? 'lg:grid-cols-3' : ''}`}>
+                            {canUseProduction && (
+                                <NumField
+                                    label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
+                                    value={state.orderQuantityM}
+                                    onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })}
+                                    unit="m"
+                                    step={100}
+                                    placeholder="1000"
+                                    attentionWhenEmpty
+                                    hint={t('estimator.simulation.quantity_hint')}
+                                />
+                            )}
+                            {(!canUseProduction || hasOrderQty) && (
                                 <>
                                     <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} />
                                     <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} />

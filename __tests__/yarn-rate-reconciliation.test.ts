@@ -69,6 +69,20 @@ describe('saved-quality yarn rate reconciliation', () => {
         })
     })
 
+    it('discovers yarn rates from standalone saved costing snapshots', () => {
+        const savedCosting = {
+            id: 'costing:costing-a',
+            name: 'Unsaved-quality costing',
+            warp_rows: [warp('warp-costing', '40 POLY', 185)],
+            weft_rows: [weft('weft-costing', '60 VISCOSE', 210)],
+        }
+
+        expect(getMissingYarnRateCandidates([savedCosting], [])).toMatchObject([
+            { yarnName: '40 POLY', category: 'yarn_warp', currentValue: 185 },
+            { yarnName: '60 VISCOSE', category: 'yarn_weft', currentValue: 210 },
+        ])
+    })
+
     it('flags different quality rates for the same named yarn with their locations', () => {
         const conflicts = getYarnRateConflicts(templates)
         expect(conflicts).toHaveLength(1)

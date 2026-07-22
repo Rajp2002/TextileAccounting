@@ -977,6 +977,7 @@ export const en = {
     },
     simulation: {
       title: "Cost Estimate Quantity",
+      base_title: "Quotation Price Assumptions",
       market_title: "Market Run & Quantity",
       quantity: "Cost Estimate Quantity",
       market_target: "Target Production",

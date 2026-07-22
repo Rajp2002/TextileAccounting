@@ -14,6 +14,7 @@ describe('Estimator-only product presentation', () => {
     const gate = read('components/billing/AccessGate.tsx')
     const costProfile = read('components/settings/factory-cost-profile.tsx')
     const rateBook = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const rateActions = read('app/(dashboard)/owner/rates/actions.ts')
 
     it('limits Base navigation to estimator destinations and account billing', () => {
         expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings'])")
@@ -29,6 +30,12 @@ describe('Estimator-only product presentation', () => {
         expect(rateBook).not.toContain("['processing', 'Processing']")
         expect(rateBook).not.toContain("['commercial', 'Commercial Defaults']")
         expect(rateBook).not.toContain('>Saved Qualities</button>')
+        expect(rateBook).toContain('Save a quality or costing and its yarn rates will appear here automatically.')
+        expect(rateActions).toContain(".from('estimator_quotes')")
+        expect(rateActions).toContain(".eq('record_kind', 'costing')")
+        expect(rateActions).toContain(".is('template_id', null)")
+        expect(rateActions).not.toContain('defaultWarpName')
+        expect(rateActions).not.toContain('defaultWeftName')
     })
 
     it('removes party requirements and quote workflow actions from Base costing', () => {
@@ -40,7 +47,9 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).not.toContain('!canUseProduction || !hasOrderQty')
         expect(estimator).toContain("t('estimator.hud.quote_per_m')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
-        expect(estimator).toContain("t('estimator.simulation.title')")
+        expect(estimator).toContain("!canUseProduction ? t('estimator.simulation.base_title')")
+        expect(estimator).toContain("{canUseProduction && (\n                                <NumField")
+        expect(estimator).toContain("(!canUseProduction || hasOrderQty) && orderQuote")
     })
 
     it('keeps the costing backbone and terminology shared with Full Suite', () => {
@@ -50,6 +59,8 @@ describe('Estimator-only product presentation', () => {
         expect(english).toContain('title: "Cost Estimate Details"')
         expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
         expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'")
+        expect(estimator).toContain("if (canUseProduction && (!state.orderQuantityM || state.orderQuantityM <= 0))")
+        expect(estimator).toContain("(canUseProduction && !hasOrderQty)")
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
         expect(estimator).not.toContain("!canUseProduction ? 'Costing Quantity'")
     })

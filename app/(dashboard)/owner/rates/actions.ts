@@ -89,59 +89,70 @@ export async function getCostRates() {
         .order('name')
     if (error) return { error: error.message }
 
-    const { data: templates, error: templatesError } = await supabase
-        .from('estimator_templates')
-        .select('id, name, warp_rows, weft_rows')
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-    if (templatesError) return { error: templatesError.message }
+    const [templatesResult, costingsResult] = await Promise.all([
+        supabase
+            .from('estimator_templates')
+            .select('id, name, warp_rows, weft_rows')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true),
+        supabase
+            .from('estimator_quotes')
+            .select('id, quality_label, party_name, warp_rows, weft_rows')
+            .eq('org_id', profile.org_id)
+            .eq('record_kind', 'costing')
+            .eq('is_archived', false)
+            // Templates are already included above. This fallback is for
+            // standalone costings saved before the database trigger existed.
+            .is('template_id', null),
+    ])
+    if (templatesResult.error || costingsResult.error) {
+        return { error: templatesResult.error?.message ?? costingsResult.error?.message }
+    }
 
-    const qualityTemplates = (templates ?? []) as YarnRateTemplate[]
+    const qualityTemplates = (templatesResult.data ?? []) as YarnRateTemplate[]
+    const savedCostings: YarnRateTemplate[] = (costingsResult.data ?? []).map(costing => ({
+        id: `costing:${costing.id}`,
+        name: costing.quality_label?.trim() || costing.party_name?.trim() || 'Saved costing',
+        warp_rows: costing.warp_rows,
+        weft_rows: costing.weft_rows,
+    })) as YarnRateTemplate[]
+    const savedYarnSources = [...qualityTemplates, ...savedCostings]
     const today = new Date().toISOString().slice(0, 10)
     let rates = existingRates ?? []
 
-    if (!rates.length) {
-        const { data: costProfile, error: profileError } = await supabase
-            .from('factory_cost_profile')
-            .select('*')
-            .eq('factory_id', profile.org_id)
-            .maybeSingle()
-        if (profileError) return { error: profileError.message }
+    // Remove only untouched yarn placeholders created by the old read-time
+    // seeding behavior. Any rate the owner saved has a history row and must be
+    // preserved, even if its source label still says "Estimator defaults".
+    const legacyDefaultIds = rates
+        .filter(rate =>
+            (rate.category === 'yarn_warp' || rate.category === 'yarn_weft')
+            && rate.source === 'Estimator defaults'
+            && rate.apply_as_default
+        )
+        .map(rate => rate.id)
+    if (legacyDefaultIds.length) {
+        const { data: reviewedDefaults, error: historyError } = await supabase
+            .from('cost_rate_history')
+            .select('rate_id')
+            .eq('org_id', profile.org_id)
+            .in('rate_id', legacyDefaultIds)
+        if (historyError) return { error: historyError.message }
 
-        const defaultWarpName = costProfile?.default_warp_yarn_name || 'Warp yarn'
-        const defaultWeftName = costProfile?.default_weft_yarn_name || 'Weft yarn'
-        const savedQualityRates = getMissingYarnRateCandidates(qualityTemplates, [])
-        const savedRate = (name: string, category: CostRateCategory, fallback: number) => savedQualityRates.find(candidate => candidate.category === category && normalizeYarnName(candidate.yarnName) === normalizeYarnName(name))?.currentValue ?? fallback
-        const defaults = [
-            { name: defaultWarpName, category: 'yarn_warp', unit: 'per_kg', current_value: savedRate(defaultWarpName, 'yarn_warp', Number(costProfile?.default_warp_yarn_rate_per_kg ?? 0)), apply_as_default: true },
-            { name: defaultWeftName, category: 'yarn_weft', unit: 'per_kg', current_value: savedRate(defaultWeftName, 'yarn_weft', Number(costProfile?.default_weft_yarn_rate_per_kg ?? 0)), apply_as_default: true },
-            { name: 'Warping', category: 'warping', unit: 'per_kg', current_value: Number(costProfile?.warping_rate_per_kg ?? 2), apply_as_default: true },
-            { name: 'Sizing', category: 'sizing', unit: 'per_kg', current_value: Number(costProfile?.sizing_rate_per_kg ?? 1.5), apply_as_default: true },
-            { name: 'Transport', category: 'transport', unit: 'per_m', current_value: Number(costProfile?.default_transport_per_m ?? 0), apply_as_default: true },
-        ].map(item => ({
-            ...item,
-            org_id: profile.org_id,
-            effective_date: today,
-            last_reviewed_at: today,
-            review_interval_days: 90,
-            source: 'Estimator defaults',
-            created_by: user.id,
-            updated_by: user.id,
-        }))
-
-        await setAuditActor(supabase, user.id)
-        const { data: seeded, error: seedError } = await supabase
-            .from('cost_rate_book')
-            .upsert(defaults, { onConflict: 'org_id,name,category', ignoreDuplicates: true })
-            .select('*')
-        if (seedError) return { error: seedError.message }
-        rates = seeded ?? []
+        const reviewedIds = new Set((reviewedDefaults ?? []).map(row => row.rate_id))
+        const untouchedIds = legacyDefaultIds.filter(id => !reviewedIds.has(id))
+        if (untouchedIds.length) {
+            await setAuditActor(supabase, user.id)
+            const { error: cleanupError } = await supabase
+                .from('cost_rate_book')
+                .delete()
+                .eq('org_id', profile.org_id)
+                .in('id', untouchedIds)
+            if (cleanupError) return { error: cleanupError.message }
+            rates = rates.filter(rate => !untouchedIds.includes(rate.id))
+        }
     }
 
-    // A cost profile can seed zero-value yarn placeholders before the owner saves
-    // their first quality. Promote those placeholders from the saved recipe so the
-    // Rate Book never hides a known market rate behind ₹0/kg.
-    const savedCandidates = collectYarnRateCandidates(qualityTemplates)
+    const savedCandidates = collectYarnRateCandidates(savedYarnSources)
     const placeholderUpgrades = savedCandidates.flatMap(candidate => {
         const existing = rates.find(rate =>
             rate.category === candidate.category
@@ -160,10 +171,10 @@ export async function getCostRates() {
                     current_value: candidate.currentValue,
                     effective_date: today,
                     last_reviewed_at: today,
-                    source: candidate.conflict ? 'Saved qualities — review needed' : 'Saved qualities',
+                    source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
                     notes: (candidate.conflict
                         ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
-                        : `Promoted from ${candidate.yarnName} layers in saved qualities.`).slice(0, 500),
+                        : `Discovered from ${candidate.yarnName} layers in a saved quality or costing.`).slice(0, 500),
                     updated_by: user.id,
                     updated_at: new Date().toISOString(),
                 })
@@ -184,7 +195,7 @@ export async function getCostRates() {
         rates = refreshed ?? []
     }
 
-    const missingYarns = getMissingYarnRateCandidates(qualityTemplates, rates)
+    const missingYarns = getMissingYarnRateCandidates(savedYarnSources, rates)
     if (missingYarns.length) {
         const discoveredRates = missingYarns.map(candidate => ({
             org_id: profile.org_id,
@@ -195,10 +206,10 @@ export async function getCostRates() {
             effective_date: today,
             last_reviewed_at: today,
             review_interval_days: 90,
-            source: candidate.conflict ? 'Saved qualities — review needed' : 'Saved qualities',
+            source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
             notes: (candidate.conflict
                 ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
-                : `Discovered from ${candidate.yarnName} layers in saved qualities.`).slice(0, 500),
+                : `Discovered from ${candidate.yarnName} layers in a saved quality or costing.`).slice(0, 500),
             apply_as_default: false,
             created_by: user.id,
             updated_by: user.id,
@@ -220,7 +231,7 @@ export async function getCostRates() {
         rates = refreshed ?? []
     }
 
-    return { data: rates, conflicts: getYarnRateConflicts(qualityTemplates) }
+    return { data: rates, conflicts: getYarnRateConflicts(savedYarnSources) }
 }
 
 export async function getCostRateHistory(rateId: string) {

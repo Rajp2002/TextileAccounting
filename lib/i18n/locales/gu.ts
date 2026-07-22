@@ -973,6 +973,7 @@ export const gu = {
       finishing_per_m: "ફિનિશિંગ / મી"
     },
     simulation: {
+      base_title: "કોટેશન કિંમતની ધારણાઓ",
       title: "કોસ્ટિંગ જથ્થો",
       market_title: "માર્કેટ રન અને જથ્થો",
       quantity: "કોસ્ટિંગ જથ્થો",
