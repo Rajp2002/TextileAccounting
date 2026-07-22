@@ -1475,6 +1475,7 @@ export default function EstimatorClient({
                 loomPowerKw:      state.loomPowerKw,
                 sizingMode:       state.sizingMode,
                 hoursPerShift:    state.hoursPerShift,
+                estimate:         { ...state, warpRows, weftRows },
             })
             if (res.success) {
                 const tRes = await getEstimatorTemplates()
@@ -1739,7 +1740,7 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
-                    toast.success('Market Run created successfully')
+                    toast.success('Market Run started and costing saved')
                     router.push(`/owner/market-runs/${res.marketRunId}`)
                 }
             } else {
@@ -1824,7 +1825,7 @@ export default function EstimatorClient({
             setSourceQuoteUpdatedAt(null)
             setSourceRecordKind(null)
             quoteRequestIdRef.current = null
-            toast.success('Party order started')
+            toast.success('Party order started and costing saved')
             router.push(`/owner/orders?orderId=${result.orderId}`)
         } catch (error) {
             console.error('Failed to start party order:', error)
@@ -2096,22 +2097,6 @@ export default function EstimatorClient({
                                         <span className="truncate">Save Quotation</span>
                                     </Button>}
 
-                                    {canUseProduction && !isStandaloneCostingSession && (
-                                        <Button
-                                            id="btn-save-costing"
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
-                                            onClick={() => handleSaveQuote('quote', 'draft', false, 'costing')}
-                                            disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                            aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
-                                            title={firstEstimatorValidationMessage ?? 'Save an internal costing without creating a customer quotation'}
-                                        >
-                                            <Save className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="truncate">Save Costing</span>
-                                        </Button>
-                                    )}
-
                                     {/* TERTIARY: Switch to Market mode */}
                                     {canUseProduction && !isStandaloneCostingSession && allowsMarketRuns && (
                                         <Button
@@ -2156,20 +2141,6 @@ export default function EstimatorClient({
                                         <Save className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate">Save Quotation</span>
                                     </Button>}
-
-                                    <Button
-                                        id="btn-save-costing-market"
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
-                                        onClick={() => handleSaveQuote('quote', 'draft', false, 'costing')}
-                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
-                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
-                                        title={firstEstimatorValidationMessage ?? 'Save this analysis without starting production'}
-                                    >
-                                        <Save className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">Save Costing</span>
-                                    </Button>
 
                                     {/* TERTIARY: Transition to Party Order mode */}
                                     {allowsPartyOrders && <Button
@@ -2696,11 +2667,9 @@ export default function EstimatorClient({
 
                         <div className="space-y-4">
                             {state.weftRows.map((row, i) => {
-                                const finishedWidthCm = row.finishedWidthCm ?? row.reedSpace
                                 const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                                 const rawEffectiveWidth = widthUnit === 'inch' ? effectiveCostingWidthCm / 2.54 : effectiveCostingWidthCm
                                 const effectiveWidthWarning = getWidthWarnings({
-                                    finishedWidthCm,
                                     effectiveCostingWidthCm,
                                     inputUnit: widthUnit,
                                     rawInputValue: rawEffectiveWidth,
@@ -2729,19 +2698,6 @@ export default function EstimatorClient({
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
                                         <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
-                                        <WidthField
-                                            label="Finished / market pano"
-                                            value={finishedWidthCm}
-                                            onChange={v => {
-                                                dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'finishedWidthCm', value: v })
-                                                if (effectiveCostingWidthCm <= 0) {
-                                                    dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value: v })
-                                                    dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })
-                                                }
-                                            }}
-                                            unit={widthUnit}
-                                            hint="Market/finished pano"
-                                        />
                                         <WidthField
                                             label="Effective costing width"
                                             value={effectiveCostingWidthCm}

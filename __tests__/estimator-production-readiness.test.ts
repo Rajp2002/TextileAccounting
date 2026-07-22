@@ -51,7 +51,6 @@ describe('Estimator production-readiness regressions', () => {
       calcDenier: 0,
       picks: 60,
       reedSpace: 0,
-      finishedWidthCm: 0,
       effectiveCostingWidthCm: 0,
       manualKgPer100m: 2.75,
       yarnRate: 120,

@@ -1,4 +1,4 @@
-import { getEstimatorQuotes, getEstimatorTemplates, getFactoryCostProfile, getFixedWorkersForOverhead } from '../estimator/actions'
+import { ensureCostingSnapshotsForSavedQualities, getEstimatorQuotes, getEstimatorTemplates, getFactoryCostProfile, getFixedWorkersForOverhead } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
@@ -10,6 +10,9 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const status = requestedStatus && ['costings', 'draft', 'sent', 'accepted', 'rejected'].includes(requestedStatus)
         ? requestedStatus
         : undefined
+    // Older qualities could be saved without history. Repair them before the
+    // library query so every card opens with at least its initial snapshot.
+    await ensureCostingSnapshotsForSavedQualities()
     const [{ data: quotes }, { data: templates }, { data: costProfile }, auth] = await Promise.all([
         getEstimatorQuotes(),
         getEstimatorTemplates(),

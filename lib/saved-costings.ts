@@ -142,15 +142,20 @@ export function normalizeSavedWeftRows(
   const sourceRows = Array.isArray(rows) && rows.length > 0 ? rows : [{}]
   return sourceRows.map((value, index) => {
     const row = asRecord(value)
+    // Old snapshots may only contain finishedWidthCm. Treat it as a final
+    // restore fallback, but do not carry that retired field into live state.
+    const effectiveCostingWidthCm = finiteNumber(
+      row.effectiveCostingWidthCm ?? row.reedSpace ?? row.finishedWidthCm ?? legacy.reedSpace,
+      fallbackRow.effectiveCostingWidthCm ?? fallbackRow.reedSpace,
+    )
     return {
       id: typeof row.id === 'string' && row.id ? row.id : `legacy-weft-${index}`,
       label: typeof row.label === 'string' ? row.label : fallbackRow.label,
       calculationMode: row.calculationMode === 'manual' ? 'manual' : 'formula',
       manualKgPer100m: nullableFiniteNumber(row.manualKgPer100m, fallbackRow.manualKgPer100m ?? null),
       picks: finiteNumber(row.picks ?? legacy.picks, fallbackRow.picks),
-      reedSpace: finiteNumber(row.reedSpace ?? legacy.reedSpace, fallbackRow.reedSpace),
-      finishedWidthCm: nullableFiniteNumber(row.finishedWidthCm, fallbackRow.finishedWidthCm ?? null),
-      effectiveCostingWidthCm: nullableFiniteNumber(row.effectiveCostingWidthCm, fallbackRow.effectiveCostingWidthCm ?? null),
+      reedSpace: effectiveCostingWidthCm,
+      effectiveCostingWidthCm,
       linearDensityUnit: row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier',
       cottonCountNe: nullableFiniteNumber(row.cottonCountNe, fallbackRow.cottonCountNe ?? null),
       calcDenier: finiteNumber(row.calcDenier ?? row.denier ?? legacy.weftDenier, fallbackRow.calcDenier),

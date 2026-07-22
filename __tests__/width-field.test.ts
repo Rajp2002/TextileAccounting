@@ -179,7 +179,6 @@ describe('4. WidthField state persistence', () => {
 describe('5. Width warnings', () => {
     it('warns when 62 cm would silently cost as only 24.4 inches', () => {
         const warnings = getWidthWarnings({
-            finishedWidthCm: 60,
             effectiveCostingWidthCm: 62,
             inputUnit: 'cm',
             rawInputValue: 62,

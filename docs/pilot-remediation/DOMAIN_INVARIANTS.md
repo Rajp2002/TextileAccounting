@@ -204,7 +204,7 @@ Required proof:
 - Formula mode exposes formula-derived kg/100m when it differs from practical/manual consumption.
 - Warp crimp applies only to warp; weft receives waste only.
 - Blank row waste uses the default, explicit `0` overrides the default to zero, and row waste does not stack with default waste.
-- Effective costing width, not finished/market pano, drives weft formula costing.
+- Costing width is the estimator's sole fabric-width input and drives weft formula costing.
 - Suspicious cm inputs such as `62 cm` surface a width warning before they silently under-cost weft.
 - Cost Breakdown and restored quote details show mode, formula/manual base kg, adjustments, final kg, rate, and cost.
 

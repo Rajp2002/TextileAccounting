@@ -39,7 +39,6 @@ function validEstimate(): EstimateState {
             picks: 68,
             reedSpace: 112,
             effectiveCostingWidthCm: 112,
-            finishedWidthCm: 108,
             calcDenier: 75,
             yarnRate: 107,
             gstPct: 5,

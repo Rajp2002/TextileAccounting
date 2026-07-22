@@ -513,8 +513,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const filteredQuotes = useMemo(() => {
         const library = filterAndSortSavedCostings(quotes.filter(quote => (
-            quote.record_kind !== 'market_run'
-            && Boolean(quote.is_archived) === showArchived
+            Boolean(quote.is_archived) === showArchived
         )), {
             query: searchQuery,
             sort: costingSort,

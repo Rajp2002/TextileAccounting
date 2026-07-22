@@ -11,6 +11,7 @@ import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
+import { buildSavedQualityRecipeState } from '@/lib/saved-costings'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -110,6 +111,11 @@ function validateClientRequestId(value: string): string | null {
     return UUID_PATTERN.test(value)
         ? null
         : 'The save request identifier is invalid. Refresh the estimator and try again.'
+}
+
+function getInitialQualitySnapshotRequestId(templateId: string): string {
+    const hex = crypto.createHash('sha256').update(`initial-quality-costing:${templateId}`).digest('hex')
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`
 }
 
 async function requirePremiumTier(orgId: string): Promise<string | null> {
@@ -305,6 +311,7 @@ export async function saveAsFabricTemplate(data: {
     loomPowerKw?:     number | null
     sizingMode?:      'in_house' | 'outsourced'
     hoursPerShift?:   number | null
+    estimate:          EstimateState
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -355,9 +362,96 @@ export async function saveAsFabricTemplate(data: {
 
     if (error) return { error: templateWriteError(error) }
 
+    // A saved quality is only useful commercial history when its recipe has an
+    // immutable costing attached. Keep the two user-visible writes together:
+    // if the snapshot cannot be saved, remove the just-created quality rather
+    // than leaving another "no costing history yet" record behind.
+    const snapshotEstimate: EstimateState = {
+        ...data.estimate,
+        warpRows: data.warpRows,
+        weftRows: data.weftRows,
+    }
+    const snapshotTotals = getAuthoritativeQuoteTotals(snapshotEstimate)
+    const snapshot = await saveEstimatorQuoteV3({
+        clientRequestId: getInitialQualitySnapshotRequestId(saved.id),
+        partyName: normalizeTemplateName(data.name),
+        qualityLabel: normalizeTemplateName(data.name),
+        estimate: snapshotEstimate,
+        totalProductionCostPerM: snapshotTotals.productionCostPerM,
+        quotePricePerM: snapshotTotals.quotePricePerM,
+        status: 'draft',
+        recordKind: 'costing',
+        templateId: saved.id,
+    })
+
+    if (!snapshot.success) {
+        const { error: rollbackError } = await supabase
+            .from('estimator_templates')
+            .delete()
+            .eq('id', saved.id)
+            .eq('org_id', profile.org_id)
+
+        if (rollbackError) {
+            return { error: `Costing snapshot failed and the incomplete saved quality could not be removed: ${snapshot.error ?? 'Unknown snapshot error'}` }
+        }
+        return { error: snapshot.error ?? 'The quality was not saved because its costing snapshot could not be created.' }
+    }
+
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { success: true, templateId: saved.id, updatedAt: saved.updated_at }
+    revalidatePath('/owner/quotes')
+    return { success: true, templateId: saved.id, updatedAt: saved.updated_at, quoteId: snapshot.quoteId }
+}
+
+/**
+ * Repair legacy qualities created before quality saves automatically included
+ * their first costing snapshot. This is idempotent for qualities that already
+ * have any linked costing history.
+ */
+export async function ensureCostingSnapshotsForSavedQualities() {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const [{ data: templates, error: templateError }, { data: linked, error: linkedError }, { data: costProfile, error: profileError }] = await Promise.all([
+        supabase.from('estimator_templates').select('*').eq('org_id', profile.org_id).eq('is_active', true),
+        supabase.from('estimator_quotes').select('template_id').eq('org_id', profile.org_id).not('template_id', 'is', null),
+        supabase.from('factory_cost_profile').select('*').eq('factory_id', profile.org_id).maybeSingle(),
+    ])
+    if (templateError || linkedError || profileError) {
+        return { error: templateError?.message ?? linkedError?.message ?? profileError?.message }
+    }
+
+    const linkedTemplateIds = new Set((linked ?? []).map(row => row.template_id).filter(Boolean))
+    const missing = (templates ?? []).filter(template => !linkedTemplateIds.has(template.id))
+    if (missing.length === 0) return { success: true, created: 0 }
+
+    const { data: fixedWorkers } = await supabase
+        .from('fixed_workers')
+        .select('id, name, role, monthly_salary')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+
+    let created = 0
+    for (const template of missing) {
+        const estimate = buildSavedQualityRecipeState(template, costProfile ?? undefined, fixedWorkers ?? [])
+        const totals = getAuthoritativeQuoteTotals(estimate)
+        const result = await saveEstimatorQuoteV3({
+            clientRequestId: getInitialQualitySnapshotRequestId(template.id),
+            partyName: template.name,
+            qualityLabel: template.name,
+            estimate,
+            totalProductionCostPerM: totals.productionCostPerM,
+            quotePricePerM: totals.quotePricePerM,
+            status: 'draft',
+            recordKind: 'costing',
+            templateId: template.id,
+        })
+        if (!result.success) return { error: result.error, created }
+        created += 1
+    }
+
+    revalidatePath('/owner/quotes')
+    return { success: true, created }
 }
 
 /**
