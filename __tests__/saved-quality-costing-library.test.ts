@@ -33,7 +33,7 @@ describe('saved quality costing library', () => {
     expect(drafts).toContain('templateId?: string')
   })
 
-  it('creates a first costing snapshot whenever a quality is saved and repairs legacy gaps', () => {
+  it('creates a first costing snapshot whenever a quality is saved without mutating data during page render', () => {
     const page = read('app/(dashboard)/owner/quotes/page.tsx')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
@@ -45,7 +45,7 @@ describe('saved quality costing library', () => {
     expect(actions).toContain("recordKind: 'costing'")
     expect(actions).toContain(".from('estimator_templates')\n            .delete()")
     expect(actions).toContain('export async function ensureCostingSnapshotsForSavedQualities()')
-    expect(page).toContain('await ensureCostingSnapshotsForSavedQualities()')
+    expect(page).not.toContain('ensureCostingSnapshotsForSavedQualities')
   })
 
   it('normalizes legacy yarn rows before calculating their breakdown', () => {
