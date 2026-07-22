@@ -2151,4 +2151,5 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Base product proof: first-run costing defaults persist, Save Costing is primary, Party Order/Market Run actions and production-usage language are absent, Scenario Analysis is removed, and weft fields render in two rows at the 2XL breakpoint.
 - Pilot billing policy: existing Razorpay TEST lifecycle evidence is sufficient. Live provider activation intentionally waits for post-incorporation business verification.
 - Monitored checks: observe the first external signup/email confirmation and physically inspect the first internal/customer PDFs. Current-release Sentry evidence remains event-driven; legacy Premium database lint is outside Base pilot scope.
+- Deployment: application/docs release `e51261795fd7156ed0e6c643852f6d789b29f8fe` completed Production deployment `5551926974`; deployed Base smoke `BASEGO-1784707590569-013A77` passed and reconciled to zero.
 - Cleanup: the exact main fixture and the failed-signup QA account/organization reconciled to zero. Next work is limited to the open gates; do not promote unresolved evidence.

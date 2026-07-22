@@ -54,7 +54,7 @@ The standalone estimator is ready for a real factory pilot. Its core financial w
 ## Verification evidence
 
 - Main commits: `6b62762`, `31cac88`, and follow-up implementation `dfd49b3`.
-- Final deployment: `dpl_5gKkpg8GgyXRDxCnSeUEUJ3igDyQ`, READY on `https://textile-accounting.vercel.app`.
+- Follow-up application release: commit `e51261795fd7156ed0e6c643852f6d789b29f8fe`, GitHub Production deployment `5551926974`, completed successfully and aliased through `https://textile-accounting.vercel.app`.
 - Migrations: `20260721183000_base_estimator_go_readiness.sql` and `20260721203000_atomic_base_rate_updates.sql`, applied to linked production; local/remote history aligned through `20260721203000`.
 - Local gates: focused ESLint pass; TypeScript pass; 110 test files with 748 passed and one intentional skip; optimized Next 16.2.11 build pass with 45 static pages.
 - Dependency audit: zero high runtime advisories; two moderate runtime advisories remain in Next's bundled PostCSS path with no non-breaking available fix. Remaining high findings are dev-tool dependency paths requiring breaking forced downgrades.
@@ -63,6 +63,7 @@ The standalone estimator is ready for a real factory pilot. Its core financial w
 - Database lint: repaired Base lockdown error; five unrelated legacy/Premium function errors remain documented.
 - Follow-up browser run: isolated Base tenant `BASEGO-1784675775346-874401` completed first-run defaults, Base-only action/language inspection, Settings persistence, 1600px two-row weft proof, Scenario Analysis absence, and clean console; cleanup reconciled organization/profile/subscription/Auth to zero.
 - Atomic production run: isolated tenant `BASEGO-1784707134907-67E9DE` proved rollback `{rateRows: 0, historyDelta: 0}` and commit `{rate: 321.25, historyRows: 1, profileDefault: 321.25, savedQualities: 1}`; cleanup reconciled organization/profile/subscription/Auth to zero.
+- Exact deployed smoke: `BASEGO-1784707590569-013A77` loaded the new defaults wizard, showed only Save Costing and Export Cost Sheet, omitted Scenario Analysis, rendered ten weft fields in two rows, and emitted no browser warnings/errors; cleanup again reconciled to zero.
 
 ## Conditions for the controlled pilot
 
