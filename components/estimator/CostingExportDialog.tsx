@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import {
   buildCostingPrintHtml,
+  extractStyledCostingBody,
   type CostingExportMode,
   type CostingExportModel,
 } from '@/lib/estimator-export'
@@ -96,15 +97,18 @@ export function CostingExportDialog({
       host.style.zIndex = '-1'
       host.style.pointerEvents = 'none'
       host.style.background = '#ffffff'
-      host.innerHTML = html.match(/<body>([\s\S]*)<\/body>/)?.[1] ?? html
+      host.innerHTML = extractStyledCostingBody(html)
       document.body.appendChild(host)
-      await pdf.html(host, {
-        margin: [36, 36, 36, 36],
-        autoPaging: 'text',
-        width: 523,
-        windowWidth: 760,
-      })
-      host.remove()
+      try {
+        await pdf.html(host, {
+          margin: [36, 36, 36, 36],
+          autoPaging: 'text',
+          width: 523,
+          windowWidth: 760,
+        })
+      } finally {
+        host.remove()
+      }
       const safeName = model.qualityLabel.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'costing'
       pdf.save(`${safeName}-${mode === 'internal' ? 'cost-sheet' : 'quotation'}.pdf`)
       toast.success(mode === 'internal' ? 'Internal cost sheet downloaded' : 'Customer quotation downloaded')

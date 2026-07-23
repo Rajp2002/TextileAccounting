@@ -4,6 +4,7 @@ import {
   buildCostingPrintHtml,
   calculateBreakEvenPricePerM,
   createCostingExportModel,
+  extractStyledCostingBody,
 } from '../lib/estimator-export'
 import {
   compareSavedCostings,
@@ -90,5 +91,29 @@ describe('Base costing exports', () => {
     expect(customer).not.toContain('Production cost')
     expect(customer).not.toContain('Expected profit')
     expect(customer).not.toContain('>Margin<')
+  })
+
+  it('preserves print styling in the jsPDF body', () => {
+    const html = buildCostingPrintHtml(model, {
+      mode: 'internal', businessName: 'Acme Weaves', customerName: '', validUntil: '', notes: '', showGstNote: false,
+    })
+    const pdfBody = extractStyledCostingBody(html)
+
+    expect(pdfBody).toContain('<style>')
+    expect(pdfBody).toContain('.summary{display:grid')
+    expect(pdfBody).toContain('class="costing-pdf-root"')
+    expect(pdfBody).toContain('class="brandbar"')
+    expect(pdfBody).not.toContain('<head>')
+  })
+
+  it('renders structured cost and yarn tables with PDF-safe currency text', () => {
+    const html = buildCostingPrintHtml(model, {
+      mode: 'internal', businessName: 'Acme Weaves', customerName: '', validUntil: '', notes: '', showGstNote: false,
+    })
+
+    expect(html).toContain('<th>Cost component</th>')
+    expect(html).toContain('<th>Yarn / layer</th>')
+    expect(html).toContain('Rs ')
+    expect(html).not.toContain('₹')
   })
 })

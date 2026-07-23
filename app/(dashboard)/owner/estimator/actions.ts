@@ -712,7 +712,9 @@ export async function saveEstimatorQuoteV3(params: {
         if (templateError) return { error: templateError.message }
         if (!template) return { error: 'The selected saved quality is no longer available.' }
     }
-    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate))
+    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, {
+        requireTapeLength: canUseProduction,
+    }))
     if (snapshotError) return { error: snapshotError }
     const authoritative = getAuthoritativeQuoteTotals(estimate)
     const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
@@ -720,6 +722,7 @@ export async function saveEstimatorQuoteV3(params: {
         totalProductionCostPerM: authoritative.productionCostPerM,
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters: estimate.orderQuantityM,
+        requireTapeLength: canUseProduction,
     }))
     if (validationError) return { error: validationError }
     if (!totalsMatchAuthoritative(params.totalProductionCostPerM, params.quotePricePerM, authoritative)) {

@@ -1339,7 +1339,10 @@ export default function EstimatorClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isStandaloneCostingSession, partyName])
 
-    const estimatorValidation = useMemo(() => validateEstimatorSnapshot(state), [state])
+    const estimatorValidation = useMemo(
+        () => validateEstimatorSnapshot(state, { requireTapeLength: canUseProduction }),
+        [canUseProduction, state],
+    )
     const firstEstimatorValidationMessage = useMemo(
         () => getFirstEstimatorValidationMessage(estimatorValidation),
         [estimatorValidation],
@@ -2572,8 +2575,8 @@ export default function EstimatorClient({
                         >
                             <Plus className="h-4 w-4" /> {t('estimator.warp.add_blend')}
                         </Button>
-                        {/* Tape Length + Beam Capacity + Beams Needed */}
-                        {(() => {
+                        {/* Beam planning only applies to production-enabled plans with order quantities. */}
+                        {canUseProduction && (() => {
                             const beamM = totals.estimatedBeamCapacityM
                             const orderQty = state.orderQuantityM
                             const beamsNeeded = (beamM > 0 && orderQty && orderQty > 0)

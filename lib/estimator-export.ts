@@ -69,14 +69,49 @@ function escapeHtml(value: string) {
 }
 
 function money(value: number, digits = 2) {
-  return `₹${Number(value || 0).toLocaleString('en-IN', {
+  return `Rs ${Number(value || 0).toLocaleString('en-IN', {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })}`
 }
 
-function printRow(label: string, value: string, strong = false) {
-  return `<tr${strong ? ' class="strong"' : ''}><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`
+function metric(label: string, value: string, tone: 'default' | 'accent' | 'positive' = 'default') {
+  return `<div class="metric metric-${tone}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
+}
+
+function tableRow(cells: string[], className = '') {
+  return `<tr${className ? ` class="${className}"` : ''}>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`
+}
+
+const PRINT_STYLES = `
+  @page{size:A4;margin:13mm 14mm 14mm}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff}
+  body,.costing-pdf-root{font-family:Arial,Helvetica,sans-serif;color:#172033;font-size:10px;line-height:1.42;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .document{width:100%;max-width:100%;margin:0 auto}
+  .brandbar{height:6px;background:linear-gradient(90deg,#1d4ed8 0 78%,#f97316 78% 100%);margin-bottom:18px}
+  .masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:1px solid #dbe3ef}
+  .brand{display:flex;align-items:center;gap:10px}.brandmark{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:8px;background:#1d4ed8;color:#fff;font-size:17px;font-weight:800}.brandname{font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0f172a}.doctype{margin-top:2px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:.13em;font-weight:700}
+  .docmeta{text-align:right;color:#64748b}.docmeta strong{display:block;color:#0f172a;font-size:11px;margin-bottom:3px}.docmeta span{display:block}
+  .titleblock{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:17px 0 14px}.eyebrow{margin-bottom:4px;color:#1d4ed8;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.14em}.titleblock h1{margin:0;color:#0f172a;font-size:23px;line-height:1.15;letter-spacing:-.035em}.titleaside{text-align:right;color:#64748b;white-space:nowrap}.titleaside b{color:#334155}
+  .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:17px}.metric{min-height:58px;padding:10px 11px;border:1px solid #dbe3ef;border-radius:8px;background:#f8fafc}.metric span{display:block;color:#64748b;font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.metric strong{display:block;margin-top:5px;color:#0f172a;font-size:15px;line-height:1.15;letter-spacing:-.02em;white-space:nowrap}.metric-accent{border-color:#fed7aa;background:#fff7ed}.metric-accent strong{color:#c2410c}.metric-positive{border-color:#bbf7d0;background:#f0fdf4}.metric-positive strong{color:#15803d}
+  .section{margin-top:15px;break-inside:avoid;page-break-inside:avoid}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.sectionhead h2{margin:0;color:#0f172a;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.sectionhead span{color:#94a3b8;font-size:8px}
+  table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #dbe3ef;border-radius:7px;overflow:hidden}th{padding:6px 8px;background:#eef3f9;color:#475569;font-size:7.5px;text-align:left;text-transform:uppercase;letter-spacing:.06em}th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}td{padding:6px 8px;border-top:1px solid #e7edf5;color:#334155}tbody tr:first-child td{border-top:0}tbody tr:nth-child(even):not(.total) td{background:#fbfdff}.total td{border-top:1.5px solid #94a3b8;background:#eff6ff;color:#0f172a;font-weight:800}.label-main{font-weight:700;color:#172033}
+  .commercial{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #dbe3ef;border-radius:7px;overflow:hidden}.commercial div{padding:8px 10px;border-left:1px solid #e7edf5}.commercial div:first-child{border-left:0}.commercial span{display:block;color:#64748b;font-size:7.5px;text-transform:uppercase;letter-spacing:.06em}.commercial strong{display:block;margin-top:3px;color:#172033;font-size:11px}
+  .note{margin-top:15px;padding:10px 12px;border-left:3px solid #f97316;background:#fff7ed;color:#475569;white-space:pre-wrap}.note strong{display:block;margin-bottom:3px;color:#9a3412;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+  .quote-details{display:grid;grid-template-columns:1fr 1fr;margin:2px 0 17px;border:1px solid #dbe3ef;border-radius:8px;overflow:hidden}.quote-details div{padding:11px 12px}.quote-details div+div{border-left:1px solid #e7edf5}.quote-details span{display:block;color:#64748b;font-size:7.5px;text-transform:uppercase;letter-spacing:.07em}.quote-details strong{display:block;margin-top:3px;color:#172033;font-size:11px}
+  .footer{display:flex;justify-content:space-between;gap:24px;margin-top:18px;padding-top:9px;border-top:1px solid #dbe3ef;color:#94a3b8;font-size:7.5px}.footer strong{color:#64748b}.gst{margin:14px 0 0;color:#64748b;font-size:8.5px}
+`
+
+/**
+ * Returns the styled body used by jsPDF.html(). The old export extracted only
+ * the body and silently dropped the stylesheet from <head>, producing the raw,
+ * unformatted PDF that prompted this redesign.
+ */
+export function extractStyledCostingBody(html: string) {
+  const styles = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map(match => match[1]).join('\n')
+  const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? html
+  return `<style>${styles}</style><div class="costing-pdf-root">${body}</div>`
 }
 
 export function buildCostingPrintHtml(model: CostingExportModel, options: CostingExportOptions) {
@@ -86,55 +121,75 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
   const date = new Date(model.createdAt).toLocaleDateString('en-IN')
   const validUntil = options.validUntil
     ? new Date(`${options.validUntil}T00:00:00`).toLocaleDateString('en-IN')
-    : '—'
-
-  const costRows = [
-    printRow('Warp yarn', `${money(totals.warpCostPerM)}/m`),
-    printRow('Weft yarn', `${money(totals.weftCostPerM)}/m`),
-    printRow('Machine weaving', `${money(totals.weaveCostPerM)}/m`),
-    printRow('Warping + sizing', `${money(totals.warpingAndSizingPerM)}/m`),
-    totals.windingPerM > 0 ? printRow('Winding', `${money(totals.windingPerM)}/m`) : '',
-    totals.processingPerM > 0 ? printRow('Processing', `${money(totals.processingPerM)}/m`) : '',
-    totals.finishingPerM > 0 ? printRow('Finishing', `${money(totals.finishingPerM)}/m`) : '',
-    printRow('Factory overhead', `${money(totals.overheadPerM)}/m`),
-    printRow('Production cost', `${money(model.productionCostPerM)}/m`, true),
-  ].join('')
-
-  const layerRows = [
-    ...totals.warpRows.map((row, index) => printRow(
-      `Warp · ${row.label || `Layer ${index + 1}`}`,
-      `${row.finalKgPer100m.toFixed(3)} kg/100m · ${money(row.ratePerKg, 0)}/kg · ${money(row.costPerMeter)}/m`,
-    )),
-    ...totals.weftRows.map((row, index) => printRow(
-      `Weft · ${row.label || `Layer ${index + 1}`}`,
-      `${row.finalKgPer100m.toFixed(3)} kg/100m · ${money(row.ratePerKg, 0)}/kg · ${money(row.costPerMeter)}/m`,
-    )),
-  ].join('')
-
+    : 'Not specified'
   const customer = options.customerName.trim()
   const notes = options.notes.trim()
   const businessName = options.businessName.trim() || 'Weavly Cost Estimate'
+  const quantity = model.quantityM > 0 ? `${model.quantityM.toLocaleString('en-IN')} m` : 'Not specified'
+
+  const costItems = [
+    ['Warp yarn', totals.warpCostPerM],
+    ['Weft yarn', totals.weftCostPerM],
+    ['Machine weaving', totals.weaveCostPerM],
+    ['Warping + sizing', totals.warpingAndSizingPerM],
+    ...(totals.windingPerM > 0 ? [['Winding', totals.windingPerM] as [string, number]] : []),
+    ...(totals.processingPerM > 0 ? [['Processing', totals.processingPerM] as [string, number]] : []),
+    ...(totals.finishingPerM > 0 ? [['Finishing', totals.finishingPerM] as [string, number]] : []),
+    ['Factory overhead', totals.overheadPerM],
+  ] as [string, number][]
+
+  const costRows = costItems.map(([label, value]) => tableRow([
+    label,
+    model.productionCostPerM > 0 ? `${(value / model.productionCostPerM * 100).toFixed(1)}%` : '0.0%',
+    `${money(value)}/m`,
+  ])).join('') + tableRow(['Production cost', '100.0%', `${money(model.productionCostPerM)}/m`], 'total')
+
+  const layerRows = [
+    ...totals.warpRows.map((row, index) => tableRow([
+      'Warp', row.label || `Layer ${index + 1}`, `${row.finalKgPer100m.toFixed(3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+    ])),
+    ...totals.weftRows.map((row, index) => tableRow([
+      'Weft', row.label || `Layer ${index + 1}`, `${row.finalKgPer100m.toFixed(3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+    ])),
+  ].join('')
+
+  const summary = isInternal
+    ? [
+        metric('Production cost', `${money(model.productionCostPerM)}/m`),
+        metric('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
+        metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
+        metric('Margin', `${model.marginPct.toFixed(1)}%`, 'positive'),
+        metric('Order quantity', quantity),
+        metric('Expected profit', money(model.expectedProfit, 0), 'positive'),
+      ].join('')
+    : [
+        metric('Quoted price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
+        metric('Order quantity', quantity),
+        metric('Quotation value', model.quantityM > 0 ? money(model.suggestedSellingPricePerM * model.quantityM, 0) : 'On confirmation'),
+      ].join('')
+
+  const internalSections = `
+    <section class="section"><div class="sectionhead"><h2>Cost breakdown</h2><span>Per metre of finished fabric</span></div>
+      <table><thead><tr><th>Cost component</th><th class="num">Share</th><th class="num">Cost / m</th></tr></thead><tbody>${costRows}</tbody></table>
+    </section>
+    <section class="section"><div class="sectionhead"><h2>Yarn assumptions</h2><span>Saved with this costing snapshot</span></div>
+      <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Consumption / 100m</th><th class="num">Rate</th><th class="num">Cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
+    </section>
+    <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
+      <div class="commercial"><div><span>Commission</span><strong>${state.commissionPct.toFixed(1)}%</strong></div><div><span>Transport</span><strong>${money(state.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${state.monthlyOutputM.toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${state.profitPct.toFixed(1)}%</strong></div></div>
+    </section>`
 
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(model.qualityLabel)}</title>
-<style>
-  @page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#18202a;margin:0;font-size:12px;line-height:1.45}
-  header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid #df6f16;padding-bottom:14px;margin-bottom:20px}h1{font-size:24px;margin:0 0 4px}h2{font-size:14px;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.06em;color:#52606d}
-  .muted{color:#6b7280}.meta{text-align:right}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{border:1px solid #dde2e7;padding:12px}.metric span{display:block;color:#6b7280;font-size:10px;text-transform:uppercase}.metric strong{display:block;font-size:18px;margin-top:3px}.accent{color:#d96b1c}.positive{color:#147a45}
-  table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #e6e9ed;padding:7px 4px}td:last-child{text-align:right;font-family:monospace}.strong td{font-weight:700;border-top:2px solid #cfd5db}
-  .note{margin-top:18px;padding:12px;border:1px solid #e6d4b3;background:#fffaf0;white-space:pre-wrap}.footer{margin-top:24px;border-top:1px solid #dde2e7;padding-top:10px;color:#6b7280;font-size:10px}
-</style></head><body>
-<header><div><h1>${escapeHtml(businessName)}</h1><div class="muted">${isInternal ? 'Internal Cost Sheet' : 'Customer Quotation'}</div></div><div class="meta"><strong>${escapeHtml(model.qualityLabel)}</strong><br><span class="muted">Prepared ${escapeHtml(date)}</span>${customer ? `<br>Customer: ${escapeHtml(customer)}` : ''}${!isInternal ? `<br>Valid until: ${escapeHtml(validUntil)}` : ''}</div></header>
-<section class="summary">
-  ${isInternal ? `<div class="metric"><span>Production cost</span><strong>${escapeHtml(money(model.productionCostPerM))}/m</strong></div>` : ''}
-  <div class="metric"><span>${isInternal ? 'Suggested selling price' : 'Quoted price'}</span><strong class="accent">${escapeHtml(money(model.suggestedSellingPricePerM))}/m</strong></div>
-  ${isInternal ? `<div class="metric"><span>Break-even price</span><strong>${escapeHtml(money(model.breakEvenPricePerM))}/m</strong></div><div class="metric"><span>Margin</span><strong class="positive">${model.marginPct.toFixed(1)}%</strong></div>` : ''}
-  <div class="metric"><span>Quantity</span><strong>${model.quantityM > 0 ? `${model.quantityM.toLocaleString('en-IN')} m` : 'Not specified'}</strong></div>
-  ${isInternal ? `<div class="metric"><span>Expected profit</span><strong class="positive">${escapeHtml(money(model.expectedProfit, 0))}</strong></div>` : ''}
-</section>
-${isInternal ? `<h2>Cost breakdown</h2><table>${costRows}</table><h2>Yarn assumptions</h2><table>${layerRows}</table><h2>Commercial assumptions</h2><table>${printRow('Commission', `${state.commissionPct.toFixed(1)}%`)}${printRow('Transport', `${money(state.transportPerM)}/m`)}${printRow('Monthly output', `${state.monthlyOutputM.toLocaleString('en-IN')} m`)}${printRow('Target margin', `${state.profitPct.toFixed(1)}%`)}</table>` : ''}
-${notes ? `<div class="note"><strong>Notes</strong><br>${escapeHtml(notes)}</div>` : ''}
-${!isInternal && options.showGstNote ? '<p class="footer">GST will be charged as applicable on the final tax invoice. This quotation is not a tax invoice.</p>' : ''}
-<p class="footer">Generated by Weavly Cost Estimate · Historical costings retain the assumptions saved with their snapshot.</p>
-</body></html>`
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(model.qualityLabel)}</title><style>${PRINT_STYLES}</style></head><body>
+<main class="document">
+  <div class="brandbar"></div>
+  <header class="masthead"><div class="brand"><div class="brandmark">W</div><div><div class="brandname">${escapeHtml(businessName)}</div><div class="doctype">${isInternal ? 'Internal Cost Sheet' : 'Customer Quotation'}</div></div></div><div class="docmeta"><strong>${isInternal ? 'Costing snapshot' : 'Quotation'}</strong><span>Prepared ${escapeHtml(date)}</span>${!isInternal ? `<span>Valid until ${escapeHtml(validUntil)}</span>` : ''}</div></header>
+  <section class="titleblock"><div><div class="eyebrow">Fabric quality</div><h1>${escapeHtml(model.qualityLabel)}</h1></div><div class="titleaside">${customer ? `Prepared for<br><b>${escapeHtml(customer)}</b>` : isInternal ? 'Confidential - internal use only' : 'Prepared for your review'}</div></section>
+  ${!isInternal ? `<section class="quote-details"><div><span>Customer</span><strong>${escapeHtml(customer || 'To be confirmed')}</strong></div><div><span>Validity</span><strong>Until ${escapeHtml(validUntil)}</strong></div></section>` : ''}
+  <section class="summary">${summary}</section>
+  ${isInternal ? internalSections : ''}
+  ${notes ? `<section class="note"><strong>${isInternal ? 'Internal notes' : 'Notes & terms'}</strong>${escapeHtml(notes)}</section>` : ''}
+  ${!isInternal && options.showGstNote ? '<p class="gst">GST will be charged as applicable on the final tax invoice. This quotation is not a tax invoice.</p>' : ''}
+  <footer class="footer"><span>Generated by <strong>Weavly Cost Estimate</strong></span><span>${isInternal ? 'Historical costings retain their saved assumptions.' : 'Thank you for the opportunity to quote.'}</span></footer>
+</main></body></html>`
 }

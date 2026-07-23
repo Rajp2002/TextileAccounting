@@ -295,6 +295,14 @@
     }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .landing-scroll header,
+    .landing-scroll header * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   .weavly-app-bg {
     background-color: var(--color-app-bg);
     background-image:

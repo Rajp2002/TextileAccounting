@@ -184,7 +184,10 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
   }
 }
 
-export function validateEstimatorSnapshot(estimate: EstimateState): EstimatorValidationResult {
+export function validateEstimatorSnapshot(
+  estimate: EstimateState,
+  options: { requireTapeLength?: boolean } = {},
+): EstimatorValidationResult {
   const issues: EstimatorValidationIssue[] = []
   if (!estimate || typeof estimate !== 'object') {
     return resultFromIssues([{ field: 'estimate', message: 'Estimator input is required.' }])
@@ -225,7 +228,10 @@ export function validateEstimatorSnapshot(estimate: EstimateState): EstimatorVal
     validateWeftRow(row, index, issues)
   })
 
-  addNumberIssue(issues, 'tapeLengthM', 'Tape length', estimate.tapeLengthM, { max: MAX_TAPE_LENGTH_M })
+  addNumberIssue(issues, 'tapeLengthM', 'Tape length', estimate.tapeLengthM, {
+    max: MAX_TAPE_LENGTH_M,
+    allowZero: options.requireTapeLength === false,
+  })
   addNumberIssue(issues, 'perPickCostPaisa', 'Weaving rate per pick', estimate.perPickCostPaisa, { max: MAX_PICK_COST })
   addNumberIssue(issues, 'warpingRatePerKg', 'Warping rate', estimate.warpingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: true })
   addNumberIssue(issues, 'sizingRatePerKg', 'Sizing rate', estimate.sizingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: true })
@@ -272,8 +278,11 @@ export function validateEstimatorQuoteBoundary(input: {
   totalProductionCostPerM: number
   quotePricePerM: number
   targetMeters?: number | null
+  requireTapeLength?: boolean
 }): EstimatorValidationResult {
-  const snapshotValidation = validateEstimatorSnapshot(input.estimate)
+  const snapshotValidation = validateEstimatorSnapshot(input.estimate, {
+    requireTapeLength: input.requireTapeLength,
+  })
   const issues = snapshotValidation.valid ? [] : [...snapshotValidation.issues]
 
   addNumberIssue(issues, 'totalProductionCostPerM', 'Production cost per meter', input.totalProductionCostPerM, { max: MAX_COST_PER_M })

@@ -4,10 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function LandingHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false)
+    const previousScrollTop = useRef(0)
+    const directionDistance = useRef(0)
 
     const navLinks = [
         { name: 'Product', href: '#product' },
@@ -16,15 +19,64 @@ export default function LandingHeader() {
         { name: 'FAQ', href: '#faq' },
     ]
 
+    useEffect(() => {
+        const scrollContainer = document.querySelector<HTMLElement>('.landing-scroll')
+        const mobileQuery = window.matchMedia('(max-width: 767px)')
+
+        if (!scrollContainer) return
+
+        const handleScroll = () => {
+            if (!mobileQuery.matches || mobileMenuOpen) {
+                setIsHeaderCollapsed(false)
+                previousScrollTop.current = scrollContainer.scrollTop
+                directionDistance.current = 0
+                return
+            }
+
+            const currentScrollTop = Math.max(0, scrollContainer.scrollTop)
+            const delta = currentScrollTop - previousScrollTop.current
+
+            if (currentScrollTop < 24) {
+                setIsHeaderCollapsed(false)
+                directionDistance.current = 0
+            } else if (delta > 0) {
+                directionDistance.current = Math.max(0, directionDistance.current) + delta
+                if (directionDistance.current >= 12) setIsHeaderCollapsed(true)
+            } else if (delta < 0) {
+                directionDistance.current = Math.min(0, directionDistance.current) + delta
+                if (directionDistance.current <= -8) setIsHeaderCollapsed(false)
+            }
+
+            previousScrollTop.current = currentScrollTop
+        }
+
+        const handleViewportChange = () => {
+            if (!mobileQuery.matches) setIsHeaderCollapsed(false)
+            previousScrollTop.current = scrollContainer.scrollTop
+            directionDistance.current = 0
+        }
+
+        previousScrollTop.current = scrollContainer.scrollTop
+        scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+        mobileQuery.addEventListener('change', handleViewportChange)
+
+        return () => {
+            scrollContainer.removeEventListener('scroll', handleScroll)
+            mobileQuery.removeEventListener('change', handleViewportChange)
+        }
+    }, [mobileMenuOpen])
+
     return (
         <header
-            className="fixed top-0 left-0 right-0 z-50 px-3 pb-3 pt-safe xs:px-4 xs:pb-4 sm:px-6 lg:px-8"
+            className={`fixed left-0 right-0 top-0 z-50 px-3 pb-3 pt-safe transition-transform duration-300 ease-out xs:px-4 xs:pb-4 sm:px-6 lg:px-8 ${
+                isHeaderCollapsed ? '-translate-y-full' : 'translate-y-0'
+            }`}
         >
             <div className="mx-auto max-w-7xl">
-                <div className="rounded-b-xl border border-t-0 border-gray-800/60 bg-black shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all">
-                    <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 sm:px-6 lg:px-8">
-                    <Link href="/" className="flex items-center group">
-                            <div className="relative h-12 w-32 xs:h-16 xs:w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
+                <div className="rounded-b-xl border border-t-0 border-gray-800/60 bg-black shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all duration-300 ease-out">
+                    <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 md:px-6 lg:px-8">
+                        <Link href="/" className="group flex items-center">
+                            <div className="relative h-12 w-32 transition-opacity duration-200 group-hover:opacity-80 xs:h-16 xs:w-40 md:h-20 md:w-56">
                                 <Image src="/images/WeavlyLogoBlack.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="object-contain object-left" priority />
                             </div>
                         </Link>
@@ -62,8 +114,10 @@ export default function LandingHeader() {
                                 type="button"
                                 className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-gray-200 hover:bg-white/10 transition-colors"
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                aria-expanded={mobileMenuOpen}
+                                aria-controls="landing-mobile-menu"
                             >
-                                <span className="sr-only">Open main menu</span>
+                                <span className="sr-only">{mobileMenuOpen ? 'Close main menu' : 'Open main menu'}</span>
                                 {mobileMenuOpen ? (
                                     <X className="h-6 w-6" aria-hidden="true" />
                                 ) : (
@@ -76,7 +130,7 @@ export default function LandingHeader() {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div className="absolute left-3 right-3 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-50 xs:left-4 xs:right-4 xs:top-[calc(6rem+env(safe-area-inset-top,0px))] md:hidden">
+                    <div id="landing-mobile-menu" className="mt-2 md:hidden">
                         <div className="overflow-hidden rounded-xl bg-black/95 shadow-2xl ring-1 ring-gray-700/50 backdrop-blur-2xl">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (
