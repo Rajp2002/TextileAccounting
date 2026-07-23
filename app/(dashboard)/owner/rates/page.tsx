@@ -9,6 +9,7 @@ export default async function RatesPage() {
         <RatesClient
             initialRates={(result.data ?? []) as CostRateRow[]}
             initialConflicts={(result.conflicts ?? []) as YarnRateConflict[]}
+            defaultReviewIntervalDays={result.yarnReviewIntervalDays ?? 90}
         />
     )
 }

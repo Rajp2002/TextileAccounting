@@ -182,7 +182,9 @@ export async function getFactoryCostProfile() {
                 winding_rate_per_kg:     0,
                 overhead_pct:            8.00,
                 default_commission_pct:  2.00,
+                default_margin_pct:      10.00,
                 default_transport_per_m: 0,
+                yarn_review_interval_days: 90,
                 loom_count:              0,
                 monthly_working_days:    26,
                 avg_output_per_loom_per_day: 50,
@@ -240,7 +242,9 @@ export async function upsertFactoryCostProfile(data: {
     winding_rate_per_kg:     number
     overhead_pct:            number
     default_commission_pct:  number
+    default_margin_pct?:     number
     default_transport_per_m: number
+    yarn_review_interval_days?: number
     default_processing_rate_per_m?: number
     default_finishing_rate_per_m?: number
     enabled_sections:        FactorySections
@@ -277,6 +281,7 @@ export async function upsertFactoryCostProfile(data: {
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
+    revalidatePath('/owner', 'layout')
     return { success: true }
 }
 

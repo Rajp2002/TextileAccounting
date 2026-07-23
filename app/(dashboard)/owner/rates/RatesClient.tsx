@@ -62,7 +62,7 @@ function today() {
     return new Date().toISOString().slice(0, 10)
 }
 
-function defaultDraft(category: YarnRateCategory = 'yarn_warp'): CostRateInput {
+function defaultDraft(reviewIntervalDays: number, category: YarnRateCategory = 'yarn_warp'): CostRateInput {
     return {
         name: '',
         category,
@@ -70,7 +70,7 @@ function defaultDraft(category: YarnRateCategory = 'yarn_warp'): CostRateInput {
         currentValue: 0,
         effectiveDate: today(),
         lastReviewedAt: today(),
-        reviewIntervalDays: 90,
+        reviewIntervalDays,
         source: '',
         notes: '',
         applyAsDefault: false,
@@ -104,9 +104,11 @@ function ReviewBadge({ rate }: { rate: CostRateRow }) {
 export default function RatesClient({
     initialRates,
     initialConflicts,
+    defaultReviewIntervalDays,
 }: {
     initialRates: CostRateRow[]
     initialConflicts: YarnRateConflict[]
+    defaultReviewIntervalDays: number
 }) {
     const [rates, setRates] = useState(initialRates)
     const [query, setQuery] = useState('')
@@ -217,7 +219,7 @@ export default function RatesClient({
                     <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> Yarn Rate Book</h1>
                     <p className="mt-1 text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your saved qualities and costings.</p>
                 </div>
-                <Button onClick={() => setDraft(defaultDraft())} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
+                <Button onClick={() => setDraft(defaultDraft(defaultReviewIntervalDays))} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
             </div>
 
             {conflicts.length > 0 && (
@@ -260,10 +262,10 @@ export default function RatesClient({
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full min-w-[1000px] text-left">
                                 <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">Current value</th><th className="px-4 py-3">Previous value</th><th className="px-4 py-3">Effective date</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
-                                <tbody className="divide-y divide-slate-100">{visibleRates.map(rate => <tr key={rate.id} className="hover:bg-slate-50/70"><td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></td><td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td><td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td><td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td><td className="px-4 py-4"><ReviewBadge rate={rate} /></td><td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td><td className="px-4 py-4"><div className="flex justify-end gap-1"><Button variant="outline" size="sm" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-3.5 w-3.5" /> Edit</Button><Button variant="ghost" size="sm" onClick={() => openHistory(rate)}><History className="h-3.5 w-3.5" /> History</Button><Button variant="ghost" size="icon" aria-label={`Archive ${rate.name}`} onClick={() => setArchiveRate(rate)} className="text-slate-500"><Archive className="h-4 w-4" /></Button></div></td></tr>)}</tbody>
+                                <tbody className="divide-y divide-slate-100">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); return <tr key={rate.id} className={reviewState === 'overdue' ? 'bg-red-50/70 hover:bg-red-50' : reviewState === 'due_soon' ? 'bg-amber-50/70 hover:bg-amber-50' : 'hover:bg-slate-50/70'}><td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></td><td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td><td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td><td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td><td className="px-4 py-4"><ReviewBadge rate={rate} /></td><td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td><td className="px-4 py-4"><div className="flex justify-end gap-1"><Button variant="outline" size="sm" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-3.5 w-3.5" /> Edit</Button><Button variant="ghost" size="sm" onClick={() => openHistory(rate)}><History className="h-3.5 w-3.5" /> History</Button><Button variant="ghost" size="icon" aria-label={`Archive ${rate.name}`} onClick={() => setArchiveRate(rate)} className="text-slate-500"><Archive className="h-4 w-4" /></Button></div></td></tr> })}</tbody>
                             </table>
                         </div>
-                        <div className="space-y-3 p-3 md:hidden">{visibleRates.map(rate => <Card key={rate.id} className="border-slate-200"><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></div><ReviewBadge rate={rate} /></div><div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">Current</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div><div className="mt-3 grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-4 w-4" /> Edit</Button><Button variant="outline" onClick={() => openHistory(rate)}><History className="h-4 w-4" /> History</Button></div></CardContent></Card>)}</div>
+                        <div className="space-y-3 p-3 md:hidden">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); return <Card key={rate.id} className={reviewState === 'overdue' ? 'border-red-300 bg-red-50/70' : reviewState === 'due_soon' ? 'border-amber-300 bg-amber-50/70' : 'border-slate-200'}><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></div><ReviewBadge rate={rate} /></div><div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">Current</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div><div className="mt-3 grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-4 w-4" /> Edit</Button><Button variant="outline" onClick={() => openHistory(rate)}><History className="h-4 w-4" /> History</Button></div></CardContent></Card> })}</div>
                     </>
                 )}
             </div>

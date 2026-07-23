@@ -20,11 +20,12 @@ import { nanoid } from 'nanoid'
 
 interface FactoryCostWizardProps {
     initialState: EstimateState
-    onComplete: (data: Partial<EstimateState>) => Promise<void>
+    initialYarnReviewIntervalDays: number
+    onComplete: (data: Partial<EstimateState> & { yarnReviewIntervalDays: number }) => Promise<void>
     saving: boolean
 }
 
-export default function FactoryCostWizard({ initialState, onComplete, saving }: FactoryCostWizardProps) {
+export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, saving }: FactoryCostWizardProps) {
     const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'fast' | 'detailed'>('fast')
     
@@ -44,6 +45,8 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
     const [processingRate, setProcessingRate] = useState<number>(initialState.processingRatePerM)
     const [finishingRate, setFinishingRate] = useState<number>(initialState.finishingRatePerM)
     const [commissionPct, setCommissionPct] = useState<number>(initialState.commissionPct)
+    const [marginPct, setMarginPct] = useState<number>(initialState.profitPct || 10)
+    const [yarnReviewIntervalDays, setYarnReviewIntervalDays] = useState<number>(initialYarnReviewIntervalDays || 90)
     const [transportRate, setTransportRate] = useState<number>(initialState.transportPerM)
     const [warpCrimpPct, setWarpCrimpPct] = useState<number>(initialState.warpCrimpPct)
     const [yarnWastePct, setYarnWastePct] = useState<number>(initialState.yarnShortagePct)
@@ -78,6 +81,8 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
             processingRatePerM: processingRate,
             finishingRatePerM: finishingRate,
             commissionPct,
+            profitPct: marginPct,
+            yarnReviewIntervalDays,
             transportPerM: transportRate,
             warpCrimpPct,
             yarnShortagePct: yarnWastePct,
@@ -380,6 +385,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                             ['Processing', processingRate, setProcessingRate, '₹/m', 0.1],
                                             ['Finishing', finishingRate, setFinishingRate, '₹/m', 0.1],
                                             ['Commission', commissionPct, setCommissionPct, '%', 0.5],
+                                            ['Target margin', marginPct, setMarginPct, '%', 0.5],
                                             ['Transport', transportRate, setTransportRate, '₹/m', 0.1],
                                             ['Warp crimp', warpCrimpPct, setWarpCrimpPct, '%', 0.5],
                                             ['Default yarn waste', yarnWastePct, setYarnWastePct, '%', 0.5],
@@ -390,7 +396,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                                     <Input
                                                         type="number"
                                                         min={0}
-                                                        max={label === 'Commission' ? 99.99 : undefined}
+                                                        max={label === 'Commission' || label === 'Target margin' ? 99.99 : undefined}
                                                         step={Number(inputStep)}
                                                         value={Number(value)}
                                                         onChange={event => (setter as (next: number) => void)(Number(event.target.value))}
@@ -400,9 +406,24 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                                 </div>
                                             </div>
                                         ))}
+                                        <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                            <Label htmlFor="onboarding-yarn-review" className="text-[10px] font-black uppercase tracking-wider text-slate-500">Review yarn rates</Label>
+                                            <select
+                                                id="onboarding-yarn-review"
+                                                value={yarnReviewIntervalDays}
+                                                onChange={event => setYarnReviewIntervalDays(Number(event.target.value))}
+                                                className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800"
+                                            >
+                                                <option value={30}>Every 30 days</option>
+                                                <option value={60}>Every 60 days</option>
+                                                <option value={90}>Every 3 months</option>
+                                                <option value={180}>Every 6 months</option>
+                                                <option value={365}>Every 12 months</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[11px] leading-relaxed text-indigo-700">
-                                        Positive processing, finishing, commission, and transport defaults automatically enable those sections. You can change all defaults later in Settings.
+                                        Your target margin powers the suggested selling price. Yarn review reminders and all defaults can be changed later in Settings.
                                     </p>
                                     <Button
                                         onClick={handleFinish}

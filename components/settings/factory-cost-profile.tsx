@@ -146,7 +146,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         winding_rate_per_kg:     0,
         overhead_pct:            8.00,
         default_commission_pct:  2.00,
+        default_margin_pct:      10.00,
         default_transport_per_m: 0,
+        yarn_review_interval_days: 90,
         default_processing_rate_per_m: 0,
         default_finishing_rate_per_m: 0,
     })
@@ -171,7 +173,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     winding_rate_per_kg:     Number(d.winding_rate_per_kg    ?? 0),
                     overhead_pct:            Number(d.overhead_pct           ?? 8.00),
                     default_commission_pct:  Number(d.default_commission_pct ?? 2.00),
+                    default_margin_pct:      Number(d.default_margin_pct     ?? 10.00),
                     default_transport_per_m: Number(d.default_transport_per_m ?? 0),
+                    yarn_review_interval_days: Number(d.yarn_review_interval_days ?? 90),
                     default_processing_rate_per_m: Number(d.default_processing_rate_per_m ?? 0),
                     default_finishing_rate_per_m: Number(d.default_finishing_rate_per_m ?? 0),
                 })
@@ -352,6 +356,15 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <Label className="text-sm font-semibold text-body">Selling Defaults</Label>
                     </div>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <RateInput
+                            label="Target Margin"
+                            value={rates.default_margin_pct}
+                            onChange={updateRate('default_margin_pct')}
+                            unit="%"
+                            step={0.5}
+                            hint="Pre-fills the suggested selling price. You can adjust it in each cost estimate."
+                            icon={TrendingUp}
+                        />
                         {sections.commission && (
                             <RateInput
                                 label="Commission"
@@ -379,6 +392,30 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 Enable commission or transport sections below to configure selling defaults.
                             </p>
                         )}
+                    </div>
+                </div>
+
+                {/* ── Yarn Rate Reviews ── */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                        <Sparkles className="h-4 w-4 text-saffron" />
+                        <Label className="text-sm font-semibold text-body">Yarn Rate Reviews</Label>
+                    </div>
+                    <div className="max-w-md space-y-1.5">
+                        <Label htmlFor="yarn-review-period" className="text-xs font-semibold text-body">Review yarn rates every</Label>
+                        <select
+                            id="yarn-review-period"
+                            value={rates.yarn_review_interval_days}
+                            onChange={event => updateRate('yarn_review_interval_days')(Number(event.target.value))}
+                            className="h-10 w-full rounded-md border border-hairline bg-canvas/80 px-3 text-sm font-medium text-ink"
+                        >
+                            <option value={30}>30 days</option>
+                            <option value={60}>60 days</option>
+                            <option value={90}>3 months</option>
+                            <option value={180}>6 months</option>
+                            <option value={365}>12 months</option>
+                        </select>
+                        <p className="text-[11px] text-muted-foreground">This cadence applies to all active yarns. The Yarn Rate Book will flag rates as they approach review.</p>
                     </div>
                 </div>
 

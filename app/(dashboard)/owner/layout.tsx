@@ -7,6 +7,7 @@ import { createPerfTimer } from '@/lib/perf'
 import { getCachedOrgTier } from '@/lib/subscription'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
+import { getRateReviewStatus } from '@/lib/cost-rates'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const perf = createPerfTimer('/owner/* layout')
@@ -40,16 +41,24 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             1
         )
     )
-    const [{ data: org }, subscriptionTier] = await Promise.all([
+    const reviewRatesPromise = supabase
+        .from('cost_rate_book')
+        .select('last_reviewed_at, review_interval_days')
+        .eq('org_id', userOrgId)
+        .eq('is_active', true)
+        .in('category', ['yarn_warp', 'yarn_weft'])
+    const [{ data: org }, subscriptionTier, { data: reviewRates }] = await Promise.all([
         orgPromise,
         signInTelemetry.measure(
             'tier_lookup',
             () => perf.measure('businessData', () => getCachedOrgTier(userOrgId), 1)
         ),
+        reviewRatesPromise,
     ])
 
     if (org?.name) factoryName = org.name
     productionMode = normalizeProductionMode(org?.production_mode)
+    const yarnReviewDueCount = (reviewRates ?? []).filter(rate => getRateReviewStatus(rate) !== 'current').length
     perf.log()
     signInTelemetry.log('success', { route: '/owner/*' })
 
@@ -62,6 +71,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
                 userName={userFullName || undefined}
                 productionMode={productionMode}
                 subscriptionTier={subscriptionTier}
+                yarnReviewDueCount={yarnReviewDueCount}
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}

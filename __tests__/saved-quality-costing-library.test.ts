@@ -22,6 +22,17 @@ describe('saved quality costing library', () => {
     expect(client).toContain('live estimate from the saved yarn recipe and current factory costs')
   })
 
+  it('treats Base costings as saved qualities without changing Full Suite semantics', () => {
+    const migration = read('supabase/migrations/20260723110000_base_costings_are_saved_qualities.sql')
+
+    expect(migration).toContain("NEW.record_kind IS DISTINCT FROM 'costing'")
+    expect(migration).toContain("public.org_has_subscription_tier(NEW.org_id, 'premium')")
+    expect(migration).toContain("NOT public.org_has_subscription_tier(NEW.org_id, 'base')")
+    expect(migration).toContain('NEW.template_id := v_template_id')
+    expect(migration).toContain("quote.record_kind = 'costing'")
+    expect(migration).toContain('quote.template_id IS NULL')
+  })
+
   it('links new costing and market-run snapshots to the selected quality', () => {
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')

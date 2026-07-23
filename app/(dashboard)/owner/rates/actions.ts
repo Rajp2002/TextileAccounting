@@ -80,14 +80,24 @@ export async function getCostRates() {
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
 
-    const { data: existingRates, error } = await supabase
-        .from('cost_rate_book')
-        .select('*')
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-        .order('category')
-        .order('name')
+    const [ratesResult, profileResult] = await Promise.all([
+        supabase
+            .from('cost_rate_book')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .order('category')
+            .order('name'),
+        supabase
+            .from('factory_cost_profile')
+            .select('yarn_review_interval_days')
+            .eq('factory_id', profile.org_id)
+            .maybeSingle(),
+    ])
+    const { data: existingRates, error } = ratesResult
     if (error) return { error: error.message }
+    if (profileResult.error) return { error: profileResult.error.message }
+    const yarnReviewIntervalDays = Number(profileResult.data?.yarn_review_interval_days ?? 90)
 
     const [templatesResult, costingsResult] = await Promise.all([
         supabase
@@ -205,7 +215,7 @@ export async function getCostRates() {
             current_value: candidate.currentValue,
             effective_date: today,
             last_reviewed_at: today,
-            review_interval_days: 90,
+            review_interval_days: yarnReviewIntervalDays,
             source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
             notes: (candidate.conflict
                 ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
@@ -231,7 +241,7 @@ export async function getCostRates() {
         rates = refreshed ?? []
     }
 
-    return { data: rates, conflicts: getYarnRateConflicts(savedYarnSources) }
+    return { data: rates, conflicts: getYarnRateConflicts(savedYarnSources), yarnReviewIntervalDays }
 }
 
 export async function getCostRateHistory(rateId: string) {
@@ -278,6 +288,7 @@ export async function saveCostRate(input: CostRateInput) {
     revalidatePath('/owner/rates')
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
+    revalidatePath('/owner', 'layout')
     return {
         data: result.rate,
         syncedQualityCount: Number(result.synced_quality_count ?? 0),
@@ -302,5 +313,6 @@ export async function archiveCostRate(rateId: string) {
     if (error) return { error: error.message }
     if (!data) return { error: 'Rate no longer exists.' }
     revalidatePath('/owner/rates')
+    revalidatePath('/owner', 'layout')
     return { success: true }
 }

@@ -22,6 +22,7 @@ import {
     Factory,
     Archive,
     Tags,
+    BellRing,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -109,9 +110,10 @@ interface OwnerSidebarProps {
     userName?: string
     productionMode?: ProductionMode | null
     subscriptionTier?: SubscriptionTier
+    yarnReviewDueCount?: number
 }
 
-function NavContent({ factoryName, userName, productionMode: rawProductionMode, subscriptionTier = 'none', onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
+function NavContent({ factoryName, userName, productionMode: rawProductionMode, subscriptionTier = 'none', yarnReviewDueCount = 0, onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
     const pathname = usePathname()
     const { t } = useTranslation()
     const productionMode = normalizeProductionMode(rawProductionMode)
@@ -173,12 +175,22 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                             : "text-saffron hover:bg-saffron-deep hover:text-white"
                                     )}
                                 >
-                                    <Icon className="h-[18px] w-[18px]" />
+                                    <span className="relative shrink-0">
+                                        <Icon className="h-[18px] w-[18px]" />
+                                        {item.name === 'Yarn Rate Book' && yarnReviewDueCount > 0 && (
+                                            <BellRing className="absolute -right-2.5 -top-2.5 h-3.5 w-3.5 fill-amber-300 text-amber-300" aria-hidden="true" />
+                                        )}
+                                    </span>
                 {!hasPremium && item.href === '/owner/quotes'
                   ? 'Saved Costings'
                   : item.name === 'Yarn Rate Book'
                     ? 'Yarn Rate Book'
                     : getNavLabel(item, productionMode, t)}
+                                    {item.name === 'Yarn Rate Book' && yarnReviewDueCount > 0 && (
+                                        <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black leading-none text-amber-950" aria-label={`${yarnReviewDueCount} yarn rates due for review`}>
+                                            {yarnReviewDueCount > 99 ? '99+' : yarnReviewDueCount}
+                                        </span>
+                                    )}
                                 </Link>
                             )
                         })}
@@ -206,7 +218,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     )
 }
 
-export function OwnerSidebar({ factoryName, userName, productionMode, subscriptionTier = 'none' }: OwnerSidebarProps) {
+export function OwnerSidebar({ factoryName, userName, productionMode, subscriptionTier = 'none', yarnReviewDueCount = 0 }: OwnerSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
     const { t } = useTranslation()
@@ -222,7 +234,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
         <>
             {/* Desktop sidebar — persistent */}
             <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111] shadow-[var(--shadow-card)]">
-                <NavContent factoryName={factoryName} userName={userName} productionMode={normalizedProductionMode} subscriptionTier={subscriptionTier} />
+                <NavContent factoryName={factoryName} userName={userName} productionMode={normalizedProductionMode} subscriptionTier={subscriptionTier} yarnReviewDueCount={yarnReviewDueCount} />
             </aside>
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -239,6 +251,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
                         userName={userName}
                         productionMode={normalizedProductionMode}
                         subscriptionTier={subscriptionTier}
+                        yarnReviewDueCount={yarnReviewDueCount}
                         onLinkClick={() => setIsOpen(false)}
                     />
                 </SheetContent>

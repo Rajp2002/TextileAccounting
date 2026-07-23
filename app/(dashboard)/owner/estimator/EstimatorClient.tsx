@@ -119,7 +119,9 @@ type FactoryCostProfile = Partial<{
     winding_rate_per_kg: number | string | null
     overhead_pct: number | string | null
     default_commission_pct: number | string | null
+    default_margin_pct: number | string | null
     default_transport_per_m: number | string | null
+    yarn_review_interval_days: number | string | null
     default_warp_yarn_name: string | null
     default_warp_yarn_rate_per_kg: number | string | null
     default_weft_yarn_name: string | null
@@ -239,6 +241,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 yarnShortagePct:    profile.yarn_shortage_pct != null ? Number(profile.yarn_shortage_pct) : state.yarnShortagePct,
                 warpCrimpPct:       profile.warp_crimp_pct != null ? Number(profile.warp_crimp_pct) : state.warpCrimpPct,
                 commissionPct:      Number(profile.default_commission_pct  ?? 2),
+                profitPct:          Number(profile.default_margin_pct ?? state.profitPct),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
                 isConfigured:       profile.is_configured ?? false,
@@ -1062,6 +1065,7 @@ export default function EstimatorClient({
             finishingRatePerM: Number(initialProfile.default_finishing_rate_per_m ?? base.finishingRatePerM),
             overheadPct:       Number(initialProfile.overhead_pct         ?? base.overheadPct),
             commissionPct:     Number(initialProfile.default_commission_pct ?? base.commissionPct),
+            profitPct:         Number(initialProfile.default_margin_pct ?? base.profitPct),
             transportPerM:     Number(initialProfile.default_transport_per_m ?? base.transportPerM),
             enabledSections:   sections,
             monthlyOutputM:    Number(initialProfile.monthly_output_m     ?? base.monthlyOutputM),
@@ -1416,7 +1420,9 @@ export default function EstimatorClient({
                 winding_rate_per_kg:     state.windingRatePerKg,
                 overhead_pct:            state.overheadPct,
                 default_commission_pct:  state.commissionPct,
+                default_margin_pct:      state.profitPct,
                 default_transport_per_m: state.transportPerM,
+                yarn_review_interval_days: Number(initialProfile?.yarn_review_interval_days ?? 90),
                 default_processing_rate_per_m: state.processingRatePerM,
                 default_finishing_rate_per_m: state.finishingRatePerM,
                 enabled_sections:        state.enabledSections,
@@ -1886,6 +1892,7 @@ export default function EstimatorClient({
             {!state.isConfigured && (
                 <FactoryCostWizard 
                     initialState={state}
+                    initialYarnReviewIntervalDays={Number(initialProfile?.yarn_review_interval_days ?? 90)}
                     saving={saving}
                     onComplete={async (data) => {
                         setSaving(true)
@@ -1896,7 +1903,9 @@ export default function EstimatorClient({
                             winding_rate_per_kg:     state.windingRatePerKg,
                             overhead_pct:            state.overheadPct,
                             default_commission_pct:  data.commissionPct ?? state.commissionPct,
+                            default_margin_pct:      data.profitPct ?? state.profitPct,
                             default_transport_per_m: data.transportPerM ?? state.transportPerM,
+                            yarn_review_interval_days: data.yarnReviewIntervalDays,
                             default_processing_rate_per_m: data.processingRatePerM ?? state.processingRatePerM,
                             default_finishing_rate_per_m: data.finishingRatePerM ?? state.finishingRatePerM,
                             enabled_sections:        data.enabledSections ?? state.enabledSections,
@@ -1913,7 +1922,7 @@ export default function EstimatorClient({
                         })
                         if (res.success) {
                             // Update local state and close wizard
-                            Object.entries(data).forEach(([key, val]) => {
+                            Object.entries(data).filter(([key]) => key !== 'yarnReviewIntervalDays').forEach(([key, val]) => {
                                 dispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
                             })
                             dispatch({ type: 'SET', field: 'isConfigured', value: true })

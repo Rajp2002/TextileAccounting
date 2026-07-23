@@ -39,7 +39,9 @@ export type FactoryCostProfileInput = {
   winding_rate_per_kg: number
   overhead_pct: number
   default_commission_pct: number
+  default_margin_pct?: number
   default_transport_per_m: number
+  yarn_review_interval_days?: number
   default_processing_rate_per_m?: number
   default_finishing_rate_per_m?: number
   monthly_output_m?: number
@@ -98,6 +100,12 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   addNumberIssue(issues, 'winding_rate_per_kg', 'Winding rate', input.winding_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
   addNumberIssue(issues, 'overhead_pct', 'Overhead %', input.overhead_pct, { max: 100, allowZero: true })
   addNumberIssue(issues, 'default_commission_pct', 'Default commission %', input.default_commission_pct, { max: 99.99, allowZero: true })
+  if (input.default_margin_pct != null) addNumberIssue(issues, 'default_margin_pct', 'Default margin %', input.default_margin_pct, { max: 99.99, allowZero: true })
+  if (input.yarn_review_interval_days != null) {
+    if (!Number.isInteger(input.yarn_review_interval_days) || input.yarn_review_interval_days < 1 || input.yarn_review_interval_days > 1095) {
+      issues.push({ field: 'yarn_review_interval_days', message: 'Yarn review period must be between 1 and 1095 days.' })
+    }
+  }
   addNumberIssue(issues, 'default_transport_per_m', 'Default transport', input.default_transport_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.default_processing_rate_per_m != null) addNumberIssue(issues, 'default_processing_rate_per_m', 'Default processing rate', input.default_processing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.default_finishing_rate_per_m != null) addNumberIssue(issues, 'default_finishing_rate_per_m', 'Default finishing rate', input.default_finishing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
