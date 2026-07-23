@@ -116,4 +116,41 @@ describe('Base costing exports', () => {
     expect(html).toContain('Rs ')
     expect(html).not.toContain('₹')
   })
+
+  it('never exports NaN or Infinity when a draft contains non-finite commercial values', () => {
+    const invalidTotals = {
+      ...totals,
+      totalProductionCostPerM: Number.NaN,
+      orderQuote: totals.orderQuote
+        ? {
+            ...totals.orderQuote,
+            actualMarginPct: Number.NaN,
+            grossProfitRupees: Number.POSITIVE_INFINITY,
+          }
+        : undefined,
+    }
+    const invalidState = {
+      ...state,
+      commissionPct: Number.NaN,
+      transportPerM: Number.POSITIVE_INFINITY,
+    }
+    const safeModel = createCostingExportModel({
+      qualityLabel: 'Invalid Draft',
+      state: invalidState,
+      totals: invalidTotals,
+      suggestedSellingPricePerM: Number.NaN,
+    })
+    const html = buildCostingPrintHtml(safeModel, {
+      mode: 'internal', businessName: 'Acme Weaves', customerName: '', validUntil: '', notes: '', showGstNote: false,
+    })
+
+    expect(safeModel).toMatchObject({
+      productionCostPerM: 0,
+      suggestedSellingPricePerM: 0,
+      breakEvenPricePerM: 0,
+      marginPct: 0,
+      expectedProfit: 0,
+    })
+    expect(html).not.toMatch(/NaN|Infinity/)
+  })
 })

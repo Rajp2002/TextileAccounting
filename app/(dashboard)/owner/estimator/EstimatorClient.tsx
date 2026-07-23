@@ -98,6 +98,7 @@ import {
 } from '@/lib/production-mode'
 import {
     getFirstEstimatorValidationMessage,
+    getYarnDensityWarning,
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
 import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
@@ -658,7 +659,7 @@ function NumField({
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-[var(--color-warning-amber)] shrink-0" />
-                        <p className="text-[10px] font-medium text-[var(--color-warning-amber)] truncate">{warning}</p>
+                        <p className="text-[10px] font-medium leading-tight text-[var(--color-warning-amber)]">{warning}</p>
                     </div>
                     {onDismissWarning && (
                         <button 
@@ -689,6 +690,7 @@ function YarnDensityFields({
     const unit = row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier'
     const countNe = Number(row.cottonCountNe ?? 0)
     const effectiveDenier = getEffectiveYarnDenier(row)
+    const densityWarning = getYarnDensityWarning(effectiveDenier)
 
     const changeUnit = (nextUnit: YarnLinearDensityUnit) => {
         if (nextUnit === 'cotton_count_ne') {
@@ -721,7 +723,7 @@ function YarnDensityFields({
                 </select>
             </div>
             <NumField
-                label={unit === 'cotton_count_ne' ? 'English cotton count' : 'Effective denier'}
+                label={`${unit === 'cotton_count_ne' ? 'English cotton count' : 'Effective denier'} — REQUIRED`}
                 value={unit === 'cotton_count_ne' ? (countNe || null) : row.calcDenier}
                 onChange={value => {
                     if (unit === 'cotton_count_ne') {
@@ -736,6 +738,7 @@ function YarnDensityFields({
                 hint={unit === 'cotton_count_ne' && effectiveDenier > 0
                     ? `Converted for costing: ${effectiveDenier.toFixed(3)} D (5315 ÷ Ne)`
                     : 'Enter total linear density after any ply or doubling'}
+                warning={densityWarning}
                 attentionWhenEmpty
             />
         </>
@@ -1882,9 +1885,23 @@ export default function EstimatorClient({
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
         ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
     ]
+    const yarnGroupTotals = {
+        warp: {
+            blendCount: totals.audit.warp.layers.length,
+            base: totals.yarnBaseWarpPerM,
+            adjustment: Math.max(0, totals.audit.warp.totalCostPerMeter - totals.yarnBaseWarpPerM),
+            adjusted: totals.audit.warp.totalCostPerMeter,
+        },
+        weft: {
+            blendCount: totals.audit.weft.layers.length,
+            base: totals.yarnBaseWeftPerM,
+            adjustment: Math.max(0, totals.audit.weft.totalCostPerMeter - totals.yarnBaseWeftPerM),
+            adjusted: totals.audit.weft.totalCostPerMeter,
+        },
+    }
     const auditCostLines = [
-        { label: 'Warp yarn', value: totals.audit.warp.totalCostPerMeter },
-        { label: 'Weft yarn', value: totals.audit.weft.totalCostPerMeter },
+        { label: 'Adjusted warp yarn', value: totals.audit.warp.totalCostPerMeter },
+        { label: 'Adjusted weft yarn', value: totals.audit.weft.totalCostPerMeter },
         { label: 'Weave / loom', value: totals.audit.weaveCostPerMeter },
         { label: 'Warping + sizing', value: totals.audit.warpingAndSizingCostPerMeter },
         { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
@@ -3392,10 +3409,23 @@ export default function EstimatorClient({
                         icon={ReceiptText}
                         accent="neutral"
                         step={8}
-                        detail={<p className="text-[11px] text-[var(--color-muted)]">Engine audit used for the final production cost.</p>}
-                        badgeContent={<SectionCostPill value={totals.audit.productionCostPerMeter} />}
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">{hasValidCostResult ? 'Engine audit used for the final production cost.' : 'Complete the required inputs to calculate the final production cost.'}</p>}
+                        badgeContent={hasValidCostResult
+                            ? <SectionCostPill value={totals.audit.productionCostPerMeter} />
+                            : <span className="rounded-full border border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-warning-amber)]">Incomplete</span>}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
+                        {!hasValidCostResult ? (
+                            <div id={validationSummaryId} role="alert" className="flex items-start gap-3 rounded-[12px] border border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] p-4 text-[var(--color-warning-amber)]">
+                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                                <div>
+                                    <p className="text-sm font-semibold">Costing incomplete</p>
+                                    <p className="mt-1 text-xs font-medium leading-relaxed">{firstEstimatorValidationMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.'}</p>
+                                    <p className="mt-1 text-[11px] leading-relaxed">Draft values are not treated as a final result while a required input is blank or zero.</p>
+                                </div>
+                            </div>
+                        ) : (
+                        <>
                         <div className="overflow-hidden rounded-[12px] border border-[var(--color-hairline)]">
                             <div className="hidden grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)] md:grid">
                                 <span>Yarn</span>
@@ -3404,7 +3434,7 @@ export default function EstimatorClient({
                                 <span>Adjust</span>
                                 <span>Final kg/100m</span>
                                 <span>Rate</span>
-                                <span className="text-right">Cost</span>
+                                <span className="text-right">Adjusted cost</span>
                             </div>
                             <div className="divide-y divide-[var(--color-hairline)] bg-white">
                                 {auditLayerRows.map(layer => (
@@ -3443,20 +3473,58 @@ export default function EstimatorClient({
 
                         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
                             <div className="rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Yarn subtotal</p>
-                                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Adjusted yarn calculation</p>
+                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Each section first adds all of its blends, then applies the relevant adjustment.</p>
+                                </div>
+
+                                <div className="mt-4 space-y-3">
+                                    {([
+                                        {
+                                            label: 'Warp',
+                                            note: 'wastage + crimp',
+                                            totals: yarnGroupTotals.warp,
+                                        },
+                                        {
+                                            label: 'Weft',
+                                            note: 'wastage only',
+                                            totals: yarnGroupTotals.weft,
+                                        },
+                                    ] as const).map(group => (
+                                        <div key={group.label} className="rounded-[10px] border border-[var(--color-hairline)] bg-white p-3">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div>
+                                                    <p className="text-xs font-semibold text-[var(--color-ink)]">{group.label} yarn</p>
+                                                    <p className="text-[10px] text-[var(--color-muted)]">{group.totals.blendCount} {group.totals.blendCount === 1 ? 'blend' : 'blends'} combined</p>
+                                                </div>
+                                                <p className="text-[10px] font-medium text-[var(--color-muted)]">{group.note}</p>
+                                            </div>
+                                            <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-end gap-2">
+                                                <div>
+                                                    <p className="text-[9px] leading-tight text-[var(--color-muted)]">Base {group.label.toLowerCase()} total</p>
+                                                    <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-ink)]">₹{group.totals.base.toFixed(2)}</p>
+                                                </div>
+                                                <span className="pb-0.5 text-sm font-semibold text-[var(--color-muted)]">+</span>
+                                                <div>
+                                                    <p className="text-[9px] leading-tight text-[var(--color-muted)]">{group.label === 'Warp' ? 'Waste + crimp' : 'Waste add-on'}</p>
+                                                    <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-warning-amber)]">₹{group.totals.adjustment.toFixed(2)}</p>
+                                                </div>
+                                                <span className="pb-0.5 text-sm font-semibold text-[var(--color-muted)]">=</span>
+                                                <div>
+                                                    <p className="text-[9px] leading-tight text-[var(--color-muted)]">Adjusted {group.label.toLowerCase()}</p>
+                                                    <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-factory-green)]">₹{group.totals.adjusted.toFixed(2)}/m</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-3 flex flex-col gap-2 rounded-[10px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] p-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p className="text-[10px] text-[var(--color-muted)]">Base before adjustment</p>
-                                        <p className="font-mono text-base font-semibold text-[var(--color-ink)]">₹{totals.audit.yarnBaseCostPerMeter.toFixed(2)}/m</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-factory-green)]">Final adjusted yarn rate</p>
+                                        <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Adjusted warp ₹{yarnGroupTotals.warp.adjusted.toFixed(2)} + adjusted weft ₹{yarnGroupTotals.weft.adjusted.toFixed(2)}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] text-[var(--color-muted)]">Waste/crimp add-on</p>
-                                        <p className="font-mono text-base font-semibold text-[var(--color-warning-amber)]">₹{totals.audit.yarnAdjustmentCostPerMeter.toFixed(2)}/m</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-[var(--color-muted)]">Yarn after adjustment</p>
-                                        <p className="font-mono text-base font-semibold text-[var(--color-factory-green)]">₹{totals.audit.yarnTotalCostPerMeter.toFixed(2)}/m</p>
-                                    </div>
+                                    <p className="font-mono text-lg font-semibold text-[var(--color-factory-green)]">₹{totals.audit.yarnTotalCostPerMeter.toFixed(2)}/m</p>
                                 </div>
                             </div>
                             <div className="rounded-[12px] border border-[var(--color-hairline)] bg-white p-4">
@@ -3475,6 +3543,8 @@ export default function EstimatorClient({
                                 </div>
                             </div>
                         </div>
+                        </>
+                        )}
                     </CardContent>
                 </EstimatorCard>
 

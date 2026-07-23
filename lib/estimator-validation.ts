@@ -32,6 +32,15 @@ const MAX_MONTHLY_AMOUNT = 1_000_000_000
 const MAX_LOOMS = 100_000
 const MAX_WORKING_DAYS = 366
 const MAX_OUTPUT_PER_LOOM_PER_DAY = 1_000_000
+export const UNUSUALLY_LOW_DENIER = 20
+
+export function getYarnDensityWarning(effectiveDenier: number): string | undefined {
+  if (!Number.isFinite(effectiveDenier) || effectiveDenier <= 0 || effectiveDenier >= UNUSUALLY_LOW_DENIER) {
+    return undefined
+  }
+
+  return `Unusually low (under ${UNUSUALLY_LOW_DENIER} D). Confirm the yarn numbering and unit.`
+}
 
 export type FactoryCostProfileInput = {
   warping_rate_per_kg: number

@@ -24,10 +24,18 @@ export type CostingExportModel = {
   totals: EstimatorV3Totals
 }
 
+function finiteOrZero(value: unknown) {
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) ? numericValue : 0
+}
+
 export function calculateBreakEvenPricePerM(productionCostPerM: number, transportPerM: number, commissionPct: number) {
-  const denominator = 1 - commissionPct / 100
+  const safeProductionCostPerM = finiteOrZero(productionCostPerM)
+  const safeTransportPerM = finiteOrZero(transportPerM)
+  const safeCommissionPct = finiteOrZero(commissionPct)
+  const denominator = 1 - safeCommissionPct / 100
   if (!Number.isFinite(denominator) || denominator <= 0) return 0
-  return (productionCostPerM + transportPerM) / denominator
+  return (safeProductionCostPerM + safeTransportPerM) / denominator
 }
 
 export function createCostingExportModel(input: {
@@ -37,23 +45,24 @@ export function createCostingExportModel(input: {
   totals: EstimatorV3Totals
   suggestedSellingPricePerM?: number
 }): CostingExportModel {
-  const quantityM = Number(input.state.orderQuantityM ?? 0)
-  const suggestedSellingPricePerM = Number(
+  const quantityM = finiteOrZero(input.state.orderQuantityM)
+  const productionCostPerM = finiteOrZero(input.totals.totalProductionCostPerM)
+  const suggestedSellingPricePerM = finiteOrZero(
     input.suggestedSellingPricePerM ?? input.totals.orderQuote?.quotePricePerM ?? 0,
   )
   return {
     qualityLabel: input.qualityLabel.trim() || 'Untitled Costing',
     createdAt: input.createdAt ?? new Date().toISOString(),
     quantityM,
-    productionCostPerM: input.totals.totalProductionCostPerM,
+    productionCostPerM,
     suggestedSellingPricePerM,
     breakEvenPricePerM: calculateBreakEvenPricePerM(
-      input.totals.totalProductionCostPerM,
+      productionCostPerM,
       input.state.transportPerM,
       input.state.commissionPct,
     ),
-    marginPct: input.totals.orderQuote?.actualMarginPct ?? input.state.profitPct,
-    expectedProfit: input.totals.orderQuote?.grossProfitRupees ?? 0,
+    marginPct: finiteOrZero(input.totals.orderQuote?.actualMarginPct ?? input.state.profitPct),
+    expectedProfit: finiteOrZero(input.totals.orderQuote?.grossProfitRupees),
     state: input.state,
     totals: input.totals,
   }
@@ -69,10 +78,14 @@ function escapeHtml(value: string) {
 }
 
 function money(value: number, digits = 2) {
-  return `Rs ${Number(value || 0).toLocaleString('en-IN', {
+  return `Rs ${finiteOrZero(value).toLocaleString('en-IN', {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })}`
+}
+
+function decimal(value: number, digits: number) {
+  return finiteOrZero(value).toFixed(digits)
 }
 
 function metric(label: string, value: string, tone: 'default' | 'accent' | 'positive' = 'default') {
@@ -140,16 +153,16 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
 
   const costRows = costItems.map(([label, value]) => tableRow([
     label,
-    model.productionCostPerM > 0 ? `${(value / model.productionCostPerM * 100).toFixed(1)}%` : '0.0%',
+    model.productionCostPerM > 0 ? `${decimal(finiteOrZero(value) / model.productionCostPerM * 100, 1)}%` : '0.0%',
     `${money(value)}/m`,
   ])).join('') + tableRow(['Production cost', '100.0%', `${money(model.productionCostPerM)}/m`], 'total')
 
   const layerRows = [
     ...totals.warpRows.map((row, index) => tableRow([
-      'Warp', row.label || `Layer ${index + 1}`, `${row.finalKgPer100m.toFixed(3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+      'Warp', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
     ])),
     ...totals.weftRows.map((row, index) => tableRow([
-      'Weft', row.label || `Layer ${index + 1}`, `${row.finalKgPer100m.toFixed(3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+      'Weft', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
     ])),
   ].join('')
 
@@ -158,7 +171,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
         metric('Production cost', `${money(model.productionCostPerM)}/m`),
         metric('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
         metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
-        metric('Margin', `${model.marginPct.toFixed(1)}%`, 'positive'),
+        metric('Margin', `${decimal(model.marginPct, 1)}%`, 'positive'),
         metric('Order quantity', quantity),
         metric('Expected profit', money(model.expectedProfit, 0), 'positive'),
       ].join('')
@@ -176,7 +189,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
       <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Consumption / 100m</th><th class="num">Rate</th><th class="num">Cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
     </section>
     <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
-      <div class="commercial"><div><span>Commission</span><strong>${state.commissionPct.toFixed(1)}%</strong></div><div><span>Transport</span><strong>${money(state.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${state.monthlyOutputM.toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${state.profitPct.toFixed(1)}%</strong></div></div>
+      <div class="commercial"><div><span>Commission</span><strong>${decimal(state.commissionPct, 1)}%</strong></div><div><span>Transport</span><strong>${money(state.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(state.profitPct, 1)}%</strong></div></div>
     </section>`
 
   return `<!doctype html>
