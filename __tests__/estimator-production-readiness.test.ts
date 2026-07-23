@@ -7,7 +7,10 @@ import {
   denierToCottonCountNe,
   makeDefaultEstimateState,
 } from '../lib/estimator'
-import { validateEstimatorSnapshot } from '../lib/estimator-validation'
+import {
+  getYarnDensityWarning,
+  validateEstimatorSnapshot,
+} from '../lib/estimator-validation'
 import { resolveEffectiveSubscription } from '../lib/subscription-access'
 import { calcDailyOutputM } from '../lib/estimator-capacity'
 
@@ -87,6 +90,37 @@ describe('Estimator production-readiness regressions', () => {
     }]
 
     expect(validateEstimatorSnapshot(estimate)).toEqual({ valid: true, issues: [] })
+  })
+
+  it('rejects zero denier in formula mode and nudges unusually low positive denier', () => {
+    const estimate = makeDefaultEstimateState()
+    estimate.weftRows[0] = {
+      ...estimate.weftRows[0],
+      calculationMode: 'formula',
+      calcDenier: 0,
+      picks: 60,
+      effectiveCostingWidthCm: 150,
+      yarnRate: 120,
+    }
+
+    const validation = validateEstimatorSnapshot(estimate)
+    expect(validation.valid).toBe(false)
+    if (!validation.valid) {
+      expect(validation.issues).toContainEqual({
+        field: 'weftRows.0.calcDenier',
+        message: 'Weft row 1 denier must be greater than 0.',
+      })
+    }
+
+    expect(getYarnDensityWarning(0)).toBeUndefined()
+    expect(getYarnDensityWarning(19.9)).toContain('Unusually low')
+    expect(getYarnDensityWarning(20)).toBeUndefined()
+  })
+
+  it('does not present an invalid draft as a final cost breakdown', () => {
+    expect(estimatorClientSource).toContain('Costing incomplete')
+    expect(estimatorClientSource).toContain('Draft values are not treated as a final result')
+    expect(estimatorClientSource).toContain('warning={densityWarning}')
   })
 
   it('converts English cotton count to denier using the documented 5315/Ne basis', () => {

@@ -14,7 +14,7 @@ export function PwaUpdateNotice() {
         const showUpdateToast = (registration: ServiceWorkerRegistration) => {
             if (disposed) return
             toast.info('App update ready', {
-                description: 'Save any drafts, then refresh to load the latest version.',
+                description: 'Save any drafts, then refresh before exporting to use the latest fixes and PDF layout.',
                 duration: Infinity,
                 action: {
                     label: 'Refresh',

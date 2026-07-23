@@ -159,7 +159,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
 
         expect(nextConfig).toContain('skipWaiting: false')
         expect(nextConfig).toContain('clientsClaim: false')
-        expect(updateNotice).toContain('Save any drafts, then refresh')
+        expect(updateNotice).toContain('Save any drafts, then refresh before exporting')
         expect(updateNotice).toContain('navigator.serviceWorker.ready')
         expect(updateNotice).toContain('registration.update()')
         expect(updateNotice).toContain('controllerchange')
