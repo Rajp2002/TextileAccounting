@@ -1,5 +1,51 @@
 # Base Estimator Go-Readiness Sprint Plan
 
+## Pilot blocker sprint — 2026-07-24
+
+### Objective and decision rule
+
+Move the current Base release from **No-Go** to **Go for a controlled owner-led pilot**. A Go is issued only after every product-controlled P0/P1 below is fixed and the exact candidate passes the release gates. Deployment and human-only evidence are not represented as complete by local implementation.
+
+### Sprint shape
+
+This is a three-day release sprint with one stabilization day available if a gate fails.
+
+| Order | Work item | Owner | Acceptance criteria | Pilot effect |
+| --- | --- | --- | --- | --- |
+| 1 | `BASE-PILOT-SEC-01` Export-audit RPC boundary | Engineering | `log_export_event` has a fixed `search_path`, is not executable by `public`, `anon`, or `authenticated`, remains callable by the server-side service role, and records the explicit authenticated actor. Migration and regression tests pass. | P0 blocker |
+| 2 | `BASE-PILOT-DEP-01` Runtime dependency advisories | Engineering | `npm audit --omit=dev --audit-level=high` exits zero without a forced framework downgrade; lint, tests, typecheck, and build still pass. | P0 blocker |
+| 3 | `BASE-PILOT-EXP-01` Verifiable downloads | Engineering + QA | PDF and organization-export downloads use one testable browser helper, retain a deterministic filename, delay URL revocation until after the browser consumes it, and show success/failure feedback. Customer-output privacy tests remain green. | P0 blocker |
+| 4 | `BASE-PILOT-TSC-01` Independent type gate | Engineering | `npx tsc --noEmit` exits zero; the non-finite export fixture preserves the production `EstimatorV3Totals` contract. | P1 blocker |
+| 5 | `BASE-PILOT-UX-01` Base standalone language | Product + Engineering | Applied saved-quality action says “Start From,” duplicate-name guidance uses the same language, landing copy says “saved costing history,” and referral copy describes annual billing accurately. | P1 blocker |
+| 6 | `BASE-PILOT-QA-01` Candidate verification | QA | Focused tests, full lint/typecheck/test/build, runtime audit, migration validation, and a fresh Base browser smoke pass. Downloaded JSON and both rendered PDFs are physically inspected on the deployed candidate. | Go gate |
+
+### Day-by-day execution
+
+1. **Day 1 — close security and build blockers:** implement the RPC migration, dependency overrides/lockfile update, TypeScript correction, and focused security/dependency tests.
+2. **Day 2 — close user-facing blockers:** consolidate browser downloads, add accessible completion feedback and download-unit tests, and align Base/referral/landing language.
+3. **Day 3 — candidate validation:** run every local gate, apply the reviewed migration to the pilot environment, deploy the exact candidate, and run the prefixed Base owner journey including file inspection and cleanup.
+4. **Stabilization day, only if needed:** fix failed gates, rerun the full set, and do not promote partial evidence.
+
+### Go checklist
+
+- No open product-controlled P0/P1 Base blocker.
+- Runtime high-advisory audit exits zero; no `--force` downgrade is accepted.
+- Lint, independent TypeScript, full Vitest, and optimized production build all exit zero.
+- Local and target migration histories align after reviewed apply.
+- A fresh Base owner can configure costs, calculate, save/reopen/version, update rates atomically, export internal/customer PDFs, and export readable organization JSON.
+- The customer PDF contains no production cost, overhead, break-even, margin, or expected-profit data.
+- No cross-tenant RPC call can forge an export audit row.
+- Candidate commit/deployment, console state, artifacts, and zero-residue fixture cleanup are recorded.
+
+### Explicit non-code closure dependencies
+
+- Production deployment and migration apply require the normal reviewed release path; local source completion alone is `fixed_pending_runtime_proof`.
+- The first pilot estimate must be reconciled by the factory owner against an independent costing sheet.
+- The first deployed internal PDF, customer PDF, and organization JSON must be opened and inspected in a physical browser.
+- Current-release Sentry attribution is captured when an authentic error occurs; QA must not manufacture a production incident.
+
+Until the Go checklist is complete on the deployed candidate, the release status remains **No-Go**.
+
 ## Goal
 
 Promote the standalone Base Estimator from the 2026-07-21 **No-Go** assessment to a factory-pilot **Go**, then to paid-production **Go**, without weakening tenant isolation or historical costing integrity.

@@ -2153,3 +2153,12 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Monitored checks: observe the first external signup/email confirmation and physically inspect the first internal/customer PDFs. Current-release Sentry evidence remains event-driven; legacy Premium database lint is outside Base pilot scope.
 - Deployment: application/docs release `e51261795fd7156ed0e6c643852f6d789b29f8fe` completed Production deployment `5551926974`; deployed Base smoke `BASEGO-1784707590569-013A77` passed and reconciled to zero.
 - Cleanup: the exact main fixture and the failed-signup QA account/organization reconciled to zero. Next work is limited to the open gates; do not promote unresolved evidence.
+
+## Base pilot blocker sprint state — 2026-07-24
+
+- State: `fixed_pending_runtime_proof`; release verdict remains `no_go` until the exact candidate is deployed and re-proven.
+- Local source gates are green: lint, TypeScript, 114 test files / 770 passed / one intentional skip, production build, zero runtime audit vulnerabilities, and migration dry-run.
+- Pending migration: `20260724161732_harden_export_audit_boundary.sql`; remote head remains `20260723113000` and dry-run would apply only this migration.
+- Product-controlled source blockers closed: runtime dependency highs, export-audit RPC exposure, export completion observability, the TypeScript test contract, and Base/annual-billing copy inconsistencies.
+- Next executable release step: review/apply the migration and deploy this exact candidate, then run the prefixed Base owner journey and physically inspect internal PDF, customer PDF privacy/nonblank output, and readable organization JSON before changing status to `go_base_factory_pilot`.
+- Human operating checks remain named and unchanged: independent factory costing reconciliation, first external signup observation, and authentic current-release Sentry evidence when an error occurs.

@@ -9,7 +9,7 @@ const planDetails: Record<PurchasablePlanTier, {
 }> = {
     base: {
         badge: 'Costing desk',
-        description: 'For owners who want reliable costing, quote history, and margin control without moving factory-floor operations yet.',
+        description: 'For owners who want reliable costing, saved costing history, and margin control without moving factory-floor operations yet.',
         features: [
             'Warp and weft cost estimator',
             'Fabric templates and saved qualities',

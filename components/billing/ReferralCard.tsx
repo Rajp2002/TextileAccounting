@@ -52,7 +52,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                     <div>
                         <CardTitle className="text-lg text-white">Refer & Earn</CardTitle>
                         <p className="mt-0.5 text-xs text-emerald-200/70">
-                            Get 10% off your monthly bill per paid referral.
+                            Get 10% off your next annual plan payment per paid referral.
                         </p>
                     </div>
                 </div>

@@ -634,3 +634,11 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
 - Reclassify `BASE-BILLING-PROD-P0` outside the pilot gate. Razorpay TEST mode is explicitly accepted for the pilot; live activation waits for incorporation details.
 - Keep `BASE-PDF-PROD-P0` as a first-pilot physical-browser acceptance check and `BASE-OBS-P1` as an exact-release operational evidence item. Neither blocks opening the owner-led costing pilot, but a PDF privacy/blank-output failure would pause use of that output.
 - Keep `BASE-DB-LINT-P2` outside Base scope; it blocks only a clean whole-database claim.
+
+### Base pilot blocker sprint disposition — 2026-07-24
+
+- Close `BASE-PILOT-DEP-01`, `BASE-PILOT-TSC-01`, and `BASE-PILOT-UX-01` at local proof: the runtime audit is zero, the independent TypeScript gate passes, and standalone Base/referral/landing language is aligned.
+- Reclassify `BASE-PILOT-SEC-01` as `fixed_pending_runtime_proof`: migration `20260724161732` removes authenticated execution and validates explicit actors, but is not yet applied to the linked target.
+- Reclassify `BASE-PILOT-EXP-01` as `fixed_pending_runtime_proof`: shared download dispatch and user feedback are regression-covered, but deployed file capture/render/readability proof remains required.
+- Keep `BASE-PDF-PROD-P0` open as the exact-candidate acceptance gate. Add organization JSON readability to the same physical-browser evidence bundle.
+- The candidate remains No-Go until the reviewed migration, deployment, fresh Base browser smoke, artifact inspection, and exact fixture cleanup all pass.

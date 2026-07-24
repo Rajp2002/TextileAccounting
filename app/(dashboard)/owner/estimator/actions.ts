@@ -46,7 +46,7 @@ function normalizeTemplateName(value: string): string {
 
 function templateWriteError(error: { code?: string; message: string }) {
     if (error.code === '23505') {
-        return 'A saved quality with this name already exists. Choose Duplicate and give the copy a different name.'
+        return 'A saved quality with this name already exists. Choose Start From and give the new quality a different name.'
     }
     return error.message
 }

@@ -147,6 +147,7 @@ describe('Batch 24G security and audit source guardrails', () => {
         expect(settingsPage).toContain('const dataExportMutation = useMutation')
         expect(settingsPage).toContain('dataExportMutation.mutate()')
         expect(settingsPage).toContain('Download Data Export')
-        expect(settingsPage).toContain("anchor.download = `weavly-org-export-${new Date().toISOString().slice(0, 10)}.json`")
+        expect(settingsPage).toContain("downloadJson(payload, filename)")
+        expect(settingsPage).toContain("toast.success('Data export downloaded', { description: filename })")
     })
 })

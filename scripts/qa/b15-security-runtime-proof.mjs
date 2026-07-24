@@ -485,7 +485,7 @@ async function main() {
             p_actor_id: storedExisting.fixture.userId,
         })
         if (erasure.error) throw new Error(`B15 final erasure exercise failed: ${erasure.error.message}`)
-        const exportAudit = await owner.rpc('log_export_event', {
+        const exportAudit = await admin.rpc('log_export_event', {
             p_org_id: storedExisting.fixture.orgId,
             p_table_name: 'owner_data_export',
             p_record_id: storedExisting.fixture.orgId,

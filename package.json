@@ -58,6 +58,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.2.7",
+    "postcss": "8.5.15",
     "shadcn": "^3.8.5",
     "supabase": "^2.95.3",
     "tailwindcss": "^4",
@@ -66,6 +67,13 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
+    "dompurify": "3.4.12",
+    "fast-uri": "3.1.4",
+    "sharp": "0.35.3",
+    "next": {
+      "postcss": "$postcss",
+      "sharp": "0.35.3"
+    },
     "@ducanh2912/next-pwa": {
       "workbox-build": "7.4.1",
       "workbox-core": "7.4.1",

@@ -2628,4 +2628,15 @@ Date: 2026-07-19 IST. Status: `pass`.
 - Browser proof on `BASEGO-1784675775346-874401` verified onboarding persistence, Base-only actions/copy, no Scenario Analysis, a two-row weft layout at 1600px, and zero console warnings/errors. Both disposable tenants reconciled organizations, profiles, subscriptions, and Auth users to zero.
 - Pilot status becomes Go. Razorpay TEST mode is the accepted pilot boundary; live Razorpay credentials are deferred until incorporation. First external signup and physical PDF inspection remain monitored pilot checks.
 - Deployment closeout: commit `e51261795fd7156ed0e6c643852f6d789b29f8fe` completed GitHub Production deployment `5551926974`. Exact deployed smoke `BASEGO-1784707590569-013A77` verified the new wizard, Base-only actions, Scenario Analysis removal, two-row weft layout, and a clean browser console before zero-residue cleanup.
+
+## Base pilot blocker sprint — 2026-07-24
+
+- Batch: `BASE-PILOT-BLOCKERS-20260724`; state: `fixed_pending_runtime_proof`.
+- Hardened `public.log_export_event` in migration `20260724161732_harden_export_audit_boundary.sql`: empty search path, explicit actor validation, organization/admin authorization, revocation from PUBLIC/anon/authenticated, and service-role-only execution.
+- Replaced three ad hoc download paths with `lib/browser-download.ts`. PDF and JSON downloads now dispatch through one tested helper, defer object-URL revocation, return an observable filename, and include that filename in success feedback.
+- Resolved the independent TypeScript failure, aligned Base saved-quality actions to `Start From`, corrected landing saved-costing language, and described referral credit against the next annual payment.
+- Pinned patched transitive runtime versions for DOMPurify, fast-uri, PostCSS, and Sharp without accepting npm audit's forced Next.js downgrade.
+- Verification passed: ESLint; `npx tsc --noEmit`; 114 Vitest files with 770 passed and one intentional skip; optimized Next 16.2.11 build with 45 static pages; `npm audit --omit=dev --audit-level=high` with zero vulnerabilities; `git diff --check`; linked migration list and push dry-run naming only the new migration.
+- The full audit still reports three moderate and nine high findings confined to dev tooling (`shadcn`/MCP/Hono and ESLint/minimatch paths). They do not ship in the runtime dependency tree and remain dependency-maintenance backlog.
+- No deployment or production schema mutation was performed. Promotion remains blocked on reviewed migration apply, exact candidate deployment, Base browser rerun, and physical inspection of both PDFs plus organization JSON.
 - Data safety: only reviewed migration `20260721183000` and exact prefixed disposable QA records were permitted. Both the main `BASEGO-1784662022802-4412AD` fixture and failed-signup `BASEGO-20260722-VK6WBT MILL` reconciled organizations, profiles, subscriptions where applicable, and Auth users to zero.

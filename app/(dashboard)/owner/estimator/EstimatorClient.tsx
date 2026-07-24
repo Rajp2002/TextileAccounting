@@ -1217,7 +1217,7 @@ export default function EstimatorClient({
         if (autoRestoredDraftSavedAtRef.current === draft.savedAt) return
 
         // React StrictMode can replay mount effects. savedAt identifies this
-        // handoff so an explicit Open & Update / Duplicate action is applied
+        // handoff so an explicit Open & Update / Start From action is applied
         // once without affecting the manual recovery flow for ordinary drafts.
         autoRestoredDraftSavedAtRef.current = draft.savedAt
         applyEstimatorDraft()
@@ -2210,16 +2210,16 @@ export default function EstimatorClient({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
-                                            setTemplateName(`${appliedTemplate.name} Copy`)
+                                            setTemplateName(`${appliedTemplate.name} - New`)
                                             setTemplateSaveError(null)
                                             setShowSaveTemplate(true)
                                         }}
                                         className="h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
-                                        title="Create an intentional copy with a new name"
-                                        aria-label={`Duplicate ${appliedTemplate.name}`}
+                                        title="Use this saved quality as the starting point for a new one"
+                                        aria-label={`Start from ${appliedTemplate.name}`}
                                     >
                                         <BookmarkPlus className="mr-1.5 h-4 w-4" />
-                                        Duplicate
+                                        Start From
                                     </Button>
                                     <Button
                                         variant="ghost"

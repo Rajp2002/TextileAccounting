@@ -23,6 +23,7 @@ import {
   type CostingExportModel,
 } from '@/lib/estimator-export'
 import { toast } from 'sonner'
+import { downloadBlob } from '@/lib/browser-download'
 
 export function CostingExportDialog({
   open,
@@ -110,8 +111,11 @@ export function CostingExportDialog({
         host.remove()
       }
       const safeName = model.qualityLabel.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'costing'
-      pdf.save(`${safeName}-${mode === 'internal' ? 'cost-sheet' : 'quotation'}.pdf`)
-      toast.success(mode === 'internal' ? 'Internal cost sheet downloaded' : 'Customer quotation downloaded')
+      const filename = `${safeName}-${mode === 'internal' ? 'cost-sheet' : 'quotation'}.pdf`
+      downloadBlob(pdf.output('blob'), filename)
+      toast.success(mode === 'internal' ? 'Internal cost sheet downloaded' : 'Customer quotation downloaded', {
+        description: filename,
+      })
     } catch (error) {
       console.error(error)
       toast.error('PDF generation failed. Use Print as a fallback.')

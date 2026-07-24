@@ -464,3 +464,4 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 6. Customer PDF output cannot contain internal costs, overhead, margin, break-even, or expected-profit data.
 7. Organization export fails if any promised dataset fails and remains owner-accessible after plan expiry without widening tenant scope.
 8. Disposable production QA uses an exact `BASEGO-*` identity and must reconcile organizations, profiles, subscriptions, estimator data, rates, audit rows, and Auth users to zero.
+9. Export audit writes are server-mediated. PUBLIC, anon, and authenticated clients cannot execute the SECURITY DEFINER logger directly; the service-role caller must supply an existing same-organization owner or an admin actor, and every unauthorized attempt leaves no row.

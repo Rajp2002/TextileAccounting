@@ -127,7 +127,7 @@ describe('Base costing exports', () => {
             actualMarginPct: Number.NaN,
             grossProfitRupees: Number.POSITIVE_INFINITY,
           }
-        : undefined,
+        : null,
     }
     const invalidState = {
       ...state,

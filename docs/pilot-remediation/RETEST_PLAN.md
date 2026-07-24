@@ -795,3 +795,13 @@ Acceptance:
 - At 1600px require ten weft inputs to occupy two rows of five. At normal mobile/tablet sizes require no clipped input, blocking horizontal overflow, or unreachable Save Costing action.
 - Base must expose Save Costing and Export Cost Sheet without Party Order, Market Run, applied-production panels, or Scenario Analysis. Premium behavior must remain unchanged.
 - Accept Razorpay TEST mode for pilot evidence. Do not make live-provider credentials a pilot prerequisite before incorporation; observe the first external signup and physical PDF outputs as pilot operating checks.
+
+### Base pilot blocker candidate retest — 2026-07-24
+
+- Before deployment run `npm ci`, `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`, `npm audit --omit=dev --audit-level=high`, and `git diff --check`. Runtime audit must exit zero; record full-audit dev-tool findings separately.
+- Review migration `20260724161732_harden_export_audit_boundary.sql`, then prove PUBLIC, anon, and authenticated cannot execute `log_export_event`; service-role server actions can record an explicit same-org owner or admin actor; missing, foreign-org, and forged actors fail with no audit row.
+- Require migration list alignment after apply. A pre-apply dry-run may list only `20260724161732`; it is not runtime proof.
+- In the exact deployed Base candidate, use a fresh `BASEGO-*` owner to calculate, save/reopen/version, update a rate atomically, download both PDF modes, and download organization JSON. Require visible filename feedback for every download.
+- Open both PDFs and the JSON outside the application. Require nonblank A4 internal output, no internal economics in customer output, valid JSON, expected current-organization scope, and no unredacted sensitive field.
+- Verify `Start From` on the applied saved-quality action, saved-costing-history landing copy, and annual referral-credit copy at their deployed surfaces.
+- Record candidate commit/deployment identity, browser console state, database audit row, filenames/hashes, and exact fixture cleanup to zero. Only then promote `fixed_pending_runtime_proof` to `pass` and issue the controlled-pilot Go.
