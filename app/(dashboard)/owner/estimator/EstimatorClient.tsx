@@ -1011,6 +1011,7 @@ export default function EstimatorClient({
     productionMode,
     staleDefaultRateNames,
     organizationName,
+    initialPartyNames,
 }: {
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
@@ -1021,6 +1022,7 @@ export default function EstimatorClient({
     productionMode: ProductionMode
     staleDefaultRateNames: string[]
     organizationName: string
+    initialPartyNames: string[]
 }) {
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
@@ -1116,6 +1118,7 @@ export default function EstimatorClient({
     const [wagePerMInput, setWagePerMInput] = useState<string>('')
 
     const [partyName,       setPartyName]       = useState('')
+    const [partyNames,      setPartyNames]      = useState(initialPartyNames)
     const [qualityLabel,    setQualityLabel]    = useState('')
     const [warpInstruction, setWarpInstruction] = useState('')
     const [weftInstruction, setWeftInstruction] = useState('')
@@ -1329,7 +1332,7 @@ export default function EstimatorClient({
 
     // Party rate memory — debounced 800ms, 3-char minimum
     useEffect(() => {
-        if (isStandaloneCostingSession) { setPartyHint(null); return }
+        if (mode === 'market') { setPartyHint(null); return }
         if (partyLookupTimerRef[0]) clearTimeout(partyLookupTimerRef[0])
         if (partyName.trim().length < 3) { setPartyHint(null); return }
         const timer = setTimeout(async () => {
@@ -1340,7 +1343,7 @@ export default function EstimatorClient({
         partyLookupTimerRef[0] = timer
         return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isStandaloneCostingSession, partyName])
+    }, [mode, partyName])
 
     const estimatorValidation = useMemo(
         () => validateEstimatorSnapshot(state, { requireTapeLength: canUseProduction }),
@@ -1475,6 +1478,7 @@ export default function EstimatorClient({
         try {
             const res = await saveAsFabricTemplate({
                 name:             savedName,
+                partyName:        partyName.trim() || undefined,
                 warpRows,
                 weftRows,
                 tapeLengthM:      state.tapeLengthM,
@@ -1497,6 +1501,10 @@ export default function EstimatorClient({
                     if (savedTemplate) setAppliedTemplate(savedTemplate)
                 }
                 setQualityLabel(savedName)
+                setSourceQuoteId(null)
+                setSourceQuoteUpdatedAt(null)
+                setSourceRecordKind(null)
+                quoteRequestIdRef.current = null
                 setShowSaveTemplate(false)
                 setTemplateName('')
                 setTemplateSaveError(null)
@@ -1687,17 +1695,15 @@ export default function EstimatorClient({
             return toast.error('Market Runs are unavailable in Order-Based only mode')
         }
 
-        const resolvedPartyName = saveAsStandaloneCosting
-            ? qualityLabel.trim()
-            : effectiveTargetMode === 'market'
+        const resolvedPartyName = effectiveTargetMode === 'market'
             ? (qualityLabel.trim() || partyName.trim()) 
             : partyName.trim()
 
         if (!resolvedPartyName) {
-            return toast.error(saveAsStandaloneCosting ? 'Quality name is required' : effectiveTargetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
+            return toast.error(effectiveTargetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
-        if (canUseProduction && (!state.orderQuantityM || state.orderQuantityM <= 0)) {
+        if (!state.orderQuantityM || state.orderQuantityM <= 0) {
             return toast.error('Set a quantity before saving')
         }
         if (staleDefaultRateNames.length > 0 && !staleRatesAcknowledged) {
@@ -1777,6 +1783,12 @@ export default function EstimatorClient({
                     templateId:              appliedTemplate?.id,
                 })
                 if (res.success) {
+                    setPartyNames(current => {
+                        if (current.some(name => name.toLocaleLowerCase('en-IN') === resolvedPartyName.toLocaleLowerCase('en-IN'))) {
+                            return current
+                        }
+                        return [resolvedPartyName, ...current].slice(0, 25)
+                    })
                     clearDraft()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
@@ -2028,11 +2040,11 @@ export default function EstimatorClient({
                                     </p>
                                     <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">minimum at 0% margin</p>
                                 </div>
-                                {canUseProduction && (
+                                {hasOrderQty && (
                                     <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
                                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
                                         <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
-                                            {hasValidCostResult && hasOrderQty && orderQuote?.isValid
+                                            {hasValidCostResult && orderQuote?.isValid
                                                 ? `₹${orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
                                                 : '—'}
                                         </p>
@@ -2095,10 +2107,10 @@ export default function EstimatorClient({
                                             ? 'col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1'
                                             : 'h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]'}
                                         onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
-                                        disabled={savingQuote || !estimatorValidation.valid || (canUseProduction && !hasOrderQty) || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        disabled={savingQuote || !estimatorValidation.valid || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
-                                        title={firstEstimatorValidationMessage ?? (((canUseProduction && !hasOrderQty) || (!isStandaloneCostingSession && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
-                                            ? (!isStandaloneCostingSession ? 'Complete party, quality, quantity, and cost result first.' : canUseProduction ? 'Complete quality, costing quantity, and cost result first.' : 'Complete quality and cost result first.')
+                                        title={firstEstimatorValidationMessage ?? ((!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                            ? 'Complete party, quality, quantity, and cost result first.'
                                             : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
@@ -2210,7 +2222,14 @@ export default function EstimatorClient({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
+                                            // A copy starts a new template and costing lineage. Keep
+                                            // the loaded recipe, but detach every source identity.
                                             setTemplateName(`${appliedTemplate.name} - New`)
+                                            setAppliedTemplate(null)
+                                            setSourceQuoteId(null)
+                                            setSourceQuoteUpdatedAt(null)
+                                            setSourceRecordKind(null)
+                                            quoteRequestIdRef.current = null
                                             setTemplateSaveError(null)
                                             setShowSaveTemplate(true)
                                         }}
@@ -2264,7 +2283,7 @@ export default function EstimatorClient({
                                 className="h-5 flex-1 modern-slider"
                             />
                             <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
-                            {canUseProduction && (
+                            {hasOrderQty && (
                                 <>
                                     <div className="h-6 w-px bg-[var(--color-hairline)]" />
                                     <div className="shrink-0 text-right">
@@ -2410,18 +2429,25 @@ export default function EstimatorClient({
                     <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Party / Customer (only visible in quote mode) */}
-                            {canUseProduction && !isStandaloneCostingSession && mode !== 'market' && (
+                            {/* Party / Customer is commercial context for Base and Full Suite. */}
+                            {mode !== 'market' && (
                                 <div className="space-y-1.5">
                                     <Label className="text-[10px] uppercase font-bold text-slate-500">
                                         {t('estimator.order_basics.party')}
                                     </Label>
                                     <Input
+                                        list="estimator-party-options"
                                         value={partyName}
                                         onChange={e => setPartyName(e.target.value)}
                                         placeholder="e.g. Sundaram Textiles"
                                         className="font-bold border-slate-200 h-11"
                                     />
+                                    <datalist id="estimator-party-options">
+                                        {partyNames.map(name => <option key={name} value={name} />)}
+                                    </datalist>
+                                    <p className="text-[10px] text-slate-400 font-medium leading-normal">
+                                        Select a recent customer or type a new one.
+                                    </p>
                                     {partyHint && (
                                         <p className="text-[10px] text-slate-500 flex items-center gap-1">
                                             <span className="text-blue-500">💡</span>
@@ -2435,7 +2461,7 @@ export default function EstimatorClient({
                             )}
 
                             {/* Fabric / Quality Name (visible in both modes) */}
-                            <div className={isStandaloneCostingSession || mode === 'market' ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
+                            <div className={mode === 'market' ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
@@ -2444,7 +2470,7 @@ export default function EstimatorClient({
                                     onChange={e => {
                                         const val = e.target.value
                                         setQualityLabel(val)
-                                        if (isStandaloneCostingSession || mode === 'market') {
+                                        if (mode === 'market') {
                                             setPartyName(val)
                                         }
                                     }}
@@ -3552,19 +3578,17 @@ export default function EstimatorClient({
                 <EstimatorCard accent="weft">
                     <SectionHeader title={!canUseProduction ? t('estimator.simulation.base_title') : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
-                        <div className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${canUseProduction ? 'lg:grid-cols-3' : ''}`}>
-                            {canUseProduction && (
-                                <NumField
-                                    label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
-                                    value={state.orderQuantityM}
-                                    onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })}
-                                    unit="m"
-                                    step={100}
-                                    placeholder="1000"
-                                    attentionWhenEmpty
-                                    hint={t('estimator.simulation.quantity_hint')}
-                                />
-                            )}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <NumField
+                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
+                                value={state.orderQuantityM}
+                                onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })}
+                                unit="m"
+                                step={100}
+                                placeholder="5000"
+                                attentionWhenEmpty
+                                hint={t('estimator.simulation.quantity_hint')}
+                            />
                             {(!canUseProduction || hasOrderQty) && (
                                 <>
                                     <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} />
@@ -3582,7 +3606,7 @@ export default function EstimatorClient({
                 open={showExportDialog}
                 onOpenChange={setShowExportDialog}
                 model={exportModel}
-                defaultCustomerName={!isStandaloneCostingSession ? partyName : ''}
+                defaultCustomerName={partyName}
                 defaultBusinessName={organizationName}
             />
 

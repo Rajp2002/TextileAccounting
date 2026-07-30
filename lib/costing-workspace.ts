@@ -20,7 +20,9 @@ export function getCostingWorkspaceCapabilities(canUseProduction: boolean): Cost
     versionedCostings: true,
     costingComparison: true,
     professionalExports: true,
-    partyContext: canUseProduction,
+    // Base costings are still commercial documents: they need a customer
+    // context even though order conversion remains a Full Suite capability.
+    partyContext: true,
     quotationLifecycle: canUseProduction,
     productionConversion: canUseProduction,
   }
