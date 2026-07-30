@@ -19,6 +19,7 @@ import {
 } from '@/lib/billing-constants'
 import {
     resolveBillingPurchase,
+    resolveBillingCheckoutPresentation,
     type BillingPaymentRow,
     type BillingPurchaseDecision,
     type BillingSubscriptionRow,
@@ -193,7 +194,7 @@ export default async function BillingPage() {
             .limit(10),
         supabase
             .from('org_subscriptions')
-            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, created_at')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, created_at')
             .eq('org_id', profile.org_id),
     ])
     const payments = paymentsResult.data ?? []
@@ -216,13 +217,14 @@ export default async function BillingPage() {
 
     const referralStats = await getReferralStatsAction()
 
-    const isActivating = subscription?.status === 'authenticated' || 
-                         (subscription?.status === 'created' && 
-                          subscription.razorpay_order_id && 
-                          subscription.created_at && 
-                          // Server-request clock is intentionally used to expire a stale pending checkout.
-                          // eslint-disable-next-line react-hooks/purity
-                          new Date(subscription.created_at).getTime() > Date.now() - 15 * 60 * 1000)
+    const checkoutPresentation = resolveBillingCheckoutPresentation(
+        billingSubscriptions,
+        billingPayments,
+        billingNow,
+    )
+    const isActivating = checkoutPresentation.state === 'activating'
+    const isPending = checkoutPresentation.state === 'pending'
+    const isRetryable = checkoutPresentation.state === 'retryable'
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
@@ -261,6 +263,26 @@ export default async function BillingPage() {
                                         <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Your factory is coming online.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
                                             We&apos;ve received your payment. Your selected <strong>Weavly plan</strong> is being configured. Refresh in a few seconds.
+                                        </p>
+                                    </>
+                                ) : isPending ? (
+                                    <>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/30 text-xs font-black uppercase tracking-widest">
+                                            <Clock className="w-3 h-3 animate-spin" /> Checkout pending
+                                        </div>
+                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Complete payment in Razorpay.</h2>
+                                        <p className="text-indigo-100 text-lg font-medium">
+                                            Your order is ready, but Weavly has <strong>not received a verified payment yet</strong>. Complete or close the checkout to continue.
+                                        </p>
+                                    </>
+                                ) : isRetryable ? (
+                                    <>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-400/20 border border-red-400/30 text-xs font-black uppercase tracking-widest text-red-100">
+                                            <XCircle className="w-3 h-3" /> Payment not completed
+                                        </div>
+                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">No payment was captured.</h2>
+                                        <p className="text-indigo-100 text-lg font-medium">
+                                            Your access was not activated. Choose a plan below to retry the checkout safely.
                                         </p>
                                     </>
                                 ) : subscription ? (
@@ -396,7 +418,7 @@ export default async function BillingPage() {
                     )}
 
                     {/* 2. PLAN CARDS SECTION (If not premium or if base) */}
-                    {(tier !== 'premium' && !isActivating) && (
+                    {(tier !== 'premium' && !isActivating && !isPending) && (
                         <div className="pt-4">
                             <PlanCards
                                 label={tier === 'base' ? 'Upgrade to Weavly Full Suite' : 'Select your Weavly Plan'}
@@ -484,7 +506,7 @@ export default async function BillingPage() {
                             <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
                                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                                 <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider leading-relaxed">
-                                    🧪 Test Mode Active: Use card 4111-1111-1111-1111 for test payments.
+                                    🧪 Test Mode Active: Use Razorpay Netbanking and complete the mock bank success flow. UPI is not part of the pilot activation path.
                                 </p>
                             </div>
                         )}

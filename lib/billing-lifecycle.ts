@@ -16,13 +16,21 @@ export type BillingSubscriptionRow = {
   current_end: string | null
   razorpay_payment_id?: string | null
   razorpay_subscription_id?: string | null
+  razorpay_order_id?: string | null
   created_at?: string | null
 }
 
 export type BillingPaymentRow = {
   subscription_id: string | null
   status: string
+  razorpay_order_id?: string | null
 }
+
+export type BillingCheckoutPresentation =
+  | { state: 'none'; subscription: BillingSubscriptionRow | null }
+  | { state: 'pending'; subscription: BillingSubscriptionRow }
+  | { state: 'activating'; subscription: BillingSubscriptionRow }
+  | { state: 'retryable'; subscription: BillingSubscriptionRow }
 
 export type BillingPurchaseDecision = {
   allowed: boolean
@@ -44,6 +52,46 @@ function validTime(value: string | null | undefined): number | null {
   if (!value) return null
   const time = new Date(value).getTime()
   return Number.isFinite(time) ? time : null
+}
+
+/**
+ * Resolve the truthful checkout state shown on the billing page.
+ *
+ * Creating a Razorpay order is not proof that payment was received. Failed or
+ * dismissed checkouts must immediately return to a retryable state, while only
+ * a verified `authenticated` row may claim that activation is in progress.
+ */
+export function resolveBillingCheckoutPresentation(
+  subscriptions: BillingSubscriptionRow[],
+  payments: BillingPaymentRow[],
+  now = new Date(),
+  pendingWindowMs = 15 * 60 * 1000,
+): BillingCheckoutPresentation {
+  const latest = [...subscriptions].sort((left, right) => {
+    const leftTime = validTime(left.created_at) ?? 0
+    const rightTime = validTime(right.created_at) ?? 0
+    return rightTime - leftTime
+  })[0] ?? null
+
+  if (!latest) return { state: 'none', subscription: null }
+  if (latest.status === 'authenticated') return { state: 'activating', subscription: latest }
+
+  const failed = payments.some((payment) =>
+    payment.status === 'failed'
+    && (
+      (payment.subscription_id && payment.subscription_id === latest.id)
+      || (payment.razorpay_order_id && payment.razorpay_order_id === latest.razorpay_order_id)
+    ))
+  const createdAt = validTime(latest.created_at)
+  const pendingIsFresh = createdAt !== null && createdAt > now.getTime() - pendingWindowMs
+
+  if (latest.status === 'created' && !failed && pendingIsFresh) {
+    return { state: 'pending', subscription: latest }
+  }
+  if (['created', 'halted', 'cancelled', 'failed'].includes(latest.status) || failed) {
+    return { state: 'retryable', subscription: latest }
+  }
+  return { state: 'none', subscription: latest }
 }
 
 function rowHasPaidHistory(row: BillingSubscriptionRow, capturedSubscriptionIds: Set<string>): boolean {
