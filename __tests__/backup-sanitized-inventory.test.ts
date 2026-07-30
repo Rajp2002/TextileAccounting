@@ -130,7 +130,7 @@ afterEach(() => {
   }
 })
 
-describe.skipIf(!jqAvailable)('sanitized backup inventory capture', () => {
+describe.skipIf(!jqAvailable)('sanitized backup inventory capture', { timeout: 15_000 }, () => {
   it('generates one compact JSON object at the SQL source and shares capture logic', () => {
     const sql = readFileSync('scripts/backup/sql/sanitized_inventory.sql', 'utf8')
     const backup = readFileSync('scripts/backup/create-supabase-logical-backup.sh', 'utf8')

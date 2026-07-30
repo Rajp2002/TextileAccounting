@@ -19,7 +19,8 @@ export type CostingExportModel = {
   suggestedSellingPricePerM: number
   breakEvenPricePerM: number
   marginPct: number
-  expectedProfit: number
+  expectedProfit: number | null
+  expectedProfitPerM: number
   state: EstimateState
   totals: EstimatorV3Totals
 }
@@ -50,6 +51,15 @@ export function createCostingExportModel(input: {
   const suggestedSellingPricePerM = finiteOrZero(
     input.suggestedSellingPricePerM ?? input.totals.orderQuote?.quotePricePerM ?? 0,
   )
+  const landedCostPerM = finiteOrZero(
+    input.totals.orderQuote?.landedCostPerM
+      ?? (
+        productionCostPerM
+        + finiteOrZero(input.state.transportPerM)
+        + suggestedSellingPricePerM * finiteOrZero(input.state.commissionPct) / 100
+      ),
+  )
+  const expectedProfitPerM = Math.max(0, suggestedSellingPricePerM - landedCostPerM)
   return {
     qualityLabel: input.qualityLabel.trim() || 'Untitled Costing',
     createdAt: input.createdAt ?? new Date().toISOString(),
@@ -62,7 +72,8 @@ export function createCostingExportModel(input: {
       input.state.commissionPct,
     ),
     marginPct: finiteOrZero(input.totals.orderQuote?.actualMarginPct ?? input.state.profitPct),
-    expectedProfit: finiteOrZero(input.totals.orderQuote?.grossProfitRupees),
+    expectedProfit: quantityM > 0 ? expectedProfitPerM * quantityM : null,
+    expectedProfitPerM,
     state: input.state,
     totals: input.totals,
   }
@@ -173,7 +184,9 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
         metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
         metric('Margin', `${decimal(model.marginPct, 1)}%`, 'positive'),
         metric('Order quantity', quantity),
-        metric('Expected profit', money(model.expectedProfit, 0), 'positive'),
+        model.expectedProfit != null
+          ? metric('Expected profit', money(model.expectedProfit, 0), 'positive')
+          : metric('Profit / m', `${money(model.expectedProfitPerM)}/m`, 'positive'),
       ].join('')
     : [
         metric('Quoted price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),

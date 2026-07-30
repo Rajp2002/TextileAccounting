@@ -674,10 +674,16 @@ export function calcOrderQuote(params: {
   const quotePricePerM   = P.plus(T).div(denominator)
   const commissionPerM   = quotePricePerM.times(C)
   const landedCostPerM   = P.plus(T).plus(commissionPerM)
+  const profitPerM       = quotePricePerM.minus(landedCostPerM)
   const totalOrderValue  = quotePricePerM.times(orderQuantityM)
   const totalCost        = landedCostPerM.times(orderQuantityM)
   const grossProfitRupees = totalOrderValue.minus(totalCost)
-  const actualMarginPct  = quotePricePerM.gt(0) ? grossProfitRupees.div(totalOrderValue).times(100) : new Decimal(0)
+  // Margin is a per-metre commercial invariant. Deriving it from aggregate
+  // order totals produces 0/0 when Base has no order quantity, which made the
+  // UI and exported cost sheet contradict the configured target margin.
+  const actualMarginPct  = quotePricePerM.gt(0)
+    ? profitPerM.div(quotePricePerM).times(100)
+    : new Decimal(0)
 
   return { 
     isValid: true,
@@ -906,7 +912,12 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     totalProductionCostPerM: totalProductionCostPerM.toNumber(),
     orderQuantityM:  estimate.orderQuantityM || 0,
     commissionPct:   estimate.enabledSections.commission ? estimate.commissionPct : 0,
-    transportPerM:   estimate.enabledSections.transport  ? estimate.transportPerM  : 0,
+    // A non-zero transport value is an explicit commercial assumption. Base
+    // always exposes this field, so a stale/default section toggle must not
+    // silently discard the amount from the customer price.
+    transportPerM:   estimate.enabledSections.transport || Number(estimate.transportPerM) > 0
+      ? estimate.transportPerM
+      : 0,
     profitMarginPct: estimate.profitPct,
   })
 

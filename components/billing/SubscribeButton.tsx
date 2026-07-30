@@ -97,6 +97,22 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
         return tryLoadScript('https://checkout.razorpay.com/v1/checkout.js')
     }
 
+    const markCheckoutRetryable = async (orderId: string, outcome: 'failed' | 'cancelled') => {
+        try {
+            await fetch('/api/billing/checkout-state', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ orderId, outcome }),
+                keepalive: true,
+            })
+        } finally {
+            router.refresh()
+        }
+    }
+
     async function handleSubscribe() {
         setLoading(true)
         try {
@@ -138,6 +154,7 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
             }
             const checkoutPlanName = data.planName ?? planName
             const checkoutPurpose = purchaseType === 'renewal' ? 'Annual Renewal' : 'First Year'
+            let paymentHandled = false
 
             const rzp = new window.Razorpay({
                 key: keyId,
@@ -152,6 +169,7 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
                     razorpay_order_id: string
                     razorpay_signature: string
                 }) {
+                    paymentHandled = true
                     setLoading(true)
                     try {
                         console.log('[SubscribeButton] Verifying payment signature...')
@@ -188,14 +206,19 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
                     }
                 },
                 modal: {
-                    ondismiss: () => setLoading(false),
+                    ondismiss: () => {
+                        setLoading(false)
+                        if (!paymentHandled) void markCheckoutRetryable(orderId, 'cancelled')
+                    },
                 },
                 theme: { color: '#D97706' },
             })
 
             rzp.on('payment.failed', () => {
+                paymentHandled = true
                 toast.error('Payment failed. Please try again.')
                 setLoading(false)
+                void markCheckoutRetryable(orderId, 'failed')
             })
 
             rzp.open()

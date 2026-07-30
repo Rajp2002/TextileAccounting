@@ -243,6 +243,14 @@ function getProductionCostPerM(quote: QuoteRow) {
     return getSavedCostingTotals(quote)?.totalProductionCostPerM ?? Number(quote.landed_cost_per_meter)
 }
 
+function getSuggestedSellingPricePerM(quote: QuoteRow) {
+    return getSavedCostingTotals(quote)?.orderQuote?.quotePricePerM ?? Number(quote.quote_price_per_meter)
+}
+
+function getActualMarginPct(quote: QuoteRow) {
+    return getSavedCostingTotals(quote)?.orderQuote?.actualMarginPct ?? Number(quote.intended_margin_percent)
+}
+
 function getProductionCostMovement(current: QuoteRow, previous: QuoteRow | null) {
     return previous ? getProductionCostPerM(current) - getProductionCostPerM(previous) : null
 }
@@ -410,8 +418,8 @@ function SavedQualityLibraryView({
                                                 </div>
                                                 <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-slate-950 p-3 text-white">
                                                     <div><p className="text-[10px] uppercase text-slate-400">Production cost</p><p className="mt-1 font-mono text-sm font-black">₹{latestTotals.totalProductionCostPerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latest.quote_price_per_meter).toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latest.intended_margin_percent).toFixed(1)}%</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latestTotals.orderQuote?.quotePricePerM ?? latest.quote_price_per_meter).toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latestTotals.orderQuote?.actualMarginPct ?? latest.intended_margin_percent).toFixed(1)}%</p></div>
                                                 </div>
                                             </section>
 
@@ -466,8 +474,8 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3 font-bold text-slate-900">v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></td>
                                                                 <td className="py-3 capitalize text-slate-600">{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name}` : 'Internal costing'}</td>
                                                                 <td className="py-3 font-mono text-slate-700">₹{getProductionCostPerM(record).toFixed(2)}/m</td>
-                                                                <td className="py-3 font-mono font-bold text-orange-700">₹{Number(record.quote_price_per_meter).toFixed(2)}/m</td>
-                                                                <td className="py-3 font-mono font-bold text-emerald-700">{Number(record.intended_margin_percent).toFixed(1)}%</td>
+                                                                <td className="py-3 font-mono font-bold text-orange-700">₹{getSuggestedSellingPricePerM(record).toFixed(2)}/m</td>
+                                                                <td className="py-3 font-mono font-bold text-emerald-700">{getActualMarginPct(record).toFixed(1)}%</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
                                                                 <td className="py-3 text-right"><Button variant="ghost" size="sm" onClick={() => onOpen(record)}>Open</Button></td>
                                                             </tr>
@@ -601,7 +609,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             createdAt: quoteToExport.created_at,
             state,
             totals: calcFullTotals(state),
-            suggestedSellingPricePerM: Number(quoteToExport.quote_price_per_meter),
         })
     }, [quoteToExport])
 
@@ -1239,8 +1246,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                     {[
                                         ['Production cost', `₹${Number(selectedCostingStates[0]?.totals.totalProductionCostPerM ?? selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.totalProductionCostPerM ?? selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.totalProductionCostPerM ?? selectedCostings[1].landed_cost_per_meter) - Number(selectedCostingStates[0]?.totals.totalProductionCostPerM ?? selectedCostings[0].landed_cost_per_meter), '₹', '/m'],
                                         ['Commercial break-even', `₹${Number(selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, comparison.productionCostDelta, '₹', '/m'],
-                                        ['Suggested selling price', `₹${Number(selectedCostings[0].quote_price_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostings[1].quote_price_per_meter).toFixed(2)}/m`, comparison.sellingPriceDelta, '₹', '/m'],
-                                        ['Margin', `${Number(selectedCostings[0].intended_margin_percent).toFixed(1)}%`, `${Number(selectedCostings[1].intended_margin_percent).toFixed(1)}%`, comparison.marginDelta, '', ' pp'],
+                                        ['Suggested selling price', `₹${Number(selectedCostingStates[0]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[0].quote_price_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[1].quote_price_per_meter).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[1].quote_price_per_meter) - Number(selectedCostingStates[0]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[0].quote_price_per_meter), '₹', '/m'],
+                                        ['Margin', `${Number(selectedCostingStates[0]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[0].intended_margin_percent).toFixed(1)}%`, `${Number(selectedCostingStates[1]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[1].intended_margin_percent).toFixed(1)}%`, Number(selectedCostingStates[1]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[1].intended_margin_percent) - Number(selectedCostingStates[0]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[0].intended_margin_percent), '', ' pp'],
                                         ['Quantity', `${Number(selectedCostings[0].meters).toLocaleString('en-IN')} m`, `${Number(selectedCostings[1].meters).toLocaleString('en-IN')} m`, comparison.quantityDelta, '', ' m'],
                                         ['Warp yarn rate', `₹${Number(selectedCostingStates[0]?.state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg`, `₹${Number(selectedCostingStates[1]?.state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg`, Number(selectedCostingStates[1]?.state.warpRows[0]?.yarnRate ?? 0) - Number(selectedCostingStates[0]?.state.warpRows[0]?.yarnRate ?? 0), '₹', '/kg'],
                                         ['Warp consumption', `${Number(selectedCostingStates[0]?.totals.totalWarpKgPer100m ?? 0).toFixed(2)} kg/100m`, `${Number(selectedCostingStates[1]?.totals.totalWarpKgPer100m ?? 0).toFixed(2)} kg/100m`, Number(selectedCostingStates[1]?.totals.totalWarpKgPer100m ?? 0) - Number(selectedCostingStates[0]?.totals.totalWarpKgPer100m ?? 0), '', ' kg'],

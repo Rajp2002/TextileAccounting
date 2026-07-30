@@ -363,6 +363,21 @@ describe('Estimator formula primitives', () => {
         expect(round2(quote.actualMarginPct)).toBe(10)
     })
 
+    it('preserves the configured margin when Base has no order quantity', () => {
+        const quote = calcOrderQuote({
+            totalProductionCostPerM: 35.1718,
+            orderQuantityM: 0,
+            commissionPct: 2,
+            transportPerM: 2,
+            profitMarginPct: 10,
+        })
+
+        expect(round2(quote.quotePricePerM)).toBe(42.24)
+        expect(round2(quote.actualMarginPct)).toBe(10)
+        expect(quote.totalOrderValue).toBe(0)
+        expect(quote.grossProfitRupees).toBe(0)
+    })
+
     it('returns invalid state if commission + margin percentage >= 100%', () => {
         const quote = calcOrderQuote({
             totalProductionCostPerM: 32.48,
@@ -379,6 +394,21 @@ describe('Estimator formula primitives', () => {
 })
 
 describe('Estimator full totals', () => {
+    it('honors an explicitly entered transport cost even when a stale section toggle is off', () => {
+        const estimate = makeFactoryFormulaQaEstimate()
+        estimate.orderQuantityM = 0
+        estimate.transportPerM = 2
+        estimate.commissionPct = 2
+        estimate.profitPct = 10
+        estimate.enabledSections = { ...estimate.enabledSections, transport: false, commission: true }
+
+        const totals = calcFullTotals(estimate)
+        const expected = (totals.totalProductionCostPerM + 2) / (1 - 0.02 - 0.10)
+
+        expect(totals.orderQuote?.quotePricePerM).toBeCloseTo(expected, 8)
+        expect(totals.orderQuote?.actualMarginPct).toBeCloseTo(10, 8)
+    })
+
     it('calculates the real factory formula QA case honestly with warp crimp only on warp', () => {
         const totals = calcFullTotals(makeFactoryFormulaQaEstimate())
 

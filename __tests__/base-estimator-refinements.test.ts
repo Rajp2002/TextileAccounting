@@ -93,6 +93,35 @@ describe('Base costing exports', () => {
     expect(customer).not.toContain('>Margin<')
   })
 
+  it('exports per-metre margin and profit honestly when Base has no order quantity', () => {
+    const noQuantityState = {
+      ...state,
+      orderQuantityM: null,
+      transportPerM: 2,
+      commissionPct: 2,
+      enabledSections: { ...state.enabledSections, transport: false, commission: true },
+    }
+    const noQuantityTotals = calcFullTotals(noQuantityState)
+    const noQuantityModel = createCostingExportModel({
+      qualityLabel: 'Base Quality',
+      state: noQuantityState,
+      totals: noQuantityTotals,
+    })
+    const html = buildCostingPrintHtml(noQuantityModel, {
+      mode: 'internal', businessName: 'Acme Weaves', customerName: '', validUntil: '', notes: '', showGstNote: false,
+    })
+
+    expect(noQuantityModel.suggestedSellingPricePerM).toBeCloseTo(
+      (noQuantityTotals.totalProductionCostPerM + 2) / (1 - 0.02 - 0.12),
+      8,
+    )
+    expect(noQuantityModel.marginPct).toBeCloseTo(12, 8)
+    expect(noQuantityModel.expectedProfit).toBeNull()
+    expect(noQuantityModel.expectedProfitPerM).toBeGreaterThan(0)
+    expect(html).toContain('Profit / m')
+    expect(html).not.toContain('Expected profit')
+  })
+
   it('preserves print styling in the jsPDF body', () => {
     const html = buildCostingPrintHtml(model, {
       mode: 'internal', businessName: 'Acme Weaves', customerName: '', validUntil: '', notes: '', showGstNote: false,
@@ -131,6 +160,7 @@ describe('Base costing exports', () => {
     }
     const invalidState = {
       ...state,
+      orderQuantityM: null,
       commissionPct: Number.NaN,
       transportPerM: Number.POSITIVE_INFINITY,
     }
@@ -149,7 +179,8 @@ describe('Base costing exports', () => {
       suggestedSellingPricePerM: 0,
       breakEvenPricePerM: 0,
       marginPct: 0,
-      expectedProfit: 0,
+      expectedProfit: null,
+      expectedProfitPerM: 0,
     })
     expect(html).not.toMatch(/NaN|Infinity/)
   })
