@@ -642,3 +642,19 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
 - Reclassify `BASE-PILOT-EXP-01` as `fixed_pending_runtime_proof`: shared download dispatch and user feedback are regression-covered, but deployed file capture/render/readability proof remains required.
 - Keep `BASE-PDF-PROD-P0` open as the exact-candidate acceptance gate. Add organization JSON readability to the same physical-browser evidence bundle.
 - The candidate remains No-Go until the reviewed migration, deployment, fresh Base browser smoke, artifact inspection, and exact fixture cleanup all pass.
+
+### BASE-BILL-RETRY-PRICE — source fixed, production proof pending
+
+- Severity: P0. Scope: Base self-serve billing. Current status:
+  `fixed_pending_runtime_proof`.
+- A failed first-year TEST checkout incorrectly unlocked ₹2,360 renewal
+  pricing. The failure did not grant entitlement, but it exposed direct revenue
+  and commercial-policy risk.
+- Application classification and database enforcement are corrected locally.
+  `halted`/`cancelled` alone are not paid history; captured payment, a proven
+  paid lifecycle, or a provider subscription paired with a real service period
+  is required.
+- Keep the blocker open until migration `20260730214000` is applied and the
+  exact deployed commit proves the retained failed account shows ₹8,260,
+  TEST Netbanking captures once, and exactly one active Base entitlement is
+  present. A popup/tooling failure remains blocked evidence, not pass credit.

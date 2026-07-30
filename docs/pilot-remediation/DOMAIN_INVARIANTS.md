@@ -465,3 +465,17 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 7. Organization export fails if any promised dataset fails and remains owner-accessible after plan expiry without widening tenant scope.
 8. Disposable production QA uses an exact `BASEGO-*` identity and must reconcile organizations, profiles, subscriptions, estimator data, rates, audit rows, and Auth users to zero.
 9. Export audit writes are server-mediated. PUBLIC, anon, and authenticated clients cannot execute the SECURITY DEFINER logger directly; the service-role caller must supply an existing same-organization owner or an admin actor, and every unauthorized attempt leaves no row.
+
+## Base billing paid-history invariants — 2026-07-30
+
+1. A failed, halted, cancelled, dismissed, or abandoned first checkout never
+   earns renewal pricing by status or provider identifier alone.
+2. Renewal pricing requires distinct same-tier paid history proven by a
+   captured payment, subscription-level payment ID, positive paid lifecycle
+   state, or a provider subscription ID paired with a real service period.
+3. The current order cannot prove its own renewal eligibility. Database
+   enforcement excludes the row being inserted or activated.
+4. Failed payment recovery must preserve truthful no-access state and return
+   the customer to the full first-year price.
+5. Successful TEST activation must reconcile to one captured payment and one
+   active entitlement; replay cannot create another payment or paid year.

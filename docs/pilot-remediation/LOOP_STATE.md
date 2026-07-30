@@ -2162,3 +2162,24 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Product-controlled source blockers closed: runtime dependency highs, export-audit RPC exposure, export completion observability, the TypeScript test contract, and Base/annual-billing copy inconsistencies.
 - Next executable release step: review/apply the migration and deploy this exact candidate, then run the prefixed Base owner journey and physically inspect internal PDF, customer PDF privacy/nonblank output, and readable organization JSON before changing status to `go_base_factory_pilot`.
 - Human operating checks remain named and unchanged: independent factory costing reconciliation, first external signup observation, and authentic current-release Sentry evidence when an error occurs.
+
+## Active Base billing P0 remediation — 2026-07-30
+
+- State: `fixed_pending_runtime_proof`; Base production-ready pilot verdict
+  remains `no_go`.
+- `BASE-BILL-RETRY-PRICE` / `BILL-006` is source-fixed: failed or dismissed
+  first checkouts no longer count as paid history, and a new database trigger
+  prevents an unearned renewal-priced order from being inserted or activated.
+- Local proof is green: focused billing 17/17, full suite 786 passed / one
+  skipped, ESLint, TypeScript, optimized production build, zero production
+  dependency vulnerabilities, and clean diff validation.
+- Pending migration:
+  `20260730214000_reject_unearned_billing_renewal_pricing.sql`. No production
+  schema/data mutation is claimed yet.
+- `BILL-006` may be represented as `code_verified` in the scoped Base ledger;
+  `BILL-003` remains blocked because the successful Razorpay mock-bank popup
+  was unavailable to the prior browser harness.
+- Next action: commit/push the exact candidate, review and apply only the named
+  migration, deploy the exact commit, confirm the retained failed-checkout
+  account again shows ₹8,260 first-year activation, then complete TEST
+  Netbanking and reconcile one captured payment plus one active entitlement.

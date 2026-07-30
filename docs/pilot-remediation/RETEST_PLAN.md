@@ -805,3 +805,26 @@ Acceptance:
 - Open both PDFs and the JSON outside the application. Require nonblank A4 internal output, no internal economics in customer output, valid JSON, expected current-organization scope, and no unredacted sensitive field.
 - Verify `Start From` on the applied saved-quality action, saved-costing-history landing copy, and annual referral-credit copy at their deployed surfaces.
 - Record candidate commit/deployment identity, browser console state, database audit row, filenames/hashes, and exact fixture cleanup to zero. Only then promote `fixed_pending_runtime_proof` to `pass` and issue the controlled-pilot Go.
+
+### Base failed-checkout renewal-price production retest — 2026-07-30
+
+1. Before release, require focused billing 17/17, the full Vitest suite,
+   ESLint, TypeScript, optimized build, zero high production dependency
+   vulnerabilities, and `git diff --check`.
+2. Review and apply only
+   `20260730214000_reject_unearned_billing_renewal_pricing.sql`; require
+   local/remote migration alignment afterward.
+3. Deploy the exact pushed main commit and verify the canonical production
+   alias resolves to a READY deployment for that commit.
+4. Log into retained account
+   `basepilotretest.20260730.2027.68w7@weavly.test`. Its prior failed payment
+   must remain failed, access must remain inactive, and Base must show ₹8,260
+   first-year activation—not ₹2,360 renewal.
+5. Complete Razorpay TEST Netbanking through the mock-bank Success window. UPI
+   remains outside this pilot activation path.
+6. Reconcile exactly one captured ₹8,260 payment and exactly one active Base
+   entitlement for the fresh organization; direct Estimator access must become
+   available only after capture.
+7. Keep `BILL-003` blocked if the provider popup cannot be completed. Promote
+   `BILL-006` and `BILL-003` to pass only with the exact deployed browser and
+   database evidence.

@@ -2639,4 +2639,33 @@ Date: 2026-07-19 IST. Status: `pass`.
 - Verification passed: ESLint; `npx tsc --noEmit`; 114 Vitest files with 770 passed and one intentional skip; optimized Next 16.2.11 build with 45 static pages; `npm audit --omit=dev --audit-level=high` with zero vulnerabilities; `git diff --check`; linked migration list and push dry-run naming only the new migration.
 - The full audit still reports three moderate and nine high findings confined to dev tooling (`shadcn`/MCP/Hono and ESLint/minimatch paths). They do not ship in the runtime dependency tree and remain dependency-maintenance backlog.
 - No deployment or production schema mutation was performed. Promotion remains blocked on reviewed migration apply, exact candidate deployment, Base browser rerun, and physical inspection of both PDFs plus organization JSON.
+
+## Base P0 failed-checkout renewal-price remediation — 2026-07-30
+
+- Failure ID: `BASE-BILL-RETRY-PRICE`; formal Base row: `BILL-006`.
+- Production evidence before the fix: a fresh Base checkout failed through
+  Razorpay TEST Netbanking, correctly produced one `halted` subscription and
+  one `failed` payment with no active entitlement, but the next checkout
+  rendered the ₹2,360 renewal price instead of the ₹8,260 first-year price.
+- Root cause: application paid-history classification treated bare `halted`
+  and `cancelled` statuses as proof of a paid plan. The original atomic
+  activation guard used the same over-broad status set.
+- Source correction: `lib/billing-lifecycle.ts` now requires a captured payment,
+  a subscription-level payment ID, a positive paid lifecycle state, or a
+  provider subscription ID paired with a real start/end service period.
+- Database backstop:
+  `20260730214000_reject_unearned_billing_renewal_pricing.sql` adds a
+  tenant/tier-scoped trigger that rejects renewal-priced order insertion or
+  activation without distinct captured or otherwise proven paid history.
+- Regression proof: focused billing suite passed 17/17; full prebuild suite
+  passed 786 tests with one intentional skip; focused and full ESLint passed;
+  TypeScript and the optimized Next.js build passed; production dependency
+  audit found zero vulnerabilities; `git diff --check` passed.
+- Data safety: no production schema or business row has been changed by this
+  local implementation. The failed-checkout QA account and evidence remain
+  retained for the exact deployed retry proof.
+- Status: `fixed_pending_runtime_proof`. Do not promote `BILL-006` or
+  `BILL-003` to pass before the reviewed migration is applied and the exact
+  deployed commit proves ₹8,260 retry pricing, one captured TEST payment, and
+  exactly one active Base entitlement.
 - Data safety: only reviewed migration `20260721183000` and exact prefixed disposable QA records were permitted. Both the main `BASEGO-1784662022802-4412AD` fixture and failed-signup `BASEGO-20260722-VK6WBT MILL` reconciled organizations, profiles, subscriptions where applicable, and Auth users to zero.

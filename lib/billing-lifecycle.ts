@@ -24,6 +24,7 @@ export type BillingPaymentRow = {
   subscription_id: string | null
   status: string
   razorpay_order_id?: string | null
+  razorpay_payment_id?: string | null
 }
 
 export type BillingCheckoutPresentation =
@@ -41,9 +42,8 @@ export type BillingPurchaseDecision = {
 
 const PAID_LIFECYCLE_STATUSES = new Set([
   'active',
+  'authenticated',
   'paused',
-  'halted',
-  'cancelled',
   'completed',
   'expired',
 ])
@@ -97,7 +97,13 @@ export function resolveBillingCheckoutPresentation(
 function rowHasPaidHistory(row: BillingSubscriptionRow, capturedSubscriptionIds: Set<string>): boolean {
   if (!isPurchasablePlanTier(row.plan_tier)) return false
   if (capturedSubscriptionIds.has(row.id)) return true
-  if (row.razorpay_payment_id || row.razorpay_subscription_id) return true
+  if (row.razorpay_payment_id) return true
+  if (row.razorpay_subscription_id && validTime(row.current_start) !== null && validTime(row.current_end) !== null) {
+    return true
+  }
+  // `halted` and `cancelled` are also used for failed or dismissed first
+  // checkouts. They are paid history only when a captured payment or a
+  // completed paid period on the entitlement row proves it.
   return PAID_LIFECYCLE_STATUSES.has(row.status)
 }
 

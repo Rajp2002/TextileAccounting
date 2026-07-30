@@ -126,6 +126,18 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('TO service_role')
     })
 
+    it('backs renewal pricing with captured or otherwise proven paid history in the database', () => {
+        const content = readProjectFile('supabase/migrations/20260730214000_reject_unearned_billing_renewal_pricing.sql')
+        expect(content).toContain('enforce_paid_history_for_billing_renewal')
+        expect(content).toContain("payment.status = 'captured'")
+        expect(content).toContain("history.status IN ('active', 'authenticated', 'paused', 'completed', 'expired')")
+        expect(content).not.toContain("'halted', 'cancelled'")
+        expect(content).toContain('history.current_start IS NOT NULL')
+        expect(content).toContain('history.current_end IS NOT NULL')
+        expect(content).toContain('BEFORE INSERT OR UPDATE OF')
+        expect(content).toContain('Renewal pricing requires prior captured or paid history')
+    })
+
     it('derives first-year and renewal pricing from paid lifecycle history, never trial state', () => {
         const now = new Date('2026-07-10T00:00:00.000Z')
         const trial: BillingSubscriptionRow = {
@@ -157,6 +169,76 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(resolveBillingPurchase([activeBase], [], 'premium', now)).toMatchObject({
             allowed: true,
             purchaseType: 'initial_purchase',
+        })
+    })
+
+    it('keeps a failed first-purchase checkout on first-year pricing even when Razorpay assigned a payment ID', () => {
+        const now = new Date('2026-07-30T00:00:00.000Z')
+        const failedBase: BillingSubscriptionRow = {
+            id: 'base-failed-first-purchase',
+            plan_tier: 'base',
+            status: 'halted',
+            current_end: null,
+            razorpay_order_id: 'order_failed_first_purchase',
+        }
+
+        expect(resolveBillingPurchase(
+            [failedBase],
+            [{
+                subscription_id: failedBase.id,
+                status: 'failed',
+                razorpay_order_id: failedBase.razorpay_order_id,
+                razorpay_payment_id: 'pay_failed_first_purchase',
+            }],
+            'base',
+            now,
+        )).toMatchObject({
+            allowed: true,
+            purchaseType: 'initial_purchase',
+            periodStart: now.toISOString(),
+        })
+        expect(getBillingPrice('base', 'initial_purchase').totalPaise).toBe(826000)
+    })
+
+    it('keeps halted or cancelled paid history eligible for renewal only with payment proof', () => {
+        const now = new Date('2026-07-30T00:00:00.000Z')
+        const haltedBase: BillingSubscriptionRow = {
+            id: 'base-halted-paid',
+            plan_tier: 'base',
+            status: 'halted',
+            current_end: null,
+        }
+        const cancelledBase: BillingSubscriptionRow = {
+            id: 'base-cancelled-paid',
+            plan_tier: 'base',
+            status: 'cancelled',
+            current_end: null,
+            razorpay_subscription_id: 'sub_created_but_never_paid',
+        }
+
+        expect(resolveBillingPurchase([haltedBase, cancelledBase], [], 'base', now)).toMatchObject({
+            purchaseType: 'initial_purchase',
+        })
+        expect(resolveBillingPurchase(
+            [haltedBase, cancelledBase],
+            [{ subscription_id: haltedBase.id, status: 'captured' }],
+            'base',
+            now,
+        )).toMatchObject({
+            purchaseType: 'renewal',
+        })
+
+        expect(resolveBillingPurchase(
+            [{
+                ...cancelledBase,
+                current_start: '2025-07-30T00:00:00.000Z',
+                current_end: '2026-07-29T00:00:00.000Z',
+            }],
+            [],
+            'base',
+            now,
+        )).toMatchObject({
+            purchaseType: 'renewal',
         })
     })
 
