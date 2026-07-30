@@ -85,7 +85,13 @@ function validateTemplateRecipe(data: TemplateRecipeInput): string | null {
         overheadOverridePerM: data.overheadOverridePerM ?? null,
         monthlyOutputM: 1,
     }
-    const recipeError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(snapshot))
+    // A saved quality is a reusable recipe, not a production beam plan. Base
+    // intentionally hides tape length, while production workflows validate it
+    // when a costing/order snapshot is saved. Do not make the hidden field a
+    // prerequisite for persisting a Base quality.
+    const recipeError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(snapshot, {
+        requireTapeLength: false,
+    }))
     if (recipeError) return recipeError
 
     if (data.sizingMode !== undefined && !['in_house', 'outsourced'].includes(data.sizingMode)) {
@@ -304,6 +310,7 @@ export async function getEstimatorTemplates() {
 
 export async function saveAsFabricTemplate(data: {
     name:             string
+    partyName?:       string
     warpRows:         WarpRow[]
     weftRows:         WeftRow[]
     tapeLengthM:      number
@@ -331,6 +338,24 @@ export async function saveAsFabricTemplate(data: {
 
     const nameError = validateTemplateName(data.name)
     if (nameError) return { error: nameError }
+
+    // Validate the exact costing snapshot before the first database write.
+    // Base does not expose tape length because it is beam-capacity metadata,
+    // not a commercial costing requirement.
+    const snapshotEstimate: EstimateState = {
+        ...data.estimate,
+        warpRows: data.warpRows,
+        weftRows: data.weftRows,
+    }
+    const snapshotTotals = getAuthoritativeQuoteTotals(snapshotEstimate)
+    const snapshotBoundaryError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
+        estimate: snapshotEstimate,
+        totalProductionCostPerM: snapshotTotals.productionCostPerM,
+        quotePricePerM: snapshotTotals.quotePricePerM,
+        targetMeters: snapshotEstimate.orderQuantityM,
+        requireTapeLength: false,
+    }))
+    if (snapshotBoundaryError) return { error: snapshotBoundaryError }
 
     const { data: saved, error } = await supabase
         .from('estimator_templates')
@@ -371,15 +396,9 @@ export async function saveAsFabricTemplate(data: {
     // immutable costing attached. Keep the two user-visible writes together:
     // if the snapshot cannot be saved, remove the just-created quality rather
     // than leaving another "no costing history yet" record behind.
-    const snapshotEstimate: EstimateState = {
-        ...data.estimate,
-        warpRows: data.warpRows,
-        weftRows: data.weftRows,
-    }
-    const snapshotTotals = getAuthoritativeQuoteTotals(snapshotEstimate)
     const snapshot = await saveEstimatorQuoteV3({
         clientRequestId: getInitialQualitySnapshotRequestId(saved.id),
-        partyName: normalizeTemplateName(data.name),
+        partyName: normalizeTemplateName(data.partyName || data.name),
         qualityLabel: normalizeTemplateName(data.name),
         estimate: snapshotEstimate,
         totalProductionCostPerM: snapshotTotals.productionCostPerM,
@@ -390,13 +409,15 @@ export async function saveAsFabricTemplate(data: {
     })
 
     if (!snapshot.success) {
-        const { error: rollbackError } = await supabase
+        const { data: rolledBack, error: rollbackError } = await supabase
             .from('estimator_templates')
             .delete()
             .eq('id', saved.id)
             .eq('org_id', profile.org_id)
+            .select('id')
+            .maybeSingle()
 
-        if (rollbackError) {
+        if (rollbackError || !rolledBack) {
             return { error: `Costing snapshot failed and the incomplete saved quality could not be removed: ${snapshot.error ?? 'Unknown snapshot error'}` }
         }
         return { error: snapshot.error ?? 'The quality was not saved because its costing snapshot could not be created.' }
@@ -1123,6 +1144,37 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
 }
 
 // ─── Party Rate Memory ────────────────────────────────────────────────────────
+
+/**
+ * Return recent distinct party names for the inline Base/Full Suite chooser.
+ * The names come only from tenant-scoped estimator history; creating a new name
+ * remains a simple free-text action.
+ */
+export async function getEstimatorPartyNames(): Promise<{ data?: string[]; error?: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .select('party_name')
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+    if (error) return { error: error.message }
+    const seen = new Set<string>()
+    const names = (data ?? [])
+        .map(row => row.party_name?.trim())
+        .filter((name): name is string => Boolean(name))
+        .filter(name => {
+            const key = name.toLocaleLowerCase('en-IN')
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+        })
+        .slice(0, 25)
+    return { data: names }
+}
 
 /**
  * Returns the most recent quote for a given party name.

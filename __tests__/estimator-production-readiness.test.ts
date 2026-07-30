@@ -18,6 +18,10 @@ const estimatorClientSource = readFileSync(
   join(process.cwd(), 'app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
   'utf8',
 )
+const estimatorActionsSource = readFileSync(
+  join(process.cwd(), 'app/(dashboard)/owner/estimator/actions.ts'),
+  'utf8',
+)
 const globalStylesSource = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
 
 describe('Estimator production-readiness regressions', () => {
@@ -49,6 +53,12 @@ describe('Estimator production-readiness regressions', () => {
     expect(validateEstimatorSnapshot(estimate, { requireTapeLength: false })).toEqual({ valid: true, issues: [] })
     expect(validateEstimatorSnapshot(estimate).valid).toBe(false)
     expect(calcFullTotals(estimate).totalProductionCostPerM).toBeGreaterThan(0)
+  })
+
+  it('allows a Base saved quality recipe without the production-only tape length', () => {
+    expect(estimatorActionsSource).toMatch(
+      /validateEstimatorSnapshot\(snapshot, \{\s*requireTapeLength: false,?\s*\}\)/,
+    )
   })
 
   it('converts loom output from inches per minute to metres per day', () => {

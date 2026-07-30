@@ -1,4 +1,4 @@
-import { getFactoryCostProfile, getEstimatorTemplates, getFixedWorkersForOverhead } from './actions'
+import { getEstimatorPartyNames, getFactoryCostProfile, getEstimatorTemplates, getFixedWorkersForOverhead } from './actions'
 import EstimatorClient from './EstimatorClient'
 import { Suspense } from 'react'
 import { requireRole } from '@/lib/auth'
@@ -15,13 +15,14 @@ export default async function EstimatorPage() {
     const supabase = await createClient()
 
     // Parallelize server-side data fetching for zero-latency initial load
-    const [profileRes, templatesRes, workersRes, productionModeRes, costRatesRes, organizationRes] = await Promise.all([
+    const [profileRes, templatesRes, workersRes, productionModeRes, costRatesRes, organizationRes, partiesRes] = await Promise.all([
         getFactoryCostProfile(),
         getEstimatorTemplates(),
         canUseProduction ? getFixedWorkersForOverhead() : Promise.resolve({ data: [] }),
         getOrganizationProductionMode(supabase, profile.org_id),
         getCostRates(),
         supabase.from('organizations').select('name').eq('id', profile.org_id).maybeSingle(),
+        getEstimatorPartyNames(),
     ])
 
     const staleDefaultRateNames = ((costRatesRes.data ?? []) as CostRateRow[])
@@ -40,6 +41,7 @@ export default async function EstimatorPage() {
                 productionMode={productionModeRes.productionMode}
                 staleDefaultRateNames={staleDefaultRateNames}
                 organizationName={organizationRes.data?.name ?? ''}
+                initialPartyNames={partiesRes.data ?? []}
             />
         </Suspense>
     )
