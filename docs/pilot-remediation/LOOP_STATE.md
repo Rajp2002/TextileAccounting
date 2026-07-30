@@ -2183,3 +2183,22 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
   migration, deploy the exact commit, confirm the retained failed-checkout
   account again shows ₹8,260 first-year activation, then complete TEST
   Netbanking and reconcile one captured payment plus one active entitlement.
+
+## Base billing P0 production closeout — 2026-07-30
+
+- State: `pass` for `BASE-BILL-RETRY-PRICE` / `BILL-006`.
+- Source and production: `ed6e32a` is on `main`; deployment
+  `dpl_7aJizgchjx96eLG8pQzvCxGw1UhL` is `READY` on
+  `https://textile-accounting.vercel.app`.
+- Database: migration `20260730214000` is applied and linked history is
+  aligned; the post-apply dry-run reports no pending migration.
+- Runtime: the retained failed-checkout account now shows ₹8,260 first-year
+  activation, preserves the earlier failed ₹8,260 Netbanking invoice, and has
+  neither a captured payment nor an active entitlement.
+- Formal scope: promote `BILL-006` from `code_verified` to `pass`. Keep
+  `BILL-003` blocked because the provider mock-bank Success/Failure window
+  remained unavailable to automation; no successful capture or activation is
+  inferred.
+- Next evidence action: complete one Razorpay TEST Netbanking Success flow in
+  a browser that exposes the mock-bank window, then reconcile exactly one
+  captured ₹8,260 payment and exactly one active Base entitlement.

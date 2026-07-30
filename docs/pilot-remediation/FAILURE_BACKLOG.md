@@ -658,3 +658,17 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
   exact deployed commit proves the retained failed account shows ₹8,260,
   TEST Netbanking captures once, and exactly one active Base entitlement is
   present. A popup/tooling failure remains blocked evidence, not pass credit.
+
+### BASE-BILL-RETRY-PRICE — closed on production
+
+- Close the P0 pricing blocker at commit `ed6e32a`, production deployment
+  `dpl_7aJizgchjx96eLG8pQzvCxGw1UhL`, and applied migration
+  `20260730214000`.
+- Exact deployed evidence shows the retained failed account at ₹8,260
+  first-year pricing, with its prior failed ₹8,260 Netbanking payment
+  preserved, no captured payment, and no active entitlement. The unearned
+  ₹2,360 renewal path is no longer offered.
+- Remove `BILL-006` from the active Base blocker set. Retain `BILL-003`
+  independently as blocked until the Razorpay mock-bank Success window is
+  completed and successful capture/activation is reconciled. This tooling
+  limitation does not reopen the corrected failed-checkout pricing defect.

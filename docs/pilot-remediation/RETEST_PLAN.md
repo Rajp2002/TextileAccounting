@@ -828,3 +828,16 @@ Acceptance:
 7. Keep `BILL-003` blocked if the provider popup cannot be completed. Promote
    `BILL-006` and `BILL-003` to pass only with the exact deployed browser and
    database evidence.
+
+#### Result
+
+- Steps 1–4 passed for commit `ed6e32a`, migration `20260730214000`, and READY
+  deployment `dpl_7aJizgchjx96eLG8pQzvCxGw1UhL`.
+- Step 5 remained blocked because the automation harness could not expose
+  Razorpay's mock-bank Success/Failure window after Netbanking selection.
+- The safe negative invariant passed: the prior failed ₹8,260 payment remains
+  failed, the replacement checkout is only `created`, no payment is captured,
+  and no active entitlement exists.
+- Disposition: `BILL-006=pass`; `BILL-003=blocked`. Rerun only the successful
+  provider-popup and post-capture reconciliation portion when a compatible
+  browser session is available.

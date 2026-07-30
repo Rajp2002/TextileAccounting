@@ -2668,4 +2668,27 @@ Date: 2026-07-19 IST. Status: `pass`.
   `BILL-003` to pass before the reviewed migration is applied and the exact
   deployed commit proves ₹8,260 retry pricing, one captured TEST payment, and
   exactly one active Base entitlement.
+
+### Production closeout — 2026-07-30
+
+- Implementation commit `ed6e32a` was pushed to `main`. Vercel deployment
+  `dpl_7aJizgchjx96eLG8pQzvCxGw1UhL` reached `READY` and serves the canonical
+  production alias `https://textile-accounting.vercel.app`.
+- Reviewed migration
+  `20260730214000_reject_unearned_billing_renewal_pricing.sql` was applied to
+  the linked production database. Local/remote migration history aligns and a
+  follow-up dry-run reports the remote database is up to date.
+- The retained failed-checkout account displayed the preserved failed
+  Netbanking invoice at ₹8,260, `₹8,260 / first year`, and
+  `Pay ₹8,260 & Activate`. It did not display the former ₹2,360 renewal offer.
+- Opening the replacement Razorpay TEST checkout created a new `created`
+  subscription/order alongside the prior `halted` attempt. Reconciliation
+  confirmed the prior payment remains `failed`, there is no captured payment,
+  and there is no active entitlement.
+- `BASE-BILL-RETRY-PRICE` is closed and `BILL-006` is promoted to `pass` for
+  truthful failed-payment state, correct retry pricing, and absence of false
+  access. `BILL-003` remains `blocked`: the automation harness could not expose
+  Razorpay's mock-bank Success/Failure window, so successful capture and
+  activation are not claimed.
+- The isolated QA account and prefixed records remain retained as requested.
 - Data safety: only reviewed migration `20260721183000` and exact prefixed disposable QA records were permitted. Both the main `BASEGO-1784662022802-4412AD` fixture and failed-signup `BASEGO-20260722-VK6WBT MILL` reconciled organizations, profiles, subscriptions where applicable, and Auth users to zero.
