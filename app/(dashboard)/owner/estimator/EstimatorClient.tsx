@@ -984,7 +984,7 @@ function RowCard({
                     </span>
                     <ChevronUp className="h-4 w-4 text-[var(--color-muted)]" />
                     {canRemove && (
-                        <button onClick={onRemove} className="rounded-md p-1 text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)]">
+                        <button aria-label={`Remove ${title}`} title={`Remove ${title}`} onClick={onRemove} className="rounded-md p-1 text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)]">
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     )}

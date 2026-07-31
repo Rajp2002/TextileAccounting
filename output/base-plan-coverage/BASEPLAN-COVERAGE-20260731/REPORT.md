@@ -13,6 +13,8 @@
 
 The current functional lifecycle pass is strong: yarn rates, saved qualities, costing versions, exports, settings, data export, and Base entitlement boundaries behaved correctly in the retained QA tenant. The prior P0 billing retry-pricing defect is closed by the deployed fix. The remaining base-rate hardening was implemented and deployed: server-side non-negative/range validation, unique-name conflict handling with inline feedback, and optimistic concurrency protection for stale edits. User-provided Razorpay evidence shows the INR 8,260 first-year checkout, the mock-bank success path, a successful Netbanking payment, an active Weavly Estimator subscription, and estimator access. Authoritative payment/entitlement reconciliation should still be retained as an operational release artifact.
 
+This P1 workstream added production-standard coverage for blend add/remove, reversible optional-section toggles, and 390px settings operation. It also identified and locally fixed two reachability gaps: the Base quality-library view did not expose costing archive/restore controls, and the mobile rate card did not expose Archive. Those local changes are reviewable but are not yet deployed, so the live production result for those two controls remains a follow-up until the next approved push. The in-app browser could not provide a clean two-tab stale-edit capture because background-tab actions were routed through the active tab; the deployed database guard and focused tests remain the authoritative concurrency proof.
+
 ## Current run scorecard
 
 | Area | Result | Evidence |
@@ -28,6 +30,11 @@ The current functional lifecycle pass is strong: yarn rates, saved qualities, co
 | Billing purchase/retry gate | PASS | Retry-price fix is closed; user-provided Razorpay evidence shows INR 8,260 Netbanking success, active Base entitlement, and estimator access. |
 | Production deployment alignment | PASS | Migration `20260731123000_version_base_rate_updates.sql` applied; matching production deployment `dpl_3RhPZYDYUS2FYqwjrQAd2XBS67TV` is READY and aliased. |
 | Base-rate hardening | PASS | Negative/range guards, duplicate conflict handling, inline save errors, and stale-edit protection are deployed and covered by focused tests. |
+| Blend add/remove coverage | PASS | Production estimator added and removed warp and weft blend rows; the last remaining row had no remove action; focused tests cover the reducer guards. |
+| Optional section toggle coverage | PASS | At 390px, Winding, Processing, and Finishing were enabled, saved, reloaded through the estimator, then restored to the original off/off/off state. |
+| Costing archive/restore | P1 gap identified and locally fixed | The live Base quality-library view exposed the Archived filter but no archive/restore action. Local changes add record-level Archive/Restore controls; not deployed in this turn. |
+| Mobile rate/settings checks | PARTIAL | Settings controls and Save Estimator Defaults worked at 390px. Live mobile rate cards lacked Archive; local mobile Archive action added; not deployed in this turn. |
+| Clean browser two-tab proof | PARTIAL / harness-limited | Two tabs loaded the same QA tenant, but the in-app browser could not reliably focus the background tab for the stale-save action. No false pass is claimed. |
 
 ## User-provided Razorpay evidence
 
@@ -48,13 +55,14 @@ The report includes only the safe visual evidence files `plan-price.jpg`, `mock-
 - Add rate works with name, warp/weft use, current rate, effective date, review cadence, source, and notes.
 - Updating the current value preserves the previous value and creates an auditable history entry. The QA rate moved from INR 123.45/kg to INR 125.00/kg.
 - The linked yarn name is intentionally locked in the edit surface: “This name is locked because it matches yarn layers in saved qualities.” A user cannot rename a linked yarn in place.
+- The explicit policy is: add a replacement rate with the new name, then update saved qualities intentionally; historical costing snapshots remain unchanged. The clearer page and edit-sheet policy copy is implemented locally and awaits deployment.
 - The user-visible delete equivalent is **Archive Yarn Rate**, not hard delete. The archived rate disappears from the active rate book while saved quality and costing snapshots remain intact.
 - Read-only reconciliation found one archived QA rate and two corresponding history rows.
 - Negative and extreme rate values were rejected without creating a row or partial history.
 - A duplicate same-category name was blocked by the server uniqueness policy and surfaced through the save error path; no duplicate row was created.
 - The deployed edit path carries `updated_at` and the database wrapper rejects a stale or archived edit instead of overwriting a newer value.
 
-**Product decision required:** if Base users must rename a yarn, the product needs an explicit “replace linked yarn name” workflow or a documented create-new-rate migration path. The current behavior is safe, but it does not satisfy a literal “change yarn name” requirement.
+**Policy status:** linked-yarn renames are intentionally create-new-rate operations, not in-place edits. If a guided replacement workflow is later required, it can be added without changing historical snapshots; the current safe behavior is now documented in local UI copy.
 
 ### Saved Fabric Qualities
 
@@ -73,6 +81,7 @@ The report includes only the safe visual evidence files `plan-price.jpg`, `mock-
 - Snapshot comparison showed quantity 5,000 m to 6,000 m, suggested price INR 22.98/m to INR 23.04/m, and stable 10.0% margin.
 - Start From showed the local-draft replacement confirmation and, after explicit overwrite, opened an independent save-mode draft.
 - The UI keeps historical snapshots available after quality deletion and yarn archival.
+- The live Base quality-library view currently has no record-level Archive/Restore button even though its filter and server action exist. This P1 gap was reproduced with a disposable `BASEP1-20260731-1709-E4E1` costing, then locally fixed by adding Archive/Restore actions to the latest snapshot and history rows. The disposable costing and its linked template were removed by exact tenant-scoped cleanup after reconciliation; the local fix is not deployed yet.
 
 ### Exports and settings
 
@@ -128,7 +137,7 @@ The matrix below is the recommended production-standard acceptance pack. “Curr
 | EST-002 | Blank required fields | Save/export disabled or clear validation; no partial quote | Current pass | P0 |
 | EST-003 | Negative and extreme inputs | Reject unsafe values; no NaN/Infinity or overflow | Current pass - runtime + server guard | P0 |
 | EST-004 | Waste/crimp boundary | 0 means explicit zero; blank uses default; percentages bounded | Retest pass | P0 |
-| EST-005 | Blend component add/remove | Totals update; removing last component leaves valid state | Next gate | P1 |
+| EST-005 | Blend component add/remove | Totals update; removing last component leaves valid state | Current run pass; focused tests pass | P1 |
 | EST-006 | Loom/wage boundary | Formula and manual modes agree; missing wage is guarded | Retest pass | P0 |
 | EST-007 | Sizing in-house vs outsourced | Only intended cost changes; no hidden duplicate charge | Retest pass | P0 |
 | EST-008 | Overhead override | Direct override is visible and included exactly once | Retest pass | P0 |
@@ -139,25 +148,25 @@ The matrix below is the recommended production-standard acceptance pack. “Curr
 | EST-013 | Compare snapshots | Selected versions show accurate commercial deltas | Current pass | P1 |
 | EST-014 | Start From costing | Copy enters save mode and creates independent lineage only on save | Current pass | P0 |
 | EST-015 | Refresh/draft recovery | Local draft is explicit; restore/keep/overwrite choices are clear | Current pass | P1 |
-| EST-016 | Delete/archive saved costing | Retention policy and UI action are explicit; no accidental history loss | Non-blocking next gate - Base archive surface not exposed; snapshots retained | P1 |
+| EST-016 | Delete/archive saved costing | Retention policy and UI action are explicit; no accidental history loss | Live gap reproduced; local archive/restore controls added, not deployed | P1 |
 | EXP-001 | Internal cost sheet | Detailed costs, assumptions, margin, break-even, profit included | Current pass | P0 |
 | EXP-002 | Customer quotation | Internal cost and margin hidden; final commercial data correct | Current pass | P0 |
 | EXP-003 | Export refresh boundary | Latest fixes/data used after refresh; no stale service-worker export | Retest pass | P1 |
 | EXP-004 | Organization data export | Tenant-only data; secrets/join codes excluded or redacted | Current pass | P0 |
 | SET-001 | Business name edit/restore | Save is explicit and value persists across reload | Current pass | P1 |
 | SET-002 | Cost default edit/restore | Target margin/rates/toggles persist and apply to new costing | Current pass for margin | P0 |
-| SET-003 | Optional section toggles | Toggle changes are reversible and do not corrupt saved snapshots | Non-blocking next gate | P1 |
+| SET-003 | Optional section toggles | Toggle changes are reversible and do not corrupt saved snapshots | Current run pass: enabled, saved, estimator-verified, restored | P1 |
 | SET-004 | Saved quality manager | List, update, delete, and reload agree with estimator surface | Current pass via estimator; settings list observed | P1 |
 | RESP-001 | 390px mobile estimator | No horizontal overflow; critical actions remain usable | Retest pass | P1 |
-| RESP-002 | Mobile rate book/settings | Forms and dialogs remain operable at 390px | Non-blocking next gate | P1 |
+| RESP-002 | Mobile rate book/settings | Forms and dialogs remain operable at 390px | Settings pass; live rate Archive gap locally fixed, not deployed | P1 |
 | OBS-001 | Console errors/warnings | No new errors or warning bursts during core flows | Current pass | P1 |
 | OBS-002 | Tenant database reconciliation | Browser state, persisted rows, versions, and entitlement agree | Current pass | P0 |
 
 ## Production release gates
 
 1. Retain authoritative reconciliation for the user-provided successful payment: one captured INR 8,260 payment and exactly one active Base entitlement. This is an operational evidence requirement, not a release blocker for the already-proven pilot account.
-2. Decide and document the linked-yarn rename policy. If renaming is needed, build a replacement workflow; if not, make the locked-name rule prominent in Base help text.
-3. Expand P1 breadth coverage for optional estimator toggles, blend add/remove, saved-costing archive/restore, and 390px rate/settings dialogs.
+2. Deploy the local linked-yarn policy copy and mobile rate Archive action after review; keep the create-new-rate replacement rule explicit.
+3. Deploy and re-run the Base quality-library Archive/Restore controls, then verify active/archived filters and exact persisted state.
 4. Capture a clean browser-native two-tab stale-edit proof when the automation harness supports native dialogs and stable tab lifecycle. The database guard is already deployed and covered by focused tests.
 
 ## Billing remediation closeout
@@ -179,5 +188,7 @@ The separate billing remediation thread closed `BASE-BILL-RETRY-PRICE` on the de
 - User-provided Razorpay evidence: `user-evidence/plan-price.jpg`, `user-evidence/mock-bank.jpg`, `user-evidence/billing-active.jpg`, `user-evidence/estimator-access.jpg`
 - Latest pilot retest report: `../../pilot-readiness/BASEPILOTRETEST-20260730-2027-68W7/REPORT.md`
 - Canonical workflow inventory: `../../outputs/base-plan-phase-1-workflow-verification/canonical-workflow-inventory.md`
+- P1 source/test changes awaiting deployment: `app/(dashboard)/owner/rates/RatesClient.tsx`, `app/(dashboard)/owner/estimator/EstimatorClient.tsx`, `app/(dashboard)/owner/quotes/QuotesClient.tsx`, `components/settings/factory-cost-profile.tsx`, and `__tests__/base-p1-coverage.test.ts`
+- Exact disposable cleanup: `BASEP1-20260731-1709-E4E1` costing, template, rate, and rate history reconciled to zero in the retained QA tenant.
 
 Disposable `BASEEDGE-20260731-0401-HL4Y` QA rates, qualities, and quotes were removed after reconciliation; post-cleanup prefix counts were zero. No passwords or private credentials are included in this report.

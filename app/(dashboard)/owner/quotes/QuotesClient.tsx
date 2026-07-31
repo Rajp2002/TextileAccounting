@@ -291,6 +291,7 @@ function SavedQualityLibraryView({
     onOpen: (quote: QuoteRow) => void
     onStartFrom: (quote: QuoteRow) => void
     onExport: (quote: QuoteRow) => void
+    onToggleArchived: (quote: QuoteRow) => void
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
 }) {
     return (
@@ -398,6 +399,10 @@ function SavedQualityLibraryView({
                                                         <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id}>Open & Update</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Start From</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> Export</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id}>
+                                                            {latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                                                            {latest.is_archived ? 'Restore' : 'Archive'}
+                                                        </Button>
                                                     </div>
                                                 </div>
 
@@ -477,7 +482,7 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3 font-mono font-bold text-orange-700">₹{getSuggestedSellingPricePerM(record).toFixed(2)}/m</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{getActualMarginPct(record).toFixed(1)}%</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
-                                                                <td className="py-3 text-right"><Button variant="ghost" size="sm" onClick={() => onOpen(record)}>Open</Button></td>
+                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1"><Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id}>{record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {record.is_archived ? 'Restore' : 'Archive'}</Button></div></td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -886,6 +891,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onOpen={quote => handleRestore(quote, 'edit')}
                     onStartFrom={quote => handleRestore(quote, 'duplicate')}
                     onExport={setQuoteToExport}
+                    onToggleArchived={quote => { void handleLibraryState(quote, { isArchived: !quote.is_archived }) }}
                     onOpenUsage={openAppliedProduction}
                 />
             ) : !canUseProduction || !canUseQuotationWorkflow ? (
