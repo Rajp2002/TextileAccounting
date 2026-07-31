@@ -113,6 +113,33 @@ function validateExpectedTimestamp(value: string | undefined, label: string): st
     return null
 }
 
+function buildSavedQualityUpdatePayload(estimate: EstimateState) {
+    const firstWarp = estimate.warpRows[0]
+    const firstWeft = estimate.weftRows[0]
+
+    return {
+        warp_rows: estimate.warpRows,
+        weft_rows: estimate.weftRows,
+        per_pick_cost_paise: estimate.perPickCostPaisa,
+        tape_length_m: estimate.tapeLengthM,
+        warp_crimp_pct: estimate.warpCrimpPct ?? 0,
+        yarn_shortage_pct: estimate.yarnShortagePct ?? 0,
+        overhead_override_per_m: estimate.overheadOverridePerM ?? null,
+        loom_type: estimate.loomType ?? null,
+        loom_rpm: estimate.loomRpm ?? null,
+        loom_power_kw: estimate.loomPowerKw ?? null,
+        sizing_mode: estimate.sizingMode,
+        hours_per_shift: estimate.hoursPerShift,
+        yarn_denier: Math.round(firstWarp ? getEffectiveYarnDenier(firstWarp) : 75),
+        calculated_yarn_denier: firstWarp ? getEffectiveYarnDenier(firstWarp) : 75,
+        beam_ends: firstWarp?.beamEnds ?? 3200,
+        ppi: Math.round(firstWeft?.picks ?? 68),
+        reed_space: firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
+        weft_denier: firstWeft ? getEffectiveYarnDenier(firstWeft) : 75,
+        default_yarn_rate: firstWarp?.yarnRate ?? 107,
+    }
+}
+
 function validateClientRequestId(value: string): string | null {
     return UUID_PATTERN.test(value)
         ? null
@@ -263,6 +290,7 @@ export async function upsertFactoryCostProfile(data: {
     yarn_shortage_pct?:      number
     warp_crimp_pct?:         number
     is_configured?:          boolean
+    expectedUpdatedAt?:       string
 }) {
     const validationError = getFirstEstimatorValidationMessage(validateFactoryCostProfile(data))
     if (validationError) return { error: validationError }
@@ -275,20 +303,44 @@ export async function upsertFactoryCostProfile(data: {
         // Non-fatal: authenticated writes still fall back to auth.uid() in the audit trigger.
     }
 
-    const { error } = await supabase
-        .from('factory_cost_profile')
-        .upsert({
-            factory_id: profile.org_id,
-            ...data,
-            updated_at: new Date().toISOString(),
-        }, { onConflict: 'factory_id' })
+    const nextUpdatedAt = new Date().toISOString()
+    const { expectedUpdatedAt, ...profileData } = data
+    let updatedAt: string | null = null
 
-    if (error) return { error: error.message }
+    if (expectedUpdatedAt) {
+        const timestampError = validateExpectedTimestamp(expectedUpdatedAt, 'The factory baseline')
+        if (timestampError) return { error: timestampError }
+
+        const { data: updated, error } = await supabase
+            .from('factory_cost_profile')
+            .update({ ...profileData, updated_at: nextUpdatedAt })
+            .eq('factory_id', profile.org_id)
+            .eq('updated_at', expectedUpdatedAt)
+            .select('updated_at')
+            .maybeSingle()
+
+        if (error) return { error: error.message }
+        if (!updated) return { error: 'The factory baseline changed in another tab. Refresh it before saving again.' }
+        updatedAt = updated.updated_at
+    } else {
+        const { data: saved, error } = await supabase
+            .from('factory_cost_profile')
+            .upsert({
+                factory_id: profile.org_id,
+                ...profileData,
+                updated_at: nextUpdatedAt,
+            }, { onConflict: 'factory_id' })
+            .select('updated_at')
+            .single()
+
+        if (error) return { error: error.message }
+        updatedAt = saved.updated_at
+    }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
     revalidatePath('/owner', 'layout')
-    return { success: true }
+    return { success: true, updatedAt }
 }
 
 // ─── Estimator Templates ──────────────────────────────────────────────────────
@@ -557,15 +609,15 @@ export async function updateFabricTemplate(data: {
 
     const timestampError = validateExpectedTimestamp(data.expectedUpdatedAt, 'This saved quality')
     if (timestampError) return { error: timestampError }
-    const nameError = validateTemplateName(data.name)
-    if (nameError) return { error: nameError }
     const recipeError = validateTemplateRecipe(data)
     if (recipeError) return { error: recipeError }
 
     const { data: updated, error } = await supabase
         .from('estimator_templates')
         .update({
-            name:                normalizeTemplateName(data.name),
+            // Saved Quality names are stable identities. Use the explicit
+            // rename action only for a typo correction; a different fabric
+            // construction must be saved as a new quality.
             warp_rows:           data.warpRows,
             weft_rows:           data.weftRows,
             per_pick_cost_paise: data.perPickCostPaisa,
@@ -687,6 +739,8 @@ export async function saveEstimatorQuoteV3(params: {
     sourceQuoteId?:     string
     expectedSourceUpdatedAt?: string
     templateId?:         string
+    expectedTemplateUpdatedAt?: string
+    updateSavedQuality?: boolean
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -808,6 +862,45 @@ export async function saveEstimatorQuoteV3(params: {
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
     }
 
+    if (params.updateSavedQuality) {
+        if (newRecordKind !== 'costing') {
+            return { error: 'Only a Cost Estimate can update a Saved Quality.' }
+        }
+        if (!params.templateId) {
+            return { error: 'Select a Saved Quality before updating its recipe.' }
+        }
+        const timestampError = validateExpectedTimestamp(params.expectedTemplateUpdatedAt, 'The Saved Quality')
+        if (timestampError) return { error: timestampError }
+
+        // The RPC updates both rows in one transaction. A costing version is
+        // never used as a substitute for the reusable quality record.
+        const { data: combined, error: combinedError } = await supabase.rpc(
+            'save_estimator_costing_revision_with_quality',
+            {
+                p_quote_payload: quotePayload,
+                p_source_quote_id: params.sourceQuoteId ?? null,
+                p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
+                p_template_id: params.templateId,
+                p_expected_template_updated_at: params.expectedTemplateUpdatedAt,
+                p_template_payload: buildSavedQualityUpdatePayload(estimate),
+            },
+        )
+
+        if (combinedError) return { error: combinedError.message }
+        if (!combined || combined.success !== true) {
+            return { error: combined?.error ?? 'The costing and Saved Quality were not saved.' }
+        }
+        return {
+            success: true,
+            quoteId: combined.quoteId,
+            updatedAt: combined.updatedAt,
+            createdAt: combined.createdAt,
+            versionNumber: combined.versionNumber,
+            qualityUpdated: true,
+            idempotentReplay: combined.idempotentReplay,
+        }
+    }
+
     if (params.sourceQuoteId) {
         const timestampError = validateExpectedTimestamp(params.expectedSourceUpdatedAt, 'The quote being edited')
         if (timestampError) return { error: timestampError }
@@ -830,6 +923,24 @@ export async function saveEstimatorQuoteV3(params: {
             return { error: 'Party quotations are unavailable in Market Run only mode.' }
         }
         if (shouldCreateImmutableRevision(sourceRecordKind, source.status, Boolean(source.order_id))) {
+            if (sourceRecordKind === 'costing') {
+                const { data: latestCosting, error: latestCostingError } = await supabase
+                    .from('estimator_quotes')
+                    .select('id')
+                    .eq('org_id', profile.org_id)
+                    .eq('record_kind', 'costing')
+                    .eq('costing_group_id', source.costing_group_id ?? source.id)
+                    .order('version_number', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle()
+
+                if (latestCostingError) return { error: latestCostingError.message }
+                if (latestCosting && latestCosting.id !== source.id) {
+                    return { error: 'A newer costing version already exists. Reload it before saving again.' }
+                }
+            }
+
             const { data: version, error: versionError } = await supabase
                 .from('estimator_quotes')
                 .insert({
@@ -908,6 +1019,9 @@ export async function saveEstimatorQuoteV3(params: {
             if (existing) {
                 return { success: true, quoteId: existing.id, updatedAt: existing.updated_at, idempotentReplay: true }
             }
+        }
+        if (params.sourceQuoteId && newRecordKind === 'costing') {
+            return { error: 'A newer costing version already exists. Reload it before saving again.' }
         }
         return { error: error.message }
     }
