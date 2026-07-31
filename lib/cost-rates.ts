@@ -14,9 +14,12 @@ export type CostRateRow = {
     notes: string | null
     apply_as_default: boolean
     updated_at: string
+    is_active?: boolean
+    /** A discovered rate is persisted for convenience, but is not trusted until the owner saves/reviews it. */
+    is_reviewed?: boolean
 }
 
-export type RateReviewStatus = 'current' | 'due_soon' | 'overdue'
+export type RateReviewStatus = 'needs_review' | 'current' | 'due_soon' | 'overdue'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -27,9 +30,10 @@ export function getRateReviewDueDate(rate: Pick<CostRateRow, 'last_reviewed_at' 
 }
 
 export function getRateReviewStatus(
-    rate: Pick<CostRateRow, 'last_reviewed_at' | 'review_interval_days'>,
+    rate: Pick<CostRateRow, 'last_reviewed_at' | 'review_interval_days' | 'is_reviewed'>,
     now = new Date(),
 ): RateReviewStatus {
+    if (rate.is_reviewed === false) return 'needs_review'
     const dueAt = getRateReviewDueDate(rate).getTime()
     const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
     if (dueAt < today) return 'overdue'

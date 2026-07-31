@@ -23,7 +23,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { convertAcceptedQuoteToOrder, deleteEstimatorQuote, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
+import { convertAcceptedQuoteToOrder, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast } from 'sonner'
 import { addDays, format } from 'date-fns'
 import { getCurrentTimestampMs } from '@/lib/time'
@@ -36,7 +36,6 @@ import {
     Package,
     AlertTriangle,
     Copy,
-    Trash2,
     XCircle,
     Search,
     Download,
@@ -325,6 +324,7 @@ function SavedQualityLibraryView({
                                         <span className="flex flex-wrap items-center gap-2">
                                             <span className="truncate text-base font-black text-slate-950">{group.name}</span>
                                             {group.template && <Badge variant="outline" className="border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700">Saved quality</Badge>}
+                                            {group.template?.is_active === false && <Badge variant="outline" className="border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-600">Archived · read-only</Badge>}
                                             {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
                                         </span>
                                         <span className="mt-1 block text-xs text-slate-500">
@@ -398,7 +398,7 @@ function SavedQualityLibraryView({
                                                         <p className="mt-1 text-xs text-slate-500">Snapshot v{Number(latest.version_number ?? 1)} · {format(new Date(latest.created_at), 'MMM d, yyyy')}</p>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id}>Open & Update</Button>
+                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id}>Open & Update</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Start From</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> Export</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id}>
@@ -484,7 +484,7 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3 font-mono font-bold text-orange-700">₹{getSuggestedSellingPricePerM(record).toFixed(2)}/m</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{getActualMarginPct(record).toFixed(1)}%</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
-                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1"><Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id}>{record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {record.is_archived ? 'Restore' : 'Archive'}</Button></div></td>
+                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id}>{record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {record.is_archived ? 'Restore' : 'Archive'}</Button></div></td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -511,7 +511,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [quoteToAccept, setQuoteToAccept] = useState<QuoteRow | null>(null)
     const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
     const [restoreMode, setRestoreMode] = useState<'edit' | 'duplicate'>('edit')
-    const [quoteToDelete, setQuoteToDelete] = useState<QuoteRow | null>(null)
     const [existingDraftForRestore, setExistingDraftForRestore] = useState<EstimatorAutosaveData<QuoteDraftState> | null>(null)
     const [convertMeters, setConvertMeters] = useState('')
     const [convertDeadline, setConvertDeadline] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
@@ -545,7 +544,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         const labelIndex = new Map<string, string>()
 
         if (!showArchived) {
-            for (const template of initialTemplates.filter(item => item.is_active !== false)) {
+            for (const template of initialTemplates.filter(item => Boolean(item.is_active) === !showArchived)) {
                 const key = `template:${template.id}`
                 groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at, currentRecipeCostPerM: null })
                 labelIndex.set(normalizeQualityKey(template.name), key)
@@ -736,20 +735,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             toast.error('Failed to restore snapshot')
             console.error(e)
         }
-    }
-
-    const handleDeleteQuote = async () => {
-        if (!quoteToDelete) return
-        setUpdatingId(quoteToDelete.id)
-        const res = await deleteEstimatorQuote(quoteToDelete.id, quoteToDelete.updated_at)
-        setUpdatingId(null)
-        if (res.error) {
-            toast.error(res.error)
-            return
-        }
-        setQuotes(previous => previous.filter(quote => quote.id !== quoteToDelete.id))
-        setQuoteToDelete(null)
-        toast.success(isStandaloneCosting(quoteToDelete.record_kind) ? 'Costing deleted' : 'Quotation deleted')
     }
 
     const handleLibraryState = async (quote: QuoteRow, changes: { isArchived?: boolean; isFavorite?: boolean }) => {
@@ -951,7 +936,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <td className="px-4 py-4 text-xs font-medium text-slate-500">{format(new Date(quote.updated_at), 'MMM d, yyyy')}<br />{format(new Date(quote.updated_at), 'h:mm a')}</td>
                                             <td className="px-4 py-4">
                                                 <div className="flex justify-end gap-1">
-                                                    <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-9 text-xs font-semibold text-blue-700">Open</Button>
+                                                    {!quote.is_archived && <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-9 text-xs font-semibold text-blue-700">Open</Button>}
                                                     <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
                                                         <Copy className="h-3.5 w-3.5" /> Use as Starting Point
                                                     </Button>
@@ -964,11 +949,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     <Button variant="ghost" size="icon" onClick={() => handleLibraryState(quote, { isArchived: !quote.is_archived })} className="h-9 w-9 text-slate-500" aria-label={quote.is_archived ? `Restore ${quote.quality_label || 'costing'}` : `Archive ${quote.quality_label || 'costing'}`}>
                                                         {quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                                                     </Button>
-                                                    {quote.status === 'draft' && (
-                                                        <Button variant="ghost" size="icon" onClick={() => setQuoteToDelete(quote)} className="h-9 w-9 text-red-600" aria-label={`Delete ${quote.quality_label || 'costing'}`}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -1024,7 +1004,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             </div>
                                         </div>
                                         <div className="mt-3 grid grid-cols-3 gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-10 text-xs font-semibold text-blue-700">Open</Button>
+                                            {!quote.is_archived && <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-10 text-xs font-semibold text-blue-700">Open</Button>}
                                             <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Use as Starting Point" className="h-10 text-xs font-semibold">
                                                 <Copy className="h-3.5 w-3.5" /> Start From
                                             </Button>
@@ -1040,11 +1020,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 {quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {quote.is_archived ? 'Restore' : 'Archive'}
                                             </Button>
                                         </div>
-                                        {quote.status === 'draft' && (
-                                            <Button variant="ghost" size="sm" onClick={() => setQuoteToDelete(quote)} className="mt-2 h-9 w-full text-xs text-red-600" aria-label={`Delete ${quality}`}>
-                                                <Trash2 className="h-3.5 w-3.5" /> Delete costing
-                                            </Button>
-                                        )}
                                     </CardContent>
                                 </Card>
                             )
@@ -1119,8 +1094,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     variant="ghost"
                                                     className="h-11 px-3 text-xs font-bold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 lg:h-7 lg:px-2"
                                                     onClick={() => handleRestore(quote, 'edit')}
+                                                    disabled={quote.is_archived}
                                                 >
-                                                    {isCosting ? 'Open & Update' : ((quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate')}
+                                                    {quote.is_archived ? 'Archived · restore to edit' : isCosting ? 'Open & Update' : ((quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate')}
                                                     <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
                                                 </Button>
                                                 <Button
@@ -1143,17 +1119,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <Button variant="ghost" size="icon" aria-label={`${quote.is_archived ? 'Restore' : 'Archive'} ${quote.quality_label || 'record'}`} onClick={() => void handleLibraryState(quote, { isArchived: !quote.is_archived })} className="h-9 w-9 text-slate-500">
                                                     {quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                                                 </Button>
-                                                {!linkedOrder && (isCosting || quote.status === 'draft' || quote.status === 'rejected') && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        className="h-11 px-3 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 lg:h-7 lg:px-2"
-                                                        onClick={() => setQuoteToDelete(quote)}
-                                                        disabled={updatingId === quote.id}
-                                                    >
-                                                        <Trash2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                                                        Delete
-                                                    </Button>
-                                                )}
                                             </div>
                                         </div>
 
@@ -1452,44 +1417,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={!!quoteToDelete} onOpenChange={(open) => !open && setQuoteToDelete(null)}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Trash2 className="h-5 w-5 text-red-600" />
-                            {quoteToDelete && isStandaloneCosting(quoteToDelete.record_kind) ? 'Delete this Costing?' : 'Delete this Quotation?'}
-                        </DialogTitle>
-                        <DialogDescription className="text-sm leading-relaxed text-slate-500">
-                            {quoteToDelete && !isStandaloneCosting(quoteToDelete.record_kind)
-                                ? 'This permanently removes the unconverted draft or rejected Quotation. Accepted, sent, and converted records remain protected.'
-                                 : 'This permanently removes this saved costing. Saved qualities and other costing snapshots are not affected.'}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {quoteToDelete && (
-                        <div className="rounded-xl border border-red-200 bg-red-50 p-3">
-                            <p className="font-black text-red-950">{isStandaloneCosting(quoteToDelete.record_kind) ? (quoteToDelete.quality_label || 'Untitled costing') : (quoteToDelete.party_name || 'Customer not set')}</p>
-                            <p className="mt-1 text-xs font-bold uppercase tracking-widest text-red-700">
-                                {quoteToDelete.quality_label || 'No quality label'}
-                            </p>
-                        </div>
-                    )}
-                    <DialogFooter className="flex gap-2 justify-end pt-2">
-                        <Button variant="ghost" onClick={() => setQuoteToDelete(null)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleDeleteQuote}
-                            disabled={!quoteToDelete || updatingId === quoteToDelete.id}
-                        >
-                            {quoteToDelete && updatingId === quoteToDelete.id
-                                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                : <Trash2 className="mr-2 h-4 w-4" />}
-                            {quoteToDelete && isStandaloneCosting(quoteToDelete.record_kind) ? 'Delete Costing' : 'Delete Quotation'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }

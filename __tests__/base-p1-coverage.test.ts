@@ -12,7 +12,7 @@ describe('Base P1 production coverage contracts', () => {
         expect(rates).toContain('Linked-yarn rename policy:')
         expect(rates).toContain('add a replacement rate, then update saved qualities deliberately')
         expect(rates).toContain('disabled={Boolean(draft.id)}')
-        expect(rates).toContain('aria-label={`Archive ${rate.name}`}')
+        expect(rates).toContain("aria-label={`${archived ? 'Restore' : 'Archive'} ${rate.name}`}")
         expect(rates).toContain('Archive rate')
     })
 

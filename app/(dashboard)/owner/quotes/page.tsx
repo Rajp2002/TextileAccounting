@@ -12,7 +12,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         : undefined
     const [{ data: quotes }, { data: templates }, { data: costProfile }, auth] = await Promise.all([
         getEstimatorQuotes(),
-        getEstimatorTemplates(),
+        getEstimatorTemplates({ includeArchived: true }),
         getFactoryCostProfile(),
         getAuthenticatedUser(),
     ])

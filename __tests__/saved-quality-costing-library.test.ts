@@ -12,7 +12,7 @@ describe('saved quality costing library', () => {
     const page = read('app/(dashboard)/owner/quotes/page.tsx')
     const client = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
 
-    expect(page).toContain('getEstimatorTemplates()')
+    expect(page).toContain('getEstimatorTemplates({ includeArchived: true })')
     expect(page).toContain('initialTemplates={templates ?? []}')
     expect(client).toContain('Latest costing breakdown')
     expect(client).toContain('Applied production')

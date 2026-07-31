@@ -15,6 +15,7 @@ import {
     Loader2,
     Sparkles,
     BookmarkPlus,
+    Archive,
     Layers,
     Plus,
     Trash2,
@@ -38,6 +39,7 @@ import {
     Minus,
     ReceiptText,
     FileDown,
+    Pencil,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -76,7 +78,6 @@ import {
     saveAsFabricTemplate,
     saveEstimatorQuoteV3,
     getFixedWorkersForOverhead,
-    deleteTemplate,
     updateTemplateRates,
     updateFabricTemplate,
     getLastQuoteForParty,
@@ -84,6 +85,8 @@ import {
     upsertFactoryCostProfile,
     createMarketRunFromEstimator,
     startPartyOrderFromEstimator,
+    archiveTemplate,
+    renameTemplate,
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
 import { toast } from 'sonner'
@@ -1495,6 +1498,11 @@ export default function EstimatorClient({
     const autoRestoredDraftSavedAtRef = useRef<number | null>(null)
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
+    const [renameTpl, setRenameTpl] = useState<EstimatorTemplate | null>(null)
+    const [renameValue, setRenameValue] = useState('')
+    const [renameError, setRenameError] = useState<string | null>(null)
+    const [renamingTpl, setRenamingTpl] = useState(false)
+    const [showDiscardDraft, setShowDiscardDraft] = useState(false)
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
         targetMode: 'quote' | 'market'
@@ -2093,14 +2101,35 @@ export default function EstimatorClient({
         toast.success(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`)
     }
 
-    const handleDeleteTemplate = async (template: EstimatorTemplate) => {
+    const handleRenameTemplate = async () => {
+        if (!renameTpl) return
+        setRenamingTpl(true)
+        setRenameError(null)
+        const res = await renameTemplate(renameTpl.id, renameValue, renameTpl.updated_at)
+        setRenamingTpl(false)
+        if (res.error) {
+            setRenameError(res.error)
+            return
+        }
+        const normalizedName = renameValue.trim().replace(/\s+/g, ' ')
+        const refreshed = { ...renameTpl, name: normalizedName, updated_at: res.updatedAt ?? renameTpl.updated_at }
+        setTemplates(previous => previous.map(template => template.id === renameTpl.id ? refreshed : template))
+        if (appliedTemplate?.id === renameTpl.id) {
+            setAppliedTemplate(refreshed)
+            setQualityLabel(normalizedName)
+        }
+        setRenameTpl(null)
+        toast.success('Quality renamed. Existing costing snapshots keep their original names.')
+    }
+
+    const handleArchiveTemplate = async (template: EstimatorTemplate) => {
         setDeletingTpl(template.id)
-        const res = await deleteTemplate(template.id, template.updated_at)
+        const res = await archiveTemplate(template.id, template.updated_at)
         setDeletingTpl(null)
         if (res.error) { toast.error(res.error); return }
         setTemplates(prev => prev.filter(t => t.id !== template.id))
         if (appliedTemplate?.id === template.id) setAppliedTemplate(null)
-        toast.success(t('estimator.quality.deleted'))
+        toast.success('Quality archived. It remains available in History and can be restored.')
     }
 
     const handleSaveQuote = async (
@@ -2469,8 +2498,9 @@ export default function EstimatorClient({
                             {draft.sourceQuoteId ? 'Load Specs' : 'Restore'}
                         </button>
                         <button
-                            onClick={dismissDraft}
+                            onClick={() => setShowDiscardDraft(true)}
                             className="ml-1 text-amber-500 hover:text-amber-700"
+                            aria-label="Dismiss unsaved draft"
                         ><X className="h-4 w-4" /></button>
                     </div>
                 </div>
@@ -2937,18 +2967,26 @@ export default function EstimatorClient({
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                             </button>
                                             <button
+                                                onClick={e => { e.stopPropagation(); setRenameTpl(tpl); setRenameValue(tpl.name); setRenameError(null) }}
+                                                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-yarn-orange-dark)]"
+                                                title="Rename quality"
+                                                aria-label={`Rename quality: ${tpl.name}`}
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
                                                 onClick={e => {
                                                     e.stopPropagation();
-                                                    if (window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', tpl.name))) {
-                                                        handleDeleteTemplate(tpl)
+                                                    if (window.confirm(`Archive quality “${tpl.name}”? It will become read-only and can be restored from History.`)) {
+                                                        handleArchiveTemplate(tpl)
                                                     }
                                                 }}
                                                 disabled={deletingTpl === tpl.id}
                                                 className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
-                                                title={t('estimator.quality.deleteButton')}
-                                                aria-label={`${t('estimator.quality.deleteButton')}: ${tpl.name}`}
+                                                title="Archive quality"
+                                                aria-label={`Archive quality: ${tpl.name}`}
                                             >
-                                                {deletingTpl === tpl.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                                {deletingTpl === tpl.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
                                             </button>
                                         </div>
                                     </div>
@@ -4409,6 +4447,47 @@ export default function EstimatorClient({
                 </DialogContent>
             </Dialog>
 
+            {/* Rename Quality Dialog */}
+            <Dialog open={Boolean(renameTpl)} onOpenChange={open => { if (!open) { setRenameTpl(null); setRenameError(null) } }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Rename saved quality</DialogTitle>
+                        <DialogDescription>Rename the reusable recipe label only. Existing costing snapshots keep the name recorded when they were saved.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-1.5 py-4">
+                        <Label htmlFor="rename-quality-name">Quality name</Label>
+                        <Input
+                            id="rename-quality-name"
+                            value={renameValue}
+                            onChange={event => { setRenameValue(event.target.value); setRenameError(null) }}
+                            maxLength={120}
+                            aria-invalid={Boolean(renameError)}
+                            aria-describedby={renameError ? 'rename-quality-error' : undefined}
+                            autoFocus
+                        />
+                        {renameError && <p id="rename-quality-error" role="alert" className="text-xs font-medium text-destructive">{renameError}</p>}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setRenameTpl(null)}>Cancel</Button>
+                        <Button onClick={handleRenameTemplate} disabled={renamingTpl || !renameValue.trim()}>{renamingTpl && <Loader2 className="h-4 w-4 animate-spin" />} Rename quality</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Draft dismissal confirmation */}
+            <Dialog open={showDiscardDraft} onOpenChange={setShowDiscardDraft}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Discard this unsaved draft?</DialogTitle>
+                        <DialogDescription>This removes the draft saved on this device. Saved qualities, costings, and quotations are not affected.</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>Keep draft</Button>
+                        <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); toast.success('Unsaved draft discarded') }}>Discard draft</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Edit Quality Rates Dialog */}
             <Dialog open={!!editRatesTpl} onOpenChange={open => { if (!open) setEditRatesTpl(null) }}>
                 <DialogContent className="max-w-lg">
@@ -4496,8 +4575,8 @@ export default function EstimatorClient({
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                             <button
                                 onClick={() => {
-                                    if (editRatesTpl && window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', editRatesTpl.name))) {
-                                        handleDeleteTemplate(editRatesTpl)
+                                    if (editRatesTpl && window.confirm(`Archive quality “${editRatesTpl.name}”? It will become read-only and can be restored from History.`)) {
+                                        handleArchiveTemplate(editRatesTpl)
                                         setEditRatesTpl(null)
                                     }
                                 }}
@@ -4505,9 +4584,9 @@ export default function EstimatorClient({
                                 className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50"
                             >
                                 <Trash2 className="h-3.5 w-3.5" />
-                                {t('estimator.quality.deleteButton')}
+                                Archive quality
                             </button>
-                            <p className="text-[10px] text-slate-400 font-medium">{t('estimator.quality.deleteNote')}</p>
+                            <p className="text-[10px] text-slate-400 font-medium">Archived qualities remain in History and can be restored.</p>
                         </div>
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">

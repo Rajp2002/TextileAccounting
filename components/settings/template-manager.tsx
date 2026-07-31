@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Trash2, FileText, Layers, Hash } from 'lucide-react'
-import { getEstimatorTemplates, deleteTemplate } from '@/app/(dashboard)/owner/estimator/actions'
+import { Loader2, Archive, ArchiveRestore, FileText, Layers, Hash } from 'lucide-react'
+import { getEstimatorTemplates, archiveTemplate, restoreTemplate } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
 import type { WarpRow, WeftRow } from '@/lib/estimator'
@@ -22,6 +22,8 @@ interface TemplateV3 {
     weft_denier?:       number
     per_pick_cost_paise?: number
     tape_length_m?:     number
+    updated_at:         string
+    is_active?:         boolean
 }
 
 export function TemplateManager({ className }: { className?: string }) {
@@ -31,7 +33,7 @@ export function TemplateManager({ className }: { className?: string }) {
 
     const load = async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
         if (showLoading) setLoading(true)
-        const res = await getEstimatorTemplates()
+        const res = await getEstimatorTemplates({ includeArchived: true })
         if (res.data) setQualities(res.data as TemplateV3[])
         setLoading(false)
     }
@@ -43,14 +45,17 @@ export function TemplateManager({ className }: { className?: string }) {
         return () => clearTimeout(timer)
     }, [])
 
-    const handleDelete = async (id: string) => {
-        if (!confirm(t('estimator.quality.settingsDeleteConfirm'))) return
-        const res = await deleteTemplate(id)
+    const handleArchive = async (quality: TemplateV3) => {
+        const archived = quality.is_active === false
+        if (!archived && !confirm(`Archive quality “${quality.name}”? It will be read-only until restored.`)) return
+        const res = archived
+            ? await restoreTemplate(quality.id, quality.updated_at)
+            : await archiveTemplate(quality.id, quality.updated_at)
         if (res.success) {
-            toast.success(t('common.removed'))
+            toast.success(archived ? 'Quality restored' : 'Quality archived')
             load()
         } else {
-            toast.error(res.error ?? 'Failed to delete')
+            toast.error(res.error ?? `Quality could not be ${archived ? 'restored' : 'archived'}`)
         }
     }
 
@@ -109,11 +114,12 @@ export function TemplateManager({ className }: { className?: string }) {
                             return (
                                 <div
                                     key={quality.id}
-                                    className="group rounded-lg border border-hairline bg-canvas/55 p-3 transition-all duration-200 hover:border-hairline-strong hover:bg-surface hover:shadow-sm"
+                                    className={cn("group rounded-lg border border-hairline bg-canvas/55 p-3 transition-all duration-200 hover:border-hairline-strong hover:bg-surface hover:shadow-sm", quality.is_active === false && 'opacity-75')}
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
                                             <h5 className="text-sm font-bold text-ink group-hover:text-saffron-deep">{quality.name}</h5>
+                                            {quality.is_active === false && <span className="text-[10px] font-semibold text-muted-foreground">Archived · read-only</span>}
                                             {isV3 && (
                                                 <span className="rounded-full bg-info-soft px-1.5 py-0.5 text-[10px] font-semibold text-info">
                                                     V3 · {summary.warpLayers}W + {summary.weftLayers}F
@@ -123,10 +129,11 @@ export function TemplateManager({ className }: { className?: string }) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-7 w-7 text-subtle opacity-0 transition-opacity hover:bg-risk-soft hover:text-risk group-hover:opacity-100"
-                                            onClick={() => handleDelete(quality.id)}
+                                            className="h-7 w-7 text-subtle transition-colors hover:bg-surface-soft"
+                                            onClick={() => handleArchive(quality)}
+                                            aria-label={quality.is_active === false ? `Restore ${quality.name}` : `Archive ${quality.name}`}
                                         >
-                                            <Trash2 className="h-3.5 w-3.5" />
+                                            {quality.is_active === false ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
                                         </Button>
                                     </div>
                                     <div className="grid grid-cols-2 gap-y-1 text-[11px] font-medium text-muted-foreground">

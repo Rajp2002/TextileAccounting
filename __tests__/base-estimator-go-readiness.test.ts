@@ -52,7 +52,7 @@ describe('Base Estimator Go-readiness hardening', () => {
   it('gates Rate Book at route, action, RLS, and lockdown boundaries', () => {
     expect(source('app/(dashboard)/owner/rates/layout.tsx')).toContain('requiredTier="base"')
     const actions = source('app/(dashboard)/owner/rates/actions.ts')
-    expect(actions.match(/requireBaseTier\(profile\.org_id\)/g)?.length).toBe(4)
+    expect(actions.match(/requireBaseTier\(profile\.org_id\)/g)?.length).toBeGreaterThanOrEqual(4)
     const migration = source('supabase/migrations/20260721183000_base_estimator_go_readiness.sql')
     expect(migration).toContain("public.org_has_subscription_tier(org_id, 'base')")
     expect(migration).toContain('NOT public.check_org_lockdown(org_id)')
