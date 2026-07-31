@@ -930,7 +930,7 @@ export const hi = {
     warp: {
       title: "ताना सूत संरचना (Warp)",
       layer: "ताना परत",
-      add_blend: "ब्लेंड कॉम्पोनेंट जोड़ें",
+      add_blend: "वार्प यार्न कॉम्पोनेंट जोड़ें",
       tape_len: "टेप लंबाई",
       beam_capacity: "बीम क्षमता",
       crimp_pct: "ताने की सिकुड़न %",
@@ -939,7 +939,7 @@ export const hi = {
     weft: {
       title: "बाना सूत संरचना (Weft)",
       layer: "बाना परत",
-      add_weft: "वेफ्ट ब्लेंड जोड़ें",
+      add_weft: "वेफ्ट यार्न कॉम्पोनेंट जोड़ें",
       cloth_width_hint: "तैयार कपड़े की चौड़ाई (करघे की नहीं)"
     },
     weave: {
@@ -975,14 +975,14 @@ export const hi = {
       monthly_output: "मासिक उत्पादन (मी)",
       output_hint: "प्रति माह अनुमानित मीटर बुनाई — कुल ओवरहेड को बाँटता है",
       total_monthly: "कुल मासिक",
-      direct_override_title: "सीधा ₹/मी ओवरराइड",
-      override_active_note: "⚡ ओवरराइड सक्रिय — आइटमाइज़ड कैलक्युलेशन अनदेखा होगा",
-      override_bypass_note: "आइटमाइज़ड कैलक्युलेशन बायपास करने के लिए मूल्य दर्ज करें",
+      direct_override_title: "सीधा फैक्टरी ओवरहेड दर",
+      override_active_note: "⚡ सीधा दर सक्रिय — मासिक खर्च का उपयोग नहीं होगा",
+      override_bypass_note: "मासिक खर्च की जगह उपयोग करने के लिए सीधा ₹/मी दर दर्ज करें",
       clear: "✕ हटाएं",
-      direct_override_badge: "⚡ सीधा ओवरराइड",
+      direct_override_badge: "⚡ सीधा दर",
       overhead_per_m: "ओवरहेड प्रति मीटर",
-      effective_rate: "प्रभावी दर",
-      of_direct_cost: "प्रत्यक्ष लागत का"
+      effective_rate: "गणना पद्धति",
+      of_direct_cost: "मासिक खर्च ÷ उत्पादन"
     },
     post_processing: {
       title: "पोस्ट-प्रोसेसिंग और लॉजिस्टिक्स",

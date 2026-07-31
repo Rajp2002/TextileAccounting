@@ -7,7 +7,7 @@
  *  1. Loom type dropdown → auto-fills RPM, power kW, efficiency from LOOM_TYPE_DEFAULTS
  *  2. Hours per shift field (drives daily output preview)
  *  3. Live daily output preview: (rpm / picks) × 60 × hoursPerShift × efficiency
- *  4. "Suggest" button → pushes computed daily output into avgOutputPerLoomPerDay
+ *  4. "Apply" button → explains whether the daily result updates capacity or monthly overhead output
  *  5. "customised" badge when RPM/kW diverge from class defaults
  *  6. Validation: loomType === 'other' requires explicit RPM + kW before estimate saves
  *
@@ -285,10 +285,12 @@ export function LoomConfigSection({
                             id="suggest-output-btn"
                             onClick={() => onSuggestOutput(Math.round(dailyOutputM))}
                             className="flex items-center justify-center gap-1.5 bg-[var(--color-warning-amber)] hover:bg-[var(--color-yarn-orange)] text-white text-[10px] font-bold px-3 py-2 rounded-lg transition-colors shadow-sm shrink-0"
-                            title="Push this value into 'Avg Daily Output' in the Overhead section"
+                            title={state.overheadMode === 'monthly_expenses'
+                                ? 'Apply this daily result to the monthly overhead output reference'
+                                : 'Apply this daily result to the capacity reference'}
                         >
                             <Zap className="h-3 w-3" />
-                            Suggest
+                            {state.overheadMode === 'monthly_expenses' ? 'Use for monthly output' : 'Use for capacity'}
                             <ArrowRight className="h-3 w-3" />
                         </button>
                     )}
@@ -300,8 +302,7 @@ export function LoomConfigSection({
                 <div className="bg-white/65 border border-[#EFD7A4] rounded-lg px-3 py-2">
                     <p className="text-[10px] text-[var(--color-muted)] font-medium leading-snug">
                         <span className="font-black">Note:</span> Loom type here is a costing input — independent of which machines are assigned to this order. 
-                        Use the <span className="font-bold">Suggest →</span> button to sync daily output into the Overhead section so overhead/m and electricity/m 
-                        reflect your actual loom class, not a generic default.
+                        The <span className="font-bold">{state.overheadMode === 'monthly_expenses' ? 'Use for monthly output' : 'Use for capacity'}</span> button applies this result explicitly; it never replaces your actual output silently.
                     </p>
                 </div>
             )}

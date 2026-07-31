@@ -63,7 +63,11 @@ export function hydrateEstimateStateFromQuote(
             quote.overhead_override_per_m != null
                 ? Number(quote.overhead_override_per_m)
                 : base.overheadOverridePerM,
-        overheadPct:    Number(quote.overhead_pct    ?? base.overheadPct),
+        overheadMode: quote.overhead_override_per_m != null ? 'direct' : 'monthly_expenses',
+        // The persisted percentage field is legacy compatibility only. The
+        // active overhead method/rate is carried by overheadMode and the
+        // monthly/direct inputs above.
+        overheadPct:    0,
         commissionPct:  Number(quote.commission_pct  ?? base.commissionPct),
         transportPerM:  Number(quote.transport_per_m ?? base.transportPerM),
         profitPct:      Number(quote.profit_margin_pct ?? quote.intended_margin_percent ?? base.profitPct),

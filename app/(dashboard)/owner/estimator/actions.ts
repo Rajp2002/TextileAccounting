@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
+import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
@@ -124,7 +124,7 @@ function buildSavedQualityUpdatePayload(estimate: EstimateState) {
         tape_length_m: estimate.tapeLengthM,
         warp_crimp_pct: estimate.warpCrimpPct ?? 0,
         yarn_shortage_pct: estimate.yarnShortagePct ?? 0,
-        overhead_override_per_m: estimate.overheadOverridePerM ?? null,
+        overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
         loom_type: estimate.loomType ?? null,
         loom_rpm: estimate.loomRpm ?? null,
         loom_power_kw: estimate.loomPowerKw ?? null,
@@ -213,7 +213,8 @@ export async function getFactoryCostProfile() {
                 warping_rate_per_kg:     2.00,
                 sizing_rate_per_kg:      1.50,
                 winding_rate_per_kg:     0,
-                overhead_pct:            8.00,
+                overhead_pct:            0,
+                overhead_mode:           'monthly_expenses',
                 default_commission_pct:  2.00,
                 default_margin_pct:      10.00,
                 default_transport_per_m: 0,
@@ -273,7 +274,8 @@ export async function upsertFactoryCostProfile(data: {
     warping_rate_per_kg:     number
     sizing_rate_per_kg:      number
     winding_rate_per_kg:     number
-    overhead_pct:            number
+    overhead_pct?:           number
+    overhead_mode?:          OverheadMode
     default_commission_pct:  number
     default_margin_pct?:     number
     default_transport_per_m: number
@@ -305,6 +307,14 @@ export async function upsertFactoryCostProfile(data: {
 
     const nextUpdatedAt = new Date().toISOString()
     const { expectedUpdatedAt, ...profileData } = data
+    const normalizedProfileData = {
+        ...profileData,
+        // Retain the legacy database column for older readers, but do not
+        // calculate or expose an overhead percentage in the new workflow.
+        overhead_pct: 0,
+        overhead_mode: profileData.overhead_mode
+            ?? (profileData.overhead_override_per_m != null ? 'direct' : 'monthly_expenses'),
+    }
     let updatedAt: string | null = null
 
     if (expectedUpdatedAt) {
@@ -313,7 +323,7 @@ export async function upsertFactoryCostProfile(data: {
 
         const { data: updated, error } = await supabase
             .from('factory_cost_profile')
-            .update({ ...profileData, updated_at: nextUpdatedAt })
+            .update({ ...normalizedProfileData, updated_at: nextUpdatedAt })
             .eq('factory_id', profile.org_id)
             .eq('updated_at', expectedUpdatedAt)
             .select('updated_at')
@@ -327,7 +337,7 @@ export async function upsertFactoryCostProfile(data: {
             .from('factory_cost_profile')
             .upsert({
                 factory_id: profile.org_id,
-                ...profileData,
+                ...normalizedProfileData,
                 updated_at: nextUpdatedAt,
             }, { onConflict: 'factory_id' })
             .select('updated_at')
@@ -369,6 +379,7 @@ export async function saveAsFabricTemplate(data: {
     warpCrimpPct?:    number
     perPickCostPaisa: number
     yarnShortagePct?: number
+    overheadMode?: OverheadMode
     overheadOverridePerM?: number | null
     loomType?:        string | null
     loomRpm?:         number | null
@@ -421,7 +432,7 @@ export async function saveAsFabricTemplate(data: {
             tape_length_m:       data.tapeLengthM,
             warp_crimp_pct:      data.warpCrimpPct ?? 0,
             yarn_shortage_pct:   data.yarnShortagePct ?? 0,
-            overhead_override_per_m: data.overheadOverridePerM ?? null,
+            overhead_override_per_m: (data.overheadMode ?? data.estimate.overheadMode) === 'direct' ? data.overheadOverridePerM ?? null : null,
             // Loom type + sizing mode (new)
             loom_type:           data.loomType ?? null,
             loom_rpm:            data.loomRpm ?? null,
@@ -450,7 +461,7 @@ export async function saveAsFabricTemplate(data: {
     // than leaving another "no costing history yet" record behind.
     const snapshot = await saveEstimatorQuoteV3({
         clientRequestId: getInitialQualitySnapshotRequestId(saved.id),
-        partyName: normalizeTemplateName(data.partyName || data.name),
+        partyName: normalizeTemplateName(data.partyName || ''),
         qualityLabel: normalizeTemplateName(data.name),
         estimate: snapshotEstimate,
         totalProductionCostPerM: snapshotTotals.productionCostPerM,
@@ -515,7 +526,7 @@ export async function ensureCostingSnapshotsForSavedQualities() {
         const totals = getAuthoritativeQuoteTotals(estimate)
         const result = await saveEstimatorQuoteV3({
             clientRequestId: getInitialQualitySnapshotRequestId(template.id),
-            partyName: template.name,
+            partyName: null,
             qualityLabel: template.name,
             estimate,
             totalProductionCostPerM: totals.productionCostPerM,
@@ -594,6 +605,7 @@ export async function updateFabricTemplate(data: {
     warpCrimpPct?:    number
     perPickCostPaisa: number
     yarnShortagePct?: number
+    overheadMode?: OverheadMode
     overheadOverridePerM?: number | null
     loomType?:        string | null
     loomRpm?:         number | null
@@ -624,7 +636,7 @@ export async function updateFabricTemplate(data: {
             tape_length_m:       data.tapeLengthM,
             warp_crimp_pct:      data.warpCrimpPct ?? 0,
             yarn_shortage_pct:   data.yarnShortagePct ?? 0,
-            overhead_override_per_m: data.overheadOverridePerM ?? null,
+            overhead_override_per_m: data.overheadMode === 'direct' ? data.overheadOverridePerM ?? null : null,
             // Loom type + sizing mode (new)
             loom_type:           data.loomType ?? null,
             loom_rpm:            data.loomRpm ?? null,
@@ -727,7 +739,7 @@ export async function deleteTemplate(id: string, expectedUpdatedAt?: string) {
 
 export async function saveEstimatorQuoteV3(params: {
     clientRequestId:    string
-    partyName:          string
+    partyName?:         string | null
     qualityLabel:       string
     warpInstruction?:   string
     weftInstruction?:   string
@@ -773,7 +785,7 @@ export async function saveEstimatorQuoteV3(params: {
     }
 
     const { estimate } = params
-    if (!params.partyName.trim()) return { error: 'Party name is required.' }
+    if (newRecordKind === 'quotation' && !params.partyName?.trim()) return { error: 'Customer or party is required for a quotation.' }
     if (!params.qualityLabel.trim()) return { error: 'Quality label is required.' }
     if (params.templateId && !UUID_PATTERN.test(params.templateId)) return { error: 'Saved quality identifier is invalid.' }
     if (params.templateId) {
@@ -811,7 +823,7 @@ export async function saveEstimatorQuoteV3(params: {
     const quotePayload = {
             org_id:               profile.org_id,
             record_kind:          newRecordKind,
-            party_name:           params.partyName.trim(),
+            party_name:           params.partyName?.trim() || null,
             quality_label:        params.qualityLabel.trim(),
             template_id:          params.templateId ?? null,
             warp_instruction:     params.warpInstruction?.trim() || null,
@@ -828,11 +840,11 @@ export async function saveEstimatorQuoteV3(params: {
             winding_rate_per_kg:  estimate.windingRatePerKg,
             processing_rate_per_m: estimate.processingRatePerM,
             finishing_rate_per_m: estimate.finishingRatePerM,
-            // Overhead V2: store both the items snapshot and the computed effective %
+            // Overhead V2: store the selected method inputs; no percentage metric is persisted.
             overhead_items:       estimate.overheadItems,
             monthly_output_m:     estimate.monthlyOutputM,
-            overhead_override_per_m: estimate.overheadOverridePerM ?? null,
-            overhead_pct:         authoritative.totals.effectiveOverheadPct,
+            overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
+            overhead_pct:         0,
             commission_pct:       estimate.commissionPct,
             transport_per_m:      estimate.transportPerM,
             order_quantity_m:     estimate.orderQuantityM,
@@ -1195,8 +1207,8 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
             p_finishing_rate_per_m:  estimatorState.finishingRatePerM,
             p_overhead_items:        estimatorState.overheadItems,
             p_monthly_output_m:      estimatorState.monthlyOutputM,
-            p_overhead_override_per_m: estimatorState.overheadOverridePerM ?? null,
-            p_overhead_pct:          authoritative.totals.effectiveOverheadPct,
+            p_overhead_override_per_m: estimatorState.overheadMode === 'direct' ? estimatorState.overheadOverridePerM ?? null : null,
+            p_overhead_pct:          0,
             p_commission_pct:        estimatorState.commissionPct,
             p_transport_per_m:       estimatorState.transportPerM,
             p_order_quantity_m:      targetMeters,
@@ -1627,8 +1639,8 @@ export async function createMarketRunFromEstimator(params: {
             finishing_rate_per_m: estimate.finishingRatePerM,
             overhead_items:       estimate.overheadItems,
             monthly_output_m:     estimate.monthlyOutputM,
-            overhead_override_per_m: estimate.overheadOverridePerM ?? null,
-            overhead_pct:         authoritative.totals.effectiveOverheadPct,
+            overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
+            overhead_pct:         0,
             commission_pct:       estimate.commissionPct,
             transport_per_m:      estimate.transportPerM,
             order_quantity_m:     targetMeters,

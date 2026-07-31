@@ -935,7 +935,7 @@ export const en = {
     warp: {
       title: "Warp Yarn Composition",
       layer: "Warp Layer",
-      add_blend: "Add Blend Component",
+      add_blend: "Add warp yarn component",
       tape_len: "Tape Length",
       beam_capacity: "Beam Capacity",
       crimp_pct: "Warp Crimp %",
@@ -944,7 +944,7 @@ export const en = {
     weft: {
       title: "Weft Yarn Composition",
       layer: "Weft Layer",
-      add_weft: "Add Weft Blend",
+      add_weft: "Add weft yarn component",
       cloth_width_hint: "Finished output width (not loom width)"
     },
     weave: {
@@ -980,14 +980,14 @@ export const en = {
       monthly_output: "Monthly Output (m)",
       output_hint: "Estimated metres woven per month — divides total overhead",
       total_monthly: "Total Monthly",
-      direct_override_title: "Direct ₹/m Override",
-      override_active_note: "⚡ Override active — itemized calc is ignored",
-      override_bypass_note: "Enter a value to bypass the itemized calculation",
+      direct_override_title: "Direct factory overhead rate",
+      override_active_note: "⚡ Direct rate active — monthly expenses are not used",
+      override_bypass_note: "Enter a direct ₹/m rate to use instead of monthly expenses",
       clear: "✕ Clear",
-      direct_override_badge: "⚡ direct override",
+      direct_override_badge: "⚡ direct rate",
       overhead_per_m: "Overhead per Metre",
-      effective_rate: "Effective Rate",
-      of_direct_cost: "of direct cost"
+      effective_rate: "Calculation method",
+      of_direct_cost: "monthly expenses ÷ output"
     },
     post_processing: {
       title: "Post-Processing & Logistics",

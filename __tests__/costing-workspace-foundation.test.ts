@@ -19,7 +19,7 @@ describe('shared costing workspace foundation', () => {
       versionedCostings: true,
       costingComparison: true,
       professionalExports: true,
-      partyContext: true,
+      partyContext: false,
       quotationLifecycle: false,
       productionConversion: false,
     })

@@ -2,6 +2,7 @@ import {
   ensureOverheadIntegrity,
   makeDefaultEstimateState,
   type FactorySections,
+  type OverheadMode,
   type LoomType,
   type WarpRow,
   type WeftRow,
@@ -12,7 +13,7 @@ export type SavedCostingMarginFilter = 'all' | 'negative' | 'under_10' | '10_to_
 
 export type SavedCostingListItem = {
   id: string
-  party_name: string
+  party_name: string | null
   quality_label: string | null
   quote_price_per_meter: number
   landed_cost_per_meter: number
@@ -67,6 +68,7 @@ export type SavedQualityFactoryProfile = Partial<{
   default_processing_rate_per_m: unknown
   default_finishing_rate_per_m: unknown
   overhead_pct: unknown
+  overhead_mode: OverheadMode
   default_commission_pct: unknown
   default_transport_per_m: unknown
   enabled_sections: FactorySections
@@ -180,12 +182,16 @@ export function buildSavedQualityRecipeState(
     windingRatePerKg: finiteNumber(profile?.winding_rate_per_kg, base.windingRatePerKg),
     processingRatePerM: finiteNumber(profile?.default_processing_rate_per_m, base.processingRatePerM),
     finishingRatePerM: finiteNumber(profile?.default_finishing_rate_per_m, base.finishingRatePerM),
-    overheadPct: finiteNumber(profile?.overhead_pct, base.overheadPct),
+    overheadPct: 0,
     commissionPct: finiteNumber(profile?.default_commission_pct, base.commissionPct),
     transportPerM: finiteNumber(profile?.default_transport_per_m, base.transportPerM),
     enabledSections: { ...base.enabledSections, ...(profile?.enabled_sections ?? {}) },
     monthlyOutputM: finiteNumber(profile?.monthly_output_m, base.monthlyOutputM),
     overheadOverridePerM: nullableFiniteNumber(profile?.overhead_override_per_m, base.overheadOverridePerM),
+    overheadMode: (profile?.overhead_mode === 'direct'
+      || (profile?.overhead_mode == null && profile?.overhead_override_per_m != null)
+      ? 'direct'
+      : 'monthly_expenses') as OverheadMode,
     loomCount: finiteNumber(profile?.loom_count, base.loomCount),
     monthlyWorkingDays: finiteNumber(profile?.monthly_working_days, base.monthlyWorkingDays),
     avgOutputPerLoomPerDay: finiteNumber(profile?.avg_output_per_loom_per_day, base.avgOutputPerLoomPerDay),
@@ -237,6 +243,7 @@ export function buildSavedQualityRecipeState(
     perPickCostPaisa: finiteNumber(recipe.per_pick_cost_paise, state.perPickCostPaisa),
     yarnShortagePct: finiteNumber(recipe.yarn_shortage_pct, state.yarnShortagePct),
     overheadOverridePerM: nullableFiniteNumber(recipe.overhead_override_per_m, state.overheadOverridePerM),
+    overheadMode: recipe.overhead_override_per_m != null ? 'direct' : state.overheadMode,
     loomType: recipe.loom_type ?? null,
     loomRpm: nullableFiniteNumber(recipe.loom_rpm, null),
     loomPowerKw: nullableFiniteNumber(recipe.loom_power_kw, null),
@@ -266,7 +273,7 @@ export function filterAndSortSavedCostings<T extends SavedCostingListItem>(
   const query = options.query.trim().toLocaleLowerCase('en-IN')
   return [...costings]
     .filter(costing => {
-      const searchable = `${costing.quality_label ?? ''} ${costing.party_name}`.toLocaleLowerCase('en-IN')
+      const searchable = `${costing.quality_label ?? ''} ${costing.party_name ?? ''}`.toLocaleLowerCase('en-IN')
       return (!query || searchable.includes(query))
         && matchesMargin(Number(costing.intended_margin_percent), options.margin)
     })

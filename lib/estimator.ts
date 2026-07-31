@@ -17,7 +17,6 @@
  *            directCost    = Layers 1–7
  *   Layer 8: Overhead      = Σ(overheadItems[i].monthlyAmount) / monthlyOutputM
  *              (sum of all fixed monthly factory costs divided by monthly output metres)
- *              effectiveOverheadPct = (overheadPerM / directCostPerM) × 100  [display only]
  *   ─────────────────────────────────────────────────────
  *   totalProductionCostPerM = directCost + overhead
  *
@@ -174,6 +173,9 @@ export type OverheadCategory =
   | 'admin'
   | 'custom'
 
+/** How the factory recovers fixed overhead in a costing. */
+export type OverheadMode = 'direct' | 'monthly_expenses'
+
 /** Helper metadata for specialized overhead categories */
 export interface ElectricityMeta {
   type: 'electricity'
@@ -230,7 +232,8 @@ export interface EstimateState {
   // ── Overhead V2: itemized breakdown ─────────────────────────────────────
   overheadItems:       OverheadItem[]  // list of monthly fixed cost line items
   monthlyOutputM:      number          // estimated metres produced per month (denominator)
-  overheadOverridePerM: number | null  // when set, bypasses the itemized calc entirely
+  overheadOverridePerM: number | null  // direct ₹/m rate when overheadMode is direct
+  overheadMode:         OverheadMode    // persisted factory method
   // ── Factory Capacity Configuration ──────────────────────────────────────
   loomCount:           number          // total active looms in factory
   avgOutputPerLoomPerDay: number       // e.g. 50m for waterjets, 25m for rapier
@@ -250,7 +253,9 @@ export interface EstimateState {
   // ── Sizing Mode ─────────────────────────────────────────────────────────
   sizingMode:            'in_house' | 'outsourced'  // explicit toggle; in_house = 0 cost
   // ── kept for backward-compat serialisation (computed, never user-edited) ─
-  overheadPct:         number          // effective overhead % — derived from items/denominator
+  // Existing snapshots may still contain this legacy value. It is not a
+  // user-facing setting and is no longer read as a costing input.
+  overheadPct:         number
   // ────────────────────────────────────────────────────────────────────────
   commissionPct:       number          // selling commission %
   transportPerM:       number          // transport cost ₹/m
@@ -365,7 +370,6 @@ export interface EstimatorV3Totals {
   directCostPerM:          number
   overheadPerM:            number
   overheadTotalMonthly:    number   // sum of all overhead item monthly amounts
-  effectiveOverheadPct:    number   // overheadPerM / directCostPerM × 100 (display only)
   resolvedItems:           OverheadItem[] // overhead items after resolving meta formulas
   // ── Capacity Dynamics ───────────────────────────────────────────────────
   overheadPerMAtCapacity:  number   // overhead if factory ran at 100% capacity
@@ -880,13 +884,19 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     estimate.monthlyOutputM,
     estimate.loomCount
   )
-  // Direct override takes precedence when set and positive
-  const overheadPerM = (estimate.overheadOverridePerM != null && estimate.overheadOverridePerM > 0)
-    ? new Decimal(estimate.overheadOverridePerM)
+  // Direct mode uses the explicit ₹/m input. Older callers may still provide
+  // an override without the new mode field (or retain one while monthly mode
+  // is selected), so preserve that legacy behavior; the UI clears it whenever
+  // monthly-expense mode is chosen.
+  const isDirectOverhead = estimate.overheadMode === 'direct'
+    || (estimate.overheadMode == null && estimate.overheadOverridePerM != null)
+    // A legacy caller may set an override without the new mode field. The UI
+    // always clears it when monthly mode is chosen, so retain that compatibility
+    // path for old snapshots and non-UI integrations.
+    || (estimate.overheadMode === 'monthly_expenses' && estimate.overheadOverridePerM != null)
+  const overheadPerM = isDirectOverhead
+    ? new Decimal(estimate.overheadOverridePerM ?? 0)
     : new Decimal(calculatedOverheadPerM)
-  // Effective % for display + backward-compat snapshot in saved quotes
-  const effectiveOverheadPct = directCostPerM.gt(0) ? overheadPerM.div(directCostPerM).times(100) : new Decimal(0)
-
   // ── Capacity Dynamics ─────────────────────────────────────
   const workingDays = estimate.monthlyWorkingDays || 26
   const ratedCapacityM = new Decimal(estimate.loomCount || 0).times(estimate.avgOutputPerLoomPerDay || 0).times(workingDays)
@@ -989,7 +999,6 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     directCostPerM:          directCostPerM.toNumber(),
     overheadPerM:            overheadPerM.toNumber(),
     overheadTotalMonthly,
-    effectiveOverheadPct:    effectiveOverheadPct.toNumber(),
     overheadPerMAtCapacity:  overheadPerMAtCapacity.toNumber(),
     ratedCapacityM:          ratedCapacityM.toNumber(),
     capacityUtilisationPct:  capacityUtilisationPct.toNumber(),
@@ -1068,6 +1077,7 @@ export function makeDefaultEstimateState(): EstimateState {
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     0,
     overheadOverridePerM: null,
+    overheadMode:        'monthly_expenses',
     loomCount:          0,
     avgOutputPerLoomPerDay: 50,
     monthlyWorkingDays:  26,
@@ -1081,7 +1091,7 @@ export function makeDefaultEstimateState(): EstimateState {
     // ── Sizing Mode ───────────────────────────────────────────────────────
     sizingMode:            'in_house', // safe default: no cost increase on existing estimates
     // ─────────────────────────────────────────────────────────────────────
-    overheadPct:        0,   // will be computed — kept for compat
+    overheadPct:        0,   // legacy compatibility only
     commissionPct:      0,
     transportPerM:      0,
     profitPct:          0,
