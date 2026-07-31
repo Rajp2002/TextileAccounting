@@ -59,7 +59,8 @@ describe('Base Estimator Go-readiness hardening', () => {
 
   it('saves rate book, history, factory defaults, and matching qualities in one database transaction', () => {
     const actions = source('app/(dashboard)/owner/rates/actions.ts')
-    expect(actions).toContain("supabase.rpc('save_cost_rate_atomic'")
+    expect(actions).toContain("supabase.rpc('save_cost_rate_atomic_versioned'")
+    expect(actions).toContain('p_expected_updated_at')
     expect(actions).not.toContain('applyProfileDefault')
     expect(actions).not.toContain('syncYarnRateToSavedQualities')
 

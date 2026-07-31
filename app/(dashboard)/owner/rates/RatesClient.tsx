@@ -80,6 +80,7 @@ function defaultDraft(reviewIntervalDays: number, category: YarnRateCategory = '
 function rowToDraft(rate: CostRateRow): CostRateInput {
     return {
         id: rate.id,
+        expectedUpdatedAt: rate.updated_at,
         name: rate.name,
         category: rate.category,
         unit: rate.unit,
@@ -119,6 +120,7 @@ export default function RatesClient({
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
     const [archiveRate, setArchiveRate] = useState<CostRateRow | null>(null)
+    const [saveError, setSaveError] = useState<string | null>(null)
     const [conflicts, setConflicts] = useState(initialConflicts)
     const [showConflicts, setShowConflicts] = useState(initialConflicts.length > 0)
     const [isPending, startTransition] = useTransition()
@@ -135,6 +137,7 @@ export default function RatesClient({
         : null
 
     const updateDraft = <K extends keyof CostRateInput>(key: K, value: CostRateInput[K]) => {
+        if (saveError) setSaveError(null)
         setDraft(current => current ? { ...current, [key]: value } : current)
     }
 
@@ -147,7 +150,7 @@ export default function RatesClient({
         startTransition(async () => {
             const result = await saveCostRate(draft)
             if (result.error || !result.data) {
-                toast.error(result.error ?? 'Rate could not be saved.')
+                setSaveError(result.error ?? 'Rate could not be saved.')
                 return
             }
             const savedRate = result.data as CostRateRow
@@ -159,6 +162,7 @@ export default function RatesClient({
             if (draft.category === 'yarn_warp' || draft.category === 'yarn_weft') {
                 setConflicts(current => current.filter(conflict => conflict.normalizedName !== savedYarnName))
             }
+            setSaveError(null)
             if (result.syncedQualityCount) {
                 toast.success(`Rate saved and updated in ${result.syncedQualityCount} saved ${result.syncedQualityCount === 1 ? 'quality' : 'qualities'}. Saved costings were not changed.`)
             } else {
@@ -219,7 +223,7 @@ export default function RatesClient({
                     <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> Yarn Rate Book</h1>
                     <p className="mt-1 text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your saved qualities and costings.</p>
                 </div>
-                <Button onClick={() => setDraft(defaultDraft(defaultReviewIntervalDays))} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
+                <Button onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
             </div>
 
             {conflicts.length > 0 && (
@@ -262,7 +266,7 @@ export default function RatesClient({
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full min-w-[1000px] text-left">
                                 <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">Current value</th><th className="px-4 py-3">Previous value</th><th className="px-4 py-3">Effective date</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
-                                <tbody className="divide-y divide-slate-100">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); return <tr key={rate.id} className={reviewState === 'overdue' ? 'bg-red-50/70 hover:bg-red-50' : reviewState === 'due_soon' ? 'bg-amber-50/70 hover:bg-amber-50' : 'hover:bg-slate-50/70'}><td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></td><td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td><td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td><td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td><td className="px-4 py-4"><ReviewBadge rate={rate} /></td><td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td><td className="px-4 py-4"><div className="flex justify-end gap-1"><Button variant="outline" size="sm" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-3.5 w-3.5" /> Edit</Button><Button variant="ghost" size="sm" onClick={() => openHistory(rate)}><History className="h-3.5 w-3.5" /> History</Button><Button variant="ghost" size="icon" aria-label={`Archive ${rate.name}`} onClick={() => setArchiveRate(rate)} className="text-slate-500"><Archive className="h-4 w-4" /></Button></div></td></tr> })}</tbody>
+                                <tbody className="divide-y divide-slate-100">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); return <tr key={rate.id} className={reviewState === 'overdue' ? 'bg-red-50/70 hover:bg-red-50' : reviewState === 'due_soon' ? 'bg-amber-50/70 hover:bg-amber-50' : 'hover:bg-slate-50/70'}><td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></td><td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td><td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td><td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td><td className="px-4 py-4"><ReviewBadge rate={rate} /></td><td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td><td className="px-4 py-4"><div className="flex justify-end gap-1"><Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}><Pencil className="h-3.5 w-3.5" /> Edit</Button><Button variant="ghost" size="sm" onClick={() => openHistory(rate)}><History className="h-3.5 w-3.5" /> History</Button><Button variant="ghost" size="icon" aria-label={`Archive ${rate.name}`} onClick={() => setArchiveRate(rate)} className="text-slate-500"><Archive className="h-4 w-4" /></Button></div></td></tr> })}</tbody>
                             </table>
                         </div>
                         <div className="space-y-3 p-3 md:hidden">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); return <Card key={rate.id} className={reviewState === 'overdue' ? 'border-red-300 bg-red-50/70' : reviewState === 'due_soon' ? 'border-amber-300 bg-amber-50/70' : 'border-slate-200'}><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]}</p></div><ReviewBadge rate={rate} /></div><div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">Current</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div><div className="mt-3 grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-4 w-4" /> Edit</Button><Button variant="outline" onClick={() => openHistory(rate)}><History className="h-4 w-4" /> History</Button></div></CardContent></Card> })}</div>
@@ -305,11 +309,11 @@ export default function RatesClient({
             </Dialog>
 
             <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open) setDraft(null) }}>
-                <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+                    <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
                     <SheetHeader className="border-b border-slate-200 px-6 py-5"><SheetTitle className="text-xl font-black">{draft?.id ? `Update ${draft.name}` : 'Add Yarn Rate'}</SheetTitle><SheetDescription>Maintain the current rate used by matching saved quality layers.</SheetDescription></SheetHeader>
                     {draft && <div className="space-y-5 px-6 py-2">
                         <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">Saved costings will not change.</p><p className="mt-1 text-xs leading-relaxed">This yarn rate will be pre-populated into every saved quality with the same yarn name. Historical costing snapshots stay unchanged.</p></div></div>
-                        <div className="space-y-1.5"><Label>Yarn name</Label><Input value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} />{Boolean(draft.id) && <p className="text-xs text-slate-500">This name is locked because it matches yarn layers in saved qualities.</p>}</div>
+                        <div className="space-y-1.5"><Label htmlFor="cost-rate-name">Yarn name</Label><Input id="cost-rate-name" value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} aria-invalid={Boolean(saveError)} aria-describedby={saveError ? 'cost-rate-save-error' : undefined} />{Boolean(draft.id) && <p className="text-xs text-slate-500">This name is locked because it matches yarn layers in saved qualities.</p>}{saveError && <p id="cost-rate-save-error" role="alert" className="text-xs font-medium text-destructive">{saveError}</p>}</div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Used in</Label><select value={draft.category} onChange={event => changeCategory(event.target.value as YarnRateCategory)} disabled={Boolean(draft.id)} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-100">{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select></div><div className="space-y-1.5"><Label>Unit</Label><Input value="₹ per kg" disabled className="bg-slate-100" /></div></div>
                         <div className="space-y-1.5"><Label>New rate</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', Number(event.target.value))} className="font-mono" /></div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Effective date</Label><Input type="date" value={draft.effectiveDate} onChange={event => updateDraft('effectiveDate', event.target.value)} /></div><div className="space-y-1.5"><Label>Reviewed on</Label><Input type="date" value={draft.lastReviewedAt} onChange={event => updateDraft('lastReviewedAt', event.target.value)} /></div></div>

@@ -28,6 +28,7 @@ export type CostRateUnit = 'per_kg' | 'per_m' | 'percent'
 
 export type CostRateInput = {
     id?: string
+    expectedUpdatedAt?: string
     name: string
     category: CostRateCategory
     unit: CostRateUnit
@@ -55,6 +56,7 @@ async function requireBaseTier(orgId: string) {
 
 function validateRate(input: CostRateInput) {
     if (input.id && !UUID_PATTERN.test(input.id)) return 'Rate identifier is invalid.'
+    if (input.id && (!input.expectedUpdatedAt || !Number.isFinite(Date.parse(input.expectedUpdatedAt)))) return 'Rate version is invalid. Refresh before saving again.'
     if (!input.name.trim() || input.name.trim().length > 120) return 'Rate name must be between 1 and 120 characters.'
     if (!CATEGORIES.has(input.category)) return 'Rate category is invalid.'
     if (!UNITS.has(input.unit)) return 'Rate unit is invalid.'
@@ -268,8 +270,9 @@ export async function saveCostRate(input: CostRateInput) {
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     await setAuditActor(supabase, user.id)
-    const { data, error } = await supabase.rpc('save_cost_rate_atomic', {
+    const { data, error } = await supabase.rpc('save_cost_rate_atomic_versioned', {
         p_rate_id: input.id ?? null,
+        p_expected_updated_at: input.expectedUpdatedAt ?? null,
         p_name: input.name.trim(),
         p_category: input.category,
         p_unit: input.unit,
