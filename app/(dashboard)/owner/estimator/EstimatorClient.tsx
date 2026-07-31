@@ -105,6 +105,7 @@ import { createClientRequestUuid } from '@/lib/client-request-id'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
+import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -408,7 +409,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         case 'SET_LOOM_POWER_KW':
             return { ...state, loomPowerKw: action.kw, loomPowerKwIsCustomised: true }
         case 'ADD_WARP_ROW':
-            return { ...state, warpRows: [...state.warpRows, { id: nanoid(), ...DEFAULT_WARP_ROW }] }
+            return { ...state, warpRows: [...state.warpRows, { id: nanoid(), ...DEFAULT_WARP_ROW, label: `Warp ${state.warpRows.length + 1}` }] }
         case 'UPDATE_WARP_ROW':
             return {
                 ...state,
@@ -420,7 +421,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             if (state.warpRows.length <= 1) return state
             return { ...state, warpRows: state.warpRows.filter(r => r.id !== action.id) }
         case 'ADD_WEFT_ROW':
-            return { ...state, weftRows: [...state.weftRows, { id: nanoid(), ...DEFAULT_WEFT_ROW }] }
+            return { ...state, weftRows: [...state.weftRows, { id: nanoid(), ...DEFAULT_WEFT_ROW, label: `Weft ${state.weftRows.length + 1}` }] }
         case 'UPDATE_WEFT_ROW':
             return {
                 ...state,
@@ -661,7 +662,10 @@ function StepperField({
                     value={value}
                     step={step}
                     min={0}
-                    onChange={e => onChange(Number(e.target.value))}
+                    onChange={e => {
+                        const next = parseNonNegativeInput(e.target.value)
+                        if (next !== null) onChange(next)
+                    }}
                     className="h-full w-16 rounded-none border-0 bg-white p-0 text-center font-mono text-sm font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="flex w-10 items-center justify-center border-l border-r border-[var(--color-hairline)] text-xs font-semibold text-[var(--color-muted)]">
@@ -705,7 +709,7 @@ function NumField({
                     placeholder={displayPlaceholder}
                     value={displayValue}
                     onChange={e => {
-                        const val = e.target.value === '' ? null : Number(e.target.value)
+                        const val = parseNumericInput(e.target.value, { min })
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-10 sm:pr-14 border focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
@@ -816,6 +820,7 @@ function WidthField({
     unit,
     hint,
     warning,
+    onUseInches,
 }: {
     label: string
     value: number
@@ -823,6 +828,7 @@ function WidthField({
     unit: 'cm' | 'inch'
     hint?: string
     warning?: string
+    onUseInches?: () => void
 }) {
     const displayValue = useMemo(() => {
         if (!value) return ''
@@ -863,7 +869,7 @@ function WidthField({
                     min={0}
                     value={displayValue}
                     onChange={e => {
-                        const raw = e.target.value === '' ? 0 : Number(e.target.value)
+                        const raw = parseNonNegativeInput(e.target.value) ?? 0
                         if (unit === 'inch') {
                             const cm = raw * 2.54
                             onChange(Number(cm.toFixed(4)))
@@ -886,7 +892,16 @@ function WidthField({
                 {warning && (
                     <p className="flex items-start gap-1 rounded-md border border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)] px-2 py-1 text-[10px] font-semibold leading-tight text-[var(--color-warning-amber)]">
                         <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                        <span>{warning}</span>
+                        <span className="min-w-0 flex-1">{warning}</span>
+                        {onUseInches && (
+                            <button
+                                type="button"
+                                onClick={onUseInches}
+                                className="shrink-0 rounded border border-[var(--color-warning-amber)] px-1.5 py-0.5 text-[9px] font-bold underline-offset-2 hover:bg-white"
+                            >
+                                Use inches
+                            </button>
+                        )}
                     </p>
                 )}
                 {hint && <p className="text-[10px] text-[var(--color-muted)] font-medium leading-tight pl-1">{hint}</p>}
@@ -895,7 +910,14 @@ function WidthField({
     )
 }
 
-function SectionCostPill({ value }: { value: number }) {
+function SectionCostPill({ value, valid = true }: { value: number; valid?: boolean }) {
+    if (!valid) {
+        return (
+            <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">
+                —
+            </span>
+        )
+    }
     const hasCost = value > 0
     return (
         <span className={`rounded-full border px-3 py-1 text-[13px] font-semibold shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
@@ -924,7 +946,7 @@ function CapacityMetricField({
                 <Input
                     type="number"
                     value={value ?? ''}
-                    onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
+                    onChange={e => onChange(parseNonNegativeInput(e.target.value))}
                     className="h-7 border-0 bg-transparent p-0 text-lg font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0"
                 />
                 <span className="pb-0.5 text-[11px] font-medium text-[var(--color-muted)]">{unit}</span>
@@ -1222,6 +1244,8 @@ export default function EstimatorClient({
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
     const [appliedTemplate,   setAppliedTemplate]   = useState<EstimatorTemplate | null>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
+    const [acknowledgedWarningKey, setAcknowledgedWarningKey] = useState<string | null>(null)
+    const [showWarningAcknowledgement, setShowWarningAcknowledgement] = useState(false)
     const [showConfirmNewQuality, setShowConfirmNewQuality] = useState(false)
 
     // Template search
@@ -1434,6 +1458,12 @@ export default function EstimatorClient({
         () => getFirstEstimatorValidationMessage(estimatorValidation),
         [estimatorValidation],
     )
+    const estimatorWarnings = estimatorValidation.warnings ?? []
+    const warningKey = useMemo(
+        () => estimatorWarnings.map(warning => `${warning.field}:${warning.message}`).join('|'),
+        [estimatorWarnings],
+    )
+    const warningsAcknowledged = !warningKey || acknowledgedWarningKey === warningKey
     const totals: EstimatorV3Totals = useMemo(() => {
         try {
             return calcFullTotals(state)
@@ -1501,7 +1531,14 @@ export default function EstimatorClient({
         setShowSaveTemplate(true)
     }, [appliedTemplate?.name, mode, partyName, qualityLabel])
 
+    const requireWarningReview = () => {
+        if (warningsAcknowledged) return false
+        setShowWarningAcknowledgement(true)
+        return true
+    }
+
     const handleSaveProfile = async () => {
+        if (requireWarningReview()) return
         setSaving(true)
         try {
             const res = await upsertFactoryCostProfile({
@@ -1551,6 +1588,7 @@ export default function EstimatorClient({
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
         }
+        if (requireWarningReview()) return
 
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
@@ -1615,6 +1653,7 @@ export default function EstimatorClient({
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
         }
+        if (requireWarningReview()) return
 
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
@@ -1766,6 +1805,7 @@ export default function EstimatorClient({
         if (firstEstimatorValidationMessage) {
             return toast.error(firstEstimatorValidationMessage)
         }
+        if (requireWarningReview()) return
         if (!saveAsStandaloneCosting && canUseProduction && effectiveTargetMode === 'quote' && !allowsPartyOrders) {
             return toast.error('Party quotations are unavailable in Market Run only mode')
         }
@@ -1913,6 +1953,8 @@ export default function EstimatorClient({
 
     const handleStartPartyOrder = async () => {
         if (saveQuoteLockRef.current || savingQuote) return
+        if (firstEstimatorValidationMessage) return toast.error(firstEstimatorValidationMessage)
+        if (requireWarningReview()) return
         if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
@@ -1979,9 +2021,12 @@ export default function EstimatorClient({
     const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
     const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
-    const displayMarginPct = Number.isFinite(orderQuote?.actualMarginPct)
-        ? orderQuote?.actualMarginPct ?? state.profitPct
-        : state.profitPct
+    const displayMarginPct = estimatorValidation.valid
+        && hasOrderQty
+        && orderQuote?.isValid
+        && Number.isFinite(orderQuote.actualMarginPct)
+        ? orderQuote.actualMarginPct
+        : null
     const costSegments = [
         { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
         { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
@@ -2109,6 +2154,57 @@ export default function EstimatorClient({
                 </div>
             )}
 
+            {estimatorWarnings.length > 0 && (
+                <div className={`${pageShellClass} mb-2`}>
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold">Review unusual values before saving</p>
+                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-amber-800">
+                                    {estimatorWarnings.slice(0, 4).map(warning => (
+                                        <li key={`${warning.field}:${warning.message}`}>{warning.message}</li>
+                                    ))}
+                                </ul>
+                                {estimatorWarnings.length > 4 && (
+                                    <p className="mt-1 text-xs font-semibold text-amber-700">+{estimatorWarnings.length - 4} more unusual value(s)</p>
+                                )}
+                                <p className="mt-2 text-[11px] font-medium text-amber-700">Costing can be reviewed, but a save or quotation requires acknowledgement.</p>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="shrink-0 border-amber-300 bg-white text-amber-800 hover:bg-amber-100"
+                                onClick={() => setShowWarningAcknowledgement(true)}
+                            >
+                                Review
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {!estimatorValidation.valid && (
+                <div id={validationSummaryId} className={`${pageShellClass} mb-2`} role="alert">
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-900">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold">Complete the highlighted inputs before saving</p>
+                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-red-800">
+                                    {estimatorValidation.issues.slice(0, 6).map(issue => (
+                                        <li key={`${issue.field}:${issue.message}`}>{issue.message}</li>
+                                    ))}
+                                </ul>
+                                {estimatorValidation.issues.length > 6 && (
+                                    <p className="mt-1 text-xs font-semibold text-red-700">+{estimatorValidation.issues.length - 6} more input issue(s)</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
             <div className="sticky top-3 z-40 -mt-3 py-3">
                 <div className={hudShellClass}>
@@ -2142,7 +2238,7 @@ export default function EstimatorClient({
                                 <div className="min-w-0 rounded-[12px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] px-3 py-2 2xl:px-2 2xl:py-1.5">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">{t('estimator.hud.margin')}</p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
-                                        {displayMarginPct >= 0 ? '+' : ''}{displayMarginPct.toFixed(1)}%
+                                        {displayMarginPct === null ? '—' : `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%`}
                                     </p>
                                 </div>
                                 <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
@@ -2395,7 +2491,7 @@ export default function EstimatorClient({
                                 type="range"
                                 min={0} max={100} step={0.5}
                                 value={state.profitPct}
-                                onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
+                                onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                 className="h-5 flex-1 modern-slider"
                             />
                             <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
@@ -2634,7 +2730,7 @@ export default function EstimatorClient({
                         accent="warp"
                         step={2}
                         detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
-                        badgeContent={<SectionCostPill value={totals.warpCostPerM} />}
+                        badgeContent={<SectionCostPill value={totals.warpCostPerM} valid={hasValidCostResult} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Block */}
@@ -2837,7 +2933,7 @@ export default function EstimatorClient({
                                         inch
                                     </button>
                                 </div>
-                                <SectionCostPill value={totals.weftCostPerM} />
+                                <SectionCostPill value={totals.weftCostPerM} valid={hasValidCostResult} />
                             </div>
                         }
                     />
@@ -2902,6 +2998,14 @@ export default function EstimatorClient({
                                             unit={widthUnit}
                                             hint={row.calculationMode === 'manual' ? 'Saved for audit; manual kg bypasses formula' : 'Used for weft yarn formula'}
                                             warning={effectiveWidthWarning}
+                                            onUseInches={effectiveWidthWarning && widthUnit === 'cm'
+                                                ? () => {
+                                                    const inches = effectiveCostingWidthCm
+                                                    const convertedCm = Number((inches * 2.54).toFixed(4))
+                                                    dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value: convertedCm })
+                                                    dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: convertedCm })
+                                                }
+                                                : undefined}
                                         />
                                         {row.calculationMode === 'manual' ? (
                                             <NumField label="Weft Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Kilograms of Weft Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
@@ -2947,7 +3051,7 @@ export default function EstimatorClient({
 
                 {/* 4. Weave Cost */}
                 <EstimatorCard accent="weave">
-                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} />} />
+                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
 
                         {/* ── Loom Type Selector ── renders above Loom Wage ── */}
@@ -2997,8 +3101,8 @@ export default function EstimatorClient({
                                                     onChange={e => {
                                                         const raw = e.target.value
                                                         setWagePerMInput(raw)
-                                                        const wageNum = Number(raw)
-                                                        if (!isNaN(wageNum) && wageNum > 0 && totalPicks > 0) {
+                                                        const wageNum = parseNonNegativeInput(raw)
+                                                        if (wageNum !== null && wageNum > 0 && totalPicks > 0) {
                                                             const derived = wageNum / totalPicks
                                                             dispatch({ type: 'SET', field: 'perPickCostPaisa', value: Math.round(derived * 10000) / 10000 })
                                                         }
@@ -3023,7 +3127,8 @@ export default function EstimatorClient({
                                                     step={0.1}
                                                     value={paisaPerPickDisplay}
                                                     onChange={e => {
-                                                        const v = Number(e.target.value)
+                                                        const v = parseNonNegativeInput(e.target.value)
+                                                        if (v === null) return
                                                         dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v / 100 })
                                                         setWagePerMInput('')
                                                     }}
@@ -3061,7 +3166,7 @@ export default function EstimatorClient({
 
                 {/* 5. Warping & Sizing */}
                 <EstimatorCard accent="post">
-                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} />} />
+                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
@@ -3131,7 +3236,7 @@ export default function EstimatorClient({
                         step={6}
                         badgeContent={
                             <div className="flex items-center gap-2">
-                                <SectionCostPill value={totals.overheadPerM} />
+                                <SectionCostPill value={totals.overheadPerM} valid={hasValidCostResult} />
                             </div>
                         }
                     />
@@ -3316,7 +3421,7 @@ export default function EstimatorClient({
                                                                                 type="number"
                                                                                 value={item.monthlyAmount}
                                                                                 disabled={isLocked}
-                                                                                onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
+                                                                                onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                                 className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                             />
                                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--color-muted)] font-medium pointer-events-none">/mo</span>
@@ -3357,7 +3462,7 @@ export default function EstimatorClient({
                                                                                         <Input 
                                                                                             type="number" 
                                                                                             value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth ?? 0} 
-                                                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { unitsPerLoomPerMonth: Number(e.target.value), type: 'electricity', mode: 'per_loom' } })}
+                                                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { unitsPerLoomPerMonth: parseNonNegativeInput(e.target.value) ?? 0, type: 'electricity', mode: 'per_loom' } })}
                                                                                             className="h-6 text-[10px] font-mono font-bold px-1.5"
                                                                                         />
                                                                                     </div>
@@ -3366,7 +3471,7 @@ export default function EstimatorClient({
                                                                                         <Input 
                                                                                             type="number" 
                                                                                             value={(item.meta as ElectricityMeta)?.ratePerUnit ?? 0} 
-                                                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { ratePerUnit: Number(e.target.value), type: 'electricity', mode: 'per_loom' } })}
+                                                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { ratePerUnit: parseNonNegativeInput(e.target.value) ?? 0, type: 'electricity', mode: 'per_loom' } })}
                                                                                             className="h-6 text-[10px] font-mono font-bold px-1.5"
                                                                                         />
                                                                                     </div>
@@ -3384,7 +3489,7 @@ export default function EstimatorClient({
                                                                                     <Input 
                                                                                         type="number" 
                                                                                         value={(item.meta as DepreciationMeta)?.avgCostPerLoom ?? 1000000} 
-                                                                                        onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { avgCostPerLoom: Number(e.target.value), type: 'depreciation' } })}
+                                                                                        onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { avgCostPerLoom: parseNonNegativeInput(e.target.value) ?? 0, type: 'depreciation' } })}
                                                                                         className="h-7 text-[10px] font-mono font-bold pl-4 pr-1.5"
                                                                                     />
                                                                                 </div>
@@ -3394,7 +3499,7 @@ export default function EstimatorClient({
                                                                                 <Input 
                                                                                     type="number" 
                                                                                     value={(item.meta as DepreciationMeta)?.usefulLifeYears ?? 10} 
-                                                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { usefulLifeYears: Number(e.target.value), type: 'depreciation' } })}
+                                                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { usefulLifeYears: parseNumericInput(e.target.value, { min: 1 }) ?? 1, type: 'depreciation' } })}
                                                                                     className="h-7 text-[10px] font-mono font-bold px-2"
                                                                                 />
                                                                             </div>
@@ -3432,7 +3537,7 @@ export default function EstimatorClient({
                                                                     <Input
                                                                         type="number"
                                                                         value={state.monthlyOutputM}
-                                                                        onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: Number(e.target.value) })}
+                                                                        onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                         className="h-10 rounded-[9px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pr-9 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                     />
                                                                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m</span>
@@ -3851,6 +3956,40 @@ export default function EstimatorClient({
                 </DialogContent>
             </Dialog>
 
+            {/* Unusual-value acknowledgement */}
+            <Dialog open={showWarningAcknowledgement} onOpenChange={setShowWarningAcknowledgement}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-amber-800">
+                            <AlertTriangle className="h-5 w-5" /> Review unusual values
+                        </DialogTitle>
+                        <DialogDescription>
+                            These values may be valid for a special fabric, but they are outside the usual costing range. Confirm them before saving a costing or quotation.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        {estimatorWarnings.map(warning => (
+                            <div key={`${warning.field}:${warning.message}`} className="flex gap-2 text-sm text-amber-900">
+                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600" />
+                                <span>{warning.message}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowWarningAcknowledgement(false)}>Go back</Button>
+                        <Button
+                            className="bg-amber-600 text-white hover:bg-amber-700"
+                            onClick={() => {
+                                setAcknowledgedWarningKey(warningKey)
+                                setShowWarningAcknowledgement(false)
+                            }}
+                        >
+                            I reviewed these values
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Save Quality Dialog */}
             <Dialog
                 open={showSaveTemplate}
@@ -3947,7 +4086,7 @@ export default function EstimatorClient({
                                                 step={1}
                                                 value={editingWarpRates.find(x => x.id === row.id)?.yarnRate ?? row.yarnRate}
                                                 onChange={e => setEditingWarpRates(prev =>
-                                                    prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
+                                                    prev.map(x => x.id === row.id ? { ...x, yarnRate: parseNonNegativeInput(e.target.value) ?? 0 } : x)
                                                 )}
                                                 className="h-10 text-sm font-mono font-semibold text-right pr-12 pl-8 border-indigo-100 focus:border-indigo-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
@@ -3976,7 +4115,7 @@ export default function EstimatorClient({
                                                 step={1}
                                                 value={editingWeftRates.find(x => x.id === row.id)?.yarnRate ?? row.yarnRate}
                                                 onChange={e => setEditingWeftRates(prev =>
-                                                    prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
+                                                    prev.map(x => x.id === row.id ? { ...x, yarnRate: parseNonNegativeInput(e.target.value) ?? 0 } : x)
                                                 )}
                                                 className="h-10 text-sm font-mono font-semibold text-right pr-12 pl-8 border-emerald-100 focus:border-emerald-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />

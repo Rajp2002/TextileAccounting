@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Cpu, Zap, RotateCcw, ArrowRight } from 'lucide-react'
 import { LOOM_TYPE_DEFAULTS, type LoomType, type EstimateState } from '@/lib/estimator'
 import { calcDailyOutputM } from '@/lib/estimator-capacity'
+import { parseNumericInput } from '@/lib/numeric-input'
 
 export { calcDailyOutputM } from '@/lib/estimator-capacity'
 
@@ -150,7 +151,7 @@ export function LoomConfigSection({
                                 step={10}
                                 value={loomRpm ?? ''}
                                 onChange={e => {
-                                    const v = e.target.value === '' ? null : Number(e.target.value)
+                                    const v = parseNumericInput(e.target.value, { min: 1 })
                                     onSetLoomRpm(v)
                                 }}
                                 placeholder={isOther ? 'Required' : '—'}
@@ -199,7 +200,7 @@ export function LoomConfigSection({
                                 step={0.1}
                                 value={loomPowerKw ?? ''}
                                 onChange={e => {
-                                    const v = e.target.value === '' ? null : Number(e.target.value)
+                                    const v = parseNumericInput(e.target.value, { min: 0 })
                                     onSetLoomPowerKw(v)
                                 }}
                                 placeholder={isOther ? 'Required' : '—'}
@@ -242,7 +243,7 @@ export function LoomConfigSection({
                                 step={1}
                                 value={hoursPerShift ?? ''}
                                 placeholder="12"
-                                onChange={e => onSetHoursPerShift(e.target.value === '' ? null : Number(e.target.value))}
+                                onChange={e => onSetHoursPerShift(parseNumericInput(e.target.value, { min: 1 }))}
                                 className="h-9 text-xs font-mono font-bold text-center pr-10 bg-white border-[#EFD7A4] focus:border-[var(--color-warning-amber)] focus:ring-1 focus:ring-[var(--color-warning-amber)]/20 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[10px]"
                             />
                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">

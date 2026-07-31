@@ -24,6 +24,7 @@ function validEstimate(): EstimateState {
         ...state,
         warpRows: [{
             id: 'warp-main',
+            label: 'Main Warp',
             calculationMode: 'formula',
             manualKgPer100m: null,
             calcDenier: 75,
@@ -34,6 +35,7 @@ function validEstimate(): EstimateState {
         }],
         weftRows: [{
             id: 'weft-main',
+            label: 'Main Weft',
             calculationMode: 'formula',
             manualKgPer100m: null,
             picks: 68,

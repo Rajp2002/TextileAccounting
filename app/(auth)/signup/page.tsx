@@ -11,6 +11,7 @@ import { Loader2, ArrowRight, Eye, EyeOff, Building2, CheckCircle2 } from 'lucid
 import AuthLayout from '@/components/auth/auth-layout'
 import { createOrganizationAndRedirect } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
+import { normalizeIndianPhone } from '@/lib/phone'
 
 type RedirectError = {
     message?: string
@@ -73,12 +74,12 @@ function SignupForm() {
             newErrors.email = 'Invalid email address'
         if (!/^\d{10}$/.test(phone))
             newErrors.phone = 'Phone number must be exactly 10 digits'
-        if (password.length < 8)
-            newErrors.password = 'Password must be at least 8 characters'
-        if (!/[A-Z]/.test(password))
-            newErrors.password = 'Password must contain an uppercase letter'
-        if (!/[0-9]/.test(password))
-            newErrors.password = 'Password must contain a number'
+        const passwordErrors = strength.checks
+            .slice(0, 3)
+            .filter(check => !check.met)
+            .map(check => check.label)
+        if (passwordErrors.length > 0)
+            newErrors.password = `Password needs: ${passwordErrors.join(', ')}`
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -92,7 +93,7 @@ function SignupForm() {
             const result = await createOrganizationAndRedirect({
                 ownerName: ownerName.trim(),
                 email: email.trim(),
-                phone: phone.trim(),
+                phone: normalizeIndianPhone(phone),
                 password,
                 factoryName: factoryName.trim(),
                 referralCode: referralCode.trim() || undefined,
@@ -193,15 +194,18 @@ function SignupForm() {
                             id="phone"
                             type="tel"
                             placeholder="9876543210"
-                            maxLength={10}
+                            maxLength={14}
+                            inputMode="numeric"
+                            autoComplete="tel"
                             value={phone}
                             onChange={(e) => { 
-                                // Only allow numeric characters
-                                const val = e.target.value.replace(/\D/g, '')
+                                const val = normalizeIndianPhone(e.target.value)
                                 setPhone(val)
                                 setErrors(prev => ({ ...prev, phone: '' })) 
                             }}
                             onBlur={validate}
+                            aria-invalid={Boolean(errors.phone)}
+                            aria-describedby={errors.phone ? 'phone-error' : undefined}
                             className={cn(
                                 'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pl-11',
                                 errors.phone && 'border-red-400 focus:border-red-500'
@@ -209,7 +213,7 @@ function SignupForm() {
                             disabled={loading}
                         />
                     </div>
-                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                    {errors.phone && <p id="phone-error" role="alert" className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
 
                 {/* Password + Strength Indicator */}
@@ -224,6 +228,9 @@ function SignupForm() {
                             placeholder="Min. 8 characters"
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: '' })) }}
+                            onBlur={validate}
+                            aria-invalid={Boolean(errors.password)}
+                            aria-describedby={errors.password ? 'password-error password-rules' : 'password-rules'}
                             className={cn(
                                 'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pr-10',
                                 errors.password && 'border-red-400 focus:border-red-500'
@@ -254,7 +261,7 @@ function SignupForm() {
                                     />
                                 ))}
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div id="password-rules" className="flex items-center justify-between">
                                 <p className={cn(
                                     'text-xs font-medium transition-colors',
                                     strength.score === 4 ? 'text-emerald-600' :
@@ -263,7 +270,7 @@ function SignupForm() {
                                 )}>
                                     {strength.label}
                                 </p>
-                                <div className="flex gap-3">
+                                <div className="flex flex-wrap gap-3">
                                     {strength.checks.slice(0, 3).map((check) => (
                                         <div key={check.label} className={cn(
                                             'flex items-center gap-1 text-[10px]',
@@ -277,7 +284,7 @@ function SignupForm() {
                             </div>
                         </div>
                     )}
-                    {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                    {errors.password && <p id="password-error" role="alert" className="text-xs text-red-500">{errors.password}</p>}
                 </div>
 
                 {/* Referral Code (Optional) */}
