@@ -142,7 +142,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
     })
 
     it('enforces the 30-day manual renewal window in the database backstop', () => {
-        const content = readProjectFile('supabase/migrations/20260801090000_manual_renewal_window.sql')
+        const content = readProjectFile('supabase/migrations/20260801100000_manual_renewal_window.sql')
         expect(content).toContain('enforce_manual_renewal_window')
         expect(content).toContain("interval '30 days'")
         expect(content).toContain('BEFORE INSERT OR UPDATE OF')
