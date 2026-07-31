@@ -100,8 +100,9 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('uses an intentional deep-link explanation with a return path', () => {
-        expect(gate).toContain('Continue with Weavly Estimator')
-        expect(gate).toContain('Return to Estimator')
+        expect(gate).toContain('Unlock {featureName}')
+        expect(gate).toContain('Back to Cost Estimates')
+        expect(gate).toContain('routeName')
         expect(gate).not.toContain('Lock className=')
     })
 })

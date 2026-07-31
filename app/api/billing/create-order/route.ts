@@ -8,7 +8,8 @@ import {
     getBillingPrice,
     isPurchasablePlanTier,
     BILLING_MODEL,
-    ACCESS_DAYS
+    ACCESS_DAYS,
+    RENEWAL_ELIGIBILITY_DAYS,
 } from '@/lib/billing-constants'
 import {
     resolveBillingPurchase,
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     const [subscriptionsResult, paymentsResult] = await Promise.all([
         supabase
             .from('org_subscriptions')
-            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, created_at')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at')
             .eq('org_id', orgId),
         supabase
             .from('subscription_payments')
@@ -91,6 +92,47 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: decision.reason }, { status: 409 })
     }
     const price = getBillingPrice(planTier, decision.purchaseType)
+
+    // A browser double-click, a second tab, or a slow network must not create
+    // multiple live Razorpay orders for the same purchase. Reuse a recent
+    // untouched order and never open a second checkout while activation is in
+    // progress.
+    const nowMs = Date.now()
+    const recentPending = (subscriptionsResult.data ?? []).find((row) => {
+        const createdAt = row.created_at ? new Date(row.created_at).getTime() : Number.NaN
+        return row.plan_tier === planTier
+            && row.checkout_purchase_type === decision.purchaseType
+            && row.status === 'created'
+            && typeof row.razorpay_order_id === 'string'
+            && row.checkout_currency === 'INR'
+            && Number(row.checkout_amount_paise) === price.totalPaise
+            && Number.isFinite(createdAt)
+            && createdAt > nowMs - 15 * 60 * 1000
+    })
+
+    if (recentPending?.razorpay_order_id) {
+        return NextResponse.json({
+            orderId: recentPending.razorpay_order_id,
+            amount: price.totalPaise,
+            currency: 'INR',
+            keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            planName: plan.name,
+            purchaseType: decision.purchaseType,
+            reused: true,
+        })
+    }
+
+    const activating = (subscriptionsResult.data ?? []).some((row) =>
+        row.plan_tier === planTier
+        && row.status === 'authenticated'
+        && row.checkout_purchase_type === decision.purchaseType
+    )
+    if (activating) {
+        return NextResponse.json(
+            { error: 'Your payment is being confirmed. Please wait for access to activate before trying again.' },
+            { status: 409 }
+        )
+    }
 
     // 4. Create Razorpay order
     // Receipt format must be short (under 40 chars)
@@ -146,6 +188,7 @@ export async function POST(req: NextRequest) {
             keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             planName: plan.name,
             purchaseType: decision.purchaseType,
+            renewalEligibilityDays: RENEWAL_ELIGIBILITY_DAYS,
         })
     } catch (err) {
         Sentry.captureException(err, {

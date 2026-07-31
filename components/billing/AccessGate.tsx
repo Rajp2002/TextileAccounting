@@ -5,14 +5,13 @@ import Link from 'next/link'
 import { Calculator, Zap, Star, ArrowRight, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createPerfTimer } from '@/lib/perf'
+import { getBillingPrice } from '@/lib/billing-constants'
 
 interface AccessGateProps {
     /** Minimum tier needed to view this content */
     requiredTier: 'base' | 'premium'
     /** Optional route label for performance logs. */
     routeName?: string
-    /** Optional destination when the user has a paid but insufficient tier. */
-    insufficientRedirect?: string
     children: React.ReactNode
 }
 
@@ -31,7 +30,6 @@ interface AccessGateProps {
 export default async function AccessGate({
     requiredTier,
     routeName = '/owner/* access-gate',
-    insufficientRedirect,
     children,
 }: AccessGateProps) {
     const perf = createPerfTimer(routeName)
@@ -51,7 +49,7 @@ export default async function AccessGate({
 
     // No subscription at all → send to billing
     if (tier === 'none') {
-        redirect('/owner/billing')
+        redirect(`/owner/billing?from=${encodeURIComponent(routeName)}`)
     }
 
     // Tier is sufficient → render the protected content
@@ -59,21 +57,39 @@ export default async function AccessGate({
         return <>{children}</>
     }
 
-    if (insufficientRedirect) {
-        redirect(insufficientRedirect)
-    }
-
     // Tier is insufficient (base trying to access premium) → show upgrade wall
-    return <UpgradeWall currentTier={tier} />
+    return <UpgradeWall currentTier={tier} routeName={routeName} />
 }
 
 // ─── Upgrade Wall UI ──────────────────────────────────────────────────────────
 
 function UpgradeWall({
     currentTier,
+    routeName,
 }: {
     currentTier: SubscriptionTier
+    routeName: string
 }) {
+    const routeLabels: Record<string, string> = {
+        '/owner/today': 'Factory Today',
+        '/owner/analytics': 'Analytics',
+        '/owner/orders': 'Party Orders',
+        '/owner/market-runs': 'Market Runs',
+        '/owner/stock': 'Godown Stock',
+        '/owner/dispatches': 'Dispatches',
+        '/owner/commercials': 'Commercials',
+        '/owner/payroll': 'Payroll',
+        '/owner/advances': 'Worker Advances',
+        '/owner/fixed-workers': 'Fixed Workers',
+        '/owner/machines': 'Loom Management',
+        '/owner/archive': 'Archive',
+        '/owner/system-health': 'System Health',
+    }
+    const featureName = routeLabels[routeName] ?? 'This Full Suite feature'
+    const premiumPrice = getBillingPrice('premium', 'initial_purchase')
+    const premiumRenewal = getBillingPrice('premium', 'renewal')
+    const formatAmount = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`
+
     return (
         <div className="flex items-center justify-center min-h-[60vh] p-6">
             <div className="max-w-md w-full text-center space-y-6">
@@ -84,10 +100,10 @@ function UpgradeWall({
                 {/* Headline */}
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                        Continue with Weavly Estimator
+                        Unlock {featureName}
                     </h2>
                     <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                        This operational workspace is part of the <strong>Weavly Full Suite</strong>.
+                        {featureName} is part of the <strong>Weavly Full Suite</strong>.
                         {currentTier === 'base' && (
                             <> Your <strong>Estimator Plan</strong> remains complete for calculating, saving, and updating fabric costings.</>
                         )}
@@ -97,7 +113,7 @@ function UpgradeWall({
                 <Link href="/owner/estimator" className="block">
                     <Button variant="outline" size="lg" className="w-full gap-2 rounded-xl">
                         <ArrowLeft className="h-4 w-4" />
-                        Return to Estimator
+                        Back to Cost Estimates
                     </Button>
                 </Link>
 
@@ -105,11 +121,11 @@ function UpgradeWall({
                     <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest">Premium unlocks</p>
                     <ul className="space-y-2 text-sm text-gray-700">
                         {[
-                            'Full production & order tracking',
-                            'Payroll, advances & settlement',
-                            'Daily WhatsApp briefs',
-                            'Analytics & performance reports',
-                            'Unlimited machines & workers',
+                            'Production and party-order tracking',
+                            'Looms, workers, payroll, and advances',
+                            'Market runs, stock, and dispatches',
+                            'Analytics and owner visibility',
+                            'One connected factory workflow',
                         ].map(f => (
                             <li key={f} className="flex items-center gap-2">
                                 <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400 shrink-0" />
@@ -123,9 +139,9 @@ function UpgradeWall({
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                     <p className="text-sm text-gray-500">Weavly Full Suite</p>
                     <p className="text-3xl font-extrabold text-gray-900 mt-1">
-                        ₹29,500<span className="text-lg font-normal text-gray-400">/first year</span>
+                        {formatAmount(premiumPrice.totalPaise)}<span className="text-lg font-normal text-gray-400"> total / first year</span>
                     </p>
-                    <p className="text-xs text-gray-400">₹25,000 + 18% GST · ₹8,260/year renewal</p>
+                    <p className="text-xs text-gray-400">{formatAmount(premiumPrice.basePaise)} + {formatAmount(premiumPrice.gstPaise)} GST · {formatAmount(premiumRenewal.totalPaise)} total renewal</p>
                 </div>
 
                 {/* CTA */}
@@ -142,7 +158,7 @@ function UpgradeWall({
                 </Link>
 
                 <p className="text-xs text-gray-400">
-                    Secured by Razorpay.
+                    Secure Razorpay checkout · GST-inclusive totals shown
                 </p>
             </div>
         </div>

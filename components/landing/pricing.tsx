@@ -59,7 +59,7 @@ export default function LandingPricing() {
                             Start with the Estimator or bring the full factory workflow into Weavly. Both plans include a full year of access, with a lower annual renewal from year two.
                         </p>
                         <p className="mt-3 text-sm text-zinc-400 dark:text-zinc-500">
-                            Start with a 7-day Premium trial. Prices below show 18% GST separately and include one factory.
+                            Prices below show the GST-inclusive total and its 18% breakdown. Renewal is manual and opens 30 days before expiry. Payment receipts are provided after successful payment; formal GST invoice support is a future consideration.
                         </p>
                     </div>
                 </div>
@@ -91,23 +91,23 @@ export default function LandingPricing() {
                                     <div className={`border p-5 ${isPremium ? 'border-orange-200 bg-white/70' : 'border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5'}`}>
                                         <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">First year</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
-                                            <span className="text-5xl font-black tracking-tight text-zinc-950">{firstYearBase}</span>
-                                            <span className="text-sm font-semibold text-zinc-500">+ GST</span>
+                                            <span className="text-5xl font-black tracking-tight text-zinc-950">{firstYearTotal}</span>
+                                            <span className="text-sm font-semibold text-zinc-500">total</span>
                                         </p>
                                         <p className="mt-2 text-xs text-zinc-500">{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
                                     </div>
                                     <div className={`border p-5 ${isPremium ? 'border-orange-300 bg-orange-100/60' : 'border-orange-200 bg-orange-50/70 dark:border-orange-500/20 dark:bg-orange-500/10'}`}>
                                         <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">Renewal from year 2</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-1">
-                                            <span className="text-3xl font-black tracking-tight text-zinc-950">{renewalBase}</span>
-                                            <span className="text-sm font-semibold text-zinc-500">/year + GST</span>
+                                            <span className="text-3xl font-black tracking-tight text-zinc-950">{renewalTotal}</span>
+                                            <span className="text-sm font-semibold text-zinc-500">total / year</span>
                                         </p>
-                                        <p className="mt-2 text-xs text-zinc-500">{renewalGst} GST · {renewalTotal} total</p>
+                                        <p className="mt-2 text-xs text-zinc-500">{renewalBase} + {renewalGst} GST</p>
                                     </div>
                                 </div>
 
                                 <Button asChild className={`mt-6 w-full rounded-md py-6 font-bold ${isPremium ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md shadow-orange-500/20' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
-                                    <a href="/signup">Start 7-day trial</a>
+                                    <a href="/signup">Choose this plan</a>
                                 </Button>
 
                                 <div className="mt-7 grid gap-3 text-sm leading-6 text-zinc-600 sm:grid-cols-2">

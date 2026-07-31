@@ -5,7 +5,6 @@ export default function FactoryTodayLayout({ children }: { children: React.React
         <AccessGate
             requiredTier="premium"
             routeName="/owner/today"
-            insufficientRedirect="/owner/estimator"
         >
             {children}
         </AccessGate>

@@ -28,18 +28,13 @@ const sections = [
 
 const plans = [
     {
-        name: 'Free Trial',
-        price: '₹0',
-        details: '7 days, all features, no credit card required',
-    },
-    {
         name: 'Weavly Cost Estimate (Base Plan)',
-        price: '₹7,000 + GST first year, then ₹2,000/year + GST renewal',
+        price: '₹8,260 total first year, then ₹2,360 total/year renewal',
         details: 'Warp and Weft yarn cost estimates, fabric templates, quotation history, margin and landed-cost visibility',
     },
     {
         name: 'Weavly Full Suite (Premium Plan)',
-        price: '₹25,000 + GST first year, then ₹7,000/year + GST renewal',
+        price: '₹29,500 total first year, then ₹8,260 total/year renewal',
         details: 'Complete factory operations including quotes, production tracking, shift logs, godown stock, dispatches, worker payroll, and owner analytics',
     },
 ]
@@ -53,8 +48,8 @@ export default function TermsOfServicePage() {
             lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
-                { label: 'Trial', value: '7 days with all features', icon: CalendarDays },
-                { label: 'Commercial model', value: 'Setup plus annual maintenance', icon: IndianRupee },
+                { label: 'Renewal window', value: 'Manual renewal from 30 days before expiry', icon: CalendarDays },
+                { label: 'Commercial model', value: 'Upfront first year plus annual renewal', icon: IndianRupee },
                 { label: 'Data export', value: '30-day window after termination', icon: Database },
                 { label: 'Jurisdiction', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
@@ -123,15 +118,14 @@ export default function TermsOfServicePage() {
                     </table>
                 </div>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Listed prices are exclusive of Goods and Services Tax (GST). GST will be added at the rate applicable on the invoice date. Final tax treatment, invoice description, and place of supply may vary as required by law.
+                    Listed prices are GST-inclusive totals at the displayed 18% rate. The taxable amount and GST component are shown separately for clarity. Payment receipts are provided after successful payment; formal GST tax invoice support is not currently available.
                 </p>
 
                 <h3>3.2 Subscription and Billing</h3>
                 <ul>
                     <li>First-year subscription fees are billed upfront and cover platform access, initial setup assistance, training, and standard workflow configuration.</li>
                     <li>Subscription activation and setup begin only after the selected plan and payment terms are confirmed.</li>
-                    <li>Subsequent annual renewals are billed in advance for each 12-month service period. Unless otherwise stated, the renewal cycle is based on the initial payment and activation date.</li>
-                    <li>The free trial does not automatically convert to a paid service. You must explicitly select a plan and complete payment to continue.</li>
+                    <li>Subsequent annual renewals are manual and billed in advance for each 12-month service period. Renewal becomes available during the final 30 days of the current paid period; no automatic charge is made.</li>
                     <li>Renewal may be cancelled before the next annual billing cycle. Cancellation stops the next renewal; it does not shorten an already paid service period.</li>
                     <li>All payments are processed through RBI-authorized payment aggregators.</li>
                 </ul>

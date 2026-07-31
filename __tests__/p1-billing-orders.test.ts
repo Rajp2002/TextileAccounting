@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BILLING_MODEL, BILLING_PLANS, getBillingPrice } from '../lib/billing-constants'
+import { BILLING_MODEL, BILLING_PLANS, getBillingPrice, RENEWAL_ELIGIBILITY_DAYS } from '../lib/billing-constants'
 import { readBillingOrderContext, resolveBillingPurchase, type BillingSubscriptionRow } from '../lib/billing-lifecycle'
 
 const root = process.cwd()
@@ -53,6 +53,8 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('₹7,000')
         expect(content).toContain('activeRenewalPrice')
         expect(content).toContain("tier === 'base'")
+        expect(content).toContain('Payment history')
+        expect(content).toContain('Download receipt')
         expect(content.toLowerCase()).not.toContain('₹2,360/month')
         expect(content.toLowerCase()).not.toContain('₹5,900/month')
         expect(content).not.toContain('AutoRenewToggle')
@@ -89,8 +91,9 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
     it('verifies AccessGate upgrade wall displays correct Weavly Full Suite info', () => {
         const content = readProjectFile('components/billing/AccessGate.tsx')
         expect(content).toContain('Weavly Full Suite')
-        expect(content).toContain('₹25,000')
-        expect(content).toContain('₹29,500')
+        expect(content).toContain("getBillingPrice('premium', 'initial_purchase')")
+        expect(content).toContain("getBillingPrice('premium', 'renewal')")
+        expect(content).toContain('featureName')
     })
 
     it('verifies migration file is additive only and indexes razorpay_order_id', () => {
@@ -138,6 +141,13 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('Renewal pricing requires prior captured or paid history')
     })
 
+    it('enforces the 30-day manual renewal window in the database backstop', () => {
+        const content = readProjectFile('supabase/migrations/20260801090000_manual_renewal_window.sql')
+        expect(content).toContain('enforce_manual_renewal_window')
+        expect(content).toContain("interval '30 days'")
+        expect(content).toContain('BEFORE INSERT OR UPDATE OF')
+    })
+
     it('derives first-year and renewal pricing from paid lifecycle history, never trial state', () => {
         const now = new Date('2026-07-10T00:00:00.000Z')
         const trial: BillingSubscriptionRow = {
@@ -162,9 +172,17 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
             current_end: '2027-01-01T00:00:00.000Z',
         }
         expect(resolveBillingPurchase([activeBase], [], 'base', now)).toMatchObject({
-            allowed: true,
+            allowed: false,
             purchaseType: 'renewal',
             periodStart: '2027-01-01T00:00:00.000Z',
+        })
+        expect(resolveBillingPurchase([activeBase], [], 'base', now).reason).toContain(`${RENEWAL_ELIGIBILITY_DAYS} days`)
+        expect(resolveBillingPurchase([{
+            ...activeBase,
+            current_end: '2026-07-25T00:00:00.000Z',
+        }], [], 'base', now)).toMatchObject({
+            allowed: true,
+            purchaseType: 'renewal',
         })
         expect(resolveBillingPurchase([activeBase], [], 'premium', now)).toMatchObject({
             allowed: true,
@@ -254,7 +272,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
             allowed: false,
         })
         expect(resolveBillingPurchase([activePremium], [], 'premium', now)).toMatchObject({
-            allowed: true,
+            allowed: false,
             purchaseType: 'renewal',
             periodStart: '2026-12-31T00:00:00.000Z',
         })

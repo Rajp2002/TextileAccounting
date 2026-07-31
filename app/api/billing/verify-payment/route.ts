@@ -4,7 +4,7 @@ import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { activateInitialPurchase } from '@/lib/billing-activation'
 import { BILLING_MODEL } from '@/lib/billing-constants'
-import { readBillingOrderContext } from '@/lib/billing-lifecycle'
+import { readBillingOrderContext, type BillingOrderContext } from '@/lib/billing-lifecycle'
 import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
@@ -79,13 +79,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 
+    let capturedContext: BillingOrderContext | null = null
+    let paymentWasCaptured = false
+
     // 4. Server-side validation against Razorpay API
     try {
-        console.log(`[verify-payment] Fetching order from Razorpay: ${razorpay_order_id}`)
         // Fetch order to verify details
         const order = await razorpay.orders.fetch(razorpay_order_id)
         if (!order) {
-            console.error(`[verify-payment] Order ${razorpay_order_id} not found on Razorpay`)
             return NextResponse.json({ error: 'Order not found on Razorpay' }, { status: 400 })
         }
 
@@ -93,10 +94,10 @@ export async function POST(req: NextRequest) {
         // order. No amount, tier, or purchase type is accepted from the client.
         const orderContext = readBillingOrderContext(order)
         if (!orderContext || orderContext.orgId !== orgId) {
-            console.error(`[verify-payment] Context mismatch for order: ${razorpay_order_id}`)
             Sentry.captureMessage(`Razorpay order verification failed. Context mismatch for order: ${razorpay_order_id}`, 'warning')
             return NextResponse.json({ error: 'Payment validation failed' }, { status: 400 })
         }
+        capturedContext = orderContext
 
         // Bind the Razorpay order to the local server-created checkout row.
         const { data: trackedOrder, error: trackedOrderError } = await supabase
@@ -119,18 +120,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Payment order is not recognized.' }, { status: 400 })
         }
 
-        console.log(`[verify-payment] Fetching payment from Razorpay: ${razorpay_payment_id}`)
         // Fetch payment details to check status and method
         const payment = await razorpay.payments.fetch(razorpay_payment_id)
         if (!payment) {
-            console.error(`[verify-payment] Payment ${razorpay_payment_id} not found on Razorpay`)
             return NextResponse.json({ error: 'Payment not found on Razorpay' }, { status: 400 })
         }
 
-        console.log(`[verify-payment] Checking payment: status=${payment.status}, order_id=${payment.order_id}`)
-
         if (payment.order_id !== razorpay_order_id) {
-            console.error(`[verify-payment] Payment ${razorpay_payment_id} order ID mismatch (expected: ${razorpay_order_id}, got: ${payment.order_id})`)
             return NextResponse.json({ error: 'Payment does not belong to this order' }, { status: 400 })
         }
 
@@ -142,6 +138,7 @@ export async function POST(req: NextRequest) {
             Sentry.captureMessage(`Uncaptured or amount-mismatched payment rejected: ${razorpay_payment_id}`, 'warning')
             return NextResponse.json({ error: 'Payment has not been captured for the selected plan.' }, { status: 400 })
         }
+        paymentWasCaptured = true
 
         // Activate the subscription using the shared helper
         const result = await activateInitialPurchase({
@@ -154,17 +151,32 @@ export async function POST(req: NextRequest) {
             purchaseType: orderContext.purchaseType,
         })
 
-        console.log(`[verify-payment] Activation successful! Sub end: ${result.subscription?.current_end}`)
-
         return NextResponse.json({
             success: true,
             activeUntil: result.subscription?.current_end,
+            paymentId: razorpay_payment_id,
+            orderId: razorpay_order_id,
+            planTier: orderContext.planTier,
+            purchaseType: orderContext.purchaseType,
+            amountPaise: Number(payment.amount),
         })
     } catch (err) {
-        console.error('[verify-payment] Unexpected verification error:', err)
         Sentry.captureException(err, {
             tags: { route: 'billing_verify_payment', phase: 'verification_process' }
         })
+        if (paymentWasCaptured && capturedContext) {
+            // Razorpay has confirmed the money, but the local activation may
+            // still complete through the webhook. Do not ask the owner to pay
+            // again while this state is reconciling.
+            return NextResponse.json({
+                error: 'Payment received. We are confirming access now.',
+                activationPending: true,
+                paymentId: razorpay_payment_id,
+                orderId: razorpay_order_id,
+                planTier: capturedContext.planTier,
+                purchaseType: capturedContext.purchaseType,
+            }, { status: 202 })
+        }
         return NextResponse.json({ error: 'Failed to verify payment' }, { status: 500 })
     }
 }
