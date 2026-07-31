@@ -15,6 +15,8 @@ export interface EstimatorAutosaveData<TState = unknown> {
   savedAt: number
   sourceQuoteId?: string
   sourceQuoteUpdatedAt?: string
+  sourceQuoteVersionNumber?: number
+  sourceQuoteCreatedAt?: string
   sourceRecordKind?: CostingRecordKind
   templateId?: string
   /**
@@ -58,6 +60,10 @@ export function parseEstimatorDraft<TState = unknown>(
       savedAt: Number(parsed.savedAt),
       sourceQuoteId: typeof parsed.sourceQuoteId === 'string' ? parsed.sourceQuoteId : undefined,
       sourceQuoteUpdatedAt: typeof parsed.sourceQuoteUpdatedAt === 'string' ? parsed.sourceQuoteUpdatedAt : undefined,
+      sourceQuoteVersionNumber: Number.isFinite(parsed.sourceQuoteVersionNumber)
+        ? Number(parsed.sourceQuoteVersionNumber)
+        : undefined,
+      sourceQuoteCreatedAt: typeof parsed.sourceQuoteCreatedAt === 'string' ? parsed.sourceQuoteCreatedAt : undefined,
       sourceRecordKind: parsed.sourceRecordKind === 'costing' || parsed.sourceRecordKind === 'quotation' || parsed.sourceRecordKind === 'market_run'
         ? parsed.sourceRecordKind
         : undefined,

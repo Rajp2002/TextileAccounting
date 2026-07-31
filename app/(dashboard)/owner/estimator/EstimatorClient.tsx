@@ -78,7 +78,6 @@ import {
     deleteTemplate,
     updateTemplateRates,
     updateFabricTemplate,
-    renameTemplate,
     getLastQuoteForParty,
     getMonthlyOutputSuggestion,
     upsertFactoryCostProfile,
@@ -115,6 +114,7 @@ type FixedWorkerOverhead = { id: number; name: string; role: string; monthly_sal
 
 type FactoryCostProfile = Partial<{
     factory_id: string
+    updated_at: string
     warping_rate_per_kg: number | string | null
     sizing_rate_per_kg: number | string | null
     winding_rate_per_kg: number | string | null
@@ -166,6 +166,70 @@ type EstimatorTemplate = {
     default_yarn_rate?: number | string | null
     is_active?: boolean
     content_text?: string
+}
+
+function normalizeRecipeRows(rows: Array<Record<string, unknown>> | null | undefined) {
+    return (rows ?? []).map(row => Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'id')))
+}
+
+function recipeSignature(recipe: {
+    warpRows: WarpRow[]
+    weftRows: WeftRow[]
+    tapeLengthM: number | string | null | undefined
+    warpCrimpPct: number | string | null | undefined
+    perPickCostPaisa: number | string | null | undefined
+    yarnShortagePct: number | string | null | undefined
+    overheadOverridePerM: number | string | null | undefined
+    loomType: string | null | undefined
+    loomRpm: number | string | null | undefined
+    loomPowerKw: number | string | null | undefined
+    sizingMode: string | null | undefined
+    hoursPerShift: number | string | null | undefined
+}) {
+    return JSON.stringify({
+        warpRows: normalizeRecipeRows(recipe.warpRows as unknown as Array<Record<string, unknown>>),
+        weftRows: normalizeRecipeRows(recipe.weftRows as unknown as Array<Record<string, unknown>>),
+        tapeLengthM: Number(recipe.tapeLengthM ?? 0),
+        warpCrimpPct: Number(recipe.warpCrimpPct ?? 0),
+        perPickCostPaisa: Number(recipe.perPickCostPaisa ?? 0),
+        yarnShortagePct: Number(recipe.yarnShortagePct ?? 0),
+        overheadOverridePerM: recipe.overheadOverridePerM == null ? null : Number(recipe.overheadOverridePerM),
+        loomType: recipe.loomType ?? null,
+        loomRpm: recipe.loomRpm == null ? null : Number(recipe.loomRpm),
+        loomPowerKw: recipe.loomPowerKw == null ? null : Number(recipe.loomPowerKw),
+        sizingMode: recipe.sizingMode ?? null,
+        hoursPerShift: recipe.hoursPerShift == null ? null : Number(recipe.hoursPerShift),
+    })
+}
+
+function hasSavedQualityRecipeChanges(template: EstimatorTemplate, state: EstimateState) {
+    return recipeSignature({
+        warpRows: template.warp_rows ?? [],
+        weftRows: template.weft_rows ?? [],
+        tapeLengthM: template.tape_length_m,
+        warpCrimpPct: template.warp_crimp_pct,
+        perPickCostPaisa: template.per_pick_cost_paise,
+        yarnShortagePct: template.yarn_shortage_pct,
+        overheadOverridePerM: template.overhead_override_per_m,
+        loomType: template.loom_type,
+        loomRpm: template.loom_rpm,
+        loomPowerKw: template.loom_power_kw,
+        sizingMode: template.sizing_mode,
+        hoursPerShift: template.hours_per_shift,
+    }) !== recipeSignature({
+        warpRows: state.warpRows,
+        weftRows: state.weftRows,
+        tapeLengthM: state.tapeLengthM,
+        warpCrimpPct: state.warpCrimpPct,
+        perPickCostPaisa: state.perPickCostPaisa,
+        yarnShortagePct: state.yarnShortagePct,
+        overheadOverridePerM: state.overheadOverridePerM,
+        loomType: state.loomType,
+        loomRpm: state.loomRpm,
+        loomPowerKw: state.loomPowerKw,
+        sizingMode: state.sizingMode,
+        hoursPerShift: state.hoursPerShift,
+    })
 }
 
 type EstimateStatePatch = Partial<EstimateState>
@@ -1126,6 +1190,8 @@ export default function EstimatorClient({
     const lastGeneratedWeft = useRef<string | null>(null)
     const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null)
     const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
+    const [sourceQuoteVersionNumber, setSourceQuoteVersionNumber] = useState<number | null>(null)
+    const [sourceQuoteCreatedAt, setSourceQuoteCreatedAt] = useState<string | null>(null)
     const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
     const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
     const quoteRequestIdRef = useRef<string | null>(null)
@@ -1138,6 +1204,12 @@ export default function EstimatorClient({
         status: 'draft' | 'accepted'
         recordKindOverride?: 'costing' | 'quotation'
     } | null>(null)
+    const [pendingQualityVersionSave, setPendingQualityVersionSave] = useState<{
+        targetMode: 'quote' | 'market'
+        status: 'draft' | 'accepted'
+        recordKindOverride?: 'costing' | 'quotation'
+    } | null>(null)
+    const [factoryBaselineUpdatedAt, setFactoryBaselineUpdatedAt] = useState<string | null>(initialProfile?.updated_at ?? null)
     const [templateName,     setTemplateName]     = useState('')
     const [templateSaveError, setTemplateSaveError] = useState<string | null>(null)
 
@@ -1179,6 +1251,8 @@ export default function EstimatorClient({
         weftInstruction,
         sourceQuoteId: sourceQuoteId ?? undefined,
         sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+        sourceQuoteVersionNumber: sourceQuoteVersionNumber ?? undefined,
+        sourceQuoteCreatedAt: sourceQuoteCreatedAt ?? undefined,
         sourceRecordKind: recordKindOverride ?? sourceRecordKind ?? undefined,
         templateId: appliedTemplate?.id,
         clientRequestId: clientRequestId ?? undefined,
@@ -1188,6 +1262,8 @@ export default function EstimatorClient({
         qualityLabel,
         sourceQuoteId,
         sourceQuoteUpdatedAt,
+        sourceQuoteVersionNumber,
+        sourceQuoteCreatedAt,
         sourceRecordKind,
         state,
         warpInstruction,
@@ -1207,6 +1283,8 @@ export default function EstimatorClient({
         setWeftInstruction(restored.weftInstruction)
         setSourceQuoteId(restored.sourceQuoteId ?? null)
         setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
+        setSourceQuoteVersionNumber(restored.sourceQuoteVersionNumber ?? null)
+        setSourceQuoteCreatedAt(restored.sourceQuoteCreatedAt ?? null)
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
@@ -1237,6 +1315,7 @@ export default function EstimatorClient({
                 getFixedWorkersForOverhead(),
             ])
             if (pRes.data) {
+                setFactoryBaselineUpdatedAt(pRes.data.updated_at ?? null)
                 dispatch({
                     type: 'INIT_FROM_PROFILE',
                     data: {
@@ -1271,9 +1350,11 @@ export default function EstimatorClient({
             weftInstruction,
             sourceQuoteId: sourceQuoteId ?? undefined,
             sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+            sourceQuoteVersionNumber: sourceQuoteVersionNumber ?? undefined,
+            sourceQuoteCreatedAt: sourceQuoteCreatedAt ?? undefined,
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction, sourceQuoteId, sourceQuoteUpdatedAt])
+    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction, sourceQuoteId, sourceQuoteUpdatedAt, sourceQuoteVersionNumber, sourceQuoteCreatedAt])
 
     // Sync partyName with qualityLabel in market mode for database/draft compatibility
     useEffect(() => {
@@ -1442,11 +1523,13 @@ export default function EstimatorClient({
                 avg_output_per_loom_per_day: state.avgOutputPerLoomPerDay,
                 yarn_shortage_pct:       state.yarnShortagePct,
                 warp_crimp_pct:          state.warpCrimpPct,
+                expectedUpdatedAt:       factoryBaselineUpdatedAt ?? undefined,
             })
 
             if (res.success) {
                 dispatch({ type: 'SET', field: 'isConfigured', value: true })
-                toast.success('Factory baseline updated successfully!')
+                setFactoryBaselineUpdatedAt(res.updatedAt ?? factoryBaselineUpdatedAt)
+                toast.success(t('estimator.sprint1.baseline_updated'))
             } else {
                 toast.error(res.error || 'Failed to save profile')
             }
@@ -1503,6 +1586,8 @@ export default function EstimatorClient({
                 setQualityLabel(savedName)
                 setSourceQuoteId(null)
                 setSourceQuoteUpdatedAt(null)
+                setSourceQuoteVersionNumber(null)
+                setSourceQuoteCreatedAt(null)
                 setSourceRecordKind(null)
                 quoteRequestIdRef.current = null
                 setShowSaveTemplate(false)
@@ -1535,11 +1620,12 @@ export default function EstimatorClient({
         const weftRows = trimLayerLabels(state.weftRows)
 
         setSavingTemplate(true)
-        const updatedName = qualityLabel.trim() || appliedTemplate.name
         const res = await updateFabricTemplate({
             id:               appliedTemplate.id,
             expectedUpdatedAt: appliedTemplate.updated_at,
-            name:             updatedName,
+            // A Saved Quality keeps its identity. A different construction is
+            // saved with "Save as New Quality" instead of being renamed here.
+            name:             appliedTemplate.name,
             warpRows,
             weftRows,
             tapeLengthM:      state.tapeLengthM,
@@ -1561,10 +1647,9 @@ export default function EstimatorClient({
             if (tRes.data) setTemplates(tRes.data)
             setAppliedTemplate(refreshed ?? {
                 ...appliedTemplate,
-                name: updatedName,
                 updated_at: res.updatedAt ?? appliedTemplate.updated_at,
             })
-            toast.success(t('estimator.toast.updated_applied'))
+            toast.success(t('estimator.sprint1.quality_updated_no_snapshot'))
         } else {
             toast.error(res.error ?? t('estimator.quality.updateFailed'))
         }
@@ -1588,6 +1673,8 @@ export default function EstimatorClient({
         lastGeneratedWeft.current = null
         setSourceQuoteId(null)
         setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         clearDraft()
@@ -1609,20 +1696,10 @@ export default function EstimatorClient({
     const handleSaveRatesAndApply = async () => {
         if (!editRatesTpl) return
         setSavingRates(true)
-        let expectedUpdatedAt = editRatesTpl.updated_at
+        const expectedUpdatedAt = editRatesTpl.updated_at
 
-        // 1. Rename if changed
-        if (editingTplName.trim() && editingTplName.trim() !== editRatesTpl.name) {
-            const renameRes = await renameTemplate(editRatesTpl.id, editingTplName.trim(), expectedUpdatedAt)
-            if (renameRes.error) {
-                setSavingRates(false)
-                toast.error(`${t('estimator.toast.rename_failed')} ${renameRes.error}`)
-                return
-            }
-            expectedUpdatedAt = renameRes.updatedAt ?? expectedUpdatedAt
-        }
-
-        // 2. Update rates
+        // Update rates only. The quality name is an identity and is not edited
+        // from this dialog; use "Save as New Quality" for a new construction.
         const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
             ...r,
             yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
@@ -1648,12 +1725,12 @@ export default function EstimatorClient({
         
         dispatch({
             type: 'APPLY_TEMPLATE',
-            template: refreshed ?? { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
+            template: refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
         })
-        setAppliedTemplate(refreshed ?? { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt })
-        setQualityLabel(editingTplName.trim())
+        setAppliedTemplate(refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt })
+        setQualityLabel(editRatesTpl.name)
         setEditRatesTpl(null)
-        toast.success(t('estimator.toast.updated_applied'))
+        toast.success(t('estimator.sprint1.rates_updated_no_snapshot'))
     }
 
     /** Apply template directly (without editing rates). */
@@ -1681,6 +1758,7 @@ export default function EstimatorClient({
         status: 'draft' | 'accepted' = 'draft',
         staleRatesAcknowledged = false,
         recordKindOverride?: 'costing' | 'quotation',
+        qualityUpdateDecision?: 'version_only' | 'version_and_quality',
     ) => {
         if (saveQuoteLockRef.current || savingQuote) return
         const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
@@ -1708,6 +1786,16 @@ export default function EstimatorClient({
         }
         if (staleDefaultRateNames.length > 0 && !staleRatesAcknowledged) {
             setPendingStaleRateSave({ targetMode, status, recordKindOverride })
+            return
+        }
+
+        const shouldOfferSavedQualityUpdate = effectiveTargetMode === 'quote'
+            && saveAsStandaloneCosting
+            && Boolean(appliedTemplate)
+            && hasSavedQualityRecipeChanges(appliedTemplate!, state)
+
+        if (shouldOfferSavedQualityUpdate && !qualityUpdateDecision) {
+            setPendingQualityVersionSave({ targetMode, status, recordKindOverride })
             return
         }
 
@@ -1761,6 +1849,8 @@ export default function EstimatorClient({
                     clearDraft()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
+                    setSourceQuoteVersionNumber(null)
+                    setSourceQuoteCreatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
                     toast.success('Market Run started and costing saved')
@@ -1781,6 +1871,8 @@ export default function EstimatorClient({
                     sourceQuoteId:           sourceQuoteId ?? undefined,
                     expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
                     templateId:              appliedTemplate?.id,
+                    expectedTemplateUpdatedAt: appliedTemplate?.updated_at,
+                    updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
                 })
                 if (res.success) {
                     setPartyNames(current => {
@@ -1792,11 +1884,15 @@ export default function EstimatorClient({
                     clearDraft()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
+                    setSourceQuoteVersionNumber(null)
+                    setSourceQuoteCreatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
                     toast.success(!saveAsStandaloneCosting
                         ? (status === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
-                        : (sourceQuoteId ? 'New costing version saved' : 'Costing saved'))
+                        : (qualityUpdateDecision === 'version_and_quality'
+                            ? `${sourceQuoteId ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
+                            : (sourceQuoteId ? 'New costing version saved' : 'Costing saved')))
                     router.push('/owner/quotes')
                 } else {
                     toast.error(res.error ?? 'Failed to save quote')
@@ -1852,6 +1948,8 @@ export default function EstimatorClient({
             clearDraft()
             setSourceQuoteId(null)
             setSourceQuoteUpdatedAt(null)
+            setSourceQuoteVersionNumber(null)
+            setSourceQuoteCreatedAt(null)
             setSourceRecordKind(null)
             quoteRequestIdRef.current = null
             toast.success('Party order started and costing saved')
@@ -1951,6 +2049,7 @@ export default function EstimatorClient({
                             monthly_working_days:    data.monthlyWorkingDays ?? state.monthlyWorkingDays,
                             avg_output_per_loom_per_day: data.avgOutputPerLoomPerDay ?? state.avgOutputPerLoomPerDay,
                             is_configured:           true,
+                            expectedUpdatedAt:       factoryBaselineUpdatedAt ?? undefined,
                         })
                         if (res.success) {
                             // Update local state and close wizard
@@ -1958,7 +2057,8 @@ export default function EstimatorClient({
                                 dispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
                             })
                             dispatch({ type: 'SET', field: 'isConfigured', value: true })
-                            toast.success('Factory baseline configured successfully!')
+                            setFactoryBaselineUpdatedAt(res.updatedAt ?? factoryBaselineUpdatedAt)
+                            toast.success(t('estimator.sprint1.baseline_configured'))
                         } else {
                             toast.error(res.error || 'Failed to save configuration')
                         }
@@ -1978,6 +2078,12 @@ export default function EstimatorClient({
                                     {draft.sourceRecordKind === 'costing' ? 'Updating saved Cost Estimate ' : canUseProduction ? 'Recalculating Cost Estimate from Quotation for ' : 'Updating saved Cost Estimate '}
                                     <span className="font-bold">{draft.sourceRecordKind === 'costing' || !canUseProduction ? (draft.qualityLabel || 'Untitled') : (draft.partyName || 'Unknown Party')}</span>
                                     {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
+                                    {draft.sourceRecordKind === 'costing' && draft.sourceQuoteVersionNumber && (
+                                        <span className="ml-1 text-amber-700">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
+                                    )}
+                                    {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
+                                        <span className="ml-1 text-amber-600">· saved {new Date(draft.sourceQuoteCreatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                    )}
                                     {canUseProduction && draft.sourceRecordKind !== 'costing' && ' — editable Quotations update in place; accepted Quotations create a linked version'}
                                     {draft.sourceRecordKind === 'costing' && ' — saving creates a new costing version without changing the original'}
                                 </>
@@ -2006,6 +2112,14 @@ export default function EstimatorClient({
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
             <div className="sticky top-3 z-40 -mt-3 py-3">
                 <div className={hudShellClass}>
+                    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--color-hairline)] pb-2 text-[11px] text-[var(--color-muted)]">
+                        <span className="font-semibold uppercase tracking-[0.08em] text-[var(--color-body)]">{t('estimator.sprint1.active_record')}</span>
+                        <span>{t('estimator.sprint1.quality')}: <strong className="text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</strong></span>
+                        {sourceQuoteId && sourceRecordKind === 'costing' && (
+                            <span>{t('estimator.sprint1.costing')}: <strong className="text-[var(--color-ink)]">v{sourceQuoteVersionNumber ?? 1}</strong>{sourceQuoteCreatedAt ? ` · ${new Date(sourceQuoteCreatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
+                        )}
+                        {!sourceQuoteId && <span>{t('estimator.sprint1.new_costing_snapshot')}</span>}
+                    </div>
                     <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
                         <div className="min-w-0 space-y-3">
                             <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 xl:items-end 2xl:gap-1.5 ${canUseProduction ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
@@ -2216,7 +2330,7 @@ export default function EstimatorClient({
                                         disabled={savingTemplate}
                                     >
                                         {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 text-brand-accent shrink-0" />}
-                                        <span className="truncate">Update {appliedTemplate.name}</span>
+                                        <span className="truncate">Update Saved Quality</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -2228,6 +2342,8 @@ export default function EstimatorClient({
                                             setAppliedTemplate(null)
                                             setSourceQuoteId(null)
                                             setSourceQuoteUpdatedAt(null)
+                                            setSourceQuoteVersionNumber(null)
+                                            setSourceQuoteCreatedAt(null)
                                             setSourceRecordKind(null)
                                             quoteRequestIdRef.current = null
                                             setTemplateSaveError(null)
@@ -2467,7 +2583,11 @@ export default function EstimatorClient({
                                 </Label>
                                 <Input
                                     value={qualityLabel}
+                                    readOnly={Boolean(appliedTemplate)}
+                                    aria-readonly={appliedTemplate ? 'true' : undefined}
+                                    title={appliedTemplate ? t('estimator.sprint1.saved_quality_name_stable') : undefined}
                                     onChange={e => {
+                                        if (appliedTemplate) return
                                         const val = e.target.value
                                         setQualityLabel(val)
                                         if (mode === 'market') {
@@ -2478,7 +2598,7 @@ export default function EstimatorClient({
                                     className="font-bold border-slate-200 h-11"
                                 />
                                 <p className="text-[10px] text-slate-400 font-medium leading-normal">
-                                    {t('estimator.quality.fabricQualityNameHelper')}
+                                    {appliedTemplate ? t('estimator.sprint1.saved_quality_name_stable') : t('estimator.quality.fabricQualityNameHelper')}
                                 </p>
                             </div>
                         </div>
@@ -3117,9 +3237,12 @@ export default function EstimatorClient({
                                                             disabled={saving}
                                                         >
                                                             {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
-                                                            Update Baseline
+                                                            {t('estimator.sprint1.save_baseline')}
                                                         </Button>
                                                     </div>
+                                                    <p className="text-[10px] leading-relaxed text-[var(--color-muted)]">
+                                                        {t('estimator.sprint1.baseline_future_only')}
+                                                    </p>
                                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                                         <CapacityMetricField
                                                             label="Machine Count"
@@ -3643,6 +3766,56 @@ export default function EstimatorClient({
                 </DialogContent>
             </Dialog>
 
+            <Dialog open={Boolean(pendingQualityVersionSave)} onOpenChange={open => { if (!open) setPendingQualityVersionSave(null) }}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <History className="h-5 w-5 text-[var(--color-yarn-orange)]" />
+                            {t('estimator.sprint1.save_new_version')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('estimator.sprint1.recipe_changed', { name: appliedTemplate?.name })}{' '}
+                            {t('estimator.sprint1.version_explanation')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3 text-sm text-[var(--color-body)]">
+                        <p className="font-semibold text-[var(--color-ink)]">
+                            {sourceQuoteVersionNumber
+                                ? t('estimator.sprint1.next_version', { version: sourceQuoteVersionNumber + 1 })
+                                : t('estimator.sprint1.next_version_generic')}
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">
+                            {t('estimator.sprint1.future_quality_explanation')}
+                        </p>
+                    </div>
+                    <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+                        <Button variant="ghost" onClick={() => setPendingQualityVersionSave(null)}>
+                            {t('estimator.sprint1.cancel')}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                const pending = pendingQualityVersionSave
+                                setPendingQualityVersionSave(null)
+                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_only')
+                            }}
+                        >
+                            {t('estimator.sprint1.save_version_only')}
+                        </Button>
+                        <Button
+                            className="bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]"
+                            onClick={() => {
+                                const pending = pendingQualityVersionSave
+                                setPendingQualityVersionSave(null)
+                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_and_quality')
+                            }}
+                        >
+                            {t('estimator.sprint1.save_version_update_quality')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Start New Quality Dialog */}
             <Dialog open={showConfirmNewQuality} onOpenChange={setShowConfirmNewQuality}>
                 <DialogContent className="sm:max-w-[400px] bg-white border border-slate-100 shadow-xl rounded-2xl p-6">
@@ -3739,14 +3912,16 @@ export default function EstimatorClient({
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-brand-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             {t('estimator.quality.editDialogTitle')} {editRatesTpl?.name}
                         </DialogTitle>
-                        <DialogDescription>Update the saved quality label and default rates.</DialogDescription>
+                        <DialogDescription>{t('estimator.sprint1.edit_quality_rates')}</DialogDescription>
                     </DialogHeader>
                     <div className="py-3 space-y-5">
                         <div className="space-y-1.5">
                             <Label className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 value={editingTplName}
-                                onChange={e => setEditingTplName(e.target.value)}
+                                readOnly
+                                aria-readonly="true"
+                                title={t('estimator.sprint1.saved_quality_name_stable')}
                                 className="font-bold border-slate-200 focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 rounded-xl h-11 transition-all"
                             />
                         </div>

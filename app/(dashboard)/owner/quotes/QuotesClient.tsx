@@ -696,6 +696,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 savedAt: getCurrentTimestampMs(),
                 sourceQuoteId: isDuplicate ? undefined : quote.id,
                 sourceQuoteUpdatedAt: isDuplicate ? undefined : quote.updated_at,
+                sourceQuoteVersionNumber: isDuplicate ? undefined : Number(quote.version_number ?? 1),
+                sourceQuoteCreatedAt: isDuplicate ? undefined : quote.created_at,
                 sourceRecordKind: createsQuotationFromCosting
                     ? undefined
                     : quote.record_kind ?? (canUseQuotationWorkflow ? 'quotation' : 'costing'),
