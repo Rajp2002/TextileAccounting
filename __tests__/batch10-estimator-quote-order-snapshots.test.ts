@@ -110,14 +110,15 @@ describe('Estimator persistence safety', () => {
         expect(estimatorActions).toContain('getEffectiveYarnDenier(firstWarp)')
     })
 
-    it('offers immutable accepted-quote re-estimation plus explicit duplicate and guarded delete', () => {
+    it('offers immutable accepted-quote re-estimation plus explicit duplicate and archive-first record management', () => {
         const quotesClient = readProjectFile('app/(dashboard)/owner/quotes/QuotesClient.tsx')
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
 
         expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'edit')}")
         expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'duplicate')}")
         expect(quotesClient).toContain('sourceQuoteId: isDuplicate ? undefined : quote.id')
-        expect(quotesClient).toContain("isStandaloneCosting(quoteToDelete.record_kind) ? 'Delete this Costing?' : 'Delete this Quotation?'")
+        expect(quotesClient).toContain("handleLibraryState(quote, { isArchived: !quote.is_archived })")
+        expect(quotesClient).not.toContain('Delete this Costing?')
         expect(functionBody(estimatorActions, 'deleteEstimatorQuote')).toContain(".in('status', ['draft', 'rejected'])")
     })
 

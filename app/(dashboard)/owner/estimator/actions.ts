@@ -44,6 +44,10 @@ function normalizeTemplateName(value: string): string {
     return value.trim().replace(/\s+/g, ' ')
 }
 
+function normalizeTemplateNameKey(value: string): string {
+    return normalizeTemplateName(value).toLocaleLowerCase('en-IN')
+}
+
 function templateWriteError(error: { code?: string; message: string }) {
     if (error.code === '23505') {
         return 'A saved quality with this name already exists. Choose Start From and give the new quality a different name.'
@@ -355,16 +359,19 @@ export async function upsertFactoryCostProfile(data: {
 
 // ─── Estimator Templates ──────────────────────────────────────────────────────
 
-export async function getEstimatorTemplates() {
+export async function getEstimatorTemplates(options?: { includeArchived?: boolean }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('estimator_templates')
         .select('*')
         .eq('org_id', profile.org_id)
-        .eq('is_active', true)
         .order('created_at', { ascending: false })
+
+    if (!options?.includeArchived) query = query.eq('is_active', true)
+
+    const { data, error } = await query
 
     if (error) return { error: error.message }
     return { data: data ?? [] }
@@ -401,6 +408,18 @@ export async function saveAsFabricTemplate(data: {
 
     const nameError = validateTemplateName(data.name)
     if (nameError) return { error: nameError }
+
+    // Give the owner a useful decision before the database uniqueness rule is
+    // reached. An archived name is deliberately reserved so a new costing
+    // cannot silently recreate a quality the owner archived.
+    const { data: sameNameTemplates, error: sameNameError } = await supabase
+        .from('estimator_templates')
+        .select('id, name, is_active')
+        .eq('org_id', profile.org_id)
+    if (sameNameError) return { error: sameNameError.message }
+    const sameName = (sameNameTemplates ?? []).find(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(data.name))
+    if (sameName?.is_active) return { error: 'A saved quality with this name already exists. Choose Start From and give the new quality a different name.' }
+    if (sameName && !sameName.is_active) return { error: 'This quality name is archived. Restore that quality or choose a different name for the new recipe.' }
 
     // Validate the exact costing snapshot before the first database write.
     // Base does not expose tape length because it is beam-capacity metadata,
@@ -679,6 +698,16 @@ export async function renameTemplate(id: string, name: string, expectedUpdatedAt
     const nameError = validateTemplateName(name)
     if (nameError) return { error: nameError }
 
+    const { data: sameNameTemplates, error: sameNameError } = await supabase
+        .from('estimator_templates')
+        .select('id, name, is_active')
+        .eq('org_id', profile.org_id)
+        .neq('id', id)
+    if (sameNameError) return { error: sameNameError.message }
+    const sameName = (sameNameTemplates ?? []).find(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(name))
+    if (sameName?.is_active) return { error: 'A saved quality with this name already exists. Choose a different name or use Start From.' }
+    if (sameName && !sameName.is_active) return { error: 'This quality name is archived. Restore that quality or choose a different name.' }
+
     const { data: updated, error } = await supabase
         .from('estimator_templates')
         .update({ name: normalizeTemplateName(name), updated_at: new Date().toISOString() })
@@ -697,7 +726,7 @@ export async function renameTemplate(id: string, name: string, expectedUpdatedAt
     return { success: true, updatedAt: updated.updated_at }
 }
 
-export async function deleteTemplate(id: string, expectedUpdatedAt?: string) {
+export async function archiveTemplate(id: string, expectedUpdatedAt?: string) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -724,15 +753,59 @@ export async function deleteTemplate(id: string, expectedUpdatedAt?: string) {
         .eq('org_id', profile.org_id)
         .eq('is_active', true)
         .eq('updated_at', resolvedUpdatedAt!)
-        .select('id')
+        .select('id, updated_at')
         .maybeSingle()
 
     if (error) return { error: error.message }
-    if (!deleted) return { error: 'This saved quality changed in another tab or was already deleted. Refresh before deleting it.' }
+    if (!deleted) return { error: 'This saved quality changed in another tab or was already archived. Refresh before archiving it.' }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
-    return { success: true }
+    return { success: true, updatedAt: deleted.updated_at }
+}
+
+export async function restoreTemplate(id: string, expectedUpdatedAt?: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    let resolvedUpdatedAt = expectedUpdatedAt
+    if (!resolvedUpdatedAt) {
+        const { data: current, error: currentError } = await supabase
+            .from('estimator_templates')
+            .select('updated_at')
+            .eq('id', id)
+            .eq('org_id', profile.org_id)
+            .eq('is_active', false)
+            .maybeSingle()
+        if (currentError) return { error: currentError.message }
+        resolvedUpdatedAt = current?.updated_at
+    }
+
+    const timestampError = validateExpectedTimestamp(resolvedUpdatedAt, 'This saved quality')
+    if (timestampError) return { error: timestampError }
+
+    const { data: restored, error } = await supabase
+        .from('estimator_templates')
+        .update({ is_active: true, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+        .eq('is_active', false)
+        .eq('updated_at', resolvedUpdatedAt!)
+        .select('id, name, updated_at, is_active')
+        .maybeSingle()
+
+    if (error) return { error: templateWriteError(error) }
+    if (!restored) return { error: 'This saved quality changed in another tab or was already restored. Refresh before restoring it.' }
+
+    revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner/quotes')
+    return { success: true, data: restored, updatedAt: restored.updated_at }
+}
+
+/** @deprecated Use archiveTemplate. Kept as a compatibility alias for older callers. */
+export async function deleteTemplate(id: string, expectedUpdatedAt?: string) {
+    return archiveTemplate(id, expectedUpdatedAt)
 }
 
 // ─── Save Quote (V3) ──────────────────────────────────────────────────────────
@@ -798,6 +871,16 @@ export async function saveEstimatorQuoteV3(params: {
             .maybeSingle()
         if (templateError) return { error: templateError.message }
         if (!template) return { error: 'The selected saved quality is no longer available.' }
+    }
+    if (!params.templateId && newRecordKind === 'costing') {
+        const { data: archivedTemplates, error: archivedTemplateError } = await supabase
+            .from('estimator_templates')
+            .select('name')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', false)
+        if (archivedTemplateError) return { error: archivedTemplateError.message }
+        const archivedName = (archivedTemplates ?? []).some(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(params.qualityLabel))
+        if (archivedName) return { error: 'This quality name is archived. Restore the saved quality or choose a different name before saving a new Cost Estimate.' }
     }
     const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, {
         requireTapeLength: canUseProduction,

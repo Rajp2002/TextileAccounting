@@ -76,20 +76,22 @@ async function setAuditActor(supabase: Awaited<ReturnType<typeof createServerCli
     }
 }
 
-export async function getCostRates() {
+export async function getCostRates(options?: { includeArchived?: boolean }) {
     const { user, profile } = await requireRole(['owner'])
     const tierError = await requireBaseTier(profile.org_id)
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
 
-    const [ratesResult, profileResult] = await Promise.all([
-        supabase
+    let ratesQuery = supabase
             .from('cost_rate_book')
             .select('*')
             .eq('org_id', profile.org_id)
-            .eq('is_active', true)
             .order('category')
-            .order('name'),
+            .order('name')
+    if (!options?.includeArchived) ratesQuery = ratesQuery.eq('is_active', true)
+
+    const [ratesResult, profileResult] = await Promise.all([
+        ratesQuery,
         supabase
             .from('factory_cost_profile')
             .select('yarn_review_interval_days')
@@ -137,6 +139,8 @@ export async function getCostRates() {
     // preserved, even if its source label still says "Estimator defaults".
     const legacyDefaultIds = rates
         .filter(rate =>
+            rate.is_active !== false
+            &&
             (rate.category === 'yarn_warp' || rate.category === 'yarn_weft')
             && rate.source === 'Estimator defaults'
             && rate.apply_as_default
@@ -167,6 +171,8 @@ export async function getCostRates() {
     const savedCandidates = collectYarnRateCandidates(savedYarnSources)
     const placeholderUpgrades = savedCandidates.flatMap(candidate => {
         const existing = rates.find(rate =>
+            rate.is_active !== false
+            &&
             rate.category === candidate.category
             && normalizeYarnName(rate.name) === candidate.normalizedName
             && Number(rate.current_value) === 0
@@ -193,6 +199,7 @@ export async function getCostRates() {
                 .eq('id', existing.id)
                 .eq('org_id', profile.org_id)
                 .eq('current_value', 0)
+                .eq('is_active', true)
             if (promoteError) return { error: promoteError.message }
         }
 
@@ -207,7 +214,7 @@ export async function getCostRates() {
         rates = refreshed ?? []
     }
 
-    const missingYarns = getMissingYarnRateCandidates(savedYarnSources, rates)
+    const missingYarns = getMissingYarnRateCandidates(savedYarnSources, rates.filter(rate => rate.is_active !== false))
     if (missingYarns.length) {
         const discoveredRates = missingYarns.map(candidate => ({
             org_id: profile.org_id,
@@ -243,7 +250,29 @@ export async function getCostRates() {
         rates = refreshed ?? []
     }
 
-    return { data: rates, conflicts: getYarnRateConflicts(savedYarnSources), yarnReviewIntervalDays }
+    if (options?.includeArchived) {
+        const { data: allRates, error: allRatesError } = await supabase
+            .from('cost_rate_book')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .order('category')
+            .order('name')
+        if (allRatesError) return { error: allRatesError.message }
+        rates = allRates ?? []
+    }
+
+    const { data: reviewedRows, error: reviewedError } = await supabase
+        .from('cost_rate_history')
+        .select('rate_id')
+        .eq('org_id', profile.org_id)
+    if (reviewedError) return { error: reviewedError.message }
+
+    const reviewedRateIds = new Set((reviewedRows ?? []).map(row => row.rate_id))
+    return {
+        data: rates.map(rate => ({ ...rate, is_reviewed: reviewedRateIds.has(rate.id) })),
+        conflicts: getYarnRateConflicts(savedYarnSources),
+        yarnReviewIntervalDays,
+    }
 }
 
 export async function getCostRateHistory(rateId: string) {
@@ -298,24 +327,52 @@ export async function saveCostRate(input: CostRateInput) {
     }
 }
 
-export async function archiveCostRate(rateId: string) {
+export async function archiveCostRate(rateId: string, expectedUpdatedAt?: string) {
     if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
     const { user, profile } = await requireRole(['owner'])
     const tierError = await requireBaseTier(profile.org_id)
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     await setAuditActor(supabase, user.id)
-    const { data, error } = await supabase
+    if (expectedUpdatedAt && !Number.isFinite(Date.parse(expectedUpdatedAt))) {
+        return { error: 'This rate changed or is missing its version. Refresh before archiving it.' }
+    }
+    let query = supabase
         .from('cost_rate_book')
         .update({ is_active: false, updated_by: user.id, updated_at: new Date().toISOString() })
         .eq('id', rateId)
         .eq('org_id', profile.org_id)
         .eq('is_active', true)
-        .select('id')
-        .maybeSingle()
+    if (expectedUpdatedAt) query = query.eq('updated_at', expectedUpdatedAt)
+    const { data, error } = await query.select('id, updated_at').maybeSingle()
     if (error) return { error: error.message }
-    if (!data) return { error: 'Rate no longer exists.' }
+    if (!data) return { error: 'This rate changed in another tab or was already archived. Refresh before archiving it.' }
     revalidatePath('/owner/rates')
     revalidatePath('/owner', 'layout')
-    return { success: true }
+    return { success: true, updatedAt: data.updated_at }
+}
+
+export async function restoreCostRate(rateId: string, expectedUpdatedAt?: string) {
+    if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
+    const { user, profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+    if (expectedUpdatedAt && !Number.isFinite(Date.parse(expectedUpdatedAt))) {
+        return { error: 'This rate changed or is missing its version. Refresh before restoring it.' }
+    }
+    const supabase = await createServerClient()
+    await setAuditActor(supabase, user.id)
+    let query = supabase
+        .from('cost_rate_book')
+        .update({ is_active: true, updated_by: user.id, updated_at: new Date().toISOString() })
+        .eq('id', rateId)
+        .eq('org_id', profile.org_id)
+        .eq('is_active', false)
+    if (expectedUpdatedAt) query = query.eq('updated_at', expectedUpdatedAt)
+    const { data, error } = await query.select('id, updated_at').maybeSingle()
+    if (error) return { error: error.message }
+    if (!data) return { error: 'This rate changed in another tab or was already restored. Refresh before restoring it.' }
+    revalidatePath('/owner/rates')
+    revalidatePath('/owner', 'layout')
+    return { success: true, updatedAt: data.updated_at }
 }
