@@ -99,7 +99,7 @@ type SavedQuality = SavedQualityRecipe & {
 type QuoteRow = {
     id: string
     status: QuoteStatus
-    party_name: string
+    party_name: string | null
     quality_label: string | null
     quote_price_per_meter: number
     landed_cost_per_meter: number
@@ -210,7 +210,8 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         overheadItems: Array.isArray(snapshot.overheadItems) ? snapshot.overheadItems : Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
         monthlyOutputM: numberOr(snapshot.monthlyOutputM ?? quote.monthly_output_m, base.monthlyOutputM),
         overheadOverridePerM: snapshot.overheadOverridePerM ?? (quote.overhead_override_per_m != null ? numberOr(quote.overhead_override_per_m, 0) : base.overheadOverridePerM),
-        overheadPct: numberOr(snapshot.overheadPct ?? quote.overhead_pct, base.overheadPct),
+        overheadMode: snapshot.overheadMode ?? (snapshot.overheadOverridePerM != null || quote.overhead_override_per_m != null ? 'direct' : 'monthly_expenses'),
+        overheadPct: 0,
         commissionPct: numberOr(snapshot.commissionPct ?? quote.commission_pct, base.commissionPct),
         transportPerM: numberOr(snapshot.transportPerM ?? quote.transport_per_m, base.transportPerM),
         profitPct: numberOr(snapshot.profitPct ?? quote.profit_margin_pct ?? quote.intended_margin_percent, base.profitPct),
@@ -478,7 +479,7 @@ function SavedQualityLibraryView({
                                                             <tr key={record.id}>
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
                                                                 <td className="py-3 font-bold text-slate-900">v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></td>
-                                                                <td className="py-3 capitalize text-slate-600">{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name}` : `Costing · ${record.party_name || 'No customer'}`}</td>
+                                                                <td className="py-3 capitalize text-slate-600">{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name || 'Customer not set'}` : 'Costing'}</td>
                                                                 <td className="py-3 font-mono text-slate-700">₹{getProductionCostPerM(record).toFixed(2)}/m</td>
                                                                 <td className="py-3 font-mono font-bold text-orange-700">₹{getSuggestedSellingPricePerM(record).toFixed(2)}/m</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{getActualMarginPct(record).toFixed(1)}%</td>
@@ -611,7 +612,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         if (!quoteToExport) return null
         const state = buildDraftStateFromQuote(quoteToExport)
         return createCostingExportModel({
-            qualityLabel: quoteToExport.quality_label || quoteToExport.party_name,
+            qualityLabel: quoteToExport.quality_label || 'Untitled costing',
             createdAt: quoteToExport.created_at,
             state,
             totals: calcFullTotals(state),
@@ -1069,7 +1070,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 {isCosting ? (quote.quality_label || 'Untitled costing') : quote.party_name}
                                             </h3>
                                             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none truncate">
-                                                {isCosting ? `${quote.party_name || 'No customer'} · v${Number(quote.version_number ?? 1)}` : quote.quality_label}
+                                                {isCosting ? `Costing · v${Number(quote.version_number ?? 1)}` : quote.quality_label}
                                             </p>
                                         </div>
                                         <Badge variant="outline" className={`${isCosting ? 'border-orange-200 bg-orange-50 text-orange-700' : STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
@@ -1466,7 +1467,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </DialogHeader>
                     {quoteToDelete && (
                         <div className="rounded-xl border border-red-200 bg-red-50 p-3">
-                            <p className="font-black text-red-950">{quoteToDelete.party_name}</p>
+                            <p className="font-black text-red-950">{isStandaloneCosting(quoteToDelete.record_kind) ? (quoteToDelete.quality_label || 'Untitled costing') : (quoteToDelete.party_name || 'Customer not set')}</p>
                             <p className="mt-1 text-xs font-bold uppercase tracking-widest text-red-700">
                                 {quoteToDelete.quality_label || 'No quality label'}
                             </p>

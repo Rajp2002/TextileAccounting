@@ -58,7 +58,8 @@ function hydrateEstimateFromQuote(quote: QuoteSnapshot, targetMeters: number): E
         overheadOverridePerM: quote.overhead_override_per_m == null
             ? base.overheadOverridePerM
             : num(quote.overhead_override_per_m),
-        overheadPct: num(quote.overhead_pct, base.overheadPct),
+        overheadMode: quote.overhead_override_per_m != null ? 'direct' : 'monthly_expenses',
+        overheadPct: 0,
         commissionPct: num(quote.commission_pct, base.commissionPct),
         transportPerM: num(quote.transport_per_m, base.transportPerM),
         profitPct: num(quote.profit_margin_pct ?? quote.intended_margin_percent, base.profitPct),

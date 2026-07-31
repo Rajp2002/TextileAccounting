@@ -18,12 +18,13 @@ describe('Base Estimator Go-readiness hardening', () => {
     const valid = {
       warping_rate_per_kg: 2, sizing_rate_per_kg: 1.5, winding_rate_per_kg: 0,
       default_processing_rate_per_m: 3.5, default_finishing_rate_per_m: 1.25,
-      overhead_pct: 8, default_commission_pct: 2, default_transport_per_m: 0,
+      overhead_mode: 'monthly_expenses' as const, default_commission_pct: 2, default_transport_per_m: 0,
       monthly_output_m: 10_000, loom_count: 8, monthly_working_days: 26,
       avg_output_per_loom_per_day: 50,
     }
     expect(validateFactoryCostProfile(valid).valid).toBe(true)
-    expect(validateFactoryCostProfile({ ...valid, overhead_pct: Number.NaN }).valid).toBe(false)
+    expect(validateFactoryCostProfile({ ...valid, overhead_pct: Number.NaN }).valid).toBe(true)
+    expect(validateFactoryCostProfile({ ...valid, overhead_mode: 'direct', overhead_override_per_m: null }).valid).toBe(false)
     expect(validateFactoryCostProfile({ ...valid, monthly_working_days: 0 }).valid).toBe(false)
     expect(validateFactoryCostProfile({ ...valid, avg_output_per_loom_per_day: 0 }).valid).toBe(false)
     expect(validateFactoryCostProfile({ ...valid, default_commission_pct: 100 }).valid).toBe(false)

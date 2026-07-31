@@ -932,7 +932,7 @@ export const gu = {
     warp: {
       title: "તાણા સુતર રચના (Warp)",
       layer: "તાણા સ્તર",
-      add_blend: "બ્લેન્ડ પરિબળ ઉમેરો",
+      add_blend: "વાર્પ યાર્ન ઘટક ઉમેરો",
       tape_len: "ટેપ લંબાઈ",
       beam_capacity: "બીમ ક્ષમતા",
       crimp_pct: "વાર્પ ક્રિમ્પ %",
@@ -941,7 +941,7 @@ export const gu = {
     weft: {
       title: "ભરણ સૂત રચના (Weft)",
       layer: "ભરણ લેયર",
-      add_weft: "વેફ્ટ બ્લેન્ડ ઉમેરો",
+      add_weft: "વેફ્ટ યાર્ન ઘટક ઉમેરો",
       cloth_width_hint: "તૈયાર કાપડની પહોળાઈ (લૂમ નહીં)"
     },
     weave: {
@@ -977,14 +977,14 @@ export const gu = {
       monthly_output: "માસિક ઉત્પાદન (મી)",
       output_hint: "દર મહિને અંદાજિત મીટર વણાટ — કુલ ઓવરહેડ વહેંચે છે",
       total_monthly: "કુલ માસિક",
-      direct_override_title: "સીધો ₹/મી ઓવરરાઇડ",
-      override_active_note: "⚡ ઓવરરાઇડ ચાલુ — આઇટેમાઇઝ્ડ ગણતરી અવગણાશે",
-      override_bypass_note: "આઇટેમાઇઝ્ડ ગણતરી બાયપાસ કરવા મૂલ્ય દાખલ કરો",
+      direct_override_title: "સીધો ફેક્ટરી ઓવરહેડ દર",
+      override_active_note: "⚡ સીધો દર ચાલુ — માસિક ખર્ચનો ઉપયોગ નહીં થાય",
+      override_bypass_note: "માસિક ખર્ચની જગ્યાએ ઉપયોગ કરવા સીધો ₹/મી દર દાખલ કરો",
       clear: "✕ સાફ કરો",
-      direct_override_badge: "⚡ સીધો ઓવરરાઇડ",
+      direct_override_badge: "⚡ સીધો દર",
       overhead_per_m: "ઓવરહેડ પ્રતિ મીટર",
-      effective_rate: "અસરકારક દર",
-      of_direct_cost: "સીધા ખર્ચના"
+      effective_rate: "ગણતરી પદ્ધતિ",
+      of_direct_cost: "માસિક ખર્ચ ÷ ઉત્પાદન"
     },
     post_processing: {
       title: "પોસ્ટ-પ્રોસેસિંગ અને લોજિસ્ટિક્સ",

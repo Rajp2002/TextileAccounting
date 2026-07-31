@@ -71,7 +71,8 @@ export type FactoryCostProfileInput = {
   warping_rate_per_kg: number
   sizing_rate_per_kg: number
   winding_rate_per_kg: number
-  overhead_pct: number
+  overhead_pct?: number
+  overhead_mode?: 'direct' | 'monthly_expenses'
   default_commission_pct: number
   default_margin_pct?: number
   default_transport_per_m: number
@@ -157,7 +158,11 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   addNumberIssue(issues, warnings, 'warping_rate_per_kg', 'Warping rate', input.warping_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
   addNumberIssue(issues, warnings, 'sizing_rate_per_kg', 'Sizing rate', input.sizing_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
   addNumberIssue(issues, warnings, 'winding_rate_per_kg', 'Winding rate', input.winding_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
-  addNumberIssue(issues, warnings, 'overhead_pct', 'Overhead %', input.overhead_pct, { max: 100, allowZero: true })
+  const overheadMode = input.overhead_mode
+    ?? (input.overhead_override_per_m != null ? 'direct' : 'monthly_expenses')
+  if (!['direct', 'monthly_expenses'].includes(overheadMode)) {
+    issues.push({ field: 'overhead_mode', message: 'Choose how factory overhead should be calculated.' })
+  }
   addNumberIssue(issues, warnings, 'default_commission_pct', 'Default commission %', input.default_commission_pct, { max: 99.99, allowZero: true })
   if (input.default_margin_pct != null) addNumberIssue(issues, warnings, 'default_margin_pct', 'Default margin %', input.default_margin_pct, { max: 99.99, allowZero: true })
   if (input.yarn_review_interval_days != null) {
@@ -168,7 +173,13 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   addNumberIssue(issues, warnings, 'default_transport_per_m', 'Default transport', input.default_transport_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.default_processing_rate_per_m != null) addNumberIssue(issues, warnings, 'default_processing_rate_per_m', 'Default processing rate', input.default_processing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.default_finishing_rate_per_m != null) addNumberIssue(issues, warnings, 'default_finishing_rate_per_m', 'Default finishing rate', input.default_finishing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
-  if (input.overhead_override_per_m != null) addNumberIssue(issues, warnings, 'overhead_override_per_m', 'Overhead override', input.overhead_override_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.overhead_override_per_m != null) addNumberIssue(issues, warnings, 'overhead_override_per_m', 'Direct overhead rate', input.overhead_override_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (overheadMode === 'direct') {
+    addNumberIssue(issues, warnings, 'overhead_override_per_m', 'Direct overhead rate', input.overhead_override_per_m, {
+      max: MAX_COST_PER_M,
+      required: true,
+    })
+  }
   if (input.monthly_output_m != null) addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS })
   if (input.loom_count != null) addNumberIssue(issues, warnings, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })
   if (input.monthly_working_days != null) addNumberIssue(issues, warnings, 'monthly_working_days', 'Monthly working days', input.monthly_working_days, { max: 31 })
@@ -314,7 +325,21 @@ export function validateEstimatorSnapshot(
   addNumberIssue(issues, warnings, 'finishingRatePerM', 'Finishing rate', estimate.finishingRatePerM, { max: MAX_COST_PER_M, allowZero: true })
   addNumberIssue(issues, warnings, 'yarnShortagePct', 'Default yarn waste %', estimate.yarnShortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
   addNumberIssue(issues, warnings, 'warpCrimpPct', 'Warp crimp %', estimate.warpCrimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
-  addNumberIssue(issues, warnings, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, { max: MAX_TARGET_METERS })
+  const overheadMode = estimate.overheadMode
+    ?? (estimate.overheadOverridePerM != null ? 'direct' : 'monthly_expenses')
+  if (!['direct', 'monthly_expenses'].includes(overheadMode)) {
+    issues.push({ field: 'overheadMode', message: 'Choose a valid overhead calculation method.' })
+  }
+  if (overheadMode === 'direct') {
+    addNumberIssue(issues, warnings, 'overheadOverridePerM', 'Direct overhead rate', estimate.overheadOverridePerM, {
+      max: MAX_COST_PER_M,
+      required: true,
+    })
+  }
+  addNumberIssue(issues, warnings, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, {
+    max: MAX_TARGET_METERS,
+    allowZero: overheadMode === 'direct',
+  })
   addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true })
@@ -341,7 +366,7 @@ export function validateEstimatorSnapshot(
   }
 
   if (estimate.overheadOverridePerM !== null && estimate.overheadOverridePerM !== undefined) {
-    addNumberIssue(issues, warnings, 'overheadOverridePerM', 'Overhead override', estimate.overheadOverridePerM, { max: MAX_COST_PER_M, allowZero: true })
+    addNumberIssue(issues, warnings, 'overheadOverridePerM', 'Direct overhead rate', estimate.overheadOverridePerM, { max: MAX_COST_PER_M, allowZero: true })
   }
 
   if (estimate.orderQuantityM !== null && estimate.orderQuantityM !== undefined) {

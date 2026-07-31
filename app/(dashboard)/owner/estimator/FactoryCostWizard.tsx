@@ -30,22 +30,25 @@ interface FactoryCostWizardProps {
 
 export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, saving }: FactoryCostWizardProps) {
     const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
-    const [setupPath, setSetupPath] = useState<'fast' | 'detailed'>('fast')
+    const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
     const [validationError, setValidationError] = useState<string | null>(null)
     const [pendingCompletion, setPendingCompletion] = useState<(Partial<EstimateState> & { yarnReviewIntervalDays: number }) | null>(null)
     const [pendingWarnings, setPendingWarnings] = useState<EstimatorValidationIssue[]>([])
     
     // Local state for the wizard inputs
-    const [overheadPerM, setOverheadPerM] = useState<number>(13.5)
+    const [overheadPerM, setOverheadPerM] = useState<number>(initialState.overheadOverridePerM ?? 13.5)
     const [loomCount, setLoomCount] = useState<number>(initialState.loomCount || 24)
     const [workingDays, setWorkingDays] = useState<number>(initialState.monthlyWorkingDays || 26)
     const [avgOutput, setAvgOutput] = useState<number>(initialState.avgOutputPerLoomPerDay || 50)
+    const [monthlyOutput, setMonthlyOutput] = useState<number>(initialState.monthlyOutputM || 0)
     
     // Monthly expenses for detailed path
-    const [rent, setRent] = useState<number>(0)
-    const [electricity, setElectricity] = useState<number>(0)
-    const [staff, setStaff] = useState<number>(0)
-    const [others, setOthers] = useState<number>(0)
+    const [rent, setRent] = useState<number>(() => initialState.overheadItems.find(item => item.category === 'rent')?.monthlyAmount ?? 0)
+    const [electricity, setElectricity] = useState<number>(() => initialState.overheadItems.find(item => item.category === 'electricity')?.monthlyAmount ?? 0)
+    const [staff, setStaff] = useState<number>(() => initialState.overheadItems.find(item => item.category === 'admin')?.monthlyAmount ?? 0)
+    const [others, setOthers] = useState<number>(() => initialState.overheadItems
+        .filter(item => !['rent', 'electricity', 'admin'].includes(item.category))
+        .reduce((sum, item) => sum + item.monthlyAmount, 0))
     const [warpingRate, setWarpingRate] = useState<number>(initialState.warpingRatePerKg)
     const [sizingRate, setSizingRate] = useState<number>(initialState.sizingRatePerKg)
     const [processingRate, setProcessingRate] = useState<number>(initialState.processingRatePerM)
@@ -58,8 +61,8 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const [yarnWastePct, setYarnWastePct] = useState<number>(initialState.yarnShortagePct)
 
     const getOverheadSetup = (): Partial<EstimateState> => {
-        if (setupPath === 'fast') {
-            return { overheadOverridePerM: overheadPerM }
+        if (setupPath === 'direct') {
+            return { overheadMode: 'direct', overheadOverridePerM: overheadPerM }
         }
         const items: OverheadItem[] = [
             { id: nanoid(), label: 'Rent / Lease', monthlyAmount: rent, category: 'rent', isPreset: true, isLocked: false, source: 'manual' },
@@ -68,13 +71,14 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             { id: nanoid(), label: 'Other Expenses', monthlyAmount: others, category: 'custom', isPreset: true, isLocked: false, source: 'manual' },
         ]
         
-        const monthlyOutput = loomCount * avgOutput * workingDays
+        const capacityOutput = loomCount * avgOutput * workingDays
         return {
+            overheadMode: 'monthly_expenses',
             loomCount,
             monthlyWorkingDays: workingDays,
             avgOutputPerLoomPerDay: avgOutput,
             overheadItems: ensureOverheadIntegrity(items),
-            monthlyOutputM: monthlyOutput,
+            monthlyOutputM: monthlyOutput > 0 ? monthlyOutput : capacityOutput,
             overheadOverridePerM: null,
         }
     }
@@ -105,7 +109,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         warping_rate_per_kg: data.warpingRatePerKg ?? initialState.warpingRatePerKg,
         sizing_rate_per_kg: data.sizingRatePerKg ?? initialState.sizingRatePerKg,
         winding_rate_per_kg: initialState.windingRatePerKg,
-        overhead_pct: initialState.overheadPct,
+        overhead_mode: data.overheadMode ?? initialState.overheadMode,
         default_commission_pct: data.commissionPct ?? initialState.commissionPct,
         default_margin_pct: data.profitPct ?? initialState.profitPct,
         default_transport_per_m: data.transportPerM ?? initialState.transportPerM,
@@ -207,27 +211,27 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     </div>
                                     <div className="grid gap-4">
                                         <button 
-                                            onClick={() => { setSetupPath('fast'); setStep('fast') }}
+                                            onClick={() => { setSetupPath('direct'); setStep('fast') }}
                                             className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all text-left group"
                                         >
                                             <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                                 <Zap className="h-6 w-6 text-amber-500" />
                                             </div>
                                             <div>
-                                                <div className="font-black text-slate-900">I know my Overhead / Meter</div>
-                                                <div className="text-xs text-slate-500">Fastest way if you have a pre-calculated number (e.g. ₹13.50/m)</div>
+                                                <div className="font-black text-slate-900">I know my direct overhead rate</div>
+                                                <div className="text-xs text-slate-500">Enter the ₹/m factory overhead rate you already use.</div>
                                             </div>
                                         </button>
                                         <button 
-                                            onClick={() => { setSetupPath('detailed'); setStep('detailed') }}
+                                            onClick={() => { setSetupPath('monthly_expenses'); setStep('detailed') }}
                                             className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all text-left group"
                                         >
                                             <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                                 <Calculator className="h-6 w-6 text-indigo-500" />
                                             </div>
                                             <div>
-                                                <div className="font-black text-slate-900">Help me calculate it</div>
-                                                <div className="text-xs text-slate-500">We&apos;ll guide you through loom count and monthly expenses</div>
+                                                <div className="font-black text-slate-900">Calculate from monthly expenses</div>
+                                                <div className="text-xs text-slate-500">Enter expenses and output; we&apos;ll calculate ₹/m for you.</div>
                                             </div>
                                         </button>
                                     </div>
@@ -240,11 +244,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         <button onClick={() => setStep('choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
-                                        <h2 className="text-lg font-black text-slate-900">Enter Overhead Rate</h2>
+                                        <h2 className="text-lg font-black text-slate-900">Enter direct overhead rate</h2>
                                     </div>
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Factory Overhead (Per Meter)</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Direct factory overhead (₹/m)</Label>
                                             <div className="relative">
                                                 <Input 
                                                     type="number"
@@ -257,7 +261,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                         </div>
                                         <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                                            &quot;This should include rent, power, staff salaries, and repairs divided by your average monthly production.&quot;
+                                            &quot;Use the rate your unit already uses for rent, power, staff, repairs, and other fixed costs.&quot;
                                         </p>
                                     </div>
                                     <Button 
@@ -313,6 +317,21 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <span className="text-xs font-bold text-indigo-600">Est. Monthly Production</span>
                                                 <span className="text-sm font-black text-indigo-700">{(loomCount * workingDays * avgOutput).toLocaleString()}m</span>
                                             </div>
+                                        </div>
+                                        <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Monthly output used for costing</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    type="number"
+                                                    min={1}
+                                                    value={monthlyOutput || ''}
+                                                    onChange={event => setMonthlyOutput(parseNumericInput(event.target.value, { min: 1 }) ?? 0)}
+                                                    placeholder={String(loomCount * workingDays * avgOutput || 10000)}
+                                                    className="h-10 pr-10 font-mono font-bold"
+                                                />
+                                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/mo</span>
+                                            </div>
+                                            <p className="text-[10px] leading-relaxed text-slate-500">Use realistic actual output, not maximum rated capacity, when dividing monthly expenses.</p>
                                         </div>
                                     </div>
                                     <Button 
@@ -396,10 +415,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         <div className="flex items-center justify-between">
                                             <div className="space-y-0.5">
                                                 <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Calculated Overhead</div>
-                                                <div className="text-xs text-emerald-500">Based on {(rent+electricity+staff+others).toLocaleString()} total cost</div>
+                                                <div className="text-xs text-emerald-500">₹{(rent + electricity + staff + others).toLocaleString()} per month ÷ {(monthlyOutput > 0 ? monthlyOutput : loomCount * workingDays * avgOutput).toLocaleString()} m output</div>
                                             </div>
                                             <div className="text-xl font-black text-emerald-700">
-                                                ₹{((rent+electricity+staff+others) / Math.max(1, (loomCount * workingDays * avgOutput))).toFixed(2)}
+                                                ₹{((rent + electricity + staff + others) / Math.max(1, (monthlyOutput > 0 ? monthlyOutput : loomCount * workingDays * avgOutput))).toFixed(2)}
                                                 <span className="text-xs ml-1">/m</span>
                                             </div>
                                         </div>
@@ -418,7 +437,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'defaults' && (
                                 <div className="space-y-5">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep(setupPath === 'fast' ? 'fast' : 'detailed-expenses')} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+                                        <button onClick={() => setStep(setupPath === 'direct' ? 'fast' : 'detailed-expenses')} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <div>

@@ -8,9 +8,9 @@ import { getCostingWorkspaceCapabilities } from '../lib/costing-workspace'
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
 
 describe('Base P1 pilot remediation', () => {
-  it('treats customer context as part of Base costing without enabling production conversion', () => {
+  it('keeps Base costing quality-first without enabling production conversion', () => {
     expect(getCostingWorkspaceCapabilities(false)).toMatchObject({
-      partyContext: true,
+      partyContext: false,
       quotationLifecycle: false,
       productionConversion: false,
     })
@@ -19,24 +19,24 @@ describe('Base P1 pilot remediation', () => {
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     expect(page).toContain('getEstimatorPartyNames()')
     expect(page).toContain('initialPartyNames={partiesRes.data ?? []}')
-    expect(client).toContain('list="estimator-party-options"')
-    expect(client).toContain('Select a recent customer or type a new one.')
-    expect(client).toContain('defaultCustomerName={partyName}')
+    expect(client).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
+    expect(client).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
+    expect(client).toContain('Quick Costing')
   })
 
-  it('requires and persists an explicit Base party and costing quantity', () => {
+  it('allows Base costings without party or quantity while keeping quotation requirements', () => {
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
     expect(client).toContain("const resolvedPartyName = effectiveTargetMode === 'market'")
-    expect(client).toContain("return toast.error(effectiveTargetMode === 'market' ? 'Fabric Label is required'")
-    expect(client).toContain('if (!state.orderQuantityM || state.orderQuantityM <= 0)')
+    expect(client).toContain("if (!saveAsStandaloneCosting && !resolvedPartyName)")
+    expect(client).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
     expect(client).toContain('placeholder="5000"')
-    expect(actions).toContain('party_name:           params.partyName.trim()')
+    expect(actions).toContain('party_name:           params.partyName?.trim() || null')
+    expect(actions).toContain("if (newRecordKind === 'quotation' && !params.partyName?.trim())")
     expect(actions).toContain('order_quantity_m:     estimate.orderQuantityM')
     expect(actions).toContain('meters:                   estimate.orderQuantityM ?? 0')
-    expect(client).toContain('partyName:        partyName.trim() || undefined')
-    expect(actions).toContain('partyName: normalizeTemplateName(data.partyName || data.name)')
+    expect(actions).toContain('partyName: normalizeTemplateName(data.partyName || \'\')')
   })
 
   it('exports customer, quantity, total, margin, and profit from the same Base state', () => {

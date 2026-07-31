@@ -322,7 +322,11 @@ export const FactoryCostProfileSchema = z.object({
     warping_rate_per_kg:     z.number().nonnegative().max(10_000),
     sizing_rate_per_kg:      z.number().nonnegative().max(10_000),
     winding_rate_per_kg:     z.number().nonnegative().max(10_000),
-    overhead_pct:            z.number().min(0).max(100),
+    // Legacy compatibility field. New profiles choose an explicit overhead
+    // method and do not expose or calculate this percentage.
+    overhead_pct:            z.number().min(0).max(100).optional(),
+    overhead_mode:           z.enum(['direct', 'monthly_expenses']).optional(),
+    overhead_override_per_m: z.number().nonnegative().max(100_000).nullable().optional(),
     default_commission_pct:  z.number().min(0).max(100),
     default_transport_per_m: z.number().nonnegative().max(100_000),
 })

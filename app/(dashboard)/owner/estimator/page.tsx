@@ -22,7 +22,7 @@ export default async function EstimatorPage() {
         getOrganizationProductionMode(supabase, profile.org_id),
         getCostRates(),
         supabase.from('organizations').select('name').eq('id', profile.org_id).maybeSingle(),
-        getEstimatorPartyNames(),
+        canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
     ])
 
     const staleDefaultRateNames = ((costRatesRes.data ?? []) as CostRateRow[])

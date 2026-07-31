@@ -38,11 +38,12 @@ describe('Estimator-only product presentation', () => {
         expect(rateActions).not.toContain('defaultWeftName')
     })
 
-    it('captures Base commercial context without enabling order workflow actions', () => {
+    it('keeps Base quality-first while retaining Full Suite quotation actions', () => {
         expect(estimator).toContain("const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'")
         expect(estimator).toContain("const resolvedPartyName = effectiveTargetMode === 'market'")
-        expect(estimator).toContain('list="estimator-party-options"')
-        expect(estimator).toContain('Select a recent customer or type a new one.')
+        expect(estimator).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
+        expect(estimator).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
+        expect(estimator).toContain('Quick Costing')
         expect(estimator).toContain("'Save New Version' : 'Save Costing'")
         expect(estimator).toContain('{canUseProduction && !isStandaloneCostingSession && <Button')
         expect(estimator).toContain('id="btn-start-party-order"')
@@ -61,8 +62,8 @@ describe('Estimator-only product presentation', () => {
         expect(english).toContain('title: "Cost Estimate Details"')
         expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
         expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'")
-        expect(estimator).toContain("if (!state.orderQuantityM || state.orderQuantityM <= 0)")
-        expect(estimator).toContain("!hasOrderQty || !partyName.trim()")
+        expect(estimator).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
+        expect(estimator).toContain("(requiresCommercialContext && !partyName.trim())")
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
         expect(estimator).not.toContain("!canUseProduction ? 'Costing Quantity'")
     })
