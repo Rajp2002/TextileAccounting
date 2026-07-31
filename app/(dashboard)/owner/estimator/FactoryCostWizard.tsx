@@ -16,7 +16,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { type EstimateState, type OverheadItem, ensureOverheadIntegrity } from '@/lib/estimator'
+import { validateFactoryCostProfile, type EstimatorValidationIssue } from '@/lib/estimator-validation'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { nanoid } from 'nanoid'
+import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 
 interface FactoryCostWizardProps {
     initialState: EstimateState
@@ -28,6 +31,9 @@ interface FactoryCostWizardProps {
 export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, saving }: FactoryCostWizardProps) {
     const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'fast' | 'detailed'>('fast')
+    const [validationError, setValidationError] = useState<string | null>(null)
+    const [pendingCompletion, setPendingCompletion] = useState<(Partial<EstimateState> & { yarnReviewIntervalDays: number }) | null>(null)
+    const [pendingWarnings, setPendingWarnings] = useState<EstimatorValidationIssue[]>([])
     
     // Local state for the wizard inputs
     const [overheadPerM, setOverheadPerM] = useState<number>(13.5)
@@ -73,8 +79,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         }
     }
 
-    const handleFinish = async () => {
-        await onComplete({
+    const getCompletionData = (): Partial<EstimateState> & { yarnReviewIntervalDays: number } => ({
             ...getOverheadSetup(),
             warpingRatePerKg: warpingRate,
             sizingRatePerKg: sizingRate,
@@ -95,6 +100,49 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             },
             isConfigured: true,
         })
+
+    const validateCompletion = (data: Partial<EstimateState> & { yarnReviewIntervalDays: number }) => validateFactoryCostProfile({
+        warping_rate_per_kg: data.warpingRatePerKg ?? initialState.warpingRatePerKg,
+        sizing_rate_per_kg: data.sizingRatePerKg ?? initialState.sizingRatePerKg,
+        winding_rate_per_kg: initialState.windingRatePerKg,
+        overhead_pct: initialState.overheadPct,
+        default_commission_pct: data.commissionPct ?? initialState.commissionPct,
+        default_margin_pct: data.profitPct ?? initialState.profitPct,
+        default_transport_per_m: data.transportPerM ?? initialState.transportPerM,
+        yarn_review_interval_days: data.yarnReviewIntervalDays,
+        default_processing_rate_per_m: data.processingRatePerM ?? initialState.processingRatePerM,
+        default_finishing_rate_per_m: data.finishingRatePerM ?? initialState.finishingRatePerM,
+        monthly_output_m: data.monthlyOutputM ?? initialState.monthlyOutputM,
+        overhead_override_per_m: data.overheadOverridePerM !== undefined ? data.overheadOverridePerM : initialState.overheadOverridePerM,
+        loom_count: data.loomCount ?? initialState.loomCount,
+        monthly_working_days: data.monthlyWorkingDays ?? initialState.monthlyWorkingDays,
+        avg_output_per_loom_per_day: data.avgOutputPerLoomPerDay ?? initialState.avgOutputPerLoomPerDay,
+        yarn_shortage_pct: data.yarnShortagePct ?? initialState.yarnShortagePct,
+        warp_crimp_pct: data.warpCrimpPct ?? initialState.warpCrimpPct,
+    })
+
+    const handleFinish = async () => {
+        const data = getCompletionData()
+        const validation = validateCompletion(data)
+        setValidationError(null)
+        if (!validation.valid) {
+            setValidationError(validation.issues[0]?.message ?? 'Review the setup values before saving.')
+            return
+        }
+        if (validation.warnings?.length) {
+            setPendingCompletion(data)
+            setPendingWarnings(validation.warnings)
+            return
+        }
+        await onComplete(data)
+    }
+
+    const confirmPendingCompletion = async () => {
+        if (!pendingCompletion) return
+        const data = pendingCompletion
+        setPendingCompletion(null)
+        setPendingWarnings([])
+        await onComplete(data)
     }
 
     const containerVariants: Variants = {
@@ -201,7 +249,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number"
                                                     value={overheadPerM}
-                                                    onChange={(e) => setOverheadPerM(Number(e.target.value))}
+                                                    onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-14 text-2xl font-black text-indigo-600 pl-8 pr-12 rounded-xl border-slate-200 focus:ring-indigo-500/20"
                                                 />
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-400">₹</span>
@@ -236,7 +284,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <Input 
                                                 type="number" 
                                                 value={loomCount} 
-                                                onChange={e => setLoomCount(Number(e.target.value))}
+                                                onChange={e => setLoomCount(parseNonNegativeInput(e.target.value) ?? 0)}
                                                 className="h-10 font-bold"
                                             />
                                         </div>
@@ -246,7 +294,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number" 
                                                     value={workingDays} 
-                                                    onChange={e => setWorkingDays(Number(e.target.value))}
+                                                onChange={e => setWorkingDays(parseNumericInput(e.target.value, { min: 1 }) ?? 1)}
                                                     className="h-10 font-bold"
                                                 />
                                             </div>
@@ -255,7 +303,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number" 
                                                     value={avgOutput} 
-                                                    onChange={e => setAvgOutput(Number(e.target.value))}
+                                                onChange={e => setAvgOutput(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-10 font-bold"
                                                 />
                                             </div>
@@ -295,7 +343,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number" 
                                                     value={rent} 
-                                                    onChange={e => setRent(Number(e.target.value))}
+                                                onChange={e => setRent(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
                                                 />
                                             </div>
@@ -309,7 +357,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number" 
                                                     value={electricity} 
-                                                    onChange={e => setElectricity(Number(e.target.value))}
+                                                    onChange={e => setElectricity(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
                                                 />
                                             </div>
@@ -323,7 +371,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number" 
                                                     value={staff} 
-                                                    onChange={e => setStaff(Number(e.target.value))}
+                                                    onChange={e => setStaff(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
                                                 />
                                             </div>
@@ -337,7 +385,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number" 
                                                     value={others} 
-                                                    onChange={e => setOthers(Number(e.target.value))}
+                                                    onChange={e => setOthers(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
                                                 />
                                             </div>
@@ -399,7 +447,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                         max={label === 'Commission' || label === 'Target margin' ? 99.99 : undefined}
                                                         step={Number(inputStep)}
                                                         value={Number(value)}
-                                                        onChange={event => (setter as (next: number) => void)(Number(event.target.value))}
+                                                        onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}
                                                         className="h-11 pr-14 font-mono font-bold"
                                                     />
                                                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{String(unit)}</span>
@@ -411,7 +459,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <select
                                                 id="onboarding-yarn-review"
                                                 value={yarnReviewIntervalDays}
-                                                onChange={event => setYarnReviewIntervalDays(Number(event.target.value))}
+                                                onChange={event => setYarnReviewIntervalDays(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
                                                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800"
                                             >
                                                 <option value={30}>Every 30 days</option>
@@ -425,6 +473,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[11px] leading-relaxed text-indigo-700">
                                         Your target margin powers the suggested selling price. Yarn review reminders and all defaults can be changed later in Settings.
                                     </p>
+                                    {validationError && (
+                                        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-red-700">
+                                            {validationError}
+                                        </p>
+                                    )}
                                     <Button
                                         onClick={handleFinish}
                                         disabled={saving}
@@ -439,6 +492,39 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                     </Card>
                 </motion.div>
             </AnimatePresence>
+
+            <Dialog open={pendingCompletion !== null} onOpenChange={open => {
+                if (!open) {
+                    setPendingCompletion(null)
+                    setPendingWarnings([])
+                }
+            }}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="text-amber-800">Review unusual setup values</DialogTitle>
+                        <DialogDescription>
+                            These values may be correct for your factory, but they are outside the usual costing range. Confirm them before saving your factory baseline.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        {pendingWarnings.map(warning => (
+                            <div key={`${warning.field}:${warning.message}`} className="flex gap-2 text-sm text-amber-900">
+                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600" />
+                                <span>{warning.message}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => {
+                            setPendingCompletion(null)
+                            setPendingWarnings([])
+                        }}>Go back</Button>
+                        <Button className="bg-amber-600 text-white hover:bg-amber-700" onClick={confirmPendingCompletion}>
+                            I reviewed these values
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

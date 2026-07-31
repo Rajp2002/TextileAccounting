@@ -1009,6 +1009,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
+  label:       'Warp 1',
   calculationMode: 'formula',
   manualKgPer100m: null,
   linearDensityUnit: 'denier',
@@ -1021,6 +1022,7 @@ export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
 }
 
 export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
+  label:       'Weft 1',
   calculationMode: 'formula',
   manualKgPer100m: null,
   linearDensityUnit: 'denier',

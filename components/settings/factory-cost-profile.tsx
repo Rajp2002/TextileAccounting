@@ -11,6 +11,7 @@ import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboar
 import { toast } from 'sonner'
 import type { FactorySections } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
+import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 
 // ─── Factory type presets ─────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ function RateInput({
                     step={step}
                     min={0}
                     value={value}
-                    onChange={e => onChange(Number(e.target.value))}
+                    onChange={e => onChange(parseNonNegativeInput(e.target.value) ?? 0)}
                     className="h-10 border-hairline bg-canvas/80 pr-12 font-mono text-sm focus-visible:border-saffron"
                 />
                 {unit && (
@@ -406,7 +407,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <select
                             id="yarn-review-period"
                             value={rates.yarn_review_interval_days}
-                            onChange={event => updateRate('yarn_review_interval_days')(Number(event.target.value))}
+                            onChange={event => updateRate('yarn_review_interval_days')(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
                             className="h-10 w-full rounded-md border border-hairline bg-canvas/80 px-3 text-sm font-medium text-ink"
                         >
                             <option value={30}>30 days</option>

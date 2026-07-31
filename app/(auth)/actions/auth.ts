@@ -21,6 +21,7 @@ import { hasExplicitProductionMode } from '@/lib/production-mode'
 import { getOrgTier } from '@/lib/subscription'
 import { checkJoinCodeRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { createSignInServerTimer, persistSignInTraceCookie } from '@/lib/sign-in-telemetry.server'
+import { normalizeIndianPhone } from '@/lib/phone'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,10 @@ export async function createOrganization(input: {
     phone: string
     referralCode?: string
 }) {
-    const parsed = safeParse(CreateOrgSchema, input)
+    const parsed = safeParse(CreateOrgSchema, {
+        ...input,
+        phone: normalizeIndianPhone(input.phone),
+    })
     if ('error' in parsed) return { error: parsed.error }
 
     const adminClient = createAdminClient()
