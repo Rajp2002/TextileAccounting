@@ -4240,6 +4240,7 @@ export default function EstimatorClient({
                 model={exportModel}
                 defaultCustomerName={showPartyField ? partyName : ''}
                 defaultBusinessName={organizationName}
+                defaultMode={isStandaloneCostingSession ? 'internal' : 'customer'}
             />
 
             <Dialog open={Boolean(pendingStaleRateSave)} onOpenChange={open => { if (!open) setPendingStaleRateSave(null) }}>

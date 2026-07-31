@@ -25,6 +25,22 @@ function generateTrackingToken(): string {
 const ESTIMATOR_NAME_MAX_LENGTH = 120
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+function buildQuotationReference(id: string, createdAt = new Date()) {
+    return `QT-${createdAt.getUTCFullYear()}-${id.replaceAll('-', '').slice(0, 8).toUpperCase()}`
+}
+
+function normalizeQuotationDate(value: string | null | undefined) {
+    if (value === undefined || value === null || value === '') return null
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+    const timestamp = Date.parse(`${value}T00:00:00Z`)
+    return Number.isFinite(timestamp) ? value : null
+}
+
+function normalizeCustomerTerms(value: string | null | undefined) {
+    const terms = value?.trim() ?? ''
+    return terms ? terms.slice(0, 2000) : null
+}
+
 type TemplateRecipeInput = {
     warpRows: WarpRow[]
     weftRows: WeftRow[]
@@ -826,6 +842,8 @@ export async function saveEstimatorQuoteV3(params: {
     templateId?:         string
     expectedTemplateUpdatedAt?: string
     updateSavedQuality?: boolean
+    quotationValidUntil?: string | null
+    customerTerms?: string | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -848,18 +866,24 @@ export async function saveEstimatorQuoteV3(params: {
     // client request returns the original row instead of creating a duplicate.
     const { data: replay, error: replayError } = await supabase
         .from('estimator_quotes')
-        .select('id, updated_at')
+        .select('id, updated_at, quotation_reference')
         .eq('org_id', profile.org_id)
         .eq('client_request_id', params.clientRequestId)
         .maybeSingle()
     if (replayError) return { error: replayError.message }
     if (replay) {
-        return { success: true, quoteId: replay.id, updatedAt: replay.updated_at, idempotentReplay: true }
+        return { success: true, quoteId: replay.id, updatedAt: replay.updated_at, quotationReference: replay.quotation_reference, idempotentReplay: true }
     }
 
     const { estimate } = params
     if (newRecordKind === 'quotation' && !params.partyName?.trim()) return { error: 'Customer or party is required for a quotation.' }
     if (!params.qualityLabel.trim()) return { error: 'Quality label is required.' }
+    if (newRecordKind === 'quotation' && params.quotationValidUntil !== undefined && params.quotationValidUntil !== null && params.quotationValidUntil !== '' && !normalizeQuotationDate(params.quotationValidUntil)) {
+        return { error: 'Quotation validity date is invalid.' }
+    }
+    if (newRecordKind === 'quotation' && params.customerTerms && params.customerTerms.trim().length > 2000) {
+        return { error: 'Customer terms must be 2,000 characters or fewer.' }
+    }
     if (params.templateId && !UUID_PATTERN.test(params.templateId)) return { error: 'Saved quality identifier is invalid.' }
     if (params.templateId) {
         const { data: template, error: templateError } = await supabase
@@ -902,6 +926,17 @@ export async function saveEstimatorQuoteV3(params: {
     // Compute loom-worker wage rate: Σ(picks across all weft rows) × perPickCostPaisa
     // e.g. 58 picks × 0.16 = ₹9.28/m — this is what the weaver earns per metre
     const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)
+
+    const quotationDocumentPayload = newRecordKind === 'quotation'
+        ? {
+            ...(params.quotationValidUntil !== undefined
+                ? { quotation_valid_until: normalizeQuotationDate(params.quotationValidUntil) }
+                : {}),
+            ...(params.customerTerms !== undefined
+                ? { customer_terms: normalizeCustomerTerms(params.customerTerms) }
+                : {}),
+        }
+        : {}
 
     const quotePayload = {
             org_id:               profile.org_id,
@@ -949,6 +984,7 @@ export async function saveEstimatorQuoteV3(params: {
             meters:                   estimate.orderQuantityM ?? 0,
             status:                   params.status ?? 'draft',
             client_request_id:        params.clientRequestId,
+            ...quotationDocumentPayload,
             // Weaver wage rate snapshot — flows downstream to shift_assignments
             worker_rate_per_m:    workerRatePerM,
             // Legacy required fields with sane defaults
@@ -1036,19 +1072,24 @@ export async function saveEstimatorQuoteV3(params: {
                 }
             }
 
+            const versionId = crypto.randomUUID()
             const { data: version, error: versionError } = await supabase
                 .from('estimator_quotes')
                 .insert({
                     ...quotePayload,
+                    id: versionId,
+                    ...(sourceRecordKind === 'quotation'
+                        ? { quotation_reference: buildQuotationReference(versionId) }
+                        : {}),
                     record_kind: sourceRecordKind,
                     source_quote_id: source.id,
                     costing_group_id: source.costing_group_id ?? source.id,
                     version_number: Number(source.version_number ?? 1) + 1,
                 })
-                .select('id, updated_at, version_number')
+                .select('id, updated_at, version_number, quotation_reference')
                 .single()
             if (versionError) return { error: versionError.message }
-            return { success: true, quoteId: version.id, updatedAt: version.updated_at, versionNumber: version.version_number }
+            return { success: true, quoteId: version.id, updatedAt: version.updated_at, versionNumber: version.version_number, quotationReference: version.quotation_reference }
         }
 
         // Draft/sent/rejected quotes remain the same business record. Accepted
@@ -1063,12 +1104,12 @@ export async function saveEstimatorQuoteV3(params: {
                 .is('order_id', null)
                 .in('status', ['draft', 'sent', 'rejected'])
                 .eq('updated_at', params.expectedSourceUpdatedAt!)
-                .select('id, updated_at')
+                .select('id, updated_at, quotation_reference')
                 .maybeSingle()
 
             if (updateError) return { error: updateError.message }
             if (!updated) return { error: 'This Quotation changed in another tab. Refresh Quotations before saving again.' }
-            return { success: true, quoteId: updated.id, updatedAt: updated.updated_at, updated: true }
+            return { success: true, quoteId: updated.id, updatedAt: updated.updated_at, quotationReference: updated.quotation_reference, updated: true }
         }
     }
 
@@ -1093,26 +1134,31 @@ export async function saveEstimatorQuoteV3(params: {
         }
     }
 
+    const savedId = crypto.randomUUID()
     const { data: saved, error } = await supabase
         .from('estimator_quotes')
         .insert({
             ...quotePayload,
+            id: savedId,
+            ...(newRecordKind === 'quotation'
+                ? { quotation_reference: buildQuotationReference(savedId) }
+                : {}),
             source_quote_id: params.sourceQuoteId ?? null,
             ...costingVersion,
         })
-        .select('id, updated_at, version_number')
+        .select('id, updated_at, version_number, quotation_reference')
         .single()
 
     if (error) {
         if (error.code === '23505') {
             const { data: existing } = await supabase
                 .from('estimator_quotes')
-                .select('id, updated_at')
+                .select('id, updated_at, quotation_reference')
                 .eq('org_id', profile.org_id)
                 .eq('client_request_id', params.clientRequestId)
                 .maybeSingle()
             if (existing) {
-                return { success: true, quoteId: existing.id, updatedAt: existing.updated_at, idempotentReplay: true }
+                return { success: true, quoteId: existing.id, updatedAt: existing.updated_at, quotationReference: existing.quotation_reference, idempotentReplay: true }
             }
         }
         if (params.sourceQuoteId && newRecordKind === 'costing') {
@@ -1120,7 +1166,7 @@ export async function saveEstimatorQuoteV3(params: {
         }
         return { error: error.message }
     }
-    return { success: true, quoteId: saved.id, updatedAt: saved.updated_at, versionNumber: saved.version_number }
+    return { success: true, quoteId: saved.id, updatedAt: saved.updated_at, versionNumber: saved.version_number, quotationReference: saved.quotation_reference }
 }
 
 // ─── Convert Quote to Order ───────────────────────────────────────────────────
@@ -1594,6 +1640,58 @@ export async function updateQuoteStatus(
     if (error) return { error: error.message }
     if (!data) return { error: 'This Quotation changed in another tab. Refresh Quotations before changing its status.' }
     
+    revalidatePath('/owner/quotes')
+    return { success: true, data }
+}
+
+export async function updateQuotationDocumentMetadata(input: {
+    id: string
+    expectedUpdatedAt: string
+    validUntil: string
+    customerTerms?: string | null
+}) {
+    if (!UUID_PATTERN.test(input.id)) return { error: 'Quotation identifier is invalid.' }
+    const timestampError = validateExpectedTimestamp(input.expectedUpdatedAt, 'This quotation')
+    if (timestampError) return { error: timestampError }
+
+    const validUntil = normalizeQuotationDate(input.validUntil)
+    if (!validUntil) return { error: 'Enter a valid quotation validity date.' }
+    if ((input.customerTerms ?? '').trim().length > 2000) return { error: 'Customer terms must be 2,000 characters or fewer.' }
+
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const { data: current, error: currentError } = await supabase
+        .from('estimator_quotes')
+        .select('id, record_kind, status, order_id, updated_at, quotation_reference, created_at')
+        .eq('id', input.id)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+
+    if (currentError) return { error: currentError.message }
+    if (!current) return { error: 'Quotation not found.' }
+    if (normalizeCostingRecordKind(current.record_kind) !== 'quotation') {
+        return { error: 'Standalone costings do not have customer quotation metadata.' }
+    }
+    if (current.order_id || current.status === 'accepted') {
+        return { error: 'Accepted quotations are locked. Reopen a draft or sent quotation to change its customer terms.' }
+    }
+
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .update({
+            quotation_reference: current.quotation_reference ?? buildQuotationReference(current.id, new Date(current.created_at)),
+            quotation_valid_until: validUntil,
+            customer_terms: normalizeCustomerTerms(input.customerTerms),
+        })
+        .eq('id', input.id)
+        .eq('org_id', profile.org_id)
+        .eq('updated_at', input.expectedUpdatedAt)
+        .select('id, updated_at, quotation_reference, quotation_valid_until, customer_terms')
+        .maybeSingle()
+
+    if (error) return { error: error.message }
+    if (!data) return { error: 'This quotation changed in another tab. Refresh Quotations before exporting again.' }
+
     revalidatePath('/owner/quotes')
     return { success: true, data }
 }

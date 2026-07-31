@@ -60,7 +60,7 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
     },
     settings_security: {
         label: 'Settings & Profiles',
-        tables: ['profiles'],
+        tables: ['profiles', 'owner_data_export'],
         color: 'text-amber-700',
         bgColor: 'bg-amber-50',
         borderColor: 'border-amber-200',
@@ -285,6 +285,7 @@ export default function AuditTable() {
                                 <SelectItem value="INSERT"><span className="text-emerald-600 font-black">Created</span></SelectItem>
                                 <SelectItem value="UPDATE"><span className="text-amber-600 font-black">Modified</span></SelectItem>
                                 <SelectItem value="DELETE"><span className="text-rose-600 font-black">Removed</span></SelectItem>
+                                <SelectItem value="EXPORT"><span className="text-indigo-600 font-black">Exported</span></SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

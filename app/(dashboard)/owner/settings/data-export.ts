@@ -26,6 +26,18 @@ const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
 
 type ExportRecord = Record<string, unknown>
 
+export type OrganizationExportHistoryItem = {
+    changed_at: string
+    record_id: string | null
+    actor_name: string
+    description: string
+}
+
+function getOrganizationExportFilename(exportedAt: string) {
+    const compactTimestamp = exportedAt.replace(/\D/g, '').slice(0, 14) || new Date().toISOString().replace(/\D/g, '').slice(0, 14)
+    return `weavly-org-export-${compactTimestamp}.json`
+}
+
 function isSensitiveExportField(field: string) {
     const normalized = field.toLowerCase()
     return SENSITIVE_EXPORT_FIELD_NAMES.has(normalized)
@@ -56,6 +68,7 @@ export async function exportOrganizationData() {
     const supabase = createAdminClient()
     const orgId = profile.org_id
     const exportedAt = new Date().toISOString()
+    const filename = getOrganizationExportFilename(exportedAt)
 
     // Query all org-scoped tables in parallel
     const queryResults = await Promise.all([
@@ -109,7 +122,7 @@ export async function exportOrganizationData() {
         p_org_id: orgId,
         p_table_name: 'owner_data_export',
         p_record_id: orgId,
-        p_description: `Owner organization data export generated at ${exportedAt}`,
+        p_description: `Owner organization data export generated at ${exportedAt}; filename ${filename}`,
         p_actor_id: user.id,
     })
 
@@ -118,9 +131,21 @@ export async function exportOrganizationData() {
         throw new Error('Data export could not be audited. Please try again.')
     }
 
+    const datasetCounts = {
+        workers: workers?.length ?? 0,
+        fixed_workers: fixedWorkers?.length ?? 0,
+        machines: machines?.length ?? 0,
+        production_logs: productionLogs?.length ?? 0,
+        orders: orders?.length ?? 0,
+        estimator_quotes: estimatorQuotes?.length ?? 0,
+        estimator_templates: estimatorTemplates?.length ?? 0,
+    }
+
     return {
         exported_at: exportedAt,
+        filename,
         export_scope: 'current_owner_org',
+        dataset_counts: datasetCounts,
         terminology: {
             baseline: 'UX-012 product-owner-approved limited-pilot baseline',
             display_terms: UX012_TERMS,
@@ -171,6 +196,41 @@ export async function exportOrganizationData() {
         language_requests: redactRows(languageRequests as ExportRecord[] | null),
         grievances: redactRows(grievances as ExportRecord[] | null),
         organization_dpas: redactRows(organizationDpas as ExportRecord[] | null),
+    }
+}
+
+export async function getOrganizationExportHistory(limit = 10) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+        .from('audit_log')
+        .select('changed_at, record_id, new_data, changed_by, profiles!audit_log_changed_by_fkey(full_name)')
+        .eq('org_id', profile.org_id)
+        .eq('table_name', 'owner_data_export')
+        .eq('action', 'EXPORT')
+        .order('changed_at', { ascending: false })
+        .limit(Math.min(Math.max(limit, 1), 50))
+
+    if (error) return { error: error.message }
+
+    return {
+        data: (data ?? []).map(row => {
+            const typedRow = row as unknown as {
+                changed_at: string
+                record_id: string | null
+                new_data?: { description?: unknown } | null
+                profiles?: { full_name?: string } | { full_name?: string }[] | null
+            }
+            const profile = Array.isArray(typedRow.profiles) ? typedRow.profiles[0] : typedRow.profiles
+            return {
+                changed_at: typedRow.changed_at,
+                record_id: typedRow.record_id,
+                actor_name: profile?.full_name ?? 'Owner',
+                description: typeof typedRow.new_data?.description === 'string'
+                    ? typedRow.new_data.description
+                    : 'Organization data export generated',
+            } satisfies OrganizationExportHistoryItem
+        }),
     }
 }
 

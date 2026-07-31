@@ -137,6 +137,10 @@ export function getAuditSummary(log: AuditLogEntry): string {
     case 'factory_cost_profile':
       return 'Factory overheads updated'
 
+    case 'owner_data_export':
+      if (action === 'EXPORT') return 'Organization data export generated'
+      break
+
     default:
       // Generic fallback logic
       if (action === 'INSERT') return `New ${table_name.replace(/_/g, ' ')} created`
