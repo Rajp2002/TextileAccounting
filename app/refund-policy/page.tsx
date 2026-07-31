@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 }
 
 const sections = [
-    { href: '#free-trial', title: 'Free Trial' },
     { href: '#cancellation', title: 'Cancellation' },
     { href: '#refunds', title: 'Refund Policy' },
     { href: '#renewals', title: 'Annual Renewals' },
@@ -23,11 +22,11 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="Clear rules for trials, implementation work, annual maintenance, cancellations, refunds, and data export when service ends."
+            description="Clear rules for implementation work, annual maintenance, cancellations, refunds, payment receipts, and data export when service ends."
             lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
-                { label: 'Free trial', value: '7 days, no payment required', icon: CalendarDays },
+                { label: 'Renewal window', value: 'Manual renewal from 30 days before expiry', icon: CalendarDays },
                 { label: 'Before work starts', value: 'Setup fee fully refundable', icon: RefreshCw },
                 { label: 'Refund timing', value: '5-7 business days to original method', icon: Clock3 },
                 { label: 'Support', value: 'support@weavly.app', icon: Mail },
@@ -36,15 +35,6 @@ export default function RefundPolicyPage() {
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
                 This Refund &amp; Cancellation Policy applies to Weavly&apos;s setup and implementation services and annual platform maintenance. It explains how refund eligibility changes as onboarding work is delivered and the platform enters active use.
             </p>
-
-            <PolicySection id="free-trial" title="1. Free Trial">
-                <ul>
-                    <li>The 7-day free trial provides full access to all features at no cost.</li>
-                    <li>No credit card or payment information is required to start a trial.</li>
-                    <li>The trial does <strong>not</strong> automatically convert to a paid service. You must explicitly accept a commercial proposal and complete payment to continue after the trial.</li>
-                    <li>No refund applies to the free trial as no charges are made.</li>
-                </ul>
-            </PolicySection>
 
             <PolicySection id="cancellation" title="2. Subscription Cancellation">
                 <h3>2.1 How to Cancel</h3>
@@ -72,7 +62,7 @@ export default function RefundPolicyPage() {
             <PolicySection id="refunds" title="3. Refund Policy">
                 <h3>3.1 First-Year Plan Subscriptions</h3>
                 <p>
-                    First-year payments include platform access and setup assistance (₹7,000 + GST for Weavly Cost Estimate; ₹25,000 + GST for Weavly Full Suite).
+                    First-year payments include platform access and setup assistance (₹8,260 total for Weavly Cost Estimate; ₹29,500 total for Weavly Full Suite, including the displayed GST component).
                 </p>
                 <ul>
                     <li><strong>Before setup or onboarding work starts</strong> — The fee is fully refundable if requested within 7 days of payment and before workspace activation.</li>
@@ -82,10 +72,10 @@ export default function RefundPolicyPage() {
 
                 <h3>3.2 Annual Renewals</h3>
                 <p>
-                    Subsequent annual renewal fees are ₹2,000/year + GST for Weavly Cost Estimate and ₹7,000/year + GST for Weavly Full Suite.
+                    Subsequent annual renewal fees are ₹2,360 total/year for Weavly Cost Estimate and ₹8,260 total/year for Weavly Full Suite, including the displayed GST component.
                 </p>
                 <ul>
-                    <li><strong>Cancellation before renewal</strong> — You may cancel renewal at any time. If cancelled before the renewal date, no charges will be made.</li>
+                    <li><strong>Cancellation before renewal</strong> — Renewals are manual. They become available during the final 30 days of the current paid period, and no automatic charge will be made.</li>
                     <li><strong>Renewal payments</strong> — Renewal charges are refundable only if charged after a confirmed cancellation or in case of a billing error. Once the new annual period starts, no pro-rata refunds are provided.</li>
                     <li><strong>Service outage</strong> — For any material outage attributable to Weavly, we may provide a proportionate service credit or other remedy under the applicable order terms.</li>
                 </ul>
@@ -93,7 +83,7 @@ export default function RefundPolicyPage() {
                 <h3>3.3 How Refunds Are Processed</h3>
                 <ul>
                     <li>Refunds are processed to the original payment method within <strong>5-7 business days</strong>.</li>
-                    <li>Any tax adjustment or credit note will be handled as required by applicable GST rules.</li>
+                    <li>Payment receipts are available from Billing after successful payment. Formal GST tax invoice support is not currently available; any future tax-document workflow will be handled as required by applicable GST rules.</li>
                     <li>To request a refund, email <a href="mailto:support@weavly.app">support@weavly.app</a> with your account details and reason for the request.</li>
                 </ul>
             </PolicySection>

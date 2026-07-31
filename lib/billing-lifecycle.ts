@@ -4,6 +4,7 @@ import {
   getBillingPrice,
   isBillingPurchaseType,
   isPurchasablePlanTier,
+  RENEWAL_ELIGIBILITY_DAYS,
   type BillingPurchaseType,
   type PurchasablePlanTier,
 } from './billing-constants'
@@ -17,6 +18,9 @@ export type BillingSubscriptionRow = {
   razorpay_payment_id?: string | null
   razorpay_subscription_id?: string | null
   razorpay_order_id?: string | null
+  checkout_purchase_type?: BillingPurchaseType | null
+  checkout_amount_paise?: number | null
+  checkout_currency?: string | null
   created_at?: string | null
 }
 
@@ -37,6 +41,7 @@ export type BillingPurchaseDecision = {
   allowed: boolean
   purchaseType: BillingPurchaseType
   periodStart: string
+  renewalEligibleAt?: string | null
   reason?: string
 }
 
@@ -52,6 +57,29 @@ function validTime(value: string | null | undefined): number | null {
   if (!value) return null
   const time = new Date(value).getTime()
   return Number.isFinite(time) ? time : null
+}
+
+/** Return the first instant at which a same-plan renewal may be purchased. */
+export function getRenewalEligibilityDate(
+  currentEnd: string | null | undefined,
+  eligibilityDays = RENEWAL_ELIGIBILITY_DAYS,
+): string | null {
+  const endMs = validTime(currentEnd)
+  if (endMs === null) return null
+  return new Date(endMs - eligibilityDays * 24 * 60 * 60 * 1000).toISOString()
+}
+
+export function isRenewalEligible(
+  currentEnd: string | null | undefined,
+  now = new Date(),
+  eligibilityDays = RENEWAL_ELIGIBILITY_DAYS,
+): boolean {
+  const endMs = validTime(currentEnd)
+  if (endMs === null) return true
+  // A lapsed plan must still be renewable. The 30-day restriction applies
+  // only while the current paid period is still active.
+  if (endMs <= now.getTime()) return true
+  return endMs - now.getTime() <= eligibilityDays * 24 * 60 * 60 * 1000
 }
 
 /**
@@ -155,10 +183,30 @@ export function resolveBillingPurchase(
     ? Math.max(...futureTargetEnds)
     : nowMs
 
+  const targetEndMs = futureTargetEnds.length > 0 ? Math.max(...futureTargetEnds) : null
+  const renewalEligibleAt = targetEndMs === null
+    ? null
+    : getRenewalEligibilityDate(new Date(targetEndMs).toISOString())
+
+  if (
+    purchaseType === 'renewal'
+    && targetEndMs !== null
+    && !isRenewalEligible(new Date(targetEndMs).toISOString(), now)
+  ) {
+    return {
+      allowed: false,
+      purchaseType,
+      periodStart: new Date(periodStartMs).toISOString(),
+      renewalEligibleAt,
+      reason: `Renewal opens ${RENEWAL_ELIGIBILITY_DAYS} days before your current plan expires.`,
+    }
+  }
+
   return {
     allowed: true,
     purchaseType,
     periodStart: new Date(periodStartMs).toISOString(),
+    renewalEligibleAt,
   }
 }
 

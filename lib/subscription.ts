@@ -7,7 +7,7 @@ export { resolveEffectiveSubscription, tierSatisfies, type SubscriptionTier } fr
 /**
  * Subscription tier hierarchy:
  *   'none'    — no active subscription (blocked)
- *   'trial'   — 7-day free trial (full premium access)
+ *   'trial'   — legacy trial access for already-created rows; new trials are retired
  *   'base'    — paid Base plan (Estimator only)
  *   'premium' — paid Premium plan (full access)
  */

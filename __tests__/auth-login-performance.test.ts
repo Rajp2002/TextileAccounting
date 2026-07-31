@@ -73,6 +73,7 @@ describe('sign-in critical-path performance', () => {
 
         const todayLayout = read('app/(dashboard)/owner/today/layout.tsx')
         expect(todayLayout).toContain('requiredTier="premium"')
-        expect(todayLayout).toContain('insufficientRedirect="/owner/estimator"')
+        expect(todayLayout).toContain('routeName="/owner/today"')
+        expect(todayLayout).not.toContain('insufficientRedirect')
     })
 })

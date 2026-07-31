@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
-const proofItems = ['7-day Premium trial', 'No credit card', 'Works as an installable PWA']
+const proofItems = ['GST-inclusive pricing', 'Manual annual renewal', 'Works as an installable PWA']
 
 const ownerSignals = [
     'Production still pending this shift',

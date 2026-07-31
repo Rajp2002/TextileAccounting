@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
@@ -48,6 +49,15 @@ type CreateOrderResponse = {
     purchaseType?: BillingPurchaseType
 }
 
+type PaymentOutcome = {
+    state: 'success' | 'pending'
+    planName: string
+    purchaseType: BillingPurchaseType
+    amount: number
+    paymentId: string
+    activeUntil?: string | null
+}
+
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
@@ -60,11 +70,14 @@ interface SubscribeButtonProps {
     displayAmount?: string
     buttonLabel?: string
     onSuccess?: (paymentId: string) => void
+    successHref?: string
+    successLabel?: string
     className?: string
 }
 
-export function SubscribeButton({ planTier = 'premium', tierName, displayAmount, buttonLabel, onSuccess, className }: SubscribeButtonProps) {
+export function SubscribeButton({ planTier = 'premium', tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
+    const [outcome, setOutcome] = useState<PaymentOutcome | null>(null)
     const router = useRouter()
 
     /**
@@ -137,13 +150,10 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
             const contentType = res.headers.get('content-type')
             if (!contentType?.includes('application/json')) {
                 const text = await res.text()
-                console.error('[SubscribeButton] Received non-JSON response:', text.substring(0, 100))
                 throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
             }
 
             const data = await res.json() as CreateOrderResponse
-            console.log('[SubscribeButton] API response:', data)
-
             if (!res.ok || data.error) {
                 throw new Error(data.error || 'Failed to create payment order')
             }
@@ -172,7 +182,6 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
                     paymentHandled = true
                     setLoading(true)
                     try {
-                        console.log('[SubscribeButton] Verifying payment signature...')
                         const verifyRes = await fetch('/api/billing/verify-payment', {
                             method: 'POST',
                             headers: {
@@ -186,19 +195,45 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
                             })
                         })
 
-                        const verifyData = await verifyRes.json()
+                        const verifyData = await verifyRes.json().catch(() => ({})) as {
+                            error?: string
+                            activationPending?: boolean
+                            activeUntil?: string | null
+                        }
+
+                        if (verifyRes.status === 202 && verifyData.activationPending) {
+                            setOutcome({
+                                state: 'pending',
+                                planName: checkoutPlanName,
+                                purchaseType,
+                                amount,
+                                paymentId: response.razorpay_payment_id,
+                            })
+                            toast.info('Payment received. We are confirming access now.')
+                            onSuccess?.(response.razorpay_payment_id)
+                            return
+                        }
                         if (!verifyRes.ok || verifyData.error) {
                             throw new Error(verifyData.error || 'Failed to verify payment signature')
                         }
 
+                        setOutcome({
+                            state: 'success',
+                            planName: checkoutPlanName,
+                            purchaseType,
+                            amount,
+                            paymentId: response.razorpay_payment_id,
+                            activeUntil: verifyData.activeUntil,
+                        })
                         toast.success(
                             purchaseType === 'renewal'
                                 ? `🎉 Payment successful! ${checkoutPlanName} was renewed.`
                                 : `🎉 Payment successful! ${checkoutPlanName} is now active.`
                         )
                         onSuccess?.(response.razorpay_payment_id)
-                        // Refresh server components
-                        setTimeout(() => router.refresh(), 1500)
+                        // Keep the confirmation visible until the owner chooses
+                        // the next action. Navigating to that action performs a
+                        // fresh server render with the activated entitlement.
                     } catch (err) {
                         toast.error(getErrorMessage(err, 'Payment verification failed.'))
                     } finally {
@@ -230,26 +265,57 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
 
     return (
         <div className="space-y-3">
-            <Button
-                type="button"
-                id={`subscribe-btn-${planTier}`}
-                onClick={handleSubscribe}
-                disabled={loading}
-                size="lg"
-                className={cn('w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200/50 transition-all', className)}
-            >
-                {loading ? (
-                    <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Opening payment...
-                    </>
-                ) : (
-                    <>
-                        <CreditCard className="h-4 w-4" />
-                        {buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'base' ? '₹8,260' : '₹29,500')} & Activate`}
-                    </>
-                )}
-            </Button>
+            {outcome ? (
+                <div className={cn(
+                    'rounded-xl border p-4 text-sm',
+                    outcome.state === 'success'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                        : 'border-blue-200 bg-blue-50 text-blue-900'
+                )} role="status" aria-live="polite">
+                    <p className="font-bold">
+                        {outcome.state === 'success'
+                            ? `${outcome.planName} payment received`
+                            : 'Payment received — confirming access'}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed opacity-80">
+                        {outcome.state === 'success'
+                            ? `Paid ${displayAmount ?? `₹${(outcome.amount / 100).toLocaleString('en-IN')}`}${outcome.activeUntil ? ` · Active until ${new Date(outcome.activeUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}` : ''}.`
+                            : 'We will update your access after the payment webhook is confirmed. Please do not pay again.'}
+                    </p>
+                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider opacity-60">
+                        Payment ref. {outcome.paymentId.slice(-8)}
+                    </p>
+                    {outcome.state === 'success' && successHref && (
+                        <Link
+                            href={successHref}
+                            className="mt-3 inline-flex items-center rounded-lg bg-white/80 px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm hover:bg-white"
+                        >
+                            {successLabel ?? 'Continue'}
+                        </Link>
+                    )}
+                </div>
+            ) : (
+                <Button
+                    type="button"
+                    id={`subscribe-btn-${planTier}`}
+                    onClick={handleSubscribe}
+                    disabled={loading}
+                    size="lg"
+                    className={cn('w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200/50 transition-all', className)}
+                >
+                    {loading ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Opening payment...
+                        </>
+                    ) : (
+                        <>
+                            <CreditCard className="h-4 w-4" />
+                            {buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'base' ? '₹8,260' : '₹29,500')} & Activate`}
+                        </>
+                    )}
+                </Button>
+            )}
         </div>
     )
 }

@@ -20,8 +20,8 @@ import { updateOrganizationProductionMode } from '@/app/(dashboard)/owner/action
 import { addMeterWorkersBulk } from '@/app/(dashboard)/supervisor/actions'
 import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
-import { TrialButton } from '@/components/billing/TrialButton'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
+import { getBillingPlan, getBillingPrice } from '@/lib/billing-constants'
 import { BrandBackground } from '@/components/brand-background'
 import { LoomiAvatar } from '@/components/onboarding/loomi-avatar'
 import { PRODUCTION_MODE_OPTIONS, type ProductionMode } from '@/lib/production-mode'
@@ -657,43 +657,27 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
  // ─── Plan Selection Form ──────────────────────────────────────────────────────────
 
 function PlanSelectionForm({ onDone }: { onDone: () => void }) {
+    const plan = getBillingPlan('premium')
+    const price = getBillingPrice('premium', 'initial_purchase')
+
     return (
         <div className="pt-4 border-t border-gray-100 space-y-4">
-            <p className="text-sm text-gray-500">Choose how you&apos;d like to get started</p>
+            <p className="text-sm text-gray-500">Choose a paid plan to activate continued factory access.</p>
 
-            {/* Free trial option */}
-            <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-emerald-600" />
-                    <span className="font-semibold text-emerald-900 text-sm">7-Day Free Trial</span>
-                    <span className="ml-auto bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">RECOMMENDED</span>
-                </div>
-                <p className="text-xs text-emerald-700">Full Premium access for 7 days. No credit card required.</p>
-                <TrialButton
-                    compact
-                    onSuccess={() => onDone()}
-                />
-            </div>
-
-            <div className="relative flex items-center py-1">
-                <div className="flex-grow border-t border-gray-200" />
-                <span className="mx-3 text-xs text-gray-400">or start a paid plan</span>
-                <div className="flex-grow border-t border-gray-200" />
-            </div>
-
-            {/* Paid plan options */}
             <div className="grid grid-cols-1 gap-3">
-                {/* Weavly Full Suite */}
                 <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start sm:items-center gap-3 sm:gap-2 min-w-0">
                         <Star className="h-5 w-5 sm:h-4 sm:w-4 text-amber-500 fill-amber-400 shrink-0 mt-0.5 sm:mt-0" />
                         <div>
-                            <p className="text-sm font-semibold text-gray-900">Weavly Full Suite</p>
-                            <p className="text-xs text-gray-500">₹15,000 first year + GST (₹17,700 total) · Full access</p>
+                            <p className="text-sm font-semibold text-gray-900">{plan.name}</p>
+                            <p className="text-xs text-gray-500">₹{(price.totalPaise / 100).toLocaleString('en-IN')} total first year · ₹{(price.basePaise / 100).toLocaleString('en-IN')} + ₹{(price.gstPaise / 100).toLocaleString('en-IN')} GST</p>
                         </div>
                     </div>
                     <div className="w-full sm:w-auto shrink-0">
                         <SubscribeButton
+                            planTier="premium"
+                            tierName={plan.name}
+                            displayAmount={`₹${(price.totalPaise / 100).toLocaleString('en-IN')}`}
                             onSuccess={() => onDone()}
                         />
                     </div>
@@ -715,8 +699,8 @@ const STEPS = [
     {
         key: 'hasMachine' as keyof OnboardingStatus,
         icon: Cpu,
-        title: 'Add your machines',
-        description: 'Looms are the primary production units. Add every loom in your factory.',
+        title: 'Add your looms',
+        description: 'Add the looms that produce fabric in your factory.',
         accentColor: 'amber',
         form: MachineForm,
     },
@@ -740,7 +724,7 @@ const STEPS = [
         key: 'hasPlan' as keyof OnboardingStatus,
         icon: CreditCard,
         title: 'Choose your plan',
-        description: 'Start a free 7-day trial or subscribe immediately. No card required for trial.',
+        description: 'Choose a paid plan to keep using factory workflows.',
         accentColor: 'amber',
         form: PlanSelectionForm,
     },

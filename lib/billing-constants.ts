@@ -65,3 +65,6 @@ export const RENEWAL_TOTAL_PAISE = BILLING_PLANS.premium.renewalTotalPaise
 
 export const BILLING_MODEL = 'upfront_first_year_plus_annual_renewal'
 export const ACCESS_DAYS = 365
+
+/** Same-plan manual renewals are only offered during the final 30 days. */
+export const RENEWAL_ELIGIBILITY_DAYS = 30
