@@ -40,8 +40,7 @@ import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
-import { exportOrganizationData } from '@/app/(dashboard)/owner/settings/data-export'
-import { downloadJson } from '@/lib/browser-download'
+import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { Badge } from '@/components/ui/badge'
@@ -213,18 +212,6 @@ export default function SettingsPage() {
         },
         onError: (err: unknown) => {
             toast.error(getErrorMessage(err, 'Failed to update production mode'))
-        }
-    })
-
-    const dataExportMutation = useMutation({
-        mutationFn: exportOrganizationData,
-        onSuccess: (payload) => {
-            const filename = `weavly-org-export-${new Date().toISOString().slice(0, 10)}.json`
-            downloadJson(payload, filename)
-            toast.success('Data export downloaded', { description: filename })
-        },
-        onError: (err: unknown) => {
-            toast.error(getErrorMessage(err, 'Failed to export organization data'))
         }
     })
 
@@ -503,16 +490,12 @@ export default function SettingsPage() {
                                 title="Download your organization data"
                                 description="Create a structured export of the factory records your account is allowed to access. Sensitive authentication fields are excluded or redacted."
                             />
-                            <Button
-                                data-testid="settings-data-export"
-                                variant="outline"
-                                className="mt-5 w-full justify-center sm:w-auto"
-                                onClick={() => dataExportMutation.mutate()}
-                                disabled={dataExportMutation.isPending}
-                            >
-                                {dataExportMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                                {dataExportMutation.isPending ? 'Preparing Export' : 'Download Data Export'}
-                            </Button>
+                            <div className="mt-5">
+                                <OrganizationDataExportButton />
+                                <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                                    View export history
+                                </Link>
+                            </div>
                         </SettingsPanel>
                     </SettingsSection>
 

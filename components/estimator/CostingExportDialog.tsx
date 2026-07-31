@@ -2,7 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { addDays, format } from 'date-fns'
-import { Download, FileText, Loader2, Printer, ReceiptText } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  Eye,
+  ExternalLink,
+  FileText,
+  Loader2,
+  Printer,
+  ReceiptText,
+  Share2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,12 +29,37 @@ import {
 } from '@/components/ui/dialog'
 import {
   buildCostingPrintHtml,
+  buildQuotationShareMessage,
   extractStyledCostingBody,
+  getCostingExportFilename,
+  validateCostingExportInput,
   type CostingExportMode,
   type CostingExportModel,
 } from '@/lib/estimator-export'
 import { toast } from 'sonner'
 import { downloadBlob } from '@/lib/browser-download'
+import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimator/actions'
+
+type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
+
+type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+
+function getDefaultValidity(value?: string, locked = false) {
+  return value || (locked ? '' : format(addDays(new Date(), 15), 'yyyy-MM-dd'))
+}
+
+function statusLabel(status: ExportStatus) {
+  switch (status) {
+    case 'saving': return 'Saving quotation details'
+    case 'generating': return 'Generating PDF'
+    case 'generated': return 'PDF generated'
+    case 'download-started': return 'Download started'
+    case 'print-opened': return 'Print window opened'
+    case 'share-opened': return 'Share handoff opened'
+    case 'failed': return 'Action failed'
+    default: return 'Preview ready'
+  }
+}
 
 export function CostingExportDialog({
   open,
@@ -31,63 +67,168 @@ export function CostingExportDialog({
   model,
   defaultCustomerName = '',
   defaultBusinessName = '',
+  defaultMode = 'internal',
+  defaultValidUntil,
+  defaultCustomerTerms = '',
+  defaultInternalNotes = '',
+  documentReference = '',
+  sourceQuoteId,
+  sourceQuoteUpdatedAt,
+  sourceQuoteStatus,
+  sourceRecordKind,
+  onQuoteUpdated,
+  onMarkAsSent,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   model: CostingExportModel | null
   defaultCustomerName?: string
   defaultBusinessName?: string
+  defaultMode?: CostingExportMode
+  defaultValidUntil?: string | null
+  defaultCustomerTerms?: string | null
+  defaultInternalNotes?: string | null
+  documentReference?: string | null
+  sourceQuoteId?: string
+  sourceQuoteUpdatedAt?: string
+  sourceQuoteStatus?: QuoteStatus
+  sourceRecordKind?: 'costing' | 'quotation'
+  onQuoteUpdated?: (data: { updated_at: string; quotation_reference?: string | null; quotation_valid_until?: string | null; customer_terms?: string | null }) => void
+  onMarkAsSent?: () => Promise<boolean> | boolean
 }) {
-  const [mode, setMode] = useState<CostingExportMode>('internal')
+  const [mode, setMode] = useState<CostingExportMode>(defaultMode)
   const [businessName, setBusinessName] = useState(defaultBusinessName)
   const [customerName, setCustomerName] = useState(defaultCustomerName)
-  const [validUntil, setValidUntil] = useState(format(addDays(new Date(), 15), 'yyyy-MM-dd'))
-  const [notes, setNotes] = useState('')
+  const [validUntil, setValidUntil] = useState(getDefaultValidity(defaultValidUntil ?? undefined, sourceRecordKind === 'quotation' && sourceQuoteStatus === 'accepted'))
+  const [customerTerms, setCustomerTerms] = useState(defaultCustomerTerms ?? '')
+  const [internalNotes, setInternalNotes] = useState(defaultInternalNotes ?? '')
   const [showGstNote, setShowGstNote] = useState(true)
-  const [generating, setGenerating] = useState(false)
+  const [status, setStatus] = useState<ExportStatus>('idle')
+  const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null)
+  const [generatedFilename, setGeneratedFilename] = useState('')
+  const [sharing, setSharing] = useState(false)
+  const [markingSent, setMarkingSent] = useState(false)
+  const [markedSent, setMarkedSent] = useState(false)
+  const [latestQuoteUpdatedAt, setLatestQuoteUpdatedAt] = useState(sourceQuoteUpdatedAt)
+
+  const savedQuotation = Boolean(sourceQuoteId && sourceRecordKind === 'quotation')
+  const lockedQuotation = savedQuotation && sourceQuoteStatus === 'accepted'
 
   useEffect(() => {
     if (!open || !model) return
-    setMode('internal')
+    setMode(defaultMode)
     setBusinessName(defaultBusinessName)
     setCustomerName(defaultCustomerName)
-    setValidUntil(format(addDays(new Date(), 15), 'yyyy-MM-dd'))
-    setNotes('')
+    setValidUntil(getDefaultValidity(defaultValidUntil ?? undefined, sourceRecordKind === 'quotation' && sourceQuoteStatus === 'accepted'))
+    setCustomerTerms(defaultCustomerTerms ?? '')
+    setInternalNotes(defaultInternalNotes ?? '')
     setShowGstNote(true)
-  }, [defaultBusinessName, defaultCustomerName, model, open])
+    setStatus('idle')
+    setGeneratedBlob(null)
+    setGeneratedFilename('')
+    setSharing(false)
+    setMarkingSent(false)
+    setMarkedSent(false)
+    setLatestQuoteUpdatedAt(sourceQuoteUpdatedAt)
+  }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, model, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind])
 
   const options = useMemo(() => ({
     mode,
     businessName,
     customerName,
     validUntil,
-    notes,
+    notes: mode === 'customer' ? customerTerms : internalNotes,
     showGstNote,
-  }), [businessName, customerName, mode, notes, showGstNote, validUntil])
+    documentReference: documentReference ?? '',
+    allowMissingValidUntil: lockedQuotation && !defaultValidUntil,
+  }), [businessName, customerName, customerTerms, defaultValidUntil, documentReference, internalNotes, lockedQuotation, mode, showGstNote, validUntil])
 
-  const buildHtml = () => model ? buildCostingPrintHtml(model, options) : null
+  const previewHtml = useMemo(() => model ? buildCostingPrintHtml(model, options) : '', [model, options])
+  const validationErrors = useMemo(() => validateCostingExportInput(model, options), [model, options])
+  const canGenerate = validationErrors.length === 0 && status !== 'saving' && status !== 'generating'
+  const isBusy = status === 'saving' || status === 'generating' || sharing || markingSent
+  const canMarkSent = mode === 'customer'
+    && sourceQuoteId
+    && sourceQuoteStatus === 'draft'
+    && !markedSent
+    && ['generated', 'download-started', 'print-opened', 'share-opened'].includes(status)
+  const switchMode = (nextMode: CostingExportMode) => {
+    setMode(nextMode)
+    setGeneratedBlob(null)
+    setGeneratedFilename('')
+    setStatus('idle')
+  }
 
-  const handlePrint = () => {
-    const html = buildHtml()
-    if (!html) return
+  const persistCustomerMetadata = async () => {
+    if (!sourceQuoteId || sourceRecordKind !== 'quotation' || mode !== 'customer') return true
+    if (!latestQuoteUpdatedAt) {
+      toast.error('Quotation version is missing. Refresh Quotations before exporting again.')
+      setStatus('failed')
+      return false
+    }
+    if (sourceQuoteStatus === 'accepted') return true
+
+    setStatus('saving')
+    const result = await updateQuotationDocumentMetadata({
+      id: sourceQuoteId,
+      expectedUpdatedAt: latestQuoteUpdatedAt,
+      validUntil,
+      customerTerms,
+    })
+    if (result.error || !result.data) {
+      toast.error(result.error ?? 'Quotation details could not be saved.')
+      setStatus('failed')
+      return false
+    }
+
+    setLatestQuoteUpdatedAt(result.data.updated_at)
+    onQuoteUpdated?.(result.data)
+    return true
+  }
+
+  const handlePrint = async () => {
+    if (!model || validationErrors.length > 0) {
+      toast.error(validationErrors[0] ?? 'Complete the document details before printing.')
+      return
+    }
+
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
-      toast.error('Allow pop-ups to print the costing sheet.')
+      toast.error('Allow pop-ups to print the document.')
       return
     }
     printWindow.opener = null
-    printWindow.document.open()
-    printWindow.document.write(html)
-    printWindow.document.close()
-    printWindow.focus()
-    printWindow.print()
+
+    try {
+      if (!(await persistCustomerMetadata())) {
+        printWindow.close()
+        return
+      }
+      printWindow.document.open()
+      printWindow.document.write(previewHtml)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+      setStatus('print-opened')
+    } catch (error) {
+      printWindow.close()
+      console.error(error)
+      setStatus('failed')
+      toast.error('Print could not be opened. Try Download PDF instead.')
+    }
   }
 
   const handlePdf = async () => {
-    const html = buildHtml()
-    if (!html || !model) return
-    setGenerating(true)
+    if (!model || validationErrors.length > 0) {
+      toast.error(validationErrors[0] ?? 'Complete the document details before generating the PDF.')
+      return
+    }
+
+    setStatus('generating')
     try {
+      if (!(await persistCustomerMetadata())) return
+      setStatus('generating')
+
       const { jsPDF } = await import('jspdf')
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
       const host = document.createElement('div')
@@ -98,7 +239,7 @@ export function CostingExportDialog({
       host.style.zIndex = '-1'
       host.style.pointerEvents = 'none'
       host.style.background = '#ffffff'
-      host.innerHTML = extractStyledCostingBody(html)
+      host.innerHTML = extractStyledCostingBody(previewHtml)
       document.body.appendChild(host)
       try {
         await pdf.html(host, {
@@ -110,86 +251,229 @@ export function CostingExportDialog({
       } finally {
         host.remove()
       }
-      const safeName = model.qualityLabel.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'costing'
-      const filename = `${safeName}-${mode === 'internal' ? 'cost-sheet' : 'quotation'}.pdf`
-      downloadBlob(pdf.output('blob'), filename)
-      toast.success(mode === 'internal' ? 'Internal cost sheet downloaded' : 'Customer quotation downloaded', {
-        description: filename,
-      })
+
+      const filename = getCostingExportFilename(model, options)
+      const blob = pdf.output('blob')
+      downloadBlob(blob, filename)
+      setGeneratedBlob(blob)
+      setGeneratedFilename(filename)
+      setStatus('download-started')
+      toast.success('PDF ready', { description: `Download started: ${filename}` })
     } catch (error) {
       console.error(error)
-      toast.error('PDF generation failed. Use Print as a fallback.')
+      setStatus('failed')
+      toast.error('PDF generation failed. Retry or use Print as a fallback.')
+    }
+  }
+
+  const handleShare = async () => {
+    if (!generatedBlob || !model) {
+      toast.error('Generate the PDF before sharing it.')
+      return
+    }
+
+    setSharing(true)
+    const file = new File([generatedBlob], generatedFilename, { type: 'application/pdf' })
+    const message = buildQuotationShareMessage(model, options)
+    try {
+      const canShareFile = typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })
+      if (typeof navigator.share === 'function' && canShareFile) {
+        await navigator.share({
+          files: [file],
+          title: `Quotation ${options.documentReference || model.qualityLabel}`,
+          text: message,
+        })
+        setStatus('share-opened')
+        toast.success('Share sheet opened', { description: 'Choose WhatsApp or another app to send the PDF.' })
+      } else {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
+        const shareWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+        if (!shareWindow) {
+          toast.error('WhatsApp could not be opened. Attach the downloaded PDF manually.')
+          return
+        }
+        setStatus('share-opened')
+        toast.success('WhatsApp opened', { description: 'Attach the downloaded PDF before sending.' })
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        toast.info('Sharing cancelled')
+      } else {
+        console.error(error)
+        toast.error('Sharing could not be completed. The PDF is still available in Downloads.')
+      }
     } finally {
-      setGenerating(false)
+      setSharing(false)
+    }
+  }
+
+  const handleMarkSent = async () => {
+    if (!onMarkAsSent) return
+    setMarkingSent(true)
+    try {
+      const success = await onMarkAsSent()
+      if (success) {
+        setMarkedSent(true)
+        toast.success('Quotation marked as sent')
+      }
+    } finally {
+      setMarkingSent(false)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
         <DialogHeader>
-          <DialogTitle>Export Cost Sheet</DialogTitle>
-          <DialogDescription>Choose what the recipient is allowed to see.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5 text-blue-600" />
+            {mode === 'customer' ? 'Preview Customer Quotation' : 'Preview Internal Cost Estimate'}
+          </DialogTitle>
+          <DialogDescription>
+            Confirm exactly what will be shared before generating the document.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setMode('internal')}
-            className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
-          >
-            <FileText className="mb-3 h-5 w-5 text-blue-600" />
-            <p className="font-semibold text-slate-950">Internal Cost Sheet</p>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">Includes assumptions, detailed costs, margin, break-even, and expected profit.</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('customer')}
-            className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}
-          >
-            <ReceiptText className="mb-3 h-5 w-5 text-emerald-600" />
-            <p className="font-semibold text-slate-950">Customer Quotation</p>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">Shows final price and commercial details. Internal costs and margin stay hidden.</p>
-          </button>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="export-business-name">Business name</Label>
-            <Input id="export-business-name" value={businessName} onChange={event => setBusinessName(event.target.value)} placeholder="Your weaving business" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="export-customer-name">Customer (optional)</Label>
-            <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="export-valid-until">Valid until</Label>
-            <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={mode === 'internal'} />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="export-notes">Notes (optional)</Label>
-            <Textarea id="export-notes" value={notes} onChange={event => setNotes(event.target.value)} placeholder="Payment, delivery, quality, or internal review notes" />
-          </div>
-          {mode === 'customer' && (
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3 sm:col-span-2">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <section className="min-w-0 rounded-xl border border-slate-200 bg-slate-100 p-2">
+            <div className="mb-2 flex items-center justify-between gap-3 px-2">
               <div>
-                <Label htmlFor="export-gst-note">Show GST note</Label>
-                <p className="text-xs text-slate-500">States that GST is charged as applicable on the final tax invoice.</p>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500">Live preview</p>
+                <p className="mt-1 text-xs text-slate-500">The PDF uses this same document layout.</p>
               </div>
-              <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} />
+              {status !== 'idle' && (
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${status === 'failed' ? 'bg-red-100 text-red-700' : status.includes('started') || status.includes('opened') || status === 'generated' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {statusLabel(status)}
+                </span>
+              )}
             </div>
-          )}
+            <iframe
+              title={mode === 'customer' ? 'Customer quotation preview' : 'Internal cost estimate preview'}
+              srcDoc={previewHtml}
+              sandbox=""
+              className="h-[min(65vh,680px)] w-full rounded-lg border border-slate-200 bg-white shadow-inner"
+            />
+          </section>
+
+          <section className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <button
+                type="button"
+                onClick={() => switchMode('internal')}
+                className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+              >
+                <FileText className="mb-3 h-5 w-5 text-blue-600" />
+                <p className="font-semibold text-slate-950">Internal Cost Estimate</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">Detailed costs, assumptions, break-even, margin, and profit stay inside the factory.</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('customer')}
+                className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}
+              >
+                <ReceiptText className="mb-3 h-5 w-5 text-emerald-600" />
+                <p className="font-semibold text-slate-950">Customer Quotation</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">Final price and commercial details only. Internal costs and margin stay hidden.</p>
+              </button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="export-business-name">Business name</Label>
+                <Input id="export-business-name" value={businessName} onChange={event => setBusinessName(event.target.value)} placeholder="Your weaving business" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="export-customer-name">Party / customer {mode === 'customer' ? '' : '(optional)'}</Label>
+                <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" disabled={savedQuotation} />
+              </div>
+              {mode === 'customer' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="export-valid-until">Valid until</Label>
+                  <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={lockedQuotation} />
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <Label htmlFor="export-notes">{mode === 'customer' ? 'Customer terms (optional)' : 'Internal notes (optional)'}</Label>
+                <Textarea
+                  id="export-notes"
+                  value={mode === 'customer' ? customerTerms : internalNotes}
+                  onChange={event => mode === 'customer' ? setCustomerTerms(event.target.value) : setInternalNotes(event.target.value)}
+                  placeholder={mode === 'customer' ? 'Payment, delivery, quality, or transport terms' : 'Internal review notes - never shown to the customer'}
+                  className="min-h-24"
+                  disabled={lockedQuotation && mode === 'customer'}
+                />
+              </div>
+              {mode === 'customer' && (
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3">
+                  <div>
+                    <Label htmlFor="export-gst-note">Show GST note</Label>
+                    <p className="text-xs text-slate-500">Clarifies that this is not a tax invoice.</p>
+                  </div>
+                  <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} />
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Filename</p>
+              <p className="mt-1 break-all font-mono text-xs font-semibold text-slate-800">
+                {generatedFilename || (model ? getCostingExportFilename(model, options) : 'Ready after preview')}
+              </p>
+              {documentReference && <p className="mt-1 text-xs text-slate-500">Reference: {documentReference}</p>}
+            </div>
+
+            {validationErrors.length > 0 && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <div>
+                    <p className="font-bold">Complete this before generating</p>
+                    <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
+                      {validationErrors.map(error => <li key={error}>{error}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {status === 'download-started' && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  <div>
+                    <p className="font-bold">PDF generated and download started</p>
+                    <p className="mt-1 text-xs">Check your browser Downloads folder. The system cannot verify the device save location.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
         </div>
 
-        <DialogFooter className="gap-2 sm:justify-between">
-          <Button type="button" variant="outline" onClick={handlePrint} disabled={!model}>
-            <Printer className="h-4 w-4" /> Print
-          </Button>
+        <DialogFooter className="flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0}>
+              <Printer className="h-4 w-4" /> Print
+            </Button>
+            {generatedBlob && mode === 'customer' && (
+              <Button type="button" variant="outline" onClick={() => void handleShare()} disabled={isBusy}>
+                {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                Share PDF
+              </Button>
+            )}
+            {canMarkSent && (
+              <Button type="button" variant="outline" onClick={() => void handleMarkSent()} disabled={isBusy} className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                {markingSent ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Mark as sent
+              </Button>
+            )}
+            {status === 'share-opened' && <span className="flex items-center gap-1 text-xs font-semibold text-slate-500"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
+          </div>
           <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="button" onClick={handlePdf} disabled={!model || generating} className="bg-blue-600 text-white hover:bg-blue-700">
-              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Download PDF
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+            <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} className="bg-blue-600 text-white hover:bg-blue-700">
+              {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {status === 'download-started' ? 'Download PDF again' : 'Download PDF'}
             </Button>
           </div>
         </DialogFooter>

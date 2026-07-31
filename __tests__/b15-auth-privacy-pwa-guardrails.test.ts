@@ -10,6 +10,7 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
     const rateLimit = source('lib/rate-limit.ts')
     const resetForm = source('app/(auth)/reset-password/ResetPasswordForm.tsx')
     const settings = source('app/(dashboard)/owner/settings/page.tsx')
+    const exportButton = source('components/settings/organization-data-export-button.tsx')
     const exportAction = source('app/(dashboard)/owner/settings/data-export.ts')
     const erasureAction = source('app/(dashboard)/owner/actions/compliance.ts')
     const erasureMigration = source('supabase/migrations/20260714063000_b15_atomic_worker_erasure.sql')
@@ -40,7 +41,8 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
     })
 
     it('keeps data export available outside premium presentation and fail-closed on audit', () => {
-        expect(settings.match(/Download Data Export/g)?.length).toBe(1)
+        expect(settings).toContain('<OrganizationDataExportButton />')
+        expect(exportButton).toContain('Download organization data')
         expect(settings).toContain('<SettingsSection id="privacy-data"')
         expect(settings.indexOf('<SettingsSection id="privacy-data"')).toBeLessThan(settings.indexOf('{hasPremium ? <aside'))
         expect(exportAction).toContain("const { user, profile } = await requireRole(['owner'])")

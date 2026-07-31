@@ -26,6 +26,7 @@ describe('Batch 24G security and audit source guardrails', () => {
     const complianceActions = readProjectFile('lib/actions/compliance.ts')
     const dataExport = readProjectFile('app/(dashboard)/owner/settings/data-export.ts')
     const settingsPage = readProjectFile('app/(dashboard)/owner/settings/page.tsx')
+    const exportButton = readProjectFile('components/settings/organization-data-export-button.tsx')
 
     it('SEC-015 adds settings audit triggers for the scoped settings tables only', () => {
         for (const table of [
@@ -143,11 +144,10 @@ describe('Batch 24G security and audit source guardrails', () => {
     })
 
     it('SEC-009 wires the owner data export into active settings UI', () => {
-        expect(settingsPage).toContain("import { exportOrganizationData } from '@/app/(dashboard)/owner/settings/data-export'")
-        expect(settingsPage).toContain('const dataExportMutation = useMutation')
-        expect(settingsPage).toContain('dataExportMutation.mutate()')
-        expect(settingsPage).toContain('Download Data Export')
-        expect(settingsPage).toContain("downloadJson(payload, filename)")
-        expect(settingsPage).toContain("toast.success('Data export downloaded', { description: filename })")
+        expect(settingsPage).toContain("import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'")
+        expect(settingsPage).toContain('<OrganizationDataExportButton />')
+        expect(exportButton).toContain('exportOrganizationData()')
+        expect(exportButton).toContain('downloadJson(payload, payload.filename)')
+        expect(exportButton).toContain("toast.success('Data export ready'")
     })
 })

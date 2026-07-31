@@ -38,7 +38,7 @@ import {
     Copy,
     XCircle,
     Search,
-    Download,
+    Eye,
     Plus,
     GitCompareArrows,
     Star,
@@ -105,6 +105,9 @@ type QuoteRow = {
     intended_margin_percent: number
     created_at: string
     updated_at: string
+    quotation_reference?: string | null
+    quotation_valid_until?: string | null
+    customer_terms?: string | null
     meters: number
     snapshot_data?: QuoteDraftState
     source_quote_id?: string | null
@@ -400,7 +403,7 @@ function SavedQualityLibraryView({
                                                     <div className="flex flex-wrap gap-2">
                                                         {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id}>Open & Update</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Start From</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> Export</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> Preview</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id}>
                                                             {latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
                                                             {latest.is_archived ? 'Restore' : 'Archive'}
@@ -615,6 +618,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             createdAt: quoteToExport.created_at,
             state,
             totals: calcFullTotals(state),
+            // A historical PDF must reproduce the saved commercial snapshot,
+            // not silently recalculate today's price from the recipe.
+            suggestedSellingPricePerM: Number(quoteToExport.quote_price_per_meter),
+            landedCostPerM: Number(quoteToExport.landed_cost_per_meter),
+            marginPct: Number(quoteToExport.intended_margin_percent),
         })
     }, [quoteToExport])
 
@@ -632,15 +640,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const handleStatusChange = async (id: string, newStatus: 'draft' | 'sent' | 'accepted' | 'rejected') => {
         const quote = quotes.find(item => item.id === id)
-        if (!quote) return
+        if (!quote) return false
         setUpdatingId(id)
         const res = await updateQuoteStatus(id, newStatus, quote.updated_at)
         setUpdatingId(null)
         if (res.error) {
             toast.error(res.error)
+            return false
         } else {
             toast.success(`Quote marked as ${newStatus}`)
             setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...res.data, status: newStatus } : q))
+            return true
         }
     }
 
@@ -940,8 +950,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
                                                         <Copy className="h-3.5 w-3.5" /> Use as Starting Point
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => setQuoteToExport(quote)} className="h-9 text-xs font-semibold">
-                                                        <Download className="h-3.5 w-3.5" /> Export
+                                                <Button variant="ghost" size="sm" onClick={() => setQuoteToExport(quote)} className="h-9 text-xs font-semibold">
+                                                        <Eye className="h-3.5 w-3.5" /> Preview
                                                     </Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 w-9 text-amber-500' : 'h-9 w-9 text-slate-500'} aria-label={quote.is_favorite ? `Remove ${quote.quality_label || 'costing'} from favourites` : `Add ${quote.quality_label || 'costing'} to favourites`}>
                                                         <Star className="h-4 w-4" fill={quote.is_favorite ? 'currentColor' : 'none'} />
@@ -1009,7 +1019,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <Copy className="h-3.5 w-3.5" /> Start From
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => setQuoteToExport(quote)} className="h-10 text-xs font-semibold">
-                                                <Download className="h-3.5 w-3.5" /> Export
+                                                <Eye className="h-3.5 w-3.5" /> Preview
                                             </Button>
                                         </div>
                                         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -1108,7 +1118,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     {isCosting ? (canUseQuotationWorkflow ? 'Prepare Quotation' : 'Use as Starting Point') : 'Duplicate'}
                                                 </Button>
                                                 <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => setQuoteToExport(quote)}>
-                                                    <Download className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> Export
+                                                    <Eye className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> Preview
                                                 </Button>
                                                 <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => toggleCostingSelection(quote.id)}>
                                                     <GitCompareArrows className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> {selectedCostingIds.includes(quote.id) ? 'Selected' : 'Compare'}
@@ -1193,8 +1203,24 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 open={Boolean(quoteToExport)}
                 onOpenChange={open => { if (!open) setQuoteToExport(null) }}
                 model={exportModel}
-                 defaultCustomerName={quoteToExport?.party_name ?? ''}
-                 defaultBusinessName={organizationName}
+                defaultCustomerName={quoteToExport?.party_name ?? ''}
+                defaultBusinessName={organizationName}
+                defaultMode={isStandaloneCosting(quoteToExport?.record_kind) ? 'internal' : 'customer'}
+                defaultValidUntil={quoteToExport?.quotation_valid_until}
+                defaultCustomerTerms={quoteToExport?.customer_terms}
+                documentReference={quoteToExport?.quotation_reference}
+                sourceQuoteId={quoteToExport?.id}
+                sourceQuoteUpdatedAt={quoteToExport?.updated_at}
+                sourceQuoteStatus={quoteToExport?.status}
+                sourceRecordKind={quoteToExport?.record_kind === 'quotation' ? 'quotation' : 'costing'}
+                onQuoteUpdated={data => {
+                    if (!quoteToExport) return
+                    setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
+                    setQuoteToExport(current => current ? { ...current, ...data } : current)
+                }}
+                onMarkAsSent={quoteToExport && quoteToExport.status === 'draft'
+                    ? () => handleStatusChange(quoteToExport.id, 'sent')
+                    : undefined}
              />
 
             <Dialog open={showComparison} onOpenChange={setShowComparison}>

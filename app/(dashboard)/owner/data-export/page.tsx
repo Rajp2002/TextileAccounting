@@ -11,7 +11,7 @@ export default async function OwnerDataExportPage() {
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                     This owner-only export remains available when plan access ends. It includes the current organization&apos;s records and redacts authentication, tracking, and other sensitive fields.
                 </p>
-                <div className="mt-6"><OrganizationDataExportButton /></div>
+                <div className="mt-6"><OrganizationDataExportButton showHistory testId="owner-data-export" /></div>
             </div>
         </main>
     )
