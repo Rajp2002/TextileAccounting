@@ -279,6 +279,7 @@ function SavedQualityLibraryView({
     onOpen,
     onStartFrom,
     onExport,
+    onToggleArchived,
     onOpenUsage,
 }: {
     groups: SavedQualityGroup[]
