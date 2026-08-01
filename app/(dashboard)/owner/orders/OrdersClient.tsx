@@ -57,6 +57,7 @@ import {
 import { toast } from 'sonner'
 import { differenceInDays } from 'date-fns'
 import { dateOnlyToLocalDate, formatDateOnly } from '@/lib/format'
+import { isStrictDateOnly } from '@/lib/worker-validation'
 import {
     getOrdersWithProgress,
     updateOrderStatus,
@@ -74,6 +75,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { CostAnalysisDetails } from '@/components/cost-analysis-details'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 // ─── Utility helpers ─────────────────────────────────────────────────────────
 
@@ -86,6 +88,7 @@ type MachineOption = {
 
 type OrderProgressRow = {
     order_id: string
+    start_date?: string | null
     deadline: string
     status: 'active' | 'completed' | 'cancelled' | string
     party_name: string
@@ -137,8 +140,30 @@ type PendingCompletion = {
     summary: OrderCompletionSummary
 }
 
+type PendingCancellation = {
+    orderId: string
+    partyName: string
+    qualityLabel: string
+    producedMeters: number
+    targetMeters: number
+    assignedMachines: number
+}
+
 function formatMeters(value: number) {
     return Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+}
+
+function cancellationDescription(candidate: PendingCancellation | null) {
+    if (!candidate) return ''
+
+    const productionLine = candidate.producedMeters > 0
+        ? `${formatMeters(candidate.producedMeters)} m has already been produced against a ${formatMeters(candidate.targetMeters)} m target.`
+        : 'No production metres have been recorded yet.'
+    const machineLine = candidate.assignedMachines > 0
+        ? `${candidate.assignedMachines} matching loom assignment${candidate.assignedMachines === 1 ? '' : 's'} will be released.`
+        : 'No loom assignments will be released.'
+
+    return `Cancel the order for ${candidate.partyName} · ${candidate.qualityLabel}? ${productionLine} ${machineLine} Existing production, stock, sales, dispatches, receipts, and payments will remain in the history. New production will stop.`
 }
 
 function CompleteOrderConfirmationDialog({
@@ -650,6 +675,8 @@ function OrderDetailDrawer({
     const [codeDialogAction, setCodeDialogAction] = useState<'target' | 'deadline'>('target')
     const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(null)
     const [completingOrder, setCompletingOrder] = useState(false)
+    const [pendingCancellation, setPendingCancellation] = useState<PendingCancellation | null>(null)
+    const [cancellingOrder, setCancellingOrder] = useState(false)
 
     const load = useCallback(async () => {
         if (!orderId) return
@@ -707,11 +734,26 @@ function OrderDetailDrawer({
         })
     }
 
-    const handleCancel = async () => {
-        if (!orderId) return
-        const res = await deleteOrder(orderId)
+    const handleCancel = () => {
+        if (!orderId || !data?.order) return
+        setPendingCancellation({
+            orderId,
+            partyName: data.order.party_name,
+            qualityLabel: data.order.display_quality_name ?? data.order.quality_label ?? 'Unnamed quality',
+            producedMeters: Number(data.order.total_meters_produced ?? 0),
+            targetMeters: Number(data.order.total_target_meters ?? 0),
+            assignedMachines: Number(data.order.assigned_machines_count ?? 0),
+        })
+    }
+
+    const confirmCancel = async () => {
+        if (!pendingCancellation) return
+        setCancellingOrder(true)
+        const res = await deleteOrder(pendingCancellation.orderId)
+        setCancellingOrder(false)
         if (res.success) { toast.success('Order cancelled'); onClose(); onRefresh() }
         else toast.error(res.error ?? 'Failed to cancel')
+        if (res.success) setPendingCancellation(null)
     }
 
     /** Called after the access-code dialog resolves with a valid code */
@@ -725,6 +767,14 @@ function OrderDetailDrawer({
     }
 
     const handleSaveDeadline = () => {
+        if (!isStrictDateOnly(deadlineVal)) {
+            toast.error('Deadline must be a valid date.')
+            return
+        }
+        if (data?.order?.start_date && deadlineVal < data.order.start_date) {
+            toast.error('Deadline cannot be before the order start date.')
+            return
+        }
         setCodeDialogAction('deadline')
         setCodeDialogOpen(true)
     }
@@ -744,6 +794,16 @@ function OrderDetailDrawer({
     }
 
     const handleSaveTarget = () => {
+        const nextTarget = Number(targetVal)
+        const producedMeters = Number(data?.order?.total_meters_produced ?? 0)
+        if (!Number.isFinite(nextTarget) || nextTarget <= 0) {
+            toast.error('Target metres must be greater than 0.')
+            return
+        }
+        if (nextTarget + 0.01 < producedMeters) {
+            toast.error(`Target metres cannot be below already-produced ${formatMeters(producedMeters)} m.`)
+            return
+        }
         setCodeDialogAction('target')
         setCodeDialogOpen(true)
     }
@@ -1077,6 +1137,16 @@ function OrderDetailDrawer({
                 onCancel={() => setPendingCompletion(null)}
                 onConfirm={confirmCompletion}
             />
+            <ConfirmActionDialog
+                open={Boolean(pendingCancellation)}
+                onOpenChange={(open) => { if (!open && !cancellingOrder) setPendingCancellation(null) }}
+                title="Cancel order?"
+                description={cancellationDescription(pendingCancellation)}
+                confirmLabel="Cancel order"
+                onConfirm={confirmCancel}
+                isDestructive
+                isLoading={cancellingOrder}
+            />
         </>
     )
 }
@@ -1270,6 +1340,8 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => initialOrderId)
     const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(null)
     const [completingOrderId, setCompletingOrderId] = useState<string | null>(null)
+    const [pendingCancellation, setPendingCancellation] = useState<PendingCancellation | null>(null)
+    const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null)
 
     // Auto-open drawer if ?orderId= is in URL (e.g. from Start Party Order redirect)
     useEffect(() => {
@@ -1331,10 +1403,34 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
         })
     }
 
-    const handleCancel = async (id: string) => {
-        const res = await deleteOrder(id)
-        if (res.success) { toast.success(t('orders_page.order_cancelled')); fetchOrders() }
-        else toast.error(res.error ?? t('orders_page.failed_to_update'))
+    const handleCancel = (id: string) => {
+        const order = orders.find((candidate) => candidate.order_id === id)
+        if (!order) {
+            toast.error('Order is no longer available. Refresh and try again.')
+            return
+        }
+        setPendingCancellation({
+            orderId: id,
+            partyName: order.party_name,
+            qualityLabel: order.display_quality_name ?? order.quality_label ?? 'Unnamed quality',
+            producedMeters: Number(order.total_meters_produced ?? 0),
+            targetMeters: Number(order.total_target_meters ?? 0),
+            assignedMachines: Number(order.assigned_machines_count ?? 0),
+        })
+    }
+
+    const confirmCancel = async () => {
+        if (!pendingCancellation) return
+        setCancellingOrderId(pendingCancellation.orderId)
+        const res = await deleteOrder(pendingCancellation.orderId)
+        setCancellingOrderId(null)
+        if (res.success) {
+            toast.success(t('orders_page.order_cancelled'))
+            setPendingCancellation(null)
+            fetchOrders()
+        } else {
+            toast.error(res.error ?? t('orders_page.failed_to_update'))
+        }
     }
 
     // Split orders by phase
@@ -1471,12 +1567,22 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
                 onClose={() => setSelectedOrderId(null)}
                 onRefresh={fetchOrders}
             />
-            <CompleteOrderConfirmationDialog
+        <CompleteOrderConfirmationDialog
                 pending={pendingCompletion}
                 busy={Boolean(completingOrderId)}
                 onCancel={() => setPendingCompletion(null)}
-                onConfirm={confirmCompletion}
-            />
-        </div>
+            onConfirm={confirmCompletion}
+        />
+        <ConfirmActionDialog
+            open={Boolean(pendingCancellation)}
+            onOpenChange={(open) => { if (!open && !cancellingOrderId) setPendingCancellation(null) }}
+            title="Cancel order?"
+            description={cancellationDescription(pendingCancellation)}
+            confirmLabel="Cancel order"
+            onConfirm={confirmCancel}
+            isDestructive
+            isLoading={Boolean(cancellingOrderId)}
+        />
+    </div>
     )
 }

@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { assertOrgWritable, requireRole } from '@/lib/auth'
+import { assertOrgWritable, requireRole, requireWritableOrg } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -32,12 +32,11 @@ import {
     type LoomLifecycleProtectionInput,
 } from '@/lib/master-data-loom-guardrails'
 import {
-    getDefaultPayModeForMachineType,
     getOperatorWorkerTypeForPayMode,
-    normalizeMachineType,
     type OperatorPayMode,
     type OperatorWorkerType,
 } from '@/lib/machine-operator-payroll'
+import { WorkerAgeVerificationSchema, workerValidationError } from '@/lib/worker-validation'
 
 export type ProductionTargetOption = {
     source_type: 'order' | 'market_run'
@@ -537,7 +536,7 @@ export async function upsertMachineOperatorAssignment(data: {
     payMode?: OperatorPayMode
     rate: number
 }) {
-    const { profile } = await requireRole(['owner'])
+    await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const machineParsed = safeParse(UuidSchema, data.machineId)
@@ -554,119 +553,30 @@ export async function upsertMachineOperatorAssignment(data: {
     }
 
     const rate = numericValue(data.rate)
-    if (rate <= 0) return { error: 'Enter a valid operator rate before saving the assignment.' }
-
-    const { data: machine, error: machineError } = await supabase
-        .from('machines')
-        .select('id, loom_type')
-        .eq('id', machineParsed.data)
-        .eq('org_id', profile.org_id)
-        .single()
-
-    if (machineError || !machine) {
-        if (machineError) console.error('Failed to load loom for operator assignment:', machineError)
-        return { error: 'Loom not found for this factory.' }
+    if (!Number.isFinite(rate) || rate <= 0 || rate > 100000) {
+        return { error: 'Enter a valid operator rate between ₹0.01 and ₹1,00,000.' }
     }
 
-    const machineType = normalizeMachineType(machine.loom_type)
-    const payMode = data.payMode ?? getDefaultPayModeForMachineType(machineType)
+    const payMode = data.payMode ?? (data.workerType === 'meter_worker' ? 'per_meter' : 'fixed_monthly')
     if (getOperatorWorkerTypeForPayMode(payMode) !== data.workerType) {
         return { error: 'Selected pay mode does not match the selected worker type.' }
     }
 
-    if (data.workerType === 'meter_worker') {
-        const { data: worker, error } = await supabase
-            .from('workers')
-            .select('id')
-            .eq('id', data.meterWorkerId)
-            .eq('org_id', profile.org_id)
-            .eq('is_active', true)
-            .maybeSingle()
-
-        if (error || !worker) {
-            if (error) console.error('Failed to validate meter worker assignment:', error)
-            return { error: 'Active Piece-rate Worker not found for this factory.' }
-        }
-    } else {
-        const { data: worker, error } = await supabase
-            .from('fixed_workers')
-            .select('id')
-            .eq('id', data.fixedWorkerId)
-            .eq('org_id', profile.org_id)
-            .eq('is_active', true)
-            .maybeSingle()
-
-        if (error || !worker) {
-            if (error) console.error('Failed to validate fixed worker assignment:', error)
-            return { error: 'Active Salaried Worker not found for this factory.' }
-        }
-    }
-
     const today = formatToSurat(new Date(), 'yyyy-MM-dd')
+    const { error: rpcError } = await supabase.rpc('upsert_machine_operator_assignment_v1', {
+        p_machine_id: machineParsed.data,
+        p_shift: data.shift,
+        p_worker_type: data.workerType,
+        p_meter_worker_id: data.workerType === 'meter_worker' ? data.meterWorkerId : null,
+        p_fixed_worker_id: data.workerType === 'fixed_worker' ? data.fixedWorkerId : null,
+        p_pay_mode: payMode,
+        p_rate: rate,
+        p_effective_from: today,
+    })
 
-    const { error: closeError } = await supabase
-        .from('machine_operator_assignments')
-        .update({ active: false, effective_to: today })
-        .eq('org_id', profile.org_id)
-        .eq('machine_id', machineParsed.data)
-        .eq('shift', data.shift)
-        .eq('active', true)
-        .is('effective_to', null)
-
-    if (closeError) {
-        console.error('Failed to close previous machine operator assignment:', closeError)
-        return { error: 'Failed to update previous operator assignment. Please try again.' }
-    }
-
-    const { error: insertError } = await supabase
-        .from('machine_operator_assignments')
-        .insert({
-            org_id: profile.org_id,
-            machine_id: machineParsed.data,
-            machine_type: machineType,
-            shift: data.shift,
-            worker_type: data.workerType,
-            meter_worker_id: data.workerType === 'meter_worker' ? data.meterWorkerId : null,
-            fixed_worker_id: data.workerType === 'fixed_worker' ? data.fixedWorkerId : null,
-            pay_mode: payMode,
-            rate,
-            effective_from: today,
-            effective_to: null,
-            is_primary_operator: true,
-            active: true,
-        })
-
-    if (insertError) {
-        console.error('Failed to save machine operator assignment:', insertError)
-        return { error: 'Failed to save operator assignment. Please try again.' }
-    }
-
-    if (data.workerType === 'meter_worker') {
-        const { error: legacyError } = await supabase
-            .from('machine_assignments')
-            .upsert({
-                org_id: profile.org_id,
-                machine_id: machineParsed.data,
-                worker_id: data.meterWorkerId,
-                shift: data.shift,
-            }, { onConflict: 'org_id,machine_id,shift' })
-
-        if (legacyError) {
-            console.error('Failed to mirror meter assignment to legacy machine_assignments:', legacyError)
-            return { error: 'Saved operator assignment, but failed to update legacy meter assignment.' }
-        }
-    } else {
-        const { error: legacyDeleteError } = await supabase
-            .from('machine_assignments')
-            .delete()
-            .eq('org_id', profile.org_id)
-            .eq('machine_id', machineParsed.data)
-            .eq('shift', data.shift)
-
-        if (legacyDeleteError) {
-            console.error('Failed to clear legacy machine assignment for fixed operator:', legacyDeleteError)
-            return { error: 'Saved operator assignment, but failed to clear old meter assignment.' }
-        }
+    if (rpcError) {
+        console.error('Failed to save machine operator assignment:', rpcError)
+        return { error: rpcError.message || 'Failed to save operator assignment. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -694,16 +604,19 @@ export async function upsertFixedWorker(data: {
     age_verification_method?: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
     age_verification_reference?: string
 }) {
-    const { profile, user } = await requireRole(['owner'])
+    const { profile, user } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const name = data.name.trim()
-    if (!name || !data.role || !data.monthly_salary) return { error: 'All fields are required.' }
+    const role = data.role.trim()
+    const salary = Number(data.monthly_salary)
+    if (!name || !role) return { error: 'Worker name and role are required.' }
+    if (!Number.isFinite(salary) || salary <= 0 || salary > 100000000) return { error: 'Enter a valid monthly salary.' }
 
     const updatePayload: DbPrimitivePayload = {
         name,
-        role: data.role,
-        monthly_salary: data.monthly_salary,
+        role,
+        monthly_salary: salary,
         pf_esi_enrolled: !!data.pf_esi_enrolled,
         pf_esi_eligible: !!data.pf_esi_enrolled,
         esi_number: data.esi_number?.trim() || null,
@@ -723,19 +636,31 @@ export async function upsertFixedWorker(data: {
     let workerId = data.id;
 
     if (data.id) {
-        const { error } = await supabase
+        const parsedId = safeParse(PositiveIntSchema, data.id)
+        if ('error' in parsedId) return { error: parsedId.error }
+
+        const { data: updatedWorker, error } = await supabase
             .from('fixed_workers')
             .update(updatePayload)
-            .eq('id', data.id)
+            .eq('id', parsedId.data)
             .eq('org_id', profile.org_id)
+            .select('id')
+            .maybeSingle()
         if (error) { console.error(error); return { error: 'Failed to update worker.' } }
+        if (!updatedWorker) return { error: 'Worker not found in this factory. Refresh and try again.' }
     } else {
-        if (!data.date_of_birth || !data.age_verification_method || !data.age_verification_reference?.trim()) {
+        if (!data.date_of_birth || !data.age_verification_method || !data.age_verification_reference) {
             return { error: 'Verified adult date of birth and age evidence reference are required.' }
         }
+        const age = WorkerAgeVerificationSchema.safeParse({
+            date_of_birth: data.date_of_birth,
+            age_verification_method: data.age_verification_method,
+            age_verification_reference: data.age_verification_reference,
+        })
+        if (!age.success) return { error: workerValidationError(age.error, 'Verified adult worker details are required.') }
         updatePayload.org_id = profile.org_id;
-        updatePayload.date_of_birth = data.date_of_birth
-        updatePayload.age_verification_method = data.age_verification_method
+        updatePayload.date_of_birth = age.data.date_of_birth
+        updatePayload.age_verification_method = age.data.age_verification_method
         updatePayload.age_verification_reference = data.age_verification_reference.trim()
         updatePayload.age_verified_at = new Date().toISOString()
         updatePayload.age_verified_by = user.id
@@ -826,7 +751,7 @@ export async function updateMeterWorker(data: {
     esi_number?: string | null
     pf_number?: string | null
 }) {
-    const { profile, user } = await requireRole(['owner'])
+    const { profile, user } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(PositiveIntSchema, data.id)
@@ -852,16 +777,19 @@ export async function updateMeterWorker(data: {
         if (data.language) updatePayload.whatsapp_language = data.language
     }
 
-    const { error } = await supabase
+    const { data: updatedWorker, error } = await supabase
         .from('workers')
         .update(updatePayload)
         .eq('id', parsed.data)
         .eq('org_id', profile.org_id)
+        .select('id')
+        .maybeSingle()
 
     if (error) {
         console.error('Failed to update meter worker:', error)
         return { error: 'Failed to update worker. Please try again.' }
     }
+    if (!updatedWorker) return { error: 'Worker not found in this factory. Refresh and try again.' }
 
     // Save consent to notification_consents
     if (data.phone !== undefined) {
@@ -1026,7 +954,7 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
  * Delete a fixed/salaried worker with no historical records.
  */
 export async function deleteFixedWorker(workerId: number) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const orgId = profile.org_id
 
     const workerParsed = safeParse(PositiveIntSchema, workerId)
@@ -1055,7 +983,7 @@ export async function deleteFixedWorker(workerId: number) {
  * Delete a piece-rate (meter) worker with no historical records.
  */
 export async function deleteMeterWorker(workerId: number) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const orgId = profile.org_id
 
     const workerParsed = safeParse(PositiveIntSchema, workerId)
@@ -1085,7 +1013,7 @@ export async function deleteMeterWorker(workerId: number) {
  * Requires a one-time access code. orgId is derived server-side.
  */
 export async function deleteFixedWorkerWithCode(workerId: number, accessCode: string, erasePII: boolean = false) {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const orgId = profile.org_id
 
     // Validate inputs
@@ -1126,7 +1054,7 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
  * Requires a one-time access code. orgId is derived server-side.
  */
 export async function deleteMeterWorkerWithCode(workerId: number, accessCode: string, erasePII: boolean = false) {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const orgId = profile.org_id
 
     const workerParsed = safeParse(PositiveIntSchema, workerId)
@@ -1166,7 +1094,7 @@ export async function setWorkerActiveStatus(
     workerId: number,
     isActive: boolean
 ) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(PositiveIntSchema, workerId)
@@ -1194,7 +1122,7 @@ export async function writeOffWorkerAdvanceBalance(
     workerId: number,
     reason: string = 'Worker exit write-off'
 ) {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(PositiveIntSchema, workerId)
@@ -1455,11 +1383,34 @@ export async function upsertOrder(data: {
     deadline: string
     status: 'active' | 'completed' | 'cancelled'
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(OrderSchema, data)
     if ('error' in parsed) return { error: parsed.error }
+
+    if (parsed.data.status === 'cancelled') {
+        if (!parsed.data.id) return { error: 'Create the order before cancelling it.' }
+
+        const { data: cancellation, error: cancellationError } = await supabase.rpc('cancel_order_with_impact_v1', {
+            p_order_id: parsed.data.id,
+        })
+
+        if (cancellationError) {
+            console.error('Failed to cancel order:', cancellationError)
+            return { error: cancellationError.message || 'Failed to cancel order.' }
+        }
+
+        revalidatePath('/owner/analytics')
+        revalidatePath('/owner/orders')
+        revalidatePath('/owner/archive')
+        revalidatePath('/owner/machines')
+        revalidatePath('/supervisor/machines')
+        return {
+            success: true,
+            alreadyCancelled: Boolean((cancellation as { already_cancelled?: boolean } | null)?.already_cancelled),
+        }
+    }
 
     const orderData = { org_id: profile.org_id, ...parsed.data }
 
@@ -1478,39 +1429,34 @@ export async function upsertOrder(data: {
 }
 
 export async function deleteOrder(orderId: string) {
-    const { profile } = await requireRole(['owner'])
+    await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(UuidSchema, orderId)
     if ('error' in parsed) return { error: parsed.error }
 
-    // Unlink all machines assigned to this order and set them to inactive
-    await supabase
-        .from('machines')
-        .update({ current_order_id: null, status: 'inactive' })
-        .eq('current_order_id', parsed.data)
-        .eq('org_id', profile.org_id)
-
-    const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', parsed.data)
-        .eq('org_id', profile.org_id)
+    const { data, error } = await supabase.rpc('cancel_order_with_impact_v1', {
+        p_order_id: parsed.data,
+    })
 
     if (error) {
-        console.error('Failed to delete order:', error)
-        return { error: 'Failed to delete order. Please try again.' }
+        console.error('Failed to cancel order:', error)
+        return { error: error.message || 'Failed to cancel order. Please try again.' }
     }
 
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/machines')
     revalidatePath('/supervisor/machines')
-    return { success: true }
+    revalidatePath('/owner/archive')
+    return {
+        success: true,
+        alreadyCancelled: Boolean((data as { already_cancelled?: boolean } | null)?.already_cancelled),
+    }
 }
 
 export async function assignOrderToMachines(orderId: string, machineIds: string[]) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(AssignOrderSchema, { orderId, machineIds })

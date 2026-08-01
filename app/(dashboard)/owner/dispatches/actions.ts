@@ -1,10 +1,12 @@
 'use server'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth'
+import { requireRole, requireWritableOrg } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import type { LegacyOrderSellAndDispatchInput, SellAndDispatchInput, SellAndDispatchResult } from '@/lib/dispatch/sell-and-dispatch-types'
 import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
+import { getSuratTodayString } from '@/lib/time'
+import { isStrictDateOnly } from '@/lib/worker-validation'
 
 export async function getSellAndDispatchOptions() {
     const { profile } = await requireRole(['owner', 'supervisor'])
@@ -44,7 +46,7 @@ function toFiniteNumber(value: unknown) {
 }
 
 function normalizeDate(value: string | null | undefined) {
-    return value?.trim() || new Date().toISOString().slice(0, 10)
+    return value?.trim() || getSuratTodayString()
 }
 
 function cleanText(value: string | null | undefined) {
@@ -53,7 +55,7 @@ function cleanText(value: string | null | undefined) {
 }
 
 export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDispatchInput): Promise<SellAndDispatchResult> {
-    await requireRole(['owner'])
+    await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const partyName = cleanText(input.partyName)
@@ -79,10 +81,19 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     if (creditDays < 0) {
         return { success: false, stage: 'validation', message: 'Credit days cannot be negative' }
     }
+    if (creditDays > 365) {
+        return { success: false, stage: 'validation', message: 'Credit days cannot exceed 365 days' }
+    }
+    if (!isStrictDateOnly(saleDate)) {
+        return { success: false, stage: 'validation', message: 'Sale date must be a valid date' }
+    }
     if (input.dispatchNow && (requestedDispatchMeters <= 0 || requestedDispatchMeters > soldMeters)) {
         return { success: false, stage: 'validation', message: 'Metres Sent must be greater than 0 and cannot exceed Metres Sold' }
     }
     const dispatchDate = input.dispatchNow ? normalizeDate(input.dispatchDate) : null
+    if (input.dispatchNow && (!dispatchDate || !isStrictDateOnly(dispatchDate))) {
+        return { success: false, stage: 'validation', message: 'Dispatch date must be a valid date' }
+    }
     if (input.dispatchNow && dispatchDate !== null && dispatchDate < saleDate) {
         return { success: false, stage: 'validation', message: 'Dispatch date cannot be before sale date' }
     }
@@ -165,7 +176,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
 }
 
 export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInput): Promise<SellAndDispatchResult> {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
     
     // 1. Validation

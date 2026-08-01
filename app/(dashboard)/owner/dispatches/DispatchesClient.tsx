@@ -24,7 +24,10 @@ import { Plus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     getActiveOrders,
+    getAllDispatches,
+    getDispatchOverviewStats,
     getDispatchesForOrder,
+    getPendingStockSales,
     type OrderSummary,
     type DispatchSummary,
     type DispatchRow,
@@ -55,7 +58,6 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
-import { isDispatchGroupActionable } from '@/lib/dispatch/archive'
 import { getSuratTodayString } from '@/lib/time'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -203,65 +205,11 @@ const getReceiptBadge = (dispatch: Dispatch, t: (key: string) => string) => {
     }
 }
 
-function getClientDispatchGroupId(dispatch: Dispatch) {
-    return dispatch.stock_sale?.id ?? dispatch.stock_sale_id ?? dispatch.orders.id
-}
-
 function createClientIdempotencyKey(prefix: string) {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return `${prefix}:${crypto.randomUUID()}`
     }
     return `${prefix}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`
-}
-
-function filterArchivedDispatchRows(dispatches: Dispatch[]) {
-    const groups = new Map<string, {
-        dispatches: Dispatch[]
-        totalSaleMeters: number
-        totalDispatchedMeters: number
-        pendingDispatchMeters: number
-        hasUnconfirmedReceipt: boolean
-        hasDisputedDispatch: boolean
-        hasOpenDiscrepancy: boolean
-        hasEwayGap: boolean
-    }>()
-
-    for (const dispatch of dispatches) {
-        const groupId = getClientDispatchGroupId(dispatch)
-        if (!groups.has(groupId)) {
-            groups.set(groupId, {
-                dispatches: [],
-                totalSaleMeters: Number(dispatch.stock_sale?.meters_sold ?? dispatch.orders.total_target_meters ?? dispatch.qty_meters_sent),
-                totalDispatchedMeters: 0,
-                pendingDispatchMeters: Number(dispatch.stock_sale?.pending_dispatch_meters ?? 0),
-                hasUnconfirmedReceipt: false,
-                hasDisputedDispatch: false,
-                hasOpenDiscrepancy: false,
-                hasEwayGap: false,
-            })
-        }
-
-        const group = groups.get(groupId)!
-        const received = dispatch.qty_meters_received
-        const receiptDifference = received !== null
-            ? Math.abs(Number(dispatch.qty_meters_sent ?? 0) - Number(received)) > 0.01
-            : false
-        group.dispatches.push(dispatch)
-        group.totalSaleMeters = Math.max(group.totalSaleMeters, Number(dispatch.stock_sale?.meters_sold ?? dispatch.orders.total_target_meters ?? dispatch.qty_meters_sent))
-        group.totalDispatchedMeters += Number(dispatch.qty_meters_sent ?? 0)
-        group.pendingDispatchMeters = Math.max(group.pendingDispatchMeters, Number(dispatch.stock_sale?.pending_dispatch_meters ?? 0))
-        group.hasUnconfirmedReceipt = group.hasUnconfirmedReceipt || dispatch.status === 'in_transit' || received === null
-        group.hasDisputedDispatch = group.hasDisputedDispatch || dispatch.status === 'disputed'
-        group.hasOpenDiscrepancy = group.hasOpenDiscrepancy || receiptDifference
-        group.hasEwayGap = group.hasEwayGap || Boolean(dispatch.eway_bill_required && !dispatch.eway_bill_number)
-    }
-
-    const activeGroupIds = new Set<string>()
-    for (const [groupId, group] of groups.entries()) {
-        if (isDispatchGroupActionable(group)) activeGroupIds.add(groupId)
-    }
-
-    return dispatches.filter((dispatch) => activeGroupIds.has(getClientDispatchGroupId(dispatch)))
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -271,7 +219,7 @@ function DispatchBatchRow({
     onOwnerReceiptConfirmed,
 }: {
     dispatch: Dispatch
-    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => void
+    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => Promise<void>
 }) {
     const { t } = useTranslation()
     const [isReceiptSheetOpen, setIsReceiptSheetOpen] = useState(false)
@@ -301,7 +249,7 @@ function DispatchBatchRow({
             }
 
             toast.success(t('dispatch.receipt.recordButton'))
-            onOwnerReceiptConfirmed(dispatch.id, result.qty_received, confirmationNote)
+            await onOwnerReceiptConfirmed(dispatch.id, result.qty_received, confirmationNote)
             setIsReceiptSheetOpen(false)
             setShowExtraConfirm(false)
         })
@@ -478,7 +426,7 @@ function OrderGroupCard({
 }: {
     group: OrderGroup
     statusFilter: 'all' | 'in_transit' | 'delivered' | 'disputed'
-    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => void
+    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => Promise<void>
 }) {
     const [expanded, setExpanded] = useState(false)
 
@@ -684,7 +632,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     const { t } = useTranslation()
     const [dispatches, setDispatches] = useState(initialDispatches)
     const [overview, setOverview] = useState(initialOverview)
-    const pendingSales = initialPendingSales
+    const [pendingSales, setPendingSales] = useState(initialPendingSales)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
     const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
@@ -704,6 +652,30 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     const [dispatchNotes, setDispatchNotes] = useState('')
     const [dispatchIdempotencyKey, setDispatchIdempotencyKey] = useState(() => createClientIdempotencyKey('stock-dispatch'))
     const [confirmPending, startConfirmTransition] = useTransition()
+
+    const refreshDispatchData = async () => {
+        const [dispatchResult, overviewResult, pendingSalesResult] = await Promise.all([
+            getAllDispatches(),
+            getDispatchOverviewStats(),
+            getPendingStockSales(),
+        ])
+
+        if (
+            dispatchResult.error
+            || overviewResult.error
+            || pendingSalesResult.error
+            || !dispatchResult.data
+            || !overviewResult.data
+            || !pendingSalesResult.data
+        ) {
+            toast.error(dispatchResult.error || overviewResult.error || pendingSalesResult.error || 'Dispatch data could not be refreshed.')
+            return
+        }
+
+        setDispatches(dispatchResult.data)
+        setOverview(overviewResult.data)
+        setPendingSales(pendingSalesResult.data)
+    }
 
     const handleConfirmDispatch = () => {
         if (!confirmingSale) return
@@ -736,8 +708,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
             } else {
                 toast.success(`Dispatch #${res.dispatchNumber} confirmed!`)
                 setConfirmingSale(null)
-                // Reload the page to refresh stats and list
-                window.location.reload()
+                await refreshDispatchData()
             }
         })
     }
@@ -775,21 +746,11 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
         }
     }
 
-    const handleOwnerReceiptConfirmed = (dispatchId: string, qtyReceived: number, note: string) => {
-        setDispatches((prev) =>
-            filterArchivedDispatchRows(prev.map((dispatch) =>
-                dispatch.id === dispatchId
-                    ? {
-                        ...dispatch,
-                        qty_meters_received: qtyReceived,
-                        status: 'delivered',
-                        received_at: new Date().toISOString(),
-                        receipt_confirmed_by_owner: true,
-                        receipt_confirmation_note: note.trim() || null,
-                    }
-                    : dispatch
-            ))
-        )
+    const handleOwnerReceiptConfirmed = async () => {
+        // Receipt confirmation mutates dispatch, stock-sale, discrepancy, and
+        // receivable state. Re-read all three owner views from their source rows
+        // instead of leaving a browser-only optimistic state behind.
+        await refreshDispatchData()
     }
 
     // ── Group dispatches by order or stock sale ──
@@ -1063,6 +1024,11 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     {sale.credit_days}
                                                     <span className="text-xs ml-1 font-bold opacity-60">days</span>
                                                 </p>
+                                                <p className="mt-1 text-[10px] font-bold text-muted-foreground/70">
+                                                    {sale.due_date
+                                                        ? `Due ${formatDateOnly(sale.due_date, { day: '2-digit', month: 'short', year: 'numeric' })}`
+                                                        : 'Due after first dispatch'}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 flex-wrap lg:min-w-[340px] lg:justify-end">
@@ -1182,6 +1148,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                         pending_dispatch_meters: Math.max(0, prev.pending_dispatch_meters - Number(dispatch.qty_meters_sent ?? 0)),
                         pending_dispatch_value: Math.max(0, prev.pending_dispatch_value - Number(dispatch.taxable_value ?? 0)),
                     }))
+                    void refreshDispatchData()
                 }}
             />
             {sellAndDispatchOpen && (
@@ -1190,6 +1157,8 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     onOpenChange={setSellAndDispatchOpen}
                     onSuccess={() => {
                         setSellAndDispatchOpen(false)
+                        setActiveTab('dispatched')
+                        void refreshDispatchData()
                     }}
                 />
             )}

@@ -24,6 +24,12 @@ import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 import { WorkerExitDialog } from '@/components/advances/WorkerExitDialog'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { getSuratTodayString } from '@/lib/time'
+import {
+    AGE_VERIFICATION_METHODS,
+    getAdultWorkerCutoffDate,
+    isStrictDateOnly,
+    type WorkerAgeVerificationMethod,
+} from '@/lib/worker-validation'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -47,6 +53,10 @@ interface FixedWorker {
     pf_number?: string
     whatsapp_number?: string
     whatsapp_language?: string
+    date_of_birth?: string | null
+    age_verification_method?: WorkerAgeVerificationMethod | null
+    age_verification_reference?: string | null
+    age_verified_at?: string | null
 }
 
 interface MeterWorker {
@@ -63,12 +73,6 @@ interface MeterWorker {
 
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
-}
-
-function adultCutoffDate() {
-    const cutoff = new Date()
-    cutoff.setFullYear(cutoff.getFullYear() - 18)
-    return cutoff.toISOString().slice(0, 10)
 }
 
 async function hasMeterWorkerHistory(supabase: ReturnType<typeof createClient>, orgId: string, workerId: number) {
@@ -436,11 +440,15 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                 <CardContent>
                     <div className="text-2xl font-bold text-orange-600">{activeCount}</div>
                     <p className="text-xs text-muted-foreground mt-1">active piece rate workers</p>
+                    <p className="text-xs text-muted-foreground mt-2">Rates are set per loom and shift so quality-specific wages stay accurate.</p>
                 </CardContent>
             </Card>
 
             {/* Add button */}
-            <div className="flex justify-end">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <Button variant="outline" onClick={() => router.push('/owner/machines')}>
+                    Set loom rates
+                </Button>
                 <AddWorkerDialog orgId={orgId} onWorkerAdded={() => queryClient.invalidateQueries({ queryKey: ['meter_workers'] })} />
             </div>
 
@@ -653,6 +661,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formLang, setFormLang] = useState<'en' | 'hi' | 'gu'>('en')
     const [formConsent, setFormConsent] = useState(false)
     const [formDateOfBirth, setFormDateOfBirth] = useState('')
+    const [formAgeVerificationMethod, setFormAgeVerificationMethod] = useState<WorkerAgeVerificationMethod>('government_id')
     const [formAgeReference, setFormAgeReference] = useState('')
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
@@ -714,6 +723,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormLang('en')
         setFormConsent(false)
         setFormDateOfBirth('')
+        setFormAgeVerificationMethod('government_id')
         setFormAgeReference('')
         setDialogOpen(true)
     }
@@ -729,6 +739,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormPfNumber(worker.pf_number || '')
         setFormPhone(worker.whatsapp_number || '')
         setFormLang((worker.whatsapp_language as 'en' | 'hi' | 'gu') || 'en')
+        setFormDateOfBirth(worker.date_of_birth || '')
+        setFormAgeVerificationMethod(worker.age_verification_method || 'government_id')
+        setFormAgeReference(worker.age_verification_reference || '')
         
         const { data: consent } = await supabase
             .from('notification_consents')
@@ -761,7 +774,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         }
         if (!editingWorker && (
             !formDateOfBirth
-            || formDateOfBirth > adultCutoffDate()
+            || !isStrictDateOnly(formDateOfBirth)
+            || formDateOfBirth > getAdultWorkerCutoffDate()
+            || !formAgeVerificationMethod
             || formAgeReference.trim().length < 4
         )) {
             toast.error('Verified adult date of birth and a non-sensitive evidence reference are required.')
@@ -782,7 +797,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 language: formLang,
                 consentGiven: formConsent,
                 date_of_birth: editingWorker ? undefined : formDateOfBirth,
-                age_verification_method: editingWorker ? undefined : 'government_id',
+                age_verification_method: editingWorker ? undefined : formAgeVerificationMethod,
                 age_verification_reference: editingWorker ? undefined : formAgeReference.trim(),
             })
             if (result.error) throw new Error(result.error)
@@ -935,34 +950,55 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                 />
                             </div>
 
-                            {!editingWorker && (
-                                <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-800">Adult worker verification</p>
-                                        <p className="text-xs text-gray-500">Do not enter a full Aadhaar or government ID number.</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fixed-worker-date-of-birth">Verified date of birth</Label>
-                                        <Input
-                                            id="fixed-worker-date-of-birth"
-                                            type="date"
-                                            min="1900-01-01"
-                                            max={adultCutoffDate()}
-                                            value={formDateOfBirth}
-                                            onChange={(event) => setFormDateOfBirth(event.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fixed-worker-age-reference">Evidence reference</Label>
-                                        <Input
-                                            id="fixed-worker-age-reference"
-                                            value={formAgeReference}
-                                            onChange={(event) => setFormAgeReference(event.target.value)}
-                                            placeholder="Document type + last 4, or internal record"
-                                        />
-                                    </div>
+                            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-800">Adult worker verification</p>
+                                    <p className="text-xs text-gray-500">Do not enter a full Aadhaar or government ID number.</p>
                                 </div>
-                            )}
+                                {!editingWorker ? (
+                                    <>
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="fixed-worker-date-of-birth">Verified date of birth <span className="text-risk">*</span></Label>
+                                                <Input
+                                                    id="fixed-worker-date-of-birth"
+                                                    type="date"
+                                                    min="1900-01-01"
+                                                    max={getAdultWorkerCutoffDate()}
+                                                    value={formDateOfBirth}
+                                                    onChange={(event) => setFormDateOfBirth(event.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Verification method <span className="text-risk">*</span></Label>
+                                                <Select value={formAgeVerificationMethod} onValueChange={(value) => setFormAgeVerificationMethod(value as WorkerAgeVerificationMethod)}>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {AGE_VERIFICATION_METHODS.map((method) => (
+                                                            <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fixed-worker-age-reference">Evidence reference <span className="text-risk">*</span></Label>
+                                            <Input
+                                                id="fixed-worker-age-reference"
+                                                value={formAgeReference}
+                                                onChange={(event) => setFormAgeReference(event.target.value)}
+                                                placeholder="Document type + last 4, or internal record"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="rounded-md border border-amber-200 bg-white/70 px-3 py-2 text-xs text-gray-700">
+                                        <p className="font-semibold">Verified {formDateOfBirth || 'date not available'}</p>
+                                        <p className="mt-0.5">{AGE_VERIFICATION_METHODS.find((method) => method.value === formAgeVerificationMethod)?.label ?? 'Verified record'} · {formAgeReference || 'reference not available'}</p>
+                                        <p className="mt-1 text-[11px] text-gray-500">Verification details stay unchanged when salary or role is edited.</p>
+                                    </div>
+                                )}
+                            </div>
                             <div className="space-y-2">
                                 <Label>{t('fixed_page.role')}</Label>
                                 <Select value={formRole} onValueChange={handleRoleChange}>

@@ -1,13 +1,14 @@
 'use server'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth'
+import { requireRole, requireWritableOrg } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
 import { assignMachinesToOrderForOrg, type AssignmentResult } from '@/lib/actions/order-assignment'
 import { CreateFabricDispatchSchema, safeParse } from '@/lib/schemas'
 import { shouldArchiveDispatchGroup } from '@/lib/dispatch/archive'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { isStrictDateOnly } from '@/lib/worker-validation'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,9 +68,7 @@ type PendingCompletionSaleRow = {
 }
 
 function isValidDateOnly(value: string) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-    const date = new Date(`${value}T00:00:00.000Z`)
-    return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value)
+    return isStrictDateOnly(value)
 }
 
 async function getPendingDispatchMetersForOrder(
@@ -197,8 +196,25 @@ export async function getActiveOrders() {
 
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus, options: OrderCompletionOptions = {}) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
+
+    if (status === 'cancelled') {
+        const { data, error } = await supabase.rpc('cancel_order_with_impact_v1', {
+            p_order_id: orderId,
+        })
+
+        if (error) return { error: error.message || 'Failed to cancel order.' }
+
+        revalidatePath('/owner/orders')
+        revalidatePath('/owner/archive')
+        revalidatePath('/owner/analytics')
+        return {
+            success: true,
+            alreadyCancelled: Boolean((data as { already_cancelled?: boolean } | null)?.already_cancelled),
+            machinesUnlinked: Number((data as { machines_unlinked?: number } | null)?.machines_unlinked ?? 0),
+        }
+    }
 
     if (status === 'completed') {
         const summary = await getOrderCompletionSummary(supabase, profile.org_id, orderId)
@@ -223,8 +239,9 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus, op
 
     if (error) return { error: error.message }
 
-    // If order is completed or cancelled, unlink all machines assigned to it and set them to inactive
-    if (status === 'completed' || status === 'cancelled') {
+    // Completed orders release all assigned looms. Cancellation uses the
+    // transactional RPC above so it cannot leave a half-updated order.
+    if (status === 'completed') {
         await supabase
             .from('machines')
             .update({ current_order_id: null, status: 'inactive' })
@@ -263,8 +280,15 @@ export async function updateOrderDetails(orderId: string, data: {
     total_target_meters?: number
     deadline?: string
 }, accessCode: string) {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
+
+    if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) {
+        return { error: 'Order ID is invalid.' }
+    }
+
+    if (data.party_name !== undefined && !data.party_name.trim()) return { error: 'Party name cannot be empty.' }
+    if (data.quality_label !== undefined && !data.quality_label.trim()) return { error: 'Quality cannot be empty.' }
 
     if (data.deadline !== undefined && !isValidDateOnly(data.deadline)) {
         return { error: 'Deadline must be a valid date.' }
@@ -274,6 +298,34 @@ export async function updateOrderDetails(orderId: string, data: {
         const targetMeters = Number(data.total_target_meters)
         if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
             return { error: 'Target meters must be greater than 0.' }
+        }
+    }
+
+    // Read and validate the current business state before consuming the
+    // one-time access code. This prevents an obviously invalid edit from
+    // spending Rajesh's authorization code.
+    const { data: currentOrder, error: currentOrderError } = await supabase
+        .from('order_progress_summary')
+        .select('status, start_date, deadline, total_target_meters, total_meters_produced')
+        .eq('order_id', orderId)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+
+    if (currentOrderError) return { error: currentOrderError.message }
+    if (!currentOrder) return { error: 'Order not found.' }
+    if (currentOrder.status === 'cancelled') return { error: 'Cancelled orders cannot be edited.' }
+
+    if (data.deadline !== undefined && data.deadline < String(currentOrder.start_date)) {
+        return { error: 'Deadline cannot be before the order start date.' }
+    }
+
+    if (data.total_target_meters !== undefined) {
+        const targetMeters = Number(data.total_target_meters)
+        const producedMeters = Number(currentOrder.total_meters_produced ?? 0)
+        if (targetMeters + 0.01 < producedMeters) {
+            return {
+                error: `Target meters cannot be below already-produced ${producedMeters.toFixed(2)} m.`,
+            }
         }
     }
 
@@ -287,27 +339,6 @@ export async function updateOrderDetails(orderId: string, data: {
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
-    // Fetch current order state and produced meters before updating.
-    const { data: currentOrder, error: currentOrderError } = await supabase
-        .from('order_progress_summary')
-        .select('status, total_target_meters, total_meters_produced')
-        .eq('order_id', orderId)
-        .eq('org_id', profile.org_id)
-        .maybeSingle()
-
-    if (currentOrderError) return { error: currentOrderError.message }
-    if (!currentOrder) return { error: 'Order not found.' }
-
-    if (data.total_target_meters !== undefined) {
-        const targetMeters = Number(data.total_target_meters)
-        const producedMeters = Number(currentOrder.total_meters_produced ?? 0)
-        if (targetMeters + 0.01 < producedMeters) {
-            return {
-                error: `Target meters cannot be below already-produced ${producedMeters.toFixed(2)} m.`,
-            }
-        }
-    }
-
     const updatePayload: UpdatableOrderPayload = { ...data }
 
     // If target is being increased on a completed order, reactivate it
@@ -319,13 +350,17 @@ export async function updateOrderDetails(orderId: string, data: {
         updatePayload.status = 'active'
     }
 
-    const { error } = await supabase
+    const { data: updatedOrder, error } = await supabase
         .from('orders')
         .update(updatePayload)
         .eq('id', orderId)
         .eq('org_id', profile.org_id)
+        .eq('status', currentOrder.status)
+        .select('id')
+        .maybeSingle()
 
     if (error) return { error: error.message }
+    if (!updatedOrder) return { error: 'Order changed before the edit could be saved. Reload and try again.' }
 
     revalidatePath('/owner/orders')
     revalidatePath('/owner/archive')
@@ -334,26 +369,25 @@ export async function updateOrderDetails(orderId: string, data: {
 }
 
 export async function deleteOrder(orderId: string) {
-    const { profile } = await requireRole(['owner'])
+    await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
-    const { error } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId)
-        .eq('org_id', profile.org_id)
+    if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) return { error: 'Order ID is invalid.' }
 
-    if (error) return { error: error.message }
+    const { data, error } = await supabase.rpc('cancel_order_with_impact_v1', {
+        p_order_id: orderId,
+    })
 
-    // Unlink all machines assigned to this order and set them to inactive
-    await supabase
-        .from('machines')
-        .update({ current_order_id: null, status: 'inactive' })
-        .eq('current_order_id', orderId)
-        .eq('org_id', profile.org_id)
+    if (error) return { error: error.message || 'Failed to cancel order.' }
 
     revalidatePath('/owner/orders')
-    return { success: true }
+    revalidatePath('/owner/archive')
+    revalidatePath('/owner/analytics')
+    return {
+        success: true,
+        alreadyCancelled: Boolean((data as { already_cancelled?: boolean } | null)?.already_cancelled),
+        machinesUnlinked: Number((data as { machines_unlinked?: number } | null)?.machines_unlinked ?? 0),
+    }
 }
 
 // ─── Order With Quote ─────────────────────────────────────────────────────────
@@ -425,7 +459,7 @@ export async function getActiveMachinesList() {
 
 /** Assign machines to an order */
 export async function assignMachinesToOrder(orderId: string, machineIds: string[]): Promise<AssignmentResult> {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     const assignmentResult = await assignMachinesToOrderForOrg(supabase, profile.org_id, orderId, machineIds)
@@ -989,7 +1023,7 @@ export async function createDispatch(
     challanNumber?: string,
     idempotencyKey?: string
 ): Promise<{ dispatch: DispatchRow; dispatch_number: number } | { error: string }> {
-    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireWritableOrg(['owner', 'supervisor'])
     const supabase = await createServerClient()
     const parsed = safeParse(CreateFabricDispatchSchema, {
         order_id: orderId,
@@ -1440,7 +1474,7 @@ export async function confirmDispatchReceiptByOwner(
     qtyReceived: number,
     note?: string
 ): Promise<{ success: true; qty_received: number } | { error: string }> {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     if (!Number.isFinite(qtyReceived) || qtyReceived <= 0) {
@@ -1544,6 +1578,7 @@ export interface PendingStockSale {
     price_per_meter: number
     revenue_amount: number
     credit_days: number
+    due_date: string | null
     party_name: string
     party_phone: string | null
     party_city: string | null
@@ -1581,6 +1616,7 @@ export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]
             price_per_meter,
             revenue_amount,
             credit_days,
+            due_date,
             party_name,
             party_phone,
             party_city,
@@ -1610,6 +1646,7 @@ export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]
             price_per_meter: Number(row.price_per_meter ?? 0),
             revenue_amount: Number(row.revenue_amount ?? 0),
             credit_days: Number(row.credit_days ?? 0),
+            due_date: row.due_date ?? null,
             party_name: row.party_name ?? 'Stock Sale Party',
             party_phone: row.party_phone,
             party_city: row.party_city,
@@ -1636,7 +1673,7 @@ export async function confirmPendingSaleDispatch(
     notes: string,
     idempotencyKey?: string
 ): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
-    await requireRole(['owner'])
+    await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     if (!saleId) {
@@ -1691,7 +1728,7 @@ export async function confirmPendingSaleReceived(
     receivedMeters: number,
     notes: string
 ): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
-    await requireRole(['owner'])
+    await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
 
     if (!saleId) {

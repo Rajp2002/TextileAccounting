@@ -27,6 +27,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Sentry from '@sentry/nextjs'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import {
+    AGE_VERIFICATION_METHODS,
+    getAdultWorkerCutoffDate,
+    isStrictDateOnly,
+    WorkerAgeVerificationMethodSchema,
+} from '@/lib/worker-validation'
 
 const FIXED_ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -38,19 +44,6 @@ const FIXED_ROLES = [
     { value: 'other', defaultSalary: 0 },
 ]
 
-const AGE_VERIFICATION_METHODS = [
-    { value: 'government_id', label: 'Government ID' },
-    { value: 'birth_certificate', label: 'Birth certificate' },
-    { value: 'school_record', label: 'School record' },
-    { value: 'other', label: 'Other verified record' },
-] as const
-
-function adultCutoffDate() {
-    const cutoff = new Date()
-    cutoff.setFullYear(cutoff.getFullYear() - 18)
-    return cutoff.toISOString().slice(0, 10)
-}
-
 // Define Zod Schema for validation
 const workerSchema = z.object({
     workerType: z.enum(['meter', 'fixed']),
@@ -61,11 +54,11 @@ const workerSchema = z.object({
     pf_esi_enrolled: z.boolean().default(false),
     esi_number: z.string().optional(),
     pf_number: z.string().optional(),
-    date_of_birth: z.string().min(1, 'Verified date of birth is required'),
-    age_verification_method: z.enum(['government_id', 'birth_certificate', 'school_record', 'other']),
+    date_of_birth: z.string().min(1, 'Verified date of birth is required').refine(isStrictDateOnly, 'Enter a valid date of birth'),
+    age_verification_method: WorkerAgeVerificationMethodSchema,
     age_verification_reference: z.string().trim().min(4, 'Enter a non-sensitive evidence reference (at least 4 characters)'),
 }).superRefine((data, ctx) => {
-    if (data.date_of_birth && data.date_of_birth > adultCutoffDate()) {
+    if (data.date_of_birth && data.date_of_birth > getAdultWorkerCutoffDate()) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: 'Worker must be at least 18 years old',
@@ -306,7 +299,7 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                                         id="worker-date-of-birth"
                                         type="date"
                                         min="1900-01-01"
-                                        max={adultCutoffDate()}
+                                        max={getAdultWorkerCutoffDate()}
                                         {...register('date_of_birth')}
                                     />
                                     {errors.date_of_birth && <span className="text-xs text-risk">{errors.date_of_birth.message}</span>}
