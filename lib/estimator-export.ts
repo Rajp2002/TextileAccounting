@@ -6,6 +6,7 @@ import {
   type EstimateState,
   type EstimatorV3Totals,
 } from './estimator'
+import { validateCostingResultBoundary } from './estimator-validation'
 
 export type CostingExportMode = 'internal' | 'customer'
 
@@ -78,13 +79,26 @@ export function createCostingExportModel(input: {
           finiteNumber(input.landedCostPerM) ?? calculatedResult.landedCostPerM,
         )
         const profitPerM = normalizeCurrencySnapshot(suggestedSellingPricePerM - landedCostPerM)
+        const commissionPerM = normalizeCurrencySnapshot(
+          landedCostPerM - calculatedResult.productionCostPerM - calculatedResult.transportPerM,
+        )
+        const commissionPct = suggestedSellingPricePerM > 0
+          ? normalizeCurrencySnapshot(commissionPerM / suggestedSellingPricePerM * 100)
+          : calculatedResult.commissionPct
         const quantityM = calculatedResult.quantityM
         const totalOrderValue = quantityM == null ? null : normalizeCurrencySnapshot(suggestedSellingPricePerM * quantityM)
         const totalLandedCost = quantityM == null ? null : normalizeCurrencySnapshot(landedCostPerM * quantityM)
         return {
           ...calculatedResult,
           suggestedSellingPricePerM,
+          commissionPct,
+          commissionPerM,
           landedCostPerM,
+          breakEvenPricePerM: normalizeCurrencySnapshot(calculateBreakEvenPricePerM(
+            calculatedResult.productionCostPerM,
+            calculatedResult.transportPerM,
+            commissionPct,
+          )),
           profitPerM,
           totalOrderValue,
           totalLandedCost,
@@ -126,6 +140,12 @@ export function validateCostingExportInput(model: CostingExportModel | null, opt
     && model.reconciliationStatus !== 'verified'
     && model.reconciliationStatus !== 'unreconstructable') {
     errors.push('This saved costing needs owner review before it can be used as a customer quotation. Check the saved numbers or save a new current costing.')
+  }
+  if (model.reconciliationStatus !== 'unreconstructable') {
+    const resultValidation = validateCostingResultBoundary(model.result, model.totals)
+    if (!resultValidation.valid) {
+      errors.push(resultValidation.issues[0]?.message ?? 'The costing result is not valid for export. Review the calculation before exporting.')
+    }
   }
   if (!model.qualityLabel.trim()) errors.push('Quality is required before generating a document.')
   if (!Number.isFinite(model.productionCostPerM) || model.productionCostPerM <= 0) errors.push('Production cost is not valid. Review the costing before exporting.')

@@ -931,6 +931,56 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
   if (totalLandedCost !== null && !Number.isFinite(totalLandedCost)) return null
   if (expectedProfitTotal !== null && !Number.isFinite(expectedProfitTotal)) return null
 
+  const nonNegativeValues = [
+    readCurrency('productionCostPerM'),
+    readCurrency('overheadPerM'),
+    readCurrency('transportPerM'),
+    readCurrency('commissionPct'),
+    readCurrency('commissionPerM'),
+    readCurrency('landedCostPerM'),
+    readCurrency('breakEvenPricePerM'),
+    readCurrency('suggestedSellingPricePerM'),
+    ...breakdownKeys.map(readBreakdownCurrency),
+  ]
+  if (nonNegativeValues.some(value => value === null || value < 0)) return null
+  if (readCurrency('commissionPct')! >= 100) return null
+  if (readCurrency('targetMarginPct')! < -100 || readCurrency('targetMarginPct')! > 100) return null
+  if (readCurrency('productionCostPerM')! <= 0 || readCurrency('suggestedSellingPricePerM')! <= 0) return null
+  if (quantity !== null && quantity <= 0) return null
+  if (quantity === null && (totalOrderValue !== null || totalLandedCost !== null || expectedProfitTotal !== null)) return null
+  if ((totalOrderValue !== null && totalOrderValue < 0) || (totalLandedCost !== null && totalLandedCost < 0)) return null
+
+  const closeEnough = (left: number, right: number, tolerance = 0.02) => Math.abs(left - right) <= tolerance
+  if (!closeEnough(readCurrency('productionCostPerM')!, readBreakdownCurrency('productionCostPerM')!)) return null
+  if (!closeEnough(readCurrency('overheadPerM')!, readBreakdownCurrency('overheadPerM')!)) return null
+  if (readCurrency('landedCostPerM')! + 0.02 < readCurrency('productionCostPerM')!) return null
+  if (!closeEnough(
+    readCurrency('profitPerM')!,
+    readCurrency('suggestedSellingPricePerM')! - readCurrency('landedCostPerM')!,
+  )) return null
+  if (expectedProfitTotal !== null && totalOrderValue !== null && totalLandedCost !== null
+      && !closeEnough(expectedProfitTotal, totalOrderValue - totalLandedCost, 0.05)) return null
+  if (quantity !== null && totalOrderValue !== null && !closeEnough(totalOrderValue, readCurrency('suggestedSellingPricePerM')! * quantity, 0.05)) return null
+  if (quantity !== null && totalLandedCost !== null && !closeEnough(totalLandedCost, readCurrency('landedCostPerM')! * quantity, 0.05)) return null
+  if (!closeEnough(
+    readCurrency('commissionPerM')!,
+    readCurrency('suggestedSellingPricePerM')! * readCurrency('commissionPct')! / 100,
+  )) return null
+  if (!closeEnough(
+    readCurrency('landedCostPerM')!,
+    readCurrency('productionCostPerM')! + readCurrency('transportPerM')! + readCurrency('commissionPerM')!,
+  )) return null
+  if (!closeEnough(
+    readCurrency('breakEvenPricePerM')!,
+    calculateBreakEvenPricePerM(readCurrency('productionCostPerM')!, readCurrency('transportPerM')!, readCurrency('commissionPct')!),
+    0.05,
+  )) return null
+  if (!closeEnough(
+    readCurrency('actualMarginPct')!,
+    readCurrency('profitPerM')! / readCurrency('suggestedSellingPricePerM')! * 100,
+    0.05,
+  )) return null
+
   return {
     calculationVersion: raw.calculationVersion,
     roundingPolicy: raw.roundingPolicy,

@@ -91,8 +91,8 @@ describe('Batch 11 estimator server-boundary validation', () => {
         if (!result.valid) {
             expect(result.issues.map(issue => issue.message)).toEqual(expect.arrayContaining([
                 'Add at least one warp row before saving.',
-                'Weft row 1 picks must be greater than 0.',
-                'Weft row 1 effective costing width is outside the supported range.',
+                'Weft layer 1 (Main Weft) picks must be greater than 0.',
+                'Weft layer 1 (Main Weft) effective costing width is outside the supported range.',
                 'Weaving rate per pick must be greater than 0.',
                 'Production cost per meter must be greater than 0.',
             ]))

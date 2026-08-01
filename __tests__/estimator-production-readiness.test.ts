@@ -118,7 +118,7 @@ describe('Estimator production-readiness regressions', () => {
     if (!validation.valid) {
       expect(validation.issues).toContainEqual({
         field: 'weftRows.0.calcDenier',
-        message: 'Weft row 1 denier must be greater than 0.',
+        message: 'Weft layer 1 (Weft 1) denier must be greater than 0.',
       })
     }
 

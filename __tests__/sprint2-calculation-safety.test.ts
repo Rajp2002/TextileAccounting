@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { makeDefaultEstimateState } from '../lib/estimator'
-import { getYarnDensityWarning, validateEstimatorSnapshot } from '../lib/estimator-validation'
+import { buildCostingResult, calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
+import { getEstimatorReadiness, getYarnDensityWarning, validateCostingResultBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '../lib/estimator-validation'
 import { parseNonNegativeInput, parseNumericInput } from '../lib/numeric-input'
-import { normalizeIndianPhone } from '../lib/phone'
+import { isValidIndianPhone, normalizeIndianPhone } from '../lib/phone'
+import { CreateOrgSchema, JoinOrgSchema, PasswordSchema } from '../lib/schemas'
 
 describe('Sprint 2 calculation safety', () => {
   it('hard-blocks impossible denier values and preserves the common-range warning', () => {
@@ -69,5 +70,95 @@ describe('Sprint 2 calculation safety', () => {
     expect(normalizeIndianPhone('9876543210')).toBe('9876543210')
     expect(normalizeIndianPhone('+91 9876543210')).toBe('9876543210')
     expect(normalizeIndianPhone('91-9876543210')).toBe('9876543210')
+    expect(normalizeIndianPhone('123456789012')).toBe('')
+    expect(normalizeIndianPhone('9876543210abc')).toBe('')
+    expect(isValidIndianPhone('+91 (98765) 43210')).toBe(true)
+    expect(isValidIndianPhone('09876543210')).toBe(false)
+  })
+
+  it('enforces password and confirmation rules at the shared auth boundary', () => {
+    expect(PasswordSchema.safeParse('Password1').success).toBe(false)
+    expect(PasswordSchema.safeParse('Password1!').success).toBe(true)
+
+    const owner = CreateOrgSchema.safeParse({
+      ownerName: 'Rajesh Patel',
+      email: 'rajesh@example.com',
+      password: 'Password1!',
+      confirmPassword: 'Password2!',
+      factoryName: 'Patel Weaving',
+      phone: '9876543210',
+    })
+    expect(owner.success).toBe(false)
+
+    const join = JoinOrgSchema.safeParse({
+      joinCode: 'MILL4X2A',
+      supervisorName: 'Amit Shah',
+      email: 'amit@example.com',
+      password: 'Password1!',
+      confirmPassword: 'Password1!',
+      phone: '9876543210',
+    })
+    expect(join.success).toBe(true)
+  })
+
+  it('does not treat an invalid result as displayable money', () => {
+    const estimate = makeDefaultEstimateState()
+    const validation = validateEstimatorSnapshot(estimate, { requireTapeLength: false })
+    const readiness = getEstimatorReadiness({
+      validation,
+      result: null,
+      warningsAcknowledged: true,
+    })
+
+    expect(readiness.status).toBe('blocked')
+    expect(readiness.canDisplayMoney).toBe(false)
+    expect(readiness.canPersist).toBe(false)
+  })
+
+  it('blocks invalid factory overhead amounts before the profile can be saved', () => {
+    const result = validateFactoryCostProfile({
+      warping_rate_per_kg: 0,
+      sizing_rate_per_kg: 0,
+      winding_rate_per_kg: 0,
+      overhead_mode: 'monthly_expenses',
+      default_commission_pct: 2,
+      default_transport_per_m: 0,
+      monthly_output_m: 50_000,
+      overhead_items: [{
+        id: 'rent',
+        category: 'rent',
+        label: 'Rent',
+        monthlyAmount: -1,
+        isPreset: true,
+        isLocked: false,
+        source: 'manual',
+      }],
+    })
+
+    expect(result.valid).toBe(false)
+    expect(result.issues).toContainEqual(expect.objectContaining({ field: 'overhead_items.0.monthlyAmount' }))
+  })
+
+  it('rejects a tampered total even when the individual money fields are finite', () => {
+    const estimate = makeDefaultEstimateState()
+    estimate.tapeLengthM = 1_000
+    estimate.perPickCostPaisa = 0.14
+    estimate.monthlyOutputM = 10_000
+    estimate.overheadMode = 'direct'
+    estimate.overheadOverridePerM = 3
+    estimate.orderQuantityM = 5_000
+    estimate.profitPct = 10
+    estimate.commissionPct = 2
+    estimate.transportPerM = 2
+    estimate.warpRows[0] = { ...estimate.warpRows[0], label: 'Main Warp', calcDenier: 75, beamEnds: 3_200, yarnRate: 110 }
+    estimate.weftRows[0] = { ...estimate.weftRows[0], label: 'Main Weft', calcDenier: 75, picks: 68, effectiveCostingWidthCm: 110, yarnRate: 110 }
+    const totals = calcFullTotals(estimate)
+    const result = buildCostingResult(estimate, totals)
+
+    expect(validateCostingResultBoundary(result, totals).valid).toBe(true)
+    const tampered = { ...result, totalOrderValue: (result.totalOrderValue ?? 0) + 1 }
+    const invalid = validateCostingResultBoundary(tampered, totals)
+    expect(invalid.valid).toBe(false)
+    expect(invalid.issues).toContainEqual(expect.objectContaining({ field: 'totalOrderValue' }))
   })
 })

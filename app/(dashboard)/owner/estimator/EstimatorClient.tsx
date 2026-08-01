@@ -103,6 +103,7 @@ import {
 } from '@/lib/production-mode'
 import {
     getFirstEstimatorValidationMessage,
+    getEstimatorReadiness,
     getYarnDensityWarning,
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
@@ -950,6 +951,10 @@ function SectionCostPill({ value, valid = true }: { value: number; valid?: boole
     )
 }
 
+function formatCalculatedMoney(value: number, valid: boolean, suffix = '') {
+    return valid ? `₹${value.toFixed(2)}${suffix}` : '—'
+}
+
 function CapacityMetricField({
     label, value, unit, onChange, hint,
 }: {
@@ -1057,10 +1062,10 @@ function trimLayerLabels<T extends WarpRow | WeftRow>(rows: T[]) {
 }
 
 function RowCard({
-    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, children, accent = 'indigo'
+    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, showCalculatedValues = true, children, accent = 'indigo'
 }: {
     title: string; index: number; onRemove: () => void; canRemove: boolean
-    kgPer100m: number; costPer100m: number; adjustmentPct?: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
+    kgPer100m: number; costPer100m: number; adjustmentPct?: number; showCalculatedValues?: boolean; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
     const colors = {
         indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]', dot: 'bg-[var(--color-info-blue)]' },
@@ -1076,9 +1081,9 @@ function RowCard({
                     </span>
                     <span className={`h-2 w-2 rounded-full ${c.dot}`} />
                     <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-semibold text-[var(--color-muted)]">
-                        {kgPer100m.toFixed(3)} kg/100m
+                        {showCalculatedValues ? `${kgPer100m.toFixed(3)} kg/100m` : '—'}
                     </Badge>
-                    {adjustmentPct != null && (
+                    {adjustmentPct != null && showCalculatedValues && (
                         <Badge variant="outline" className={`h-5 rounded-[6px] px-1.5 py-0 text-[10px] font-semibold ${c.badge}`}>
                             Adj {adjustmentPct.toFixed(1)}%
                         </Badge>
@@ -1086,7 +1091,7 @@ function RowCard({
                 </div>
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                     <span className="text-xs font-semibold text-[var(--color-muted)]">
-                        ₹{costPer100m.toFixed(2)}/100m
+                        {showCalculatedValues ? `₹${costPer100m.toFixed(2)}/100m` : '—'}
                     </span>
                     <ChevronUp className="h-4 w-4 text-[var(--color-muted)]" />
                     {canRemove && (
@@ -1219,6 +1224,7 @@ function QuickCostingView({
                             kgPer100m={totals.warpRows[index]?.kgPer100m ?? 0}
                             costPer100m={totals.warpRows[index]?.costPer100m ?? 0}
                             adjustmentPct={totals.warpRows[index]?.totalAdjustmentPct ?? 0}
+                            showCalculatedValues={hasValidCostResult}
                         >
                             <CalculationModeField
                                 value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -1256,11 +1262,11 @@ function QuickCostingView({
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         return (
-                            <RowCard key={row.id} title="Weft yarn" index={index} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0}>
+                            <RowCard key={row.id} title="Weft yarn" index={index} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
                                 <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" />
-                                <WidthField label="Effective costing width" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} hint={row.calculationMode === 'manual' ? 'Saved for audit' : 'Used in weft formula'} />
+                                <WidthField label="Effective costing width (finished width)" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} hint={row.calculationMode === 'manual' ? 'Saved for audit' : 'Used in weft formula'} />
                                 {row.calculationMode === 'manual' ? (
                                     <NumField label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} attentionWhenEmpty />
                                 ) : (
@@ -1282,10 +1288,10 @@ function QuickCostingView({
                 <SectionHeader title="Weaving cost" icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <NumField label="Weaving rate" value={state.perPickCostPaisa * 100} onChange={value => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: (value ?? 0) / 100 })} unit="paise/pick" step={0.1} attentionWhenEmpty hint={`At ${totalPicks} picks: ₹${totals.weaveCostPerM.toFixed(2)}/m`} />
+                        <NumField label="Weaving rate" value={state.perPickCostPaisa * 100} onChange={value => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: (value ?? 0) / 100 })} unit="paise/pick" step={0.1} attentionWhenEmpty hint={`At ${totalPicks} picks: ${formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}`} />
                         <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-3 py-2.5">
                             <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Calculated loom cost</p>
-                            <p className="mt-1 font-mono text-xl font-semibold text-[var(--color-warning-amber)]">₹{totals.weaveCostPerM.toFixed(2)}/m</p>
+                            <p className="mt-1 font-mono text-xl font-semibold text-[var(--color-warning-amber)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</p>
                             <p className="mt-1 text-[10px] text-[var(--color-muted)]">{totalPicks} total picks × paise per pick</p>
                         </div>
                     </div>
@@ -1347,7 +1353,7 @@ function QuickCostingView({
                     {directRateMissing && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Enter a direct rate greater than ₹0/m before saving.</p>}
                     <div className="flex items-center justify-between rounded-[10px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                         <span className="text-[11px] font-medium text-[var(--color-muted)]">Used in this costing</span>
-                        <span className="font-mono text-base font-semibold text-[var(--color-risk-red)]">₹{totals.overheadPerM.toFixed(2)}/m</span>
+                        <span className="font-mono text-base font-semibold text-[var(--color-risk-red)]">{formatCalculatedMoney(totals.overheadPerM, hasValidCostResult, '/m')}</span>
                     </div>
                 </CardContent>
             </EstimatorCard>
@@ -1787,20 +1793,29 @@ export default function EstimatorClient({
         }
     }, [state])
     const costingResult = useMemo(() => buildCostingResult(state, totals), [state, totals])
+    const costingReadiness = useMemo(
+        () => getEstimatorReadiness({
+            validation: estimatorValidation,
+            result: costingResult,
+            totals,
+            warningsAcknowledged,
+        }),
+        [costingResult, estimatorValidation, totals, warningsAcknowledged],
+    )
     // Keep the monthly-expense reference available even when the costing is
     // currently using a direct ₹/m rate. This is transparency only; it never
     // overrides the selected calculation method.
     const monthlyOverheadReference = state.monthlyOutputM > 0
         ? totals.overheadTotalMonthly / state.monthlyOutputM
         : 0
-    const hasValidCostResult = estimatorValidation.valid
-        && Number.isFinite(totals.totalProductionCostPerM)
-        && totals.totalProductionCostPerM >= 0
+    const hasValidCostResult = costingReadiness.canDisplayMoney
+    const canPersistCostResult = costingReadiness.canPersist
+    const firstCostingReadinessMessage = costingReadiness.issues[0]?.message ?? firstEstimatorValidationMessage
     const validationSummaryId = 'estimator-save-validation-summary'
-    const exportModel = useMemo(() => hasValidCostResult
+    const exportModel = useMemo(() => canPersistCostResult
         ? createCostingExportModel({ qualityLabel, state, totals, result: costingResult })
         : null,
-    [costingResult, hasValidCostResult, qualityLabel, state, totals])
+    [canPersistCostResult, costingResult, qualityLabel, state, totals])
     const scenarios = useMemo(() => runScenarios(state, totals), [state, totals])
     const breakEvenScenario = useMemo(
         () => scenarios.find(scenario => scenario.id === 'break-even'),
@@ -1879,6 +1894,15 @@ export default function EstimatorClient({
         return true
     }
 
+    const requireTemplateReadiness = () => {
+        const templateValidation = validateEstimatorSnapshot(state, { requireTapeLength: false })
+        if (!templateValidation.valid) {
+            toast.error(getFirstEstimatorValidationMessage(templateValidation) ?? 'Complete the highlighted inputs before saving the quality.')
+            return true
+        }
+        return requireWarningReview()
+    }
+
     const handleSaveProfile = async () => {
         if (requireWarningReview()) return
         setSaving(true)
@@ -1932,7 +1956,7 @@ export default function EstimatorClient({
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
         }
-        if (requireWarningReview()) return
+        if (requireTemplateReadiness()) return
 
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
@@ -1999,7 +2023,7 @@ export default function EstimatorClient({
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
         }
-        if (requireWarningReview()) return
+        if (requireTemplateReadiness()) return
 
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
@@ -2175,8 +2199,8 @@ export default function EstimatorClient({
         setShowValidation(true)
         const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
         const effectiveTargetMode = saveAsStandaloneCosting ? 'quote' : targetMode
-        if (firstEstimatorValidationMessage) {
-            return toast.error(firstEstimatorValidationMessage)
+        if (!hasValidCostResult) {
+            return toast.error(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before saving.')
         }
         if (requireWarningReview()) return
         if (!saveAsStandaloneCosting && canUseProduction && effectiveTargetMode === 'quote' && !allowsPartyOrders) {
@@ -2333,7 +2357,7 @@ export default function EstimatorClient({
     const handleStartPartyOrder = async () => {
         if (saveQuoteLockRef.current || savingQuote) return
         setShowValidation(true)
-        if (firstEstimatorValidationMessage) return toast.error(firstEstimatorValidationMessage)
+        if (!hasValidCostResult) return toast.error(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before starting the party order.')
         if (requireWarningReview()) return
         if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
@@ -2405,20 +2429,20 @@ export default function EstimatorClient({
     const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
     const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
-    const displayMarginPct = estimatorValidation.valid
+    const displayMarginPct = hasValidCostResult
         && hasOrderQty
         && orderQuote?.isValid
         && Number.isFinite(costingResult.actualMarginPct)
         ? costingResult.actualMarginPct
         : null
-    const costSegments = [
+    const costSegments = hasValidCostResult ? [
         { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
         { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
         { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
         { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
         { label: 'Overhead', value: totals.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
         { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
-    ].filter(segment => segment.value > 0)
+    ].filter(segment => segment.value > 0) : []
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
     const auditLayerRows = [
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
@@ -2716,9 +2740,9 @@ export default function EstimatorClient({
                                             ? 'col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1'
                                             : 'h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]'}
                                         onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
-                                        disabled={savingQuote || !estimatorValidation.valid || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !orderQuote?.isValid)}
-                                        aria-describedby={!estimatorValidation.valid ? validationSummaryId : undefined}
-                                        title={firstEstimatorValidationMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !orderQuote?.isValid))
+                                        disabled={savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !orderQuote?.isValid)}
+                                        aria-describedby={!hasValidCostResult ? validationSummaryId : undefined}
+                                        title={firstCostingReadinessMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !orderQuote?.isValid))
                                             ? (requiresCommercialContext ? 'Complete customer, quality, quantity, and cost result first.' : 'Complete quality and cost inputs first.')
                                             : undefined)}
                                     >
@@ -2907,7 +2931,9 @@ export default function EstimatorClient({
                                     <div className="shrink-0 text-right">
                                         <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
                                         <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
-                                            ₹{(costingResult.expectedProfitTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {hasValidCostResult && costingResult.expectedProfitTotal !== null
+                                                ? `₹${costingResult.expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                : '—'}
                                         </p>
                                     </div>
                                 </>
@@ -3215,6 +3241,7 @@ export default function EstimatorClient({
                                     kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
                                     adjustmentPct={totals.warpRows[i]?.totalAdjustmentPct ?? 0}
+                                    showCalculatedValues={hasValidCostResult}
                                 >
                                     <CalculationModeField
                                         value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -3410,6 +3437,7 @@ export default function EstimatorClient({
                                         kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
                                         costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
                                         adjustmentPct={totals.weftRows[i]?.totalAdjustmentPct ?? 0}
+                                        showCalculatedValues={hasValidCostResult}
                                     >
                                         <CalculationModeField
                                             value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -3423,7 +3451,7 @@ export default function EstimatorClient({
                                         />
                                         <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
                                         <WidthField
-                                            label="Effective costing width"
+                                            label="Effective costing width (finished width)"
                                             value={effectiveCostingWidthCm}
                                             onChange={v => {
                                                 dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value: v })
@@ -3578,15 +3606,15 @@ export default function EstimatorClient({
 
                                     <div className="mt-3 flex items-center justify-between border-t border-[var(--color-warning-amber-soft)] pt-3">
                                         <span className="text-[11px] text-[var(--color-warning-amber)]">At {totalPicks} picks</span>
-                                        <span className="text-sm font-semibold text-[var(--color-warning-amber)]">₹{totals.weaveCostPerM.toFixed(2)}/m</span>
+                                        <span className="text-sm font-semibold text-[var(--color-warning-amber)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</span>
                                     </div>
 
                                     {/* Unusually High Weave Cost Warning */}
-                                    {totals.weaveCostPerM > 100 && (
+                                    {hasValidCostResult && totals.weaveCostPerM > 100 && (
                                         <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-xs flex items-start gap-2.5 shadow-sm">
                                             <span className="text-sm shrink-0">⚠️</span>
                                             <div>
-                                                <p className="font-bold">Unusually High Weave Cost (₹{totals.weaveCostPerM.toFixed(2)}/m)</p>
+                                                <p className="font-bold">Unusually High Weave Cost ({formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')})</p>
                                                 <p className="text-amber-700 mt-0.5 font-medium">This weave cost looks unusually high. Did you mean paise per pick?</p>
                                             </div>
                                         </div>
@@ -3716,7 +3744,7 @@ export default function EstimatorClient({
                                             </div>
                                         </div>
 
-                                        {state.overheadOverridePerM != null && state.overheadOverridePerM < monthlyOverheadReference && (
+                                        {hasValidCostResult && state.overheadOverridePerM != null && state.overheadOverridePerM < monthlyOverheadReference && (
                                             <div className="flex items-center gap-2 pt-2 mt-2 border-t border-dashed border-[var(--color-hairline)]">
                                                 <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
                                                 <p className="text-[10px] font-bold text-amber-700 leading-tight">
@@ -3733,7 +3761,7 @@ export default function EstimatorClient({
                                 <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3.5 py-3">
                                     <p className="text-[12px] font-medium text-[var(--color-ink)]">Monthly expenses are active</p>
                                     <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Saved rent, power, salaries, and other expenses are divided by actual monthly output. Expand the section below to edit them.</p>
-                                    <p className="mt-2 text-[11px] font-semibold text-[var(--color-factory-green)]">Current calculated overhead: ₹{totals.overheadPerM.toFixed(2)}/m</p>
+                                    <p className="mt-2 text-[11px] font-semibold text-[var(--color-factory-green)]">Current calculated overhead: {formatCalculatedMoney(totals.overheadPerM, hasValidCostResult, '/m')}</p>
                                 </div>
                             )}
                         </div>
@@ -3758,7 +3786,7 @@ export default function EstimatorClient({
                                                 <div className="flex items-center gap-2">
                                                     {!showAdvancedOverhead && totals.overheadTotalMonthly > 0 && (
                                                         <span className="text-[10px] font-mono text-[var(--color-muted)] font-normal mr-2">
-                                                            Total: ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo
+                                                            Total: {hasValidCostResult ? `₹${totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo` : '—'}
                                                         </span>
                                                     )}
                                                     {showAdvancedOverhead ? (
@@ -4031,16 +4059,16 @@ export default function EstimatorClient({
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                                                             <p className="text-[10px] text-[var(--color-muted)]">Total monthly cost</p>
                                                             <p className={`text-base font-semibold ${totals.overheadTotalMonthly <= 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-ink)]'}`}>
-                                                                ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}
+                                                                {hasValidCostResult ? `₹${totals.overheadTotalMonthly.toLocaleString('en-IN')}` : '—'}
                                                             </p>
                                                         </div>
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                                                                 <p className="text-[10px] text-[var(--color-muted)]">{state.overheadMode === 'direct' ? 'Monthly-expense reference' : 'Rated capacity cost'}</p>
-                                                            <p className="text-base font-semibold text-[var(--color-ink)]">₹{(state.overheadMode === 'direct' ? monthlyOverheadReference : totals.overheadPerMAtCapacity).toFixed(2)}/m</p>
+                                                            <p className="text-base font-semibold text-[var(--color-ink)]">{formatCalculatedMoney(state.overheadMode === 'direct' ? monthlyOverheadReference : totals.overheadPerMAtCapacity, hasValidCostResult, '/m')}</p>
                                                         </div>
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                                                             <p className="text-[10px] text-[var(--color-muted)]">Your actual cost</p>
-                                                            <p className={`text-base font-semibold ${totals.overheadPerM > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>₹{totals.overheadPerM.toFixed(2)}/m</p>
+                                                            <p className={`text-base font-semibold ${totals.overheadPerM > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>{formatCalculatedMoney(totals.overheadPerM, hasValidCostResult, '/m')}</p>
                                                         </div>
                                                     </div>
                                                     {isZeroConfig && (
@@ -4048,7 +4076,7 @@ export default function EstimatorClient({
                                                     )}
 
                                                     <div className="space-y-2">
-                                                        {totals.costOfIdleCapacityMonthly > 500 && (
+                                                        {hasValidCostResult && totals.costOfIdleCapacityMonthly > 500 && (
                                                             <div className="flex items-center gap-3 rounded-[10px] border border-[var(--color-risk-red-soft)] bg-[var(--color-risk-red-soft)] p-3">
                                                                 <AlertCircle className="h-4 w-4 text-[var(--color-risk-red)] shrink-0" />
                                                                 <div>
@@ -4066,7 +4094,7 @@ export default function EstimatorClient({
                                         <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
                                             <div>
                                                 <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-600/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
-                                                <p className="text-2xl font-semibold font-mono text-rose-700 leading-none">₹{totals.overheadPerM.toFixed(2)}</p>
+                                                <p className="text-2xl font-semibold font-mono text-rose-700 leading-none">{formatCalculatedMoney(totals.overheadPerM, hasValidCostResult)}</p>
                                                 {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
                                                     <p className="text-[9px] text-amber-600 font-bold mt-0.5">⚡ direct rate selected</p>
                                                 )}
@@ -4124,7 +4152,7 @@ export default function EstimatorClient({
                                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                                 <div>
                                     <p className="text-sm font-semibold">Costing incomplete</p>
-                                    <p className="mt-1 text-xs font-medium leading-relaxed">{showValidation ? (firstEstimatorValidationMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.') : 'Enter your fabric quality and yarn numbers to see a reliable cost breakdown.'}</p>
+                                    <p className="mt-1 text-xs font-medium leading-relaxed">{showValidation ? (firstCostingReadinessMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.') : 'Enter your fabric quality and yarn numbers to see a reliable cost breakdown.'}</p>
                                     <p className="mt-1 text-[11px] leading-relaxed">Draft values are not treated as a final result while a required input is blank or zero.</p>
                                 </div>
                             </div>

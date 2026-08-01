@@ -467,6 +467,8 @@ export async function saveAsFabricTemplate(data: {
         quotePricePerM: snapshotTotals.quotePricePerM,
         targetMeters: snapshotEstimate.orderQuantityM,
         requireTapeLength: false,
+        result: snapshotTotals.result,
+        totals: snapshotTotals.totals,
     }))
     if (snapshotBoundaryError) return { error: snapshotBoundaryError }
 
@@ -932,6 +934,8 @@ export async function saveEstimatorQuoteV3(params: {
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters: estimate.orderQuantityM,
         requireTapeLength: canUseProduction,
+        result: authoritative.result,
+        totals: authoritative.totals,
     }))
     if (validationError) return { error: validationError }
     if (!totalsMatchAuthoritative(params.totalProductionCostPerM, params.quotePricePerM, authoritative)) {
@@ -1322,6 +1326,8 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
         totalProductionCostPerM: authoritative.productionCostPerM,
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters,
+        result: authoritative.result,
+        totals: authoritative.totals,
     }))
     if (validationError) return { error: validationError }
     if (!totalsMatchAuthoritative(input.costPerM, input.quotePricePerM, authoritative)) {
@@ -1858,6 +1864,8 @@ export async function createMarketRunFromEstimator(params: {
         totalProductionCostPerM: authoritative.productionCostPerM,
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters,
+        result: authoritative.result,
+        totals: authoritative.totals,
     }))
     if (validationError) return { error: validationError }
     if (normalizeCurrencySnapshot(params.totalProductionCostPerM) !== authoritative.productionCostPerM) {

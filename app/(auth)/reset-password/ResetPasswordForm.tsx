@@ -187,7 +187,7 @@ export default function ResetPasswordForm() {
     return (
         <AuthLayout
             title="Choose a new password"
-            subtitle="Use 8+ characters with an uppercase letter and number"
+            subtitle="Use 8+ characters with an uppercase letter, number, and special character"
         >
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div className="space-y-1.5">
@@ -198,7 +198,7 @@ export default function ResetPasswordForm() {
                         <Input
                             id="password"
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="8+ chars, uppercase, number"
+                            placeholder="8+ chars, uppercase, number, special"
                             value={password}
                             onChange={(event) => {
                                 setPassword(event.target.value)

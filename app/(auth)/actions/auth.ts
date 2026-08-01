@@ -21,7 +21,7 @@ import { hasExplicitProductionMode } from '@/lib/production-mode'
 import { getOrgTier } from '@/lib/subscription'
 import { checkJoinCodeRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { createSignInServerTimer, persistSignInTraceCookie } from '@/lib/sign-in-telemetry.server'
-import { normalizeIndianPhone } from '@/lib/phone'
+import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -83,10 +83,14 @@ export async function createOrganization(input: {
     ownerName: string
     email: string
     password: string
+    confirmPassword: string
     factoryName: string
     phone: string
     referralCode?: string
 }) {
+    if (!isValidIndianPhone(input.phone)) {
+        return { error: 'Enter a valid 10-digit Indian mobile number, for example 9876543210.' }
+    }
     const parsed = safeParse(CreateOrgSchema, {
         ...input,
         phone: normalizeIndianPhone(input.phone),
@@ -235,6 +239,7 @@ export async function createOrganizationAndRedirect(input: {
     ownerName: string
     email: string
     password: string
+    confirmPassword: string
     factoryName: string
     phone: string
     referralCode?: string
@@ -304,6 +309,7 @@ export async function joinOrganization(input: {
     supervisorName: string
     email: string
     password: string
+    confirmPassword: string
     phone: string
 }) {
     const requestHeaders = await headers()
@@ -315,7 +321,13 @@ export async function joinOrganization(input: {
         return { error: 'Join-code protection is temporarily unavailable. Try again later.' }
     }
 
-    const parsed = safeParse(JoinOrgSchema, input)
+    if (!isValidIndianPhone(input.phone)) {
+        return { error: 'Enter a valid 10-digit Indian mobile number, for example 9876543210.' }
+    }
+    const parsed = safeParse(JoinOrgSchema, {
+        ...input,
+        phone: normalizeIndianPhone(input.phone),
+    })
     if ('error' in parsed) return { error: parsed.error }
 
     const adminClient = createAdminClient()
