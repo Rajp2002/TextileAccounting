@@ -841,3 +841,54 @@ Acceptance:
 - Disposition: `BILL-006=pass`; `BILL-003=blocked`. Rerun only the successful
   provider-popup and post-capture reconciliation portion when a compatible
   browser session is available.
+
+### Sprint 1 Save, Versioning, and Trust regression guard — 2026-08-01
+
+Use an isolated owner tenant and a repeat-trader scenario that resembles
+Rajesh Patel's 40–60 loom grey-fabric unit. Keep the quality label
+`60 D poly blithest` and a separate genuinely different quality such as
+`60 D micro`; do not rename one quality into the other.
+
+1. Create the saved quality, calculate a representative grey-fabric estimate
+   for a 50-loom factory, and save costing `v1`. Record the displayed quality,
+   costing group, version, timestamp, yarn rates, transport, margin, overhead,
+   and total. Refresh, sign out/in, reopen from Saved Costings, and export a
+   quotation; every surface must point to the same saved economics and the
+   customer export must not expose internal cost or margin fields.
+2. Reopen `v1`, change a yarn rate, transport, and margin, then choose
+   `Update Quality`. Confirm the saved quality recipe changes but no costing
+   snapshot is created or modified. If Rajesh then saves the costing, confirm
+   the new snapshot is created from the explicitly saved quality state and the
+   prior `v1` remains unchanged. If he does not save the quality, confirm a
+   later quality reflection uses the last saved recipe, not the unsaved editor.
+3. Reopen `v1`, add a yarn layer or otherwise change the recipe, and choose
+   `Save New Costing Version`. Confirm the prompt offers `Save Version Only`
+   and `Save Version & Update Quality`; test both choices. Version-only keeps
+   the quality unchanged while creating `v2`; the combined choice creates
+   `v2` and updates the reusable quality exactly once.
+4. Repeat a save without changing any value. Expect a clear no-change result,
+   no new version, and no changed timestamp/economics. Double-click the save
+   control and retry the same request after a timeout; expect one persisted
+   version and feedback that does not claim an unverified duplicate success.
+5. Open the same costing in two sessions. Save `v2` in one, then submit the
+   older session. Expect a stale-edit response, no overwrite of `v2`, and a
+   clear reload/reconcile path. A validation, authorization, or server error
+   must leave the prior saved state intact and explain what Rajesh can do next.
+6. Change the factory overhead baseline/profile and create a future estimate.
+   Confirm the new estimate uses the new baseline while `v1` and `v2` retain
+   their original totals and baseline context. Reopen, compare, and export
+   both versions to confirm no historical back-propagation.
+7. Repeat the core save/version journey in Base and Full Suite according to
+   each product's existing workflow. Confirm Base does not gain irrelevant
+   production concepts and Full Suite's working behavior remains intact.
+8. Run the journey with Gujarati and Hindi selected. Preserve names, numbers,
+   and established textile terms such as warp, weft, and margin; translate
+   action labels and feedback into the selected language without weakening
+   the distinction between quality update and costing-version save.
+
+Required automated evidence: focused Sprint 1 tests, the full Vitest suite,
+TypeScript, ESLint, production build, and clean diff. Required release
+evidence: exact merged commit/deployment, linked migration list plus dry-run
+after apply, browser console state, visible save feedback, and tenant-scoped
+reconciliation/cleanup for the isolated fixture. Source tests alone do not
+promote this guard to a production pass.

@@ -2202,3 +2202,28 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Next evidence action: complete one Razorpay TEST Netbanking Success flow in
   a browser that exposes the mock-bank window, then reconcile exactly one
   captured ₹8,260 payment and exactly one active Base entitlement.
+
+## Sprint 1 Save, Versioning, and Trust release candidate — 2026-08-01
+
+- State: `code_verified_but_not_runtime_verified`.
+- Candidate branch: `codex/sprint1-save-trust-release`; it must be reconciled
+  with the current `origin/main` before promotion. The exact merged commit and
+  production deployment are intentionally recorded only after release.
+- Customer contract: `Update Quality` is a template/recipe update and does
+  not create or mutate a costing snapshot. A later costing save may use that
+  saved quality, but a recent unsaved costing edit never silently changes the
+  quality. `Save New Costing Version` creates the next historical snapshot and
+  offers Rajesh a clear choice about also updating the saved quality when the
+  recipe changed.
+- Trust contract: same-value saves are no-ops, duplicate clicks/retries cannot
+  create a second version, stale edits fail without overwriting newer work,
+  and refresh/re-login/reopen show the authoritative version, timestamp,
+  quality/group identity, and saved economics.
+- Baseline contract: a factory overhead baseline change affects future
+  estimates only. Existing costing versions retain the baseline context that
+  was used to calculate them.
+- Local evidence is green for the source gates recorded in the corresponding
+  `FIX_LOG.md` entry. Pending gates are production build, linked migration
+  dry-run/apply, exact deployment, and the isolated owner runtime journey.
+- Formal pilot matrix/readiness counts are unchanged until those runtime gates
+  produce the named evidence; no source-only pass is being inferred.

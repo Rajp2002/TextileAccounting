@@ -1497,6 +1497,7 @@ export default function EstimatorClient({
     const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
     const [sourceQuoteVersionNumber, setSourceQuoteVersionNumber] = useState<number | null>(null)
     const [sourceQuoteCreatedAt, setSourceQuoteCreatedAt] = useState<string | null>(null)
+    const [sourceFactoryProfileUpdatedAt, setSourceFactoryProfileUpdatedAt] = useState<string | null>(null)
     const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
     const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
     const quoteRequestIdRef = useRef<string | null>(null)
@@ -1575,7 +1576,7 @@ export default function EstimatorClient({
 
     const buildCurrentDraft = useCallback((
         clientRequestId = quoteRequestIdRef.current,
-        recordKindOverride?: 'costing' | 'quotation',
+        recordKindOverride?: CostingRecordKind,
     ) => ({
         state,
         partyName,
@@ -1586,6 +1587,7 @@ export default function EstimatorClient({
         sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
         sourceQuoteVersionNumber: sourceQuoteVersionNumber ?? undefined,
         sourceQuoteCreatedAt: sourceQuoteCreatedAt ?? undefined,
+        sourceFactoryProfileUpdatedAt: sourceFactoryProfileUpdatedAt ?? undefined,
         sourceRecordKind: recordKindOverride ?? sourceRecordKind ?? undefined,
         templateId: appliedTemplate?.id,
         clientRequestId: clientRequestId ?? undefined,
@@ -1597,6 +1599,7 @@ export default function EstimatorClient({
         sourceQuoteUpdatedAt,
         sourceQuoteVersionNumber,
         sourceQuoteCreatedAt,
+        sourceFactoryProfileUpdatedAt,
         sourceRecordKind,
         state,
         warpInstruction,
@@ -1619,6 +1622,7 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
         setSourceQuoteVersionNumber(restored.sourceQuoteVersionNumber ?? null)
         setSourceQuoteCreatedAt(restored.sourceQuoteCreatedAt ?? null)
+        setSourceFactoryProfileUpdatedAt(restored.sourceFactoryProfileUpdatedAt ?? null)
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
@@ -1685,9 +1689,11 @@ export default function EstimatorClient({
     // Autosave: persist on every state change (debounced)
     useEffect(() => {
         if (!orgId) return
-        saveDraft(buildCurrentDraft())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [buildCurrentDraft, saveDraft])
+        saveDraft(buildCurrentDraft(
+            quoteRequestIdRef.current,
+            sourceRecordKind ?? (isStandaloneCostingSession ? 'costing' : 'quotation'),
+        ))
+    }, [buildCurrentDraft, isStandaloneCostingSession, orgId, saveDraft, sourceRecordKind, state])
 
     // Sync partyName with qualityLabel in market mode for database/draft compatibility
     useEffect(() => {
@@ -1856,6 +1862,16 @@ export default function EstimatorClient({
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
+        // Choosing a Saved Quality is a fresh estimate context. It must not
+        // silently keep the costing version that was previously open, or a
+        // later Save New Version could attach the wrong recipe to that history.
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
         setWarpInstruction('')
         setWeftInstruction('')
         lastGeneratedWarp.current = null
@@ -1971,6 +1987,7 @@ export default function EstimatorClient({
                 setSourceQuoteUpdatedAt(null)
                 setSourceQuoteVersionNumber(null)
                 setSourceQuoteCreatedAt(null)
+                setSourceFactoryProfileUpdatedAt(null)
                 setSourceRecordKind(null)
                 quoteRequestIdRef.current = null
                 setShowSaveTemplate(false)
@@ -2035,7 +2052,9 @@ export default function EstimatorClient({
                 ...appliedTemplate,
                 updated_at: res.updatedAt ?? appliedTemplate.updated_at,
             })
-            toast.success(t('estimator.sprint1.quality_updated_no_snapshot'))
+            toast.success('noChange' in res && res.noChange
+                ? t('estimator.sprint1.quality_no_change')
+                : t('estimator.sprint1.quality_updated_no_snapshot'))
         } else {
             toast.error(res.error ?? t('estimator.quality.updateFailed'))
         }
@@ -2061,6 +2080,7 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(null)
         setSourceQuoteVersionNumber(null)
         setSourceQuoteCreatedAt(null)
+        setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         clearDraft()
@@ -2119,8 +2139,17 @@ export default function EstimatorClient({
         })
         setAppliedTemplate(refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt })
         setQualityLabel(editRatesTpl.name)
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
         setEditRatesTpl(null)
-        toast.success(t('estimator.sprint1.rates_updated_no_snapshot'))
+        toast.success('noChange' in res && res.noChange
+            ? t('estimator.sprint1.quality_no_change')
+            : t('estimator.sprint1.rates_updated_no_snapshot'))
     }
 
     /** Apply template directly (without editing rates). */
@@ -2129,6 +2158,13 @@ export default function EstimatorClient({
         dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
         setAppliedTemplate(editRatesTpl)
         setQualityLabel(editRatesTpl.name)
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
         setEditRatesTpl(null)
         toast.success(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`)
     }
@@ -2151,7 +2187,9 @@ export default function EstimatorClient({
             setQualityLabel(normalizedName)
         }
         setRenameTpl(null)
-        toast.success('Quality renamed. Existing costing snapshots keep their original names.')
+        toast.success('noChange' in res && res.noChange
+            ? t('estimator.sprint1.quality_no_change')
+            : t('estimator.sprint1.quality_name_corrected'))
     }
 
     const handleArchiveTemplate = async (template: EstimatorTemplate) => {
@@ -2267,6 +2305,7 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     setSourceQuoteVersionNumber(null)
                     setSourceQuoteCreatedAt(null)
+                    setSourceFactoryProfileUpdatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
                     toast.success('Market Run started and costing saved')
@@ -2288,9 +2327,18 @@ export default function EstimatorClient({
                     expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
                     templateId:              appliedTemplate?.id,
                     expectedTemplateUpdatedAt: appliedTemplate?.updated_at,
+                    // Reopening a historical Cost Estimate keeps the
+                    // baseline provenance that belongs to its inputs. A
+                    // changed factory default is for future estimates; it
+                    // must not make an edited old estimate look as though
+                    // the new default supplied all of its numbers.
+                    factoryProfileUpdatedAt: (sourceQuoteId
+                        ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
+                        : factoryBaselineUpdatedAt) ?? undefined,
                     updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
                 })
                 if (res.success) {
+                    const wasEditingCosting = Boolean(sourceQuoteId)
                     if (resolvedPartyName) {
                         setPartyNames(current => {
                             if (current.some(name => name.toLocaleLowerCase('en-IN') === resolvedPartyName.toLocaleLowerCase('en-IN'))) {
@@ -2305,13 +2353,16 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     setSourceQuoteVersionNumber(null)
                     setSourceQuoteCreatedAt(null)
+                    setSourceFactoryProfileUpdatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
                     toast.success(!saveAsStandaloneCosting
                         ? (status === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
-                        : (qualityUpdateDecision === 'version_and_quality'
-                            ? `${sourceQuoteId ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
-                            : (sourceQuoteId ? 'New costing version saved' : 'Costing saved')))
+                        : ('noChange' in res && res.noChange)
+                            ? t('estimator.sprint1.costing_no_change', { version: String(('versionNumber' in res && res.versionNumber) || 1) })
+                            : (qualityUpdateDecision === 'version_and_quality'
+                                ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
+                                : (wasEditingCosting ? 'New costing version saved' : 'Costing saved')))
                     router.push('/owner/quotes')
                 } else {
                     toast.error(res.error ?? 'Failed to save quote')
@@ -2373,6 +2424,7 @@ export default function EstimatorClient({
             setSourceQuoteUpdatedAt(null)
             setSourceQuoteVersionNumber(null)
             setSourceQuoteCreatedAt(null)
+            setSourceFactoryProfileUpdatedAt(null)
             setSourceRecordKind(null)
             quoteRequestIdRef.current = null
             toast.success('Party order started and costing saved')
@@ -2608,6 +2660,13 @@ export default function EstimatorClient({
                         <span>{t('estimator.sprint1.quality')}: <strong className="text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</strong></span>
                         {sourceQuoteId && sourceRecordKind === 'costing' && (
                             <span>{t('estimator.sprint1.costing')}: <strong className="text-[var(--color-ink)]">v{sourceQuoteVersionNumber ?? 1}</strong>{sourceQuoteCreatedAt ? ` · ${new Date(sourceQuoteCreatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
+                        )}
+                        {sourceQuoteId && sourceRecordKind === 'costing' && !sourceFactoryProfileUpdatedAt ? (
+                            <span>{t('estimator.sprint1.baseline_not_recorded')}</span>
+                        ) : sourceFactoryProfileUpdatedAt ? (
+                            <span>{t('estimator.sprint1.baseline_captured')}: <strong className="text-[var(--color-ink)]">{new Date(sourceFactoryProfileUpdatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
+                        ) : (
+                            <span>{t('estimator.sprint1.baseline_current')}</span>
                         )}
                         {!sourceQuoteId && <span>{t('estimator.sprint1.new_costing_snapshot')}</span>}
                         <div className="ml-auto flex items-center gap-1 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
@@ -2846,6 +2905,7 @@ export default function EstimatorClient({
                                             setSourceQuoteUpdatedAt(null)
                                             setSourceQuoteVersionNumber(null)
                                             setSourceQuoteCreatedAt(null)
+                                            setSourceFactoryProfileUpdatedAt(null)
                                             setSourceRecordKind(null)
                                             quoteRequestIdRef.current = null
                                             setTemplateSaveError(null)
@@ -4500,11 +4560,11 @@ export default function EstimatorClient({
             <Dialog open={Boolean(renameTpl)} onOpenChange={open => { if (!open) { setRenameTpl(null); setRenameError(null) } }}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Rename saved quality</DialogTitle>
-                        <DialogDescription>Rename the reusable recipe label only. Existing costing snapshots keep the name recorded when they were saved.</DialogDescription>
+                        <DialogTitle>{t('estimator.sprint1.correct_quality_name')}</DialogTitle>
+                        <DialogDescription>{t('estimator.sprint1.correct_quality_name_help')}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-1.5 py-4">
-                        <Label htmlFor="rename-quality-name">Quality name</Label>
+                        <Label htmlFor="rename-quality-name">{t('estimator.quality.qualityNameLabel')}</Label>
                         <Input
                             id="rename-quality-name"
                             value={renameValue}
@@ -4518,7 +4578,7 @@ export default function EstimatorClient({
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setRenameTpl(null)}>Cancel</Button>
-                        <Button onClick={handleRenameTemplate} disabled={renamingTpl || !renameValue.trim()}>{renamingTpl && <Loader2 className="h-4 w-4 animate-spin" />} Rename quality</Button>
+                        <Button onClick={handleRenameTemplate} disabled={renamingTpl || !renameValue.trim()}>{renamingTpl && <Loader2 className="h-4 w-4 animate-spin" />} {t('estimator.sprint1.save_name_correction')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

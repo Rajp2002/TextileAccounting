@@ -139,6 +139,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             const res = await getFactoryCostProfile()
             if (res.data) {
                 const d = res.data
+                setLastSavedAt(d.updated_at ?? null)
                 setRates({
                     warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
                     sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),

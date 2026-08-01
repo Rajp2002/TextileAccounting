@@ -2692,3 +2692,41 @@ Date: 2026-07-19 IST. Status: `pass`.
   activation are not claimed.
 - The isolated QA account and prefixed records remain retained as requested.
 - Data safety: only reviewed migration `20260721183000` and exact prefixed disposable QA records were permitted. Both the main `BASEGO-1784662022802-4412AD` fixture and failed-signup `BASEGO-20260722-VK6WBT MILL` reconciled organizations, profiles, subscriptions where applicable, and Auth users to zero.
+
+## Sprint 1 Save, Versioning, and Trust — 2026-08-01
+
+- Batch: `SPRINT1-SAVE-TRUST`; state at this checkpoint:
+  `code_verified_but_not_runtime_verified`.
+- Customer problem: Rajesh must be able to tell whether he changed a reusable
+  quality, created a new costing version, or only changed an unsaved estimate.
+  The release therefore makes the following boundary explicit: `Update Quality`
+  changes the saved recipe/template only and never creates or edits a costing
+  snapshot; `Save New Costing Version` creates the next immutable snapshot; and
+  `Use as Starting Point` detaches a new costing from the prior quality identity.
+- Historical economics are protected. A saved snapshot retains the rates,
+  transport, margin, quantity, overhead inputs, breakdown, quality/group
+  identity, version, and creation context that Rajesh used at save time. A
+  changed factory overhead baseline is recorded for future estimates and does
+  not back-propagate into existing snapshots.
+- Save feedback now distinguishes success, no-change, duplicate/retry,
+  stale-edit, validation, authorization, and server failure outcomes. The
+  editor identifies the costing group, saved quality, version, timestamp, and
+  whether the visible values are saved or still being edited.
+- Source changes include the estimator server actions and client, Saved
+  Costings/quotation context, factory-cost profile, draft/export helpers,
+  Gujarati/Hindi/English trust copy, the shared save-trust helper, and the
+  focused Sprint 1 regression contract.
+- Reviewed migration: `20260801174038_sprint1_save_trust_v2.sql`. It adds the
+  atomic revision/save paths and database guards for snapshot immutability,
+  request replay protection, quality/template separation, and future-only
+  factory-baseline provenance. It has not been claimed as production-applied
+  in this entry until the linked dry-run and apply are recorded.
+- Local source evidence before promotion: `npm test -- --run --reporter=dot`
+  passed 126 files / 823 tests with one intentional skip; `npx tsc --noEmit`,
+  `npm run lint`, and `git diff --check` passed. The production build and
+  linked-database/runtime proof remain release gates.
+- Data safety: no production business row or schema mutation is claimed by
+  this source checkpoint. Promotion requires reconciling the candidate with
+  the current `origin/main`, applying only the reviewed migration, and
+  exercising the Rajesh save/reopen/version/compare/export journey on the
+  exact deployed candidate.
