@@ -1,11 +1,39 @@
 'use client'
 
 import { useEffect } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
+import { useTranslation } from '@/lib/i18n/context'
 
 const UPDATE_REFRESH_FLAG = 'weavly_pwa_update_refreshing'
+const UPDATE_TOAST_SHOWN_FLAG = 'weavly_pwa_update_toast_seen'
+
+function readSessionFlag(key: string) {
+    try {
+        return sessionStorage.getItem(key) === '1'
+    } catch {
+        return false
+    }
+}
+
+function writeSessionFlag(key: string, value: string) {
+    try {
+        sessionStorage.setItem(key, value)
+    } catch {
+        // A restricted browser storage context must not block app use.
+    }
+}
+
+function removeSessionFlag(key: string) {
+    try {
+        sessionStorage.removeItem(key)
+    } catch {
+        // Best effort only.
+    }
+}
 
 export function PwaUpdateNotice() {
+    const { t } = useTranslation()
+
     useEffect(() => {
         if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
@@ -13,13 +41,15 @@ export function PwaUpdateNotice() {
 
         const showUpdateToast = (registration: ServiceWorkerRegistration) => {
             if (disposed) return
-            toast.info('App update ready', {
-                description: 'Save any drafts, then refresh before exporting to use the latest fixes and PDF layout.',
+            if (readSessionFlag(UPDATE_TOAST_SHOWN_FLAG)) return
+            writeSessionFlag(UPDATE_TOAST_SHOWN_FLAG, '1')
+            toast.info(t('common.pwa_update_title'), {
+                description: t('common.pwa_update_description'),
                 duration: Infinity,
                 action: {
-                    label: 'Refresh',
+                    label: t('common.pwa_update_refresh'),
                     onClick: () => {
-                        sessionStorage.setItem(UPDATE_REFRESH_FLAG, '1')
+                        writeSessionFlag(UPDATE_REFRESH_FLAG, '1')
                         const waitingWorker = registration.waiting
                         if (!waitingWorker) {
                             window.location.reload()
@@ -66,8 +96,8 @@ export function PwaUpdateNotice() {
         })
 
         const handleControllerChange = () => {
-            if (sessionStorage.getItem(UPDATE_REFRESH_FLAG) === '1') {
-                sessionStorage.removeItem(UPDATE_REFRESH_FLAG)
+            if (readSessionFlag(UPDATE_REFRESH_FLAG)) {
+                removeSessionFlag(UPDATE_REFRESH_FLAG)
                 return
             }
             void navigator.serviceWorker.ready.then(showUpdateToast)
@@ -79,7 +109,7 @@ export function PwaUpdateNotice() {
             disposed = true
             navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
         }
-    }, [])
+    }, [t])
 
     return null
 }

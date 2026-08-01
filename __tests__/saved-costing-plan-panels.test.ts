@@ -9,7 +9,7 @@ describe('Saved Costings plan-specific panels', () => {
         const breakdownPanel = '<section className="rounded-xl border border-slate-200 bg-white p-4">\n                                                <div className="flex flex-wrap items-start justify-between gap-3">'
         const productionPanel = '{canUseProduction && <section className="rounded-xl border border-slate-200 bg-white p-4">\n                                                <div className="flex items-center justify-between gap-3">'
 
-        expect(client).toContain('<p className="text-sm font-black text-slate-950">Latest costing breakdown</p>')
+        expect(client).toContain('<p className="text-sm font-black text-slate-950">Latest Saved Costing breakdown</p>')
         expect(client).toContain(breakdownPanel)
         expect(client).not.toContain(`{canUseProduction && ${breakdownPanel}`)
         expect(client).toContain(productionPanel)

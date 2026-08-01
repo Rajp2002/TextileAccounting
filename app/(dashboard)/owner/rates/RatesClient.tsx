@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { format } from 'date-fns'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
     Archive,
@@ -50,6 +50,7 @@ import {
     type YarnRateConflict,
 } from '@/lib/yarn-rate-reconciliation'
 import { parseNonNegativeInput } from '@/lib/numeric-input'
+import { useTranslation } from '@/lib/i18n/context'
 
 type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
 type RateHistoryRow = {
@@ -127,6 +128,7 @@ export default function RatesClient({
     initialConflicts: YarnRateConflict[]
     defaultReviewIntervalDays: number
 }) {
+    const { t } = useTranslation()
     const [rates, setRates] = useState(initialRates)
     const [query, setQuery] = useState('')
     const [category, setCategory] = useState<YarnRateCategory | 'all'>('all')
@@ -196,7 +198,7 @@ export default function RatesClient({
                 }
                 setDraft(null)
             } catch (error) {
-                const message = error instanceof Error ? error.message : 'Rate could not be saved.'
+                const message = userFacingError(error, 'Rate could not be saved. Try again.')
                 setSaveError(message)
                 toast.error(message)
             } finally {
@@ -214,7 +216,7 @@ export default function RatesClient({
             try {
                 const result = await confirmCostRateReview(target.id, target.updated_at)
                 if (result.error || !result.data) {
-                    const message = result.error ?? 'The current rate could not be confirmed.'
+                    const message = userFacingError(result.error, 'The current rate could not be confirmed. Try again.')
                     setReviewError(message)
                     toast.error(message)
                     return
@@ -226,7 +228,7 @@ export default function RatesClient({
                 toast.success(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`)
                 setReviewRate(null)
             } catch (error) {
-                const message = error instanceof Error ? error.message : 'The current rate could not be confirmed.'
+                const message = userFacingError(error, 'The current rate could not be confirmed. Try again.')
                 setReviewError(message)
                 toast.error(message)
             } finally {
@@ -260,13 +262,14 @@ export default function RatesClient({
         try {
             const result = await getCostRateHistory(rate.id)
             if (result.error) {
-                setHistoryError(result.error)
-                toast.error(result.error)
+                const message = userFacingError(result.error, 'Rate activity could not be loaded. Try again.')
+                setHistoryError(message)
+                toast.error(message)
                 return
             }
             setHistoryRows((result.data ?? []) as RateHistoryRow[])
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Rate activity could not be loaded.'
+            const message = userFacingError(error, 'Rate activity could not be loaded. Try again.')
             setHistoryError(message)
             toast.error(message)
         } finally {
@@ -286,8 +289,9 @@ export default function RatesClient({
                     ? await restoreCostRate(target.id, target.updated_at)
                     : await archiveCostRate(target.id, target.updated_at)
                 if (result.error) {
-                    setArchiveError(result.error)
-                    toast.error(result.error)
+                    const message = userFacingError(result.error, 'The yarn rate could not be archived or restored. Try again.')
+                    setArchiveError(message)
+                    toast.error(message)
                     return
                 }
                 setRates(current => current.map(rate => rate.id === target.id
@@ -298,7 +302,7 @@ export default function RatesClient({
                     : 'Rate archived from the active Rate Book. Saved Qualities and costing snapshots were not changed.')
                 setArchiveRate(null)
             } catch (error) {
-                const message = error instanceof Error ? error.message : `Rate could not be ${restoring ? 'restored' : 'archived'}.`
+                const message = userFacingError(error, `Rate could not be ${restoring ? 'restored' : 'archived'}. Try again.`)
                 setArchiveError(message)
                 toast.error(message)
             } finally {
@@ -307,15 +311,33 @@ export default function RatesClient({
         })
     }
 
+    const pendingMessage = pendingAction?.kind === 'save'
+        ? 'Saving this yarn rate…'
+        : pendingAction?.kind === 'review'
+            ? 'Confirming the current yarn rate…'
+            : pendingAction?.kind === 'archive'
+                ? 'Archiving the yarn rate…'
+                : pendingAction?.kind === 'restore'
+                    ? 'Restoring the yarn rate…'
+                    : historyLoading
+                        ? 'Loading rate activity…'
+                        : null
+
     return (
         <div className="mx-auto max-w-6xl space-y-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                    <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> Yarn Rate Book</h1>
+                    <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> {t('common.yarn_rate_book')}</h1>
                     <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your Saved Qualities. Confirm discovered rates here, or change a rate when your supplier price changes. Existing costing snapshots stay unchanged.</p>
                 </div>
                 <Button onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
             </div>
+
+            {pendingMessage && (
+                <p role="status" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
+                    {pendingMessage} Please wait; other rate actions are temporarily unavailable.
+                </p>
+            )}
 
             {conflicts.length > 0 && (
                 <div className="flex flex-col gap-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
@@ -357,7 +379,7 @@ export default function RatesClient({
                     <>
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full min-w-[1000px] text-left">
-                                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">Current rate</th><th className="px-4 py-3">Previous rate</th><th className="px-4 py-3">Effective from</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
+                                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">{t('common.current_yarn_rate')}</th><th className="px-4 py-3">Previous rate</th><th className="px-4 py-3">Effective from</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {visibleRates.map(rate => {
                                         const reviewState = getRateReviewStatus(rate)
@@ -400,7 +422,7 @@ export default function RatesClient({
                                     <Card key={rate.id} className={archived ? 'border-slate-300 bg-slate-50' : reviewState === 'overdue' ? 'border-red-300 bg-red-50/70' : reviewState === 'due_soon' ? 'border-amber-300 bg-amber-50/70' : reviewState === 'needs_review' ? 'border-blue-300 bg-blue-50/60' : 'border-slate-200'}>
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
-                                            <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">Current rate</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous rate</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
+                                            <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">{t('common.current_yarn_rate')}</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous rate</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
                                             <div className="mt-3 grid grid-cols-2 gap-2">
                                                 {!archived && reviewState !== 'current' && <Button variant="outline" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {actionKind === 'review' ? 'Confirming…' : reviewLabel}</Button>}
                                                 {!archived && <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-4 w-4" /> Change rate</Button>}
@@ -460,7 +482,7 @@ export default function RatesClient({
                         <div className="space-y-1.5"><Label htmlFor="cost-rate-name">Yarn name</Label><Input id="cost-rate-name" value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} aria-invalid={Boolean(saveError)} aria-describedby={saveError ? 'cost-rate-save-error' : undefined} />{Boolean(draft.id) && <p className="text-xs leading-relaxed text-slate-500"><span className="font-semibold text-slate-700">Linked-yarn rename policy:</span> this name is locked in place. To rename it, add a new rate with the replacement name and update saved qualities intentionally. Historical costing snapshots stay unchanged.</p>}{saveError && <p id="cost-rate-save-error" role="alert" className="text-xs font-medium text-destructive">{saveError}</p>}</div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Used in</Label><select value={draft.category} onChange={event => changeCategory(event.target.value as YarnRateCategory)} disabled={Boolean(draft.id)} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-100">{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select></div><div className="space-y-1.5"><Label>Unit</Label><Input value="₹ per kg" disabled className="bg-slate-100" /></div></div>
                         {draft.id && <p className="-mt-3 text-xs leading-relaxed text-slate-500">Category and unit stay fixed for a linked yarn so saved qualities and historical costings keep the same meaning.</p>}
-                        <div className="space-y-1.5"><Label>Current rate</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', parseNonNegativeInput(event.target.value) ?? 0)} className="font-mono" /></div>
+                        <div className="space-y-1.5"><Label>{t('common.current_yarn_rate')}</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', parseNonNegativeInput(event.target.value) ?? 0)} className="font-mono" /></div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Effective from</Label><Input type="date" value={draft.effectiveDate} onChange={event => updateDraft('effectiveDate', event.target.value)} /></div><div className="space-y-1.5"><Label>Review date</Label><Input type="date" value={draft.lastReviewedAt} onChange={event => updateDraft('lastReviewedAt', event.target.value)} /></div></div>
                         <div className="space-y-1.5"><Label>Source</Label><Input value={draft.source} onChange={event => updateDraft('source', event.target.value)} placeholder="Supplier quote, email, internal rate card…" /></div>
                         <div className="space-y-1.5"><Label>Notes</Label><Textarea value={draft.notes} onChange={event => updateDraft('notes', event.target.value)} placeholder="Why this rate changed or how it should be used" maxLength={500} /><p className="text-right text-xs text-slate-400">{draft.notes?.length ?? 0}/500</p></div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard, RefreshCw, ShieldCheck } from 'lucide-react'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import { cn } from '@/lib/utils'
 import type { BillingPurchaseType, PurchasablePlanTier } from '@/lib/billing-constants'
 
@@ -68,7 +68,7 @@ type PaymentStatusResponse = {
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-    return error instanceof Error ? error.message : fallback
+    return userFacingError(error, fallback)
 }
 
 interface SubscribeButtonProps {

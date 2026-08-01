@@ -14,9 +14,9 @@ describe('saved quality costing library', () => {
 
     expect(page).toContain('getEstimatorTemplates({ includeArchived: true })')
     expect(page).toContain('initialTemplates={templates ?? []}')
-    expect(client).toContain('Latest costing breakdown')
+    expect(client).toContain('Latest Saved Costing breakdown')
     expect(client).toContain('Applied production')
-    expect(client).toContain('Costing history')
+    expect(client).toContain('Saved Costing history')
     expect(client).toContain('No costing saved for this quality yet')
     expect(client).toContain('Current recipe')
     expect(client).toContain('live estimate from the saved yarn recipe and current factory costs')

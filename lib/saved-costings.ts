@@ -54,6 +54,15 @@ function finiteOrNull(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function legacyPositiveMetricOrNull(value: unknown): number | null {
+  const parsed = finiteOrNull(value)
+  // Older rows used zero as a placeholder when the canonical costing result
+  // was not stored. A zero production or break-even price is not a trustworthy
+  // historical result for a saved grey-fabric costing, so keep it unavailable
+  // rather than showing a false ₹0.00/m value.
+  return parsed != null && parsed > 0 ? parsed : null
+}
+
 /**
  * Read the immutable financial snapshot first. Legacy rows deliberately do
  * not fall back to recalculating today's recipe; missing derived values remain
@@ -75,7 +84,7 @@ export function getSavedCostingMetrics(costing: SavedCostingListItem): SavedCost
     }
   }
 
-  const landedCostPerM = finiteOrNull(costing.landed_cost_per_meter)
+  const landedCostPerM = legacyPositiveMetricOrNull(costing.landed_cost_per_meter)
   const suggestedSellingPricePerM = finiteOrNull(costing.quote_price_per_meter)
   const quantityM = finiteOrNull(costing.meters)
   const expectedProfitPerM = landedCostPerM != null && suggestedSellingPricePerM != null
@@ -90,12 +99,14 @@ export function getSavedCostingMetrics(costing: SavedCostingListItem): SavedCost
     ? normalizeCurrencySnapshot((expectedProfitPerM / suggestedSellingPricePerM) * 100)
     : null
   return {
-    productionCostPerM: finiteOrNull(costing.production_cost_per_meter),
-    breakEvenPricePerM: finiteOrNull(costing.break_even_price_per_meter),
+    productionCostPerM: legacyPositiveMetricOrNull(costing.production_cost_per_meter),
+    breakEvenPricePerM: legacyPositiveMetricOrNull(costing.break_even_price_per_meter),
     landedCostPerM,
     suggestedSellingPricePerM,
     targetMarginPct: finiteOrNull(costing.intended_margin_percent),
-    actualMarginPct: finiteOrNull(costing.actual_margin_percent) ?? actualMarginPct,
+    actualMarginPct: legacyPositiveMetricOrNull(costing.production_cost_per_meter) == null
+      ? null
+      : finiteOrNull(costing.actual_margin_percent) ?? actualMarginPct,
     expectedProfitPerM,
     expectedProfitTotal: finiteOrNull(costing.expected_profit_total) ?? expectedProfitTotal,
     status: costing.reconciliation_status ?? 'legacy',

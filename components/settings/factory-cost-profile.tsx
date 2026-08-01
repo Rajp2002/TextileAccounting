@@ -11,9 +11,11 @@ import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboar
 import { toast } from '@/lib/app-notifications'
 import { DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
+import { userFacingError } from '@/lib/app-notifications'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { nanoid } from 'nanoid'
 import { FACTORY_COST_PRESETS, getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
 
@@ -101,6 +103,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [loading, setLoading]   = useState(true)
     const [saving, setSaving]     = useState(false)
     const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
+    const [presetToReplace, setPresetToReplace] = useState<(typeof FACTORY_COST_PRESETS)[number] | null>(null)
     const [dirty, setDirty] = useState(false)
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
@@ -183,11 +186,18 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         load()
     }, [])
 
-    const applyPreset = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
-        if (dirty && activePreset !== preset.id && !window.confirm('Replace the current staged costing defaults with this factory type?')) return
+    const applyPresetImmediately = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
         setActivePreset(preset.id)
         setSections({ ...preset.sections })
         setDirty(true)
+    }
+
+    const applyPreset = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
+        if (dirty && activePreset !== preset.id) {
+            setPresetToReplace(preset)
+            return
+        }
+        applyPresetImmediately(preset)
     }
 
     const handleSave = async () => {
@@ -225,7 +235,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 setDirty(false)
                 toast.success('Saved for new Cost Estimates')
             } else {
-                toast.error(res.error ?? 'Failed to save profile')
+                toast.error(userFacingError(res.error, 'Factory costing defaults could not be saved. Try again.'))
             }
         } catch {
             toast.error('The defaults could not be saved. Your changes are still here — try again.')
@@ -275,6 +285,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     }
 
     return (
+        <>
         <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
             <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
@@ -665,6 +676,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         className="w-full gap-2 sm:w-auto"
                         onClick={handleSave}
                         disabled={saving}
+                        aria-busy={saving}
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Save for new Cost Estimates
@@ -672,5 +684,19 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 </div>
             </CardContent>
         </Card>
+        <ConfirmActionDialog
+            open={Boolean(presetToReplace)}
+            onOpenChange={open => { if (!open) setPresetToReplace(null) }}
+            title="Replace staged defaults?"
+            description={presetToReplace
+                ? `Your unsaved setup will be replaced with the ${presetToReplace.label} preset. Saved Costings and the currently saved factory defaults will not change.`
+                : ''}
+            confirmLabel="Replace staged defaults"
+            onConfirm={() => {
+                if (presetToReplace) applyPresetImmediately(presetToReplace)
+                setPresetToReplace(null)
+            }}
+        />
+        </>
     )
 }

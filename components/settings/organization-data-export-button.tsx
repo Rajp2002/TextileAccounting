@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { Download, Loader2, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import { Button } from '@/components/ui/button'
 import {
     exportOrganizationData,
@@ -78,7 +78,7 @@ export function OrganizationDataExportButton({
             try {
                 downloadJson(payload, payload.filename)
             } catch (error) {
-                setDownloadError(error instanceof Error ? error.message : 'The browser could not start the download.')
+                setDownloadError(userFacingError(error, 'The browser could not start the download.'))
                 setStatus('download-started')
                 toast.info('Export generated, but the browser could not start the download. Try again from this page.')
                 return
@@ -90,7 +90,7 @@ export function OrganizationDataExportButton({
             }
         } catch (error) {
             setStatus('failed')
-            toast.error(error instanceof Error ? error.message : 'Failed to export organization data')
+            toast.error(userFacingError(error, 'Organization data could not be exported. Check your connection and try again.'))
         }
     })
 

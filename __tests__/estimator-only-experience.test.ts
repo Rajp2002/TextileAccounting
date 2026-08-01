@@ -69,10 +69,10 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('presents persisted quote entities as saved costings without forking persistence', () => {
-        expect(quotes).toContain("canUseQuotationWorkflow ? 'Costings & Quotations' : t('common.saved_costings_title')")
-        expect(quotes).toContain('Search quality or costing…')
+        expect(quotes).toContain("canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')")
+        expect(quotes).toContain("t('common.search_quality_costing')")
         expect(quotes).toContain('Compare Saved Costings')
-        expect(quotes).toContain("'Open & Update'")
+        expect(quotes).toContain("t('common.open_and_save_new_version')")
         expect(quotes).toContain('Use as Starting Point')
         expect(quotes).toContain('Costing loaded as a starting point')
         expect(estimator).toContain('saveEstimatorQuoteV3({')

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Loader2, Archive, ArchiveRestore, FileText, Layers, Hash } from 'lucide-react'
 import { getEstimatorTemplates, archiveTemplate, restoreTemplate } from '@/app/(dashboard)/owner/estimator/actions'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import type { WarpRow, WeftRow } from '@/lib/estimator'
@@ -59,7 +59,7 @@ export function TemplateManager({ className }: { className?: string }) {
                 toast.success(archived ? 'Quality restored' : 'Quality archived')
                 await load()
             } else {
-                toast.error(res.error ?? `Quality could not be ${archived ? 'restored' : 'archived'}`)
+                toast.error(userFacingError(res.error, `Fabric Quality could not be ${archived ? 'restored' : 'archived'}. Try again.`))
             }
         } finally {
             setArchivingQualityId(null)
