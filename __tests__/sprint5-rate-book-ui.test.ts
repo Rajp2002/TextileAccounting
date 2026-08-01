@@ -59,7 +59,7 @@ describe('Sprint 5 Rate Book UI boundary', () => {
   })
 
   it('makes the canonical legacy audit metadata-only and keeps snapshot exports explicit', () => {
-    const migration = read('supabase/migrations/20260801151421_sprint5_rate_activity_and_legacy_audit.sql')
+    const migration = read('supabase/migrations/20260801173845_sprint5_rate_activity_and_legacy_audit.sql')
     const estimatorActions = read('app/(dashboard)/owner/estimator/actions.ts')
     const exportModel = read('lib/estimator-export.ts')
 
