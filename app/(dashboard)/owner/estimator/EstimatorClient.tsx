@@ -107,11 +107,13 @@ import {
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
 import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
+import type { EstimatorAutosaveData } from '@/lib/estimator-drafts'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
+import { getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -122,6 +124,7 @@ type FixedWorkerOverhead = { id: number; name: string; role: string; monthly_sal
 type FactoryCostProfile = Partial<{
     factory_id: string
     updated_at: string
+    factory_profile_key: FactoryProfileId | null
     warping_rate_per_kg: number | string | null
     sizing_rate_per_kg: number | string | null
     winding_rate_per_kg: number | string | null
@@ -314,13 +317,13 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 processingRatePerM: Number(profile.default_processing_rate_per_m ?? state.processingRatePerM),
                 finishingRatePerM:  Number(profile.default_finishing_rate_per_m ?? state.finishingRatePerM),
                 overheadItems:      ensureOverheadIntegrity(savedItems ?? state.overheadItems),
-                monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
+                monthlyOutputM:     profile.is_configured ? Number(profile.monthly_output_m ?? 0) : 0,
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadMode:        resolveOverheadMode(profile),
                 overheadPct:        0,
                 yarnShortagePct:    profile.yarn_shortage_pct != null ? Number(profile.yarn_shortage_pct) : state.yarnShortagePct,
                 warpCrimpPct:       profile.warp_crimp_pct != null ? Number(profile.warp_crimp_pct) : state.warpCrimpPct,
-                commissionPct:      Number(profile.default_commission_pct  ?? 2),
+                commissionPct:      Number(profile.default_commission_pct  ?? 0),
                 profitPct:          Number(profile.default_margin_pct ?? state.profitPct),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
@@ -499,7 +502,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 commissionPct:     Number(profile.default_commission_pct ?? base.commissionPct),
                 transportPerM:     Number(profile.default_transport_per_m ?? base.transportPerM),
                 enabledSections:   sections,
-                monthlyOutputM:    Number(profile.monthly_output_m     ?? base.monthlyOutputM),
+                monthlyOutputM:    profile.is_configured ? Number(profile.monthly_output_m ?? base.monthlyOutputM) : 0,
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : base.overheadOverridePerM,
                 overheadMode:        resolveOverheadMode(profile),
                 loomCount:         Number(profile.loom_count           ?? base.loomCount),
@@ -1321,15 +1324,15 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="overhead">
-                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={totals.overheadPerM} valid={hasValidCostResult} />} />
+                <SectionHeader title="Factory expenses" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={totals.overheadPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
-                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
+                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">I know my factory cost per metre</p>
                             <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use a trusted ₹/m input.</p>
                         </button>
                         <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => onOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
-                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">Monthly expenses ÷ output</p>
+                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">Calculate from monthly expenses</p>
                             <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use saved factory expenses.</p>
                         </button>
                     </div>
@@ -1353,8 +1356,8 @@ function QuickCostingView({
                 <SectionHeader title="Selling and quantity (optional for Base)" icon={Coins} accent="neutral" step={7} />
                 <CardContent className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
                     <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} />
-                    <NumField label="Commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} />
-                    <NumField label="Transport" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} />
+                    <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} />
+                    <NumField label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} />
                     <NumField label="Costing quantity" value={state.orderQuantityM} onChange={value => dispatch({ type: 'SET', field: 'orderQuantityM', value })} unit="m" step={100} placeholder="Optional" hint="Needed for order-level profit and quotations." />
                 </CardContent>
             </EstimatorCard>
@@ -1422,7 +1425,7 @@ export default function EstimatorClient({
 
         // Apply profile — mirrors INIT_FROM_PROFILE reducer case
         const sections = initialProfile.enabled_sections ?? {
-            winding: false, processing: false, finishing: false, commission: true, transport: false,
+            winding: false, processing: false, finishing: false, commission: false, transport: false,
         }
         let next = {
             ...base,
@@ -1438,7 +1441,7 @@ export default function EstimatorClient({
             profitPct:         Number(initialProfile.default_margin_pct ?? base.profitPct),
             transportPerM:     Number(initialProfile.default_transport_per_m ?? base.transportPerM),
             enabledSections:   sections,
-            monthlyOutputM:    Number(initialProfile.monthly_output_m     ?? base.monthlyOutputM),
+            monthlyOutputM:    initialProfile.is_configured ? Number(initialProfile.monthly_output_m ?? base.monthlyOutputM) : 0,
             overheadOverridePerM: initialProfile.overhead_override_per_m !== undefined && initialProfile.overhead_override_per_m !== null
                 ? Number(initialProfile.overhead_override_per_m) : base.overheadOverridePerM,
             overheadMode:        resolveOverheadMode(initialProfile),
@@ -1533,6 +1536,7 @@ export default function EstimatorClient({
     const [acknowledgedWarningKey, setAcknowledgedWarningKey] = useState<string | null>(null)
     const [showWarningAcknowledgement, setShowWarningAcknowledgement] = useState(false)
     const [showConfirmNewQuality, setShowConfirmNewQuality] = useState(false)
+    const [showValidation, setShowValidation] = useState(false)
 
     // Template search
     const [templateSearch,   setTemplateSearch]   = useState('')
@@ -1547,8 +1551,26 @@ export default function EstimatorClient({
     const partyLookupTimerRef = useState<ReturnType<typeof setTimeout> | null>(null)
 
     // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
-    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow } = useAutosave<EstimateState>({
-        orgId, userId, debounceMs: 2000,
+    const shouldPersistEstimatorDraft = useCallback((data: Omit<EstimatorAutosaveData<EstimateState>, 'savedAt'>) => {
+        const hasWarpInput = data.state.warpRows.some(row => Number(row.calcDenier) > 0 || Number(row.beamEnds) > 0 || Number(row.yarnRate) > 0 || Number(row.manualKgPer100m) > 0)
+        const hasWeftInput = data.state.weftRows.some(row => Number(row.calcDenier) > 0 || Number(row.picks) > 0 || Number(row.yarnRate) > 0 || Number(row.manualKgPer100m) > 0)
+        return Boolean(
+            data.sourceQuoteId
+            || data.qualityLabel.trim()
+            || data.partyName.trim()
+            || hasWarpInput
+            || hasWeftInput
+            || ((hasWarpInput || hasWeftInput) && (data.warpInstruction.trim() || data.weftInstruction.trim()))
+            || Number(data.state.perPickCostPaisa) > 0
+            || data.state.orderQuantityM != null,
+        )
+    }, [])
+
+    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged } = useAutosave<EstimateState>({
+        orgId,
+        userId,
+        debounceMs: 2000,
+        shouldPersist: data => shouldPersistEstimatorDraft(data as Omit<EstimatorAutosaveData<EstimateState>, 'savedAt'>),
     })
 
     const buildCurrentDraft = useCallback((
@@ -1584,6 +1606,7 @@ export default function EstimatorClient({
     const applyEstimatorDraft = useCallback(() => {
         const restored = restoreDraft()
         if (!restored) return
+        suppressAutosaveUntilChanged()
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
 
@@ -1599,10 +1622,19 @@ export default function EstimatorClient({
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
-        toast.success(restored.sourceQuoteId
-            ? restored.sourceRecordKind === 'costing' ? 'Costing specifications loaded' : 'Quotation specifications loaded'
-            : 'Cost Estimate draft restored')
-    }, [restoreDraft, templates])
+        setDismissedWarnings([])
+        setAcknowledgedWarningKey(null)
+        setShowWarningAcknowledgement(false)
+        const restoredValidation = validateEstimatorSnapshot(restored.state, { requireTapeLength: canUseProduction })
+        setShowValidation(!restoredValidation.valid)
+        if (!restoredValidation.valid) {
+            toast.error('This Cost Estimate draft is incomplete. Check the highlighted fields before saving.')
+        } else {
+            toast.success(restored.sourceQuoteId
+                ? restored.sourceRecordKind === 'costing' ? 'Costing specifications loaded' : 'Quotation specifications loaded'
+                : 'Cost Estimate draft restored')
+        }
+    }, [canUseProduction, restoreDraft, suppressAutosaveUntilChanged, templates])
 
     useEffect(() => {
         if (!hasDraft || !draft || !shouldAutoRestoreEstimatorDraft(draft)) return
@@ -1632,7 +1664,7 @@ export default function EstimatorClient({
                     data: {
                         profile:  pRes.data,
                         sections: pRes.data.enabled_sections ?? {
-                            winding: false, processing: false, finishing: false, commission: true, transport: false,
+                            winding: false, processing: false, finishing: false, commission: false, transport: false,
                         },
                     },
                 })
@@ -1653,19 +1685,9 @@ export default function EstimatorClient({
     // Autosave: persist on every state change (debounced)
     useEffect(() => {
         if (!orgId) return
-        saveDraft({
-            state,
-            partyName,
-            qualityLabel,
-            warpInstruction,
-            weftInstruction,
-            sourceQuoteId: sourceQuoteId ?? undefined,
-            sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
-            sourceQuoteVersionNumber: sourceQuoteVersionNumber ?? undefined,
-            sourceQuoteCreatedAt: sourceQuoteCreatedAt ?? undefined,
-        })
+        saveDraft(buildCurrentDraft())
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction, sourceQuoteId, sourceQuoteUpdatedAt, sourceQuoteVersionNumber, sourceQuoteCreatedAt])
+    }, [buildCurrentDraft, saveDraft])
 
     // Sync partyName with qualityLabel in market mode for database/draft compatibility
     useEffect(() => {
@@ -1866,6 +1888,7 @@ export default function EstimatorClient({
                 sizing_rate_per_kg:      state.sizingRatePerKg,
                 winding_rate_per_kg:     state.windingRatePerKg,
                 overhead_mode:          state.overheadMode,
+                factory_profile_key:    getMatchingFactoryProfileId(state.enabledSections) ?? 'custom',
                 default_commission_pct:  state.commissionPct,
                 default_margin_pct:      state.profitPct,
                 default_transport_per_m: state.transportPerM,
@@ -1954,6 +1977,7 @@ export default function EstimatorClient({
                 setTemplateName('')
                 setTemplateSaveError(null)
                 clearDraft()
+                suppressAutosaveUntilChanged()
                 toast.success(t('estimator.quality.saved'))
             } else {
                 const message = res.error ?? t('estimator.quality.saveFailed')
@@ -2040,6 +2064,10 @@ export default function EstimatorClient({
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         clearDraft()
+        suppressAutosaveUntilChanged()
+        setShowValidation(false)
+        setDismissedWarnings([])
+        setAcknowledgedWarningKey(null)
         setShowConfirmNewQuality(false)
         toast.success(tx('Started blank quality recipe'))
     }
@@ -2144,6 +2172,7 @@ export default function EstimatorClient({
         qualityUpdateDecision?: 'version_only' | 'version_and_quality',
     ) => {
         if (saveQuoteLockRef.current || savingQuote) return
+        setShowValidation(true)
         const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
         const effectiveTargetMode = saveAsStandaloneCosting ? 'quote' : targetMode
         if (firstEstimatorValidationMessage) {
@@ -2233,6 +2262,7 @@ export default function EstimatorClient({
                     toast.error(res.error)
                 } else {
                     clearDraft()
+                    suppressAutosaveUntilChanged()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
                     setSourceQuoteVersionNumber(null)
@@ -2270,6 +2300,7 @@ export default function EstimatorClient({
                         })
                     }
                     clearDraft()
+                    suppressAutosaveUntilChanged()
                     setSourceQuoteId(null)
                     setSourceQuoteUpdatedAt(null)
                     setSourceQuoteVersionNumber(null)
@@ -2301,6 +2332,7 @@ export default function EstimatorClient({
 
     const handleStartPartyOrder = async () => {
         if (saveQuoteLockRef.current || savingQuote) return
+        setShowValidation(true)
         if (firstEstimatorValidationMessage) return toast.error(firstEstimatorValidationMessage)
         if (requireWarningReview()) return
         if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
@@ -2336,6 +2368,7 @@ export default function EstimatorClient({
             }
 
             clearDraft()
+            suppressAutosaveUntilChanged()
             setSourceQuoteId(null)
             setSourceQuoteUpdatedAt(null)
             setSourceQuoteVersionNumber(null)
@@ -2411,7 +2444,7 @@ export default function EstimatorClient({
         { label: 'Weave / loom', value: totals.audit.weaveCostPerMeter },
         { label: 'Warping + sizing', value: totals.audit.warpingAndSizingCostPerMeter },
         { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
-        { label: 'Factory overhead / other', value: totals.audit.overheadCostPerMeter },
+        { label: 'Factory expenses / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
     return (
         <div className="estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
@@ -2422,47 +2455,53 @@ export default function EstimatorClient({
                     saving={saving}
                     onComplete={async (data) => {
                         setSaving(true)
-                        // Map camelCase EstimateState keys to snake_case DB keys
-                        const res = await upsertFactoryCostProfile({
-                            warping_rate_per_kg:     data.warpingRatePerKg ?? state.warpingRatePerKg,
-                            sizing_rate_per_kg:      data.sizingRatePerKg ?? state.sizingRatePerKg,
-                            winding_rate_per_kg:     state.windingRatePerKg,
-                            overhead_mode:          data.overheadMode ?? state.overheadMode,
-                            default_commission_pct:  data.commissionPct ?? state.commissionPct,
-                            default_margin_pct:      data.profitPct ?? state.profitPct,
-                            default_transport_per_m: data.transportPerM ?? state.transportPerM,
-                            yarn_review_interval_days: data.yarnReviewIntervalDays,
-                            default_processing_rate_per_m: data.processingRatePerM ?? state.processingRatePerM,
-                            default_finishing_rate_per_m: data.finishingRatePerM ?? state.finishingRatePerM,
-                            enabled_sections:        data.enabledSections ?? state.enabledSections,
-                            yarn_shortage_pct:       data.yarnShortagePct ?? state.yarnShortagePct,
-                            warp_crimp_pct:          data.warpCrimpPct ?? state.warpCrimpPct,
-                            // Overridden by wizard data
-                            overhead_items:          data.overheadItems ?? state.overheadItems,
-                            monthly_output_m:        data.monthlyOutputM ?? state.monthlyOutputM,
-                            overhead_override_per_m: data.overheadMode === 'monthly_expenses'
-                                ? null
-                                : data.overheadOverridePerM !== undefined
-                                    ? data.overheadOverridePerM
-                                    : state.overheadOverridePerM,
-                            loom_count:              data.loomCount ?? state.loomCount,
-                            monthly_working_days:    data.monthlyWorkingDays ?? state.monthlyWorkingDays,
-                            avg_output_per_loom_per_day: data.avgOutputPerLoomPerDay ?? state.avgOutputPerLoomPerDay,
-                            is_configured:           true,
-                            expectedUpdatedAt:       factoryBaselineUpdatedAt ?? undefined,
-                        })
-                        if (res.success) {
-                            // Update local state and close wizard
-                            Object.entries(data).filter(([key]) => key !== 'yarnReviewIntervalDays').forEach(([key, val]) => {
-                                dispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
+                        try {
+                            // Map camelCase EstimateState keys to snake_case DB keys.
+                            const res = await upsertFactoryCostProfile({
+                                warping_rate_per_kg:     data.warpingRatePerKg ?? state.warpingRatePerKg,
+                                sizing_rate_per_kg:      data.sizingRatePerKg ?? state.sizingRatePerKg,
+                                winding_rate_per_kg:     data.windingRatePerKg ?? state.windingRatePerKg,
+                                overhead_mode:          data.overheadMode ?? state.overheadMode,
+                                factory_profile_key:    data.factoryProfileKey,
+                                default_commission_pct:  data.commissionPct ?? state.commissionPct,
+                                default_margin_pct:      data.profitPct ?? state.profitPct,
+                                default_transport_per_m: data.transportPerM ?? state.transportPerM,
+                                yarn_review_interval_days: data.yarnReviewIntervalDays,
+                                default_processing_rate_per_m: data.processingRatePerM ?? state.processingRatePerM,
+                                default_finishing_rate_per_m: data.finishingRatePerM ?? state.finishingRatePerM,
+                                enabled_sections:        data.enabledSections ?? state.enabledSections,
+                                yarn_shortage_pct:       data.yarnShortagePct ?? state.yarnShortagePct,
+                                warp_crimp_pct:          data.warpCrimpPct ?? state.warpCrimpPct,
+                                // Overridden by wizard data
+                                overhead_items:          data.overheadItems ?? state.overheadItems,
+                                monthly_output_m:        data.monthlyOutputM ?? state.monthlyOutputM,
+                                overhead_override_per_m: data.overheadMode === 'monthly_expenses'
+                                    ? null
+                                    : data.overheadOverridePerM !== undefined
+                                        ? data.overheadOverridePerM
+                                        : state.overheadOverridePerM,
+                                loom_count:              data.loomCount ?? state.loomCount,
+                                monthly_working_days:    data.monthlyWorkingDays ?? state.monthlyWorkingDays,
+                                avg_output_per_loom_per_day: data.avgOutputPerLoomPerDay ?? state.avgOutputPerLoomPerDay,
+                                is_configured:           true,
+                                expectedUpdatedAt:       factoryBaselineUpdatedAt ?? undefined,
                             })
-                            dispatch({ type: 'SET', field: 'isConfigured', value: true })
-                            setFactoryBaselineUpdatedAt(res.updatedAt ?? factoryBaselineUpdatedAt)
-                            toast.success(t('estimator.sprint1.baseline_configured'))
-                        } else {
-                            toast.error(res.error || 'Failed to save configuration')
+                            if (res.success) {
+                                // Update local state and close wizard.
+                                Object.entries(data).filter(([key]) => key !== 'yarnReviewIntervalDays' && key !== 'factoryProfileKey').forEach(([key, val]) => {
+                                    dispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
+                                })
+                                dispatch({ type: 'SET', field: 'isConfigured', value: true })
+                                setFactoryBaselineUpdatedAt(res.updatedAt ?? factoryBaselineUpdatedAt)
+                                toast.success('Factory costing saved for new Cost Estimates')
+                            } else {
+                                toast.error(res.error || 'The factory costing could not be saved. Try again.')
+                            }
+                        } catch {
+                            toast.error('The factory costing could not be saved. Try again.')
+                        } finally {
+                            setSaving(false)
                         }
-                        setSaving(false)
                     }}
                 />
             )}
@@ -2489,7 +2528,7 @@ export default function EstimatorClient({
                                 </>
                             ) : (
                                 <>
-                                    <span className="font-bold">Unsaved draft</span> from{' '}
+                                    <span className="font-bold">Unsaved Cost Estimate</span> from{' '}
                                     {new Date(draft.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                                     {canUseProduction && draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
                                 </>
@@ -2504,13 +2543,13 @@ export default function EstimatorClient({
                         <button
                             onClick={() => setShowDiscardDraft(true)}
                             className="ml-1 text-amber-500 hover:text-amber-700"
-                            aria-label="Dismiss unsaved draft"
+                            aria-label="Dismiss unsaved Cost Estimate draft"
                         ><X className="h-4 w-4" /></button>
                     </div>
                 </div>
             )}
 
-            {estimatorWarnings.length > 0 && (
+            {showValidation && estimatorWarnings.length > 0 && (
                 <div className={`${pageShellClass} mb-2`}>
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
                         <div className="flex items-start gap-3">
@@ -2540,7 +2579,7 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {!estimatorValidation.valid && (
+            {showValidation && !estimatorValidation.valid && (
                 <div id={validationSummaryId} className={`${pageShellClass} mb-2`} role="alert">
                     <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-900">
                         <div className="flex items-start gap-3">
@@ -3622,7 +3661,7 @@ export default function EstimatorClient({
                     </CardContent>
                 </EstimatorCard>
 
-                {/* 5b. Factory Overhead — Itemized Breakdown */}
+                {/* 5b. Factory Expenses — Itemized Breakdown */}
                 <EstimatorCard accent="overhead">
                     <SectionHeader
                         title={t('estimator.overhead.title')}
@@ -3639,17 +3678,17 @@ export default function EstimatorClient({
                         {/* Overhead method — the calculation engine remains shared. */}
                         <div className="space-y-3">
                             <div>
-                                <h4 className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)] leading-none">How should factory overhead be calculated?</h4>
-                                <p className="mt-1 text-[11px] text-[var(--color-muted)]">Choose the method used for this costing. The choice is remembered for new qualities.</p>
+                                <h4 className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)] leading-none">How should factory expenses be calculated?</h4>
+                                <p className="mt-1 text-[11px] text-[var(--color-muted)]">This changes the current Cost Estimate. Save separately if you want it used for new Cost Estimates.</p>
                             </div>
 
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => handleOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
-                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">I know my factory cost per metre</p>
                                     <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Use one trusted ₹/m factory rate.</p>
                                 </button>
                                 <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => handleOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
-                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Monthly expenses ÷ output</p>
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Calculate from monthly expenses</p>
                                     <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Use saved expenses and actual monthly output.</p>
                                 </button>
                             </div>
@@ -3658,8 +3697,8 @@ export default function EstimatorClient({
                             <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3.5">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct factory overhead (₹/m)</p>
-                                                <p className="text-[11px] text-[var(--color-muted)]">Required while Direct overhead rate is selected.</p>
+                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct factory cost per metre (₹/m)</p>
+                                                <p className="text-[11px] text-[var(--color-muted)]">Required when you choose a direct factory cost per metre.</p>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className="relative w-full sm:w-[140px]">
@@ -4005,7 +4044,7 @@ export default function EstimatorClient({
                                                         </div>
                                                     </div>
                                                     {isZeroConfig && (
-                                                        <p className="text-[11px] text-[var(--color-warning-amber)]">Factory overhead items total is zero. Estimates may miss fixed cost recovery.</p>
+                                                        <p className="text-[11px] text-[var(--color-warning-amber)]">Factory expense items total is zero. Estimates may miss fixed cost recovery.</p>
                                                     )}
 
                                                     <div className="space-y-2">
@@ -4081,11 +4120,11 @@ export default function EstimatorClient({
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {!hasValidCostResult ? (
-                            <div id={validationSummaryId} role="alert" className="flex items-start gap-3 rounded-[12px] border border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] p-4 text-[var(--color-warning-amber)]">
+                            <div id={validationSummaryId} role={showValidation ? 'alert' : undefined} className={`flex items-start gap-3 rounded-[12px] border p-4 ${showValidation ? 'border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]'}`}>
                                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                                 <div>
                                     <p className="text-sm font-semibold">Costing incomplete</p>
-                                    <p className="mt-1 text-xs font-medium leading-relaxed">{firstEstimatorValidationMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.'}</p>
+                                    <p className="mt-1 text-xs font-medium leading-relaxed">{showValidation ? (firstEstimatorValidationMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.') : 'Enter your fabric quality and yarn numbers to see a reliable cost breakdown.'}</p>
                                     <p className="mt-1 text-[11px] leading-relaxed">Draft values are not treated as a final result while a required input is blank or zero.</p>
                                 </div>
                             </div>
@@ -4488,12 +4527,12 @@ export default function EstimatorClient({
             <Dialog open={showDiscardDraft} onOpenChange={setShowDiscardDraft}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Discard this unsaved draft?</DialogTitle>
-                        <DialogDescription>This removes the draft saved on this device. Saved qualities, costings, and quotations are not affected.</DialogDescription>
+                        <DialogTitle>Discard this device draft?</DialogTitle>
+                        <DialogDescription>This removes the unfinished Cost Estimate saved on this device. Saved qualities, costings, and quotations are not affected.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>Keep draft</Button>
-                        <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); toast.success('Unsaved draft discarded') }}>Discard draft</Button>
+                        <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success('Cost Estimate draft discarded') }}>Discard draft</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

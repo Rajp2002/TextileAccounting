@@ -87,7 +87,7 @@ describe('Estimator-only product presentation', () => {
         expect(settings).toContain('<FactoryCostProfile standaloneEstimator={!hasPremium} />')
         expect(settings).toContain('Password & Security')
         expect(settings).toContain('</aside> : <aside className="sticky top-6 space-y-4">')
-        expect(costProfile).toContain("standaloneEstimator ? 'Save Estimator Defaults' : 'Save Factory Profile'")
+        expect(costProfile).toContain('Save for new Cost Estimates')
     })
 
     it('saves Base edits through the authoritative versioned quote path', () => {

@@ -1307,7 +1307,7 @@ export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
   winding:    false,
   processing: false,
   finishing:  false,
-  commission: true,
+  commission: false,
   transport:  false,
 }
 

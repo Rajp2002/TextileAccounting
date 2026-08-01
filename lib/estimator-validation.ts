@@ -80,6 +80,13 @@ export type FactoryCostProfileInput = {
   yarn_review_interval_days?: number
   default_processing_rate_per_m?: number
   default_finishing_rate_per_m?: number
+  enabled_sections?: {
+    winding: boolean
+    processing: boolean
+    finishing: boolean
+    commission: boolean
+    transport: boolean
+  }
   monthly_output_m?: number
   overhead_override_per_m?: number | null
   loom_count?: number
@@ -187,6 +194,21 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   if (input.avg_output_per_loom_per_day != null) addNumberIssue(issues, warnings, 'avg_output_per_loom_per_day', 'Average output per loom per day', input.avg_output_per_loom_per_day, { max: MAX_OUTPUT_PER_LOOM_PER_DAY, warningMax: MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY, warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.' })
   if (input.yarn_shortage_pct != null) addNumberIssue(issues, warnings, 'yarn_shortage_pct', 'Default yarn waste %', input.yarn_shortage_pct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
   if (input.warp_crimp_pct != null) addNumberIssue(issues, warnings, 'warp_crimp_pct', 'Warp crimp %', input.warp_crimp_pct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
+  if (input.enabled_sections?.winding && Number(input.winding_rate_per_kg) <= 0) {
+    issues.push({ field: 'winding_rate_per_kg', message: 'Enter a winding rate or switch Winding off.' })
+  }
+  if (input.enabled_sections?.processing && Number(input.default_processing_rate_per_m) <= 0) {
+    issues.push({ field: 'default_processing_rate_per_m', message: 'Enter a processing rate or switch Processing / Dyeing off.' })
+  }
+  if (input.enabled_sections?.finishing && Number(input.default_finishing_rate_per_m) <= 0) {
+    issues.push({ field: 'default_finishing_rate_per_m', message: 'Enter a finishing rate or switch Finishing off.' })
+  }
+  if (input.enabled_sections?.commission && Number(input.default_commission_pct) <= 0) {
+    issues.push({ field: 'default_commission_pct', message: 'Enter a broker commission or switch Broker commission off.' })
+  }
+  if (input.enabled_sections?.transport && Number(input.default_transport_per_m) <= 0) {
+    issues.push({ field: 'default_transport_per_m', message: 'Enter a transport charge or switch Transport off.' })
+  }
   return resultFromIssues(issues, warnings)
 }
 

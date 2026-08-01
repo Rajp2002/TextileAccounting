@@ -870,9 +870,9 @@ export const en = {
       future_quality_explanation: "Saved Quality changes affect future estimates that use this quality. Earlier costing snapshots keep their original numbers.",
       quality_updated_no_snapshot: "Saved Quality updated. No costing snapshot was created.",
       rates_updated_no_snapshot: "Saved Quality rates updated. No costing snapshot was created.",
-      baseline_updated: "Factory baseline updated. New estimates will use it; saved costings are unchanged.",
-      baseline_configured: "Factory baseline configured. New estimates will use it; saved costings are unchanged.",
-      save_baseline: "Save Factory Baseline",
+      baseline_updated: "Saved for new Cost Estimates. Existing saved costings are unchanged.",
+      baseline_configured: "Factory costing saved for new Cost Estimates. Existing saved costings are unchanged.",
+      save_baseline: "Save for new Cost Estimates",
       baseline_future_only: "Applies to future estimates only. Saved costings keep the overhead and other factory inputs captured when they were saved.",
       saved_quality_name_stable: "Quality names stay stable. Save a different construction as a new quality.",
       edit_quality_rates: "Update the saved quality rates. The quality name stays the same; use Save as New Quality for a different construction.",
@@ -984,7 +984,7 @@ export const en = {
       warp_consumption: "kg warp yarn consumption."
     },
     overhead: {
-      title: "Factory Overhead",
+      title: "Factory Expenses",
       effective_pct: "effective",
       facility_costs: "Facility & Running Costs",
       item_placeholder: "Item name",
@@ -994,16 +994,16 @@ export const en = {
       fixed_salary_label: "Fixed Salary",
       pre_filled_note: "Pre-filled from your Salaried Workers registry. Edit amounts here — Worker Hisaab records are not affected.",
       monthly_output: "Monthly Output (m)",
-      output_hint: "Estimated metres woven per month — divides total overhead",
+      output_hint: "Actual metres woven per month — divides factory expenses",
       total_monthly: "Total Monthly",
-      direct_override_title: "Direct factory overhead rate",
+      direct_override_title: "Direct factory cost per metre",
       override_active_note: "⚡ Direct rate active — monthly expenses are not used",
       override_bypass_note: "Enter a direct ₹/m rate to use instead of monthly expenses",
       clear: "✕ Clear",
       direct_override_badge: "⚡ direct rate",
       overhead_per_m: "Overhead per Metre",
       effective_rate: "Calculation method",
-      of_direct_cost: "monthly expenses ÷ output"
+      of_direct_cost: "monthly expenses ÷ actual output"
     },
     post_processing: {
       title: "Post-Processing & Logistics",

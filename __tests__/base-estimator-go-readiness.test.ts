@@ -102,11 +102,11 @@ describe('Base Estimator Go-readiness hardening', () => {
 
   it('collects the main factory costing defaults during first-run setup', () => {
     const wizard = source('app/(dashboard)/owner/estimator/FactoryCostWizard.tsx')
-    for (const label of ['Warping', 'Sizing', 'Processing', 'Finishing', 'Commission', 'Transport', 'Warp crimp', 'Default yarn waste']) {
+    for (const label of ['Warping', 'Sizing', 'Processing', 'Finishing', 'Broker commission', 'Transport charge', 'Warp crimp', 'Default yarn waste']) {
       expect(wizard).toContain(`'${label}'`)
     }
-    expect(wizard).toContain('processing: processingRate > 0')
-    expect(wizard).toContain('finishing: finishingRate > 0')
+    expect(wizard).toContain("label === 'Processing' ? selectedSections.processing")
+    expect(wizard).toContain("label === 'Finishing' ? selectedSections.finishing")
     expect(wizard).toContain("step === 'defaults'")
   })
 

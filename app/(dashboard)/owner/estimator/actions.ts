@@ -12,6 +12,7 @@ import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
 import { buildSavedQualityRecipeState } from '@/lib/saved-costings'
+import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -233,7 +234,8 @@ export async function getFactoryCostProfile() {
                 winding_rate_per_kg:     0,
                 overhead_pct:            0,
                 overhead_mode:           'monthly_expenses',
-                default_commission_pct:  2.00,
+                monthly_output_m:        0,
+                default_commission_pct:  0,
                 default_margin_pct:      10.00,
                 default_transport_per_m: 0,
                 yarn_review_interval_days: 90,
@@ -244,7 +246,7 @@ export async function getFactoryCostProfile() {
                     winding:    false,
                     processing: false,
                     finishing:  false,
-                    commission: true,
+                    commission: false,
                     transport:  false,
                 },
                 is_configured: false,
@@ -301,6 +303,7 @@ export async function upsertFactoryCostProfile(data: {
     default_processing_rate_per_m?: number
     default_finishing_rate_per_m?: number
     enabled_sections:        FactorySections
+    factory_profile_key?:    FactoryProfileId
     overhead_items?:         OverheadItem[]
     monthly_output_m?:       number
     overhead_override_per_m?: number | null
@@ -312,6 +315,19 @@ export async function upsertFactoryCostProfile(data: {
     is_configured?:          boolean
     expectedUpdatedAt?:       string
 }) {
+    if (data.factory_profile_key && !['unselected', 'grey_weaver', 'job_weaver', 'processed_fabric', 'full_mill', 'custom'].includes(data.factory_profile_key)) {
+        return { error: 'Choose a valid factory costing profile.' }
+    }
+
+    if (data.overhead_mode === 'monthly_expenses' || (data.overhead_mode == null && data.overhead_override_per_m == null)) {
+        const monthlyOutput = Number(data.monthly_output_m ?? 0)
+        const monthlyExpenses = Array.isArray(data.overhead_items)
+            ? data.overhead_items.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
+            : 0
+        if (monthlyOutput <= 0) return { error: 'Enter the actual monthly output used to divide factory expenses.' }
+        if (monthlyExpenses <= 0) return { error: 'Enter at least one monthly factory expense before saving these defaults.' }
+    }
+
     const validationError = getFirstEstimatorValidationMessage(validateFactoryCostProfile(data))
     if (validationError) return { error: validationError }
     const { user, profile } = await requireRole(['owner'])
