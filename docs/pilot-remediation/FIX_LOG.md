@@ -2739,3 +2739,36 @@ Date: 2026-07-19 IST. Status: `pass`.
   checkpoint. The reviewed schema migration is already present in linked
   production; exact deployed save/reopen/version/compare/export proof remains
   a runtime gate.
+
+### Production deployment closeout — 2026-08-01
+
+- PR `#54` merged the Sprint 1 candidate to `main` as merge commit
+  `ad65e7eb4ebbb763a26080a6a8332779d45bb237`. The Vercel production status for
+  that exact commit reached success with deployment
+  `8cawwNS7hmumSP9oPvkTj4ub38HL`.
+- Migration `20260801174038_sprint1_save_trust_v2.sql` was applied to the
+  linked production database before the application merge. A post-apply
+  dry-run reports `Remote database is up to date`; linked migration history
+  records the local and remote version equally.
+- Read-only catalog verification found the costing fingerprint and factory
+  baseline timestamp columns, the historical snapshot immutability trigger,
+  and the revision RPC. `authenticated` can execute the revision RPC;
+  `anon` cannot. The post-apply security-advisor error check returned no
+  issues. Existing warning-level advisor findings remain outside this Sprint 1
+  change.
+- The canonical alias `https://textile-accounting.vercel.app` returned HTTP
+  200, and `/`, `/login`, `/terms`, and `/privacy` each returned HTTP 200 in
+  the release smoke window.
+- In a fresh authenticated owner QA session, `/owner/estimator` and
+  `/owner/quotes` loaded successfully. The retained QA costing
+  `PILOTQA-20260801-1711-JVS2 50x50 Grey` reopened as `v1` with its quality,
+  date, `Save New Version`, `Update Saved Quality`, and `Start From` context.
+  Refreshing that editor preserved `v1`; the fresh production tab recorded
+  zero browser console errors or warnings.
+- This closeout proves deployment, schema presence, saved-costing reopen,
+  context visibility, and refresh persistence without creating or modifying a
+  business row. It does not claim the mutating v2 choices, stale-tab,
+  duplicate-click, baseline-change, comparison, quotation-export, or re-login
+  portions of the Sprint 1 regression guard; those remain explicit follow-up
+  evidence rather than an inferred PASS. Formal pilot matrix/readiness counts
+  are unchanged.
