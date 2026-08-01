@@ -50,16 +50,18 @@ describe('Base P0 billing recovery', () => {
     ).state).toBe('retryable')
   })
 
-  it('records failed and dismissed checkout outcomes against an exact owner order', () => {
+  it('records failed checkout outcomes against an exact owner order and reconciles dismissals', () => {
     const route = source('app/api/billing/checkout-state/route.ts')
     const button = source('components/billing/SubscribeButton.tsx')
     const page = source('app/(dashboard)/owner/billing/page.tsx')
 
     expect(route).toContain(".eq('org_id', profile.org_id)")
     expect(route).toContain(".eq('razorpay_order_id', orderId)")
-    expect(route).toContain(".eq('status', 'created')")
+    expect(route).toContain(".in('status', ['creating', 'created', 'processing', 'unknown'])")
     expect(button).toContain("markCheckoutRetryable(orderId, 'failed')")
-    expect(button).toContain("markCheckoutRetryable(orderId, 'cancelled')")
+    expect(button).toContain("/api/billing/status")
+    expect(button).toContain('Do not pay again')
+    expect(button).not.toContain("markCheckoutRetryable(orderId, 'cancelled')")
     expect(page).toContain('Weavly has <strong>not received a verified payment yet</strong>')
     expect(page).toContain('No payment was captured.')
     expect(page).not.toContain('Use card 4111-1111-1111-1111')

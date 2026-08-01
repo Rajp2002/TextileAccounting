@@ -59,7 +59,7 @@ export default function LandingPricing() {
                             Start with the Estimator or bring the full factory workflow into Weavly. Both plans include a full year of access, with a lower annual renewal from year two.
                         </p>
                         <p className="mt-3 text-sm text-zinc-400 dark:text-zinc-500">
-                            Prices below show the GST-inclusive total and its 18% breakdown. Renewal is manual and opens 30 days before expiry. Payment receipts are provided after successful payment; formal GST invoice support is a future consideration.
+                            Prices below show the GST-inclusive total and its 18% breakdown. Renewal is manual and opens 30 days before expiry. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
                         </p>
                     </div>
                 </div>

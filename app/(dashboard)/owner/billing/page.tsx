@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
+import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
+import { BillingProfileForm } from '@/components/billing/BillingProfileForm'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
@@ -26,6 +28,8 @@ import {
     type BillingPurchaseDecision,
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
+import { billingInvoiceFeatureIsConfigured } from '@/lib/billing-invoice'
+import { type BillingAttemptRow } from '@/lib/billing-attempts'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -219,7 +223,7 @@ export default async function BillingPage({
     const supabase = await createClient()
     const { tier, subscription } = await getSubscriptionDetail(profile.org_id)
 
-    const [paymentsResult, subscriptionsResult] = await Promise.all([
+    const [paymentsResult, subscriptionsResult, attemptsResult, invoicesResult, billingProfileResult] = await Promise.all([
         supabase
             .from('subscription_payments')
             .select('*')
@@ -230,10 +234,41 @@ export default async function BillingPage({
             .from('org_subscriptions')
             .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at')
             .eq('org_id', profile.org_id),
+        supabase
+            .from('billing_checkout_attempts')
+            .select('id, org_id, client_request_id, plan_tier, purchase_type, status, provider_order_id, provider_payment_id, provider_order_status, provider_status, failure_code, failure_reason, created_at, updated_at, last_checked_at')
+            .eq('org_id', profile.org_id)
+            .order('created_at', { ascending: false })
+            .limit(1),
+        supabase
+            .from('billing_invoices')
+            .select('id, subscription_payment_id, invoice_number, status, issued_at')
+            .eq('org_id', profile.org_id)
+            .eq('status', 'issued')
+            .order('issued_at', { ascending: false }),
+        supabase
+            .from('organization_billing_profiles')
+            .select('id, legal_name, address_line1, address_line2, city, state, state_code, postal_code, billing_email, gstin')
+            .eq('org_id', profile.org_id)
+            .maybeSingle(),
     ])
     const payments = paymentsResult.data ?? []
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
+    const latestAttempt = (attemptsResult.data?.[0] ?? null) as BillingAttemptRow | null
+    const invoiceByPaymentId = new Map((invoicesResult.data ?? []).map(invoice => [invoice.subscription_payment_id, invoice]))
+    const billingProfile = billingProfileResult.data ? {
+        id: billingProfileResult.data.id,
+        legalName: billingProfileResult.data.legal_name,
+        addressLine1: billingProfileResult.data.address_line1,
+        addressLine2: billingProfileResult.data.address_line2 ?? '',
+        city: billingProfileResult.data.city,
+        state: billingProfileResult.data.state,
+        stateCode: billingProfileResult.data.state_code,
+        postalCode: billingProfileResult.data.postal_code,
+        billingEmail: billingProfileResult.data.billing_email,
+        gstin: billingProfileResult.data.gstin ?? '',
+    } : null
 
     // Billing lifecycle is evaluated on the server so expired paid customers
     // see renewal pricing while trials still see first-year pricing.
@@ -286,7 +321,7 @@ export default async function BillingPage({
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     <Link href="/owner/data-export" className="text-sm font-semibold text-blue-700 underline-offset-4 hover:underline">Export organization data</Link>
-                    {tier !== 'none' && <StatusBadge status="active" />}
+                    {tier !== 'none' && !latestAttempt?.status?.match(/processing|unknown|authorized|activation_pending|reconciliation_required|duplicate/) && <StatusBadge status="active" />}
                 </div>
             </div>
 
@@ -295,6 +330,9 @@ export default async function BillingPage({
                 
                 {/* Left/Main Column - Context Sensitive */}
                 <div className="space-y-6 lg:col-span-8">
+                    {latestAttempt && latestAttempt.status !== 'activated' && latestAttempt.status !== 'failed' && latestAttempt.status !== 'cancelled' && latestAttempt.status !== 'refunded' && (
+                        <BillingAttemptStatus attempt={latestAttempt} />
+                    )}
                     
                     {/* 1. STATE-SPECIFIC HERO CARD */}
                     {tier === 'none' ? (
@@ -540,6 +578,11 @@ export default async function BillingPage({
                                                         Download receipt <ArrowRight className="h-3 w-3" />
                                                     </Link>
                                                 )}
+                                                {p.status === 'captured' && invoiceByPaymentId.get(p.id)?.status === 'issued' && (
+                                                    <Link href={`/api/billing/invoice/${invoiceByPaymentId.get(p.id)?.id}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-700 hover:underline">
+                                                        GST invoice <ArrowRight className="h-3 w-3" />
+                                                    </Link>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -583,9 +626,16 @@ export default async function BillingPage({
                                 </p>
                             )}
                             <p className="text-xs leading-relaxed text-slate-500">
-                                Payment receipts confirm your payment. Formal GST tax invoice support is a future consideration and is not currently available.
+                                Payment receipts confirm payment. {billingInvoiceFeatureIsConfigured() ? 'GST invoices appear when approved supplier and billing details are complete.' : 'GST invoice issuance is waiting for approved supplier tax configuration; receipts remain available.'}
                             </p>
+                            {latestCapturedPayment && invoiceByPaymentId.get(latestCapturedPayment.id)?.status === 'issued' && (
+                                <Link href={`/api/billing/invoice/${invoiceByPaymentId.get(latestCapturedPayment.id)?.id}`} target="_blank" rel="noreferrer" className="group flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-sm font-medium text-blue-800 transition-colors hover:border-blue-300 hover:bg-blue-100">
+                                    <span className="flex items-center gap-2"><ReceiptText className="h-4 w-4" />Download latest GST invoice</span><ArrowRight className="h-4 w-4" />
+                                </Link>
+                            )}
                         </div>
+
+                        <BillingProfileForm initialProfile={billingProfile} />
 
                         {/* Test mode notice */}
                         {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (

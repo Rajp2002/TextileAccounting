@@ -31,9 +31,8 @@ function formatAmount(paise: number): string {
 }
 
 /**
- * Generates a simple payment receipt. This is intentionally not labelled or
- * formatted as a GST tax invoice until Weavly has the required legal billing
- * identity and tax-document workflow.
+ * Generates a payment receipt. A receipt remains distinct from the separately
+ * issued GST invoice snapshot and route.
  */
 export function generatePaymentReceiptPdf(input: PaymentReceiptInput): Buffer {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
@@ -115,7 +114,7 @@ export function generatePaymentReceiptPdf(input: PaymentReceiptInput): Buffer {
   doc.text('Important', 24, y + 15)
   doc.setFont('helvetica', 'normal')
   doc.text(
-    doc.splitTextToSize('This document confirms payment. Formal GST tax invoice support is not currently available.', pageWidth - 48),
+    doc.splitTextToSize('This document confirms payment. It is a payment receipt, not a GST tax invoice.', pageWidth - 48),
     24,
     y + 22,
   )

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { razorpay } from '@/lib/razorpay'
+import { getRazorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import * as Sentry from '@sentry/nextjs'
@@ -74,6 +74,7 @@ export async function POST() {
 
     // ── Tell Razorpay to cancel at cycle end ──────────────────────────────────
     try {
+        const razorpay = getRazorpay()
         await razorpay.subscriptions.cancel(sub.razorpay_subscription_id!, true)
     } catch (err) {
         Sentry.captureException(err, { tags: { route: 'subscriptions_auto_renew', phase: 'cancel_razorpay_subscription' } })

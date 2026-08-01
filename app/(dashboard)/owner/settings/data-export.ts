@@ -4,6 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { UX012_DISTINCTIONS, UX012_EXPORT_LABELS, UX012_PRIORITY_HELPERS, UX012_TERMS } from '@/lib/terminology'
+import crypto from 'crypto'
 
 const REDACTED = '[REDACTED]'
 const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
@@ -31,11 +32,62 @@ export type OrganizationExportHistoryItem = {
     record_id: string | null
     actor_name: string
     description: string
+    status?: 'generated' | 'failed'
 }
 
 function getOrganizationExportFilename(exportedAt: string) {
     const compactTimestamp = exportedAt.replace(/\D/g, '').slice(0, 14) || new Date().toISOString().replace(/\D/g, '').slice(0, 14)
     return `weavly-org-export-${compactTimestamp}.json`
+}
+
+async function persistFailedExportRun(
+    supabase: ReturnType<typeof createAdminClient>,
+    {
+        orgId,
+        actorId,
+        filename,
+        exportedAt,
+        reason,
+    }: {
+        orgId: string
+        actorId: string
+        filename: string
+        exportedAt: string
+        reason: string
+    },
+) {
+    try {
+        const { data: failedRun, error } = await supabase
+            .from('organization_export_runs')
+            .insert({
+                org_id: orgId,
+                actor_id: actorId,
+                status: 'failed',
+                filename,
+                schema_version: 'sprint4-v1',
+                exported_at: exportedAt,
+                dataset_counts: {},
+                failure_reason: reason.slice(0, 500),
+            })
+            .select('id')
+            .single()
+
+        if (error || !failedRun) {
+            console.error('Failed to persist organization export failure:', error?.message)
+            return
+        }
+
+        const { error: auditError } = await supabase.rpc('log_export_event', {
+            p_org_id: orgId,
+            p_table_name: 'owner_data_export',
+            p_record_id: failedRun.id,
+            p_description: `Owner organization data export failed at ${exportedAt}; filename ${filename}; reason ${reason.slice(0, 300)}`,
+            p_actor_id: actorId,
+        })
+        if (auditError) console.error('Failed to audit organization export failure:', auditError.message)
+    } catch (error) {
+        console.error('Failed to record organization export failure:', error instanceof Error ? error.message : error)
+    }
 }
 
 function isSensitiveExportField(field: string) {
@@ -103,11 +155,19 @@ export async function exportOrganizationData() {
         supabase.from('organization_dpas').select('*').eq('org_id', orgId),
         supabase.from('organizations').select('*').eq('id', orgId),
         supabase.from('profiles').select('id, full_name, role').eq('org_id', orgId),
+        supabase.from('organization_billing_profiles').select('id, org_id, legal_name, address_line1, address_line2, city, state, state_code, postal_code, billing_email, gstin, created_at, updated_at').eq('org_id', orgId),
+        supabase.from('org_subscriptions').select('id, org_id, plan_tier, status, current_start, current_end, checkout_purchase_type, checkout_amount_paise, checkout_currency, razorpay_order_id, razorpay_payment_id, created_at, updated_at').eq('org_id', orgId),
+        supabase.from('subscription_payments').select('id, org_id, subscription_id, razorpay_payment_id, razorpay_order_id, amount_paise, status, method, captured_at, created_at').eq('org_id', orgId),
+        supabase.from('billing_invoices').select('*').eq('org_id', orgId),
+        supabase.from('billing_checkout_attempts').select('id, org_id, client_request_id, plan_tier, purchase_type, billing_model, base_amount_paise, gst_amount_paise, total_amount_paise, currency, status, provider_order_id, provider_payment_id, provider_order_status, provider_status, org_subscription_id, failure_code, failure_reason, expires_at, last_checked_at, created_at, updated_at').eq('org_id', orgId),
+        supabase.from('billing_payment_refunds').select('id, org_id, razorpay_payment_id, amount_paise, reason, status, idempotency_key, provider_refund_id, attempts, last_error, created_at, updated_at').eq('org_id', orgId),
     ])
     const failedQuery = queryResults.find(result => result.error)
     if (failedQuery?.error) {
+        const reason = 'The organization export is incomplete. No export was generated; please try again.'
         console.error('Organization export query failed', { code: failedQuery.error.code })
-        throw new Error('The organization export is incomplete. No export was generated; please try again.')
+        await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
+        throw new Error(reason)
     }
     const [
         workers, fixedWorkers, machines, productionLogs, payrollPayments,
@@ -116,20 +176,8 @@ export async function exportOrganizationData() {
         beamCardLots, orderYarnRequirements, dispatches, estimatorQuotes, estimatorTemplates,
         factoryCostProfile, costRateBook, costRateHistory, payrollConfigs, workerConsentArtifacts,
         languageRequests, grievances, organizationDpas, organization, profiles,
+        billingProfiles, billingSubscriptions, billingPayments, billingInvoices, billingAttempts, billingRefunds,
     ] = queryResults.map(result => result.data)
-
-    const { error: auditError } = await supabase.rpc('log_export_event', {
-        p_org_id: orgId,
-        p_table_name: 'owner_data_export',
-        p_record_id: orgId,
-        p_description: `Owner organization data export generated at ${exportedAt}; filename ${filename}`,
-        p_actor_id: user.id,
-    })
-
-    if (auditError) {
-        console.error('Failed to audit organization export:', auditError.message)
-        throw new Error('Data export could not be audited. Please try again.')
-    }
 
     const datasetCounts = {
         workers: workers?.length ?? 0,
@@ -139,11 +187,18 @@ export async function exportOrganizationData() {
         orders: orders?.length ?? 0,
         estimator_quotes: estimatorQuotes?.length ?? 0,
         estimator_templates: estimatorTemplates?.length ?? 0,
+        billing_profiles: billingProfiles?.length ?? 0,
+        subscription_history: billingSubscriptions?.length ?? 0,
+        subscription_payments: billingPayments?.length ?? 0,
+        billing_invoices: billingInvoices?.length ?? 0,
+        billing_checkout_attempts: billingAttempts?.length ?? 0,
+        billing_payment_refunds: billingRefunds?.length ?? 0,
     }
 
-    return {
+    const exportPayload = {
         exported_at: exportedAt,
         filename,
+        schema_version: 'sprint4-v1',
         export_scope: 'current_owner_org',
         dataset_counts: datasetCounts,
         terminology: {
@@ -167,6 +222,12 @@ export async function exportOrganizationData() {
         },
         organization: organization?.[0] ? redactSensitiveFields(organization[0] as ExportRecord) : null,
         profiles: redactRows(profiles as ExportRecord[] | null),
+        billing_profile: billingProfiles?.[0] ? redactSensitiveFields(billingProfiles[0] as ExportRecord) : null,
+        subscription_history: redactRows(billingSubscriptions as ExportRecord[] | null),
+        subscription_payments: redactRows(billingPayments as ExportRecord[] | null),
+        billing_invoices: redactRows(billingInvoices as ExportRecord[] | null),
+        billing_checkout_attempts: redactRows(billingAttempts as ExportRecord[] | null),
+        billing_payment_refunds: redactRows(billingRefunds as ExportRecord[] | null),
         workers: redactRows(workers as ExportRecord[] | null),
         fixed_workers: redactRows(fixedWorkers as ExportRecord[] | null),
         machines: redactRows(machines as ExportRecord[] | null),
@@ -197,11 +258,80 @@ export async function exportOrganizationData() {
         grievances: redactRows(grievances as ExportRecord[] | null),
         organization_dpas: redactRows(organizationDpas as ExportRecord[] | null),
     }
+
+    const payloadHash = crypto.createHash('sha256').update(JSON.stringify(exportPayload)).digest('hex')
+    const { data: exportRun, error: exportRunError } = await supabase
+        .from('organization_export_runs')
+        .insert({
+            org_id: orgId,
+            actor_id: user.id,
+            status: 'generated',
+            filename,
+            schema_version: 'sprint4-v1',
+            exported_at: exportedAt,
+            dataset_counts: datasetCounts,
+            payload_hash: payloadHash,
+        })
+        .select('id, status, exported_at, filename, schema_version, dataset_counts, payload_hash')
+        .single()
+
+    if (exportRunError || !exportRun) {
+        console.error('Failed to persist organization export run:', exportRunError?.message)
+        const reason = 'Data export could not be recorded. No download was generated; please try again.'
+        await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
+        throw new Error(reason)
+    }
+
+    const { error: auditError } = await supabase.rpc('log_export_event', {
+        p_org_id: orgId,
+        p_table_name: 'owner_data_export',
+        p_record_id: exportRun.id,
+        p_description: `Owner organization data export generated at ${exportedAt}; filename ${filename}; run ${exportRun.id}`,
+        p_actor_id: user.id,
+    })
+
+    if (auditError) {
+        await supabase.from('organization_export_runs').delete().eq('id', exportRun.id).eq('org_id', orgId)
+        console.error('Failed to audit organization export:', auditError.message)
+        throw new Error('Data export could not be audited. No download was generated; please try again.')
+    }
+
+    return {
+        ...exportPayload,
+        export_run: {
+            ...exportRun,
+            actor_name: profile.full_name ?? 'Owner',
+        },
+    }
 }
 
 export async function getOrganizationExportHistory(limit = 10) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+    const boundedLimit = Math.min(Math.max(limit, 1), 50)
+    const { data: runs, error: runsError } = await supabase
+        .from('organization_export_runs')
+        .select('id, actor_id, status, filename, schema_version, exported_at, created_at')
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+        .limit(boundedLimit)
+
+    if (!runsError && runs && runs.length > 0) {
+        return {
+            data: runs.map(run => ({
+                changed_at: run.exported_at,
+                record_id: run.id,
+                actor_name: run.actor_id === profile.org_id ? 'Owner' : 'Owner',
+                status: run.status as 'generated' | 'failed',
+                description: run.status === 'generated'
+                    ? `Export generated; filename ${run.filename}`
+                    : `Export failed; filename ${run.filename}`,
+            } satisfies OrganizationExportHistoryItem)),
+        }
+    }
+
+    // Keep legacy audit history visible for exports created before the durable
+    // run ledger was introduced, while all new exports use organization_export_runs.
     const { data, error } = await supabase
         .from('audit_log')
         .select('changed_at, record_id, new_data, changed_by, profiles!audit_log_changed_by_fkey(full_name)')
@@ -209,7 +339,7 @@ export async function getOrganizationExportHistory(limit = 10) {
         .eq('table_name', 'owner_data_export')
         .eq('action', 'EXPORT')
         .order('changed_at', { ascending: false })
-        .limit(Math.min(Math.max(limit, 1), 50))
+        .limit(boundedLimit)
 
     if (error) return { error: error.message }
 
@@ -226,6 +356,7 @@ export async function getOrganizationExportHistory(limit = 10) {
                 changed_at: typedRow.changed_at,
                 record_id: typedRow.record_id,
                 actor_name: profile?.full_name ?? 'Owner',
+                status: 'generated' as const,
                 description: typeof typedRow.new_data?.description === 'string'
                     ? typedRow.new_data.description
                     : 'Organization data export generated',

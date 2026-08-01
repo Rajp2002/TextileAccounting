@@ -35,13 +35,13 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('checkout_currency')
     })
 
-    it('verifies verify-payment API route uses HMAC SHA256 verification and fetches Razorpay order', () => {
+    it('verifies verify-payment API route uses HMAC SHA256 and shared reconciliation', () => {
         const content = readProjectFile('app/api/billing/verify-payment/route.ts')
         expect(content).toContain('createHmac')
         expect(content).toContain('sha256')
-        expect(content).toContain('razorpay.orders.fetch')
-        expect(content).toContain('razorpay.payments.fetch')
-        expect(content).toContain('activateInitialPurchase')
+        expect(content).toContain('reconcileBillingOrder')
+        expect(content).toContain("source: 'callback'")
+        expect(content).toContain('Do not pay again')
     })
 
     it('verifies billing page contains updated Full Suite pricing descriptions', () => {
@@ -72,9 +72,12 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
     it('verifies SubscribeButton uses order_id and calls new endpoints', () => {
         const content = readProjectFile('components/billing/SubscribeButton.tsx')
         expect(content).toContain('/api/billing/create-order')
-        expect(content).toContain('/api/billing/verify-payment')
+        expect(content).toContain('/api/billing/status')
         expect(content).toContain('order_id')
         expect(content).toContain('purchaseType')
+        expect(content).toContain('clientRequestId')
+        expect(content).toContain('Check payment status')
+        expect(content).toContain('Do not pay again')
         expect(content).not.toContain('subscription_id: subscriptionId')
         expect(content).not.toContain('Auto-renew monthly')
     })
@@ -83,9 +86,10 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         const content = readProjectFile('app/api/webhooks/razorpay/route.ts')
         expect(content).toContain("case 'payment.captured'")
         expect(content).toContain("case 'order.paid'")
-        expect(content).toContain('activateInitialPurchase')
-        expect(content).toContain('planTier')
-        expect(content).toContain('purchaseType')
+        expect(content).toContain('reconcileBillingOrder')
+        expect(content).toContain("case 'payment.authorized'")
+        expect(content).toContain('readBillingOrderContext')
+        expect(content).toContain('orderContext.orgId')
     })
 
     it('verifies AccessGate upgrade wall displays correct Weavly Full Suite info', () => {

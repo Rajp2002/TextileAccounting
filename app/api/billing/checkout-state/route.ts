@@ -40,6 +40,24 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient()
+  const attemptState = body.outcome === 'failed' ? 'failed' : 'cancelled'
+  const { data: attempt, error: attemptError } = await admin
+    .from('billing_checkout_attempts')
+    .update({
+      status: attemptState,
+      failure_reason: body.outcome === 'failed' ? 'Razorpay reported payment failure.' : 'Owner dismissed checkout before local confirmation.',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('org_id', profile.org_id)
+    .eq('provider_order_id', orderId)
+    .in('status', ['creating', 'created', 'processing', 'unknown'])
+    .select('id, status')
+    .maybeSingle()
+
+  if (attemptError) {
+    return NextResponse.json({ error: 'Unable to update checkout state.' }, { status: 500 })
+  }
+
   const { data, error } = await admin
     .from('org_subscriptions')
     .update({ status: body.outcome === 'failed' ? 'halted' : 'cancelled' })
@@ -52,5 +70,5 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Unable to update checkout state.' }, { status: 500 })
   }
-  return NextResponse.json({ updated: Boolean(data) })
+  return NextResponse.json({ updated: Boolean(data) || Boolean(attempt), state: attemptState })
 }
