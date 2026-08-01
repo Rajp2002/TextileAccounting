@@ -678,3 +678,16 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
 - No existing formal matrix row is reclassified by this implementation, and the overall limited-pilot verdict remains unchanged.
 - The Sprint 2 candidate is locally source-fixed and remains `fixed_pending_runtime_proof` until the exact merged production deployment proves the estimator and signup scenarios in `RETEST_PLAN.md`.
 - The release must not receive PASS credit from local tests alone: production browser evidence is required for stale-result clearing, hard-block versus acknowledgement behavior, width conversion, no-save/no-export boundaries, and actionable signup feedback.
+
+### Sprint 2 production disposition — 2026-08-01
+
+- Promote the Sprint 2 scoped safety gates to `pass` at PR `#55`, main commit
+  `733147f850ed4eac62b1e49eb9db4ffc62f63a3f`, and READY deployment
+  `dpl_hJA21C5SohFUKxwP9GzTvC5G2cQv`.
+- Production QA proved invalid numeric input, zero-denier, extreme-denier,
+  width conversion, stale-money suppression, invalid save/export blocking, and
+  signup feedback. No business data was mutated.
+- Do not reclassify formal pilot rows or the overall No-Go verdict from this
+  scoped evidence. Keep the retained older-costing valid-export prerequisite
+  as a separate follow-up; invalid export remained blocked and no invalid
+  artifact was produced.

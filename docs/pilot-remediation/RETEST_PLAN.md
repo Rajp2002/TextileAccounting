@@ -919,3 +919,27 @@ evidence: exact merged commit/deployment, linked migration list plus dry-run
 after apply, browser console state, visible save feedback, and tenant-scoped
 reconciliation/cleanup for the isolated fixture. Source tests alone do not
 promote this guard to a production pass.
+
+#### Sprint 2 production result — 2026-08-01
+
+- Local integrated gates passed on the merged candidate: 130 Vitest files / 847
+  passed / 1 intentional skip, TypeScript, ESLint, `git diff --check`, and
+  optimized production build.
+- Exact release identity: PR `#55`, main commit
+  `733147f850ed4eac62b1e49eb9db4ffc62f63a3f`, Vercel deployment
+  `dpl_hJA21C5SohFUKxwP9GzTvC5G2cQv`, READY on the canonical production alias.
+- Migration check passed: local/remote history includes
+  `20260801174038_sprint1_save_trust_v2.sql`; Sprint 2 has no migration and
+  the linked dry-run reports the remote database is up to date.
+- The production owner QA form blocked negative rate, zero denier, and denier
+  `200000` from saving, suppressed usable derived money, and kept export
+  unavailable while invalid. The supported width controls round-tripped `63`
+  inches ↔ `160.02` cm without console errors. Signup showed field-specific
+  malformed phone, password-strength, and confirmation mismatch feedback; a
+  valid non-submitted form enabled Create factory.
+- No costing, quotation, snapshot, account, or business row was created or
+  changed by this smoke. A retained older costing still kept the existing
+  incomplete-prerequisite export guard active, so valid export artifact
+  inspection remains a separate follow-up and is not marked PASS here.
+- Disposition: Sprint 2 scoped runtime gates `pass`; formal pilot matrix and
+  readiness counts unchanged.

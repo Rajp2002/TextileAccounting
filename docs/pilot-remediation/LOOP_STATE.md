@@ -2260,3 +2260,22 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
   quotation export, and a logout/login round-trip. Keep formal matrix counts
   unchanged until those named checks are exercised with an isolated QA
   fixture.
+
+## Sprint 2 production closeout — 2026-08-01
+
+- State: `scoped_runtime_pass`; formal pilot counts remain `368 pass / 0 fail /
+  6 blocked / 3 N/A`, and the overall limited-pilot decision remains `No-Go`.
+- Main merge: PR `#55`, commit `733147f850ed4eac62b1e49eb9db4ffc62f63a3f`.
+  Production: Vercel deployment `dpl_hJA21C5SohFUKxwP9GzTvC5G2cQv` is READY
+  on `https://textile-accounting.vercel.app`.
+- Database: migration history is aligned through
+  `20260801174038_sprint1_save_trust_v2.sql`; Sprint 2 has no migration and
+  the linked dry-run reports no pending work.
+- Runtime: production owner QA proved negative rate, zero denier, extreme
+  denier, width conversion, stale-money suppression, disabled invalid save/
+  export, and signup phone/password/confirmation feedback. Valid signup values
+  enabled the submit control without submitting or creating an account. The
+  estimator and signup tabs recorded no browser console errors or warnings.
+- Caveat: a retained older costing still has an existing incomplete-prerequisite
+  export state; invalid export remained blocked, but valid export artifact proof
+  is intentionally not claimed here.
