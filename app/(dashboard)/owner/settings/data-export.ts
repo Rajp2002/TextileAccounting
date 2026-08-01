@@ -341,7 +341,10 @@ export async function getOrganizationExportHistory(limit = 10) {
         .order('changed_at', { ascending: false })
         .limit(boundedLimit)
 
-    if (error) return { error: error.message }
+    if (error) {
+        console.error('Organization export history query failed', { code: error.code })
+        return { error: 'Export history could not be loaded. Try again.' }
+    }
 
     return {
         data: (data ?? []).map(row => {

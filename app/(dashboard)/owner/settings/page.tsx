@@ -35,7 +35,7 @@ import { WhatsAppOptIn } from '@/components/settings/WhatsAppOptIn'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
@@ -60,7 +60,7 @@ type OrganizationSettings = {
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-    return error instanceof Error ? error.message : fallback
+    return userFacingError(error, fallback)
 }
 
 function formatDate(date: string | null | undefined) {

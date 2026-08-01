@@ -275,9 +275,15 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <strong>{FACTORY_COST_PRESETS.find(profile => profile.id === selectedProfileId)?.label}</strong> is selected. Processing, finishing, broker commission, and transport are off unless this setup requires them or you enable them later.
                                         </p>
                                     )}
+                                    {!selectedProfileId && (
+                                        <p id="factory-profile-selection-hint" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
+                                            Choose the factory type that best matches your unit before continuing.
+                                        </p>
+                                    )}
                                     <Button
                                         type="button"
                                         disabled={!selectedProfileId}
+                                        aria-describedby={!selectedProfileId ? 'factory-profile-selection-hint' : undefined}
                                         onClick={() => setStep('choice')}
                                         className="h-12 w-full rounded-full bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700"
                                     >
@@ -608,6 +614,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     <Button
                                         onClick={handleFinish}
                                         disabled={saving}
+                                        aria-busy={saving}
                                         className="h-12 w-full rounded-full bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700"
                                     >
                                         {saving ? 'Saving...' : 'Finish Setup'}

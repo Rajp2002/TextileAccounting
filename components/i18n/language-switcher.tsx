@@ -43,7 +43,7 @@ export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitc
     } else if (result.error !== "Language change was superseded.") {
       const targetLabel = LANGUAGES.find(item => item.code === nextLanguage)?.label ?? nextLanguage
       const failureTitle = nextLanguage === "hi" ? `${targetLabel} लोड नहीं हो सकी` : nextLanguage === "gu" ? `${targetLabel} લોડ થઈ શકી નથી` : `Could not load ${targetLabel}`
-      const fallbackDescription = nextLanguage === "hi" ? "English अभी सक्रिय है। कनेक्शन मिलने पर फिर कोशिश करें।" : nextLanguage === "gu" ? "English હજી સક્રિય છે. કનેક્શન મળે ત્યારે ફરી પ્રયાસ કરો." : "English remains active. Try again when you have a connection."
+      const fallbackDescription = t("common.language_fallback")
       toast.error(failureTitle, {
         description: fallbackDescription,
       })

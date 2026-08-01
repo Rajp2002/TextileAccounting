@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import { saveBillingProfile, type BillingProfileInput } from '@/app/(dashboard)/owner/billing/actions'
 
 export type BillingProfileValue = BillingProfileInput & { id?: string | null }
@@ -26,7 +26,7 @@ export function BillingProfileForm({ initialProfile }: { initialProfile: Billing
   const update = (key: keyof BillingProfileInput, value: string) => setForm(current => ({ ...current, [key]: value }))
   const submit = () => startTransition(async () => {
     const result = await saveBillingProfile(form)
-    if (result.error) toast.error(result.error)
+    if (result.error) toast.error(userFacingError(result.error, 'Billing details could not be saved. Try again.'))
     else toast.success('Billing details saved')
   })
 

@@ -159,7 +159,8 @@ describe('Batch 9 offline/cache truth cleanup', () => {
 
         expect(nextConfig).toContain('skipWaiting: false')
         expect(nextConfig).toContain('clientsClaim: false')
-        expect(updateNotice).toContain('Save any drafts, then refresh before exporting')
+        expect(updateNotice).toContain("t('common.pwa_update_description')")
+        expect(readProjectFile('lib/i18n/locales/en.ts')).toContain('Save any drafts, then refresh before exporting')
         expect(updateNotice).toContain('navigator.serviceWorker.ready')
         expect(updateNotice).toContain('registration.update()')
         expect(updateNotice).toContain('controllerchange')

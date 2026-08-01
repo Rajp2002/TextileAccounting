@@ -13,7 +13,7 @@ describe('Sprint 1 costing save trust', () => {
     const english = read('lib/i18n/locales/en.ts')
 
     it('keeps quality updates separate from costing snapshots', () => {
-        expect(estimator).toContain('Update Saved Quality')
+        expect(estimator).toContain('Update Fabric Quality')
         expect(estimator).toContain("estimator.sprint1.quality_updated_no_snapshot")
         expect(estimator).toContain("estimator.sprint1.save_version_only")
         expect(estimator).toContain("estimator.sprint1.save_version_update_quality")

@@ -36,7 +36,7 @@ import {
   type CostingExportMode,
   type CostingExportModel,
 } from '@/lib/estimator-export'
-import { toast } from '@/lib/app-notifications'
+import { toast, userFacingError } from '@/lib/app-notifications'
 import { downloadBlob } from '@/lib/browser-download'
 import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimator/actions'
 
@@ -181,7 +181,7 @@ export function CostingExportDialog({
       customerTerms,
     })
     if (result.error || !result.data) {
-      toast.error(result.error ?? 'Quotation details could not be saved.')
+      toast.error(userFacingError(result.error, 'Quotation details could not be saved. Try again.'))
       setStatus('failed')
       return false
     }

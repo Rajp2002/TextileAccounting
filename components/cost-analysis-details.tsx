@@ -29,7 +29,8 @@ function num(value: unknown, fallback = 0) {
     return Number.isFinite(n) ? n : fallback
 }
 
-function money(value: number, digits = 2) {
+function money(value: number | null, digits = 2) {
+    if (value == null) return 'Not available'
     return `₹${value.toLocaleString('en-IN', {
         minimumFractionDigits: digits,
         maximumFractionDigits: digits,
@@ -89,7 +90,7 @@ function CostLine({
     tone = 'default',
 }: {
     label: string
-    value: number
+    value: number | null
     targetMeters: number
     tone?: 'default' | 'strong' | 'muted'
 }) {
@@ -106,7 +107,7 @@ function CostLine({
                     {money(value)}
                 </span>
                 <span className="ml-1 text-slate-500">/m</span>
-                {targetMeters > 0 && (
+                {value != null && targetMeters > 0 && (
                     <span className="block text-[11px] text-slate-400">
                         {totalMoney(value * targetMeters)} total
                     </span>
@@ -137,7 +138,7 @@ export function CostAnalysisDetails({
     const meters = targetMeters > 0 ? targetMeters : num(quote.meters, 0)
     const quotePrice = historicalResult?.suggestedSellingPricePerM ?? num(quote.quote_price_per_meter, 0)
     const storedProductionCost = historicalResult?.productionCostPerM
-        ?? num(quote.production_cost_per_meter, num(quote.landed_cost_per_meter, 0))
+        ?? (num(quote.production_cost_per_meter, 0) > 0 ? num(quote.production_cost_per_meter) : null)
     const weaveRate = num(quote.worker_rate_per_m, totals?.weaveCostPerM ?? 0)
     const commissionPct = historicalResult?.commissionPct ?? num(quote.commission_pct, 0)
     const commissionPerM = historicalResult?.commissionPerM
