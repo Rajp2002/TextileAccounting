@@ -2279,3 +2279,15 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Caveat: a retained older costing still has an existing incomplete-prerequisite
   export state; invalid export remained blocked, but valid export artifact proof
   is intentionally not claimed here.
+
+## Sprint 7 final UX polish production closeout — 2026-08-02
+
+- Scoped state: `production_release_verified`; exact data-mutating customer journey: `blocked_by_qa_entitlement`.
+- Release identity: implementation commit `9055cda`, PR `#58`, merged main commit `93d8bea6554386412affcb66935d3e569ce9de7c`, and READY Vercel deployment `dpl_8nTPXqmMrDXFaDKfdyKSwx6bff1S` on the canonical alias.
+- Customer proof: Cost Estimate/Saved Costing/Customer Quotation terminology, unavailable-value display, shared notifications and confirmations, disabled action explanations, language-switch feedback, and 390×844 mobile layout checks passed for estimator, quotes, rates, settings, billing, and export.
+- Automated proof: 130 test files / 849 passed / 1 intentional skip, TypeScript, ESLint, optimized build, hosted build, and `git diff --check` passed.
+- Database gate: linked local/remote migration history is aligned through `20260801174038`; the linked dry-run reports `Remote database is up to date`. Sprint 7 has no migration and no schema/data mutation was performed.
+- QA pilot boundary: the isolated Patel Weaves tenant saved `production_mode=both`. A 50 Water Jet loom write was rejected by the live Full Suite entitlement boundary; reconciliation found zero machines, workers, payroll configs, and estimator quotes. No purchase or entitlement bypass was performed.
+- Translation boundary: live language-switch success and code-tested fallback are proven; complete legacy Gujarati/Hindi phrase coverage is not claimed and remains a follow-up.
+- Formal state unchanged: 368 pass, 0 fail, 6 blocked, and 3 not applicable; overall limited-pilot No-Go remains pending `TECH-011` and `GOLDEN-A-03`.
+- Next action: use an entitled disposable QA workspace for the exact realistic grey-fabric costing/quotation journey, inspect customer-output privacy, and reconcile all prefixed records to zero.

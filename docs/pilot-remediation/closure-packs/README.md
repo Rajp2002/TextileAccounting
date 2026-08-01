@@ -6,6 +6,12 @@ Repository baseline: documentation commit `bb0380f`; application commit `5a66eca
 
 The UX-012 pack now records the product-owner-approved amendment, implemented terminology baseline, production evidence, and the still-open actual-pilot-user operating control. The formal matrix is **368 PASS / 0 FAIL / 6 BLOCKED / 3 NOT APPLICABLE**.
 
+The Sprint 7 closeout pack records the final Base UX polish release, merged main commit, production deployment, migration dry-run, mobile/language evidence, and the exact-pilot QA entitlement blocker. It does not alter formal matrix counts or readiness criteria.
+
+| Scoped release | Result | Closeout pack |
+| --- | --- | --- |
+| Sprint 7 — Final UX Polish and Pilot Readiness | Production release verified; exact mutating pilot blocked by disposable QA plan entitlement | [Sprint 7 production closeout](SPRINT7_UX_POLISH_PRODUCTION_CLOSEOUT_2026-08-02.md) |
+
 | Row | Canonical requirement | Current classification | Closure pack |
 | --- | --- | --- | --- |
 | `TECH-011` | Verify backup schedule and restore into a disposable project; restored organization, users, production, stock, receivables, and payroll reconcile. | `pilot_core`, gating | [Backup and restore pack](TECH-011_BACKUP_RESTORE_CLOSURE_PACK.md) · [Free-tier runbook](TECH-011_BACKUP_RESTORE_RUNBOOK.md) |

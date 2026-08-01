@@ -943,3 +943,30 @@ promote this guard to a production pass.
   inspection remains a separate follow-up and is not marked PASS here.
 - Disposition: Sprint 2 scoped runtime gates `pass`; formal pilot matrix and
   readiness counts unchanged.
+
+### Sprint 7 final UX polish regression guard — 2026-08-02
+
+Use the exact READY production deployment and a disposable entitled owner workspace. Judge each result as Rajesh would: he should see one clear next action, understand whether a number is saved or unavailable, and never need to remember a hidden assumption.
+
+#### Automated release gates
+
+- Run `npm test -- --run`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and `git diff --check`.
+- Require the exact merged main commit and READY production deployment to be recorded.
+- Run `npx supabase migration list --linked --output-format json` and `npx supabase db push --linked --dry-run --yes`. Apply only a reviewed pending migration; Sprint 7 currently has none.
+
+#### Customer-facing checks
+
+1. At 390×844, open `/owner/estimator`, `/owner/quotes`, `/owner/rates`, `/owner/settings`, `/owner/billing`, and `/owner/data-export`. Require no horizontal overflow, reachable primary actions, readable dialogs, and no clipped notification or language menu.
+2. Verify the canonical distinctions: Cost Estimate, Saved Costing, Fabric Quality, Customer Quotation, Customer (Party), Production Cost / m, Break-even Price / m, Suggested Selling Price / m, Current Yarn Rate, and Yarn Rate Book.
+3. Open a legacy costing with missing/zero persisted derived metrics. Require `Not available`, no false ₹0.00/m, no recalculation from current rates, and no mutation of the historical snapshot.
+4. Switch English → Hindi → Gujarati. Require a loading state, localized success feedback, persistence after navigation, active-language retention and retry guidance after a resource failure. Do not claim full locale coverage from the switcher test alone; inspect visible legacy fragments.
+5. Exercise routine save/preview/export without unnecessary confirmation, and archive/discard/reset/replace with one clear confirmation and a useful next action. Every disabled Base action must have a visible explanation on mobile.
+6. With the Rajesh scenario—Patel Weaves, 50 looms, Mahavir Traders, 30,000m monthly output, 75D warp at ₹140/kg, 80D weft at ₹135/kg, 160cm, 5% warp shortage, 6% crimp, ₹0.16/pick, ₹1,50,000 monthly overhead, ₹1.50/m transport, 2% commission, 10% margin, and a 5,000m quotation—complete one costing and quotation. Require no unnecessary re-entry, no draft loss, no historical mutation, and no internal economics in the customer output.
+7. Reconcile the disposable tenant after the journey. If the account is not entitled to production records, stop at the access gate and record zero partial rows; never purchase or bypass entitlement merely to create proof.
+
+#### Sprint 7 production result — 2026-08-02
+
+- Automated gates passed: 130 files / 849 passed / 1 intentional skip, TypeScript, ESLint, optimized build, hosted build, and clean diff.
+- Production mobile checks passed for the six Base routes; Gujarati switch success feedback and Saved Costing/unavailable-value behavior were observed.
+- The exact mutating Rajesh journey was blocked by the isolated QA account's missing Full Suite entitlement. The attempted 50-loom write was rejected before persistence; reconciliation returned zero machines, workers, payroll configs, and estimator quotes. No payment or bypass was performed.
+- Disposition: Sprint 7 production UX is verified. Exact pilot execution is `blocked` pending an entitled disposable QA workspace. Full legacy Gujarati/Hindi translation coverage remains a follow-up, not an inferred PASS.
