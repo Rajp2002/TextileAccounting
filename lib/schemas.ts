@@ -55,13 +55,14 @@ export const WorkerTypeSchema = z.enum(['meter', 'fixed'])
 
 // ─── Auth Schemas ─────────────────────────────────────────────────────────────
 
-/** Password: min 8 chars, uppercase + number required (F1 spec) */
+/** Password: 8–128 chars, uppercase + number + special character required. */
 export const PasswordSchema = z
     .string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password too long')
     .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character')
 
 /**
  * CreateOrgSchema — owner signup form (F1 spec §4)
@@ -71,9 +72,14 @@ export const CreateOrgSchema = z.object({
     ownerName:   z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name too long'),
     email:       z.string().trim().email('Invalid email address').max(254),
     password:    PasswordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your password'),
     factoryName: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
     phone:       z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
     referralCode: z.string().trim().optional(),
+}).superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match' })
+    }
 })
 
 export const UpdateOrgNameSchema = z.object({
@@ -91,7 +97,12 @@ export const JoinOrgSchema = z.object({
     supervisorName: z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name too long'),
     email:          z.string().trim().email('Invalid email address').max(254),
     password:       PasswordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your password'),
     phone:          z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
+}).superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match' })
+    }
 })
 
 /**

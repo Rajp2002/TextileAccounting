@@ -3,6 +3,11 @@ import {
   getEffectiveCommercialInputs,
   getEffectiveYarnDenier,
   LOOM_TYPE_DEFAULTS,
+  calculateBreakEvenPricePerM,
+  type CostingResultSnapshot,
+  type EstimatorV3Totals,
+  type FactorySections,
+  type OverheadItem,
   type EstimateState,
   type WarpRow,
   type WeftRow,
@@ -17,12 +22,24 @@ export type EstimatorValidationResult =
   | { valid: true; issues: []; warnings?: EstimatorValidationIssue[] }
   | { valid: false; issues: EstimatorValidationIssue[]; warnings?: EstimatorValidationIssue[] }
 
+export type EstimatorReadinessStatus = 'blocked' | 'warning_ack_required' | 'ready'
+
+export type EstimatorReadinessResult = {
+  status: EstimatorReadinessStatus
+  canDisplayMoney: boolean
+  canPersist: boolean
+  issues: EstimatorValidationIssue[]
+  warnings: EstimatorValidationIssue[]
+}
+
 const MAX_ROWS = 20
 const MIN_DENIER = 0.1
 const MAX_DENIER = 5_000
 const MAX_COTTON_COUNT_NE = 500
 const MAX_BEAM_ENDS = 250_000
+const MAX_COMMON_BEAM_ENDS = 25_000
 const MAX_PICKS = 500
+const MIN_WIDTH_CM = 10
 const MAX_WIDTH_CM = 300
 const MAX_RATE_PER_KG = 1_000_000
 const MAX_PERCENT = 100
@@ -31,7 +48,9 @@ const MAX_TAPE_LENGTH_M = 1_000_000
 const MAX_PICK_COST = 1_000
 const MAX_TARGET_METERS = 100_000_000
 const MAX_COST_PER_M = 10_000_000
+const MAX_TOTAL_VALUE = Number.MAX_SAFE_INTEGER
 const MAX_MONTHLY_AMOUNT = 1_000_000_000
+const MAX_OVERHEAD_ITEMS = 100
 const MAX_LOOMS = 1_000
 const MAX_WORKING_DAYS = 31
 const MAX_OUTPUT_PER_LOOM_PER_DAY = 1_000
@@ -80,13 +99,6 @@ export type FactoryCostProfileInput = {
   yarn_review_interval_days?: number
   default_processing_rate_per_m?: number
   default_finishing_rate_per_m?: number
-  enabled_sections?: {
-    winding: boolean
-    processing: boolean
-    finishing: boolean
-    commission: boolean
-    transport: boolean
-  }
   monthly_output_m?: number
   overhead_override_per_m?: number | null
   loom_count?: number
@@ -94,6 +106,8 @@ export type FactoryCostProfileInput = {
   avg_output_per_loom_per_day?: number
   yarn_shortage_pct?: number
   warp_crimp_pct?: number
+  enabled_sections?: FactorySections
+  overhead_items?: OverheadItem[]
 }
 
 function resultFromIssues(issues: EstimatorValidationIssue[], warnings: EstimatorValidationIssue[] = []): EstimatorValidationResult {
@@ -120,13 +134,14 @@ function addNumberIssue(
     warningMessage?: string
   }
 ) {
-  const numberValue = Number(value)
+  const isBlank = value === null || value === undefined || (typeof value === 'string' && value.trim() === '')
+  const numberValue = typeof value === 'number' || typeof value === 'string' ? Number(value) : Number.NaN
   const min = options.min ?? 0
   const hardMin = options.hardMin ?? min
   const lowerBoundText = options.allowZero ? `at least ${min}` : `greater than ${min}`
 
-  if (options.required && (value === null || value === undefined || (typeof value === 'string' && value.trim() === ''))) {
-    issues.push({ field, message: `${label} is required.` })
+  if (isBlank) {
+    if (options.required) issues.push({ field, message: `${label} is required.` })
     return
   }
 
@@ -163,6 +178,7 @@ function addNumberIssue(
 export function validateFactoryCostProfile(input: FactoryCostProfileInput): EstimatorValidationResult {
   const issues: EstimatorValidationIssue[] = []
   const warnings: EstimatorValidationIssue[] = []
+  const enabledSections = input.enabled_sections
   addNumberIssue(issues, warnings, 'warping_rate_per_kg', 'Warping rate', input.warping_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
   addNumberIssue(issues, warnings, 'sizing_rate_per_kg', 'Sizing rate', input.sizing_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
   addNumberIssue(issues, warnings, 'winding_rate_per_kg', 'Winding rate', input.winding_rate_per_kg, { max: MAX_RATE_PER_KG, allowZero: true })
@@ -179,8 +195,8 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
     }
   }
   addNumberIssue(issues, warnings, 'default_transport_per_m', 'Default transport', input.default_transport_per_m, { max: MAX_COST_PER_M, allowZero: true })
-  if (input.default_processing_rate_per_m != null) addNumberIssue(issues, warnings, 'default_processing_rate_per_m', 'Default processing rate', input.default_processing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
-  if (input.default_finishing_rate_per_m != null) addNumberIssue(issues, warnings, 'default_finishing_rate_per_m', 'Default finishing rate', input.default_finishing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.default_processing_rate_per_m != null || enabledSections?.processing) addNumberIssue(issues, warnings, 'default_processing_rate_per_m', 'Default processing rate', input.default_processing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
+  if (input.default_finishing_rate_per_m != null || enabledSections?.finishing) addNumberIssue(issues, warnings, 'default_finishing_rate_per_m', 'Default finishing rate', input.default_finishing_rate_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (input.overhead_override_per_m != null) addNumberIssue(issues, warnings, 'overhead_override_per_m', 'Direct overhead rate', input.overhead_override_per_m, { max: MAX_COST_PER_M, allowZero: true })
   if (overheadMode === 'direct') {
     addNumberIssue(issues, warnings, 'overhead_override_per_m', 'Direct overhead rate', input.overhead_override_per_m, {
@@ -188,7 +204,11 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
       required: true,
     })
   }
-  if (input.monthly_output_m != null) addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS })
+  if (overheadMode === 'monthly_expenses') {
+    addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS, required: true })
+  } else if (input.monthly_output_m != null) {
+    addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS })
+  }
   if (input.loom_count != null) addNumberIssue(issues, warnings, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })
   if (input.monthly_working_days != null) addNumberIssue(issues, warnings, 'monthly_working_days', 'Monthly working days', input.monthly_working_days, { max: 31 })
   if (input.avg_output_per_loom_per_day != null) addNumberIssue(issues, warnings, 'avg_output_per_loom_per_day', 'Average output per loom per day', input.avg_output_per_loom_per_day, { max: MAX_OUTPUT_PER_LOOM_PER_DAY, warningMax: MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY, warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.' })
@@ -209,12 +229,41 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   if (input.enabled_sections?.transport && Number(input.default_transport_per_m) <= 0) {
     issues.push({ field: 'default_transport_per_m', message: 'Enter a transport charge or switch Transport off.' })
   }
+  if (input.overhead_items !== undefined) {
+    if (!Array.isArray(input.overhead_items)) {
+      issues.push({ field: 'overhead_items', message: 'Overhead items must be a list.' })
+    } else if (input.overhead_items.length > MAX_OVERHEAD_ITEMS) {
+      issues.push({ field: 'overhead_items', message: `Use ${MAX_OVERHEAD_ITEMS} or fewer overhead items.` })
+    } else {
+      input.overhead_items.forEach((item, index) => {
+        if (!item || typeof item !== 'object') {
+          issues.push({ field: `overhead_items.${index}`, message: `Overhead item ${index + 1} is invalid.` })
+          return
+        }
+        addNumberIssue(issues, warnings, `overhead_items.${index}.monthlyAmount`, `Overhead item ${index + 1} monthly amount`, item.monthlyAmount, {
+          max: MAX_MONTHLY_AMOUNT,
+          allowZero: true,
+        })
+        const meta = item.meta
+        if (!meta) return
+        if (meta.type === 'electricity') {
+          if (meta.unitsPerLoomPerMonth != null) addNumberIssue(issues, warnings, `overhead_items.${index}.meta.unitsPerLoomPerMonth`, `Overhead item ${index + 1} units per loom`, meta.unitsPerLoomPerMonth, { max: MAX_MONTHLY_AMOUNT, allowZero: true })
+          if (meta.ratePerUnit != null) addNumberIssue(issues, warnings, `overhead_items.${index}.meta.ratePerUnit`, `Overhead item ${index + 1} rate per unit`, meta.ratePerUnit, { max: MAX_COST_PER_M, allowZero: true })
+        } else if (meta.type === 'depreciation') {
+          if (meta.avgCostPerLoom != null) addNumberIssue(issues, warnings, `overhead_items.${index}.meta.avgCostPerLoom`, `Overhead item ${index + 1} average loom cost`, meta.avgCostPerLoom, { max: MAX_MONTHLY_AMOUNT, allowZero: true })
+          addNumberIssue(issues, warnings, `overhead_items.${index}.meta.usefulLifeYears`, `Overhead item ${index + 1} useful life`, meta.usefulLifeYears, { min: 1, max: 100, required: true })
+        }
+      })
+    }
+  }
   return resultFromIssues(issues, warnings)
 }
 
 function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidationIssue[], warnings: EstimatorValidationIssue[]) {
   const prefix = `warpRows.${index}`
-  const label = `Warp row ${index + 1}`
+  const label = row.label?.trim()
+    ? `Warp layer ${index + 1} (${row.label.trim()})`
+    : `Warp layer ${index + 1}`
 
   if (!row.label?.trim()) issues.push({ field: `${prefix}.label`, message: `${label} needs a label so its yarn and rate can be identified.` })
 
@@ -233,7 +282,7 @@ function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidatio
     } else {
       addNumberIssue(issues, warnings, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, warningMin: MIN_COMMON_DENIER, warningMax: MAX_COMMON_DENIER, warningMessage: `${label} denier is unusual. Confirm the yarn numbering and unit.` })
     }
-    addNumberIssue(issues, warnings, `${prefix}.beamEnds`, `${label} beam ends`, row.beamEnds, { max: MAX_BEAM_ENDS })
+    addNumberIssue(issues, warnings, `${prefix}.beamEnds`, `${label} beam ends`, row.beamEnds, { max: MAX_BEAM_ENDS, warningMax: MAX_COMMON_BEAM_ENDS, warningMessage: `${label} beam ends are unusually high. Confirm the beam plan and unit.` })
   }
   addNumberIssue(issues, warnings, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG, warningMax: MAX_RATE_WARNING_PER_KG, warningMessage: `${label} yarn rate is above ₹${MAX_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.` })
   addNumberIssue(issues, warnings, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true })
@@ -252,7 +301,9 @@ function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidatio
 
 function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidationIssue[], warnings: EstimatorValidationIssue[]) {
   const prefix = `weftRows.${index}`
-  const label = `Weft row ${index + 1}`
+  const label = row.label?.trim()
+    ? `Weft layer ${index + 1} (${row.label.trim()})`
+    : `Weft layer ${index + 1}`
 
   if (!row.label?.trim()) issues.push({ field: `${prefix}.label`, message: `${label} needs a label so its yarn and rate can be identified.` })
 
@@ -260,7 +311,7 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
   // calculated per pick. Manual mode overrides yarn kg, not weaving labour.
   addNumberIssue(issues, warnings, `${prefix}.picks`, `${label} picks`, row.picks, { max: MAX_PICKS, warningMin: MIN_COMMON_PICKS, warningMax: MAX_COMMON_PICKS, warningMessage: `${label} picks are unusual. Confirm the PPI unit and fabric construction.` })
   if (row.calculationMode !== 'manual') {
-    addNumberIssue(issues, warnings, `${prefix}.effectiveCostingWidthCm`, `${label} effective costing width`, getEffectiveCostingWidthCm(row), { min: 5, max: MAX_WIDTH_CM, warningMin: MIN_COMMON_WIDTH_CM, warningMax: MAX_COMMON_WIDTH_CM, warningMessage: `${label} width is unusual. Confirm whether the value is in centimetres or inches.` })
+    addNumberIssue(issues, warnings, `${prefix}.effectiveCostingWidthCm`, `${label} effective costing width`, getEffectiveCostingWidthCm(row), { min: MIN_WIDTH_CM, hardMin: MIN_WIDTH_CM, max: MAX_WIDTH_CM, warningMin: MIN_COMMON_WIDTH_CM, warningMax: MAX_COMMON_WIDTH_CM, warningMessage: `${label} width is unusual. Confirm whether the value is in centimetres or inches.` })
     if (row.linearDensityUnit === 'cotton_count_ne') {
       addNumberIssue(issues, warnings, `${prefix}.cottonCountNe`, `${label} English cotton count`, row.cottonCountNe, {
         min: 0,
@@ -342,10 +393,11 @@ export function validateEstimatorSnapshot(
   })
   addNumberIssue(issues, warnings, 'perPickCostPaisa', 'Weaving rate per pick', estimate.perPickCostPaisa, { max: MAX_PICK_COST })
   addNumberIssue(issues, warnings, 'warpingRatePerKg', 'Warping rate', estimate.warpingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: true })
-  addNumberIssue(issues, warnings, 'sizingRatePerKg', 'Sizing rate', estimate.sizingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: true })
-  addNumberIssue(issues, warnings, 'windingRatePerKg', 'Winding rate', estimate.windingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: true })
-  addNumberIssue(issues, warnings, 'processingRatePerM', 'Processing rate', estimate.processingRatePerM, { max: MAX_COST_PER_M, allowZero: true })
-  addNumberIssue(issues, warnings, 'finishingRatePerM', 'Finishing rate', estimate.finishingRatePerM, { max: MAX_COST_PER_M, allowZero: true })
+  addNumberIssue(issues, warnings, 'sizingRatePerKg', 'Sizing rate', estimate.sizingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.sizingMode !== 'outsourced', required: estimate.sizingMode === 'outsourced' })
+  const sections = estimate.enabledSections
+  addNumberIssue(issues, warnings, 'windingRatePerKg', 'Winding rate', estimate.windingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: !sections?.winding, required: Boolean(sections?.winding) })
+  addNumberIssue(issues, warnings, 'processingRatePerM', 'Processing rate', estimate.processingRatePerM, { max: MAX_COST_PER_M, allowZero: !sections?.processing, required: Boolean(sections?.processing) })
+  addNumberIssue(issues, warnings, 'finishingRatePerM', 'Finishing rate', estimate.finishingRatePerM, { max: MAX_COST_PER_M, allowZero: !sections?.finishing, required: Boolean(sections?.finishing) })
   addNumberIssue(issues, warnings, 'yarnShortagePct', 'Default yarn waste %', estimate.yarnShortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
   addNumberIssue(issues, warnings, 'warpCrimpPct', 'Warp crimp %', estimate.warpCrimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
   const overheadMode = estimate.overheadMode
@@ -368,10 +420,11 @@ export function validateEstimatorSnapshot(
   addNumberIssue(issues, warnings, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, {
     max: MAX_TARGET_METERS,
     allowZero: overheadMode === 'direct',
+    required: overheadMode === 'monthly_expenses',
   })
   addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
-  addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true })
+  addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: !sections?.transport, required: Boolean(sections?.transport) })
   const commercialInputs = getEffectiveCommercialInputs(estimate)
   if (commercialInputs.commissionToggleMismatch) {
     warnings.push({
@@ -394,6 +447,15 @@ export function validateEstimatorSnapshot(
     warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.',
   })
 
+  if (!sections?.winding && Number(estimate.windingRatePerKg) > 0) {
+    warnings.push({ field: 'enabledSections.winding', message: 'A winding rate is entered but Winding is switched off, so it will not be included in this costing.' })
+  }
+  if (!sections?.processing && Number(estimate.processingRatePerM) > 0) {
+    warnings.push({ field: 'enabledSections.processing', message: 'A processing rate is entered but Processing is switched off, so it will not be included in this costing.' })
+  }
+  if (!sections?.finishing && Number(estimate.finishingRatePerM) > 0) {
+    warnings.push({ field: 'enabledSections.finishing', message: 'A finishing rate is entered but Finishing is switched off, so it will not be included in this costing.' })
+  }
   if (Number(estimate.commissionPct) + Number(estimate.profitPct) >= 100) {
     issues.push({ field: 'profitPct', message: 'Commission and profit margin together must be less than 100%.' })
   }
@@ -447,6 +509,8 @@ export function validateEstimatorQuoteBoundary(input: {
   quotePricePerM: number
   targetMeters?: number | null
   requireTapeLength?: boolean
+  result?: CostingResultSnapshot | null
+  totals?: EstimatorV3Totals | null
 }): EstimatorValidationResult {
   const snapshotValidation = validateEstimatorSnapshot(input.estimate, {
     requireTapeLength: input.requireTapeLength,
@@ -461,7 +525,164 @@ export function validateEstimatorQuoteBoundary(input: {
     addNumberIssue(issues, warnings, 'targetMeters', 'Target meters', input.targetMeters, { max: MAX_TARGET_METERS })
   }
 
+  if (input.result !== undefined) {
+    const resultValidation = validateCostingResultBoundary(input.result, input.totals)
+    if (!resultValidation.valid) issues.push(...resultValidation.issues)
+  }
+
   return resultFromIssues(issues, warnings)
+}
+
+function withinTolerance(left: number, right: number, tolerance = 0.02) {
+  return Math.abs(left - right) <= tolerance
+}
+
+/**
+ * Validate the rounded result separately from the raw calculation engine.
+ * The engine intentionally remains recoverable for incomplete drafts; this
+ * boundary is what decides whether a money figure is safe to display or save.
+ */
+export function validateCostingResultBoundary(
+  result: CostingResultSnapshot | null | undefined,
+  totals?: EstimatorV3Totals | null,
+): EstimatorValidationResult {
+  const issues: EstimatorValidationIssue[] = []
+  if (!result) {
+    issues.push({ field: 'costingResult', message: 'Complete the required inputs before calculating a reliable cost.' })
+    return resultFromIssues(issues)
+  }
+
+  const nonNegativeFields: Array<[string, string, number]> = [
+    ['productionCostPerM', 'Production cost per meter', result.productionCostPerM],
+    ['overheadPerM', 'Overhead per meter', result.overheadPerM],
+    ['transportPerM', 'Transport per meter', result.transportPerM],
+    ['commissionPct', 'Commission %', result.commissionPct],
+    ['commissionPerM', 'Commission per meter', result.commissionPerM],
+    ['landedCostPerM', 'Landed cost per meter', result.landedCostPerM],
+    ['breakEvenPricePerM', 'Break-even price per meter', result.breakEvenPricePerM],
+    ['suggestedSellingPricePerM', 'Suggested selling price per meter', result.suggestedSellingPricePerM],
+  ]
+  nonNegativeFields.forEach(([field, label, value]) => {
+    const max = field === 'commissionPct' ? MAX_PERCENT : MAX_COST_PER_M
+    addNumberIssue(issues, [], field, label, value, { max, allowZero: true })
+  })
+  addNumberIssue(issues, [], 'targetMarginPct', 'Target margin %', result.targetMarginPct, { min: -100, max: MAX_PERCENT, allowZero: true })
+  if (Number(result.productionCostPerM) <= 0) {
+    issues.push({ field: 'productionCostPerM', message: 'Production cost per meter must be greater than zero before saving.' })
+  }
+  if (Number(result.suggestedSellingPricePerM) <= 0) {
+    issues.push({ field: 'suggestedSellingPricePerM', message: 'Suggested selling price must be greater than zero before saving.' })
+  }
+  if (result.commissionPct >= 100) {
+    issues.push({ field: 'commissionPct', message: 'Commission % must be below 100%.' })
+  }
+
+  const breakdownEntries = Object.entries(result.breakdown)
+  breakdownEntries.forEach(([field, value]) => {
+    addNumberIssue(issues, [], `breakdown.${field}`, 'Calculated cost component', value, { max: MAX_COST_PER_M, allowZero: true })
+  })
+
+  if (result.quantityM !== null) {
+    addNumberIssue(issues, [], 'quantityM', 'Order quantity', result.quantityM, { max: MAX_TARGET_METERS })
+    if (result.totalOrderValue === null || result.totalLandedCost === null || result.expectedProfitTotal === null) {
+      issues.push({ field: 'expectedProfitTotal', message: 'Order totals are incomplete for the selected quantity.' })
+    }
+  }
+  ;(['totalOrderValue', 'totalLandedCost'] as const).forEach(field => {
+    const value = result[field]
+    if (value !== null) addNumberIssue(issues, [], field, field === 'totalOrderValue' ? 'Total order value' : 'Total landed cost', value, { max: MAX_TOTAL_VALUE, allowZero: true })
+  })
+  if (result.expectedProfitTotal !== null && !Number.isFinite(result.expectedProfitTotal)) {
+    issues.push({ field: 'expectedProfitTotal', message: 'Expected profit must be a valid number.' })
+  }
+  if (!Number.isFinite(result.actualMarginPct) || !Number.isFinite(result.profitPerM)) {
+    issues.push({ field: 'actualMarginPct', message: 'Calculated margin and profit must be valid numbers.' })
+  }
+
+  if (!withinTolerance(result.productionCostPerM, result.breakdown.productionCostPerM)) {
+    issues.push({ field: 'breakdown.productionCostPerM', message: 'Calculated production cost does not match its breakdown.' })
+  }
+  if (!withinTolerance(result.overheadPerM, result.breakdown.overheadPerM)) {
+    issues.push({ field: 'breakdown.overheadPerM', message: 'Calculated overhead does not match its breakdown.' })
+  }
+  if (result.landedCostPerM + 0.02 < result.productionCostPerM) {
+    issues.push({ field: 'landedCostPerM', message: 'Landed cost cannot be below production cost.' })
+  }
+  if (!withinTolerance(result.profitPerM, result.suggestedSellingPricePerM - result.landedCostPerM)) {
+    issues.push({ field: 'profitPerM', message: 'Calculated profit does not match the selling price and landed cost.' })
+  }
+  if (result.expectedProfitTotal !== null && result.totalOrderValue !== null && result.totalLandedCost !== null
+      && !withinTolerance(result.expectedProfitTotal, result.totalOrderValue - result.totalLandedCost, 0.05)) {
+    issues.push({ field: 'expectedProfitTotal', message: 'Expected profit total does not match the order totals.' })
+  }
+  if (result.quantityM === null && (result.totalOrderValue !== null || result.totalLandedCost !== null || result.expectedProfitTotal !== null)) {
+    issues.push({ field: 'quantityM', message: 'Order totals cannot be present without a valid order quantity.' })
+  }
+  if (result.quantityM !== null && result.totalOrderValue !== null && !withinTolerance(
+    result.totalOrderValue,
+    result.suggestedSellingPricePerM * result.quantityM,
+    0.05,
+  )) {
+    issues.push({ field: 'totalOrderValue', message: 'Total order value does not match the quoted price and quantity.' })
+  }
+  if (result.quantityM !== null && result.totalLandedCost !== null && !withinTolerance(
+    result.totalLandedCost,
+    result.landedCostPerM * result.quantityM,
+    0.05,
+  )) {
+    issues.push({ field: 'totalLandedCost', message: 'Total landed cost does not match the landed cost and quantity.' })
+  }
+  if (!withinTolerance(result.commissionPerM, result.suggestedSellingPricePerM * result.commissionPct / 100)) {
+    issues.push({ field: 'commissionPerM', message: 'Commission per meter does not match the quote and commission rate.' })
+  }
+  if (!withinTolerance(
+    result.landedCostPerM,
+    result.productionCostPerM + result.transportPerM + result.commissionPerM,
+  )) {
+    issues.push({ field: 'landedCostPerM', message: 'Landed cost does not match production, transport, and commission.' })
+  }
+  if (!withinTolerance(
+    result.breakEvenPricePerM,
+    calculateBreakEvenPricePerM(result.productionCostPerM, result.transportPerM, result.commissionPct),
+    0.05,
+  )) {
+    issues.push({ field: 'breakEvenPricePerM', message: 'Break-even price does not match the production, transport, and commission inputs.' })
+  }
+  if (result.suggestedSellingPricePerM > 0
+      && !withinTolerance(result.actualMarginPct, result.profitPerM / result.suggestedSellingPricePerM * 100, 0.05)) {
+    issues.push({ field: 'actualMarginPct', message: 'Calculated margin does not match the profit percentage.' })
+  }
+
+  if (totals) {
+    if (!Number.isFinite(totals.totalProductionCostPerM) || totals.totalProductionCostPerM <= 0) {
+      issues.push({ field: 'totalProductionCostPerM', message: 'The calculation engine did not produce a positive production cost.' })
+    }
+    if (totals.orderQuote && totals.orderQuote.isValid === false) {
+      issues.push({ field: 'orderQuote', message: totals.orderQuote.errorMessage ?? 'The quotation inputs cannot produce a valid selling price.' })
+    }
+  }
+
+  return resultFromIssues(issues)
+}
+
+export function getEstimatorReadiness(input: {
+  validation: EstimatorValidationResult
+  result?: CostingResultSnapshot | null
+  totals?: EstimatorV3Totals | null
+  warningsAcknowledged?: boolean
+}): EstimatorReadinessResult {
+  const inputIssues = input.validation.valid ? [] : [...input.validation.issues]
+  const warnings = input.validation.warnings ? [...input.validation.warnings] : []
+  const resultValidation = validateCostingResultBoundary(input.result, input.totals)
+  const issues = [...inputIssues, ...(resultValidation.valid ? [] : resultValidation.issues)]
+
+  if (issues.length > 0) {
+    return { status: 'blocked', canDisplayMoney: false, canPersist: false, issues, warnings }
+  }
+  if (warnings.length > 0 && input.warningsAcknowledged === false) {
+    return { status: 'warning_ack_required', canDisplayMoney: true, canPersist: false, issues: [], warnings }
+  }
+  return { status: 'ready', canDisplayMoney: true, canPersist: true, issues: [], warnings }
 }
 
 export function getFirstEstimatorValidationMessage(result: EstimatorValidationResult): string | null {

@@ -11,7 +11,8 @@ import { Loader2, ArrowRight, Eye, EyeOff, Building2, CheckCircle2 } from 'lucid
 import AuthLayout from '@/components/auth/auth-layout'
 import { createOrganizationAndRedirect } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
-import { normalizeIndianPhone } from '@/lib/phone'
+import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
+import { PasswordSchema } from '@/lib/schemas'
 
 type RedirectError = {
     message?: string
@@ -57,6 +58,7 @@ function SignupForm() {
     const [email, setEmail]             = useState('')
     const [phone, setPhone]             = useState('')
     const [password, setPassword]       = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [factoryName, setFactoryName] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [consentGiven, setConsentGiven] = useState(false)
@@ -72,14 +74,22 @@ function SignupForm() {
             newErrors.ownerName = 'Name must be at least 2 characters'
         if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
             newErrors.email = 'Invalid email address'
-        if (!/^\d{10}$/.test(phone))
-            newErrors.phone = 'Phone number must be exactly 10 digits'
+        if (!isValidIndianPhone(phone))
+            newErrors.phone = 'Enter a valid 10-digit Indian mobile number, for example 9876543210.'
         const passwordErrors = strength.checks
-            .slice(0, 3)
             .filter(check => !check.met)
             .map(check => check.label)
         if (passwordErrors.length > 0)
             newErrors.password = `Password needs: ${passwordErrors.join(', ')}`
+        const passwordResult = PasswordSchema.safeParse(password)
+        if (!passwordResult.success && !newErrors.password) {
+            newErrors.password = passwordResult.error.issues[0]?.message ?? 'Password does not meet the requirements'
+        }
+        if (!confirmPassword) {
+            newErrors.confirmPassword = 'Confirm your password'
+        } else if (confirmPassword !== password) {
+            newErrors.confirmPassword = 'Passwords do not match'
+        }
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -95,6 +105,7 @@ function SignupForm() {
                 email: email.trim(),
                 phone: normalizeIndianPhone(phone),
                 password,
+                confirmPassword,
                 factoryName: factoryName.trim(),
                 referralCode: referralCode.trim() || undefined,
             })
@@ -198,8 +209,8 @@ function SignupForm() {
                             inputMode="numeric"
                             autoComplete="tel"
                             value={phone}
-                            onChange={(e) => { 
-                                const val = normalizeIndianPhone(e.target.value)
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^\d+\s().-]/g, '')
                                 setPhone(val)
                                 setErrors(prev => ({ ...prev, phone: '' })) 
                             }}
@@ -227,7 +238,7 @@ function SignupForm() {
                             type={showPassword ? 'text' : 'password'}
                             placeholder="Min. 8 characters"
                             value={password}
-                            onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: '' })) }}
+                            onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: '', confirmPassword: '' })) }}
                             onBlur={validate}
                             aria-invalid={Boolean(errors.password)}
                             aria-describedby={errors.password ? 'password-error password-rules' : 'password-rules'}
@@ -271,7 +282,7 @@ function SignupForm() {
                                     {strength.label}
                                 </p>
                                 <div className="flex flex-wrap gap-3">
-                                    {strength.checks.slice(0, 3).map((check) => (
+                                    {strength.checks.map((check) => (
                                         <div key={check.label} className={cn(
                                             'flex items-center gap-1 text-[10px]',
                                             check.met ? 'text-emerald-600' : 'text-gray-400'
@@ -285,6 +296,33 @@ function SignupForm() {
                         </div>
                     )}
                     {errors.password && <p id="password-error" role="alert" className="text-xs text-red-500">{errors.password}</p>}
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                        Confirm password
+                    </Label>
+                    <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Enter your password again"
+                        value={confirmPassword}
+                        onChange={(e) => {
+                            setConfirmPassword(e.target.value)
+                            setErrors(prev => ({ ...prev, confirmPassword: '' }))
+                        }}
+                        onBlur={validate}
+                        autoComplete="new-password"
+                        aria-invalid={Boolean(errors.confirmPassword)}
+                        aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
+                        className={cn(
+                            'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all',
+                            errors.confirmPassword && 'border-red-400 focus:border-red-500'
+                        )}
+                        disabled={loading}
+                    />
+                    {errors.confirmPassword && <p id="confirm-password-error" role="alert" className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
                 </div>
 
                 {/* Referral Code (Optional) */}

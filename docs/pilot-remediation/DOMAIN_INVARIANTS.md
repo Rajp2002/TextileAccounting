@@ -480,6 +480,37 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 5. Successful TEST activation must reconcile to one captured payment and one
    active entitlement; replay cannot create another payment or paid year.
 
+## Sprint 2 calculation-safety invariants — 2026-08-01
+
+1. Every numeric estimator input is parsed as a finite number and is rejected
+   immediately when it is malformed, negative, or zero where the related
+   formula requires a positive value. A browser-side check is only feedback;
+   server actions and authoritative costing paths enforce the same boundary.
+2. Requiredness follows formula prerequisites and is field-specific. A blank
+   prerequisite identifies the field and does not produce a partial costing,
+   quote, order, export, or saved snapshot.
+3. Physically unusual but potentially valid textile inputs show a plain-language
+   warning and require explicit acknowledgement. Super-unusual values outside
+   the supported domain are hard-blocked; acknowledgement never bypasses an
+   invalid or non-finite value.
+4. Width conversion uses only supported units and an explicit source/target
+   label. The converted value is the value used by the formula, and a
+   suspicious conversion offers the owner an understandable `Use inches`
+   correction rather than silently changing the number.
+5. Production cost, break-even, suggested price, margin, and expected profit
+   remain unavailable (`—`) while inputs or derived results are incomplete,
+   invalid, non-finite, or internally inconsistent. A prior valid result is
+   cleared immediately after a correction makes the current form invalid.
+6. Layer labels remain visible wherever saved-quality yarn layers and rates are
+   edited. The owner can tell whether a rate belongs to Layer 1 or Layer 2
+   without relying on memory.
+7. Save, quote/order creation, and customer/internal export paths accept only
+   a complete, validated, server-authoritative result. Snapshot immutability,
+   canonical formulas, rounding, and tenant isolation are not relaxed.
+8. Signup feedback distinguishes malformed Indian `+91` phone input, weak
+   password, and mismatched confirmation without exposing auth-sensitive detail
+   or weakening the approved password policy.
+
 ## Sprint 1 Save, Versioning, and Trust invariants — 2026-08-01
 
 1. A saved quality is a reusable recipe/template identity. Editing its yarn,

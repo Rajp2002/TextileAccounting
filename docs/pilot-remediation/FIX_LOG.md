@@ -2693,6 +2693,15 @@ Date: 2026-07-19 IST. Status: `pass`.
 - The isolated QA account and prefixed records remain retained as requested.
 - Data safety: only reviewed migration `20260721183000` and exact prefixed disposable QA records were permitted. Both the main `BASEGO-1784662022802-4412AD` fixture and failed-signup `BASEGO-20260722-VK6WBT MILL` reconciled organizations, profiles, subscriptions where applicable, and Auth users to zero.
 
+## Sprint 2 — calculation safety and validation — 2026-08-01
+
+- Candidate commit: `3c14bfb` (`feat(estimator): harden calculation safety and validation`), rebased onto the current `origin/main` checkpoint `e807fa1` so the Sprint 3–6 release work already on main remains intact.
+- Customer problem addressed: a Surat grey-fabric owner must not receive a plausible-looking costing, quote, or profit number when a rate, denier, width, percentage, or prerequisite is missing, malformed, physically implausible, or still being edited.
+- Source changes harden shared numeric validation, field-specific prerequisite checks, width-unit conversion, unusual-value warnings and explicit acknowledgement, layer labels, derived-result readiness, save/export/order guards, and Indian phone/password feedback. Server-authoritative costing, rounding, immutable snapshots, and tenant boundaries remain unchanged.
+- Local proof: the full Vitest suite passed `129` files / `844` tests with `1` intentional skip; TypeScript, ESLint, the focused Sprint 0–3/5/6 regression set (`27/27`), and the optimized Next.js production build passed. The build used process-only Razorpay placeholders and made no external payment call.
+- Database proof: `supabase migration list --linked` aligned local and linked production history through `20260801173845_sprint5_rate_activity_and_legacy_audit.sql`. `supabase db push --linked --dry-run --yes` reported `Remote database is up to date.` Sprint 2 has no migration and made no schema or business-row mutation.
+- Release state: `fixed_pending_runtime_proof`. Do not promote Sprint 2 to production PASS until the exact merged commit has a READY production deployment and the targeted estimator/auth browser scenarios in `RETEST_PLAN.md` pass without stale money figures, invalid saves/exports, or misleading feedback.
+
 ## Sprint 1 Save, Versioning, and Trust — 2026-08-01
 
 - Batch: `SPRINT1-SAVE-TRUST`; state at this checkpoint:
@@ -2719,14 +2728,14 @@ Date: 2026-07-19 IST. Status: `pass`.
 - Reviewed migration: `20260801174038_sprint1_save_trust_v2.sql`. It adds the
   atomic revision/save paths and database guards for snapshot immutability,
   request replay protection, quality/template separation, and future-only
-  factory-baseline provenance. It has not been claimed as production-applied
-  in this entry until the linked dry-run and apply are recorded.
+  factory-baseline provenance. Linked production history now records this
+  migration, and the post-merge dry-run reports the remote database is up to
+  date; no additional migration is pending for this release candidate.
 - Local source evidence before promotion: `npm test -- --run --reporter=dot`
   passed 126 files / 823 tests with one intentional skip; `npx tsc --noEmit`,
   `npm run lint`, and `git diff --check` passed. The production build and
   linked-database/runtime proof remain release gates.
-- Data safety: no production business row or schema mutation is claimed by
-  this source checkpoint. Promotion requires reconciling the candidate with
-  the current `origin/main`, applying only the reviewed migration, and
-  exercising the Rajesh save/reopen/version/compare/export journey on the
-  exact deployed candidate.
+- Data safety: no production business-row mutation is claimed by this source
+  checkpoint. The reviewed schema migration is already present in linked
+  production; exact deployed save/reopen/version/compare/export proof remains
+  a runtime gate.

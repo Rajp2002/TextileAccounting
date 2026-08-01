@@ -14,6 +14,8 @@ import AuthLayout from '@/components/auth/auth-layout'
 import { validateJoinCode, joinOrganization } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
+import { PasswordSchema } from '@/lib/schemas'
 
 type RedirectError = {
     digest?: string
@@ -40,6 +42,7 @@ export default function JoinPage() {
     const [email, setEmail]                   = useState('')
     const [phone, setPhone]                   = useState('')
     const [password, setPassword]             = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword]     = useState(false)
     const [errors, setErrors]                 = useState<Record<string, string>>({})
 
@@ -90,14 +93,15 @@ export default function JoinPage() {
                 newErrors.supervisorName = 'Name must be at least 2 characters'
             if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
                 newErrors.email = 'Invalid email address'
-            if (!/^\d{10}$/.test(phone))
-                newErrors.phone = 'Phone number must be exactly 10 digits'
-            if (password.length < 8)
-                newErrors.password = 'Password must be at least 8 characters'
-            if (!/[A-Z]/.test(password))
-                newErrors.password = 'Password must contain an uppercase letter'
-            if (!/[0-9]/.test(password))
-                newErrors.password = 'Password must contain a number'
+            if (!isValidIndianPhone(phone))
+                newErrors.phone = 'Enter a valid 10-digit Indian mobile number, for example 9876543210.'
+            const passwordResult = PasswordSchema.safeParse(password)
+            if (!passwordResult.success)
+                newErrors.password = passwordResult.error.issues[0]?.message ?? 'Password does not meet the requirements'
+            if (!confirmPassword)
+                newErrors.confirmPassword = 'Confirm your password'
+            else if (confirmPassword !== password)
+                newErrors.confirmPassword = 'Passwords do not match'
         }
 
         setErrors(newErrors)
@@ -123,8 +127,9 @@ export default function JoinPage() {
                 joinCode: joinCode.trim().toUpperCase(),
                 supervisorName: supervisorName.trim(),
                 email: email.trim(),
-                phone: phone.trim(),
+                phone: normalizeIndianPhone(phone),
                 password,
+                confirmPassword,
             })
             if (result && 'error' in result) {
                 toast.error(result.error)
@@ -269,10 +274,10 @@ export default function JoinPage() {
                                         id="phone"
                                         type="tel"
                                         placeholder="9876543210"
-                                        maxLength={10}
+                                        maxLength={14}
                                         value={phone}
                                         onChange={(e) => {
-                                            const val = e.target.value.replace(/\D/g, '')
+                                            const val = e.target.value.replace(/[^\d+\s().-]/g, '')
                                             setPhone(val)
                                             setErrors(p => ({ ...p, phone: '' }))
                                         }}
@@ -297,7 +302,7 @@ export default function JoinPage() {
                                         type={showPassword ? 'text' : 'password'}
                                         placeholder="Min. 8 characters"
                                         value={password}
-                                        onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })) }}
+                                        onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '', confirmPassword: '' })) }}
                                         className={cn(
                                             'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pr-10',
                                             errors.password && 'border-red-400'
@@ -314,6 +319,32 @@ export default function JoinPage() {
                                     </button>
                                 </div>
                                 {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                            </div>
+
+                            {/* Confirm Password */}
+                            <div className="space-y-1.5">
+                                <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                                    Confirm password
+                                </Label>
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="Enter your password again"
+                                    value={confirmPassword}
+                                    onChange={(e) => {
+                                        setConfirmPassword(e.target.value)
+                                        setErrors(p => ({ ...p, confirmPassword: '' }))
+                                    }}
+                                    autoComplete="new-password"
+                                    aria-invalid={Boolean(errors.confirmPassword)}
+                                    aria-describedby={errors.confirmPassword ? 'join-confirm-password-error' : undefined}
+                                    className={cn(
+                                        'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all',
+                                        errors.confirmPassword && 'border-red-400'
+                                    )}
+                                    disabled={loading}
+                                />
+                                {errors.confirmPassword && <p id="join-confirm-password-error" className="text-xs text-red-500">{errors.confirmPassword}</p>}
                             </div>
 
                             {/* Submit */}

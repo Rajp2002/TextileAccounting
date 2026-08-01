@@ -2203,12 +2203,20 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
   a browser that exposes the mock-bank window, then reconcile exactly one
   captured ₹8,260 payment and exactly one active Base entitlement.
 
+## Sprint 2 release candidate — pre-deployment — 2026-08-01
+
+- State: `fixed_pending_runtime_proof`; the overall limited-pilot `No-Go` decision and the canonical `368 pass / 0 fail / 6 blocked / 3 N/A` counts are unchanged.
+- Candidate `3c14bfb` is based on current `origin/main` `e807fa1` and keeps the released Sprint 0–6 contracts. Local proof is green: `129` Vitest files, `844` passing tests, one intentional skip, TypeScript, ESLint, focused Sprint 0/2/3/5/6 regressions, and optimized build.
+- Sprint 2 has no database migration. Linked production migration history is aligned through `20260801173845`; the linked dry-run reports no pending migrations and no production data mutation is claimed.
+- Runtime closure still requires the exact merged main commit, READY Vercel deployment, estimator invalid-input and correction flows, no-save/no-export proof, width conversion proof, and signup feedback proof. These checks must be recorded before changing this state to `pass`.
+
 ## Sprint 1 Save, Versioning, and Trust release candidate — 2026-08-01
 
 - State: `code_verified_but_not_runtime_verified`.
-- Candidate branch: `codex/sprint1-save-trust-release`; it must be reconciled
-  with the current `origin/main` before promotion. The exact merged commit and
-  production deployment are intentionally recorded only after release.
+- Candidate branch: `codex/sprint1-save-trust-release`; its code and reviewed
+  migration are now included in current `origin/main`. Linked production
+  history records `20260801174038`, and the dry-run is up to date. The exact
+  merged commit and production deployment are still recorded only after release.
 - Customer contract: `Update Quality` is a template/recipe update and does
   not create or mutate a costing snapshot. A later costing save may use that
   saved quality, but a recent unsaved costing edit never silently changes the
@@ -2223,7 +2231,7 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
   estimates only. Existing costing versions retain the baseline context that
   was used to calculate them.
 - Local evidence is green for the source gates recorded in the corresponding
-  `FIX_LOG.md` entry. Pending gates are production build, linked migration
-  dry-run/apply, exact deployment, and the isolated owner runtime journey.
+  `FIX_LOG.md` entry. Pending gates are the exact deployment and isolated owner
+  runtime journey; migration alignment is verified.
 - Formal pilot matrix/readiness counts are unchanged until those runtime gates
   produce the named evidence; no source-only pass is being inferred.
