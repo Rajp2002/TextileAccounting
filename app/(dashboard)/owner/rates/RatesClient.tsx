@@ -28,6 +28,7 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Textarea } from '@/components/ui/textarea'
 import {
     archiveCostRate,
+    confirmCostRateReview,
     getCostRateHistory,
     restoreCostRate,
     saveCostRate,
@@ -39,6 +40,7 @@ import {
     filterCostRates,
     formatRateValue,
     getRateReviewDueDate,
+    getRateHistoryEventLabel,
     getRateReviewStatus,
     type CostRateRow,
     type RateReviewStatus,
@@ -53,11 +55,20 @@ type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
 type RateHistoryRow = {
     id: string
     value: number
+    previous_value: number | null
+    event_type: 'recorded' | 'reviewed' | 'changed' | 'archived' | 'restored'
     effective_date: string
     source: string | null
     notes: string | null
     created_at: string
     changed_by: string | null
+    actor_name: string | null
+    actor_role: string | null
+}
+
+type PendingRateAction = {
+    id: string
+    kind: 'save' | 'review' | 'archive' | 'restore'
 }
 
 const YARN_CATEGORIES: YarnRateCategory[] = ['yarn_warp', 'yarn_weft']
@@ -125,11 +136,16 @@ export default function RatesClient({
     const [historyRate, setHistoryRate] = useState<CostRateRow | null>(null)
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
+    const [historyError, setHistoryError] = useState<string | null>(null)
+    const [reviewRate, setReviewRate] = useState<CostRateRow | null>(null)
+    const [reviewError, setReviewError] = useState<string | null>(null)
     const [archiveRate, setArchiveRate] = useState<CostRateRow | null>(null)
+    const [archiveError, setArchiveError] = useState<string | null>(null)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [conflicts, setConflicts] = useState(initialConflicts)
     const [showConflicts, setShowConflicts] = useState(initialConflicts.length > 0)
     const [isPending, startTransition] = useTransition()
+    const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
 
     const yarnRates = useMemo(
         () => rates.filter(rate => YARN_CATEGORIES.includes(rate.category as YarnRateCategory)),
@@ -154,28 +170,68 @@ export default function RatesClient({
 
     const handleSave = () => {
         if (!draft) return
+        const target = draft
+        setPendingAction({ id: target.id ?? 'new-rate', kind: 'save' })
         startTransition(async () => {
-            const result = await saveCostRate(draft)
-            if (result.error || !result.data) {
-                setSaveError(result.error ?? 'Rate could not be saved.')
-                return
+            try {
+                const result = await saveCostRate(target)
+                if (result.error || !result.data) {
+                    setSaveError(result.error ?? 'Rate could not be saved.')
+                    return
+                }
+                const savedRate = result.data as CostRateRow
+                setRates(current => {
+                    const next = current.filter(rate => rate.id !== savedRate.id)
+                    return [...next, savedRate]
+                })
+                const savedYarnName = normalizeYarnName(target.name)
+                if (target.category === 'yarn_warp' || target.category === 'yarn_weft') {
+                    setConflicts(current => current.filter(conflict => conflict.normalizedName !== savedYarnName))
+                }
+                setSaveError(null)
+                if (result.syncedQualityCount) {
+                    toast.success(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Existing costing snapshots were not changed.`)
+                } else {
+                    toast.success(target.id ? 'Rate updated. Existing costing snapshots were not changed.' : 'Rate added for future estimates.')
+                }
+                setDraft(null)
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Rate could not be saved.'
+                setSaveError(message)
+                toast.error(message)
+            } finally {
+                setPendingAction(null)
             }
-            const savedRate = result.data as CostRateRow
-            setRates(current => {
-                const next = current.filter(rate => rate.id !== savedRate.id)
-                return [...next, savedRate]
-            })
-            const savedYarnName = normalizeYarnName(draft.name)
-            if (draft.category === 'yarn_warp' || draft.category === 'yarn_weft') {
-                setConflicts(current => current.filter(conflict => conflict.normalizedName !== savedYarnName))
+        })
+    }
+
+    const handleConfirmReview = () => {
+        if (!reviewRate) return
+        const target = reviewRate
+        setReviewError(null)
+        setPendingAction({ id: target.id, kind: 'review' })
+        startTransition(async () => {
+            try {
+                const result = await confirmCostRateReview(target.id, target.updated_at)
+                if (result.error || !result.data) {
+                    const message = result.error ?? 'The current rate could not be confirmed.'
+                    setReviewError(message)
+                    toast.error(message)
+                    return
+                }
+                const savedRate = result.data as CostRateRow
+                setRates(current => current.map(rate => rate.id === target.id
+                    ? { ...rate, ...savedRate, is_reviewed: true }
+                    : rate))
+                toast.success(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`)
+                setReviewRate(null)
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'The current rate could not be confirmed.'
+                setReviewError(message)
+                toast.error(message)
+            } finally {
+                setPendingAction(null)
             }
-            setSaveError(null)
-            if (result.syncedQualityCount) {
-                toast.success(`Rate saved and updated in ${result.syncedQualityCount} saved ${result.syncedQualityCount === 1 ? 'quality' : 'qualities'}. Saved costings were not changed.`)
-            } else {
-                toast.success(draft.id ? 'Rate updated. Saved costings were not changed.' : 'Rate added for new costings.')
-            }
-            setDraft(null)
         })
     }
 
@@ -199,29 +255,55 @@ export default function RatesClient({
     const openHistory = async (rate: CostRateRow) => {
         setHistoryRate(rate)
         setHistoryRows([])
+        setHistoryError(null)
         setHistoryLoading(true)
-        const result = await getCostRateHistory(rate.id)
-        setHistoryLoading(false)
-        if (result.error) {
-            toast.error(result.error)
-            return
+        try {
+            const result = await getCostRateHistory(rate.id)
+            if (result.error) {
+                setHistoryError(result.error)
+                toast.error(result.error)
+                return
+            }
+            setHistoryRows((result.data ?? []) as RateHistoryRow[])
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Rate activity could not be loaded.'
+            setHistoryError(message)
+            toast.error(message)
+        } finally {
+            setHistoryLoading(false)
         }
-        setHistoryRows((result.data ?? []) as RateHistoryRow[])
     }
 
     const handleArchive = () => {
         if (!archiveRate) return
+        const target = archiveRate
+        const restoring = target.is_active === false
+        setArchiveError(null)
+        setPendingAction({ id: target.id, kind: restoring ? 'restore' : 'archive' })
         startTransition(async () => {
-            const result = archiveRate.is_active === false
-                ? await restoreCostRate(archiveRate.id, archiveRate.updated_at)
-                : await archiveCostRate(archiveRate.id, archiveRate.updated_at)
-            if (result.error) {
-                toast.error(result.error)
-                return
+            try {
+                const result = restoring
+                    ? await restoreCostRate(target.id, target.updated_at)
+                    : await archiveCostRate(target.id, target.updated_at)
+                if (result.error) {
+                    setArchiveError(result.error)
+                    toast.error(result.error)
+                    return
+                }
+                setRates(current => current.map(rate => rate.id === target.id
+                    ? { ...rate, is_active: result.isActive ?? restoring, updated_at: result.updatedAt ?? rate.updated_at }
+                    : rate))
+                toast.success(restoring
+                    ? 'Rate restored to the active Rate Book. Existing costing snapshots were not changed.'
+                    : 'Rate archived from the active Rate Book. Saved Qualities and costing snapshots were not changed.')
+                setArchiveRate(null)
+            } catch (error) {
+                const message = error instanceof Error ? error.message : `Rate could not be ${restoring ? 'restored' : 'archived'}.`
+                setArchiveError(message)
+                toast.error(message)
+            } finally {
+                setPendingAction(null)
             }
-            setRates(current => current.map(rate => rate.id === archiveRate.id ? { ...rate, is_active: archiveRate.is_active === false, updated_at: result.updatedAt ?? rate.updated_at } : rate))
-            toast.success(archiveRate.is_active === false ? 'Rate restored. It can be edited again.' : 'Rate archived. Historical costings remain unchanged.')
-            setArchiveRate(null)
         })
     }
 
@@ -230,7 +312,7 @@ export default function RatesClient({
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> Yarn Rate Book</h1>
-                    <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your saved qualities and costings. Linked yarn names are immutable in place: add a replacement rate, then update saved qualities deliberately. Historical costing snapshots stay unchanged.</p>
+                    <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500">Keep one current rate for every yarn used across your Saved Qualities. Confirm discovered rates here, or change a rate when your supplier price changes. Existing costing snapshots stay unchanged.</p>
                 </div>
                 <Button onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> Add Yarn Rate</Button>
             </div>
@@ -241,7 +323,7 @@ export default function RatesClient({
                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
                         <div>
                             <p className="text-sm font-bold">Different rates found for {conflicts.length} {conflicts.length === 1 ? 'yarn' : 'yarns'}.</p>
-                            <p className="mt-1 text-xs leading-relaxed text-amber-800">Choose one current rate for each yarn. Saving it will update every saved quality that uses that yarn.</p>
+                            <p className="mt-1 text-xs leading-relaxed text-amber-800">Review the saved values before choosing one current rate. Changing it will update future estimates that use this yarn.</p>
                         </div>
                     </div>
                     <Button variant="outline" onClick={() => setShowConflicts(true)} className="shrink-0 border-amber-400 bg-white text-amber-900 hover:bg-amber-100">Review conflicts</Button>
@@ -259,7 +341,7 @@ export default function RatesClient({
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div className="border-b border-slate-200 px-4 py-4">
                     <p className="font-bold text-slate-950">Yarn rates</p>
-                    <p className="mt-1 text-xs text-slate-500">Rates appear automatically after you save a quality or costing. A discovered rate stays marked for owner review until you confirm it here.</p>
+                    <p className="mt-1 text-xs text-slate-500">Rates appear automatically after you save a quality or costing. A discovered rate stays marked for owner review until you confirm that the displayed value is correct.</p>
                 </div>
 
                 <div className="grid gap-3 border-b border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_220px_180px_auto]">
@@ -275,11 +357,63 @@ export default function RatesClient({
                     <>
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full min-w-[1000px] text-left">
-                                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">Current value</th><th className="px-4 py-3">Previous value</th><th className="px-4 py-3">Effective date</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
-                                <tbody className="divide-y divide-slate-100">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); const archived = rate.is_active === false; return <tr key={rate.id} className={archived ? 'bg-slate-50 opacity-80' : reviewState === 'overdue' ? 'bg-red-50/70 hover:bg-red-50' : reviewState === 'due_soon' ? 'bg-amber-50/70 hover:bg-amber-50' : reviewState === 'needs_review' ? 'bg-blue-50/60 hover:bg-blue-50' : 'hover:bg-slate-50/70'}><td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td><td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td><td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td><td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td><td className="px-4 py-4"><ReviewBadge rate={rate} /></td><td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td><td className="px-4 py-4"><div className="flex justify-end gap-1">{!archived && <Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}><Pencil className="h-3.5 w-3.5" /> Edit</Button>}<Button variant="ghost" size="sm" onClick={() => openHistory(rate)}><History className="h-3.5 w-3.5" /> History</Button><Button variant="ghost" size="sm" onClick={() => setArchiveRate(rate)} className="text-slate-500">{archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {archived ? 'Restore' : 'Archive'}</Button></div></td></tr> })}</tbody>
+                                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">Current rate</th><th className="px-4 py-3">Previous rate</th><th className="px-4 py-3">Effective from</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {visibleRates.map(rate => {
+                                        const reviewState = getRateReviewStatus(rate)
+                                        const archived = rate.is_active === false
+                                        const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
+                                        const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
+                                        return (
+                                            <tr key={rate.id} className={archived ? 'bg-slate-50 opacity-80' : reviewState === 'overdue' ? 'bg-red-50/70 hover:bg-red-50' : reviewState === 'due_soon' ? 'bg-amber-50/70 hover:bg-amber-50' : reviewState === 'needs_review' ? 'bg-blue-50/60 hover:bg-blue-50' : 'hover:bg-slate-50/70'}>
+                                                <td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td>
+                                                <td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td>
+                                                <td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
+                                                <td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td>
+                                                <td className="px-4 py-4"><ReviewBadge rate={rate} /></td>
+                                                <td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex justify-end gap-1">
+                                                        {!archived && reviewState !== 'current' && <Button variant="outline" size="sm" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>
+                                                            {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {actionKind === 'review' ? 'Confirming…' : reviewLabel}
+                                                        </Button>}
+                                                        {!archived && <Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-3.5 w-3.5" /> Change rate</Button>}
+                                                        <Button variant="ghost" size="sm" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-3.5 w-3.5" /> Activity</Button>
+                                                        <Button variant="ghost" size="sm" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="text-slate-500">
+                                                            {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {actionKind === 'archive' ? 'Archiving…' : actionKind === 'restore' ? 'Restoring…' : archived ? 'Restore rate' : 'Archive rate'}
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
                             </table>
                         </div>
-                        <div className="space-y-3 p-3 md:hidden">{visibleRates.map(rate => { const reviewState = getRateReviewStatus(rate); const archived = rate.is_active === false; return <Card key={rate.id} className={archived ? 'border-slate-300 bg-slate-50' : reviewState === 'overdue' ? 'border-red-300 bg-red-50/70' : reviewState === 'due_soon' ? 'border-amber-300 bg-amber-50/70' : reviewState === 'needs_review' ? 'border-blue-300 bg-blue-50/60' : 'border-slate-200'}><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div><div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">Current</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div><div className="mt-3 grid grid-cols-2 gap-2">{!archived && <Button variant="outline" onClick={() => setDraft(rowToDraft(rate))}><Pencil className="h-4 w-4" /> Edit</Button>}<Button variant="outline" onClick={() => openHistory(rate)}><History className="h-4 w-4" /> History</Button><Button variant="outline" className="col-span-2" aria-label={`${archived ? 'Restore' : 'Archive'} ${rate.name}`} onClick={() => setArchiveRate(rate)}>{archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {archived ? 'Restore rate' : 'Archive rate'}</Button></div></CardContent></Card> })}</div>
+                        <div className="space-y-3 p-3 md:hidden">
+                            {visibleRates.map(rate => {
+                                const reviewState = getRateReviewStatus(rate)
+                                const archived = rate.is_active === false
+                                const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
+                                const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
+                                return (
+                                    <Card key={rate.id} className={archived ? 'border-slate-300 bg-slate-50' : reviewState === 'overdue' ? 'border-red-300 bg-red-50/70' : reviewState === 'due_soon' ? 'border-amber-300 bg-amber-50/70' : reviewState === 'needs_review' ? 'border-blue-300 bg-blue-50/60' : 'border-slate-200'}>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
+                                            <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">Current rate</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous rate</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
+                                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                                {!archived && reviewState !== 'current' && <Button variant="outline" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {actionKind === 'review' ? 'Confirming…' : reviewLabel}</Button>}
+                                                {!archived && <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-4 w-4" /> Change rate</Button>}
+                                                <Button variant="outline" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-4 w-4" /> Activity</Button>
+                                                <Button variant="outline" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`}>
+                                                    {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {actionKind === 'archive' ? 'Archiving…' : actionKind === 'restore' ? 'Restoring…' : archived ? 'Restore rate' : 'Archive rate'}
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )
+                            })}
+                        </div>
                     </>
                 )}
             </div>
@@ -287,8 +421,8 @@ export default function RatesClient({
             <Dialog open={showConflicts && conflicts.length > 0} onOpenChange={setShowConflicts}>
                 <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /> Choose one rate for each yarn</DialogTitle>
-                        <DialogDescription>We found the same yarn at different rates in your saved qualities. Edit each yarn once; the chosen rate will then pre-populate every matching warp or weft layer.</DialogDescription>
+                        <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /> Review different saved rates</DialogTitle>
+                        <DialogDescription>We found the same yarn at different rates in your Saved Qualities. Review the usages before changing the current Rate Book value. Existing costing snapshots remain unchanged.</DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
                         {conflicts.map(conflict => {
@@ -300,7 +434,7 @@ export default function RatesClient({
                                             <p className="font-bold text-slate-950">{conflict.yarnName}</p>
                                             <p className="mt-1 text-xs text-slate-600">Used in {qualityCount} saved {qualityCount === 1 ? 'quality' : 'qualities'} · found {conflict.rates.map(rate => `₹${rate}/kg`).join(' and ')}</p>
                                         </div>
-                                        <Button size="sm" onClick={() => editConflict(conflict)} className="shrink-0 bg-amber-700 text-white hover:bg-amber-800"><Pencil className="h-3.5 w-3.5" /> Edit rate</Button>
+                                        <Button size="sm" onClick={() => editConflict(conflict)} className="shrink-0 bg-amber-700 text-white hover:bg-amber-800"><Pencil className="h-3.5 w-3.5" /> Change current rate</Button>
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-1.5">
                                         {conflict.usages.slice(0, 6).map(usage => (
@@ -318,28 +452,78 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open) setDraft(null) }}>
+            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending) { setDraft(null); setSaveError(null) } }}>
                     <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-                    <SheetHeader className="border-b border-slate-200 px-6 py-5"><SheetTitle className="text-xl font-black">{draft?.id ? `Update ${draft.name}` : 'Add Yarn Rate'}</SheetTitle><SheetDescription>Maintain the current rate used by matching saved quality layers.</SheetDescription></SheetHeader>
+                    <SheetHeader className="border-b border-slate-200 px-6 py-5"><SheetTitle className="text-xl font-black">{draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate'}</SheetTitle><SheetDescription>Set the current rate used by matching Saved Quality layers.</SheetDescription></SheetHeader>
                     {draft && <div className="space-y-5 px-6 py-2">
-                        <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">Saved costings will not change.</p><p className="mt-1 text-xs leading-relaxed">This yarn rate will be pre-populated into every saved quality with the same yarn name. Historical costing snapshots stay unchanged.</p></div></div>
+                        <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">Future estimates use this rate.</p><p className="mt-1 text-xs leading-relaxed">Matching Saved Quality layers may be updated. Existing costing snapshots keep the rate and cost stack recorded when they were saved.</p></div></div>
                         <div className="space-y-1.5"><Label htmlFor="cost-rate-name">Yarn name</Label><Input id="cost-rate-name" value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} aria-invalid={Boolean(saveError)} aria-describedby={saveError ? 'cost-rate-save-error' : undefined} />{Boolean(draft.id) && <p className="text-xs leading-relaxed text-slate-500"><span className="font-semibold text-slate-700">Linked-yarn rename policy:</span> this name is locked in place. To rename it, add a new rate with the replacement name and update saved qualities intentionally. Historical costing snapshots stay unchanged.</p>}{saveError && <p id="cost-rate-save-error" role="alert" className="text-xs font-medium text-destructive">{saveError}</p>}</div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Used in</Label><select value={draft.category} onChange={event => changeCategory(event.target.value as YarnRateCategory)} disabled={Boolean(draft.id)} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-100">{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select></div><div className="space-y-1.5"><Label>Unit</Label><Input value="₹ per kg" disabled className="bg-slate-100" /></div></div>
                         {draft.id && <p className="-mt-3 text-xs leading-relaxed text-slate-500">Category and unit stay fixed for a linked yarn so saved qualities and historical costings keep the same meaning.</p>}
-                        <div className="space-y-1.5"><Label>New rate</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', parseNonNegativeInput(event.target.value) ?? 0)} className="font-mono" /></div>
-                        <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Effective date</Label><Input type="date" value={draft.effectiveDate} onChange={event => updateDraft('effectiveDate', event.target.value)} /></div><div className="space-y-1.5"><Label>Reviewed on</Label><Input type="date" value={draft.lastReviewedAt} onChange={event => updateDraft('lastReviewedAt', event.target.value)} /></div></div>
+                        <div className="space-y-1.5"><Label>Current rate</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', parseNonNegativeInput(event.target.value) ?? 0)} className="font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Effective from</Label><Input type="date" value={draft.effectiveDate} onChange={event => updateDraft('effectiveDate', event.target.value)} /></div><div className="space-y-1.5"><Label>Review date</Label><Input type="date" value={draft.lastReviewedAt} onChange={event => updateDraft('lastReviewedAt', event.target.value)} /></div></div>
                         <div className="space-y-1.5"><Label>Source</Label><Input value={draft.source} onChange={event => updateDraft('source', event.target.value)} placeholder="Supplier quote, email, internal rate card…" /></div>
                         <div className="space-y-1.5"><Label>Notes</Label><Textarea value={draft.notes} onChange={event => updateDraft('notes', event.target.value)} placeholder="Why this rate changed or how it should be used" maxLength={500} /><p className="text-right text-xs text-slate-400">{draft.notes?.length ?? 0}/500</p></div>
                         <div className="space-y-1.5"><Label>Review every</Label><select value={draft.reviewIntervalDays} onChange={event => updateDraft('reviewIntervalDays', Number(event.target.value))} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"><option value="30">30 days</option><option value="60">60 days</option><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option></select></div>
                     </div>}
-                    <SheetFooter className="border-t border-slate-200 p-6 sm:flex-row"><Button variant="outline" onClick={() => setDraft(null)} className="flex-1">Cancel</Button><Button onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined} className="flex-1 bg-orange-600 text-white hover:bg-orange-700">{isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save Yarn Rate</Button></SheetFooter>
+                    <SheetFooter className="border-t border-slate-200 p-6 sm:flex-row"><Button variant="outline" onClick={() => setDraft(null)} className="flex-1" disabled={isPending}>Cancel</Button><Button onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined} className="flex-1 bg-orange-600 text-white hover:bg-orange-700">{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {isPending ? 'Saving…' : 'Save current rate'}</Button></SheetFooter>
                     {draft && !draft.name.trim() && <p id="cost-rate-save-hint" className="px-6 pb-5 text-xs font-medium text-amber-700">Enter a yarn name before saving this rate.</p>}
                 </SheetContent>
             </Sheet>
 
-            <Dialog open={Boolean(historyRate)} onOpenChange={open => { if (!open) setHistoryRate(null) }}><DialogContent className="sm:max-w-xl"><DialogHeader><DialogTitle className="flex items-center gap-2"><History className="h-5 w-5 text-blue-600" /> {historyRate?.name} history</DialogTitle><DialogDescription>Every reviewed value is preserved for audit. Existing saved costings retain their own snapshots.</DialogDescription></DialogHeader>{historyLoading ? <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-orange-600" /></div> : historyRows.length ? <div className="max-h-[420px] space-y-3 overflow-y-auto">{historyRows.map((row, index) => { const previous = historyRows[index + 1]; return <div key={row.id} className="rounded-lg border border-slate-200 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-slate-950">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p>{previous && historyRate && <p className="mt-1 text-xs font-semibold text-slate-600">Changed from {formatRateValue(previous.value, historyRate.unit)}</p>}</div><p className="text-right text-xs text-slate-500">Effective {format(new Date(`${row.effective_date}T00:00:00`), 'd MMM yyyy')}<br />Recorded {format(new Date(row.created_at), 'd MMM yyyy, h:mm a')}</p></div><p className="mt-2 text-sm font-medium text-slate-700">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-slate-500">{row.notes}</p>}<p className="mt-2 text-[11px] text-slate-400">Changed by owner{row.changed_by ? ` · ${row.changed_by.slice(0, 8)}` : ''}</p></div> })}</div> : <div className="py-10 text-center text-sm text-slate-500">No recorded changes yet. Save this discovered rate to confirm it as reviewed.</div>}<DialogFooter><Button variant="outline" onClick={() => setHistoryRate(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
+            <Dialog open={Boolean(reviewRate)} onOpenChange={open => { if (!open && !isPending) { setReviewRate(null); setReviewError(null) } }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirm current rate?</DialogTitle>
+                        <DialogDescription>Confirm that this displayed rate is correct. This records your review without changing the rate or existing costing snapshots.</DialogDescription>
+                    </DialogHeader>
+                    {reviewRate && <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-950">
+                        <div className="flex items-start justify-between gap-3"><div><p className="font-bold">{reviewRate.name}</p><p className="mt-1 text-xs text-blue-800">{COST_RATE_CATEGORY_LABELS[reviewRate.category]}</p></div><p className="font-mono text-lg font-black">{formatRateValue(Number(reviewRate.current_value), reviewRate.unit)}</p></div>
+                        <p className="text-xs leading-relaxed text-blue-800">Source: {reviewRate.source || 'Not recorded'}</p>
+                        {reviewRate.notes && <p className="text-xs leading-relaxed text-blue-800">{reviewRate.notes}</p>}
+                    </div>}
+                    {reviewError && <p role="alert" className="text-sm font-medium text-destructive">{reviewError}</p>}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setReviewRate(null); setReviewError(null) }} disabled={isPending}>Review later</Button>
+                        <Button onClick={handleConfirmReview} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {isPending ? 'Confirming…' : 'Confirm current rate'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-            <Dialog open={Boolean(archiveRate)} onOpenChange={open => { if (!open) setArchiveRate(null) }}><DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>{archiveRate?.is_active === false ? `Restore ${archiveRate?.name}?` : `Archive ${archiveRate?.name}?`}</DialogTitle><DialogDescription>{archiveRate?.is_active === false ? 'Restoring makes this rate editable and available for new costings again.' : 'The yarn will stop appearing in the active rate book. Saved quality and costing snapshots remain unchanged. You can restore it later.'}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setArchiveRate(null)}>Cancel</Button><Button variant={archiveRate?.is_active === false ? 'default' : 'destructive'} onClick={handleArchive} disabled={isPending}>{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {archiveRate?.is_active === false ? 'Restore Yarn Rate' : 'Archive Yarn Rate'}</Button></DialogFooter></DialogContent></Dialog>
+            <Dialog open={Boolean(historyRate)} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><History className="h-5 w-5 text-blue-600" /> {historyRate?.name} activity</DialogTitle>
+                        <DialogDescription>Reviews and saved values are shown here for audit. Existing costing snapshots retain their own numbers.</DialogDescription>
+                    </DialogHeader>
+                    {historyLoading ? <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500" role="status" aria-live="polite"><Loader2 className="h-6 w-6 animate-spin text-orange-600" /> Loading rate activity…</div>
+                        : historyError ? <div className="py-10 text-center text-sm font-medium text-destructive" role="alert">{historyError}</div>
+                        : historyRows.length ? <div className="max-h-[420px] space-y-3 overflow-y-auto">{historyRows.map((row, index) => {
+                            const previous = row.previous_value ?? historyRows[index + 1]?.value
+                            const eventLabel = historyRate ? getRateHistoryEventLabel(row.value, previous, historyRate.unit, row.event_type) : 'Value recorded'
+                            return <div key={row.id} className="rounded-lg border border-slate-200 p-4">
+                                <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-slate-950">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-slate-600">{eventLabel}</p></div><p className="text-right text-xs text-slate-500">Effective {format(new Date(`${row.effective_date}T00:00:00`), 'd MMM yyyy')}<br />Recorded {format(new Date(row.created_at), 'd MMM yyyy, h:mm a')}</p></div>
+                                <p className="mt-2 text-sm font-medium text-slate-700">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-slate-500">{row.notes}</p>}<p className="mt-2 text-[11px] text-slate-400">Recorded by {row.actor_name || (row.changed_by ? 'owner' : 'system')}</p>
+                            </div>
+                        })}</div>
+                        : <div className="py-10 text-center text-sm text-slate-500">No activity recorded yet. Confirm or change this rate to create the first entry.</div>}
+                    <DialogFooter><Button variant="outline" onClick={() => { setHistoryRate(null); setHistoryError(null) }}>Close</Button></DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={Boolean(archiveRate)} onOpenChange={open => { if (!open && !isPending) { setArchiveRate(null); setArchiveError(null) } }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{archiveRate?.is_active === false ? `Restore ${archiveRate?.name} to Rate Book?` : `Archive ${archiveRate?.name} from Rate Book?`}</DialogTitle>
+                        <DialogDescription>{archiveRate?.is_active === false ? 'This makes the rate visible and editable in the active Rate Book again. Saved Qualities and costing snapshots will not change.' : 'This removes the rate from the active Rate Book. Saved Qualities keep their recipe values, and costing snapshots remain unchanged.'}</DialogDescription>
+                    </DialogHeader>
+                    {archiveError && <p role="alert" className="text-sm font-medium text-destructive">{archiveError}</p>}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setArchiveRate(null); setArchiveError(null) }} disabled={isPending}>Cancel</Button>
+                        <Button variant={archiveRate?.is_active === false ? 'default' : 'destructive'} onClick={handleArchive} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {isPending ? archiveRate?.is_active === false ? 'Restoring…' : 'Archiving…' : archiveRate?.is_active === false ? 'Restore rate' : 'Archive rate'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

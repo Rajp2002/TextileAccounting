@@ -122,6 +122,11 @@ export function validateCostingExportInput(model: CostingExportModel | null, opt
   if (model.reconciliationStatus === 'unreconstructable') {
     errors.push('This historical costing is missing financial assumptions. Create a new current Cost Estimate before exporting.')
   }
+  if (options.mode === 'customer'
+    && model.reconciliationStatus !== 'verified'
+    && model.reconciliationStatus !== 'unreconstructable') {
+    errors.push('This saved costing needs owner review before it can be used as a customer quotation. Check the saved numbers or save a new current costing.')
+  }
   if (!model.qualityLabel.trim()) errors.push('Quality is required before generating a document.')
   if (!Number.isFinite(model.productionCostPerM) || model.productionCostPerM <= 0) errors.push('Production cost is not valid. Review the costing before exporting.')
   if (!Number.isFinite(model.suggestedSellingPricePerM) || model.suggestedSellingPricePerM <= 0) errors.push('Selling price per metre is not valid. Review the commercial assumptions before exporting.')

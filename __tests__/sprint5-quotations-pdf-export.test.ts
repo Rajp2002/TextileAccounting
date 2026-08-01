@@ -90,6 +90,29 @@ describe('Sprint 5 quotation and PDF output contract', () => {
     ])
   })
 
+  it('does not turn an unverified legacy snapshot into a customer quotation', () => {
+    const legacyModel = { ...makeModel(), reconciliationStatus: 'legacy' }
+    const customerErrors = validateCostingExportInput(legacyModel, {
+      mode: 'customer',
+      businessName: 'Patel Weaves',
+      customerName: 'Mahavir Traders',
+      validUntil: '2026-08-16',
+      notes: '',
+      showGstNote: true,
+    })
+    const internalErrors = validateCostingExportInput(legacyModel, {
+      mode: 'internal',
+      businessName: 'Patel Weaves',
+      customerName: '',
+      validUntil: '',
+      notes: '',
+      showGstNote: true,
+    })
+
+    expect(customerErrors).toContain('This saved costing needs owner review before it can be used as a customer quotation. Check the saved numbers or save a new current costing.')
+    expect(internalErrors).not.toContain('This saved costing needs owner review before it can be used as a customer quotation. Check the saved numbers or save a new current costing.')
+  })
+
   it('keeps internal economics out of the WhatsApp handoff message', () => {
     const model = makeModel()
     const message = buildQuotationShareMessage(model, {

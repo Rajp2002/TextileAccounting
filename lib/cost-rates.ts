@@ -21,6 +21,8 @@ export type CostRateRow = {
 
 export type RateReviewStatus = 'needs_review' | 'current' | 'due_soon' | 'overdue'
 
+export type RateHistoryEventKind = 'recorded' | 'reviewed' | 'changed' | 'archived' | 'restored'
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export function getRateReviewDueDate(rate: Pick<CostRateRow, 'last_reviewed_at' | 'review_interval_days'>) {
@@ -45,6 +47,35 @@ export function formatRateValue(value: number, unit: CostRateUnit) {
     const suffix = unit === 'per_kg' ? '/kg' : unit === 'per_m' ? '/m' : '%'
     const prefix = unit === 'percent' ? '' : '₹'
     return `${prefix}${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${suffix}`
+}
+
+/**
+ * Present explicit activity events from the tenant-scoped Rate Book history.
+ * The adjacent-value fallback keeps older history rows understandable after
+ * the event columns are added.
+ */
+export function getRateHistoryEventKind(
+    value: number,
+    previousValue: number | null | undefined,
+    eventType?: RateHistoryEventKind | null,
+): RateHistoryEventKind {
+    if (eventType) return eventType
+    if (previousValue == null) return 'recorded'
+    return Number(value) === Number(previousValue) ? 'reviewed' : 'changed'
+}
+
+export function getRateHistoryEventLabel(
+    value: number,
+    previousValue: number | null | undefined,
+    unit: CostRateUnit,
+    eventType?: RateHistoryEventKind | null,
+) {
+    const kind = getRateHistoryEventKind(value, previousValue, eventType)
+    if (kind === 'reviewed') return 'Value reviewed — no rate change'
+    if (kind === 'changed') return previousValue == null ? 'Rate changed' : `Changed from ${formatRateValue(Number(previousValue), unit)}`
+    if (kind === 'archived') return 'Rate archived from active Rate Book'
+    if (kind === 'restored') return 'Rate restored to active Rate Book'
+    return 'Value recorded'
 }
 
 export function filterCostRates<T extends CostRateRow>(

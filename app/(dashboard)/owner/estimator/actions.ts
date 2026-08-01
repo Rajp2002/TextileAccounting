@@ -12,6 +12,7 @@ import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
 import { buildSavedQualityRecipeState } from '@/lib/saved-costings'
+import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 
 /**
@@ -1579,6 +1580,52 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
     const { data, error } = await query
     if (error) return { error: error.message }
     return { data }
+}
+
+/**
+ * Re-checks the saved record against its stored canonical snapshot. This is
+ * metadata-only: it never recalculates with today's rate book or rewrites any
+ * historical financial value.
+ */
+export async function auditHistoricalCostingSnapshot(costingId: string, expectedUpdatedAt: string) {
+    if (!UUID_PATTERN.test(costingId)) return { error: 'Costing identifier is invalid.' }
+    const timestampError = validateExpectedTimestamp(expectedUpdatedAt, 'This costing')
+    if (timestampError) return { error: timestampError }
+
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Audit triggers fall back to auth.uid().
+    }
+    const { data: costing, error: costingError } = await supabase
+        .from('estimator_quotes')
+        .select('*')
+        .eq('id', costingId)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+    if (costingError) return { error: costingError.message }
+    if (!costing) return { error: 'This costing no longer exists.' }
+
+    const audit = auditHistoricalCosting(costing)
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .update({
+            reconciliation_status: audit.status,
+            reconciliation_note: audit.reasons.length > 0 ? audit.reasons.join(' ') : null,
+            reconciled_at: new Date().toISOString(),
+        })
+        .eq('id', costingId)
+        .eq('org_id', profile.org_id)
+        .eq('updated_at', expectedUpdatedAt)
+        .select('id, updated_at, reconciliation_status, reconciliation_note, reconciled_at')
+        .maybeSingle()
+    if (error) return { error: error.message }
+    if (!data) return { error: 'This costing changed in another tab. Refresh before auditing it again.' }
+    revalidatePath('/owner/quotes')
+    revalidatePath('/owner/estimator')
+    return { data, audit }
 }
 
 export async function updateSavedCostingLibraryState(input: {
