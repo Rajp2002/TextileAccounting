@@ -35,7 +35,8 @@ describe('Sprint 4 quality, history, and record management', () => {
         expect(actions).toContain('export async function restoreTemplate')
         expect(actions).toContain('This quality name is archived')
         expect(rateActions).toContain('export async function restoreCostRate')
-        expect(rateActions).toContain(".eq('updated_at', expectedUpdatedAt)")
+        expect(rateActions).toContain("supabase.rpc('set_cost_rate_active_atomic'")
+        expect(rateActions).toContain('p_expected_updated_at: expectedUpdatedAt')
     })
 
     it('keeps archived records read-only and makes draft dismissal explicit', () => {
@@ -48,6 +49,6 @@ describe('Sprint 4 quality, history, and record management', () => {
         expect(library).toContain('Archived · read-only')
         expect(library).toContain('!latest.is_archived')
         expect(rates).toContain('Owner review needed')
-        expect(rates).toContain('Changed by owner')
+        expect(rates).toContain('Recorded by {row.actor_name')
     })
 })

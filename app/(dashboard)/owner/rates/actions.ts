@@ -265,6 +265,7 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
         .from('cost_rate_history')
         .select('rate_id')
         .eq('org_id', profile.org_id)
+        .in('event_type', ['recorded', 'reviewed', 'changed'])
     if (reviewedError) return { error: reviewedError.message }
 
     const reviewedRateIds = new Set((reviewedRows ?? []).map(row => row.rate_id))
@@ -288,7 +289,27 @@ export async function getCostRateHistory(rateId: string) {
         .eq('rate_id', rateId)
         .order('effective_date', { ascending: false })
         .order('created_at', { ascending: false })
-    return error ? { error: error.message } : { data: data ?? [] }
+    if (error) return { error: error.message }
+
+    const rows = data ?? []
+    const actorIds = [...new Set(rows.map(row => row.changed_by).filter((id): id is string => Boolean(id)))]
+    if (actorIds.length === 0) return { data: rows.map(row => ({ ...row, actor_name: null, actor_role: null })) }
+
+    const { data: actors, error: actorError } = await supabase
+        .from('profiles')
+        .select('id, full_name, role')
+        .eq('org_id', profile.org_id)
+        .in('id', actorIds)
+    if (actorError) return { error: actorError.message }
+
+    const actorById = new Map((actors ?? []).map(actor => [actor.id, actor]))
+    return {
+        data: rows.map(row => ({
+            ...row,
+            actor_name: row.changed_by ? actorById.get(row.changed_by)?.full_name ?? null : null,
+            actor_role: row.changed_by ? actorById.get(row.changed_by)?.role ?? null : null,
+        })),
+    }
 }
 
 export async function saveCostRate(input: CostRateInput) {
@@ -327,52 +348,55 @@ export async function saveCostRate(input: CostRateInput) {
     }
 }
 
-export async function archiveCostRate(rateId: string, expectedUpdatedAt?: string) {
+export async function confirmCostRateReview(rateId: string, expectedUpdatedAt: string) {
     if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
+    if (!expectedUpdatedAt || !Number.isFinite(Date.parse(expectedUpdatedAt))) {
+        return { error: 'This rate changed or is missing its version. Refresh before reviewing it.' }
+    }
     const { user, profile } = await requireRole(['owner'])
     const tierError = await requireBaseTier(profile.org_id)
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
     await setAuditActor(supabase, user.id)
-    if (expectedUpdatedAt && !Number.isFinite(Date.parse(expectedUpdatedAt))) {
-        return { error: 'This rate changed or is missing its version. Refresh before archiving it.' }
-    }
-    let query = supabase
-        .from('cost_rate_book')
-        .update({ is_active: false, updated_by: user.id, updated_at: new Date().toISOString() })
-        .eq('id', rateId)
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-    if (expectedUpdatedAt) query = query.eq('updated_at', expectedUpdatedAt)
-    const { data, error } = await query.select('id, updated_at').maybeSingle()
+    const { data, error } = await supabase.rpc('review_cost_rate_atomic', {
+        p_rate_id: rateId,
+        p_expected_updated_at: expectedUpdatedAt,
+    })
     if (error) return { error: error.message }
-    if (!data) return { error: 'This rate changed in another tab or was already archived. Refresh before archiving it.' }
+    const result = data as { rate?: unknown } | null
+    if (!result?.rate) return { error: 'The rate review completed without returning the reviewed rate.' }
+    revalidatePath('/owner/rates')
+    revalidatePath('/owner/estimator')
+    return { data: result.rate }
+}
+
+async function setCostRateActive(rateId: string, expectedUpdatedAt: string | undefined, isActive: boolean) {
+    if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
+    if (!expectedUpdatedAt || !Number.isFinite(Date.parse(expectedUpdatedAt))) {
+        return { error: `This rate changed or is missing its version. Refresh before ${isActive ? 'restoring' : 'archiving'} it.` }
+    }
+    const { user, profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+    const supabase = await createServerClient()
+    await setAuditActor(supabase, user.id)
+    const { data, error } = await supabase.rpc('set_cost_rate_active_atomic', {
+        p_rate_id: rateId,
+        p_expected_updated_at: expectedUpdatedAt,
+        p_is_active: isActive,
+    })
+    if (error) return { error: error.message }
+    const result = data as { id?: string; updated_at?: string; is_active?: boolean } | null
+    if (!result?.id) return { error: `The rate could not be ${isActive ? 'restored' : 'archived'}.` }
     revalidatePath('/owner/rates')
     revalidatePath('/owner', 'layout')
-    return { success: true, updatedAt: data.updated_at }
+    return { success: true, updatedAt: result.updated_at, isActive: result.is_active }
+}
+
+export async function archiveCostRate(rateId: string, expectedUpdatedAt?: string) {
+    return setCostRateActive(rateId, expectedUpdatedAt, false)
 }
 
 export async function restoreCostRate(rateId: string, expectedUpdatedAt?: string) {
-    if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
-    const { user, profile } = await requireRole(['owner'])
-    const tierError = await requireBaseTier(profile.org_id)
-    if (tierError) return { error: tierError }
-    if (expectedUpdatedAt && !Number.isFinite(Date.parse(expectedUpdatedAt))) {
-        return { error: 'This rate changed or is missing its version. Refresh before restoring it.' }
-    }
-    const supabase = await createServerClient()
-    await setAuditActor(supabase, user.id)
-    let query = supabase
-        .from('cost_rate_book')
-        .update({ is_active: true, updated_by: user.id, updated_at: new Date().toISOString() })
-        .eq('id', rateId)
-        .eq('org_id', profile.org_id)
-        .eq('is_active', false)
-    if (expectedUpdatedAt) query = query.eq('updated_at', expectedUpdatedAt)
-    const { data, error } = await query.select('id, updated_at').maybeSingle()
-    if (error) return { error: error.message }
-    if (!data) return { error: 'This rate changed in another tab or was already restored. Refresh before restoring it.' }
-    revalidatePath('/owner/rates')
-    revalidatePath('/owner', 'layout')
-    return { success: true, updatedAt: data.updated_at }
+    return setCostRateActive(rateId, expectedUpdatedAt, true)
 }

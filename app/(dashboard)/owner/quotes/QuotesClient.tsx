@@ -23,7 +23,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { convertAcceptedQuoteToOrder, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
 import { getCurrentTimestampMs } from '@/lib/time'
@@ -65,6 +65,7 @@ import {
     type SavedCostingSort,
 } from '@/lib/saved-costings'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
@@ -251,6 +252,18 @@ function getCostingStatus(quote: QuoteRow) {
     return getSavedCostingMetrics(quote).status
 }
 
+function getCostingTrustCopy(status: string | null | undefined) {
+    if (status === 'verified') return 'Checked against the saved canonical costing result.'
+    if (status === 'needs_review') return 'Saved values are preserved, but the stored numbers need owner review before quotation export.'
+    if (status === 'unreconstructable') return 'Saved values are preserved, but older assumptions are incomplete. Save a new costing before using it as a quotation.'
+    if (status === 'legacy') return 'This costing predates the canonical snapshot. Its saved values are preserved; no current rate or factory profile was used to rewrite it.'
+    return 'This costing has not been checked against the canonical snapshot contract yet.'
+}
+
+function getCostingBadge(status: string | null | undefined) {
+    return status === 'legacy' || status === 'unreconstructable' ? 'Older saved costing' : 'Needs a check'
+}
+
 function getProductionCostPerM(quote: QuoteRow) {
     return getSavedCostingMetrics(quote).productionCostPerM
 }
@@ -313,6 +326,8 @@ function SavedQualityLibraryView({
     onOpen,
     onStartFrom,
     onExport,
+    onAudit,
+    auditingId,
     onToggleArchived,
     onOpenUsage,
 }: {
@@ -326,6 +341,8 @@ function SavedQualityLibraryView({
     onOpen: (quote: QuoteRow) => void
     onStartFrom: (quote: QuoteRow) => void
     onExport: (quote: QuoteRow) => void
+    onAudit: (quote: QuoteRow) => void
+    auditingId: string | null
     onToggleArchived: (quote: QuoteRow) => void
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
 }) {
@@ -360,7 +377,7 @@ function SavedQualityLibraryView({
                                             {group.template && <Badge variant="outline" className="border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700">Saved quality</Badge>}
                                             {group.template?.is_active === false && <Badge variant="outline" className="border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-600">Archived · read-only</Badge>}
                                             {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
-                                            {latest && getCostingStatus(latest) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                            {latest && getCostingStatus(latest) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(latest))}</Badge>}
                                         </span>
                                         <span className="mt-1 block text-xs text-slate-500">
                                             {group.records.length > 0
@@ -412,7 +429,7 @@ function SavedQualityLibraryView({
                                         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
                                             {latest ? <AlertTriangle className="h-6 w-6 text-amber-500" /> : <FileText className="h-6 w-6 text-slate-400" />}
                                             <p className="mt-3 text-sm font-bold text-slate-700">{latest
-                                                ? 'Detailed breakdown unavailable for this legacy snapshot'
+                                                ? 'Detailed breakdown unavailable for this older saved costing'
                                                 : group.currentRecipeCostPerM != null
                                                     ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                     : 'No costing saved for this quality yet'}</p>
@@ -437,8 +454,8 @@ function SavedQualityLibraryView({
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Start From</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> Preview</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id}>
-                                                            {latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                                            {latest.is_archived ? 'Restore' : 'Archive'}
+                                                            {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                                                            {updatingId === latest.id ? latest.is_archived ? 'Restoring…' : 'Archiving…' : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
                                                         </Button>
                                                     </div>
                                                         </div>
@@ -464,8 +481,11 @@ function SavedQualityLibraryView({
                                                     <div><p className="text-[10px] uppercase text-slate-400">Actual margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{latestResult.actualMarginPct.toFixed(1)}%</p></div>
                                                 </div>
                                                 {getCostingStatus(latest) !== 'verified' && (
-                                                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                                                        This is a legacy or review snapshot. The saved numbers are preserved, but customer quotation export stays blocked until the assumptions are reconstructed and saved as a new current costing.
+                                                    <div className="mt-3 flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+                                                        <div><p className="font-bold">Saved costing needs a check</p><p className="mt-1">{latest.reconciliation_note || getCostingTrustCopy(getCostingStatus(latest))}</p></div>
+                                                        <Button variant="outline" size="sm" onClick={() => onAudit(latest)} disabled={auditingId === latest.id} className="shrink-0 border-amber-300 bg-white text-amber-900 hover:bg-amber-100">
+                                                            {auditingId === latest.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {auditingId === latest.id ? 'Checking…' : 'Check saved numbers'}
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </section>
@@ -522,14 +542,14 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3 capitalize text-slate-600">
                                                                     <div className="flex flex-wrap items-center gap-2">
                                                                         <span>{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name || 'Customer not set'}` : 'Costing'}</span>
-                                                                        {getCostingStatus(record) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                                                        {getCostingStatus(record) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(record))}</Badge>}
                                                                     </div>
                                                                 </td>
                                                                 <td className="py-3 font-mono text-slate-700">{formatCostingMoneyPerM(getProductionCostPerM(record))}</td>
                                                                 <td className="py-3 font-mono font-bold text-orange-700">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{formatCostingPercent(getActualMarginPct(record))}</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
-                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id}>{record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {record.is_archived ? 'Restore' : 'Archive'}</Button></div></td>
+                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? 'Restoring…' : 'Archiving…' : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -567,6 +587,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [selectedCostingIds, setSelectedCostingIds] = useState<string[]>([])
     const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
+    const [quoteToArchive, setQuoteToArchive] = useState<QuoteRow | null>(null)
     const [showArchived, setShowArchived] = useState(false)
     const [expandedQualityKey, setExpandedQualityKey] = useState<string | null>(null)
     const showQualityLibrary = !canUseQuotationWorkflow
@@ -810,18 +831,61 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const handleLibraryState = async (quote: QuoteRow, changes: { isArchived?: boolean; isFavorite?: boolean }) => {
         setUpdatingId(quote.id)
-        const result = await updateSavedCostingLibraryState({
-            id: quote.id,
-            expectedUpdatedAt: quote.updated_at,
-            ...changes,
-        })
-        setUpdatingId(null)
-        if (result.error || !result.data) {
-            toast.error(result.error ?? 'Saved costing could not be updated.')
+        try {
+            const result = await updateSavedCostingLibraryState({
+                id: quote.id,
+                expectedUpdatedAt: quote.updated_at,
+                ...changes,
+            })
+            if (result.error || !result.data) {
+                toast.error(result.error ?? 'Saved costing could not be updated.')
+                return
+            }
+            setQuotes(current => current.map(item => item.id === quote.id ? { ...item, ...result.data } : item))
+            toast.success(changes.isArchived === true ? 'Costing snapshot archived' : changes.isArchived === false ? 'Costing snapshot restored' : changes.isFavorite ? 'Added to favourites' : 'Removed from favourites')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Saved costing could not be updated.')
+            console.error(error)
+        } finally {
+            setUpdatingId(null)
+        }
+    }
+
+    const auditQuote = async (quote: QuoteRow) => {
+        setUpdatingId(quote.id)
+        try {
+            const result = await auditHistoricalCostingSnapshot(quote.id, quote.updated_at)
+            if (result.error || !result.data || !result.audit) {
+                toast.error(result.error ?? 'Saved costing could not be checked.')
+                return
+            }
+            setQuotes(current => current.map(item => item.id === quote.id ? { ...item, ...result.data } : item))
+            if (result.audit.status === 'verified') {
+                toast.success('Saved costing checked. Its canonical result is consistent.')
+            } else {
+                toast.success(`Saved values preserved. ${getCostingTrustCopy(result.audit.status)}`)
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Saved costing could not be checked.')
+            console.error(error)
+        } finally {
+            setUpdatingId(null)
+        }
+    }
+
+    const requestArchiveState = (quote: QuoteRow) => {
+        if (quote.is_archived) {
+            void handleLibraryState(quote, { isArchived: false })
             return
         }
-        setQuotes(current => current.map(item => item.id === quote.id ? { ...item, ...result.data } : item))
-        toast.success(changes.isArchived === true ? 'Costing archived' : changes.isArchived === false ? 'Costing restored' : changes.isFavorite ? 'Added to favourites' : 'Removed from favourites')
+        setQuoteToArchive(quote)
+    }
+
+    const confirmArchiveSnapshot = async () => {
+        if (!quoteToArchive) return
+        const target = quoteToArchive
+        setQuoteToArchive(null)
+        await handleLibraryState(target, { isArchived: true })
     }
 
     return (
@@ -957,7 +1021,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onOpen={quote => handleRestore(quote, 'edit')}
                     onStartFrom={quote => handleRestore(quote, 'duplicate')}
                     onExport={setQuoteToExport}
-                    onToggleArchived={quote => { void handleLibraryState(quote, { isArchived: !quote.is_archived }) }}
+                    onAudit={quote => { void auditQuote(quote) }}
+                    auditingId={updatingId}
+                    onToggleArchived={requestArchiveState}
                     onOpenUsage={openAppliedProduction}
                 />
             ) : !canUseProduction || !canUseQuotationWorkflow ? (
@@ -998,7 +1064,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <p className="truncate text-sm font-bold text-slate-950">{quote.quality_label || 'Untitled costing'} <span className="ml-1 text-xs font-semibold text-blue-600">v{Number(quote.version_number ?? 1)}</span></p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                                     <span>Saved {format(new Date(quote.created_at), 'MMM d, yyyy')}</span>
-                                                    {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                                    {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4">
@@ -1021,14 +1087,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
                                                         <Copy className="h-3.5 w-3.5" /> Use as Starting Point
                                                     </Button>
-                                                <Button variant="ghost" size="sm" onClick={() => setQuoteToExport(quote)} className="h-9 text-xs font-semibold">
+                                                    <Button variant="ghost" size="sm" onClick={() => setQuoteToExport(quote)} className="h-9 text-xs font-semibold">
                                                         <Eye className="h-3.5 w-3.5" /> Preview
                                                     </Button>
+                                                    {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" size="sm" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id} className="h-9 text-xs font-semibold text-amber-700">
+                                                        {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {updatingId === quote.id ? 'Checking…' : 'Check saved numbers'}
+                                                    </Button>}
                                                     <Button variant="ghost" size="icon" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 w-9 text-amber-500' : 'h-9 w-9 text-slate-500'} aria-label={quote.is_favorite ? `Remove ${quote.quality_label || 'costing'} from favourites` : `Add ${quote.quality_label || 'costing'} to favourites`}>
                                                         <Star className="h-4 w-4" fill={quote.is_favorite ? 'currentColor' : 'none'} />
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => handleLibraryState(quote, { isArchived: !quote.is_archived })} className="h-9 w-9 text-slate-500" aria-label={quote.is_archived ? `Restore ${quote.quality_label || 'costing'}` : `Archive ${quote.quality_label || 'costing'}`}>
-                                                        {quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                                                    <Button variant="ghost" size="icon" onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 w-9 text-slate-500" aria-label={quote.is_archived ? `Restore costing snapshot ${quote.quality_label || 'costing'}` : `Archive costing snapshot ${quote.quality_label || 'costing'}`}>
+                                                        {updatingId === quote.id ? <Loader2 className="h-4 w-4 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                                                     </Button>
                                                 </div>
                                             </td>
@@ -1061,7 +1130,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <p className="truncate text-sm font-bold text-slate-950">{quality} <span className="ml-1 text-xs font-semibold text-blue-600">v{Number(quote.version_number ?? 1)}</span></p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                                     <span>Updated {format(new Date(quote.updated_at), 'MMM d, yyyy · h:mm a')}</span>
-                                                    {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                                    {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
                                                 </div>
                                             </div>
                                         </div>
@@ -1101,8 +1170,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <Button variant="ghost" size="sm" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 text-xs text-amber-600' : 'h-9 text-xs text-slate-600'}>
                                                 <Star className="h-3.5 w-3.5" fill={quote.is_favorite ? 'currentColor' : 'none'} /> {quote.is_favorite ? 'Favourited' : 'Favourite'}
                                             </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => handleLibraryState(quote, { isArchived: !quote.is_archived })} className="h-9 text-xs text-slate-600">
-                                                {quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {quote.is_archived ? 'Restore' : 'Archive'}
+                                            <Button variant="ghost" size="sm" onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 text-xs text-slate-600" aria-label={`${quote.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${quote.quality_label || 'costing'}`}>
+                                                {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === quote.id ? quote.is_archived ? 'Restoring…' : 'Archiving…' : quote.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -1138,7 +1207,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <Badge variant="outline" className={`${isCosting ? 'border-orange-200 bg-orange-50 text-orange-700' : STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
                                                 {isCosting ? (quote.id === updatingId ? 'Updating' : 'Costing') : quote.status}
                                             </Badge>
-                                            {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                            {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
                                         </div>
                                     </div>
 
@@ -1199,14 +1268,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => setQuoteToExport(quote)}>
                                                     <Eye className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> Preview
                                                 </Button>
+                                                {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-amber-700 lg:h-7 lg:px-2" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id}>
+                                                    {updatingId === quote.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin lg:h-3 lg:w-3" /> : <CheckCircle2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />} {updatingId === quote.id ? 'Checking…' : 'Check saved numbers'}
+                                                </Button>}
                                                 <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => toggleCostingSelection(quote.id)}>
                                                     <GitCompareArrows className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> {selectedCostingIds.includes(quote.id) ? 'Selected' : 'Compare'}
                                                 </Button>
                                                 <Button variant="ghost" size="icon" aria-label={quote.is_favorite ? `Remove ${quote.quality_label || 'record'} from favourites` : `Add ${quote.quality_label || 'record'} to favourites`} onClick={() => void handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className="h-9 w-9">
                                                     <Star className={`h-4 w-4 ${quote.is_favorite ? 'fill-amber-400 text-amber-500' : 'text-slate-500'}`} />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" aria-label={`${quote.is_archived ? 'Restore' : 'Archive'} ${quote.quality_label || 'record'}`} onClick={() => void handleLibraryState(quote, { isArchived: !quote.is_archived })} className="h-9 w-9 text-slate-500">
-                                                    {quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                                                <Button variant="ghost" size="icon" aria-label={`${quote.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${quote.quality_label || 'record'}`} onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 w-9 text-slate-500">
+                                                    {updatingId === quote.id ? <Loader2 className="h-4 w-4 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1301,6 +1373,18 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     ? () => handleStatusChange(quoteToExport.id, 'sent')
                     : undefined}
              />
+
+            <ConfirmActionDialog
+                open={Boolean(quoteToArchive)}
+                onOpenChange={open => { if (!open && updatingId !== quoteToArchive?.id) setQuoteToArchive(null) }}
+                title={`Archive costing snapshot${quoteToArchive?.quality_label ? ` · ${quoteToArchive.quality_label}` : ''}?`}
+                description="This archives only this costing snapshot. The Saved Quality, other costing versions, and all historical saved values remain unchanged. You can restore this snapshot later."
+                confirmLabel="Archive snapshot"
+                cancelLabel="Keep snapshot"
+                onConfirm={confirmArchiveSnapshot}
+                isDestructive
+                isLoading={updatingId === quoteToArchive?.id}
+            />
 
             <Dialog open={showComparison} onOpenChange={setShowComparison}>
                 <DialogContent className="sm:max-w-4xl">

@@ -10,9 +10,9 @@ describe('Base P1 production coverage contracts', () => {
         const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
         expect(rates).toContain('Linked-yarn rename policy:')
-        expect(rates).toContain('add a replacement rate, then update saved qualities deliberately')
+        expect(rates).toContain('add a new rate with the replacement name and update saved qualities intentionally')
         expect(rates).toContain('disabled={Boolean(draft.id)}')
-        expect(rates).toContain("aria-label={`${archived ? 'Restore' : 'Archive'} ${rate.name}`}")
+        expect(rates).toContain("aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`}")
         expect(rates).toContain('Archive rate')
     })
 
@@ -38,9 +38,9 @@ describe('Base P1 production coverage contracts', () => {
         const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
         expect(quotes).toContain('onToggleArchived: (quote: QuoteRow) => void')
-        expect(quotes).toContain('onToggleArchived={quote => { void handleLibraryState(quote, { isArchived: !quote.is_archived }) }}')
-        expect(quotes).toContain("{latest.is_archived ? 'Restore' : 'Archive'}")
-        expect(quotes).toContain("{record.is_archived ? 'Restore' : 'Archive'}")
+        expect(quotes).toContain('onToggleArchived={requestArchiveState}')
+        expect(quotes).toContain("latest.is_archived ? 'Restore snapshot' : 'Archive snapshot'")
+        expect(quotes).toContain("record.is_archived ? 'Restore snapshot' : 'Archive snapshot'")
         expect(quotes).toContain('Boolean(quote.is_archived) === showArchived')
         expect(actions).toContain('updateSavedCostingLibraryState')
         expect(actions).toContain('This costing changed in another tab. Refresh Saved Costings and try again.')
