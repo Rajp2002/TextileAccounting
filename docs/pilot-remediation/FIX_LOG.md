@@ -2772,3 +2772,37 @@ Date: 2026-07-19 IST. Status: `pass`.
   portions of the Sprint 1 regression guard; those remain explicit follow-up
   evidence rather than an inferred PASS. Formal pilot matrix/readiness counts
   are unchanged.
+
+### Sprint 2 production closeout — 2026-08-01
+
+- Scoped release state: `pass` for Sprint 2 calculation-safety and signup
+  runtime gates. The formal limited-pilot matrix and overall `No-Go` decision
+  remain unchanged.
+- PR `#55` merged Sprint 2 into `main` as `733147f850ed4eac62b1e49eb9db4ffc62f63a3f`.
+  Vercel deployment `dpl_hJA21C5SohFUKxwP9GzTvC5G2cQv` is `READY`, targets
+  production, and serves the canonical alias
+  `https://textile-accounting.vercel.app`.
+- The linked database records local and remote migration
+  `20260801174038_sprint1_save_trust_v2.sql`; the post-merge
+  `supabase db push --linked --dry-run --yes` reports `Remote database is up to date.`
+  Sprint 2 added no migration and no production business-row mutation.
+- Integrated source proof for the merged candidate: 130 Vitest files, 847
+  passing tests, 1 intentional skip, TypeScript, ESLint, `git diff --check`,
+  and the optimized Next.js build all passed.
+- Authenticated owner QA smoke on the exact production alias loaded the Cost
+  Estimate route with the saved `PILOTQA-20260801-1711-JVS2 50x50 Grey` costing.
+  A negative yarn rate and zero denier disabled `Save New Version`, hid usable
+  derived money, and disabled export. Denier `200000` was hard-blocked at the
+  readiness/persistence boundary with saving disabled and money suppressed;
+  the visible warning said to confirm the yarn numbering and unit. Width
+  `63` inches converted to `160.02` cm and back to `63` inches. No browser
+  console errors or warnings were recorded.
+- Signup smoke showed the actionable malformed Indian phone message, weak
+  password checklist/message, and password-mismatch message. A valid `+91`
+  phone, strong password, matching confirmation, and consent enabled Create
+  factory; the form was not submitted and no account was created.
+- The retained legacy QA costing still showed the existing `Complete the
+  highlighted inputs...` prerequisite and kept `Export Cost Sheet` disabled
+  even after the form was restored to its prior valid money state. Invalid
+  export was therefore blocked, but a valid export artifact is not claimed in
+  this Sprint 2 closeout; retain that separate existing follow-up.
