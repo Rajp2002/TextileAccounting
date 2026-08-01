@@ -2235,3 +2235,28 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
   runtime journey; migration alignment is verified.
 - Formal pilot matrix/readiness counts are unchanged until those runtime gates
   produce the named evidence; no source-only pass is being inferred.
+
+## Sprint 1 production closeout — 2026-08-01
+
+- State: `deployed_read_only_smoke_passed`; the mutating save/version journey
+  remains unproven and is not promoted to a formal pilot PASS.
+- PR `#54` is merged on `main` as
+  `ad65e7eb4ebbb763a26080a6a8332779d45bb237`. Vercel production deployment
+  `8cawwNS7hmumSP9oPvkTj4ub38HL` reports success for that merge commit on the
+  canonical alias.
+- Production database: migration `20260801174038` is applied; the linked
+  migration dry-run reports no pending work. Catalog/RPC/grant verification
+  confirms the Sprint 1 schema boundary and the security advisor error check
+  reports no issues.
+- Runtime: a fresh authenticated owner QA tab loaded the Cost Estimate and
+  Costings & Quotations routes. A retained `PILOTQA-*` costing reopened as
+  `v1`, showed its quality and save-time date, exposed `Save New Version`,
+  `Update Saved Quality`, and `Start From`, and retained `v1` after refresh.
+  The fresh production tab recorded zero console errors or warnings.
+- No production costing, quality, quotation, or customer row was created or
+  changed during this closeout, so no cleanup mutation was required.
+- Remaining evidence: explicit v2 save choices, same-value no-op, stale edit,
+  duplicate/retry, factory-baseline future-only behavior, comparison,
+  quotation export, and a logout/login round-trip. Keep formal matrix counts
+  unchanged until those named checks are exercised with an isolated QA
+  fixture.
