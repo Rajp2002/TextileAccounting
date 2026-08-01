@@ -64,7 +64,7 @@ describe('Sprint 4 billing trust boundaries', () => {
   })
 
   it('adds RLS, service-role-only mutations, and durable ledgers for money and exports', () => {
-    const migration = read('supabase/migrations/20260801143840_sprint4_billing_trust_boundaries.sql')
+    const migration = read('supabase/migrations/20260801162646_20260801143840_sprint4_billing_trust_boundaries.sql')
     for (const table of [
       'billing_checkout_attempts',
       'billing_payment_refunds',

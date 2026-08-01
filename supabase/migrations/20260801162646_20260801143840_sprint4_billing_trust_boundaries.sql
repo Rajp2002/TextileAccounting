@@ -474,3 +474,4 @@ GRANT EXECUTE ON FUNCTION public.activate_order_billing_purchase(uuid, text, tex
 COMMENT ON TABLE public.billing_checkout_attempts IS 'Tenant-scoped server-owned Razorpay checkout attempts. Access is granted only by captured subscription payments.';
 COMMENT ON TABLE public.billing_invoices IS 'Immutable, provider-payment-linked GST invoice snapshots. Receipt rows are not invoices.';
 COMMENT ON TABLE public.organization_export_runs IS 'Durable server-side organization export generation records; browser download completion is not asserted.';
+;
