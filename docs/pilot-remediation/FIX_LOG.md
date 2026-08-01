@@ -2806,3 +2806,17 @@ Date: 2026-07-19 IST. Status: `pass`.
   even after the form was restored to its prior valid money state. Invalid
   export was therefore blocked, but a valid export artifact is not claimed in
   this Sprint 2 closeout; retain that separate existing follow-up.
+
+## Sprint 7 — final UX polish and pilot readiness — 2026-08-02
+
+- Scoped result: production release verified; exact data-mutating pilot remains `blocked_by_qa_entitlement`. The complete evidence pack is `docs/pilot-remediation/closure-packs/SPRINT7_UX_POLISH_PRODUCTION_CLOSEOUT_2026-08-02.md`.
+- Customer problem: Rajesh needs to trust every number and action during a busy repeat-trader costing workflow. The release standardizes Cost Estimate, Saved Costing, Fabric Quality, Customer Quotation, Customer (Party), Production Cost / m, Break-even Price / m, Suggested Selling Price / m, Current Yarn Rate, and Yarn Rate Book terminology; removes misleading legacy zero values; and makes blocked, saving, success, error, update, archive, reset, discard, and replace states understandable.
+- Source scope: estimator/setup, Saved Costings/quotes, Rate Book, settings and factory defaults, billing/data-export presentation, shared notifications and confirmations, language switching, and mobile Base layouts. Costing formulas, rounding, immutable snapshots, tenant isolation, billing lifecycle, and Premium workflows were preserved.
+- Automated proof: `npm test -- --run` passed 130 files / 849 tests with one intentional skip; TypeScript, ESLint, optimized build, and `git diff --check` passed. Hosted Vercel checks also passed.
+- Release proof: implementation commit `9055cda` was merged by PR `#58` into `main` as `93d8bea6554386412affcb66935d3e569ce9de7c`. Production deployment `dpl_8nTPXqmMrDXFaDKfdyKSwx6bff1S` is `READY` on `https://textile-accounting.vercel.app`.
+- Migration proof: local and linked history match through `20260801174038_sprint1_save_trust_v2`; `npx supabase db push --linked --dry-run --yes` returned `Remote database is up to date`. Sprint 7 has no migration and no production schema/business-row mutation was performed.
+- Runtime proof: the six Base owner routes fit 390×844 without horizontal overflow; Gujarati language switching showed localized success feedback; observed Saved Costings output showed `Not available` for unavailable legacy values and clear Saved Costing terminology. No browser console errors or warnings were observed on the checked production Saved Costings route.
+- Pilot/data safety: an isolated Sprint 7 Patel Weaves QA tenant saved production mode `both`, but live creation of 50 Water Jet looms was correctly rejected because the account had no Full Suite subscription. Reconciliation returned zero machines, workers, payroll configs, and estimator quotes. No payment, entitlement bypass, or partial production data was created.
+- Translation boundary: switching/fallback/retry behavior is verified, but a complete audit of every legacy Gujarati/Hindi phrase is not claimed; mixed legacy English fragments remain a follow-up for language coverage.
+- Matrix effect: none. Formal totals remain 368 pass, 0 fail, 6 blocked, and 3 not applicable; the overall No-Go decision and existing `TECH-011` and `GOLDEN-A-03` gates are unchanged.
+- Next action: rerun the exact Rajesh pilot journey in an existing entitled disposable QA workspace, then reconcile it to zero. Do not buy a plan or mutate a live customer tenant solely to close the evidence gap.

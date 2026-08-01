@@ -691,3 +691,10 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
   scoped evidence. Keep the retained older-costing valid-export prerequisite
   as a separate follow-up; invalid export remained blocked and no invalid
   artifact was produced.
+
+### Sprint 7 final UX polish disposition — 2026-08-02
+
+- The scoped Sprint 7 Base UX implementation is released and production verified at merged main commit `93d8bea` / READY deployment `dpl_8nTPXqmMrDXFaDKfdyKSwx6bff1S`. Automated gates and mobile/language/terminology runtime checks are recorded in the Sprint 7 closeout pack.
+- No formal failure row is reclassified. The canonical matrix remains 368 pass, 0 fail, 6 blocked, and 3 not applicable; the overall No-Go decision is unchanged.
+- Exact pilot execution is blocked only by the disposable QA account's missing Full Suite entitlement. The live attempt to add 50 Water Jet looms was rejected before persistence, and tenant reconciliation returned zero machines, workers, payroll configs, and estimator quotes. This is not evidence to bypass the entitlement boundary or use a live customer tenant.
+- Language switching/fallback/retry behavior is verified, but complete legacy Gujarati/Hindi phrase coverage is not claimed. Mixed legacy English fragments remain a scoped translation-coverage follow-up and must not be silently promoted to a full-language PASS.
