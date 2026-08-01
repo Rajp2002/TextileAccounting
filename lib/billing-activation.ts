@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { processReferralConversion, issueReferralRefund } from '@/lib/referral-webhook'
+import { ensureBillingInvoice } from '@/lib/billing-invoice'
 import * as Sentry from '@sentry/nextjs'
 import {
     getBillingPrice,
@@ -75,6 +76,25 @@ export async function activateInitialPurchase({
     const result = data as AtomicActivationResult | null
     if (!result?.success || !result.subscription || !result.payment) {
         throw new Error('Atomic billing activation returned an invalid result.')
+    }
+
+    // Invoice issuance is deliberately non-blocking for access. If the
+    // approved GST configuration or customer billing profile is incomplete,
+    // the payment receipt remains available and the invoice can be issued for
+    // a later eligible payment without holding up Rajesh's access.
+    try {
+        await ensureBillingInvoice({
+            orgId,
+            paymentId: result.payment.id,
+            planTier,
+            purchaseType,
+            amountPaise,
+        })
+    } catch (err) {
+        Sentry.captureException(err, {
+            tags: { component: 'billing-activation', phase: 'issue_gst_invoice' },
+            extra: { orgId, razorpayOrderId, planTier, purchaseType },
+        })
     }
 
     // Side effects run only for the transaction that inserted the payment.

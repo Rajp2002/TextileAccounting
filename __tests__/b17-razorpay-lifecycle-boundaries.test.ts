@@ -91,7 +91,7 @@ describe('B17 Razorpay lifecycle boundaries', () => {
         const route = read('app/api/webhooks/razorpay/route.ts')
         const captured = route.slice(route.indexOf("case 'payment.captured'"), route.indexOf("case 'order.paid'"))
         const failed = route.slice(route.indexOf("case 'payment.failed'"), route.indexOf('default:'))
-        expect(captured.indexOf('razorpay.payments.fetch')).toBeLessThan(captured.indexOf('activateInitialPurchase'))
+        expect(captured.indexOf('razorpay.payments.fetch')).toBeLessThan(captured.indexOf('reconcileBillingOrder'))
         expect(captured).toContain("payment.status !== 'captured'")
         expect(failed.indexOf('razorpay.payments.fetch')).toBeLessThan(failed.indexOf("status: 'failed'"))
         expect(failed).toContain("payment.status !== 'failed'")

@@ -83,7 +83,7 @@ export default function RefundPolicyPage() {
                 <h3>3.3 How Refunds Are Processed</h3>
                 <ul>
                     <li>Refunds are processed to the original payment method within <strong>5-7 business days</strong>.</li>
-                    <li>Payment receipts are available from Billing after successful payment. Formal GST tax invoice support is not currently available; any future tax-document workflow will be handled as required by applicable GST rules.</li>
+                    <li>Payment receipts are available from Billing after successful payment. GST invoices are issued only when approved billing details and supplier tax configuration are complete.</li>
                     <li>To request a refund, email <a href="mailto:support@weavly.app">support@weavly.app</a> with your account details and reason for the request.</li>
                 </ul>
             </PolicySection>

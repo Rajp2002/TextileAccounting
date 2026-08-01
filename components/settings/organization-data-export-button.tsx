@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { Download, Loader2, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { toast } from '@/lib/app-notifications'
 import { Button } from '@/components/ui/button'
@@ -33,11 +33,15 @@ export function OrganizationDataExportButton({
     const [filename, setFilename] = useState('')
     const [history, setHistory] = useState<OrganizationExportHistoryItem[]>([])
     const [historyError, setHistoryError] = useState<string | null>(null)
+    const [downloadError, setDownloadError] = useState<string | null>(null)
+    const historyRequest = useRef(0)
 
     const loadHistory = () => {
         if (!showHistory) return
+        const requestNumber = ++historyRequest.current
         startTransition(async () => {
             const result = await getOrganizationExportHistory()
+            if (requestNumber !== historyRequest.current) return
             if (result.error) {
                 setHistoryError(result.error)
                 return
@@ -57,16 +61,32 @@ export function OrganizationDataExportButton({
     const download = () => startTransition(async () => {
         setStatus('preparing')
         setFilename('')
+        setDownloadError(null)
         try {
             const payload = await exportOrganizationData()
             setStatus('ready')
             setFilename(payload.filename)
-            downloadJson(payload, payload.filename)
+            if (showHistory && payload.export_run) {
+                setHistory(current => [{
+                    changed_at: payload.export_run.exported_at,
+                    record_id: payload.export_run.id,
+                    actor_name: payload.export_run.actor_name,
+                    status: 'generated' as const,
+                    description: `Export generated; filename ${payload.filename}`,
+                }, ...current.filter(item => item.record_id !== payload.export_run?.id)].slice(0, 10))
+            }
+            try {
+                downloadJson(payload, payload.filename)
+            } catch (error) {
+                setDownloadError(error instanceof Error ? error.message : 'The browser could not start the download.')
+                setStatus('download-started')
+                toast.info('Export generated, but the browser could not start the download. Try again from this page.')
+                return
+            }
             setStatus('download-started')
-            toast.success('Data export ready', { description: `Download started: ${payload.filename}` })
+            toast.success('Data export generated', { description: `Download requested: ${payload.filename}` })
             if (showHistory) {
-                const historyResult = await getOrganizationExportHistory()
-                if (!historyResult.error) setHistory(historyResult.data ?? [])
+                loadHistory()
             }
         } catch (error) {
             setStatus('failed')
@@ -85,7 +105,7 @@ export function OrganizationDataExportButton({
                 </Button>
                 {status === 'download-started' && (
                     <span role="status" className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Download started
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Export generated; download requested
                     </span>
                 )}
                 {status === 'failed' && (
@@ -93,6 +113,7 @@ export function OrganizationDataExportButton({
                         <AlertTriangle className="h-3.5 w-3.5" /> No export was generated
                     </span>
                 )}
+                {downloadError && <p role="alert" className="text-xs font-semibold text-amber-800">{downloadError}</p>}
             </div>
 
             {filename && (
@@ -107,7 +128,7 @@ export function OrganizationDataExportButton({
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <h2 className="text-sm font-black text-slate-950">Recent organization exports</h2>
-                            <p className="mt-1 text-xs text-slate-500">Owner-only export attempts recorded for this organization.</p>
+                            <p className="mt-1 text-xs text-slate-500">Owner-only exports generated for this organization. The browser save location cannot be verified automatically.</p>
                         </div>
                         <Button type="button" variant="ghost" size="sm" onClick={loadHistory} disabled={pending} className="h-8 text-xs">
                             <RefreshCw className="h-3.5 w-3.5" /> Refresh
@@ -123,7 +144,7 @@ export function OrganizationDataExportButton({
                                 <div key={`${item.changed_at}-${item.record_id}`} className="py-3 first:pt-0 last:pb-0">
                                     <p className="text-xs font-semibold text-slate-800">{formatExportDate(item.changed_at)}</p>
                                     <p className="mt-1 break-words font-mono text-[11px] text-slate-600">{item.description}</p>
-                                    <p className="mt-1 text-[11px] text-slate-500">Started by {item.actor_name}</p>
+                                    <p className="mt-1 text-[11px] text-slate-500">Generated by {item.actor_name}{item.status === 'failed' ? ' · failed' : ''}</p>
                                 </div>
                             ))}
                         </div>

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
-import { activateInitialPurchase } from '@/lib/billing-activation'
-import { BILLING_MODEL } from '@/lib/billing-constants'
-import { readBillingOrderContext, type BillingOrderContext } from '@/lib/billing-lifecycle'
+import { reconcileBillingOrder } from '@/lib/billing-reconciliation'
 import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
@@ -79,104 +76,50 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 
-    let capturedContext: BillingOrderContext | null = null
-    let paymentWasCaptured = false
-
-    // 4. Server-side validation against Razorpay API
+    // The reconciliation service performs the canonical Razorpay order and
+    // payment fetch, exact catalog validation, and atomic activation. Keeping
+    // that logic shared with webhooks prevents callback/webhook divergence.
     try {
-        // Fetch order to verify details
-        const order = await razorpay.orders.fetch(razorpay_order_id)
-        if (!order) {
-            return NextResponse.json({ error: 'Order not found on Razorpay' }, { status: 400 })
-        }
-
-        // Validate the complete commercial context from the canonical Razorpay
-        // order. No amount, tier, or purchase type is accepted from the client.
-        const orderContext = readBillingOrderContext(order)
-        if (!orderContext || orderContext.orgId !== orgId) {
-            Sentry.captureMessage(`Razorpay order verification failed. Context mismatch for order: ${razorpay_order_id}`, 'warning')
-            return NextResponse.json({ error: 'Payment validation failed' }, { status: 400 })
-        }
-        capturedContext = orderContext
-
-        // Bind the Razorpay order to the local server-created checkout row.
-        const { data: trackedOrder, error: trackedOrderError } = await supabase
-            .from('org_subscriptions')
-            .select('org_id, plan_tier, billing_model, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency')
-            .eq('razorpay_order_id', razorpay_order_id)
-            .maybeSingle()
-
-        if (
-            trackedOrderError ||
-            !trackedOrder ||
-            trackedOrder.org_id !== orgId ||
-            trackedOrder.plan_tier !== orderContext.planTier ||
-            trackedOrder.billing_model !== BILLING_MODEL ||
-            trackedOrder.checkout_purchase_type !== orderContext.purchaseType ||
-            Number(trackedOrder.checkout_amount_paise) !== orderContext.amountPaise ||
-            trackedOrder.checkout_currency !== 'INR'
-        ) {
-            Sentry.captureMessage(`Untracked or mismatched Razorpay order rejected: ${razorpay_order_id}`, 'warning')
-            return NextResponse.json({ error: 'Payment order is not recognized.' }, { status: 400 })
-        }
-
-        // Fetch payment details to check status and method
-        const payment = await razorpay.payments.fetch(razorpay_payment_id)
-        if (!payment) {
-            return NextResponse.json({ error: 'Payment not found on Razorpay' }, { status: 400 })
-        }
-
-        if (payment.order_id !== razorpay_order_id) {
-            return NextResponse.json({ error: 'Payment does not belong to this order' }, { status: 400 })
-        }
-
-        if (
-            payment.status !== 'captured' ||
-            Number(payment.amount) !== orderContext.amountPaise ||
-            payment.currency !== 'INR'
-        ) {
-            Sentry.captureMessage(`Uncaptured or amount-mismatched payment rejected: ${razorpay_payment_id}`, 'warning')
-            return NextResponse.json({ error: 'Payment has not been captured for the selected plan.' }, { status: 400 })
-        }
-        paymentWasCaptured = true
-
-        // Activate the subscription using the shared helper
-        const result = await activateInitialPurchase({
-            orgId: orgId,
-            razorpayOrderId: razorpay_order_id,
-            razorpayPaymentId: razorpay_payment_id,
-            amountPaise: Number(payment.amount),
-            method: payment.method || null,
-            planTier: orderContext.planTier,
-            purchaseType: orderContext.purchaseType,
-        })
-
-        return NextResponse.json({
-            success: true,
-            activeUntil: result.subscription?.current_end,
-            paymentId: razorpay_payment_id,
+        const result = await reconcileBillingOrder({
+            orgId,
             orderId: razorpay_order_id,
-            planTier: orderContext.planTier,
-            purchaseType: orderContext.purchaseType,
-            amountPaise: Number(payment.amount),
+            hintedPaymentId: razorpay_payment_id,
+            source: 'callback',
         })
+
+        if (result.state === 'activated') {
+            return NextResponse.json({
+                success: true,
+                activeUntil: result.activeUntil,
+                paymentId: result.paymentId ?? razorpay_payment_id,
+                orderId: result.orderId,
+                planTier: result.planTier,
+                purchaseType: result.purchaseType,
+                amountPaise: result.amountPaise,
+            })
+        }
+
+        const status = result.state === 'failed' || result.state === 'duplicate' || result.state === 'reconciliation_required' ? 409 : 202
+        return NextResponse.json({
+            error: result.message,
+            activationPending: status === 202,
+            state: result.state,
+            paymentId: result.paymentId ?? razorpay_payment_id,
+            orderId: result.orderId,
+            planTier: result.planTier,
+            purchaseType: result.purchaseType,
+        }, { status })
     } catch (err) {
         Sentry.captureException(err, {
             tags: { route: 'billing_verify_payment', phase: 'verification_process' }
         })
-        if (paymentWasCaptured && capturedContext) {
-            // Razorpay has confirmed the money, but the local activation may
-            // still complete through the webhook. Do not ask the owner to pay
-            // again while this state is reconciling.
-            return NextResponse.json({
-                error: 'Payment received. We are confirming access now.',
-                activationPending: true,
-                paymentId: razorpay_payment_id,
-                orderId: razorpay_order_id,
-                planTier: capturedContext.planTier,
-                purchaseType: capturedContext.purchaseType,
-            }, { status: 202 })
-        }
-        return NextResponse.json({ error: 'Failed to verify payment' }, { status: 500 })
+        // An upstream timeout after a real payment must never instruct Rajesh
+        // to pay again. Webhook/status reconciliation will finish the attempt.
+        return NextResponse.json({
+            error: 'Payment status is being confirmed. Do not pay again; check Billing again shortly.',
+            activationPending: true,
+            paymentId: razorpay_payment_id,
+            orderId: razorpay_order_id,
+        }, { status: 202 })
     }
 }

@@ -4,9 +4,9 @@ import * as Sentry from '@sentry/nextjs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { processReferralConversion, issueReferralRefund } from '@/lib/referral-webhook'
 import { checkPublicPostRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
-import { razorpay } from '@/lib/razorpay'
-import { activateInitialPurchase } from '@/lib/billing-activation'
+import { getRazorpay } from '@/lib/razorpay'
 import { readBillingOrderContext } from '@/lib/billing-lifecycle'
+import { reconcileBillingOrder } from '@/lib/billing-reconciliation'
 
 export const dynamic = 'force-dynamic'
 
@@ -164,6 +164,7 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
+    const razorpay = getRazorpay()
     const eventType = typeof event.event === 'string' ? event.event : 'unknown'
     const payloadHash = crypto.createHash('sha256').update(rawBody).digest('hex')
     const eventId = eventIdForRequest(req, event, rawBody)
@@ -199,7 +200,7 @@ export async function POST(req: NextRequest) {
                 const payment = await razorpay.payments.fetch(hintedPayment.id)
                 if (payment.status !== 'captured') break
 
-                // If it is a subscription-based payment, subscription.charged will handle it.
+                // If it is a legacy subscription-based payment, subscription.charged will handle it.
                 if (payment.subscription_id) {
                     break
                 }
@@ -207,33 +208,19 @@ export async function POST(req: NextRequest) {
                 const orderId = payment.order_id
                 if (!orderId) break
 
-                // Payment notes are not authoritative. Always fetch and validate
-                // the canonical order before activating a one-time purchase.
-                const order = await razorpay.orders.fetch(orderId)
-                const orderContext = readBillingOrderContext(order)
-
                 console.log(`[razorpay-webhook] payment.captured: id=${payment.id}, order_id=${orderId}`)
-
-                if (
-                    !orderContext ||
-                    Number(payment.amount) !== orderContext.amountPaise ||
-                    payment.currency !== 'INR' ||
-                    payment.order_id !== orderId
-                ) {
-                    Sentry.captureMessage(`Invalid billing context on captured order ${orderId}`, 'warning')
-                    break
-                }
-
-                console.log(`[razorpay-webhook] Triggering activateInitialPurchase for payment.captured...`)
-                await activateInitialPurchase({
+                const canonicalOrder = await razorpay.orders.fetch(orderId)
+                const orderContext = readBillingOrderContext(canonicalOrder)
+                if (!orderContext) break
+                const reconciliation = await reconcileBillingOrder({
                     orgId: orderContext.orgId,
-                    razorpayOrderId: orderId,
-                    razorpayPaymentId: payment.id,
-                    amountPaise: Number(payment.amount),
-                    method: payment.method ?? null,
-                    planTier: orderContext.planTier,
-                    purchaseType: orderContext.purchaseType,
+                    orderId,
+                    hintedPaymentId: payment.id,
+                    source: 'webhook',
                 })
+                if (reconciliation.state === 'reconciliation_required') {
+                    throw new Error(reconciliation.message)
+                }
                 break
             }
 
@@ -241,35 +228,35 @@ export async function POST(req: NextRequest) {
                 const order = event.payload?.order?.entity
                 if (!order?.id) break
 
+                console.log(`[razorpay-webhook] order.paid: id=${order.id}`)
                 const fetchedOrder = await razorpay.orders.fetch(order.id)
                 const orderContext = readBillingOrderContext(fetchedOrder)
-                console.log(`[razorpay-webhook] order.paid: id=${order.id}`)
-
-                if (!orderContext) {
-                    Sentry.captureMessage(`Invalid billing context on paid order ${order.id}`, 'warning')
-                    break
+                if (!orderContext) break
+                const reconciliation = await reconcileBillingOrder({
+                    orgId: orderContext.orgId,
+                    orderId: order.id,
+                    source: 'webhook',
+                })
+                if (reconciliation.state === 'reconciliation_required') {
+                    throw new Error(reconciliation.message)
                 }
+                break
+            }
 
-                console.log(`[razorpay-webhook] Fetching payments for order ${order.id}...`)
-                const paymentsList = await razorpay.orders.fetchPayments(order.id)
-                const successfulPayment = paymentsList.items?.find((p: { status: string; amount: string | number; currency: string }) => (
-                    p.status === 'captured' &&
-                    Number(p.amount) === orderContext.amountPaise &&
-                    p.currency === 'INR'
-                ))
-                if (successfulPayment) {
-                    console.log(`[razorpay-webhook] Triggering activateInitialPurchase for order.paid (payment: ${successfulPayment.id})...`)
-                    await activateInitialPurchase({
-                        orgId: orderContext.orgId,
-                        razorpayOrderId: order.id,
-                        razorpayPaymentId: successfulPayment.id,
-                        amountPaise: Number(successfulPayment.amount),
-                        method: successfulPayment.method ?? null,
-                        planTier: orderContext.planTier,
-                        purchaseType: orderContext.purchaseType,
-                    })
-                } else {
-                    console.log('[razorpay-webhook] No captured payment found for order.paid')
+            case 'payment.authorized': {
+                const hintedPayment = event.payload?.payment?.entity
+                if (!hintedPayment?.id || hintedPayment.subscription_id || !hintedPayment.order_id) break
+                const order = await razorpay.orders.fetch(hintedPayment.order_id)
+                const orderContext = readBillingOrderContext(order)
+                if (!orderContext) break
+                const reconciliation = await reconcileBillingOrder({
+                    orgId: orderContext.orgId,
+                    orderId: hintedPayment.order_id,
+                    hintedPaymentId: hintedPayment.id,
+                    source: 'webhook',
+                })
+                if (reconciliation.state === 'reconciliation_required') {
+                    throw new Error(reconciliation.message)
                 }
                 break
             }
@@ -436,6 +423,15 @@ export async function POST(req: NextRequest) {
                 } else if (payment.order_id) {
                     const order = await razorpay.orders.fetch(payment.order_id)
                     const orderContext = readBillingOrderContext(order)
+                    if (orderContext) {
+                        const reconciliation = await reconcileBillingOrder({
+                            orgId: orderContext.orgId,
+                            orderId: payment.order_id,
+                            hintedPaymentId: payment.id,
+                            source: 'webhook',
+                        })
+                        if (reconciliation.state !== 'failed') break
+                    }
                     if (
                         !orderContext ||
                         payment.currency !== 'INR' ||

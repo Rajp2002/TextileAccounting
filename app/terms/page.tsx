@@ -118,7 +118,7 @@ export default function TermsOfServicePage() {
                     </table>
                 </div>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Listed prices are GST-inclusive totals at the displayed 18% rate. The taxable amount and GST component are shown separately for clarity. Payment receipts are provided after successful payment; formal GST tax invoice support is not currently available.
+                    Listed prices are GST-inclusive totals at the displayed 18% rate. The taxable amount and GST component are shown separately for clarity. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
                 </p>
 
                 <h3>3.2 Subscription and Billing</h3>

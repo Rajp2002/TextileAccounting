@@ -47,7 +47,7 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
         expect(settings.indexOf('<SettingsSection id="privacy-data"')).toBeLessThan(settings.indexOf('{hasPremium ? <aside'))
         expect(exportAction).toContain("const { user, profile } = await requireRole(['owner'])")
         expect(exportAction).toContain("supabase.rpc('log_export_event'")
-        expect(exportAction).toContain("throw new Error('Data export could not be audited. Please try again.')")
+        expect(exportAction).toContain("throw new Error('Data export could not be audited.")
     })
 
     it('performs tenant-bound erasure and audit-payload redaction in one database transaction', () => {
