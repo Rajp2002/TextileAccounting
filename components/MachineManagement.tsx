@@ -1102,7 +1102,7 @@ export function MachineManagement({
                     <DialogHeader>
                         <DialogTitle>Assign Loom Worker</DialogTitle>
                         <DialogDescription>
-                            Set the operator, pay mode, and rate snapshot for this loom shift.
+                            Set the operator and the rate per metre used for future production on this loom shift.
                         </DialogDescription>
                     </DialogHeader>
                     {assignmentEditor && (
@@ -1219,7 +1219,7 @@ export function MachineManagement({
                             <div className="space-y-2">
                                 <Label htmlFor="operator-rate">
                                     {assignmentEditor.payMode === 'per_meter'
-                                        ? 'Rate per meter'
+                                        ? 'Rate per metre for this loom/shift'
                                         : assignmentEditor.payMode === 'fixed_monthly'
                                             ? 'Monthly rate'
                                             : assignmentEditor.payMode === 'fixed_daily'
@@ -1233,6 +1233,11 @@ export function MachineManagement({
                                     onChange={(e) => setAssignmentEditor((current) => current && { ...current, rate: e.target.value })}
                                     placeholder="0"
                                 />
+                                {assignmentEditor.payMode === 'per_meter' && (
+                                    <p className="text-[11px] text-muted-foreground">
+                                        This rate is saved for future production and keeps past payroll snapshots unchanged.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     )}

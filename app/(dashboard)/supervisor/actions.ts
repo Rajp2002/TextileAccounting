@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { assertOrgWritable, requireRole } from '@/lib/auth'
+import { assertOrgWritable, requireRole, requireWritableOrg } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import {
@@ -28,6 +28,7 @@ import {
 } from '@/lib/master-data-loom-guardrails'
 import { normalizeMachineType, type OperatorPayMode, type OperatorWorkerType } from '@/lib/machine-operator-payroll'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
+import { WorkerAgeVerificationSchema, workerValidationError } from '@/lib/worker-validation'
 
 type ShiftType = 'day' | 'night'
 
@@ -650,8 +651,18 @@ export async function addMeterWorker(data: {
     age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
     age_verification_reference: string
 }) {
-    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireWritableOrg(['owner', 'supervisor'])
     const supabase = await createServerClient()
+
+    const name = data.name?.trim()
+    if (!name) return { error: 'Worker name is required.' }
+
+    const age = WorkerAgeVerificationSchema.safeParse({
+        date_of_birth: data.date_of_birth,
+        age_verification_method: data.age_verification_method,
+        age_verification_reference: data.age_verification_reference,
+    })
+    if (!age.success) return { error: workerValidationError(age.error, 'Verified adult worker details are required.') }
     
     // Set actor context so the audit trigger captures the ID instead of NULL since we are using requireRole which sets the user JWT natively
     // We don't need service role here, so we shouldn't necessarily need set_actor_for_audit unless it's a service client,
@@ -661,14 +672,14 @@ export async function addMeterWorker(data: {
     const { data: inserted, error } = await supabase
         .from('workers')
         .insert({
-            name: data.name,
+            name,
             is_active: true,
             pf_esi_enrolled: data.pf_esi_enrolled,
             pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
-            date_of_birth: data.date_of_birth,
-            age_verification_method: data.age_verification_method,
+            date_of_birth: age.data.date_of_birth,
+            age_verification_method: age.data.age_verification_method,
             age_verification_reference: data.age_verification_reference.trim(),
             age_verified_at: new Date().toISOString(),
             age_verified_by: user.id,
@@ -677,7 +688,10 @@ export async function addMeterWorker(data: {
         .select('id')
         .single()
         
-    if (error) return { error: error.message }
+    if (error) {
+        console.error('Failed to add piece-rate worker:', error)
+        return { error: 'Failed to add worker. Check the verified DOB and evidence reference.' }
+    }
     return { success: true, workerId: inserted.id as number }
 }
 
@@ -695,7 +709,7 @@ export async function addMeterWorkersBulk(
         age_verification_reference: string
     }>
 ) {
-    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireWritableOrg(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     if (!workers.length) return { error: 'No workers to add.' }
@@ -704,15 +718,20 @@ export async function addMeterWorkersBulk(
     // Validate all names upfront
     const rows = workers.map(w => {
         const name = w.name.trim()
-        if (!name) return null
+        const age = WorkerAgeVerificationSchema.safeParse({
+            date_of_birth: w.date_of_birth,
+            age_verification_method: w.age_verification_method,
+            age_verification_reference: w.age_verification_reference,
+        })
+        if (!name || !age.success) return null
         return {
             name,
             is_active: true,
             pf_esi_enrolled: w.pf_esi_enrolled,
             pf_esi_eligible: w.pf_esi_enrolled,
-            date_of_birth: w.date_of_birth,
-            age_verification_method: w.age_verification_method,
-            age_verification_reference: w.age_verification_reference.trim(),
+            date_of_birth: age.data.date_of_birth,
+            age_verification_method: age.data.age_verification_method,
+            age_verification_reference: age.data.age_verification_reference,
             age_verified_at: new Date().toISOString(),
             age_verified_by: user.id,
             org_id: profile.org_id,
@@ -750,23 +769,36 @@ export async function addFixedWorker(data: {
     age_verification_method: 'government_id' | 'birth_certificate' | 'school_record' | 'other'
     age_verification_reference: string
 }) {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireWritableOrg(['owner'])
     const supabase = await createServerClient()
+
+    const name = data.name?.trim()
+    const role = data.role?.trim()
+    const salary = Number(data.monthly_salary)
+    if (!name || !role) return { error: 'Worker name and role are required.' }
+    if (!Number.isFinite(salary) || salary <= 0) return { error: 'Enter a valid monthly salary.' }
+
+    const age = WorkerAgeVerificationSchema.safeParse({
+        date_of_birth: data.date_of_birth,
+        age_verification_method: data.age_verification_method,
+        age_verification_reference: data.age_verification_reference,
+    })
+    if (!age.success) return { error: workerValidationError(age.error, 'Verified adult worker details are required.') }
     
     const { data: inserted, error } = await supabase
         .from('fixed_workers')
         .insert({
-            name: data.name,
-            role: data.role,
-            monthly_salary: data.monthly_salary,
+            name,
+            role,
+            monthly_salary: salary,
             is_active: true,
             pf_esi_enrolled: data.pf_esi_enrolled,
             pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
-            date_of_birth: data.date_of_birth,
-            age_verification_method: data.age_verification_method,
-            age_verification_reference: data.age_verification_reference.trim(),
+            date_of_birth: age.data.date_of_birth,
+            age_verification_method: age.data.age_verification_method,
+            age_verification_reference: age.data.age_verification_reference,
             age_verified_at: new Date().toISOString(),
             age_verified_by: user.id,
             org_id: profile.org_id
@@ -774,12 +806,15 @@ export async function addFixedWorker(data: {
         .select('id')
         .single()
         
-    if (error) return { error: error.message }
+    if (error) {
+        console.error('Failed to add salaried worker:', error)
+        return { error: 'Failed to add worker. Check the verified DOB and evidence reference.' }
+    }
     return { success: true, workerId: inserted.id as number }
 }
 
 export async function toggleWorkerActive(workerId: number, currentActive: boolean, table: 'workers' | 'fixed_workers') {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { profile } = await requireWritableOrg(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     if (table === 'fixed_workers' && profile.role !== 'owner') {

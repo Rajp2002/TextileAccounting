@@ -448,8 +448,8 @@ export function SellAndDispatchDialog({
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <Label>Credit days</Label>
-                            <Input type="number" min="0" step="1" value={creditDays} onChange={(event) => setCreditDays(event.target.value)} className="h-11 lg:h-9" />
+                            <Label>Credit days (0–365)</Label>
+                            <Input type="number" min="0" max="365" step="1" value={creditDays} onChange={(event) => setCreditDays(event.target.value)} className="h-11 lg:h-9" />
                         </div>
                         <div className="space-y-1.5">
                             <Label>Sale date</Label>
@@ -547,7 +547,7 @@ export function SellAndDispatchDialog({
     const canContinue = step === 1
         ? Boolean(sourceId)
         : step === 2
-            ? Boolean(partyName.trim()) && !hasAmbiguousPartyName && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.001))
+            ? Boolean(partyName.trim()) && !hasAmbiguousPartyName && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && creditDaysNum <= 365 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.001))
             : step === 3
                 ? !dispatchNow || (Boolean(dispatchDate) && dispatchDate >= saleDate && dispatchMetersNum > 0 && dispatchMetersNum <= soldMetersNum)
                 : true
