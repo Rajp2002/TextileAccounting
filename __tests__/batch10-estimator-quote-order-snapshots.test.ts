@@ -26,7 +26,7 @@ describe('Batch 10 estimator quote/order snapshots', () => {
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
         const estimatorClient = readProjectFile('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
-        expect(estimatorActions).toContain("import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot")
+        expect(estimatorActions).toContain('calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot')
         expect(estimatorActions).toContain('const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)')
         expect(estimatorActions.match(/const workerRatePerM = calcWorkerRateSnapshot\(/g)?.length).toBeGreaterThanOrEqual(3)
         expect(functionBody(estimatorActions, 'startPartyOrderFromEstimator')).not.toContain('input.workerRatePerM')
@@ -42,9 +42,9 @@ describe('Batch 10 estimator quote/order snapshots', () => {
         const saveQuote = functionBody(estimatorActions, 'saveEstimatorQuoteV3')
         const startOrder = functionBody(estimatorActions, 'startPartyOrderFromEstimator')
 
-        expect(estimatorActions).toContain('landedCostPerM: normalizeCurrencySnapshot(')
-        expect(estimatorActions).toContain('totals.orderQuote?.landedCostPerM ?? totals.totalProductionCostPerM')
-        expect(saveQuote).toContain('landed_cost_per_meter:    authoritative.landedCostPerM')
+        expect(estimatorActions).toContain('landedCostPerM: result.landedCostPerM')
+        expect(estimatorActions).toContain('const result = buildCostingResult(estimate, totals)')
+        expect(saveQuote).toContain('landed_cost_per_meter:    authoritative.result.landedCostPerM')
         expect(startOrder).toContain('p_landed_cost_per_meter: authoritative.landedCostPerM')
         expect(startOrder).not.toContain('p_landed_cost_per_meter: authoritative.productionCostPerM')
     })

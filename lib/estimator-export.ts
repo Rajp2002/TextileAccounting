@@ -1,4 +1,11 @@
-import type { EstimateState, EstimatorV3Totals } from './estimator'
+import {
+  buildCostingResult,
+  calculateBreakEvenPricePerM,
+  normalizeCurrencySnapshot,
+  type CostingResultSnapshot,
+  type EstimateState,
+  type EstimatorV3Totals,
+} from './estimator'
 
 export type CostingExportMode = 'internal' | 'customer'
 
@@ -24,6 +31,8 @@ export type CostingExportModel = {
   marginPct: number
   expectedProfit: number | null
   expectedProfitPerM: number
+  result: CostingResultSnapshot
+  reconciliationStatus: string
   state: EstimateState
   totals: EstimatorV3Totals
 }
@@ -38,58 +47,69 @@ function finiteNumber(value: unknown) {
   return Number.isFinite(numericValue) ? numericValue : null
 }
 
-export function calculateBreakEvenPricePerM(productionCostPerM: number, transportPerM: number, commissionPct: number) {
-  const safeProductionCostPerM = finiteOrZero(productionCostPerM)
-  const safeTransportPerM = finiteOrZero(transportPerM)
-  const safeCommissionPct = finiteOrZero(commissionPct)
-  const denominator = 1 - safeCommissionPct / 100
-  if (!Number.isFinite(denominator) || denominator <= 0) return 0
-  return (safeProductionCostPerM + safeTransportPerM) / denominator
-}
+// Kept as a public export for existing callers. The implementation now lives
+// in the estimator's canonical calculation module so PDFs cannot drift from
+// the estimator break-even formula.
+export { calculateBreakEvenPricePerM }
 
 export function createCostingExportModel(input: {
   qualityLabel: string
   createdAt?: string
   state: EstimateState
   totals: EstimatorV3Totals
+  result?: CostingResultSnapshot
+  reconciliationStatus?: string
   suggestedSellingPricePerM?: number
   landedCostPerM?: number
   marginPct?: number
 }): CostingExportModel {
-  const quantityM = finiteOrZero(input.state.orderQuantityM)
-  const rawProductionCostPerM = finiteNumber(input.totals.totalProductionCostPerM)
-  const productionCostPerM = rawProductionCostPerM ?? 0
-  const rawSuggestedSellingPricePerM = input.suggestedSellingPricePerM ?? input.totals.orderQuote?.quotePricePerM ?? 0
-  const suggestedSellingPricePerM = finiteNumber(rawSuggestedSellingPricePerM) ?? 0
-  const hasSafeCommercialInputs = rawProductionCostPerM !== null
-    && finiteNumber(rawSuggestedSellingPricePerM) !== null
-  const calculatedLandedCostPerM = hasSafeCommercialInputs
-    ? finiteOrZero(
-        input.totals.orderQuote?.landedCostPerM
-          ?? (
-            productionCostPerM
-            + finiteOrZero(input.state.transportPerM)
-            + suggestedSellingPricePerM * finiteOrZero(input.state.commissionPct) / 100
-          ),
-      )
-    : 0
-  const landedCostPerM = finiteNumber(input.landedCostPerM) ?? calculatedLandedCostPerM
-  const expectedProfitPerM = suggestedSellingPricePerM - landedCostPerM
+  const calculatedResult = input.result ?? buildCostingResult(input.state, input.totals)
+  const hasExplicitLegacyOverrides = input.result == null && (
+    input.suggestedSellingPricePerM !== undefined
+    || input.landedCostPerM !== undefined
+    || input.marginPct !== undefined
+  )
+  const result = hasExplicitLegacyOverrides
+    ? (() => {
+        const suggestedSellingPricePerM = normalizeCurrencySnapshot(
+          finiteNumber(input.suggestedSellingPricePerM) ?? calculatedResult.suggestedSellingPricePerM,
+        )
+        const landedCostPerM = normalizeCurrencySnapshot(
+          finiteNumber(input.landedCostPerM) ?? calculatedResult.landedCostPerM,
+        )
+        const profitPerM = normalizeCurrencySnapshot(suggestedSellingPricePerM - landedCostPerM)
+        const quantityM = calculatedResult.quantityM
+        const totalOrderValue = quantityM == null ? null : normalizeCurrencySnapshot(suggestedSellingPricePerM * quantityM)
+        const totalLandedCost = quantityM == null ? null : normalizeCurrencySnapshot(landedCostPerM * quantityM)
+        return {
+          ...calculatedResult,
+          suggestedSellingPricePerM,
+          landedCostPerM,
+          profitPerM,
+          totalOrderValue,
+          totalLandedCost,
+          expectedProfitTotal: totalOrderValue == null || totalLandedCost == null
+            ? null
+            : normalizeCurrencySnapshot(totalOrderValue - totalLandedCost),
+          targetMarginPct: finiteNumber(input.marginPct) ?? calculatedResult.targetMarginPct,
+          actualMarginPct: finiteNumber(input.marginPct) ?? calculatedResult.actualMarginPct,
+        }
+      })()
+    : calculatedResult
+  const quantityM = result.quantityM == null ? 0 : result.quantityM
   return {
     qualityLabel: input.qualityLabel.trim() || 'Untitled Costing',
     createdAt: input.createdAt ?? new Date().toISOString(),
     quantityM,
-    productionCostPerM,
-    suggestedSellingPricePerM,
-    breakEvenPricePerM: calculateBreakEvenPricePerM(
-      productionCostPerM,
-      input.state.transportPerM,
-      input.state.commissionPct,
-    ),
-    landedCostPerM,
-    marginPct: finiteNumber(input.marginPct) ?? finiteOrZero(input.totals.orderQuote?.actualMarginPct ?? input.state.profitPct),
-    expectedProfit: quantityM > 0 ? expectedProfitPerM * quantityM : null,
-    expectedProfitPerM,
+    productionCostPerM: result.productionCostPerM,
+    suggestedSellingPricePerM: result.suggestedSellingPricePerM,
+    breakEvenPricePerM: result.breakEvenPricePerM,
+    landedCostPerM: result.landedCostPerM,
+    marginPct: result.actualMarginPct,
+    expectedProfit: result.expectedProfitTotal,
+    expectedProfitPerM: result.profitPerM,
+    result,
+    reconciliationStatus: input.reconciliationStatus ?? 'verified',
     state: input.state,
     totals: input.totals,
   }
@@ -99,6 +119,9 @@ export function validateCostingExportInput(model: CostingExportModel | null, opt
   if (!model) return ['The costing result is not ready yet.']
 
   const errors: string[] = []
+  if (model.reconciliationStatus === 'unreconstructable') {
+    errors.push('This historical costing is missing financial assumptions. Create a new current Cost Estimate before exporting.')
+  }
   if (!model.qualityLabel.trim()) errors.push('Quality is required before generating a document.')
   if (!Number.isFinite(model.productionCostPerM) || model.productionCostPerM <= 0) errors.push('Production cost is not valid. Review the costing before exporting.')
   if (!Number.isFinite(model.suggestedSellingPricePerM) || model.suggestedSellingPricePerM <= 0) errors.push('Selling price per metre is not valid. Review the commercial assumptions before exporting.')
@@ -223,6 +246,19 @@ export function extractStyledCostingBody(html: string) {
 
 export function buildCostingPrintHtml(model: CostingExportModel, options: CostingExportOptions) {
   const isInternal = options.mode === 'internal'
+  if (model.reconciliationStatus === 'unreconstructable') {
+    const businessName = options.businessName.trim() || 'Weavly Cost Estimate'
+    const customer = options.customerName.trim()
+    return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(model.qualityLabel)} — review required</title><style>${PRINT_STYLES}</style></head><body>
+<main class="document">
+  <div class="brandbar"></div>
+  <header class="masthead"><div class="brand"><div class="brandmark">W</div><div><div class="brandname">${escapeHtml(businessName)}</div><div class="doctype">${isInternal ? 'Internal Cost Sheet' : 'Customer Quotation'}</div></div></div><div class="docmeta"><strong>Review required</strong><span>Prepared from an incomplete historical snapshot</span></div></header>
+  <section class="titleblock"><div><div class="eyebrow">Fabric quality</div><h1>${escapeHtml(model.qualityLabel)}</h1></div><div class="titleaside">${customer ? `Prepared for<br><b>${escapeHtml(customer)}</b>` : 'Historical record'}</div></section>
+  <section class="note"><strong>Financial values not shown</strong>This historical costing is missing one or more saved assumptions. Re-enter or confirm the costing in Cost Estimate and save a new snapshot before using it as a customer quotation.</section>
+  <footer class="footer"><span>Generated by <strong>Weavly Cost Estimate</strong></span><span>Customer export is blocked until the costing is reconciled.</span></footer>
+</main></body></html>`
+  }
   const state = model.state
   const totals = model.totals
   const parsedCreatedAt = new Date(model.createdAt)
@@ -238,14 +274,14 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
   const reference = options.documentReference?.trim() || ''
 
   const costItems = [
-    ['Warp yarn', totals.warpCostPerM],
-    ['Weft yarn', totals.weftCostPerM],
-    ['Machine weaving', totals.weaveCostPerM],
-    ['Warping + sizing', totals.warpingAndSizingPerM],
-    ...(totals.windingPerM > 0 ? [['Winding', totals.windingPerM] as [string, number]] : []),
-    ...(totals.processingPerM > 0 ? [['Processing', totals.processingPerM] as [string, number]] : []),
-    ...(totals.finishingPerM > 0 ? [['Finishing', totals.finishingPerM] as [string, number]] : []),
-    ['Factory overhead', totals.overheadPerM],
+    ['Warp yarn', model.result.breakdown.warpCostPerM],
+    ['Weft yarn', model.result.breakdown.weftCostPerM],
+    ['Machine weaving', model.result.breakdown.weaveCostPerM],
+    ['Warping + sizing', model.result.breakdown.warpingAndSizingPerM],
+    ...(model.result.breakdown.windingPerM > 0 ? [['Winding', model.result.breakdown.windingPerM] as [string, number]] : []),
+    ...(model.result.breakdown.processingPerM > 0 ? [['Processing', model.result.breakdown.processingPerM] as [string, number]] : []),
+    ...(model.result.breakdown.finishingPerM > 0 ? [['Finishing', model.result.breakdown.finishingPerM] as [string, number]] : []),
+    ['Factory overhead', model.result.breakdown.overheadPerM],
   ] as [string, number][]
 
   const costRows = costItems.map(([label, value]) => tableRow([
@@ -254,21 +290,25 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
     `${money(value)}/m`,
   ])).join('') + tableRow(['Production cost', '100.0%', `${money(model.productionCostPerM)}/m`], 'total')
 
-  const layerRows = [
-    ...totals.warpRows.map((row, index) => tableRow([
-      'Warp', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
-    ])),
-    ...totals.weftRows.map((row, index) => tableRow([
-      'Weft', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
-    ])),
-  ].join('')
+  const hasMatchingLayerDetails = Number.isFinite(totals.totalProductionCostPerM)
+    && Math.abs(totals.totalProductionCostPerM - model.result.productionCostPerM) <= 0.01
+  const layerRows = hasMatchingLayerDetails
+    ? [
+        ...totals.warpRows.map((row, index) => tableRow([
+          'Warp', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+        ])),
+        ...totals.weftRows.map((row, index) => tableRow([
+          'Weft', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+        ])),
+      ].join('')
+    : tableRow(['Historical yarn details', 'Unavailable', 'Re-enter and save this costing', '—', '—'])
 
   const summary = isInternal
     ? [
         metric('Production cost', `${money(model.productionCostPerM)}/m`),
         metric('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
         metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
-        metric('Margin', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
+        metric('Actual margin', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
         metric('Order quantity', quantity),
         model.expectedProfit != null
           ? metric(model.expectedProfit < 0 ? 'Expected loss' : 'Expected profit', money(Math.abs(model.expectedProfit), 0), model.expectedProfit < 0 ? 'negative' : 'positive')
@@ -277,18 +317,18 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
     : [
         metric('Quoted price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
         metric('Order quantity', quantity),
-        metric('Quotation value', model.quantityM > 0 ? money(model.suggestedSellingPricePerM * model.quantityM, 0) : 'On confirmation'),
+        metric('Quotation value', model.result.totalOrderValue != null ? money(model.result.totalOrderValue, 2) : 'On confirmation'),
       ].join('')
 
   const internalSections = `
     <section class="section"><div class="sectionhead"><h2>Cost breakdown</h2><span>Per metre of finished fabric</span></div>
       <table><thead><tr><th>Cost component</th><th class="num">Share</th><th class="num">Cost / m</th></tr></thead><tbody>${costRows}</tbody></table>
     </section>
-    <section class="section"><div class="sectionhead"><h2>Yarn assumptions</h2><span>Saved with this costing snapshot</span></div>
+    <section class="section"><div class="sectionhead"><h2>Yarn assumptions</h2><span>${hasMatchingLayerDetails ? 'Saved with this costing snapshot' : 'Detailed historical values unavailable'}</span></div>
       <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Consumption / 100m</th><th class="num">Rate</th><th class="num">Cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
     </section>
     <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
-      <div class="commercial"><div><span>Commission</span><strong>${decimal(state.commissionPct, 1)}%</strong></div><div><span>Transport</span><strong>${money(state.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(state.profitPct, 1)}%</strong></div></div>
+      <div class="commercial"><div><span>Commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
     </section>`
 
   return `<!doctype html>

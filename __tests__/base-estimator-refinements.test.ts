@@ -17,11 +17,15 @@ const saved = [
   {
     id: 'older', party_name: 'Alpha', quality_label: 'Canvas', quote_price_per_meter: 70,
     landed_cost_per_meter: 50, intended_margin_percent: 18, meters: 1000,
+    production_cost_per_meter: 50, break_even_price_per_meter: 51,
+    expected_profit_per_meter: 20, expected_profit_total: 20_000, actual_margin_percent: 18,
     created_at: '2026-01-01T00:00:00.000Z', updated_at: '2026-01-02T00:00:00.000Z',
   },
   {
     id: 'newer', party_name: 'Beta', quality_label: 'Georgette', quote_price_per_meter: 45,
     landed_cost_per_meter: 42, intended_margin_percent: 6, meters: 5000,
+    production_cost_per_meter: 42, break_even_price_per_meter: 43,
+    expected_profit_per_meter: 3, expected_profit_total: 15_000, actual_margin_percent: 6,
     created_at: '2026-02-01T00:00:00.000Z', updated_at: '2026-02-03T00:00:00.000Z',
   },
 ]
@@ -37,8 +41,11 @@ describe('Base Saved Costings discovery', () => {
     expect(filterAndSortSavedCostings(saved, { query: '', sort: 'recent', margin: 'under_10' }).map(item => item.id)).toEqual(['newer'])
     expect(compareSavedCostings(saved[0], saved[1])).toEqual({
       productionCostDelta: -8,
+      breakEvenDelta: -8,
+      landedCostDelta: -8,
       sellingPriceDelta: -25,
       marginDelta: -12,
+      expectedProfitDelta: -5_000,
       quantityDelta: 4000,
     })
   })
@@ -46,7 +53,7 @@ describe('Base Saved Costings discovery', () => {
   it('shows movement only against the previous version in the same costing group', () => {
     const versions = [
       { ...saved[0], id: 'v1', costing_group_id: 'group-a', version_number: 1, landed_cost_per_meter: 50 },
-      { ...saved[0], id: 'v2', costing_group_id: 'group-a', version_number: 2, landed_cost_per_meter: 52.25 },
+      { ...saved[0], id: 'v2', costing_group_id: 'group-a', version_number: 2, landed_cost_per_meter: 52.25, production_cost_per_meter: 52.25 },
       { ...saved[1], id: 'other', costing_group_id: 'group-b', version_number: 1, landed_cost_per_meter: 10 },
     ]
     const previous = getPreviousCostingVersion(versions[1], versions)
@@ -62,6 +69,7 @@ describe('Base costing exports', () => {
   state.weftRows = [{ ...state.weftRows[0], label: 'Weft Main', picks: 68, reedSpace: 110, calcDenier: 75, yarnRate: 110, gstPct: 5 }]
   state.tapeLengthM = 1000
   state.perPickCostPaisa = 0.08
+  state.overheadMode = 'direct'
   state.overheadOverridePerM = 3
   state.monthlyOutputM = 10000
   state.loomType = 'water_jet'
@@ -85,7 +93,7 @@ describe('Base costing exports', () => {
     })
 
     expect(internal).toContain('Production cost')
-    expect(internal).toContain('Margin')
+    expect(internal).toContain('Actual margin')
     expect(customer).toContain('Customer Quotation')
     expect(customer).toContain('Quoted price')
     expect(customer).not.toContain('Production cost')
@@ -111,11 +119,8 @@ describe('Base costing exports', () => {
       mode: 'internal', businessName: 'Acme Weaves', customerName: '', validUntil: '', notes: '', showGstNote: false,
     })
 
-    expect(noQuantityModel.suggestedSellingPricePerM).toBeCloseTo(
-      (noQuantityTotals.totalProductionCostPerM + 2) / (1 - 0.02 - 0.12),
-      8,
-    )
-    expect(noQuantityModel.marginPct).toBeCloseTo(12, 8)
+    expect(noQuantityModel.suggestedSellingPricePerM).toBe(19.2)
+    expect(noQuantityModel.marginPct).toBe(12.03)
     expect(noQuantityModel.expectedProfit).toBeNull()
     expect(noQuantityModel.expectedProfitPerM).toBeGreaterThan(0)
     expect(html).toContain('Profit / m')

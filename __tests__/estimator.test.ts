@@ -42,6 +42,7 @@ function makeDno252BaseEstimate(partial: Partial<EstimateState>): EstimateState 
         yarnShortagePct: 10,
         warpCrimpPct: 0,
         overheadItems: [],
+        overheadMode: 'direct',
         overheadOverridePerM: 21.5,
         monthlyOutputM: 10000,
         enabledSections: {
@@ -184,6 +185,7 @@ function makeFactoryFormulaQaEstimate(): EstimateState {
         yarnShortagePct: 10,
         warpCrimpPct: 10,
         overheadItems: [],
+        overheadMode: 'direct',
         overheadOverridePerM: 13.5,
         monthlyOutputM: 10000,
         enabledSections: {
@@ -286,6 +288,7 @@ function makePracticalManualQaEstimate(overheadPerM: number): EstimateState {
         yarnShortagePct: 10,
         warpCrimpPct: 0,
         overheadItems: [],
+        overheadMode: 'direct',
         overheadOverridePerM: overheadPerM,
         monthlyOutputM: 10000,
         enabledSections: {
@@ -790,6 +793,7 @@ describe('Estimator full totals', () => {
             yarnShortagePct: 10,
             warpCrimpPct: 5,
             overheadItems: [],
+            overheadMode: 'direct',
             monthlyOutputM: 2600,
             overheadOverridePerM: 5.75,
             loomCount: 2,
@@ -850,6 +854,7 @@ describe('Estimator full totals', () => {
             yarnShortagePct: 10,
             warpCrimpPct: 5,
             overheadItems: [],
+            overheadMode: 'direct',
             monthlyOutputM: 2600,
             overheadOverridePerM: 5.75,
             loomCount: 2,

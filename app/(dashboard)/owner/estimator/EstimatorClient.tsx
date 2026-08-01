@@ -45,6 +45,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
+    buildCostingResult,
     runScenarios,
     makeDefaultEstimateState,
     DEFAULT_WARP_ROW,
@@ -1763,6 +1764,7 @@ export default function EstimatorClient({
             return calcFullTotals(makeDefaultEstimateState())
         }
     }, [state])
+    const costingResult = useMemo(() => buildCostingResult(state, totals), [state, totals])
     // Keep the monthly-expense reference available even when the costing is
     // currently using a direct ₹/m rate. This is transparency only; it never
     // overrides the selected calculation method.
@@ -1774,9 +1776,9 @@ export default function EstimatorClient({
         && totals.totalProductionCostPerM >= 0
     const validationSummaryId = 'estimator-save-validation-summary'
     const exportModel = useMemo(() => hasValidCostResult
-        ? createCostingExportModel({ qualityLabel, state, totals })
+        ? createCostingExportModel({ qualityLabel, state, totals, result: costingResult })
         : null,
-    [hasValidCostResult, qualityLabel, state, totals])
+    [costingResult, hasValidCostResult, qualityLabel, state, totals])
     const scenarios = useMemo(() => runScenarios(state, totals), [state, totals])
     const breakEvenScenario = useMemo(
         () => scenarios.find(scenario => scenario.id === 'break-even'),
@@ -2222,7 +2224,7 @@ export default function EstimatorClient({
                     weftInstruction:         weftInstruction.trim() || undefined,
                     targetMeters,
                     estimate:                state,
-                    totalProductionCostPerM: totals.totalProductionCostPerM,
+                    totalProductionCostPerM: costingResult.productionCostPerM,
                     notes:                   '',
                     deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0], // 30 days default
                     templateId:              appliedTemplate?.id,
@@ -2248,8 +2250,8 @@ export default function EstimatorClient({
                     warpInstruction:         warpInstruction.trim() || undefined,
                     weftInstruction:         weftInstruction.trim() || undefined,
                     estimate:                state,
-                    quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
-                    totalProductionCostPerM: totals.totalProductionCostPerM,
+                    quotePricePerM:          costingResult.suggestedSellingPricePerM,
+                    totalProductionCostPerM: costingResult.productionCostPerM,
                     status:                  status,
                     recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
                     sourceQuoteId:           sourceQuoteId ?? undefined,
@@ -2307,8 +2309,8 @@ export default function EstimatorClient({
             return toast.error('Set a quantity before starting the order')
         }
 
-        const quotePricePerM = totals.orderQuote?.quotePricePerM
-        if (!quotePricePerM || quotePricePerM <= 0 || totals.totalProductionCostPerM <= 0) {
+        const quotePricePerM = costingResult.suggestedSellingPricePerM
+        if (!quotePricePerM || quotePricePerM <= 0 || costingResult.productionCostPerM <= 0) {
             return toast.error('Complete the estimate before starting the order')
         }
 
@@ -2325,7 +2327,7 @@ export default function EstimatorClient({
                 targetMeters: state.orderQuantityM,
                 deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
                 quotePricePerM,
-                costPerM: totals.totalProductionCostPerM,
+                costPerM: costingResult.productionCostPerM,
             })
 
             if ('error' in result) {
@@ -2373,8 +2375,8 @@ export default function EstimatorClient({
     const displayMarginPct = estimatorValidation.valid
         && hasOrderQty
         && orderQuote?.isValid
-        && Number.isFinite(orderQuote.actualMarginPct)
-        ? orderQuote.actualMarginPct
+        && Number.isFinite(costingResult.actualMarginPct)
+        ? costingResult.actualMarginPct
         : null
     const costSegments = [
         { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
@@ -2580,7 +2582,7 @@ export default function EstimatorClient({
                                 <div className="min-w-0">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.price_helpers.production_cost')}</p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-ink)] sm:text-[32px] 2xl:text-[22px]">
-                                        {hasValidCostResult ? `₹${totals.totalProductionCostPerM.toFixed(2)}` : '—'}
+                                        {hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'}
                                     </p>
                                     <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
                                 </div>
@@ -2589,12 +2591,12 @@ export default function EstimatorClient({
                                         {mode === 'market' ? 'Target selling price' : t('estimator.price_helpers.suggested_selling_price')}
                                     </p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[32px] 2xl:text-[22px]">
-                                        {hasValidCostResult && orderQuote?.isValid ? `₹${orderQuote.quotePricePerM.toFixed(2)}` : '—'}
+                                        {hasValidCostResult && orderQuote?.isValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
                                     </p>
                                     <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
                                 </div>
                                 <div className="min-w-0 rounded-[12px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] px-3 py-2 2xl:px-2 2xl:py-1.5">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">{t('estimator.hud.margin')}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">Actual margin</p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
                                         {displayMarginPct === null ? '—' : `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%`}
                                     </p>
@@ -2603,7 +2605,7 @@ export default function EstimatorClient({
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.price_helpers.break_even')}</p>
                                     <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-ink)] 2xl:text-[20px]">
                                         {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
-                                            ? `₹${breakEvenScenario.quotePricePerM.toFixed(2)}`
+                                            ? `₹${costingResult.breakEvenPricePerM.toFixed(2)}`
                                             : '—'}
                                     </p>
                                     <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.price_helpers.break_even_hint')}</p>
@@ -2613,7 +2615,7 @@ export default function EstimatorClient({
                                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
                                         <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
                                             {hasValidCostResult && orderQuote?.isValid
-                                                ? `₹${orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+                                                ? `₹${(costingResult.expectedProfitTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                                 : '—'}
                                         </p>
                                         <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">
@@ -2866,7 +2868,7 @@ export default function EstimatorClient({
                                     <div className="shrink-0 text-right">
                                         <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
                                         <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
-                                            ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                            ₹{(costingResult.expectedProfitTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                     </div>
                                 </>

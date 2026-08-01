@@ -1,5 +1,6 @@
 import {
   getEffectiveCostingWidthCm,
+  getEffectiveCommercialInputs,
   getEffectiveYarnDenier,
   LOOM_TYPE_DEFAULTS,
   type EstimateState,
@@ -336,6 +337,12 @@ export function validateEstimatorSnapshot(
       required: true,
     })
   }
+  if (overheadMode === 'monthly_expenses' && estimate.overheadOverridePerM != null) {
+    warnings.push({
+      field: 'overheadOverridePerM',
+      message: 'Monthly overhead mode is selected, so the direct ₹/m overhead value will not be used.',
+    })
+  }
   addNumberIssue(issues, warnings, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, {
     max: MAX_TARGET_METERS,
     allowZero: overheadMode === 'direct',
@@ -343,6 +350,19 @@ export function validateEstimatorSnapshot(
   addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true })
+  const commercialInputs = getEffectiveCommercialInputs(estimate)
+  if (commercialInputs.commissionToggleMismatch) {
+    warnings.push({
+      field: 'enabledSections.commission',
+      message: `Commission is set to ${Number(estimate.commissionPct).toFixed(2)}%, so it will be included even though the commission section is switched off.`,
+    })
+  }
+  if (commercialInputs.transportToggleMismatch) {
+    warnings.push({
+      field: 'enabledSections.transport',
+      message: `Transport is set to ₹${Number(estimate.transportPerM).toFixed(2)}/m, so it will be included even though the transport section is switched off.`,
+    })
+  }
   addNumberIssue(issues, warnings, 'loomCount', 'Loom count', estimate.loomCount, { max: MAX_LOOMS, allowZero: true })
   addNumberIssue(issues, warnings, 'monthlyWorkingDays', 'Monthly working days', estimate.monthlyWorkingDays, { max: MAX_WORKING_DAYS })
   addNumberIssue(issues, warnings, 'avgOutputPerLoomPerDay', 'Average output per loom per day', estimate.avgOutputPerLoomPerDay, {

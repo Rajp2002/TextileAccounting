@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { calcFullTotals, makeDefaultEstimateState } from '@/lib/estimator'
+import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
 import {
     getEstimatorDraftStorageKey,
     parseEstimatorDraft,
@@ -57,6 +57,7 @@ import {
     getPreviousCostingVersion,
     normalizeSavedWarpRows,
     normalizeSavedWeftRows,
+    getSavedCostingMetrics,
     type SavedQualityFactoryProfile,
     type SavedQualityFixedWorker,
     type SavedQualityRecipe,
@@ -154,6 +155,18 @@ type QuoteRow = {
     loom_count?: number | null
     monthly_working_days?: number | null
     avg_output_per_loom_per_day?: number | null
+    calculation_version?: string | null
+    rounding_policy?: string | null
+    production_cost_per_meter?: number | null
+    overhead_per_meter?: number | null
+    commission_cost_per_meter?: number | null
+    break_even_price_per_meter?: number | null
+    expected_profit_per_meter?: number | null
+    expected_profit_total?: number | null
+    actual_margin_percent?: number | null
+    costing_result_snapshot?: unknown
+    reconciliation_status?: string | null
+    reconciliation_note?: string | null
     orders?: QuoteLinkedOrder | QuoteLinkedOrder[] | null
 }
 
@@ -234,29 +247,46 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
     }
 }
 
-function getSavedCostingTotals(quote: QuoteRow) {
-    try {
-        return calcFullTotals(buildDraftStateFromQuote(quote))
-    } catch (error) {
-        console.error('Unable to calculate a saved costing snapshot', quote.id, error)
-        return null
-    }
+function getCostingStatus(quote: QuoteRow) {
+    return getSavedCostingMetrics(quote).status
 }
 
 function getProductionCostPerM(quote: QuoteRow) {
-    return getSavedCostingTotals(quote)?.totalProductionCostPerM ?? Number(quote.landed_cost_per_meter)
+    return getSavedCostingMetrics(quote).productionCostPerM
 }
 
 function getSuggestedSellingPricePerM(quote: QuoteRow) {
-    return getSavedCostingTotals(quote)?.orderQuote?.quotePricePerM ?? Number(quote.quote_price_per_meter)
+    return getSavedCostingMetrics(quote).suggestedSellingPricePerM
 }
 
 function getActualMarginPct(quote: QuoteRow) {
-    return getSavedCostingTotals(quote)?.orderQuote?.actualMarginPct ?? Number(quote.intended_margin_percent)
+    return getSavedCostingMetrics(quote).actualMarginPct
+}
+
+function getHistoricalCostingResult(quote: QuoteRow): CostingResultSnapshot | null {
+    return parseCostingResultSnapshot(quote.costing_result_snapshot)
+}
+
+function formatCostingMoneyPerM(value: number | null) {
+    return value == null ? 'Not available' : `₹${value.toFixed(2)}/m`
+}
+
+function formatCostingPercent(value: number | null) {
+    return value == null ? 'Not available' : `${value.toFixed(1)}%`
+}
+
+function formatTechnicalMetric(value: number | null | undefined, prefix: string, suffix: string, digits = 2) {
+    return value == null ? 'Not available' : `${prefix}${value.toFixed(digits)}${suffix}`
+}
+
+function technicalMetricDelta(left: number | null | undefined, right: number | null | undefined) {
+    return left == null || right == null ? null : right - left
 }
 
 function getProductionCostMovement(current: QuoteRow, previous: QuoteRow | null) {
-    return previous ? getProductionCostPerM(current) - getProductionCostPerM(previous) : null
+    const currentCost = getProductionCostPerM(current)
+    const previousCost = previous ? getProductionCostPerM(previous) : null
+    return previousCost == null || currentCost == null ? null : currentCost - previousCost
 }
 
 function getCurrentRecipeCostPerM(
@@ -304,7 +334,7 @@ function SavedQualityLibraryView({
             {groups.map(group => {
                 const isExpanded = expandedKey === group.key
                 const latest = group.records[0] ?? null
-                const latestTotals = latest ? getSavedCostingTotals(latest) : null
+                const latestResult = latest ? getHistoricalCostingResult(latest) : null
                 const usages = group.records
                     .map(record => ({ record, order: getLinkedOrder(record) }))
                     .filter((item): item is { record: QuoteRow; order: QuoteLinkedOrder } => Boolean(item.order))
@@ -330,6 +360,7 @@ function SavedQualityLibraryView({
                                             {group.template && <Badge variant="outline" className="border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700">Saved quality</Badge>}
                                             {group.template?.is_active === false && <Badge variant="outline" className="border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-600">Archived · read-only</Badge>}
                                             {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
+                                            {latest && getCostingStatus(latest) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
                                         </span>
                                         <span className="mt-1 block text-xs text-slate-500">
                                             {group.records.length > 0
@@ -343,7 +374,7 @@ function SavedQualityLibraryView({
                                     <div className="rounded-lg bg-slate-50 px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{latest ? 'Latest cost' : 'Current recipe'}</p>
                                         <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest
-                                            ? `₹${getProductionCostPerM(latest).toFixed(2)}/m`
+                                            ? formatCostingMoneyPerM(getProductionCostPerM(latest))
                                             : group.currentRecipeCostPerM != null
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                 : '—'}</p>
@@ -377,7 +408,7 @@ function SavedQualityLibraryView({
 
                             {isExpanded && (
                                 <div className="border-t border-slate-200 bg-slate-50/60 p-4 sm:p-5">
-                                    {!latest || !latestTotals ? (
+                                    {!latest || !latestResult ? (
                                         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
                                             {latest ? <AlertTriangle className="h-6 w-6 text-amber-500" /> : <FileText className="h-6 w-6 text-slate-400" />}
                                             <p className="mt-3 text-sm font-bold text-slate-700">{latest
@@ -391,7 +422,7 @@ function SavedQualityLibraryView({
                                                     ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
                                                     : canUseProduction
                                                         ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
-                                                        : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'}</p>
+                                                    : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'}</p>
                                         </div>
                                     ) : (
                                         <div className={`grid gap-4 ${canUseProduction ? 'xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
@@ -410,16 +441,16 @@ function SavedQualityLibraryView({
                                                             {latest.is_archived ? 'Restore' : 'Archive'}
                                                         </Button>
                                                     </div>
-                                                </div>
+                                                        </div>
 
                                                 <div className="mt-4 divide-y divide-slate-100 text-sm">
                                                     {[
-                                                        ['Warp yarn', latestTotals.warpCostPerM],
-                                                        ['Weft yarn', latestTotals.weftCostPerM],
-                                                        ['Weaving', latestTotals.weaveCostPerM],
-                                                        ['Warping & sizing', latestTotals.warpingAndSizingPerM],
-                                                        ['Processing & finishing', latestTotals.windingPerM + latestTotals.processingPerM + latestTotals.finishingPerM],
-                                                        ['Factory overhead', latestTotals.overheadPerM],
+                                                        ['Warp yarn', latestResult.breakdown.warpCostPerM],
+                                                        ['Weft yarn', latestResult.breakdown.weftCostPerM],
+                                                        ['Weaving', latestResult.breakdown.weaveCostPerM],
+                                                        ['Warping & sizing', latestResult.breakdown.warpingAndSizingPerM],
+                                                        ['Processing & finishing', latestResult.breakdown.windingPerM + latestResult.breakdown.processingPerM + latestResult.breakdown.finishingPerM],
+                                                        ['Factory overhead', latestResult.breakdown.overheadPerM],
                                                     ].map(([label, value]) => (
                                                         <div key={String(label)} className="flex items-center justify-between py-2">
                                                             <span className="text-slate-600">{label}</span>
@@ -428,10 +459,15 @@ function SavedQualityLibraryView({
                                                     ))}
                                                 </div>
                                                 <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-slate-950 p-3 text-white">
-                                                    <div><p className="text-[10px] uppercase text-slate-400">Production cost</p><p className="mt-1 font-mono text-sm font-black">₹{latestTotals.totalProductionCostPerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{Number(latestTotals.orderQuote?.quotePricePerM ?? latest.quote_price_per_meter).toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-slate-400">Margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{Number(latestTotals.orderQuote?.actualMarginPct ?? latest.intended_margin_percent).toFixed(1)}%</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Production cost</p><p className="mt-1 font-mono text-sm font-black">₹{latestResult.productionCostPerM.toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Suggested price</p><p className="mt-1 font-mono text-sm font-black text-orange-300">₹{latestResult.suggestedSellingPricePerM.toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-slate-400">Actual margin</p><p className="mt-1 font-mono text-sm font-black text-emerald-300">{latestResult.actualMarginPct.toFixed(1)}%</p></div>
                                                 </div>
+                                                {getCostingStatus(latest) !== 'verified' && (
+                                                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                                                        This is a legacy or review snapshot. The saved numbers are preserved, but customer quotation export stays blocked until the assumptions are reconstructed and saved as a new current costing.
+                                                    </div>
+                                                )}
                                             </section>
 
                                             {canUseProduction && <section className="rounded-xl border border-slate-200 bg-white p-4">
@@ -483,10 +519,15 @@ function SavedQualityLibraryView({
                                                             <tr key={record.id}>
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
                                                                 <td className="py-3 font-bold text-slate-900">v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></td>
-                                                                <td className="py-3 capitalize text-slate-600">{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name || 'Customer not set'}` : 'Costing'}</td>
-                                                                <td className="py-3 font-mono text-slate-700">₹{getProductionCostPerM(record).toFixed(2)}/m</td>
-                                                                <td className="py-3 font-mono font-bold text-orange-700">₹{getSuggestedSellingPricePerM(record).toFixed(2)}/m</td>
-                                                                <td className="py-3 font-mono font-bold text-emerald-700">{getActualMarginPct(record).toFixed(1)}%</td>
+                                                                <td className="py-3 capitalize text-slate-600">
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <span>{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name || 'Customer not set'}` : 'Costing'}</span>
+                                                                        {getCostingStatus(record) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-3 font-mono text-slate-700">{formatCostingMoneyPerM(getProductionCostPerM(record))}</td>
+                                                                <td className="py-3 font-mono font-bold text-orange-700">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</td>
+                                                                <td className="py-3 font-mono font-bold text-emerald-700">{formatCostingPercent(getActualMarginPct(record))}</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
                                                                 <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id}>{record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {record.is_archived ? 'Restore' : 'Archive'}</Button></div></td>
                                                             </tr>
@@ -593,8 +634,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
         return visible.sort((a, b) => {
             if (costingSort === 'oldest') return Date.parse(a.updatedAt) - Date.parse(b.updatedAt)
-            if (costingSort === 'margin_desc') return Number(b.records[0]?.intended_margin_percent ?? Number.NEGATIVE_INFINITY) - Number(a.records[0]?.intended_margin_percent ?? Number.NEGATIVE_INFINITY)
-            if (costingSort === 'cost_asc') return (a.records[0] ? getProductionCostPerM(a.records[0]) : Number.POSITIVE_INFINITY) - (b.records[0] ? getProductionCostPerM(b.records[0]) : Number.POSITIVE_INFINITY)
+            if (costingSort === 'margin_desc') {
+                const leftMargin = a.records[0] ? getSavedCostingMetrics(a.records[0]).actualMarginPct : null
+                const rightMargin = b.records[0] ? getSavedCostingMetrics(b.records[0]).actualMarginPct : null
+                return (rightMargin ?? Number.NEGATIVE_INFINITY) - (leftMargin ?? Number.NEGATIVE_INFINITY)
+            }
+            if (costingSort === 'cost_asc') return (a.records[0] ? getProductionCostPerM(a.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY) - (b.records[0] ? getProductionCostPerM(b.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY)
             return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
     }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived])
@@ -605,8 +650,23 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const selectedCostingStates = useMemo(
         () => selectedCostings.map(costing => {
             const state = buildDraftStateFromQuote(costing)
-            return { state, totals: calcFullTotals(state) }
+            try {
+                const totals = calcFullTotals(state)
+                const historicalResult = getHistoricalCostingResult(costing)
+                const technicalDetailsVerified = Boolean(
+                    historicalResult
+                    && Number.isFinite(totals.totalProductionCostPerM)
+                    && Math.abs(totals.totalProductionCostPerM - historicalResult.productionCostPerM) <= 0.01,
+                )
+                return { state, totals, technicalDetailsVerified }
+            } catch {
+                return { state, totals: null, technicalDetailsVerified: false }
+            }
         }),
+        [selectedCostings],
+    )
+    const selectedCostingMetrics = useMemo(
+        () => selectedCostings.map(costing => getSavedCostingMetrics(costing)),
         [selectedCostings],
     )
     const comparison = selectedCostings.length === 2
@@ -615,16 +675,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const exportModel = useMemo(() => {
         if (!quoteToExport) return null
         const state = buildDraftStateFromQuote(quoteToExport)
+        const historicalResult = getHistoricalCostingResult(quoteToExport)
+        const currentTotals = calcFullTotals(state)
         return createCostingExportModel({
             qualityLabel: quoteToExport.quality_label || 'Untitled costing',
             createdAt: quoteToExport.created_at,
             state,
-            totals: calcFullTotals(state),
-            // A historical PDF must reproduce the saved commercial snapshot,
-            // not silently recalculate today's price from the recipe.
-            suggestedSellingPricePerM: Number(quoteToExport.quote_price_per_meter),
-            landedCostPerM: Number(quoteToExport.landed_cost_per_meter),
-            marginPct: Number(quoteToExport.intended_margin_percent),
+            totals: currentTotals,
+            result: historicalResult ?? buildCostingResult(state, currentTotals),
+            reconciliationStatus: historicalResult ? getCostingStatus(quoteToExport) : 'unreconstructable',
         })
     }, [quoteToExport])
 
@@ -921,6 +980,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             <tbody className="divide-y divide-slate-100">
                                 {filteredQuotes.map(quote => {
                                     const selected = selectedCostingIds.includes(quote.id)
+                                    const metrics = getSavedCostingMetrics(quote)
                                     const previousVersion = getPreviousCostingVersion(quote, quotes)
                                     const costMovement = getProductionCostMovement(quote, previousVersion)
                                     return (
@@ -936,19 +996,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             </td>
                                             <td className="max-w-[240px] px-4 py-4">
                                                 <p className="truncate text-sm font-bold text-slate-950">{quote.quality_label || 'Untitled costing'} <span className="ml-1 text-xs font-semibold text-blue-600">v{Number(quote.version_number ?? 1)}</span></p>
-                                                <p className="mt-1 text-xs text-slate-500">Saved {format(new Date(quote.created_at), 'MMM d, yyyy')}</p>
+                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                                    <span>Saved {format(new Date(quote.created_at), 'MMM d, yyyy')}</span>
+                                                    {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4">
-                                                <p className="font-mono text-sm font-semibold text-slate-700">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
+                                                <p className="font-mono text-sm font-semibold text-slate-700">{formatCostingMoneyPerM(getProductionCostPerM(quote))}</p>
                                                 {costMovement !== null && (
                                                     <p className={`mt-1 text-[11px] font-semibold ${costMovement > 0 ? 'text-amber-700' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                         {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
                                                     </p>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-4 font-mono text-sm font-bold text-orange-700">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</td>
-                                            <td className={`px-4 py-4 font-mono text-sm font-bold ${Number(quote.intended_margin_percent) < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
-                                                {Number(quote.intended_margin_percent).toFixed(1)}%
+                                            <td className="px-4 py-4 font-mono text-sm font-bold text-orange-700">{formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)}</td>
+                                            <td className={`px-4 py-4 font-mono text-sm font-bold ${(metrics.actualMarginPct ?? 0) < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
+                                                {formatCostingPercent(metrics.actualMarginPct)}
                                             </td>
                                             <td className="px-4 py-4 text-sm font-medium text-slate-600">{Number(quote.meters || 0).toLocaleString('en-IN')} m</td>
                                             <td className="px-4 py-4 text-xs font-medium text-slate-500">{format(new Date(quote.updated_at), 'MMM d, yyyy')}<br />{format(new Date(quote.updated_at), 'h:mm a')}</td>
@@ -979,6 +1042,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <div className="space-y-3 md:hidden">
                         {filteredQuotes.map(quote => {
                             const selected = selectedCostingIds.includes(quote.id)
+                            const metrics = getSavedCostingMetrics(quote)
                             const quality = quote.quality_label || 'Untitled costing'
                             const previousVersion = getPreviousCostingVersion(quote, quotes)
                             const costMovement = getProductionCostMovement(quote, previousVersion)
@@ -995,13 +1059,16 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             />
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-sm font-bold text-slate-950">{quality} <span className="ml-1 text-xs font-semibold text-blue-600">v{Number(quote.version_number ?? 1)}</span></p>
-                                                <p className="mt-1 text-xs text-slate-500">Updated {format(new Date(quote.updated_at), 'MMM d, yyyy · h:mm a')}</p>
+                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                                    <span>Updated {format(new Date(quote.updated_at), 'MMM d, yyyy · h:mm a')}</span>
+                                                    {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3">
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Production cost</p>
-                                                <p className="mt-1 font-mono text-sm font-bold text-slate-800">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
+                                                <p className="mt-1 font-mono text-sm font-bold text-slate-800">{formatCostingMoneyPerM(getProductionCostPerM(quote))}</p>
                                                 {costMovement !== null && (
                                                     <p className={`mt-1 text-[10px] font-semibold ${costMovement > 0 ? 'text-amber-700' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                         {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
@@ -1010,11 +1077,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Selling price</p>
-                                                <p className="mt-1 font-mono text-sm font-bold text-orange-700">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
+                                                <p className="mt-1 font-mono text-sm font-bold text-orange-700">{formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Margin</p>
-                                                <p className={`mt-1 font-mono text-sm font-bold ${Number(quote.intended_margin_percent) < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{Number(quote.intended_margin_percent).toFixed(1)}%</p>
+                                                <p className={`mt-1 font-mono text-sm font-bold ${(metrics.actualMarginPct ?? 0) < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{formatCostingPercent(metrics.actualMarginPct)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Quantity</p>
@@ -1048,6 +1115,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredQuotes.map(quote => {
                         const linkedOrder = getLinkedOrder(quote)
+                        const metrics = getSavedCostingMetrics(quote)
                         const isCosting = isStandaloneCosting(quote.record_kind)
                         const hasQuotationLifecycle = canUseQuotationLifecycle(quote.record_kind, canUseQuotationWorkflow)
                         const canCreateOrder = hasQuotationLifecycle && quote.status === 'accepted' && !linkedOrder
@@ -1066,25 +1134,28 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 {isCosting ? `Costing · v${Number(quote.version_number ?? 1)}` : quote.quality_label}
                                             </p>
                                         </div>
-                                        <Badge variant="outline" className={`${isCosting ? 'border-orange-200 bg-orange-50 text-orange-700' : STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
-                                            {isCosting ? (quote.id === updatingId ? 'Updating' : 'Costing') : quote.status}
-                                        </Badge>
+                                        <div className="flex flex-wrap justify-end gap-1">
+                                            <Badge variant="outline" className={`${isCosting ? 'border-orange-200 bg-orange-50 text-orange-700' : STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
+                                                {isCosting ? (quote.id === updatingId ? 'Updating' : 'Costing') : quote.status}
+                                            </Badge>
+                                            {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">Legacy / review</Badge>}
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{isCosting ? t('common.suggested_selling_price') : 'Quotation Price'}</p>
-                                            <p className="text-base font-black font-mono text-indigo-600">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
+                                            <p className="text-base font-black font-mono text-indigo-600">{formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Margin</p>
-                                            <p className="text-base font-black font-mono text-emerald-600">
-                                                {Number(quote.intended_margin_percent).toFixed(1)}%
+                                            <p className={`text-base font-black font-mono ${(metrics.actualMarginPct ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                {formatCostingPercent(metrics.actualMarginPct)}
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{t('common.production_cost')}</p>
-                                            <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
+                                            <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">{formatCostingMoneyPerM(getProductionCostPerM(quote))}</p>
                                             {isCosting && costMovement != null && (
                                                 <p className={`mt-1 text-[10px] font-bold ${costMovement > 0 ? 'text-red-600' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                     {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
@@ -1253,25 +1324,27 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {[
-                                        ['Production cost', `₹${Number(selectedCostingStates[0]?.totals.totalProductionCostPerM ?? selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.totalProductionCostPerM ?? selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.totalProductionCostPerM ?? selectedCostings[1].landed_cost_per_meter) - Number(selectedCostingStates[0]?.totals.totalProductionCostPerM ?? selectedCostings[0].landed_cost_per_meter), '₹', '/m'],
-                                        ['Commercial break-even', `₹${Number(selectedCostings[0].landed_cost_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostings[1].landed_cost_per_meter).toFixed(2)}/m`, comparison.productionCostDelta, '₹', '/m'],
-                                        ['Suggested selling price', `₹${Number(selectedCostingStates[0]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[0].quote_price_per_meter).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[1].quote_price_per_meter).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[1].quote_price_per_meter) - Number(selectedCostingStates[0]?.totals.orderQuote?.quotePricePerM ?? selectedCostings[0].quote_price_per_meter), '₹', '/m'],
-                                        ['Margin', `${Number(selectedCostingStates[0]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[0].intended_margin_percent).toFixed(1)}%`, `${Number(selectedCostingStates[1]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[1].intended_margin_percent).toFixed(1)}%`, Number(selectedCostingStates[1]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[1].intended_margin_percent) - Number(selectedCostingStates[0]?.totals.orderQuote?.actualMarginPct ?? selectedCostings[0].intended_margin_percent), '', ' pp'],
+                                        ['Production cost', formatCostingMoneyPerM(selectedCostingMetrics[0]?.productionCostPerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.productionCostPerM ?? null), comparison.productionCostDelta, '₹', '/m'],
+                                        ['Break-even selling price', formatCostingMoneyPerM(selectedCostingMetrics[0]?.breakEvenPricePerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.breakEvenPricePerM ?? null), comparison.breakEvenDelta, '₹', '/m'],
+                                        ['Landed cost', formatCostingMoneyPerM(selectedCostingMetrics[0]?.landedCostPerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.landedCostPerM ?? null), comparison.landedCostDelta, '₹', '/m'],
+                                        ['Suggested selling price', formatCostingMoneyPerM(selectedCostingMetrics[0]?.suggestedSellingPricePerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.suggestedSellingPricePerM ?? null), comparison.sellingPriceDelta, '₹', '/m'],
+                                        ['Actual margin', formatCostingPercent(selectedCostingMetrics[0]?.actualMarginPct ?? null), formatCostingPercent(selectedCostingMetrics[1]?.actualMarginPct ?? null), comparison.marginDelta, '', ' pp'],
+                                        ['Expected profit', selectedCostingMetrics[0]?.expectedProfitTotal == null ? 'Not available' : `₹${selectedCostingMetrics[0].expectedProfitTotal.toFixed(2)}`, selectedCostingMetrics[1]?.expectedProfitTotal == null ? 'Not available' : `₹${selectedCostingMetrics[1].expectedProfitTotal.toFixed(2)}`, comparison.expectedProfitDelta, '₹', ''],
                                         ['Quantity', `${Number(selectedCostings[0].meters).toLocaleString('en-IN')} m`, `${Number(selectedCostings[1].meters).toLocaleString('en-IN')} m`, comparison.quantityDelta, '', ' m'],
-                                        ['Warp yarn rate', `₹${Number(selectedCostingStates[0]?.state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg`, `₹${Number(selectedCostingStates[1]?.state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg`, Number(selectedCostingStates[1]?.state.warpRows[0]?.yarnRate ?? 0) - Number(selectedCostingStates[0]?.state.warpRows[0]?.yarnRate ?? 0), '₹', '/kg'],
-                                        ['Warp consumption', `${Number(selectedCostingStates[0]?.totals.totalWarpKgPer100m ?? 0).toFixed(2)} kg/100m`, `${Number(selectedCostingStates[1]?.totals.totalWarpKgPer100m ?? 0).toFixed(2)} kg/100m`, Number(selectedCostingStates[1]?.totals.totalWarpKgPer100m ?? 0) - Number(selectedCostingStates[0]?.totals.totalWarpKgPer100m ?? 0), '', ' kg'],
-                                        ['Weft yarn rate', `₹${Number(selectedCostingStates[0]?.state.weftRows[0]?.yarnRate ?? 0).toFixed(2)}/kg`, `₹${Number(selectedCostingStates[1]?.state.weftRows[0]?.yarnRate ?? 0).toFixed(2)}/kg`, Number(selectedCostingStates[1]?.state.weftRows[0]?.yarnRate ?? 0) - Number(selectedCostingStates[0]?.state.weftRows[0]?.yarnRate ?? 0), '₹', '/kg'],
-                                        ['Processing', `₹${Number(selectedCostingStates[0]?.totals.processingPerM ?? 0).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.processingPerM ?? 0).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.processingPerM ?? 0) - Number(selectedCostingStates[0]?.totals.processingPerM ?? 0), '₹', '/m'],
-                                        ['Overhead', `₹${Number(selectedCostingStates[0]?.totals.overheadPerM ?? 0).toFixed(2)}/m`, `₹${Number(selectedCostingStates[1]?.totals.overheadPerM ?? 0).toFixed(2)}/m`, Number(selectedCostingStates[1]?.totals.overheadPerM ?? 0) - Number(selectedCostingStates[0]?.totals.overheadPerM ?? 0), '₹', '/m'],
+                                        ['Warp yarn rate', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.warpRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.warpRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.warpRows[0]?.yarnRate ?? 0) : null, selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.warpRows[0]?.yarnRate ?? 0) : null), '₹', '/kg'],
+                                        ['Warp consumption', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.totalWarpKgPer100m ?? null : null, '', ' kg/100m'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.totalWarpKgPer100m ?? null : null, '', ' kg/100m'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.totalWarpKgPer100m ?? null : null, selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.totalWarpKgPer100m ?? null : null), '', ' kg'],
+                                        ['Weft yarn rate', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.weftRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.weftRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.weftRows[0]?.yarnRate ?? 0) : null, selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.weftRows[0]?.yarnRate ?? 0) : null), '₹', '/kg'],
+                                        ['Processing', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.processingPerM ?? null : null, '₹', '/m'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.processingPerM ?? null : null, '₹', '/m'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.processingPerM ?? null : null, selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.processingPerM ?? null : null), '₹', '/m'],
+                                        ['Overhead', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.overheadPerM ?? null : null, '₹', '/m'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.overheadPerM ?? null : null, '₹', '/m'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.overheadPerM ?? null : null, selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.overheadPerM ?? null : null), '₹', '/m'],
                                     ].map(([label, left, right, delta, prefix, suffix]) => {
-                                        const numericDelta = Number(delta)
+                                        const numericDelta = delta == null ? null : Number(delta)
                                         return (
                                             <tr key={String(label)}>
                                                 <td className="px-4 py-3 font-semibold text-slate-600">{label}</td>
                                                 <td className="px-4 py-3 font-mono font-semibold text-slate-900">{left}</td>
                                                 <td className="px-4 py-3 font-mono font-semibold text-slate-900">{right}</td>
-                                                <td className={`px-4 py-3 font-mono font-bold ${numericDelta > 0 ? 'text-emerald-700' : numericDelta < 0 ? 'text-red-600' : 'text-slate-500'}`}>
-                                                    {numericDelta > 0 ? '+' : ''}{prefix}{numericDelta.toLocaleString('en-IN', { maximumFractionDigits: 2 })}{suffix}
+                                                <td className={`px-4 py-3 font-mono font-bold ${numericDelta == null ? 'text-slate-400' : numericDelta > 0 ? 'text-emerald-700' : numericDelta < 0 ? 'text-red-600' : 'text-slate-500'}`}>
+                                                    {numericDelta == null ? 'Not available' : `${numericDelta > 0 ? '+' : ''}${prefix}${numericDelta.toLocaleString('en-IN', { maximumFractionDigits: 2 })}${suffix}`}
                                                 </td>
                                             </tr>
                                         )

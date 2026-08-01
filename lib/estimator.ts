@@ -86,6 +86,22 @@ export function denierToCottonCountNe(denier: number): number {
 // 20-digit precision is hardened for textile manufacturing land-cost analysis
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP })
 
+/**
+ * Version and rounding identifiers are persisted with every new financial
+ * snapshot.  A saved costing must remain explainable after the calculator
+ * evolves, so these are deliberately explicit rather than inferred from the
+ * row creation date.
+ */
+export const COSTING_CALCULATION_VERSION = 'estimator_v3_2026_08'
+export const COSTING_ROUNDING_POLICY = 'INR_HALF_UP_2'
+
+export type CostingReconciliationStatus =
+  | 'verified'
+  | 'legacy'
+  | 'needs_review'
+  | 'unreconstructable'
+  | 'unreviewed'
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -383,6 +399,67 @@ export interface EstimatorV3Totals {
   estimatedBeamCapacityM:  number   // how many metres one full beam produces
   orderQuote:              OrderQuote | null
   audit:                   EstimatorCostAudit
+}
+
+/**
+ * The one financial result contract consumed by the estimator, saved costing
+ * library, comparison view, PDFs, and persistence boundary.
+ *
+ * The calculation engine keeps full Decimal precision internally.  These are
+ * the final INR values after the single approved rounding policy is applied.
+ */
+export interface CostingResultSnapshot {
+  calculationVersion: string
+  roundingPolicy: string
+  quantityM: number | null
+  productionCostPerM: number
+  overheadPerM: number
+  transportPerM: number
+  commissionPct: number
+  commissionPerM: number
+  landedCostPerM: number
+  breakEvenPricePerM: number
+  suggestedSellingPricePerM: number
+  targetMarginPct: number
+  actualMarginPct: number
+  profitPerM: number
+  totalOrderValue: number | null
+  totalLandedCost: number | null
+  expectedProfitTotal: number | null
+  breakdown: {
+    warpCostPerM: number
+    weftCostPerM: number
+    weaveCostPerM: number
+    warpingAndSizingPerM: number
+    windingPerM: number
+    processingPerM: number
+    finishingPerM: number
+    directCostPerM: number
+    overheadPerM: number
+    productionCostPerM: number
+  }
+}
+
+function finiteNumberOrZero(value: unknown): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+/**
+ * A non-zero entered commercial amount is an explicit customer-facing
+ * assumption.  A stale section toggle must not silently remove it from the
+ * price calculation.  The mismatch flags let the UI warn without changing
+ * the owner's entered amount.
+ */
+export function getEffectiveCommercialInputs(estimate: Pick<EstimateState, 'enabledSections' | 'commissionPct' | 'transportPerM'>) {
+  const commissionPct = finiteNumberOrZero(estimate.commissionPct)
+  const transportPerM = finiteNumberOrZero(estimate.transportPerM)
+  return {
+    commissionPct: estimate.enabledSections.commission || commissionPct > 0 ? commissionPct : 0,
+    transportPerM: estimate.enabledSections.transport || transportPerM > 0 ? transportPerM : 0,
+    commissionToggleMismatch: commissionPct > 0 && !estimate.enabledSections.commission,
+    transportToggleMismatch: transportPerM > 0 && !estimate.enabledSections.transport,
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -700,6 +777,194 @@ export function calcOrderQuote(params: {
 }
 
 /**
+ * Break-even selling price per metre.  This is the minimum selling price that
+ * leaves zero profit after transport and commission.  It is intentionally
+ * separate from landed cost: landed cost depends on the chosen quote price,
+ * while break-even solves for the quote price at zero margin.
+ */
+export function calculateBreakEvenPricePerM(
+  productionCostPerM: number,
+  transportPerM: number,
+  commissionPct: number,
+): number {
+  const production = new Decimal(finiteNumberOrZero(productionCostPerM))
+  const transport = new Decimal(finiteNumberOrZero(transportPerM))
+  const commission = new Decimal(finiteNumberOrZero(commissionPct)).div(100)
+  const denominator = new Decimal(1).minus(commission)
+  if (denominator.lte(0)) return 0
+  return production.plus(transport).div(denominator).toNumber()
+}
+
+/**
+ * Build the final, rounded financial result shared by every output surface.
+ * `calcFullTotals` remains the detailed high-precision textile engine; this
+ * function is the only boundary at which financial values are normalized for
+ * persistence and display.
+ */
+export function buildCostingResult(
+  estimate: EstimateState,
+  totals: EstimatorV3Totals,
+): CostingResultSnapshot {
+  const commercialInputs = getEffectiveCommercialInputs(estimate)
+  const hasFiniteProductionCost = Number.isFinite(totals.totalProductionCostPerM)
+  const hasFiniteOrderQuote = Boolean(
+    totals.orderQuote
+    && Number.isFinite(totals.orderQuote.quotePricePerM)
+    && Number.isFinite(totals.orderQuote.landedCostPerM),
+  )
+  const productionCostPerM = normalizeCurrencySnapshot(
+    hasFiniteProductionCost ? totals.totalProductionCostPerM : 0,
+  )
+  const overheadPerM = normalizeCurrencySnapshot(totals.overheadPerM)
+  const transportPerM = normalizeCurrencySnapshot(commercialInputs.transportPerM)
+  // Never combine a stale quote object with an invalid production total. A
+  // partially corrupted draft must collapse to a safe, explainable zero
+  // result instead of exporting a price derived from different inputs.
+  const rawSuggestedSellingPricePerM = hasFiniteProductionCost && hasFiniteOrderQuote
+    ? totals.orderQuote?.quotePricePerM ?? 0
+    : 0
+  const suggestedSellingPricePerM = normalizeCurrencySnapshot(rawSuggestedSellingPricePerM)
+  const commissionPerM = normalizeCurrencySnapshot(
+    new Decimal(rawSuggestedSellingPricePerM)
+      .times(commercialInputs.commissionPct)
+      .div(100)
+      .toNumber(),
+  )
+  const rawLandedCostPerM = hasFiniteProductionCost && hasFiniteOrderQuote
+    ? totals.orderQuote?.landedCostPerM ?? 0
+    : new Decimal(productionCostPerM)
+      .plus(commercialInputs.transportPerM)
+      .plus(commissionPerM)
+      .toNumber()
+  const landedCostPerM = normalizeCurrencySnapshot(rawLandedCostPerM)
+  const breakEvenPricePerM = normalizeCurrencySnapshot(calculateBreakEvenPricePerM(
+    totals.totalProductionCostPerM,
+    commercialInputs.transportPerM,
+    commercialInputs.commissionPct,
+  ))
+  const profitPerM = normalizeCurrencySnapshot(suggestedSellingPricePerM - landedCostPerM)
+  const quantityValue = Number(estimate.orderQuantityM)
+  const quantityM = Number.isFinite(quantityValue) && quantityValue > 0 ? quantityValue : null
+  const totalOrderValue = quantityM == null
+    ? null
+    : normalizeCurrencySnapshot(suggestedSellingPricePerM * quantityM)
+  const totalLandedCost = quantityM == null
+    ? null
+    : normalizeCurrencySnapshot(landedCostPerM * quantityM)
+  const expectedProfitTotal = totalOrderValue == null || totalLandedCost == null
+    ? null
+    : normalizeCurrencySnapshot(totalOrderValue - totalLandedCost)
+  const actualMarginPct = normalizeCurrencySnapshot(
+    suggestedSellingPricePerM > 0
+      ? new Decimal(profitPerM).div(suggestedSellingPricePerM).times(100).toNumber()
+      : 0,
+  )
+
+  return {
+    calculationVersion: COSTING_CALCULATION_VERSION,
+    roundingPolicy: COSTING_ROUNDING_POLICY,
+    quantityM,
+    productionCostPerM,
+    overheadPerM,
+    transportPerM,
+    commissionPct: finiteNumberOrZero(commercialInputs.commissionPct),
+    commissionPerM,
+    landedCostPerM,
+    breakEvenPricePerM,
+    suggestedSellingPricePerM,
+    targetMarginPct: finiteNumberOrZero(estimate.profitPct),
+    actualMarginPct,
+    profitPerM,
+    totalOrderValue,
+    totalLandedCost,
+    expectedProfitTotal,
+    breakdown: {
+      warpCostPerM: normalizeCurrencySnapshot(totals.warpCostPerM),
+      weftCostPerM: normalizeCurrencySnapshot(totals.weftCostPerM),
+      weaveCostPerM: normalizeCurrencySnapshot(totals.weaveCostPerM),
+      warpingAndSizingPerM: normalizeCurrencySnapshot(totals.warpingAndSizingPerM),
+      windingPerM: normalizeCurrencySnapshot(totals.windingPerM),
+      processingPerM: normalizeCurrencySnapshot(totals.processingPerM),
+      finishingPerM: normalizeCurrencySnapshot(totals.finishingPerM),
+      directCostPerM: normalizeCurrencySnapshot(totals.directCostPerM),
+      overheadPerM,
+      productionCostPerM,
+    },
+  }
+}
+
+/** Safely read a persisted result snapshot without trusting arbitrary JSON. */
+export function parseCostingResultSnapshot(value: unknown): CostingResultSnapshot | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null
+  const raw = value as Record<string, unknown>
+  const breakdown = raw.breakdown
+  if (breakdown === null || typeof breakdown !== 'object' || Array.isArray(breakdown)) return null
+  const details = breakdown as Record<string, unknown>
+  const readCurrency = (key: string) => {
+    const parsed = Number(raw[key])
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const readBreakdownCurrency = (key: string) => {
+    const parsed = Number(details[key])
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const required = [
+    'productionCostPerM', 'overheadPerM', 'transportPerM', 'commissionPct',
+    'commissionPerM', 'landedCostPerM', 'breakEvenPricePerM',
+    'suggestedSellingPricePerM', 'targetMarginPct', 'actualMarginPct',
+    'profitPerM',
+  ]
+  if (typeof raw.calculationVersion !== 'string' || typeof raw.roundingPolicy !== 'string') return null
+  if (required.some(key => readCurrency(key) == null)) return null
+  const breakdownKeys = [
+    'warpCostPerM', 'weftCostPerM', 'weaveCostPerM', 'warpingAndSizingPerM',
+    'windingPerM', 'processingPerM', 'finishingPerM', 'directCostPerM',
+    'overheadPerM', 'productionCostPerM',
+  ]
+  if (breakdownKeys.some(key => readBreakdownCurrency(key) == null)) return null
+  const quantity = raw.quantityM == null ? null : Number(raw.quantityM)
+  const totalOrderValue = raw.totalOrderValue == null ? null : Number(raw.totalOrderValue)
+  const totalLandedCost = raw.totalLandedCost == null ? null : Number(raw.totalLandedCost)
+  const expectedProfitTotal = raw.expectedProfitTotal == null ? null : Number(raw.expectedProfitTotal)
+  if (quantity !== null && !Number.isFinite(quantity)) return null
+  if (totalOrderValue !== null && !Number.isFinite(totalOrderValue)) return null
+  if (totalLandedCost !== null && !Number.isFinite(totalLandedCost)) return null
+  if (expectedProfitTotal !== null && !Number.isFinite(expectedProfitTotal)) return null
+
+  return {
+    calculationVersion: raw.calculationVersion,
+    roundingPolicy: raw.roundingPolicy,
+    quantityM: quantity,
+    productionCostPerM: readCurrency('productionCostPerM')!,
+    overheadPerM: readCurrency('overheadPerM')!,
+    transportPerM: readCurrency('transportPerM')!,
+    commissionPct: readCurrency('commissionPct')!,
+    commissionPerM: readCurrency('commissionPerM')!,
+    landedCostPerM: readCurrency('landedCostPerM')!,
+    breakEvenPricePerM: readCurrency('breakEvenPricePerM')!,
+    suggestedSellingPricePerM: readCurrency('suggestedSellingPricePerM')!,
+    targetMarginPct: readCurrency('targetMarginPct')!,
+    actualMarginPct: readCurrency('actualMarginPct')!,
+    profitPerM: readCurrency('profitPerM')!,
+    totalOrderValue,
+    totalLandedCost,
+    expectedProfitTotal,
+    breakdown: {
+      warpCostPerM: readBreakdownCurrency('warpCostPerM')!,
+      weftCostPerM: readBreakdownCurrency('weftCostPerM')!,
+      weaveCostPerM: readBreakdownCurrency('weaveCostPerM')!,
+      warpingAndSizingPerM: readBreakdownCurrency('warpingAndSizingPerM')!,
+      windingPerM: readBreakdownCurrency('windingPerM')!,
+      processingPerM: readBreakdownCurrency('processingPerM')!,
+      finishingPerM: readBreakdownCurrency('finishingPerM')!,
+      directCostPerM: readBreakdownCurrency('directCostPerM')!,
+      overheadPerM: readBreakdownCurrency('overheadPerM')!,
+      productionCostPerM: readBreakdownCurrency('productionCostPerM')!,
+    },
+  }
+}
+
+/**
  * Master aggregation function — called once per render via useMemo.
  * All layers derive from EstimateState; zero server round-trips.
  */
@@ -885,15 +1150,12 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     estimate.loomCount
   )
   // Direct mode uses the explicit ₹/m input. Older callers may still provide
-  // an override without the new mode field (or retain one while monthly mode
-  // is selected), so preserve that legacy behavior; the UI clears it whenever
-  // monthly-expense mode is chosen.
+  // an override without the new mode field, so preserve that compatibility
+  // path. An explicit monthly mode always uses monthly expenses; retaining a
+  // stale direct override there would make the visible method contradict the
+  // amount used in the costing.
   const isDirectOverhead = estimate.overheadMode === 'direct'
     || (estimate.overheadMode == null && estimate.overheadOverridePerM != null)
-    // A legacy caller may set an override without the new mode field. The UI
-    // always clears it when monthly mode is chosen, so retain that compatibility
-    // path for old snapshots and non-UI integrations.
-    || (estimate.overheadMode === 'monthly_expenses' && estimate.overheadOverridePerM != null)
   const overheadPerM = isDirectOverhead
     ? new Decimal(estimate.overheadOverridePerM ?? 0)
     : new Decimal(calculatedOverheadPerM)
@@ -918,16 +1180,12 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     ? new Decimal(estimate.tapeLengthM).div(crimpFactor).toNumber()
     : 0
 
+  const commercialInputs = getEffectiveCommercialInputs(estimate)
   const orderQuote = calcOrderQuote({
     totalProductionCostPerM: totalProductionCostPerM.toNumber(),
     orderQuantityM:  estimate.orderQuantityM || 0,
-    commissionPct:   estimate.enabledSections.commission ? estimate.commissionPct : 0,
-    // A non-zero transport value is an explicit commercial assumption. Base
-    // always exposes this field, so a stale/default section toggle must not
-    // silently discard the amount from the customer price.
-    transportPerM:   estimate.enabledSections.transport || Number(estimate.transportPerM) > 0
-      ? estimate.transportPerM
-      : 0,
+    commissionPct:   commercialInputs.commissionPct,
+    transportPerM:   commercialInputs.transportPerM,
     profitMarginPct: estimate.profitPct,
   })
 
@@ -1179,17 +1437,21 @@ export function runScenarios(
   })
 
   // ── 3. Break-even margin ────────────────────────────────────────────────
-  // Find the margin % where gross profit is exactly ₹0 → quotePricePerM = landedCostPerM
-  // That means profit margin = 0%. The landed cost IS the break-even price.
+  // Solve for the selling price where gross profit is exactly ₹0.  This is
+  // not the landed cost of the baseline target-margin quote.
   if (baselineTotals.orderQuote) {
-    const breakEvenState: EstimateState = { ...baseline, profitPct: 0 }
-    const breakEvenTotals = calcFullTotals(breakEvenState)
+    const commercialInputs = getEffectiveCommercialInputs(baseline)
+    const breakEvenPricePerM = calculateBreakEvenPricePerM(
+      baselineTotals.totalProductionCostPerM,
+      commercialInputs.transportPerM,
+      commercialInputs.commissionPct,
+    )
     results.push({
       id:          'break-even',
       label:       'Break-even',
-      description: 'Margin set to 0% — landed cost = quote price',
-      totalProductionCostPerM: breakEvenTotals.totalProductionCostPerM,
-      quotePricePerM: breakEvenTotals.orderQuote?.quotePricePerM ?? null,
+      description: 'Minimum selling price after transport and commission at 0% margin',
+      totalProductionCostPerM: baselineTotals.totalProductionCostPerM,
+      quotePricePerM: breakEvenPricePerM,
       costDelta:   0, // production cost doesn't change
       costDeltaPct: 0,
       profitDelta: baselineTotals.orderQuote
@@ -1202,8 +1464,9 @@ export function runScenarios(
   // Owner enters a price the party demanded — what's the resulting margin?
   if (customTargetPrice != null && customTargetPrice > 0 && baselineTotals.orderQuote) {
     const P = new Decimal(baselineTotals.totalProductionCostPerM)
-    const T = new Decimal(baseline.enabledSections.transport ? baseline.transportPerM : 0)
-    const C = new Decimal(baseline.enabledSections.commission ? baseline.commissionPct : 0).div(100)
+    const commercialInputs = getEffectiveCommercialInputs(baseline)
+    const T = new Decimal(commercialInputs.transportPerM)
+    const C = new Decimal(commercialInputs.commissionPct).div(100)
     const targetPrice = new Decimal(customTargetPrice)
 
     const commissionPerM = targetPrice.times(C)

@@ -44,8 +44,8 @@ describe('Base Estimator Go-readiness hardening', () => {
   it('shows production cost from recipe totals and distinguishes commercial break-even', () => {
     const saved = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     expect(saved).toContain('getProductionCostPerM')
-    expect(saved).toContain('latestTotals.totalProductionCostPerM')
-    expect(saved).toContain("['Commercial break-even'")
+    expect(saved).toContain('latestResult.productionCostPerM')
+    expect(saved).toContain("['Break-even selling price'")
     expect(saved).toContain("costing.quality_label || 'Untitled costing'} · v")
   })
 

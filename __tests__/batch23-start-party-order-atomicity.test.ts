@@ -103,7 +103,7 @@ describe('Batch 23 Start Party Order atomicity (QUOTE-007)', () => {
     // ── Server action uses the atomic RPC ──
 
     it('calls the atomic start_party_order_from_estimator RPC instead of separate insert + conversion', () => {
-        expect(action).toContain("supabase.rpc(\n        'start_party_order_from_estimator'")
+        expect(action).toContain("supabase.rpc(\n        'start_party_order_from_estimator_v2'")
         // Must NOT insert estimator_quotes separately in this action
         expect(action).not.toContain(".from('estimator_quotes')\n        .insert(")
         // Must NOT call executeQuoteConversion as a function

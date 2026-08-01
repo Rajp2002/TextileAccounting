@@ -17,7 +17,7 @@ describe('Full Suite automatic costing snapshots', () => {
   })
 
   it('persists estimator snapshots when starting either production workflow', () => {
-    expect(actions).toContain("'start_party_order_from_estimator'")
+    expect(actions).toContain("'start_party_order_from_estimator_v2'")
     expect(actions).toContain("record_kind:          'market_run'")
     expect(actions).toContain(".from('estimator_quotes')")
     expect(estimator).toContain('Party order started and costing saved')

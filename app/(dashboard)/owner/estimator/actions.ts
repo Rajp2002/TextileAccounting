@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
+import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
@@ -183,15 +183,13 @@ function getAuthoritativeQuoteTotals(
     precomputedTotals?: ReturnType<typeof calcFullTotals>
 ) {
     const totals = precomputedTotals ?? calcFullTotals(estimate)
+    const result = buildCostingResult(estimate, totals)
     return {
         totals,
-        productionCostPerM: normalizeCurrencySnapshot(totals.totalProductionCostPerM),
-        landedCostPerM: normalizeCurrencySnapshot(
-            totals.orderQuote?.landedCostPerM ?? totals.totalProductionCostPerM
-        ),
-        quotePricePerM: normalizeCurrencySnapshot(
-            totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM
-        ),
+        result,
+        productionCostPerM: result.productionCostPerM,
+        landedCostPerM: result.landedCostPerM,
+        quotePricePerM: result.suggestedSellingPricePerM,
     }
 }
 
@@ -978,9 +976,22 @@ export async function saveEstimatorQuoteV3(params: {
             monthly_working_days: estimate.monthlyWorkingDays,
             avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,
             // Result snapshots
-            landed_cost_per_meter:    authoritative.landedCostPerM,
-            quote_price_per_meter:    authoritative.quotePricePerM,
-            intended_margin_percent:  estimate.profitPct,
+            calculation_version:      authoritative.result.calculationVersion,
+            rounding_policy:          authoritative.result.roundingPolicy,
+            production_cost_per_meter: authoritative.result.productionCostPerM,
+            overhead_per_meter:       authoritative.result.overheadPerM,
+            commission_cost_per_meter: authoritative.result.commissionPerM,
+            break_even_price_per_meter: authoritative.result.breakEvenPricePerM,
+            expected_profit_per_meter: authoritative.result.profitPerM,
+            expected_profit_total:     authoritative.result.expectedProfitTotal,
+            actual_margin_percent:     authoritative.result.actualMarginPct,
+            costing_result_snapshot:   authoritative.result,
+            reconciliation_status:     'verified',
+            reconciliation_note:       null,
+            reconciled_at:             new Date().toISOString(),
+            landed_cost_per_meter:    authoritative.result.landedCostPerM,
+            quote_price_per_meter:    authoritative.result.suggestedSellingPricePerM,
+            intended_margin_percent:  authoritative.result.targetMarginPct,
             meters:                   estimate.orderQuantityM ?? 0,
             status:                   params.status ?? 'draft',
             client_request_id:        params.clientRequestId,
@@ -1317,7 +1328,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
 
     // ── Atomic RPC: quote + order + backlinks + yarn requirements ─────────────
     const { data: rpcRows, error: rpcError } = await supabase.rpc(
-        'start_party_order_from_estimator',
+        'start_party_order_from_estimator_v2',
         {
             // Quote fields
             p_party_name:            input.partyName.trim(),
@@ -1373,6 +1384,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
                 warp_crimp_pct:            estimateForOrder.warpCrimpPct ?? 0,
                 yarn_shortage_pct:         estimateForOrder.yarnShortagePct ?? 0,
             },
+            p_costing_result_snapshot: authoritative.result,
         }
     )
 
@@ -1835,6 +1847,19 @@ export async function createMarketRunFromEstimator(params: {
             loom_count:           estimate.loomCount,
             monthly_working_days: estimate.monthlyWorkingDays,
             avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,
+            calculation_version:      authoritative.result.calculationVersion,
+            rounding_policy:          authoritative.result.roundingPolicy,
+            production_cost_per_meter: authoritative.result.productionCostPerM,
+            overhead_per_meter:       authoritative.result.overheadPerM,
+            commission_cost_per_meter: authoritative.result.commissionPerM,
+            break_even_price_per_meter: authoritative.result.breakEvenPricePerM,
+            expected_profit_per_meter: authoritative.result.profitPerM,
+            expected_profit_total:     authoritative.result.expectedProfitTotal,
+            actual_margin_percent:     authoritative.result.actualMarginPct,
+            costing_result_snapshot:   authoritative.result,
+            reconciliation_status:     'verified',
+            reconciliation_note:       null,
+            reconciled_at:             new Date().toISOString(),
             landed_cost_per_meter:    authoritative.landedCostPerM,
             quote_price_per_meter:    authoritative.quotePricePerM,
             intended_margin_percent:  estimate.profitPct,

@@ -1,6 +1,8 @@
 import {
   ensureOverheadIntegrity,
   makeDefaultEstimateState,
+  normalizeCurrencySnapshot,
+  parseCostingResultSnapshot,
   type FactorySections,
   type OverheadMode,
   type LoomType,
@@ -21,6 +23,83 @@ export type SavedCostingListItem = {
   meters: number
   created_at: string
   updated_at: string
+  calculation_version?: string | null
+  rounding_policy?: string | null
+  production_cost_per_meter?: number | null
+  overhead_per_meter?: number | null
+  commission_cost_per_meter?: number | null
+  break_even_price_per_meter?: number | null
+  expected_profit_per_meter?: number | null
+  expected_profit_total?: number | null
+  actual_margin_percent?: number | null
+  costing_result_snapshot?: unknown
+  reconciliation_status?: string | null
+  reconciliation_note?: string | null
+}
+
+export type SavedCostingMetrics = {
+  productionCostPerM: number | null
+  breakEvenPricePerM: number | null
+  landedCostPerM: number | null
+  suggestedSellingPricePerM: number | null
+  targetMarginPct: number | null
+  actualMarginPct: number | null
+  expectedProfitPerM: number | null
+  expectedProfitTotal: number | null
+  status: string
+}
+
+function finiteOrNull(value: unknown): number | null {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * Read the immutable financial snapshot first. Legacy rows deliberately do
+ * not fall back to recalculating today's recipe; missing derived values remain
+ * visibly unavailable instead of being presented as verified history.
+ */
+export function getSavedCostingMetrics(costing: SavedCostingListItem): SavedCostingMetrics {
+  const snapshot = parseCostingResultSnapshot(costing.costing_result_snapshot)
+  if (snapshot) {
+    return {
+      productionCostPerM: snapshot.productionCostPerM,
+      breakEvenPricePerM: snapshot.breakEvenPricePerM,
+      landedCostPerM: snapshot.landedCostPerM,
+      suggestedSellingPricePerM: snapshot.suggestedSellingPricePerM,
+      targetMarginPct: snapshot.targetMarginPct,
+      actualMarginPct: snapshot.actualMarginPct,
+      expectedProfitPerM: snapshot.profitPerM,
+      expectedProfitTotal: snapshot.expectedProfitTotal,
+      status: costing.reconciliation_status ?? 'verified',
+    }
+  }
+
+  const landedCostPerM = finiteOrNull(costing.landed_cost_per_meter)
+  const suggestedSellingPricePerM = finiteOrNull(costing.quote_price_per_meter)
+  const quantityM = finiteOrNull(costing.meters)
+  const expectedProfitPerM = landedCostPerM != null && suggestedSellingPricePerM != null
+    ? normalizeCurrencySnapshot(suggestedSellingPricePerM - landedCostPerM)
+    : null
+  const expectedProfitTotal = expectedProfitPerM == null || quantityM == null || quantityM <= 0
+    ? null
+    : normalizeCurrencySnapshot(expectedProfitPerM * quantityM)
+  const actualMarginPct = suggestedSellingPricePerM != null
+    && suggestedSellingPricePerM > 0
+    && expectedProfitPerM != null
+    ? normalizeCurrencySnapshot((expectedProfitPerM / suggestedSellingPricePerM) * 100)
+    : null
+  return {
+    productionCostPerM: finiteOrNull(costing.production_cost_per_meter),
+    breakEvenPricePerM: finiteOrNull(costing.break_even_price_per_meter),
+    landedCostPerM,
+    suggestedSellingPricePerM,
+    targetMarginPct: finiteOrNull(costing.intended_margin_percent),
+    actualMarginPct: finiteOrNull(costing.actual_margin_percent) ?? actualMarginPct,
+    expectedProfitPerM,
+    expectedProfitTotal: finiteOrNull(costing.expected_profit_total) ?? expectedProfitTotal,
+    status: costing.reconciliation_status ?? 'legacy',
+  }
 }
 
 export type VersionedSavedCostingListItem = SavedCostingListItem & {
@@ -274,23 +353,46 @@ export function filterAndSortSavedCostings<T extends SavedCostingListItem>(
   return [...costings]
     .filter(costing => {
       const searchable = `${costing.quality_label ?? ''} ${costing.party_name ?? ''}`.toLocaleLowerCase('en-IN')
+      const actualMargin = getSavedCostingMetrics(costing).actualMarginPct
       return (!query || searchable.includes(query))
-        && matchesMargin(Number(costing.intended_margin_percent), options.margin)
+        && (options.margin === 'all' || (actualMargin != null && matchesMargin(actualMargin, options.margin)))
     })
     .sort((left, right) => {
       if (options.sort === 'oldest') return Date.parse(left.updated_at) - Date.parse(right.updated_at)
-      if (options.sort === 'margin_desc') return Number(right.intended_margin_percent) - Number(left.intended_margin_percent)
-      if (options.sort === 'cost_asc') return Number(left.landed_cost_per_meter) - Number(right.landed_cost_per_meter)
+      if (options.sort === 'margin_desc') {
+        const leftMargin = getSavedCostingMetrics(left).actualMarginPct
+        const rightMargin = getSavedCostingMetrics(right).actualMarginPct
+        return (rightMargin ?? Number.NEGATIVE_INFINITY) - (leftMargin ?? Number.NEGATIVE_INFINITY)
+      }
+      if (options.sort === 'cost_asc') {
+        const leftCost = getSavedCostingMetrics(left).productionCostPerM ?? getSavedCostingMetrics(left).landedCostPerM
+        const rightCost = getSavedCostingMetrics(right).productionCostPerM ?? getSavedCostingMetrics(right).landedCostPerM
+        return (leftCost ?? Number.POSITIVE_INFINITY) - (rightCost ?? Number.POSITIVE_INFINITY)
+      }
       return Date.parse(right.updated_at) - Date.parse(left.updated_at)
     })
 }
 
 export function compareSavedCostings(left: SavedCostingListItem, right: SavedCostingListItem) {
+  const leftMetrics = getSavedCostingMetrics(left)
+  const rightMetrics = getSavedCostingMetrics(right)
+  const numericOrNull = (value: unknown) => {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const delta = (leftValue: unknown, rightValue: unknown) => {
+    const leftNumber = numericOrNull(leftValue)
+    const rightNumber = numericOrNull(rightValue)
+    return leftNumber == null || rightNumber == null ? null : rightNumber - leftNumber
+  }
   return {
-    productionCostDelta: Number(right.landed_cost_per_meter) - Number(left.landed_cost_per_meter),
-    sellingPriceDelta: Number(right.quote_price_per_meter) - Number(left.quote_price_per_meter),
-    marginDelta: Number(right.intended_margin_percent) - Number(left.intended_margin_percent),
-    quantityDelta: Number(right.meters) - Number(left.meters),
+    productionCostDelta: delta(leftMetrics.productionCostPerM, rightMetrics.productionCostPerM),
+    breakEvenDelta: delta(leftMetrics.breakEvenPricePerM, rightMetrics.breakEvenPricePerM),
+    landedCostDelta: delta(leftMetrics.landedCostPerM, rightMetrics.landedCostPerM),
+    sellingPriceDelta: delta(leftMetrics.suggestedSellingPricePerM, rightMetrics.suggestedSellingPricePerM),
+    marginDelta: delta(leftMetrics.actualMarginPct, rightMetrics.actualMarginPct),
+    expectedProfitDelta: delta(leftMetrics.expectedProfitTotal, rightMetrics.expectedProfitTotal),
+    quantityDelta: delta(left.meters, right.meters),
   }
 }
 
@@ -309,5 +411,9 @@ export function getPreviousCostingVersion<T extends VersionedSavedCostingListIte
 
 export function getCostingVersionMovement(current: SavedCostingListItem, previous: SavedCostingListItem | null) {
   if (!previous) return null
-  return Number(current.landed_cost_per_meter) - Number(previous.landed_cost_per_meter)
+  const currentMetrics = getSavedCostingMetrics(current)
+  const previousMetrics = getSavedCostingMetrics(previous)
+  return currentMetrics.productionCostPerM != null && previousMetrics.productionCostPerM != null
+    ? currentMetrics.productionCostPerM - previousMetrics.productionCostPerM
+    : null
 }
