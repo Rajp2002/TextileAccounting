@@ -36,7 +36,7 @@ describe('Base P1 pilot remediation', () => {
     expect(actions).toContain("if (newRecordKind === 'quotation' && !params.partyName?.trim())")
     expect(actions).toContain('order_quantity_m:     estimate.orderQuantityM')
     expect(actions).toContain('meters:                   estimate.orderQuantityM ?? 0')
-    expect(actions).toContain('partyName: normalizeTemplateName(data.partyName || \'\')')
+    expect(actions).toContain("party_name: normalizeTemplateName(data.partyName || '') || null")
   })
 
   it('exports customer, quantity, total, margin, and profit from the same Base state', () => {
@@ -80,13 +80,13 @@ describe('Base P1 pilot remediation', () => {
   it('validates the complete initial quality snapshot before inserting the template', () => {
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
     const boundaryIndex = actions.indexOf('const snapshotBoundaryError')
-    const insertIndex = actions.indexOf(".from('estimator_templates')\n        .insert({")
+    const atomicSaveIndex = actions.indexOf("create_saved_quality_with_initial_costing_v1")
 
     expect(actions).toContain('requireTapeLength: false')
     expect(boundaryIndex).toBeGreaterThan(-1)
-    expect(insertIndex).toBeGreaterThan(boundaryIndex)
-    expect(actions).toContain('const { data: rolledBack, error: rollbackError }')
-    expect(actions).toContain('if (rollbackError || !rolledBack)')
+    expect(atomicSaveIndex).toBeGreaterThan(boundaryIndex)
+    expect(actions).toContain('p_template_payload: templatePayload')
+    expect(actions).toContain('p_quote_payload: quotePayload')
   })
 
   it('detaches source quote and template identity before Start From saves a copy', () => {
@@ -99,6 +99,7 @@ describe('Base P1 pilot remediation', () => {
     expect(detachedBlock).toContain('setAppliedTemplate(null)')
     expect(detachedBlock).toContain('setSourceQuoteId(null)')
     expect(detachedBlock).toContain('setSourceQuoteUpdatedAt(null)')
+    expect(detachedBlock).toContain('setSourceFactoryProfileUpdatedAt(null)')
     expect(detachedBlock).toContain('setSourceRecordKind(null)')
     expect(detachedBlock).toContain('quoteRequestIdRef.current = null')
   })

@@ -510,3 +510,33 @@ Batch 8 proof supersedes that violation for production logging. A dated shift as
 8. Signup feedback distinguishes malformed Indian `+91` phone input, weak
    password, and mismatched confirmation without exposing auth-sensitive detail
    or weakening the approved password policy.
+
+## Sprint 1 Save, Versioning, and Trust invariants — 2026-08-01
+
+1. A saved quality is a reusable recipe/template identity. Editing its yarn,
+   construction, waste, or other costing inputs does not create, update, or
+   silently rewrite a costing snapshot.
+2. `Save New Costing Version` creates exactly one next version for the same
+   costing group and captures the complete economic state used by that save.
+   If the recipe changed, updating the saved quality is a separate explicit
+   choice; an unsaved editor state is never treated as the saved quality.
+3. `Use as Starting Point` creates a detached costing identity. It does not
+   rename a saved quality into a different quality; a genuinely different
+   construction such as 60 D micro must be represented by a new quality.
+4. Historical costing economics are immutable after save, including yarn
+   rates, transport, margin, quantity, overhead inputs, breakdown, group and
+   quality identity, version, and save-time context. Archive/delete controls
+   cannot erase or rewrite the historical economics.
+5. A same-value save reports no change and creates no new version. A retried or
+   double-submitted request is idempotent for the same request identity and
+   cannot create duplicate snapshots.
+6. A stale editor cannot overwrite a newer version or quality update. The
+   user receives an actionable stale-state message and must reload/reconcile
+   before saving again.
+7. A factory overhead/profile baseline is provenance for future estimates. A
+   baseline edit does not back-propagate into existing costing snapshots or
+   change their displayed historical totals.
+8. Every saved costing surface—editor, library, comparison, and quotation
+   export—must identify the costing group, quality, version, timestamp, and
+   active/editing context consistently. Base and Full Suite save semantics
+   remain distinct where their product workflows differ.

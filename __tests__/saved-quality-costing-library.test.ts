@@ -39,7 +39,7 @@ describe('saved quality costing library', () => {
     const drafts = read('lib/estimator-drafts.ts')
 
     expect(estimator).toContain('templateId:              appliedTemplate?.id')
-    expect(actions.match(/template_id:\s+params\.templateId \?\? null/g)).toHaveLength(2)
+    expect(actions).toContain('template_id:          params.templateId ?? null')
     expect(actions).toContain('production_logs ( meters )')
     expect(drafts).toContain('templateId?: string')
   })
@@ -50,11 +50,10 @@ describe('saved quality costing library', () => {
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
     expect(estimator).toContain('estimate:         { ...state, warpRows, weftRows }')
-    expect(actions).toContain('const snapshot = await saveEstimatorQuoteV3({')
-    expect(actions).toContain('getInitialQualitySnapshotRequestId(saved.id)')
+    expect(actions).toContain('create_saved_quality_with_initial_costing_v1')
+    expect(actions).toContain('const initialRequestId = getInitialQualitySnapshotRequestId(')
     expect(actions).toContain('getInitialQualitySnapshotRequestId(template.id)')
     expect(actions).toContain("recordKind: 'costing'")
-    expect(actions).toContain(".from('estimator_templates')\n            .delete()")
     expect(actions).toContain('export async function ensureCostingSnapshotsForSavedQualities()')
     expect(page).not.toContain('ensureCostingSnapshotsForSavedQualities')
   })

@@ -166,6 +166,8 @@ type QuoteRow = {
     expected_profit_total?: number | null
     actual_margin_percent?: number | null
     costing_result_snapshot?: unknown
+    costing_input_fingerprint?: string | null
+    factory_profile_updated_at?: string | null
     reconciliation_status?: string | null
     reconciliation_note?: string | null
     orders?: QuoteLinkedOrder | QuoteLinkedOrder[] | null
@@ -330,6 +332,7 @@ function SavedQualityLibraryView({
     auditingId,
     onToggleArchived,
     onOpenUsage,
+    factoryInputsCapturedLabel,
 }: {
     groups: SavedQualityGroup[]
     canUseProduction: boolean
@@ -345,6 +348,7 @@ function SavedQualityLibraryView({
     auditingId: string | null
     onToggleArchived: (quote: QuoteRow) => void
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
+    factoryInputsCapturedLabel: string
 }) {
     return (
         <div className="space-y-3">
@@ -538,7 +542,10 @@ function SavedQualityLibraryView({
                                                         {group.records.map(record => (
                                                             <tr key={record.id}>
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
-                                                                <td className="py-3 font-bold text-slate-900">v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></td>
+                                                                <td className="py-3 font-bold text-slate-900">
+                                                                    <div>v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></div>
+                                                                    {record.factory_profile_updated_at && <div className="mt-1 text-[10px] font-normal text-slate-500">{factoryInputsCapturedLabel} {format(new Date(record.factory_profile_updated_at), 'MMM d, yyyy')}</div>}
+                                                                </td>
                                                                 <td className="py-3 capitalize text-slate-600">
                                                                     <div className="flex flex-wrap items-center gap-2">
                                                                         <span>{record.record_kind === 'market_run' ? 'Market run' : record.record_kind === 'quotation' ? `Quotation · ${record.party_name || 'Customer not set'}` : 'Costing'}</span>
@@ -779,10 +786,19 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             const isDuplicate = mode === 'duplicate'
             const isCosting = isStandaloneCosting(quote.record_kind)
             const createsQuotationFromCosting = canUseQuotationWorkflow && isDuplicate && isCosting
+            const startsNewBaseQuality = isDuplicate && isCosting && !canUseQuotationWorkflow
             const newDraft: EstimatorAutosaveData<QuoteDraftState> = {
                 state: buildDraftStateFromQuote(quote),
                 partyName: createsQuotationFromCosting ? '' : quote.party_name || '',
-                qualityLabel: isDuplicate && canUseQuotationWorkflow && !isCosting ? `${quote.quality_label || 'Untitled'} Copy` : quote.quality_label || '',
+                // A Base starting point is intentionally detached from both
+                // the old snapshot and its Saved Quality. Requiring a fresh
+                // quality name prevents Rajesh from accidentally saving a
+                // different construction into the old quality's history.
+                qualityLabel: startsNewBaseQuality
+                    ? ''
+                    : isDuplicate && canUseQuotationWorkflow && !isCosting
+                        ? `${quote.quality_label || 'Untitled'} Copy`
+                        : quote.quality_label || '',
                 warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
                 weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
                 savedAt: getCurrentTimestampMs(),
@@ -790,10 +806,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 sourceQuoteUpdatedAt: isDuplicate ? undefined : quote.updated_at,
                 sourceQuoteVersionNumber: isDuplicate ? undefined : Number(quote.version_number ?? 1),
                 sourceQuoteCreatedAt: isDuplicate ? undefined : quote.created_at,
+                sourceFactoryProfileUpdatedAt: isDuplicate ? undefined : quote.factory_profile_updated_at ?? undefined,
                 sourceRecordKind: createsQuotationFromCosting
                     ? undefined
                     : quote.record_kind ?? (canUseQuotationWorkflow ? 'quotation' : 'costing'),
-                templateId: quote.template_id ?? undefined,
+                templateId: startsNewBaseQuality ? undefined : quote.template_id ?? undefined,
                 restoreOnEstimatorEntry: true,
             }
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
@@ -802,7 +819,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             toast.success(createsQuotationFromCosting
                 ? 'Costing loaded as a new customer quotation draft'
                 : isDuplicate
-                    ? (canUseQuotationWorkflow ? 'Quotation copied into a new Cost Estimate draft' : 'Costing loaded as a starting point')
+                    ? (startsNewBaseQuality ? 'Starting point loaded. Enter a new Saved Quality name before saving.' : canUseQuotationWorkflow ? 'Quotation copied into a new Cost Estimate draft' : 'Costing loaded as a starting point')
                     : isCosting ? 'Costing snapshot restored' : 'Quotation snapshot restored')
             router.push('/owner/estimator')
         } catch (error) {
@@ -1025,6 +1042,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     auditingId={updatingId}
                     onToggleArchived={requestArchiveState}
                     onOpenUsage={openAppliedProduction}
+                    factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                 />
             ) : !canUseProduction || !canUseQuotationWorkflow ? (
                 <div>

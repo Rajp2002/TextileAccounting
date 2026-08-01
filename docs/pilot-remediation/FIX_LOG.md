@@ -2701,3 +2701,41 @@ Date: 2026-07-19 IST. Status: `pass`.
 - Local proof: the full Vitest suite passed `129` files / `844` tests with `1` intentional skip; TypeScript, ESLint, the focused Sprint 0–3/5/6 regression set (`27/27`), and the optimized Next.js production build passed. The build used process-only Razorpay placeholders and made no external payment call.
 - Database proof: `supabase migration list --linked` aligned local and linked production history through `20260801173845_sprint5_rate_activity_and_legacy_audit.sql`. `supabase db push --linked --dry-run --yes` reported `Remote database is up to date.` Sprint 2 has no migration and made no schema or business-row mutation.
 - Release state: `fixed_pending_runtime_proof`. Do not promote Sprint 2 to production PASS until the exact merged commit has a READY production deployment and the targeted estimator/auth browser scenarios in `RETEST_PLAN.md` pass without stale money figures, invalid saves/exports, or misleading feedback.
+
+## Sprint 1 Save, Versioning, and Trust — 2026-08-01
+
+- Batch: `SPRINT1-SAVE-TRUST`; state at this checkpoint:
+  `code_verified_but_not_runtime_verified`.
+- Customer problem: Rajesh must be able to tell whether he changed a reusable
+  quality, created a new costing version, or only changed an unsaved estimate.
+  The release therefore makes the following boundary explicit: `Update Quality`
+  changes the saved recipe/template only and never creates or edits a costing
+  snapshot; `Save New Costing Version` creates the next immutable snapshot; and
+  `Use as Starting Point` detaches a new costing from the prior quality identity.
+- Historical economics are protected. A saved snapshot retains the rates,
+  transport, margin, quantity, overhead inputs, breakdown, quality/group
+  identity, version, and creation context that Rajesh used at save time. A
+  changed factory overhead baseline is recorded for future estimates and does
+  not back-propagate into existing snapshots.
+- Save feedback now distinguishes success, no-change, duplicate/retry,
+  stale-edit, validation, authorization, and server failure outcomes. The
+  editor identifies the costing group, saved quality, version, timestamp, and
+  whether the visible values are saved or still being edited.
+- Source changes include the estimator server actions and client, Saved
+  Costings/quotation context, factory-cost profile, draft/export helpers,
+  Gujarati/Hindi/English trust copy, the shared save-trust helper, and the
+  focused Sprint 1 regression contract.
+- Reviewed migration: `20260801174038_sprint1_save_trust_v2.sql`. It adds the
+  atomic revision/save paths and database guards for snapshot immutability,
+  request replay protection, quality/template separation, and future-only
+  factory-baseline provenance. Linked production history now records this
+  migration, and the post-merge dry-run reports the remote database is up to
+  date; no additional migration is pending for this release candidate.
+- Local source evidence before promotion: `npm test -- --run --reporter=dot`
+  passed 126 files / 823 tests with one intentional skip; `npx tsc --noEmit`,
+  `npm run lint`, and `git diff --check` passed. The production build and
+  linked-database/runtime proof remain release gates.
+- Data safety: no production business-row mutation is claimed by this source
+  checkpoint. The reviewed schema migration is already present in linked
+  production; exact deployed save/reopen/version/compare/export proof remains
+  a runtime gate.
