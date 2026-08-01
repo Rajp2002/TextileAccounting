@@ -841,3 +841,30 @@ Acceptance:
 - Disposition: `BILL-006=pass`; `BILL-003=blocked`. Rerun only the successful
   provider-popup and post-capture reconciliation portion when a compatible
   browser session is available.
+
+### Sprint 2 calculation-safety release retest — 2026-08-01
+
+#### Local release gates
+
+- Run `npm test -- --run`, `npm run lint`, `npx tsc --noEmit --pretty false`, `git diff --check`, and the optimized build with process-only Razorpay placeholders. Record the exact commit and counts; do not treat build-time payment placeholders as payment-provider evidence.
+- Verify the linked migration list and run `supabase db push --linked --dry-run --yes`. Sprint 2 should produce no migration and no data mutation; any pending migration must be reviewed by filename before an apply.
+
+#### Customer-facing estimator scenarios
+
+1. With a realistic grey-fabric recipe (for example, valid warp/weft yarn deniers and rates, picks, width, production quantity, and standard waste), calculate and confirm that every displayed amount is finite, understandable, and consistent with the canonical costing result.
+2. Leave each formula prerequisite blank in turn. The field-specific message must identify what Rajesh needs to enter; the form must not show a partial production cost, break-even, suggested price, margin, or expected-profit figure.
+3. Enter a negative rate, zero denier, `NaN`/infinity-like or garbled input, and an invalid percentage. The field must reject it immediately, explain the correction, clear any stale derived amount, and prevent save, quote/order creation, and export.
+4. Enter unusual but plausible low denier/width values and verify a warning appears with explicit acknowledgement. Enter a clearly impossible value such as denier `200000` and verify a hard block that acknowledgement cannot bypass.
+5. Change among the actually supported width units and verify the known conversion result and unit label used in the formula. For a suspicious conversion, verify the warning offers `Use inches` and does not silently rewrite Rajesh's input.
+6. Correct one invalid field without refreshing. The error must clear, the calculation must recalculate immediately, and a valid current result must replace the prior unavailable state.
+7. Toggle optional charges on and off, including blank and positive values. Disabled optional sections must not become hidden required prerequisites; enabled sections must validate their own inputs.
+8. Attempt every save/quote/order/export path while invalid or incomplete and confirm no invalid costing, quote, or immutable snapshot is persisted or exported. Confirm the customer PDF remains free of internal economics.
+
+#### Signup scenarios
+
+- Try malformed Indian phone values outside the normalized `+91` flow, a weak password, and mismatched confirmation. Each message must be actionable and field-specific without weakening the approved password policy.
+- Submit a valid Surat-cluster `+91` phone, approved password, and matching confirmation. Confirm normal signup behavior remains intact.
+
+#### Production closure gate
+
+- Repeat the targeted scenarios on the exact READY production deployment after the main merge, with authenticated browser evidence and browser-console review. Do not change the Sprint 2 release state from `fixed_pending_runtime_proof` until no stale money figure, invalid save, invalid export, wrong unit conversion, or misleading auth feedback remains.

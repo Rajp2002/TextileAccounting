@@ -2202,3 +2202,10 @@ Only `UX-012` changed from `blocked` to `pass`. Counts are **368 pass, 0 fail, 6
 - Next evidence action: complete one Razorpay TEST Netbanking Success flow in
   a browser that exposes the mock-bank window, then reconcile exactly one
   captured ₹8,260 payment and exactly one active Base entitlement.
+
+## Sprint 2 release candidate — pre-deployment — 2026-08-01
+
+- State: `fixed_pending_runtime_proof`; the overall limited-pilot `No-Go` decision and the canonical `368 pass / 0 fail / 6 blocked / 3 N/A` counts are unchanged.
+- Candidate `3c14bfb` is based on current `origin/main` `e807fa1` and keeps the released Sprint 0–6 contracts. Local proof is green: `129` Vitest files, `844` passing tests, one intentional skip, TypeScript, ESLint, focused Sprint 0/2/3/5/6 regressions, and optimized build.
+- Sprint 2 has no database migration. Linked production migration history is aligned through `20260801173845`; the linked dry-run reports no pending migrations and no production data mutation is claimed.
+- Runtime closure still requires the exact merged main commit, READY Vercel deployment, estimator invalid-input and correction flows, no-save/no-export proof, width conversion proof, and signup feedback proof. These checks must be recorded before changing this state to `pass`.

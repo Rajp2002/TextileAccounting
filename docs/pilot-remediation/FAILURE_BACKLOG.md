@@ -672,3 +672,9 @@ The backlog remains 8 blocked rows. All blocked-row batches are reviewed and no 
   independently as blocked until the Razorpay mock-bank Success window is
   completed and successful capture/activation is reconciled. This tooling
   limitation does not reopen the corrected failed-checkout pricing defect.
+
+### Sprint 2 calculation-safety disposition — 2026-08-01
+
+- No existing formal matrix row is reclassified by this implementation, and the overall limited-pilot verdict remains unchanged.
+- The Sprint 2 candidate is locally source-fixed and remains `fixed_pending_runtime_proof` until the exact merged production deployment proves the estimator and signup scenarios in `RETEST_PLAN.md`.
+- The release must not receive PASS credit from local tests alone: production browser evidence is required for stale-result clearing, hard-block versus acknowledgement behavior, width conversion, no-save/no-export boundaries, and actionable signup feedback.
