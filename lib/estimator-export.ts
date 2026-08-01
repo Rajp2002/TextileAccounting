@@ -281,7 +281,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
     ...(model.result.breakdown.windingPerM > 0 ? [['Winding', model.result.breakdown.windingPerM] as [string, number]] : []),
     ...(model.result.breakdown.processingPerM > 0 ? [['Processing', model.result.breakdown.processingPerM] as [string, number]] : []),
     ...(model.result.breakdown.finishingPerM > 0 ? [['Finishing', model.result.breakdown.finishingPerM] as [string, number]] : []),
-    ['Factory overhead', model.result.breakdown.overheadPerM],
+    ['Factory expenses', model.result.breakdown.overheadPerM],
   ] as [string, number][]
 
   const costRows = costItems.map(([label, value]) => tableRow([
@@ -328,7 +328,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
       <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Consumption / 100m</th><th class="num">Rate</th><th class="num">Cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
     </section>
     <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
-      <div class="commercial"><div><span>Commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
+      <div class="commercial"><div><span>Broker commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport charge</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
     </section>`
 
   return `<!doctype html>

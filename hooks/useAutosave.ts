@@ -13,6 +13,8 @@ interface UseAutosaveOptions {
   userId: string
   debounceMs?: number
   maxAgeMs?: number  // max age before draft is considered stale (default 24h)
+  /** Do not create a draft for an untouched/default estimator screen. */
+  shouldPersist?: (data: Omit<EstimatorAutosaveData<unknown>, 'savedAt'>) => boolean
 }
 
 interface UseAutosaveReturn<TState = unknown> {
@@ -30,6 +32,8 @@ interface UseAutosaveReturn<TState = unknown> {
   saveDraft: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => void
   /** Persist immediately, returning whether browser storage accepted the draft */
   saveDraftNow: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => boolean
+  /** Suppress the current programmatic state until the user edits again. */
+  suppressAutosaveUntilChanged: () => void
 }
 
 function safelyRemoveLocalStorageItem(key: string) {
@@ -54,12 +58,38 @@ export function useAutosave<TState = unknown>({
   userId,
   debounceMs = 2000,
   maxAgeMs = ESTIMATOR_DRAFT_MAX_AGE_MS,
+  shouldPersist,
 }: UseAutosaveOptions): UseAutosaveReturn<TState> {
   const [hasDraft, setHasDraft] = useState(false)
   const [draft, setDraft] = useState<EstimatorAutosaveData<TState> | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const keyRef = useRef(getEstimatorDraftStorageKey(orgId, userId))
   const draftDecisionPendingRef = useRef(false)
+  const writeGenerationRef = useRef(0)
+  const suppressUntilChangeRef = useRef(false)
+  const suppressedFingerprintRef = useRef<string | null>(null)
+
+  const getFingerprint = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
+    try {
+      return JSON.stringify(data)
+    } catch {
+      return null
+    }
+  }, [])
+
+  const isMeaningful = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
+    if (suppressUntilChangeRef.current) {
+      const fingerprint = getFingerprint(data)
+      if (suppressedFingerprintRef.current === null) {
+        suppressedFingerprintRef.current = fingerprint
+        return false
+      }
+      if (fingerprint === suppressedFingerprintRef.current) return false
+      suppressUntilChangeRef.current = false
+      suppressedFingerprintRef.current = null
+    }
+    return shouldPersist ? shouldPersist(data as Omit<EstimatorAutosaveData<unknown>, 'savedAt'>) : true
+  }, [getFingerprint, shouldPersist])
 
   const persistDraft = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
     if (draftDecisionPendingRef.current) return false
@@ -98,26 +128,31 @@ export function useAutosave<TState = unknown>({
   }, [])
 
   const saveDraft = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
+    if (!isMeaningful(data)) return
     // Cancel any pending save
     if (timerRef.current) clearTimeout(timerRef.current)
+    const generation = writeGenerationRef.current
 
     timerRef.current = setTimeout(() => {
       // Never overwrite a recoverable draft with the blank initial screen while
       // the restore/dismiss banner is waiting for the user's decision.
-      persistDraft(data)
+      if (generation === writeGenerationRef.current) persistDraft(data)
     }, debounceMs)
-  }, [debounceMs, persistDraft])
+  }, [debounceMs, isMeaningful, persistDraft])
 
   const saveDraftNow = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
+    if (!isMeaningful(data)) return true
     if (timerRef.current) {
       clearTimeout(timerRef.current)
       timerRef.current = null
     }
     return persistDraft(data)
-  }, [persistDraft])
+  }, [isMeaningful, persistDraft])
 
   const clearDraft = useCallback(() => {
+    writeGenerationRef.current += 1
     if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = null
     draftDecisionPendingRef.current = false
     safelyRemoveLocalStorageItem(keyRef.current)
     setHasDraft(false)
@@ -126,17 +161,33 @@ export function useAutosave<TState = unknown>({
 
   const restoreDraft = useCallback((): EstimatorAutosaveData<TState> | null => {
     const current = draft
+    writeGenerationRef.current += 1
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = null
     draftDecisionPendingRef.current = false
     setHasDraft(false)
-    // Don't clear from localStorage — keep it until next save or explicit dismiss
+    // Remove the recovery item immediately. A meaningful restored edit can be
+    // written again; an invalid/blank restored item cannot resurrect the banner.
+    safelyRemoveLocalStorageItem(keyRef.current)
     return current
   }, [draft])
 
   const dismissDraft = useCallback(() => {
+    writeGenerationRef.current += 1
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = null
     draftDecisionPendingRef.current = false
     safelyRemoveLocalStorageItem(keyRef.current)
     setHasDraft(false)
     setDraft(null)
+  }, [])
+
+  const suppressAutosaveUntilChanged = useCallback(() => {
+    suppressUntilChangeRef.current = true
+    suppressedFingerprintRef.current = null
+    writeGenerationRef.current += 1
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = null
   }, [])
 
   // Cleanup timer on unmount
@@ -146,5 +197,5 @@ export function useAutosave<TState = unknown>({
     }
   }, [])
 
-  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow }
+  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged }
 }

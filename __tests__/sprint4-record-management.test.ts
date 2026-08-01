@@ -43,7 +43,7 @@ describe('Sprint 4 quality, history, and record management', () => {
         const library = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
         const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
-        expect(estimator).toContain('Discard this unsaved draft?')
+        expect(estimator).toContain('Discard this device draft?')
         expect(estimator).toContain('Existing costing snapshots keep the name recorded when they were saved.')
         expect(library).toContain('Archived · read-only')
         expect(library).toContain('!latest.is_archived')

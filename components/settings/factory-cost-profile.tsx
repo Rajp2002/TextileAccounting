@@ -6,62 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles } from 'lucide-react'
+import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from '@/lib/app-notifications'
 import { DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { nanoid } from 'nanoid'
-
-// ─── Factory type presets ─────────────────────────────────────────────────────
-
-interface FactoryPreset {
-    id:          string
-    label:       string
-    description: string
-    emoji:       string
-    sections:    FactorySections
-}
-
-const FACTORY_PRESETS: FactoryPreset[] = [
-    {
-        id:          'grey_weaver',
-        label:       'Grey Weaver',
-        description: 'Grey fabric weaving only; no dyeing or finishing.',
-        emoji:       '🧶',
-        sections:    { winding: false, processing: false, finishing: false, commission: true, transport: false },
-    },
-    {
-        id:          'processed_fabric',
-        label:       'Processed / Dyed',
-        description: 'Weaves and arranges dyeing or printing before delivery.',
-        emoji:       '🎨',
-        sections:    { winding: false, processing: true, finishing: true, commission: true, transport: false },
-    },
-    {
-        id:          'job_weaver',
-        label:       'Job Weaver',
-        description: 'Weaves on job-work basis. Yarn arrives on hanks — winding needed.',
-        emoji:       '🔧',
-        sections:    { winding: true, processing: false, finishing: false, commission: false, transport: false },
-    },
-    {
-        id:          'full_mill',
-        label:       'Full Integrated Mill',
-        description: 'End-to-end production including dyeing, finishing, and delivery.',
-        emoji:       '🏭',
-        sections:    { winding: true, processing: true, finishing: true, commission: true, transport: true },
-    },
-]
-
-function matchingPresetId(sections: FactorySections): string | null {
-    const match = FACTORY_PRESETS.find(preset =>
-        (Object.keys(preset.sections) as Array<keyof FactorySections>)
-            .every(section => preset.sections[section] === sections[section]),
-    )
-    return match?.id ?? null
-}
+import { FACTORY_COST_PRESETS, getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
 
@@ -148,13 +100,15 @@ function SectionToggle({
 export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
     const [loading, setLoading]   = useState(true)
     const [saving, setSaving]     = useState(false)
-    const [activePreset, setActivePreset] = useState<string | null>(null)
+    const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
+    const [dirty, setDirty] = useState(false)
+    const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
     const [rates, setRates] = useState({
         warping_rate_per_kg:     2.00,
         sizing_rate_per_kg:      1.50,
         winding_rate_per_kg:     0,
-        default_commission_pct:  2.00,
+        default_commission_pct:  0,
         default_margin_pct:      10.00,
         default_transport_per_m: 0,
         yarn_review_interval_days: 90,
@@ -166,7 +120,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         winding:    false,
         processing: false,
         finishing:  false,
-        commission: true,
+        commission: false,
         transport:  false,
     })
     const [overheadMode, setOverheadMode] = useState<OverheadMode>('monthly_expenses')
@@ -174,7 +128,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [overheadItems, setOverheadItems] = useState<OverheadItem[]>(() => ensureOverheadIntegrity(
         DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     ))
-    const [monthlyOutputM, setMonthlyOutputM] = useState(10000)
+    const [monthlyOutputM, setMonthlyOutputM] = useState(0)
     const [loomCount, setLoomCount] = useState(0)
     const [monthlyWorkingDays, setMonthlyWorkingDays] = useState(26)
     const [avgOutputPerLoomPerDay, setAvgOutputPerLoomPerDay] = useState(50)
@@ -189,7 +143,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
                     sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
                     winding_rate_per_kg:     Number(d.winding_rate_per_kg    ?? 0),
-                    default_commission_pct:  Number(d.default_commission_pct ?? 2.00),
+                    default_commission_pct:  Number(d.default_commission_pct ?? 0),
                     default_margin_pct:      Number(d.default_margin_pct     ?? 10.00),
                     default_transport_per_m: Number(d.default_transport_per_m ?? 0),
                     yarn_review_interval_days: Number(d.yarn_review_interval_days ?? 90),
@@ -207,14 +161,20 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         ? d.overhead_items
                         : DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
                 ))
-                setMonthlyOutputM(Number(d.monthly_output_m ?? 10000))
+                setMonthlyOutputM(d.is_configured ? Number(d.monthly_output_m ?? 0) : 0)
                 setLoomCount(Number(d.loom_count ?? 0))
                 setMonthlyWorkingDays(Number(d.monthly_working_days ?? 26))
                 setAvgOutputPerLoomPerDay(Number(d.avg_output_per_loom_per_day ?? 50))
+                setLastSavedAt(d.updated_at ?? null)
                 if (d.enabled_sections) {
                     const loadedSections = d.enabled_sections as FactorySections
                     setSections(loadedSections)
-                    setActivePreset(matchingPresetId(loadedSections))
+                    const persistedProfile = d.factory_profile_key as FactoryProfileId | undefined
+                    setActivePreset(
+                        persistedProfile && persistedProfile !== 'unselected'
+                            ? persistedProfile
+                            : getMatchingFactoryProfileId(loadedSections) || 'custom',
+                    )
                 }
             }
             setLoading(false)
@@ -222,9 +182,11 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         load()
     }, [])
 
-    const applyPreset = (preset: FactoryPreset) => {
+    const applyPreset = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
+        if (dirty && activePreset !== preset.id && !window.confirm('Replace the current staged costing defaults with this factory type?')) return
         setActivePreset(preset.id)
         setSections({ ...preset.sections })
+        setDirty(true)
     }
 
     const handleSave = async () => {
@@ -236,37 +198,60 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             toast.error('Enter the actual monthly output used to divide expenses.')
             return
         }
-        setSaving(true)
-        const res = await upsertFactoryCostProfile({
-            ...rates,
-            overhead_mode: overheadMode,
-            enabled_sections: sections,
-            overhead_items: overheadItems,
-            monthly_output_m: monthlyOutputM,
-            overhead_override_per_m: overheadMode === 'direct' ? directOverheadPerM : null,
-            loom_count: loomCount,
-            monthly_working_days: monthlyWorkingDays,
-            avg_output_per_loom_per_day: avgOutputPerLoomPerDay,
-        })
-        if (res.success) {
-            toast.success(standaloneEstimator ? 'Estimator defaults saved' : 'Factory cost profile saved')
-        } else {
-            toast.error(res.error ?? 'Failed to save profile')
+        if (overheadMode === 'monthly_expenses' && overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0) <= 0) {
+            toast.error('Enter at least one monthly factory expense before saving these defaults.')
+            return
         }
-        setSaving(false)
+        setSaving(true)
+        try {
+            const res = await upsertFactoryCostProfile({
+                ...rates,
+                overhead_mode: overheadMode,
+            factory_profile_key: activePreset === 'custom'
+                ? 'custom'
+                : getMatchingFactoryProfileId(sections) ?? activePreset ?? 'custom',
+                enabled_sections: sections,
+                overhead_items: overheadItems,
+                monthly_output_m: monthlyOutputM,
+                overhead_override_per_m: overheadMode === 'direct' ? directOverheadPerM : null,
+                loom_count: loomCount,
+                monthly_working_days: monthlyWorkingDays,
+                avg_output_per_loom_per_day: avgOutputPerLoomPerDay,
+                expectedUpdatedAt: lastSavedAt ?? undefined,
+            })
+            if (res.success) {
+                setLastSavedAt(res.updatedAt ?? lastSavedAt)
+                setDirty(false)
+                toast.success('Saved for new Cost Estimates')
+            } else {
+                toast.error(res.error ?? 'Failed to save profile')
+            }
+        } catch {
+            toast.error('The defaults could not be saved. Your changes are still here — try again.')
+        } finally {
+            setSaving(false)
+        }
     }
 
-    const updateRate = (field: keyof typeof rates) => (v: number) =>
+    const updateRate = (field: keyof typeof rates) => (v: number) => {
+        setDirty(true)
         setRates(prev => ({ ...prev, [field]: v }))
+    }
 
-    const updateSection = (field: keyof FactorySections) => (v: boolean) =>
-        setSections(prev => ({ ...prev, [field]: v }))
+    const updateSection = (field: keyof FactorySections) => (v: boolean) => {
+        setDirty(true)
+        const next = { ...sections, [field]: v }
+        setSections(next)
+        setActivePreset(current => current === 'custom' ? 'custom' : getMatchingFactoryProfileId(next) ?? 'custom')
+    }
 
     const updateOverheadItem = (id: string, field: 'label' | 'monthlyAmount', value: string | number) => {
+        setDirty(true)
         setOverheadItems(items => items.map(item => item.id === id ? { ...item, [field]: value } : item))
     }
 
     const addOverheadItem = () => {
+        setDirty(true)
         setOverheadItems(items => [...items, {
             id: nanoid(),
             label: 'New monthly expense',
@@ -297,8 +282,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 </div>
                 <CardDescription>
                     {standaloneEstimator
-                        ? 'Default rates and costing sections that pre-fill every new costing.'
-                        : 'Default rates that pre-fill every new estimate. Change them once here, all new quotes pick up the new values automatically.'}
+                        ? 'Defaults that pre-fill new Cost Estimates. Your current estimate stays separate.'
+                        : 'Defaults for new estimates only. Existing saved costings keep the numbers captured when they were saved.'}
                 </CardDescription>
             </CardHeader>
 
@@ -307,13 +292,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Cost Estimate Profile' : 'Factory Type'}</Label>
-                        <p className="mt-1 text-xs text-muted-foreground">{standaloneEstimator ? 'Choose the closest costing profile, then fine-tune the enabled charges below.' : 'Select your factory type to configure which cost sections apply. Fine-tune with the toggles below.'}</p>
+                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Factory type' : 'Factory Type'}</Label>
+                        <p className="mt-1 text-xs text-muted-foreground">Choose a starting setup. It is a preview until you save it for new Cost Estimates.</p>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
-                        {FACTORY_PRESETS.map(preset => (
+                        {FACTORY_COST_PRESETS.map(preset => (
                             <button
                                 key={preset.id}
+                                type="button"
                                 onClick={() => applyPreset(preset)}
                                 className={`min-h-[112px] rounded-lg border p-3.5 text-left transition-all duration-150 ${
                                     activePreset === preset.id
@@ -322,16 +308,22 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 }`}
                             >
                                 <div className="text-xl mb-1">{preset.emoji}</div>
-                                <div className="text-sm font-semibold text-ink">{preset.label}</div>
+                                <div className="flex items-center gap-2 text-sm font-semibold text-ink">
+                                    {preset.label}
+                                    {preset.recommended && <span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-dark">Recommended</span>}
+                                </div>
                                 <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{preset.description}</div>
                             </button>
                         ))}
                     </div>
                     {activePreset === 'grey_weaver' && (
                         <p className="rounded-lg border border-saffron/20 bg-saffron-soft/25 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                            Grey Weaver keeps the estimator focused on yarn, weaving, overhead, and selling cost. Dyeing and finishing remain off unless you enable them below.
+                            Grey Weaver keeps the estimator focused on yarn, weaving, warping, sizing, and factory expenses. Processing, finishing, broker commission, and transport are off until you enable them.
                         </p>
                     )}
+                    <p className="rounded-lg border border-info/20 bg-info/5 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                        {dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.'}
+                    </p>
                 </div>
 
                 {/* ── Pre-Weaving Rates ── */}
@@ -375,7 +367,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
                         <Calculator className="h-4 w-4 text-info" />
-                        <Label className="text-sm font-semibold text-body">Factory Overhead</Label>
+                        <Label className="text-sm font-semibold text-body">Factory Expenses</Label>
                     </div>
                     <p className="text-xs leading-relaxed text-muted-foreground">
                         Choose once how your unit recovers fixed costs. This method and the values below pre-fill every new costing; a single costing can still be edited without changing these defaults.
@@ -385,7 +377,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <button
                             type="button"
                             aria-pressed={overheadMode === 'direct'}
-                            onClick={() => setOverheadMode('direct')}
+                            onClick={() => { setDirty(true); setOverheadMode('direct') }}
                             className={cn(
                                 'rounded-lg border px-4 py-3 text-left transition-colors',
                                 overheadMode === 'direct'
@@ -393,13 +385,13 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                     : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
                             )}
                         >
-                            <div className="text-sm font-semibold text-ink">Direct overhead rate</div>
+                            <div className="text-sm font-semibold text-ink">I know my factory cost per metre</div>
                             <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Use the ₹/m rate you already trust.</div>
                         </button>
                         <button
                             type="button"
                             aria-pressed={overheadMode === 'monthly_expenses'}
-                            onClick={() => setOverheadMode('monthly_expenses')}
+                            onClick={() => { setDirty(true); setOverheadMode('monthly_expenses') }}
                             className={cn(
                                 'rounded-lg border px-4 py-3 text-left transition-colors',
                                 overheadMode === 'monthly_expenses'
@@ -407,7 +399,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                     : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
                             )}
                         >
-                            <div className="text-sm font-semibold text-ink">Monthly expenses ÷ output</div>
+                            <div className="text-sm font-semibold text-ink">Calculate from monthly expenses</div>
                             <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Calculate ₹/m from rent, power, salaries, and actual output.</div>
                         </button>
                     </div>
@@ -415,12 +407,12 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     {overheadMode === 'direct' ? (
                         <div className="rounded-lg border border-saffron/30 bg-saffron-soft/30 p-4">
                             <RateInput
-                                label="Direct factory overhead"
+                                label="Direct factory cost per metre"
                                 value={directOverheadPerM}
-                                onChange={setDirectOverheadPerM}
+                                onChange={value => { setDirty(true); setDirectOverheadPerM(value) }}
                                 unit="₹/m"
                                 step={0.1}
-                                hint="Required while Direct overhead rate is selected."
+                                hint="Required when direct factory cost per metre is selected."
                                 icon={Calculator}
                             />
                         </div>
@@ -430,7 +422,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <RateInput
                                     label="Actual monthly output"
                                     value={monthlyOutputM}
-                                    onChange={setMonthlyOutputM}
+                                    onChange={value => { setDirty(true); setMonthlyOutputM(value) }}
                                     unit="m/mo"
                                     step={100}
                                     hint="Used to divide monthly expenses."
@@ -438,14 +430,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <RateInput
                                     label="Active looms"
                                     value={loomCount}
-                                    onChange={setLoomCount}
+                                    onChange={value => { setDirty(true); setLoomCount(value) }}
                                     unit="looms"
                                     step={1}
                                 />
                                 <RateInput
                                     label="Working days"
                                     value={monthlyWorkingDays}
-                                    onChange={setMonthlyWorkingDays}
+                                    onChange={value => { setDirty(true); setMonthlyWorkingDays(value) }}
                                     unit="days/mo"
                                     step={1}
                                 />
@@ -454,7 +446,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <RateInput
                                     label="Average output per loom"
                                     value={avgOutputPerLoomPerDay}
-                                    onChange={setAvgOutputPerLoomPerDay}
+                                    onChange={value => { setDirty(true); setAvgOutputPerLoomPerDay(value) }}
                                     unit="m/day"
                                     step={1}
                                     hint="Capacity reference only; actual monthly output above is used for costing."
@@ -506,7 +498,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                                 <button
                                                     type="button"
                                                     aria-label={`Remove ${item.label}`}
-                                                    onClick={() => setOverheadItems(items => items.filter(candidate => candidate.id !== item.id))}
+                                                    onClick={() => { setDirty(true); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
                                                     className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -569,7 +561,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         />
                         {sections.commission && (
                             <RateInput
-                                label="Commission"
+                                label="Broker commission"
                                 value={rates.default_commission_pct}
                                 onChange={updateRate('default_commission_pct')}
                                 unit="%"
@@ -580,7 +572,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         )}
                         {sections.transport && (
                             <RateInput
-                                label="Transport"
+                                label="Transport charge"
                                 value={rates.default_transport_per_m}
                                 onChange={updateRate('default_transport_per_m')}
                                 unit="₹/m"
@@ -649,13 +641,13 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             onChange={updateSection('finishing')}
                         />
                         <SectionToggle
-                            label="Commission"
+                            label="Broker commission"
                             description={standaloneEstimator ? 'Broker or agent commission included in the final price.' : 'Broker or agent commission included in the buyer quote.'}
                             checked={sections.commission}
                             onChange={updateSection('commission')}
                         />
                         <SectionToggle
-                            label="Transport"
+                            label="Transport charge"
                             description={standaloneEstimator ? 'Include delivery cost in the costing when transport applies.' : 'Factory delivers fabric directly rather than buyer collecting.'}
                             checked={sections.transport}
                             onChange={updateSection('transport')}
@@ -663,7 +655,10 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     </div>
                 </div>
 
-                <div className="flex justify-end border-t border-hairline/70 pt-5">
+                <div className="flex flex-col gap-3 border-t border-hairline/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-h-5 items-center gap-2 text-xs" aria-live="polite">
+                        {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin text-saffron" /> <span className="text-muted-foreground">Saving for new Cost Estimates…</span></> : dirty ? <><AlertCircle className="h-3.5 w-3.5 text-warning" /> <span className="text-warning-foreground">Not saved yet</span></> : lastSavedAt ? <><CheckCircle2 className="h-3.5 w-3.5 text-success" /> <span className="text-success">Saved for new Cost Estimates</span></> : <span className="text-muted-foreground">Preview only until saved</span>}
+                    </div>
                     <Button
                         variant="saffron"
                         className="w-full gap-2 sm:w-auto"
@@ -671,7 +666,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         disabled={saving}
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {standaloneEstimator ? 'Save Estimator Defaults' : 'Save Factory Profile'}
+                        Save for new Cost Estimates
                     </Button>
                 </div>
             </CardContent>

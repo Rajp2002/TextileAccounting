@@ -20,24 +20,32 @@ import { validateFactoryCostProfile, type EstimatorValidationIssue } from '@/lib
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { nanoid } from 'nanoid'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
+import { FACTORY_COST_PRESETS, type FactoryProfileId } from '@/lib/factory-cost-profiles'
+
+type FactoryCostWizardData = Partial<EstimateState> & {
+    yarnReviewIntervalDays: number
+    factoryProfileKey: FactoryProfileId
+}
 
 interface FactoryCostWizardProps {
     initialState: EstimateState
     initialYarnReviewIntervalDays: number
-    onComplete: (data: Partial<EstimateState> & { yarnReviewIntervalDays: number }) => Promise<void>
+    onComplete: (data: FactoryCostWizardData) => Promise<void>
     saving: boolean
 }
 
 export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, saving }: FactoryCostWizardProps) {
-    const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
+    const [step, setStep] = useState<'intro' | 'profile' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
     const [validationError, setValidationError] = useState<string | null>(null)
-    const [pendingCompletion, setPendingCompletion] = useState<(Partial<EstimateState> & { yarnReviewIntervalDays: number }) | null>(null)
+    const [pendingCompletion, setPendingCompletion] = useState<FactoryCostWizardData | null>(null)
     const [pendingWarnings, setPendingWarnings] = useState<EstimatorValidationIssue[]>([])
+    const [selectedProfileId, setSelectedProfileId] = useState<FactoryProfileId | null>(null)
+    const [selectedSections, setSelectedSections] = useState({ ...initialState.enabledSections })
     
     // Local state for the wizard inputs
-    const [overheadPerM, setOverheadPerM] = useState<number>(initialState.overheadOverridePerM ?? 13.5)
-    const [loomCount, setLoomCount] = useState<number>(initialState.loomCount || 24)
+    const [overheadPerM, setOverheadPerM] = useState<number>(initialState.overheadOverridePerM ?? 0)
+    const [loomCount, setLoomCount] = useState<number>(initialState.loomCount || 0)
     const [workingDays, setWorkingDays] = useState<number>(initialState.monthlyWorkingDays || 26)
     const [avgOutput, setAvgOutput] = useState<number>(initialState.avgOutputPerLoomPerDay || 50)
     const [monthlyOutput, setMonthlyOutput] = useState<number>(initialState.monthlyOutputM || 0)
@@ -51,14 +59,28 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         .reduce((sum, item) => sum + item.monthlyAmount, 0))
     const [warpingRate, setWarpingRate] = useState<number>(initialState.warpingRatePerKg)
     const [sizingRate, setSizingRate] = useState<number>(initialState.sizingRatePerKg)
+    const [windingRate, setWindingRate] = useState<number>(initialState.windingRatePerKg)
     const [processingRate, setProcessingRate] = useState<number>(initialState.processingRatePerM)
     const [finishingRate, setFinishingRate] = useState<number>(initialState.finishingRatePerM)
-    const [commissionPct, setCommissionPct] = useState<number>(initialState.commissionPct)
+    const [commissionPct, setCommissionPct] = useState<number>(initialState.commissionPct || 0)
     const [marginPct, setMarginPct] = useState<number>(initialState.profitPct || 10)
     const [yarnReviewIntervalDays, setYarnReviewIntervalDays] = useState<number>(initialYarnReviewIntervalDays || 90)
     const [transportRate, setTransportRate] = useState<number>(initialState.transportPerM)
     const [warpCrimpPct, setWarpCrimpPct] = useState<number>(initialState.warpCrimpPct)
     const [yarnWastePct, setYarnWastePct] = useState<number>(initialState.yarnShortagePct)
+
+    const applyFactoryProfile = (profileId: FactoryProfileId) => {
+        const preset = FACTORY_COST_PRESETS.find(candidate => candidate.id === profileId)
+        if (!preset) return
+        setSelectedProfileId(profileId)
+        setSelectedSections({ ...preset.sections })
+        if (!preset.sections.winding) setWindingRate(0)
+        if (!preset.sections.processing) setProcessingRate(0)
+        if (!preset.sections.finishing) setFinishingRate(0)
+        if (!preset.sections.commission) setCommissionPct(0)
+        if (!preset.sections.transport) setTransportRate(0)
+        setValidationError(null)
+    }
 
     const getOverheadSetup = (): Partial<EstimateState> => {
         if (setupPath === 'direct') {
@@ -71,22 +93,22 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             { id: nanoid(), label: 'Other Expenses', monthlyAmount: others, category: 'custom', isPreset: true, isLocked: false, source: 'manual' },
         ]
         
-        const capacityOutput = loomCount * avgOutput * workingDays
         return {
             overheadMode: 'monthly_expenses',
             loomCount,
             monthlyWorkingDays: workingDays,
             avgOutputPerLoomPerDay: avgOutput,
             overheadItems: ensureOverheadIntegrity(items),
-            monthlyOutputM: monthlyOutput > 0 ? monthlyOutput : capacityOutput,
+            monthlyOutputM: monthlyOutput,
             overheadOverridePerM: null,
         }
     }
 
-    const getCompletionData = (): Partial<EstimateState> & { yarnReviewIntervalDays: number } => ({
+    const getCompletionData = (): FactoryCostWizardData => ({
             ...getOverheadSetup(),
             warpingRatePerKg: warpingRate,
             sizingRatePerKg: sizingRate,
+            windingRatePerKg: windingRate,
             processingRatePerM: processingRate,
             finishingRatePerM: finishingRate,
             commissionPct,
@@ -95,20 +117,15 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             transportPerM: transportRate,
             warpCrimpPct,
             yarnShortagePct: yarnWastePct,
-            enabledSections: {
-                ...initialState.enabledSections,
-                processing: processingRate > 0,
-                finishing: finishingRate > 0,
-                commission: commissionPct > 0,
-                transport: transportRate > 0,
-            },
+            enabledSections: { ...selectedSections },
             isConfigured: true,
+            factoryProfileKey: selectedProfileId ?? 'custom',
         })
 
     const validateCompletion = (data: Partial<EstimateState> & { yarnReviewIntervalDays: number }) => validateFactoryCostProfile({
         warping_rate_per_kg: data.warpingRatePerKg ?? initialState.warpingRatePerKg,
         sizing_rate_per_kg: data.sizingRatePerKg ?? initialState.sizingRatePerKg,
-        winding_rate_per_kg: initialState.windingRatePerKg,
+        winding_rate_per_kg: data.windingRatePerKg ?? initialState.windingRatePerKg,
         overhead_mode: data.overheadMode ?? initialState.overheadMode,
         default_commission_pct: data.commissionPct ?? initialState.commissionPct,
         default_margin_pct: data.profitPct ?? initialState.profitPct,
@@ -116,6 +133,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         yarn_review_interval_days: data.yarnReviewIntervalDays,
         default_processing_rate_per_m: data.processingRatePerM ?? initialState.processingRatePerM,
         default_finishing_rate_per_m: data.finishingRatePerM ?? initialState.finishingRatePerM,
+        enabled_sections: data.enabledSections ?? selectedSections,
         monthly_output_m: data.monthlyOutputM ?? initialState.monthlyOutputM,
         overhead_override_per_m: data.overheadOverridePerM !== undefined ? data.overheadOverridePerM : initialState.overheadOverridePerM,
         loom_count: data.loomCount ?? initialState.loomCount,
@@ -126,7 +144,28 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     })
 
     const handleFinish = async () => {
+        if (!selectedProfileId) {
+            setValidationError('Choose your factory type before finishing setup.')
+            setStep('profile')
+            return
+        }
         const data = getCompletionData()
+        if (setupPath === 'direct' && overheadPerM <= 0) {
+            setValidationError('Enter the direct factory cost per metre before saving these defaults.')
+            setStep('fast')
+            return
+        }
+        if (setupPath === 'monthly_expenses' && monthlyOutput <= 0) {
+            setValidationError('Enter the actual monthly output used to divide factory expenses.')
+            setStep('detailed')
+            return
+        }
+        const monthlyExpenseTotal = data.overheadItems?.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0) ?? 0
+        if (setupPath === 'monthly_expenses' && monthlyExpenseTotal <= 0) {
+            setValidationError('Enter at least one monthly factory expense before saving these defaults.')
+            setStep('detailed-expenses')
+            return
+        }
         const validation = validateCompletion(data)
         setValidationError(null)
         if (!validation.valid) {
@@ -173,10 +212,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                 className="h-full bg-indigo-500 transition-all duration-500" 
                                 style={{ width: `${
                                     step === 'intro' ? 10 : 
-                                    step === 'choice' ? 30 : 
-                                    step === 'fast' ? 55 :
-                                    step === 'detailed' ? 50 :
-                                    step === 'detailed-expenses' ? 70 : 100
+                                    step === 'profile' ? 28 :
+                                    step === 'choice' ? 42 :
+                                    step === 'fast' ? 58 :
+                                    step === 'detailed' ? 58 :
+                                    step === 'detailed-expenses' ? 76 : 100
                                 }%` }} 
                             />
                         </div>
@@ -188,16 +228,60 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         <Building2 className="h-8 w-8 text-indigo-600" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Configure Your Factory</h2>
+                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Set up your factory costing</h2>
                                         <p className="text-slate-500 text-sm leading-relaxed">
-                                            To give you accurate per-meter profits, we need to know your factory&apos;s baseline monthly expenses and capacity.
+                                            Choose the type of work you do. We&apos;ll show only the charges relevant to your unit, then use your actual factory expenses to calculate a trustworthy ₹/m cost.
                                         </p>
                                     </div>
                                     <Button 
-                                        onClick={() => setStep('choice')}
+                                        onClick={() => setStep('profile')}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all shadow-lg shadow-indigo-200"
                                     >
                                         Get Started
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
+
+                            {step === 'profile' && (
+                                <div className="space-y-5">
+                                    <div className="space-y-1 text-center">
+                                        <h2 className="text-xl font-bold text-slate-900">Choose your factory type</h2>
+                                        <p className="text-xs leading-relaxed text-slate-500">This is a preview until you save it. You can change the optional charges later.</p>
+                                    </div>
+                                    <div className="grid gap-2.5">
+                                        {FACTORY_COST_PRESETS.map(profile => (
+                                            <button
+                                                key={profile.id}
+                                                type="button"
+                                                aria-pressed={selectedProfileId === profile.id}
+                                                onClick={() => applyFactoryProfile(profile.id)}
+                                                className={`flex items-start gap-3 rounded-xl border-2 p-3.5 text-left transition-colors ${selectedProfileId === profile.id ? 'border-indigo-500 bg-indigo-50/70' : 'border-slate-100 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
+                                            >
+                                                <span className="text-xl">{profile.emoji}</span>
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="flex flex-wrap items-center gap-2 text-sm font-black text-slate-900">
+                                                        {profile.label}
+                                                        {profile.recommended && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-amber-700">Recommended</span>}
+                                                    </span>
+                                                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{profile.description}</span>
+                                                </span>
+                                                {selectedProfileId === profile.id && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {selectedProfileId && (
+                                        <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[11px] leading-relaxed text-indigo-700">
+                                            <strong>{FACTORY_COST_PRESETS.find(profile => profile.id === selectedProfileId)?.label}</strong> is selected. Processing, finishing, broker commission, and transport are off unless this setup requires them or you enable them later.
+                                        </p>
+                                    )}
+                                    <Button
+                                        type="button"
+                                        disabled={!selectedProfileId}
+                                        onClick={() => setStep('choice')}
+                                        className="h-12 w-full rounded-full bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700"
+                                    >
+                                        Continue to factory expenses
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </div>
@@ -218,8 +302,8 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Zap className="h-6 w-6 text-amber-500" />
                                             </div>
                                             <div>
-                                                <div className="font-black text-slate-900">I know my direct overhead rate</div>
-                                                <div className="text-xs text-slate-500">Enter the ₹/m factory overhead rate you already use.</div>
+                                                <div className="font-black text-slate-900">I know my factory cost per metre</div>
+                                                <div className="text-xs text-slate-500">Enter the ₹/m factory cost you already use.</div>
                                             </div>
                                         </button>
                                         <button 
@@ -241,18 +325,19 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'fast' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                                        <button onClick={() => setStep('profile')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
-                                        <h2 className="text-lg font-black text-slate-900">Enter direct overhead rate</h2>
+                                        <h2 className="text-lg font-black text-slate-900">Enter your factory cost per metre</h2>
                                     </div>
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Direct factory overhead (₹/m)</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Factory cost per metre (₹/m)</Label>
                                             <div className="relative">
                                                 <Input 
                                                     type="number"
-                                                    value={overheadPerM}
+                                                    value={overheadPerM || ''}
+                                                    placeholder="Enter your rate"
                                                     onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     className="h-14 text-2xl font-black text-indigo-600 pl-8 pr-12 rounded-xl border-slate-200 focus:ring-indigo-500/20"
                                                 />
@@ -261,9 +346,14 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                         </div>
                                         <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                                            &quot;Use the rate your unit already uses for rent, power, staff, repairs, and other fixed costs.&quot;
+                                            &quot;Use the rate your unit already uses for rent, power, staff, repairs, and other factory expenses.&quot;
                                         </p>
                                     </div>
+                                    {validationError && (
+                                        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-red-700">
+                                            {validationError}
+                                        </p>
+                                    )}
                                     <Button 
                                         onClick={() => setStep('defaults')}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200"
@@ -326,7 +416,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     min={1}
                                                     value={monthlyOutput || ''}
                                                     onChange={event => setMonthlyOutput(parseNumericInput(event.target.value, { min: 1 }) ?? 0)}
-                                                    placeholder={String(loomCount * workingDays * avgOutput || 10000)}
+                                                     placeholder="e.g. 45,000"
                                                     className="h-10 pr-10 font-mono font-bold"
                                                 />
                                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/mo</span>
@@ -334,6 +424,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <p className="text-[10px] leading-relaxed text-slate-500">Use realistic actual output, not maximum rated capacity, when dividing monthly expenses.</p>
                                         </div>
                                     </div>
+                                    {validationError && (
+                                        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-red-700">
+                                            {validationError}
+                                        </p>
+                                    )}
                                     <Button 
                                         onClick={() => setStep('detailed-expenses')}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold"
@@ -414,15 +509,20 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
                                         <div className="flex items-center justify-between">
                                             <div className="space-y-0.5">
-                                                <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Calculated Overhead</div>
-                                                <div className="text-xs text-emerald-500">₹{(rent + electricity + staff + others).toLocaleString()} per month ÷ {(monthlyOutput > 0 ? monthlyOutput : loomCount * workingDays * avgOutput).toLocaleString()} m output</div>
+                                                <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Calculated factory cost</div>
+                                                <div className="text-xs text-emerald-500">₹{(rent + electricity + staff + others).toLocaleString()} per month ÷ {monthlyOutput.toLocaleString()} m output</div>
                                             </div>
                                             <div className="text-xl font-black text-emerald-700">
-                                                ₹{((rent + electricity + staff + others) / Math.max(1, (monthlyOutput > 0 ? monthlyOutput : loomCount * workingDays * avgOutput))).toFixed(2)}
+                                                ₹{(monthlyOutput > 0 ? (rent + electricity + staff + others) / monthlyOutput : 0).toFixed(2)}
                                                 <span className="text-xs ml-1">/m</span>
                                             </div>
                                         </div>
                                     </div>
+                                    {validationError && (
+                                        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-red-700">
+                                            {validationError}
+                                        </p>
+                                    )}
 
                                     <Button 
                                         onClick={() => setStep('defaults')}
@@ -449,21 +549,29 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         {[
                                             ['Warping', warpingRate, setWarpingRate, '₹/kg', 0.25],
                                             ['Sizing', sizingRate, setSizingRate, '₹/kg', 0.25],
+                                            ['Winding', windingRate, setWindingRate, '₹/kg', 0.25],
                                             ['Processing', processingRate, setProcessingRate, '₹/m', 0.1],
                                             ['Finishing', finishingRate, setFinishingRate, '₹/m', 0.1],
-                                            ['Commission', commissionPct, setCommissionPct, '%', 0.5],
+                                            ['Broker commission', commissionPct, setCommissionPct, '%', 0.5],
                                             ['Target margin', marginPct, setMarginPct, '%', 0.5],
-                                            ['Transport', transportRate, setTransportRate, '₹/m', 0.1],
+                                            ['Transport charge', transportRate, setTransportRate, '₹/m', 0.1],
                                             ['Warp crimp', warpCrimpPct, setWarpCrimpPct, '%', 0.5],
                                             ['Default yarn waste', yarnWastePct, setYarnWastePct, '%', 0.5],
-                                        ].map(([label, value, setter, unit, inputStep]) => (
+                                        ].filter(([label]) =>
+                                            label === 'Processing' ? selectedSections.processing
+                                            : label === 'Finishing' ? selectedSections.finishing
+                                            : label === 'Winding' ? selectedSections.winding
+                                            : label === 'Broker commission' ? selectedSections.commission
+                                            : label === 'Transport charge' ? selectedSections.transport
+                                            : true,
+                                        ).map(([label, value, setter, unit, inputStep]) => (
                                             <div key={String(label)} className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
                                                 <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">{String(label)}</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type="number"
                                                         min={0}
-                                                        max={label === 'Commission' || label === 'Target margin' ? 99.99 : undefined}
+                                                        max={label === 'Broker commission' || label === 'Target margin' ? 99.99 : undefined}
                                                         step={Number(inputStep)}
                                                         value={Number(value)}
                                                         onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}

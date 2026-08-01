@@ -202,7 +202,7 @@ export function CostAnalysisDetails({
                         {historicalResult.breakdown.windingPerM > 0 && <CostLine label="Winding" value={historicalResult.breakdown.windingPerM} targetMeters={meters} />}
                         {historicalResult.breakdown.processingPerM > 0 && <CostLine label="Processing" value={historicalResult.breakdown.processingPerM} targetMeters={meters} />}
                         {historicalResult.breakdown.finishingPerM > 0 && <CostLine label="Finishing" value={historicalResult.breakdown.finishingPerM} targetMeters={meters} />}
-                        <CostLine label="Factory overhead" value={historicalResult.breakdown.overheadPerM} targetMeters={meters} />
+                        <CostLine label="Factory expenses" value={historicalResult.breakdown.overheadPerM} targetMeters={meters} />
                         <CostLine label="Total production cost" value={historicalResult.productionCostPerM} targetMeters={meters} tone="strong" />
                     </>
                 ) : (
@@ -212,14 +212,14 @@ export function CostAnalysisDetails({
                     <>
                         {commissionPct > 0 && (
                             <CostLine
-                                label={`Commission (${commissionPct.toFixed(1)}%)`}
+                                label={`Broker commission (${commissionPct.toFixed(1)}%)`}
                                 value={commissionPerM}
                                 targetMeters={meters}
                                 tone="muted"
                             />
                         )}
                         {transportPerM > 0 && (
-                            <CostLine label="Transport" value={transportPerM} targetMeters={meters} tone="muted" />
+                            <CostLine label="Transport charge" value={transportPerM} targetMeters={meters} tone="muted" />
                         )}
                         {quotePrice > 0 && <CostLine label="Quoted price" value={quotePrice} targetMeters={meters} tone="strong" />}
                     </>

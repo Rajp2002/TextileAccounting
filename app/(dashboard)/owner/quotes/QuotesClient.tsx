@@ -450,7 +450,7 @@ function SavedQualityLibraryView({
                                                         ['Weaving', latestResult.breakdown.weaveCostPerM],
                                                         ['Warping & sizing', latestResult.breakdown.warpingAndSizingPerM],
                                                         ['Processing & finishing', latestResult.breakdown.windingPerM + latestResult.breakdown.processingPerM + latestResult.breakdown.finishingPerM],
-                                                        ['Factory overhead', latestResult.breakdown.overheadPerM],
+                                                        ['Factory expenses', latestResult.breakdown.overheadPerM],
                                                     ].map(([label, value]) => (
                                                         <div key={String(label)} className="flex items-center justify-between py-2">
                                                             <span className="text-slate-600">{label}</span>
