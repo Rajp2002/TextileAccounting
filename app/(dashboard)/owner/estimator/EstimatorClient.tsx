@@ -89,10 +89,11 @@ import {
     renameTemplate,
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import FactoryCostWizard from './FactoryCostWizard'
 import {
     getEstimatorWorkflowConfig,
@@ -1525,6 +1526,7 @@ export default function EstimatorClient({
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
+    const [templateToArchive, setTemplateToArchive] = useState<EstimatorTemplate | null>(null)
     const [appliedTemplate,   setAppliedTemplate]   = useState<EstimatorTemplate | null>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
     const [acknowledgedWarningKey, setAcknowledgedWarningKey] = useState<string | null>(null)
@@ -2576,7 +2578,7 @@ export default function EstimatorClient({
                         <div className="min-w-0 space-y-3">
                             <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 xl:items-end 2xl:gap-1.5 ${canUseProduction ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
                                 <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.price_helpers.production_cost')}</p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-ink)] sm:text-[32px] 2xl:text-[22px]">
                                         {hasValidCostResult ? `₹${totals.totalProductionCostPerM.toFixed(2)}` : '—'}
                                     </p>
@@ -2584,7 +2586,7 @@ export default function EstimatorClient({
                                 </div>
                                 <div className="min-w-0">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">
-                                        {mode === 'market' ? 'Target selling price' : canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'}
+                                        {mode === 'market' ? 'Target selling price' : t('estimator.price_helpers.suggested_selling_price')}
                                     </p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[32px] 2xl:text-[22px]">
                                         {hasValidCostResult && orderQuote?.isValid ? `₹${orderQuote.quotePricePerM.toFixed(2)}` : '—'}
@@ -2598,13 +2600,13 @@ export default function EstimatorClient({
                                     </p>
                                 </div>
                                 <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Break-even price</p>
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.price_helpers.break_even')}</p>
                                     <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-ink)] 2xl:text-[20px]">
                                         {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
                                             ? `₹${breakEvenScenario.quotePricePerM.toFixed(2)}`
                                             : '—'}
                                     </p>
-                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">minimum at 0% margin</p>
+                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.price_helpers.break_even_hint')}</p>
                                 </div>
                                 {hasOrderQty && (
                                     <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
@@ -2691,11 +2693,18 @@ export default function EstimatorClient({
                                             className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
                                             onClick={() => setShowExportDialog(true)}
                                             disabled={!exportModel}
+                                            aria-describedby={!exportModel ? 'export-cost-sheet-hint' : undefined}
                                             title={exportModel ? 'Create an internal cost sheet or customer quotation' : 'Correct the highlighted inputs before exporting'}
                                         >
                                             <FileDown className="h-3.5 w-3.5 shrink-0" />
                                             <span className="truncate">Export Cost Sheet</span>
                                         </Button>
+                                    )}
+
+                                    {isStandaloneCostingSession && !exportModel && (
+                                        <p id="export-cost-sheet-hint" className="col-span-2 text-xs font-medium leading-relaxed text-amber-700 sm:col-span-1">
+                                            Complete the highlighted inputs before creating an Internal Cost Sheet or Customer Quotation.
+                                        </p>
                                     )}
 
                                     {/* TERTIARY: Save Quote */}
@@ -2977,9 +2986,7 @@ export default function EstimatorClient({
                                             <button
                                                 onClick={e => {
                                                     e.stopPropagation();
-                                                    if (window.confirm(`Archive quality “${tpl.name}”? It will become read-only and can be restored from History.`)) {
-                                                        handleArchiveTemplate(tpl)
-                                                    }
+                                                    setTemplateToArchive(tpl)
                                                 }}
                                                 disabled={deletingTpl === tpl.id}
                                                 className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
@@ -4489,6 +4496,23 @@ export default function EstimatorClient({
                 </DialogContent>
             </Dialog>
 
+            <ConfirmActionDialog
+                open={Boolean(templateToArchive)}
+                onOpenChange={open => { if (!open) setTemplateToArchive(null) }}
+                title={t('estimator.quality.archiveTitle')}
+                description={templateToArchive ? t('estimator.quality.archiveDescription', { name: templateToArchive.name }) : ''}
+                confirmLabel={t('estimator.quality.archiveConfirm')}
+                isDestructive
+                isLoading={Boolean(templateToArchive && deletingTpl === templateToArchive.id)}
+                onConfirm={async () => {
+                    if (!templateToArchive) return
+                    const target = templateToArchive
+                    await handleArchiveTemplate(target)
+                    if (editRatesTpl?.id === target.id) setEditRatesTpl(null)
+                    setTemplateToArchive(null)
+                }}
+            />
+
             {/* Edit Quality Rates Dialog */}
             <Dialog open={!!editRatesTpl} onOpenChange={open => { if (!open) setEditRatesTpl(null) }}>
                 <DialogContent className="max-w-lg">
@@ -4576,10 +4600,7 @@ export default function EstimatorClient({
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                             <button
                                 onClick={() => {
-                                    if (editRatesTpl && window.confirm(`Archive quality “${editRatesTpl.name}”? It will become read-only and can be restored from History.`)) {
-                                        handleArchiveTemplate(editRatesTpl)
-                                        setEditRatesTpl(null)
-                                    }
+                                    if (editRatesTpl) setTemplateToArchive(editRatesTpl)
                                 }}
                                 disabled={deletingTpl === editRatesTpl?.id}
                                 className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50"

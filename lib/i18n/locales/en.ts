@@ -69,6 +69,19 @@ export const en = {
     added: "Added successfully",
     removed: "Removed successfully",
     remove: "Remove",
+    language_changed: "Language changed to {language}",
+    language_loading: "Loading {language}…",
+    language_load_failed: "Could not load {language}",
+    language_fallback: "English remains active. Try again when you have a connection.",
+    saved_costings_title: "Saved Costings",
+    saved_costings_description: "Reuse saved qualities, review costing history, and compare prices in one place.",
+    new_costing: "New Costing",
+    compare_costings: "Compare Costings",
+    compare_costings_hint: "Select exactly two saved costings to compare.",
+    production_cost: "Production Cost",
+    suggested_selling_price: "Suggested Selling Price",
+    quantity: "Quantity",
+    updated_label: "Updated",
   },
   production: {
     log_production: "Record Shift Production",
@@ -866,7 +879,7 @@ export const en = {
     },
     hud: {
       prod_cost: "Prod. Cost / m",
-      quote_per_m: "Quotation Price / m",
+      quote_per_m: "Suggested Selling Price / m",
       total_order: "Total Order",
       margin: "Margin",
       net_profit: "Net Profit",
@@ -922,7 +935,10 @@ export const en = {
       settingsTitle: "My Qualities",
       settingsDescription: "Manage frequently used Fabric Quality configurations. Qualities are saved from Cost Estimate using \"Save Quality.\"",
       settingsEmpty: "No qualities saved yet. Open Cost Estimate and use \"Save Quality\" to create your first one.",
-      settingsDeleteConfirm: "Archive this quality? It can be restored later."
+      settingsDeleteConfirm: "Archive this quality? It can be restored later.",
+      archiveTitle: "Archive saved quality?",
+      archiveDescription: "Archive “{name}”? It will remain in History and can be restored later. Existing saved costings will not change.",
+      archiveConfirm: "Archive quality"
     },
     order_basics: {
       title: "Cost Estimate Details",
@@ -1007,6 +1023,13 @@ export const en = {
       quantity_hint: "Calculates the total costing and selling price",
       commission: "Broker Comm. %",
       transport: "Transport / m"
+    },
+    price_helpers: {
+      production_cost: "Production Cost / m",
+      break_even: "Break-even Price / m",
+      break_even_hint: "Minimum selling price at 0% margin, including transport and commission.",
+      suggested_selling_price: "Suggested Selling Price / m",
+      suggested_selling_price_hint: "Selling price using your target margin."
     },
     convert_dialog: {
       title: "Convert Quotation to Party Order",

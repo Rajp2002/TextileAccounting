@@ -1,14 +1,15 @@
 "use client"
 
 import { useTranslation, Language } from "@/lib/i18n/context"
-import { Globe } from "lucide-react"
+import { Globe, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { toast } from "@/lib/app-notifications"
 
 const LANGUAGES: { code: Language; label: string; short: string }[] = [
   { code: "en", label: "English", short: "EN" },
   { code: "hi", label: "हिंदी", short: "हि" },
-  { code: "gu", label: "ગુજ", short: "ગુ" },
+  { code: "gu", label: "ગુજરાતી", short: "ગુ" },
 ]
 
 interface LanguageSwitcherProps {
@@ -17,13 +18,40 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitcherProps) {
-  const { language, setLanguage, tx } = useTranslation()
+  const { language, setLanguage, languageStatus, pendingLanguage, languageError, tx, t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   const current = LANGUAGES.find(l => l.code === language) ?? LANGUAGES[0]
+  const pending = LANGUAGES.find(l => l.code === pendingLanguage)
+  const isLoading = languageStatus === "loading"
+
+  const handleLanguageChange = async (nextLanguage: Language) => {
+    if (nextLanguage === language || isLoading) {
+      setOpen(false)
+      return
+    }
+    setOpen(false)
+    const result = await setLanguage(nextLanguage)
+    if (result.ok) {
+      const targetLabel = LANGUAGES.find(item => item.code === result.language)?.label ?? result.language
+      const successTitle = result.language === "hi"
+        ? `भाषा बदलकर ${targetLabel} हो गई`
+        : result.language === "gu"
+          ? `ભાષા ${targetLabel} માં બદલાઈ`
+          : `Language changed to ${targetLabel}`
+      toast.success(successTitle)
+    } else if (result.error !== "Language change was superseded.") {
+      const targetLabel = LANGUAGES.find(item => item.code === nextLanguage)?.label ?? nextLanguage
+      const failureTitle = nextLanguage === "hi" ? `${targetLabel} लोड नहीं हो सकी` : nextLanguage === "gu" ? `${targetLabel} લોડ થઈ શકી નથી` : `Could not load ${targetLabel}`
+      const fallbackDescription = nextLanguage === "hi" ? "English अभी सक्रिय है। कनेक्शन मिलने पर फिर कोशिश करें।" : nextLanguage === "gu" ? "English હજી સક્રિય છે. કનેક્શન મળે ત્યારે ફરી પ્રયાસ કરો." : "English remains active. Try again when you have a connection."
+      toast.error(failureTitle, {
+        description: fallbackDescription,
+      })
+    }
+  }
 
   return (
-    <div className="relative">
+    <div className="relative" data-i18n-skip="true">
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
@@ -32,13 +60,22 @@ export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitc
           className
         )}
         aria-label={tx("Switch language")}
+        aria-busy={isLoading}
       >
-        <Globe className="h-4 w-4 shrink-0" />
-        <span className="font-medium">{current.label}</span>
+        {isLoading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : <Globe className="h-4 w-4 shrink-0" />}
+        <span className="font-medium" data-i18n-skip="true">{isLoading ? t("common.language_loading", { language: pending?.label ?? "…" }) : current.label}</span>
         <svg className={cn("h-3 w-3 transition-transform", open && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
+
+      <span className="sr-only" role="status" aria-live="polite">
+        {isLoading
+          ? t("common.language_loading", { language: pending?.label ?? "…" })
+          : languageError
+            ? t("common.language_fallback")
+            : ""}
+      </span>
 
       {open && (
         <>
@@ -52,10 +89,9 @@ export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitc
               <button
                 key={lang.code}
                 type="button"
-                onClick={() => {
-                  setLanguage(lang.code)
-                  setOpen(false)
-                }}
+                onClick={() => void handleLanguageChange(lang.code)}
+                disabled={isLoading}
+                aria-current={language === lang.code ? "true" : undefined}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition-colors text-left",
                   language === lang.code

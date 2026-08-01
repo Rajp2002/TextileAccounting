@@ -30,7 +30,7 @@ describe('UX-012 terminology baseline', () => {
             'Taka',
             'm',
         ]))
-        expect(UX012_DISTINCTIONS).toHaveLength(8)
+        expect(UX012_DISTINCTIONS).toHaveLength(9)
         expect(UX012_DISTINCTIONS).toContain('Sale vs Dispatch vs Party Receipt Confirmation')
         expect(UX012_DISTINCTIONS).toContain('kg/100m vs m/kg')
     })

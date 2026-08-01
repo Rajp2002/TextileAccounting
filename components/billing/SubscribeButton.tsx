@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import { cn } from '@/lib/utils'
 import type { BillingPurchaseType, PurchasablePlanTier } from '@/lib/billing-constants'
 
@@ -149,7 +149,7 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
 
             const contentType = res.headers.get('content-type')
             if (!contentType?.includes('application/json')) {
-                const text = await res.text()
+                await res.text()
                 throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
             }
 

@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Loader2, Archive, ArchiveRestore, FileText, Layers, Hash } from 'lucide-react'
 import { getEstimatorTemplates, archiveTemplate, restoreTemplate } from '@/app/(dashboard)/owner/estimator/actions'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import type { WarpRow, WeftRow } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,8 @@ export function TemplateManager({ className }: { className?: string }) {
     const { t } = useTranslation()
     const [loading,   setLoading]   = useState(true)
     const [qualities, setQualities] = useState<TemplateV3[]>([])
+    const [qualityToArchive, setQualityToArchive] = useState<TemplateV3 | null>(null)
+    const [archivingQualityId, setArchivingQualityId] = useState<string | null>(null)
 
     const load = async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
         if (showLoading) setLoading(true)
@@ -47,16 +50,27 @@ export function TemplateManager({ className }: { className?: string }) {
 
     const handleArchive = async (quality: TemplateV3) => {
         const archived = quality.is_active === false
-        if (!archived && !confirm(`Archive quality “${quality.name}”? It will be read-only until restored.`)) return
-        const res = archived
-            ? await restoreTemplate(quality.id, quality.updated_at)
-            : await archiveTemplate(quality.id, quality.updated_at)
-        if (res.success) {
-            toast.success(archived ? 'Quality restored' : 'Quality archived')
-            load()
-        } else {
-            toast.error(res.error ?? `Quality could not be ${archived ? 'restored' : 'archived'}`)
+        setArchivingQualityId(quality.id)
+        try {
+            const res = archived
+                ? await restoreTemplate(quality.id, quality.updated_at)
+                : await archiveTemplate(quality.id, quality.updated_at)
+            if (res.success) {
+                toast.success(archived ? 'Quality restored' : 'Quality archived')
+                await load()
+            } else {
+                toast.error(res.error ?? `Quality could not be ${archived ? 'restored' : 'archived'}`)
+            }
+        } finally {
+            setArchivingQualityId(null)
         }
+    }
+
+    const confirmArchive = async () => {
+        if (!qualityToArchive) return
+        const target = qualityToArchive
+        await handleArchive(target)
+        setQualityToArchive(null)
     }
 
     // Derive display summary from V3 or V1 quality
@@ -89,6 +103,7 @@ export function TemplateManager({ className }: { className?: string }) {
     }
 
     return (
+        <>
         <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
             <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
@@ -130,7 +145,8 @@ export function TemplateManager({ className }: { className?: string }) {
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7 text-subtle transition-colors hover:bg-surface-soft"
-                                            onClick={() => handleArchive(quality)}
+                                            onClick={() => quality.is_active === false ? void handleArchive(quality) : setQualityToArchive(quality)}
+                                            disabled={Boolean(archivingQualityId)}
                                             aria-label={quality.is_active === false ? `Restore ${quality.name}` : `Archive ${quality.name}`}
                                         >
                                             {quality.is_active === false ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
@@ -158,5 +174,16 @@ export function TemplateManager({ className }: { className?: string }) {
                 )}
             </CardContent>
         </Card>
+        <ConfirmActionDialog
+            open={Boolean(qualityToArchive)}
+            onOpenChange={open => { if (!open) setQualityToArchive(null) }}
+            title={t('estimator.quality.archiveTitle')}
+            description={qualityToArchive ? t('estimator.quality.archiveDescription', { name: qualityToArchive.name }) : ''}
+            confirmLabel={t('estimator.quality.archiveConfirm')}
+            isDestructive
+            isLoading={Boolean(qualityToArchive && archivingQualityId === qualityToArchive.id)}
+            onConfirm={confirmArchive}
+        />
+        </>
     )
 }

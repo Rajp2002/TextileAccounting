@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { Download, Loader2, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import { Button } from '@/components/ui/button'
 import {
     exportOrganizationData,
@@ -84,12 +84,12 @@ export function OrganizationDataExportButton({
                     {isPending ? 'Preparing export' : status === 'failed' ? 'Retry export' : 'Download organization data'}
                 </Button>
                 {status === 'download-started' && (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                    <span role="status" className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Download started
                     </span>
                 )}
                 {status === 'failed' && (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700">
+                    <span role="alert" className="flex items-center gap-1 text-xs font-semibold text-red-700">
                         <AlertTriangle className="h-3.5 w-3.5" /> No export was generated
                     </span>
                 )}

@@ -17,7 +17,12 @@ export const UX012_TERMS = {
     deliveryChallanFirstUse: 'Delivery Challan',
     challan: 'Challan',
     costEstimate: 'Cost Estimate',
+    savedCosting: 'Saved Costing',
     quotation: 'Quotation',
+    breakEvenPrice: 'Break-even Price',
+    suggestedSellingPrice: 'Suggested Selling Price',
+    productionCostPerMetre: 'Production Cost / m',
+    currentYarnRate: 'Current Yarn Rate',
     worker: 'Worker',
     workerGujarati: 'કારીગર',
     pieceRateWorker: 'Piece-rate Worker',
@@ -52,6 +57,7 @@ export const UX012_DISTINCTIONS = [
     'Piece-rate Worker vs Salaried Worker',
     'Upaad vs Kharchi vs Hisaab payout vs Inam vs Kapaat',
     'kg/100m vs m/kg',
+    'Production Cost vs Break-even Price vs Suggested Selling Price',
 ] as const
 
 export const UX012_EXPORT_LABELS = {

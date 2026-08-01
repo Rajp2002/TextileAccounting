@@ -4,7 +4,7 @@ import { OrganizationDataExportButton } from '@/components/settings/organization
 export default async function OwnerDataExportPage() {
     await requireRole(['owner'])
     return (
-        <main className="mx-auto max-w-2xl py-10">
+        <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                 <p className="text-xs font-bold uppercase tracking-widest text-orange-600">Privacy & data</p>
                 <h1 className="mt-2 text-2xl font-black text-slate-950">Export your organization data</h1>

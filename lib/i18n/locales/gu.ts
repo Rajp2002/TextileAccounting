@@ -69,6 +69,19 @@ export const gu = {
     added: "સફળતાપૂર્વક ઉમેરવામાં આવ્યું",
     removed: "સફળતાપૂર્વક હટાવવામાં આવ્યું",
     remove: "હટાવો",
+    language_changed: "ભાષા {language} માં બદલાઈ",
+    language_loading: "{language} લોડ થઈ રહી છે…",
+    language_load_failed: "{language} લોડ થઈ શકી નથી",
+    language_fallback: "English હજી સક્રિય છે. કનેક્શન મળે ત્યારે ફરી પ્રયાસ કરો.",
+    saved_costings_title: "સાચવેલી કોસ્ટિંગ",
+    saved_costings_description: "સાચવેલી ક્વોલિટી ફરી વાપરો, કોસ્ટિંગ ઇતિહાસ જુઓ અને કિંમતોની તુલના કરો.",
+    new_costing: "નવી કોસ્ટિંગ",
+    compare_costings: "કોસ્ટિંગની તુલના કરો",
+    compare_costings_hint: "તુલના કરવા માટે બરાબર બે સાચવેલી કોસ્ટિંગ પસંદ કરો.",
+    production_cost: "ઉત્પાદન ખર્ચ",
+    suggested_selling_price: "સૂચવેલી વેચાણ કિંમત",
+    quantity: "જથ્થો",
+    updated_label: "અપડેટ",
   },
   production: {
     log_production: "પ્રોડક્શન નોંધો (Log Prod)",
@@ -866,7 +879,7 @@ export const gu = {
     },
     hud: {
       prod_cost: "ઉત્પાદન ખર્ચ / મી",
-      quote_per_m: "અંતિમ કિંમત / મી",
+      quote_per_m: "સૂચવેલી વેચાણ કિંમત / મી",
       total_order: "કુલ ઓર્ડર",
       margin: "માર્જિન",
       net_profit: "ચોખ્ખો નફો",
@@ -919,7 +932,10 @@ export const gu = {
       settingsTitle: "મારી ક્વોલિટી",
       settingsDescription: "તમારી વારંવાર ઉપયોગમાં આવતી ફેબ્રિક રચનાઓ મેનેજ કરો. ક્વોલિટી એસ્ટીમેટર પેજ પરથી \"ક્વોલિટી સાચવો\" દ્વારા સાચવાય છે.",
       settingsEmpty: "હજી કોઈ ક્વોલિટી સાચવાઈ નથી. તમારી પહેલી ક્વોલિટી બનાવવા એસ્ટીમેટર ખોલો અને \"ક્વોલિટી સાચવો\" વાપરો.",
-      settingsDeleteConfirm: "આ ક્વોલિટી આર્કાઇવ કરશો? તેને પછીથી રિસ્ટોર કરી શકો છો."
+      settingsDeleteConfirm: "આ ક્વોલિટી આર્કાઇવ કરશો? તેને પછીથી રિસ્ટોર કરી શકો છો.",
+      archiveTitle: "સાચવેલી ક્વોલિટી આર્કાઇવ કરશો?",
+      archiveDescription: "“{name}” આર્કાઇવ કરશો? તે History માં રહેશે અને પછીથી રિસ્ટોર કરી શકાશે. જૂની સાચવેલી કોસ્ટિંગ બદલાશે નહીં.",
+      archiveConfirm: "ક્વોલિટી આર્કાઇવ કરો"
     },
     order_basics: {
       title: "કોસ્ટિંગ વિગતો",
@@ -1004,6 +1020,13 @@ export const gu = {
       quantity_hint: "કુલ કોસ્ટિંગ અને વેચાણ કિંમતની ગણતરી કરે છે",
       commission: "બ્રોકર કમિશન %",
       transport: "ટ્રાન્સપોર્ટ / મી"
+    },
+    price_helpers: {
+      production_cost: "ઉત્પાદન ખર્ચ / મી",
+      break_even: "બ્રેક-ઈવન કિંમત / મી",
+      break_even_hint: "0% માર્જિન પરની ન્યૂનતમ વેચાણ કિંમત, જેમાં ટ્રાન્સપોર્ટ અને કમિશન સામેલ છે.",
+      suggested_selling_price: "સૂચવેલી વેચાણ કિંમત / મી",
+      suggested_selling_price_hint: "તમારા લક્ષ્ય માર્જિન મુજબની વેચાણ કિંમત."
     },
     convert_dialog: {
       title: "પ્રોડક્શન ઓર્ડરમાં બદલો",

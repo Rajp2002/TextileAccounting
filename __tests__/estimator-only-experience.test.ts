@@ -48,7 +48,7 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('{canUseProduction && !isStandaloneCostingSession && <Button')
         expect(estimator).toContain('id="btn-start-party-order"')
         expect(estimator).toContain('if (!state.orderQuantityM || state.orderQuantityM <= 0)')
-        expect(estimator).toContain("t('estimator.hud.quote_per_m')")
+        expect(estimator).toContain("t('estimator.price_helpers.suggested_selling_price')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("!canUseProduction ? t('estimator.simulation.base_title')")
         expect(estimator).toContain('placeholder="5000"')
@@ -58,10 +58,10 @@ describe('Estimator-only product presentation', () => {
     it('keeps the costing backbone and terminology shared with Full Suite', () => {
         const english = read('lib/i18n/locales/en.ts')
 
-        expect(english).toContain('quote_per_m: "Quotation Price / m"')
+        expect(english).toContain('quote_per_m: "Suggested Selling Price / m"')
         expect(english).toContain('title: "Cost Estimate Details"')
         expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
-        expect(estimator).toContain("canUseProduction ? t('estimator.hud.quote_per_m') : 'Suggested selling price'")
+        expect(estimator).toContain("t('estimator.price_helpers.suggested_selling_price')")
         expect(estimator).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
         expect(estimator).toContain("(requiresCommercialContext && !partyName.trim())")
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
@@ -69,7 +69,7 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('presents persisted quote entities as saved costings without forking persistence', () => {
-        expect(quotes).toContain("canUseQuotationWorkflow ? 'Costings & Quotations' : 'Saved Costings'")
+        expect(quotes).toContain("canUseQuotationWorkflow ? 'Costings & Quotations' : t('common.saved_costings_title')")
         expect(quotes).toContain('Search quality or costing…')
         expect(quotes).toContain('Compare Saved Costings')
         expect(quotes).toContain("'Open & Update'")

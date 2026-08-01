@@ -20,9 +20,17 @@ type TranslationResources = {
   generatedLegacy: Record<string, string>
 }
 
+export type LanguageLoadStatus = "idle" | "loading" | "ready" | "error"
+export type LanguageChangeResult =
+  | { ok: true; language: Language }
+  | { ok: false; language: Language; error: string }
+
 interface I18nContextProps {
   language: Language
-  setLanguage: (lang: Language) => void
+  setLanguage: (lang: Language) => Promise<LanguageChangeResult>
+  languageStatus: LanguageLoadStatus
+  pendingLanguage: Language | null
+  languageError: string | null
   t: (key: string, values?: InterpolationValues) => string
   tx: (text: string, values?: InterpolationValues) => string
 }
@@ -342,26 +350,56 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     en: { translation: en, legacy: {}, generatedLegacy: {} },
   })
   const requestedLanguage = useRef<Language>("en")
+  const [languageStatus, setLanguageStatus] = useState<LanguageLoadStatus>("idle")
+  const [pendingLanguage, setPendingLanguage] = useState<Language | null>(null)
+  const [languageError, setLanguageError] = useState<string | null>(null)
 
-  const activateLanguage = useCallback((lang: Language) => {
+  const activateLanguage = useCallback(async (lang: Language): Promise<LanguageChangeResult> => {
     requestedLanguage.current = lang
-    setLanguageState(lang)
+    setLanguageError(null)
 
-    if (lang === "en") return
+    if (lang === "en") {
+      setPendingLanguage(null)
+      setLanguageState("en")
+      setLanguageStatus("ready")
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, "en")
+      return { ok: true, language: "en" }
+    }
 
-    void loadLanguageResources(lang)
-      .then((loadedResources) => {
-        setResources((current) => current[lang]
-          ? current
-          : { ...current, [lang]: loadedResources })
-      })
-      .catch(() => {
-        if (requestedLanguage.current !== lang) return
-        requestedLanguage.current = "en"
-        setLanguageState("en")
-        localStorage.setItem(LANGUAGE_STORAGE_KEY, "en")
-      })
-  }, [])
+    if (resources[lang]) {
+      setPendingLanguage(null)
+      setLanguageState(lang)
+      setLanguageStatus("ready")
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
+      return { ok: true, language: lang }
+    }
+
+    setPendingLanguage(lang)
+    setLanguageStatus("loading")
+
+    try {
+      const loadedResources = await loadLanguageResources(lang)
+      if (requestedLanguage.current !== lang) {
+        return { ok: false, language: lang, error: "Language change was superseded." }
+      }
+      setResources((current) => current[lang]
+        ? current
+        : { ...current, [lang]: loadedResources })
+      setPendingLanguage(null)
+      setLanguageState(lang)
+      setLanguageStatus("ready")
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
+      return { ok: true, language: lang }
+    } catch {
+      if (requestedLanguage.current !== lang) {
+        return { ok: false, language: lang, error: "Language change was superseded." }
+      }
+      setPendingLanguage(null)
+      setLanguageStatus("error")
+      setLanguageError("The selected language could not be loaded.")
+      return { ok: false, language: lang, error: "The selected language could not be loaded." }
+    }
+  }, [resources])
 
   useEffect(() => {
     let disposed = false
@@ -370,7 +408,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       setIsMounted(true)
       const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY)
       if (isLanguage(savedLang)) {
-        activateLanguage(savedLang)
+        void activateLanguage(savedLang)
       }
     })
     return () => {
@@ -378,10 +416,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, [activateLanguage])
 
-  const setLanguage = (lang: Language) => {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
-    activateLanguage(lang)
-  }
+  const setLanguage = useCallback((lang: Language) => activateLanguage(lang), [activateLanguage])
 
   const activeLang = isMounted && resources[language] ? language : "en"
   const activeResources = resources[activeLang]
@@ -404,7 +439,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [activeLang, phraseMap])
 
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t, tx }}>
+    <I18nContext.Provider value={{ language, setLanguage, languageStatus, pendingLanguage, languageError, t, tx }}>
       <LegacyTextLocalizer language={activeLang} phraseMap={phraseMap} />
       {children}
     </I18nContext.Provider>

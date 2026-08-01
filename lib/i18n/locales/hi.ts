@@ -69,6 +69,19 @@ export const hi = {
     added: "सफलतापूर्वक जोड़ा गया",
     removed: "सफलतापूर्वक हटाया गया",
     remove: "हटाएं",
+    language_changed: "भाषा बदलकर {language} हो गई",
+    language_loading: "{language} लोड हो रही है…",
+    language_load_failed: "{language} लोड नहीं हो सकी",
+    language_fallback: "English अभी सक्रिय है। कनेक्शन मिलने पर फिर कोशिश करें।",
+    saved_costings_title: "सेव की गई कॉस्टिंग",
+    saved_costings_description: "सेव की गई क्वालिटी दोबारा इस्तेमाल करें, कॉस्टिंग इतिहास देखें और कीमतों की तुलना करें।",
+    new_costing: "नई कॉस्टिंग",
+    compare_costings: "कॉस्टिंग की तुलना करें",
+    compare_costings_hint: "तुलना करने के लिए ठीक दो सेव की गई कॉस्टिंग चुनें।",
+    production_cost: "उत्पादन लागत",
+    suggested_selling_price: "सुझाई गई बिक्री कीमत",
+    quantity: "मात्रा",
+    updated_label: "अपडेट",
   },
   production: {
     log_production: "प्रोडक्शन दर्ज करें (Log Prod)",
@@ -864,7 +877,7 @@ export const hi = {
     },
     hud: {
       prod_cost: "उत्पाद लागत / मी",
-      quote_per_m: "अंतिम कीमत / मी",
+      quote_per_m: "सुझाई गई बिक्री कीमत / मी",
       total_order: "कुल ऑर्डर",
       margin: "मार्जिन",
       net_profit: "शुद्ध लाभ",
@@ -917,7 +930,10 @@ export const hi = {
       settingsTitle: "मेरी क्वालिटी",
       settingsDescription: "अपनी अक्सर उपयोग होने वाली फैब्रिक कॉन्फ़िगरेशन मैनेज करें। क्वालिटी को एस्टीमेटर पेज से \"क्वालिटी सहेजें\" के जरिए सहेजा जाता है।",
       settingsEmpty: "अभी तक कोई क्वालिटी सहेजी नहीं गई है। अपनी पहली क्वालिटी बनाने के लिए एस्टीमेटर खोलें और \"क्वालिटी सहेजें\" का उपयोग करें।",
-      settingsDeleteConfirm: "क्या इस क्वालिटी को आर्काइव करना है? इसे बाद में रिस्टोर किया जा सकता है।"
+      settingsDeleteConfirm: "क्या इस क्वालिटी को आर्काइव करना है? इसे बाद में रिस्टोर किया जा सकता है।",
+      archiveTitle: "सेव की गई क्वालिटी आर्काइव करें?",
+      archiveDescription: "“{name}” आर्काइव करें? यह History में रहेगी और बाद में रिस्टोर की जा सकती है। पुरानी सेव की गई कॉस्टिंग नहीं बदलेगी।",
+      archiveConfirm: "क्वालिटी आर्काइव करें"
     },
     order_basics: {
       title: "लागत विवरण",
@@ -1002,6 +1018,13 @@ export const hi = {
       quantity_hint: "कुल लागत और बिक्री मूल्य की गणना करता है",
       commission: "ब्रोकर कमीशन %",
       transport: "ट्रांसपोर्ट / मी"
+    },
+    price_helpers: {
+      production_cost: "उत्पादन लागत / मी",
+      break_even: "ब्रेक-ईवन कीमत / मी",
+      break_even_hint: "0% मार्जिन पर न्यूनतम बिक्री कीमत, जिसमें ट्रांसपोर्ट और कमीशन शामिल हैं।",
+      suggested_selling_price: "सुझाई गई बिक्री कीमत / मी",
+      suggested_selling_price_hint: "आपके लक्ष्य मार्जिन के अनुसार बिक्री कीमत।"
     },
     convert_dialog: {
       title: "प्रोडक्शन ऑर्डर में बदलें",

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles } from 'lucide-react'
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import { DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
@@ -462,6 +462,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <div className="flex items-end rounded-lg border border-hairline bg-surface px-3 py-2.5 text-xs text-muted-foreground">
                                     <span>Monthly expenses are persistent and can be updated whenever electricity, salary, rent, or output changes.</span>
                                 </div>
+                                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                    Preset expense names stay fixed so costings use the same categories. Locked amounts are maintained by the linked factory record.
+                                </p>
                             </div>
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between gap-3">

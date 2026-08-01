@@ -24,7 +24,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { convertAcceptedQuoteToOrder, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
 import { getCurrentTimestampMs } from '@/lib/time'
 import {
@@ -66,6 +66,7 @@ import {
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
+import { useTranslation } from '@/lib/i18n/context'
 
 const STATUS_CONFIG = {
     draft:    { label: 'Draft',    color: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -506,6 +507,7 @@ function SavedQualityLibraryView({
 }
 
 export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
+    const { t } = useTranslation()
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -769,12 +771,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                         <History className="h-6 w-6 text-indigo-500" />
-                        {canUseQuotationWorkflow ? 'Costings & Quotations' : 'Saved Costings'}
+                        {canUseQuotationWorkflow ? 'Costings & Quotations' : t('common.saved_costings_title')}
                     </h1>
-                    <p className="text-sm text-slate-500 font-medium">{canUseQuotationWorkflow ? 'Keep costing intelligence while adding customer quotation and production workflows.' : 'Saved qualities with costing history, breakdowns, and comparison in one place.'}</p>
+                    <p className="text-sm text-slate-500 font-medium">{canUseQuotationWorkflow ? 'Keep costing intelligence while adding customer quotation and production workflows.' : t('common.saved_costings_description')}</p>
                 </div>
                 <Button onClick={() => router.push('/owner/estimator')} className="h-11 bg-orange-600 text-white hover:bg-orange-700">
-                    <Plus className="h-4 w-4" /> {canUseQuotationWorkflow ? 'New Estimate' : 'New Costing'}
+                    <Plus className="h-4 w-4" /> {canUseQuotationWorkflow ? 'New Estimate' : t('common.new_costing')}
                 </Button>
                 {canUseQuotationWorkflow && <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-lg shadow-sm w-full sm:w-auto overflow-x-auto">
                     {['all', 'costings', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
@@ -833,15 +835,21 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <Button
                             variant="outline"
                             disabled={selectedCostings.length !== 2}
+                            aria-describedby={selectedCostings.length !== 2 ? 'compare-costings-help' : undefined}
                             onClick={() => setShowComparison(true)}
                             className="h-10"
                         >
-                            <GitCompareArrows className="h-4 w-4" /> Compare {selectedCostings.length || ''}
+                            <GitCompareArrows className="h-4 w-4" /> {t('common.compare_costings')} {selectedCostings.length || ''}
                         </Button>
                         <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? 'Active' : 'Archived'}
                         </Button>
                     </div>
+                    {selectedCostings.length !== 2 && (
+                        <p id="compare-costings-help" className="mt-2 text-xs font-medium text-slate-600">
+                            {t('common.compare_costings_hint')}
+                        </p>
+                    )}
                     <p className="mt-2 text-xs text-slate-500">
                         {showQualityLibrary
                             ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · expand a quality to review its costing history.`
@@ -902,8 +910,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 <tr>
                                     <th className="w-12 px-4 py-3"><span className="sr-only">Compare</span></th>
                                     <th className="px-4 py-3">Quality</th>
-                                    <th className="px-4 py-3">Production Cost</th>
-                                    <th className="px-4 py-3">Suggested Selling Price</th>
+                                    <th className="px-4 py-3">{t('common.production_cost')}</th>
+                                    <th className="px-4 py-3">{t('common.suggested_selling_price')}</th>
                                     <th className="px-4 py-3">Margin</th>
                                     <th className="px-4 py-3">Quantity</th>
                                     <th className="px-4 py-3">Updated</th>
@@ -1065,7 +1073,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{isCosting ? 'Suggested Price' : 'Quotation Price'}</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{isCosting ? t('common.suggested_selling_price') : 'Quotation Price'}</p>
                                             <p className="text-base font-black font-mono text-indigo-600">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
                                         </div>
                                         <div>
@@ -1075,7 +1083,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Production Cost</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{t('common.production_cost')}</p>
                                             <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">₹{getProductionCostPerM(quote).toFixed(2)}/m</p>
                                             {isCosting && costMovement != null && (
                                                 <p className={`mt-1 text-[10px] font-bold ${costMovement > 0 ? 'text-red-600' : costMovement < 0 ? 'text-emerald-700' : 'text-slate-500'}`}>

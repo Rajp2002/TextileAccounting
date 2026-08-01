@@ -37,13 +37,14 @@ export function ConfirmActionDialog({
                     <DialogTitle>{title || t('confirm.title')}</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isLoading}>
                         {cancelLabel || t('confirm.cancel')}
                     </Button>
                     <Button
                         variant={isDestructive ? 'destructive' : 'default'}
                         onClick={onConfirm}
+                        className="w-full sm:w-auto"
                         disabled={isLoading}
                     >
                         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

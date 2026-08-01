@@ -271,7 +271,7 @@ export default async function BillingPage({
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
-        <div className="mx-auto max-w-6xl space-y-8 pb-20">
+        <div className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
             {/* Header Area */}
             <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end">
                 <div>
@@ -284,7 +284,7 @@ export default async function BillingPage({
                         </p>
                     )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <Link href="/owner/data-export" className="text-sm font-semibold text-blue-700 underline-offset-4 hover:underline">Export organization data</Link>
                     {tier !== 'none' && <StatusBadge status="active" />}
                 </div>
@@ -298,7 +298,7 @@ export default async function BillingPage({
                     
                     {/* 1. STATE-SPECIFIC HERO CARD */}
                     {tier === 'none' ? (
-                        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 p-8 md:p-12 text-white shadow-2xl shadow-indigo-500/20">
+                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 p-6 text-white shadow-2xl shadow-indigo-500/20 sm:rounded-[2.5rem] sm:p-8 md:p-12">
                             <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                                 <Zap className="w-64 h-64 rotate-12" />
                             </div>
@@ -308,7 +308,7 @@ export default async function BillingPage({
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-400/20 border border-blue-400/30 text-xs font-black uppercase tracking-widest">
                                             <Clock className="w-3 h-3 animate-spin" /> Activating access
                                         </div>
-                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Your factory is coming online.</h2>
+                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Your factory is coming online.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
                                             We&apos;ve received your payment. Your selected <strong>Weavly plan</strong> is being configured. Refresh in a few seconds.
                                         </p>
@@ -318,7 +318,7 @@ export default async function BillingPage({
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/30 text-xs font-black uppercase tracking-widest">
                                             <Clock className="w-3 h-3 animate-spin" /> Checkout pending
                                         </div>
-                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Complete payment in Razorpay.</h2>
+                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Complete payment in Razorpay.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
                                             Your order is ready, but Weavly has <strong>not received a verified payment yet</strong>. Complete or close the checkout to continue.
                                         </p>
@@ -328,7 +328,7 @@ export default async function BillingPage({
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-400/20 border border-red-400/30 text-xs font-black uppercase tracking-widest text-red-100">
                                             <XCircle className="w-3 h-3" /> Payment not completed
                                         </div>
-                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">No payment was captured.</h2>
+                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">No payment was captured.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
                                             Your access was not activated. Choose a plan below to retry the checkout safely.
                                         </p>
@@ -338,7 +338,7 @@ export default async function BillingPage({
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-400/20 border border-red-400/30 text-xs font-black uppercase tracking-widest text-red-100">
                                             <Lock className="w-3 h-3" /> Access Suspended
                                         </div>
-                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Plan expired.</h2>
+                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Plan expired.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
                                             Your paid period has ended. Renew your previous plan or choose the plan that matches how you work.
                                         </p>
@@ -348,7 +348,7 @@ export default async function BillingPage({
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-400/20 border border-indigo-400/30 text-xs font-black uppercase tracking-widest">
                                             <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> Limited Access
                                         </div>
-                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Choose your Weavly workspace.</h2>
+                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Choose your Weavly workspace.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
                                             Start with the standalone Estimator for costing and quotes, or choose Full Suite for production, stock, dispatch, and payroll.
                                         </p>

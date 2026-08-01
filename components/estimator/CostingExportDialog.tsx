@@ -36,7 +36,7 @@ import {
   type CostingExportMode,
   type CostingExportModel,
 } from '@/lib/estimator-export'
-import { toast } from 'sonner'
+import { toast } from '@/lib/app-notifications'
 import { downloadBlob } from '@/lib/browser-download'
 import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimator/actions'
 
@@ -152,6 +152,11 @@ export function CostingExportDialog({
     && sourceQuoteStatus === 'draft'
     && !markedSent
     && ['generated', 'download-started', 'print-opened', 'share-opened'].includes(status)
+  const exportActionHint = !model
+    ? 'Complete the Cost Estimate before creating a document.'
+    : validationErrors.length > 0
+      ? validationErrors[0]
+      : null
   const switchMode = (nextMode: CostingExportMode) => {
     setMode(nextMode)
     setGeneratedBlob(null)
@@ -384,12 +389,14 @@ export function CostingExportDialog({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="export-customer-name">Party / customer {mode === 'customer' ? '' : '(optional)'}</Label>
-                <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" disabled={savedQuotation} />
+                <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" disabled={savedQuotation} aria-describedby={savedQuotation ? 'export-customer-name-help' : undefined} />
+                {savedQuotation && <p id="export-customer-name-help" className="text-xs text-slate-500">This customer name is locked because the quotation has already been saved.</p>}
               </div>
               {mode === 'customer' && (
                 <div className="space-y-1.5">
                   <Label htmlFor="export-valid-until">Valid until</Label>
-                  <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={lockedQuotation} />
+                  <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={lockedQuotation} aria-describedby={lockedQuotation ? 'export-valid-until-help' : undefined} />
+                  {lockedQuotation && <p id="export-valid-until-help" className="text-xs text-slate-500">Accepted quotations keep their original validity date.</p>}
                 </div>
               )}
               <div className="space-y-1.5">
@@ -401,7 +408,9 @@ export function CostingExportDialog({
                   placeholder={mode === 'customer' ? 'Payment, delivery, quality, or transport terms' : 'Internal review notes - never shown to the customer'}
                   className="min-h-24"
                   disabled={lockedQuotation && mode === 'customer'}
+                  aria-describedby={lockedQuotation && mode === 'customer' ? 'export-terms-help' : undefined}
                 />
+                {lockedQuotation && mode === 'customer' && <p id="export-terms-help" className="text-xs text-slate-500">Accepted quotations keep their original customer terms.</p>}
               </div>
               {mode === 'customer' && (
                 <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3">
@@ -451,8 +460,9 @@ export function CostingExportDialog({
         </div>
 
         <DialogFooter className="flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+          {exportActionHint && <p id="export-action-help" className="text-xs font-medium leading-relaxed text-amber-700 sm:max-w-sm">{exportActionHint}</p>}
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0}>
+            <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0} aria-describedby={exportActionHint ? 'export-action-help' : undefined}>
               <Printer className="h-4 w-4" /> Print
             </Button>
             {generatedBlob && mode === 'customer' && (
@@ -471,7 +481,7 @@ export function CostingExportDialog({
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
-            <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-blue-600 text-white hover:bg-blue-700">
               {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {status === 'download-started' ? 'Download PDF again' : 'Download PDF'}
             </Button>
