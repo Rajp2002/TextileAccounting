@@ -119,8 +119,8 @@ export function validateCostingExportInput(model: CostingExportModel | null, opt
   if (!model) return ['The costing result is not ready yet.']
 
   const errors: string[] = []
-  if (model.reconciliationStatus === 'unreconstructable') {
-    errors.push('This historical costing is missing financial assumptions. Create a new current Cost Estimate before exporting.')
+  if (model.reconciliationStatus !== 'verified') {
+    errors.push('This historical costing is not verified for export. Open it, review the assumptions, and save a new current Cost Estimate before exporting.')
   }
   if (options.mode === 'customer'
     && model.reconciliationStatus !== 'verified'

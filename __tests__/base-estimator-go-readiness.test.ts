@@ -119,8 +119,9 @@ describe('Base Estimator Go-readiness hardening', () => {
 
   it('assigns deterministic costing revisions and exposes post-expiry export', () => {
     const actions = source('app/(dashboard)/owner/estimator/actions.ts')
-    expect(actions).toContain('costing_group_id: previous?.costing_group_id ?? previous?.id ?? crypto.randomUUID()')
-    expect(actions).toContain('version_number: Number(previous?.version_number ?? 0) + 1')
+    expect(actions).toContain("save_estimator_costing_revision_v2")
+    expect(actions).toContain('outcome: costingResult.outcome')
+    expect(actions).toContain('factory_profile_updated_at: factoryProfileUpdatedAt')
     const migration = source('supabase/migrations/20260721183000_base_estimator_go_readiness.sql')
     expect(migration).toContain('assign_standalone_costing_revision')
     expect(source('app/(dashboard)/owner/data-export/page.tsx')).toContain("await requireRole(['owner'])")

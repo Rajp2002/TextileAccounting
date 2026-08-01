@@ -45,7 +45,8 @@ describe('Sprint 4 quality, history, and record management', () => {
         const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
         expect(estimator).toContain('Discard this device draft?')
-        expect(estimator).toContain('Existing costing snapshots keep the name recorded when they were saved.')
+        expect(estimator).toContain('estimator.sprint1.correct_quality_name_help')
+        expect(estimator).toContain('estimator.sprint1.save_name_correction')
         expect(library).toContain('Archived · read-only')
         expect(library).toContain('!latest.is_archived')
         expect(rates).toContain('Owner review needed')
