@@ -16,14 +16,15 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('grid-rows-[0fr]')
     expect(client).toContain('Technical details')
     expect(client).toContain('Calculation snapshot')
-    expect(client).toContain('const [assumptionsExpanded, setAssumptionsExpanded] = useState(canUseProduction)')
+    expect(client).toContain("const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')")
+    expect(client).toContain('const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)')
     expect(client).not.toContain('Assumptions used in this price')
     expect(client).not.toContain('Reference rate')
   })
 
   it('keeps the result hierarchy and responsive layout width-driven', () => {
     expect(client).toContain('Production cost / m')
-    expect(client).toContain('Suggested price / m')
+    expect(client).toContain("t('common.suggested_selling_price_per_m')")
     expect(client).toContain('Actual margin')
     expect(client).toContain('Break-even price / m')
     expect(client).toContain('Material context')

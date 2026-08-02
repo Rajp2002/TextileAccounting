@@ -1,6 +1,16 @@
 # Fix Log
 
-This log starts from the completed pre-pilot QA artifacts. No application fix has been made or verified by this remediation operating-system step.
+## Active entry — Sprint 14 persona-test NO-GO remediation — 2026-08-03
+
+Status: `code_verified`; pilot release remains `blocked` pending authenticated browser retest and the GST/localization product gates.
+
+- Findings addressed in code: zero-capacity baseline validation, Old/New comparison direction, applied-versus-default waste wording, quotation status/history, draft rename/discard, finite PWA update notice, Rate Book timezone formatting, precise archive feedback, Quick-mode default, and Saved Costings search width.
+- Finding clarified but not changed in data behavior: Save Quality creates the initial v1 costing snapshot; Save Costing is for a later version.
+- Open gates: GST tax-invoice feature/supplier configuration and complete Gujarati/Hindi localization.
+- Regression/build evidence: `npm test` passed 135 files / 866 tests with 1 skipped; lint, TypeScript, and optimized build passed. Focused evidence is recorded in `docs/pilot-remediation/closure-packs/SPRINT14_PERSONA_NO_GO_REMEDIATION_2026-08-03.md` and `__tests__/pilot-no-go-remediation.test.ts`.
+- Browser evidence is intentionally incomplete: the local owner route redirected to login, the available QA account was rejected, and no authenticated session was available. No production deployment or production data mutation was performed.
+
+Historical entries below start from the completed pre-pilot QA artifacts; the active Sprint 14 entry above is the current remediation state.
 
 Rules for entries:
 

@@ -59,7 +59,7 @@ describe('Sprint 9 editor and draft reliability', () => {
     expect(estimator).toContain('Review and save')
     expect(estimator).toContain('warningAlreadyReviewed = false')
     expect(estimator).toContain('Save New Version creates a new immutable costing snapshot')
-    expect(estimator).toContain('Save Costing creates an internal costing snapshot')
+    expect(estimator).toContain('Save Quality creates the reusable recipe and initial v1 costing snapshot')
     expect(estimator).toContain('rollbackSaveAsNewQualityDialog')
     expect(estimator).toContain('setPendingStaleRateSave(null)')
     expect(estimator).toContain('setPendingQualityVersionSave(null)')

@@ -26,6 +26,8 @@ interface UseAutosaveReturn<TState = unknown> {
   restoreDraft: () => EstimatorAutosaveData<TState> | null
   /** Dismiss the draft (clear from localStorage) */
   dismissDraft: () => void
+  /** Rename the recoverable draft without changing its estimate values. */
+  renameDraft: (qualityLabel: string) => boolean
   /** Clear the autosaved draft (call on successful save/convert) */
   clearDraft: () => void
   /** Save current state (called automatically via debounce, but exposed for manual use) */
@@ -173,6 +175,26 @@ export function useAutosave<TState = unknown>({
     setDraft(null)
   }, [])
 
+  const renameDraft = useCallback((qualityLabel: string) => {
+    const current = draft
+    const normalized = qualityLabel.trim()
+    if (!current || !normalized) return false
+
+    const next: EstimatorAutosaveData<TState> = {
+      ...current,
+      qualityLabel: normalized,
+      savedAt: Date.now(),
+    }
+
+    try {
+      localStorage.setItem(keyRef.current, JSON.stringify(next))
+      setDraft(next)
+      return true
+    } catch {
+      return false
+    }
+  }, [draft])
+
   const suppressAutosaveUntilChanged = useCallback(() => {
     suppressUntilChangeRef.current = true
     writeGenerationRef.current += 1
@@ -191,5 +213,5 @@ export function useAutosave<TState = unknown>({
     }
   }, [])
 
-  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit }
+  return { hasDraft, draft, restoreDraft, dismissDraft, renameDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit }
 }

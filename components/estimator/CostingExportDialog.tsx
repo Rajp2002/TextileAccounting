@@ -38,6 +38,7 @@ import {
 } from '@/lib/estimator-export'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { downloadBlob } from '@/lib/browser-download'
+import { formatToSurat } from '@/lib/time'
 import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimator/actions'
 
 type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
@@ -114,6 +115,7 @@ export function CostingExportDialog({
 
   const savedQuotation = Boolean(sourceQuoteId && sourceRecordKind === 'quotation')
   const lockedQuotation = savedQuotation && sourceQuoteStatus === 'accepted'
+  const displayedQuoteStatus: QuoteStatus | undefined = markedSent ? 'sent' : sourceQuoteStatus
 
   useEffect(() => {
     if (!open || !model) return
@@ -363,6 +365,17 @@ export function CostingExportDialog({
             Confirm exactly what will be shared before generating the document.
           </DialogDescription>
         </DialogHeader>
+
+        {savedQuotation && displayedQuoteStatus && (
+          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between" role="status">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="text-xs font-semibold text-slate-600">Quotation status</span>
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700">{displayedQuoteStatus[0].toUpperCase() + displayedQuoteStatus.slice(1)}</span>
+            </div>
+            <p className="text-xs text-slate-500">Updated {formatToSurat(latestQuoteUpdatedAt ?? new Date(), 'd MMM yyyy, h:mm a')}</p>
+            <p className="text-[11px] text-slate-500 sm:max-w-xs sm:text-right">Mark as sent records this status and time. PDF sharing does not confirm delivery.</p>
+          </div>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <section className="min-w-0 rounded-xl border border-slate-200 bg-slate-100 p-2">

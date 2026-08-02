@@ -71,6 +71,44 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const [warpCrimpPct, setWarpCrimpPct] = useState<number>(initialState.warpCrimpPct)
     const [yarnWastePct, setYarnWastePct] = useState<number>(initialState.yarnShortagePct)
 
+    const capacityInputsReady = [loomCount, workingDays, avgOutput, monthlyOutput]
+        .every(value => Number.isFinite(value) && value > 0)
+    const monthlyExpenseTotal = rent + electricity + staff + others
+    const monthlyExpensesReady = capacityInputsReady && Number.isFinite(monthlyExpenseTotal) && monthlyExpenseTotal > 0
+
+    const validateCapacityInputs = () => {
+        if (!Number.isFinite(loomCount) || loomCount <= 0) return 'Enter at least one loom before continuing.'
+        if (!Number.isFinite(workingDays) || workingDays <= 0) return 'Enter positive working days before continuing.'
+        if (!Number.isFinite(avgOutput) || avgOutput <= 0) return 'Enter positive daily output per loom before continuing.'
+        if (!Number.isFinite(monthlyOutput) || monthlyOutput <= 0) return 'Enter the actual monthly output used for costing before continuing.'
+        return null
+    }
+
+    const handleCapacityContinue = () => {
+        const error = validateCapacityInputs()
+        if (error) {
+            setValidationError(error)
+            return
+        }
+        setValidationError(null)
+        setStep('detailed-expenses')
+    }
+
+    const handleExpensesContinue = () => {
+        const capacityError = validateCapacityInputs()
+        if (capacityError) {
+            setValidationError(capacityError)
+            setStep('detailed')
+            return
+        }
+        if (!Number.isFinite(monthlyExpenseTotal) || monthlyExpenseTotal <= 0) {
+            setValidationError('Enter at least one monthly factory expense before continuing.')
+            return
+        }
+        setValidationError(null)
+        setStep('defaults')
+    }
+
     const applyFactoryProfile = (profileId: FactoryProfileId) => {
         const preset = FACTORY_COST_PRESETS.find(candidate => candidate.id === profileId)
         if (!preset) return
@@ -156,6 +194,14 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             setValidationError('Enter the direct factory cost per metre before saving these defaults.')
             setStep('fast')
             return
+        }
+        if (setupPath === 'monthly_expenses') {
+            const capacityError = validateCapacityInputs()
+            if (capacityError) {
+                setValidationError(capacityError)
+                setStep('detailed')
+                return
+            }
         }
         if (setupPath === 'monthly_expenses' && monthlyOutput <= 0) {
             setValidationError('Enter the actual monthly output used to divide factory expenses.')
@@ -385,18 +431,25 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Total Loom Count</Label>
                                             <Input 
                                                 type="number" 
-                                                value={loomCount} 
+                                                min={1}
+                                                step={1}
+                                                value={loomCount || ''}
                                                 onChange={e => setLoomCount(parseNonNegativeInput(e.target.value) ?? 0)}
+                                                aria-invalid={loomCount <= 0}
                                                 className="h-10 font-bold"
                                             />
+                                            {loomCount <= 0 && <p className="text-[10px] font-semibold text-amber-700">Required for a trustworthy factory baseline.</p>}
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1.5">
                                                 <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Working Days / Month</Label>
                                                 <Input 
                                                     type="number" 
+                                                    min={1}
+                                                    step={1}
                                                     value={workingDays} 
-                                                onChange={e => setWorkingDays(parseNumericInput(e.target.value, { min: 1 }) ?? 1)}
+                                                    onChange={e => setWorkingDays(parseNumericInput(e.target.value, { min: 1 }) ?? 0)}
+                                                    aria-invalid={workingDays <= 0}
                                                     className="h-10 font-bold"
                                                 />
                                             </div>
@@ -404,8 +457,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Average m / Loom / Day</Label>
                                                 <Input 
                                                     type="number" 
+                                                    min={0.01}
+                                                    step={0.01}
                                                     value={avgOutput} 
-                                                onChange={e => setAvgOutput(parseNonNegativeInput(e.target.value) ?? 0)}
+                                                    onChange={e => setAvgOutput(parseNonNegativeInput(e.target.value) ?? 0)}
+                                                    aria-invalid={avgOutput <= 0}
                                                     className="h-10 font-bold"
                                                 />
                                             </div>
@@ -413,7 +469,9 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-bold text-indigo-600">Est. Monthly Production</span>
-                                                <span className="text-sm font-black text-indigo-700">{(loomCount * workingDays * avgOutput).toLocaleString()}m</span>
+                                                <span className={`text-sm font-black ${capacityInputsReady ? 'text-indigo-700' : 'text-amber-700'}`}>
+                                                    {capacityInputsReady ? `${(loomCount * workingDays * avgOutput).toLocaleString()}m` : 'Complete capacity inputs'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
@@ -424,6 +482,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     min={1}
                                                     value={monthlyOutput || ''}
                                                     onChange={event => setMonthlyOutput(parseNumericInput(event.target.value, { min: 1 }) ?? 0)}
+                                                    aria-invalid={monthlyOutput <= 0}
                                                      placeholder="e.g. 45,000"
                                                     className="h-10 pr-10 font-mono font-bold"
                                                 />
@@ -438,12 +497,15 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         </p>
                                     )}
                                     <Button 
-                                        onClick={() => setStep('detailed-expenses')}
+                                        onClick={handleCapacityContinue}
+                                        disabled={!capacityInputsReady}
+                                        aria-describedby={!capacityInputsReady ? 'factory-capacity-hint' : undefined}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold"
                                     >
                                         Next: Monthly Expenses
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
+                                    {!capacityInputsReady && <p id="factory-capacity-hint" className="text-center text-[11px] font-semibold leading-relaxed text-amber-700">Enter positive loom count, working days, daily productivity, and actual monthly output to continue.</p>}
                                 </div>
                             )}
 
@@ -514,16 +576,24 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         </div>
                                     </div>
                                     
-                                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                                    <div className={`p-4 rounded-xl border ${monthlyExpensesReady ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-200'}`}>
                                         <div className="flex items-center justify-between">
                                             <div className="space-y-0.5">
-                                                <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Calculated factory cost</div>
-                                                <div className="text-xs text-emerald-500">₹{(rent + electricity + staff + others).toLocaleString()} per month ÷ {monthlyOutput.toLocaleString()} m output</div>
+                                                <div className={`text-[10px] font-bold uppercase tracking-tight ${monthlyExpensesReady ? 'text-emerald-600' : 'text-amber-700'}`}>{monthlyExpensesReady ? 'Calculated factory cost' : 'Factory cost needs inputs'}</div>
+                                                <div className={`text-xs ${monthlyExpensesReady ? 'text-emerald-500' : 'text-amber-700'}`}>
+                                                    {monthlyOutput > 0
+                                                        ? `₹${monthlyExpenseTotal.toLocaleString()} per month ÷ ${monthlyOutput.toLocaleString()} m output`
+                                                        : 'Enter actual monthly output before reviewing cost'}
+                                                </div>
                                             </div>
-                                            <div className="text-xl font-black text-emerald-700">
-                                                ₹{(monthlyOutput > 0 ? (rent + electricity + staff + others) / monthlyOutput : 0).toFixed(2)}
-                                                <span className="text-xs ml-1">/m</span>
-                                            </div>
+                                            {monthlyExpensesReady ? (
+                                                <div className="text-xl font-black text-emerald-700">
+                                                    ₹{(monthlyExpenseTotal / monthlyOutput).toFixed(2)}
+                                                    <span className="text-xs ml-1">/m</span>
+                                                </div>
+                                            ) : (
+                                                <div className="text-right text-xs font-bold text-amber-700">Complete required inputs</div>
+                                            )}
                                         </div>
                                     </div>
                                     {validationError && (
@@ -533,12 +603,15 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     )}
 
                                     <Button 
-                                        onClick={() => setStep('defaults')}
+                                        onClick={handleExpensesContinue}
+                                        disabled={!monthlyExpensesReady}
+                                        aria-describedby={!monthlyExpensesReady ? 'factory-expenses-hint' : undefined}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200"
                                     >
                                         Next: Cost Defaults
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
+                                    {!monthlyExpensesReady && <p id="factory-expenses-hint" className="text-center text-[11px] font-semibold leading-relaxed text-amber-700">Enter positive capacity values and at least one monthly expense before continuing.</p>}
                                 </div>
                             )}
 

@@ -117,6 +117,7 @@ import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
+import { formatToSurat } from '@/lib/time'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -1082,7 +1083,7 @@ function CostingAssumptionsSummary({
                 aria-controls="pricing-assumptions-details"
                 aria-label={`Pricing assumptions. ${activeAssumptionsCount} active. ${formatPercent(targetMargin)} target margin. ${formatPercent(commission)} commission.${displayQualityWarning ? ` ${warningItems.join(', ')}.` : ''}`}
                 onClick={onToggle}
-                className="estimator-touch-target flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none transition-colors hover:bg-white/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] sm:px-4"
+                className="estimator-touch-target flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none transition-colors motion-reduce:transition-none hover:bg-white/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] sm:px-4"
             >
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1100,7 +1101,7 @@ function CostingAssumptionsSummary({
                     </p>
                 </div>
                 <ChevronDown
-                    className={`h-5 w-5 shrink-0 text-[var(--color-muted)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                    className={`h-5 w-5 shrink-0 text-[var(--color-muted)] transition-transform duration-200 motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`}
                     aria-hidden="true"
                 />
             </button>
@@ -1109,7 +1110,7 @@ function CostingAssumptionsSummary({
                 id="pricing-assumptions-details"
                 aria-hidden={!expanded}
                 data-state={expanded ? 'open' : 'closed'}
-                className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
             >
                 <div className="min-h-0 overflow-hidden">
                     <div className="border-t border-[var(--color-hairline)]/80">
@@ -1307,7 +1308,7 @@ function RowCard({
                     </Badge>
                     {adjustmentPct != null && showCalculatedValues && (
                         <Badge variant="outline" className={`h-5 rounded-[6px] px-1.5 py-0 text-[10px] font-semibold ${c.badge}`}>
-                            Adj {adjustmentPct.toFixed(1)}%
+                            {accent === 'emerald' ? 'Applied waste' : 'Total adjustment'} {adjustmentPct.toFixed(1)}%
                         </Badge>
                     )}
                 </div>
@@ -1739,6 +1740,8 @@ export default function EstimatorClient({
     const [renameError, setRenameError] = useState<string | null>(null)
     const [renamingTpl, setRenamingTpl] = useState(false)
     const [showDiscardDraft, setShowDiscardDraft] = useState(false)
+    const [showRenameDraft, setShowRenameDraft] = useState(false)
+    const [draftRenameValue, setDraftRenameValue] = useState('')
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
         targetMode: 'quote' | 'market'
@@ -1776,8 +1779,8 @@ export default function EstimatorClient({
     const [templateSearch,   setTemplateSearch]   = useState('')
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
-    const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>(canUseProduction ? 'detailed' : 'quick')
-    const [assumptionsExpanded, setAssumptionsExpanded] = useState(canUseProduction)
+    const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
+    const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const assumptionsManuallyToggledRef = useRef(false)
 
     const handleEntryModeChange = useCallback((nextMode: 'quick' | 'detailed') => {
@@ -1814,7 +1817,7 @@ export default function EstimatorClient({
         )
     }, [])
 
-    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit } = useAutosave<EstimateState>({
+    const { hasDraft, draft, restoreDraft, dismissDraft, renameDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit } = useAutosave<EstimateState>({
         orgId,
         userId,
         debounceMs: 2000,
@@ -2309,7 +2312,9 @@ export default function EstimatorClient({
                 setTemplateSaveError(null)
                 clearDraft()
                 suppressAutosaveUntilChanged()
-                toast.success(t('estimator.quality.saved'))
+                toast.success(t('estimator.quality.saved'), {
+                    description: 'This also created the initial v1 costing snapshot. Use Save Costing only when you intentionally want another costing version.',
+                })
             } else {
                 const message = res.error ?? t('estimator.quality.saveFailed')
                 setTemplateSaveError(message)
@@ -2384,9 +2389,9 @@ export default function EstimatorClient({
             },
         })
         setMode(canUseProduction ? estimatorWorkflow.initialMode : 'quote')
-        setEntryMode(canUseProduction ? 'detailed' : 'quick')
+        setEntryMode('quick')
         assumptionsManuallyToggledRef.current = false
-        setAssumptionsExpanded(canUseProduction)
+        setAssumptionsExpanded(false)
         setOutputSuggestion(null)
         setWagePerMInput('')
         setAppliedTemplate(null)
@@ -2929,7 +2934,7 @@ export default function EstimatorClient({
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (
                 <div className={pageShellClass}>
-                    <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                         <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
                         <p className="text-sm text-amber-800 flex-1">
                             {draft.sourceQuoteId ? (
@@ -2941,7 +2946,7 @@ export default function EstimatorClient({
                                         <span className="ml-1 text-amber-700">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
                                     )}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
-                                        <span className="ml-1 text-amber-600">· saved {new Date(draft.sourceQuoteCreatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        <span className="ml-1 text-amber-600">· saved {formatToSurat(draft.sourceQuoteCreatedAt, 'd MMM yyyy')}</span>
                                     )}
                                     {canUseProduction && draft.sourceRecordKind !== 'costing' && ' — editable Quotations update in place; accepted Quotations create a linked version'}
                                     {draft.sourceRecordKind === 'costing' && ' — saving creates a new costing version without changing the original'}
@@ -2949,22 +2954,28 @@ export default function EstimatorClient({
                             ) : (
                                 <>
                                     <span className="font-bold">Unsaved Cost Estimate</span> from{' '}
-                                    {new Date(draft.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                    {formatToSurat(draft.savedAt, 'd MMM yyyy, h:mm a')}
                                     {canUseProduction && draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
                                 </>
                             )}
                         </p>
                         <button
                             onClick={applyEstimatorDraft}
-                            className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
+                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-amber-700 underline underline-offset-2 hover:bg-amber-100 hover:text-amber-900"
                         >
                             {draft.sourceQuoteId ? 'Load Specs' : 'Restore'}
                         </button>
                         <button
+                            onClick={() => { setDraftRenameValue(draft.qualityLabel || ''); setShowRenameDraft(true) }}
+                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                        >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Rename
+                        </button>
+                        <button
                             onClick={() => setShowDiscardDraft(true)}
-                            className="ml-1 text-amber-500 hover:text-amber-700"
+                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
                             aria-label="Dismiss unsaved Cost Estimate draft"
-                        ><X className="h-4 w-4" /></button>
+                        ><X className="h-3.5 w-3.5" aria-hidden="true" /> <span>Discard</span></button>
                     </div>
                 </div>
             )}
@@ -3069,7 +3080,7 @@ export default function EstimatorClient({
                                     </div>
                                     <div className="min-w-0">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.suggested_selling_price')}>
-                                            {mode === 'market' ? 'Target price / m' : 'Suggested price / m'}
+                                            {mode === 'market' ? 'Target price / m' : t('common.suggested_selling_price_per_m')}
                                         </p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
                                             {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
@@ -3393,7 +3404,7 @@ export default function EstimatorClient({
                                 {isStandaloneCostingSession
                                     ? sourceQuoteId
                                         ? 'Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.'
-                                        : 'Save Costing creates an internal costing snapshot. Party and quantity remain optional until you need order-level profit.'
+                                        : 'Save Quality creates the reusable recipe and initial v1 costing snapshot. Use Save Costing for a later costing version.'
                                     : 'Save & Accept stores the quotation and moves it into the accepted workflow.'}
                             </p>
                         </div>
@@ -3900,22 +3911,35 @@ export default function EstimatorClient({
                         }
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
-                        {/* Global Defaults Sync Readout */}
-                        <div className="mb-6 overflow-hidden rounded-[13px] border border-[#CDE5D3] bg-[#F7FCF8]">
-                            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Calculator className="h-3.5 w-3.5 text-[var(--color-factory-green)]" />
-                                        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-factory-green)]">Effective Weft Waste</span>
+                        {/* Keep the configured default separate from the row value
+                            that the costing engine actually applies. */}
+                        {(() => {
+                            const appliedWaste = state.weftRows.map((row, index) => (
+                                totals.weftRows[index]?.shortagePctUsed
+                                ?? (row.shortagePct !== null && row.shortagePct !== undefined ? row.shortagePct : state.yarnShortagePct)
+                            ))
+                            const appliedWasteLabel = appliedWaste.map((value, index) => `Row ${index + 1}: ${Number(value).toFixed(1)}%`).join(' · ')
+                            return (
+                                <div className="mb-6 overflow-hidden rounded-[13px] border border-[#CDE5D3] bg-[#F7FCF8]">
+                                    <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-1.5">
+                                                <Calculator className="h-3.5 w-3.5 text-[var(--color-factory-green)]" />
+                                                <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-factory-green)]">Default weft waste</span>
+                                            </div>
+                                            <p className="mt-1 text-[11px] font-medium text-[var(--color-muted)]">Used only when a weft row has no row-specific value. A row value of 0 means no waste.</p>
+                                        </div>
+                                        <span className="flex shrink-0 items-center gap-2 font-mono text-sm font-semibold text-[var(--color-factory-green)]">
+                                            <span>{state.yarnShortagePct || 0}%</span>
+                                            <span className="rounded-[7px] border border-[#CDE5D3] bg-white px-2.5 py-1 text-base">default</span>
+                                        </span>
                                     </div>
-                                    <p className="mt-1 text-[11px] font-medium text-[var(--color-muted)]">Weft uses waste only. Warp crimp does not apply to weft yarn.</p>
+                                    <div className="border-t border-[#CDE5D3] px-4 py-2.5 text-[11px] font-semibold text-[var(--color-factory-green)]" data-testid="applied-weft-waste-summary">
+                                        Applied to pricing: <span className="font-mono">{appliedWasteLabel}</span>
+                                    </div>
                                 </div>
-                                <span className="flex items-center gap-2 font-mono text-sm font-semibold text-[var(--color-factory-green)]">
-                                    <span>{state.yarnShortagePct || 0}%</span>
-                                    <span className="rounded-[7px] border border-[#CDE5D3] bg-white px-2.5 py-1 text-base">waste</span>
-                                </span>
-                            </div>
-                        </div>
+                            )
+                        })()}
 
                         <div className="space-y-4">
                             {state.weftRows.map((row, i) => {
@@ -5102,6 +5126,43 @@ export default function EstimatorClient({
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>Keep draft</Button>
                         <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success('Cost Estimate draft discarded') }}>Discard draft</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Draft rename dialog */}
+            <Dialog open={showRenameDraft} onOpenChange={setShowRenameDraft}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Rename this draft</DialogTitle>
+                        <DialogDescription>Give this unfinished Cost Estimate a clear name so it is easy to identify before restoring it.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-1.5 py-4">
+                        <Label htmlFor="draft-quality-name">Quality name</Label>
+                        <Input
+                            id="draft-quality-name"
+                            value={draftRenameValue}
+                            onChange={event => setDraftRenameValue(event.target.value)}
+                            maxLength={120}
+                            autoFocus
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowRenameDraft(false)}>Cancel</Button>
+                        <Button
+                            onClick={() => {
+                                const normalized = draftRenameValue.trim()
+                                if (!normalized || !renameDraft(normalized)) {
+                                    toast.error('The draft name could not be saved.')
+                                    return
+                                }
+                                setShowRenameDraft(false)
+                                toast.success(`Draft renamed to “${normalized}”`)
+                            }}
+                            disabled={!draftRenameValue.trim()}
+                        >
+                            Save name
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
