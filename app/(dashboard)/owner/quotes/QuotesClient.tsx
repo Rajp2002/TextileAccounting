@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
 import {
@@ -51,9 +51,10 @@ import {
     ExternalLink,
 } from 'lucide-react'
 import {
-    compareSavedCostings,
-    buildSavedQualityRecipeState,
-    filterAndSortSavedCostings,
+  compareSavedCostingSnapshots,
+  buildSavedQualityRecipeState,
+  filterAndSortSavedCostings,
+  getSavedCostingIdentity,
     getPreviousCostingVersion,
     normalizeSavedWarpRows,
     normalizeSavedWeftRows,
@@ -62,7 +63,8 @@ import {
     type SavedQualityFixedWorker,
     type SavedQualityRecipe,
     type SavedCostingMarginFilter,
-    type SavedCostingSort,
+  type SavedCostingSort,
+  type SavedCostingDelta,
 } from '@/lib/saved-costings'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
@@ -290,12 +292,39 @@ function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
 }
 
-function formatTechnicalMetric(value: number | null | undefined, prefix: string, suffix: string, digits = 2) {
-    return value == null ? 'Not available' : `${prefix}${value.toFixed(digits)}${suffix}`
+function getLegacyVersionLabel(costing: Pick<QuoteRow, 'quality_label' | 'version_number'>) {
+    return `${costing.quality_label || 'Untitled costing'} · v${Number(costing.version_number ?? 1)}`
 }
 
-function technicalMetricDelta(left: number | null | undefined, right: number | null | undefined) {
-    return left == null || right == null ? null : right - left
+const comparisonPriceLabels = ['Break-even selling price'] as const
+
+type ComparisonTableRow =
+    | { label: string; unit: 'text'; text: { left: string | null; right: string | null }; changed: boolean }
+    | { label: string; unit: 'money' | 'percent' | 'number' | 'rate'; value: SavedCostingDelta; changed: boolean }
+
+type ComparisonSection = {
+    title: string
+    changed: boolean
+    rows: ComparisonTableRow[]
+}
+
+function formatComparisonValue(value: number | null, unit: 'money' | 'percent' | 'number') {
+    if (value == null) return 'Not available'
+    if (unit === 'money') return `₹${value.toFixed(2)}/m`
+    if (unit === 'percent') return `${value.toFixed(1)}%`
+    return value.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+}
+
+function formatComparisonDelta(value: SavedCostingDelta, unit: 'money' | 'percent' | 'number') {
+    if (value.delta == null) return 'Not available'
+    const prefix = value.delta > 0 ? '+' : ''
+    if (unit === 'money') return `${prefix}₹${value.delta.toFixed(2)}/m`
+    if (unit === 'percent') return `${prefix}${value.delta.toFixed(1)} pp`
+    return `${prefix}${value.delta.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+}
+
+function deltaChangedForUi(value: SavedCostingDelta) {
+    return value.delta != null && Math.abs(value.delta) > 0.0001
 }
 
 function getProductionCostMovement(current: QuoteRow, previous: QuoteRow | null) {
@@ -327,10 +356,11 @@ function SavedQualityLibraryView({
     onToggleComparison,
     onOpen,
     onStartFrom,
-    onExport,
-    onAudit,
-    auditingId,
-    onToggleArchived,
+     onExport,
+     onAudit,
+     auditingId,
+     onToggleFavorite,
+     onToggleArchived,
     onOpenUsage,
     factoryInputsCapturedLabel,
 }: {
@@ -343,10 +373,11 @@ function SavedQualityLibraryView({
     onToggleComparison: (id: string) => void
     onOpen: (quote: QuoteRow) => void
     onStartFrom: (quote: QuoteRow) => void
-    onExport: (quote: QuoteRow) => void
-    onAudit: (quote: QuoteRow) => void
-    auditingId: string | null
-    onToggleArchived: (quote: QuoteRow) => void
+     onExport: (quote: QuoteRow) => void
+     onAudit: (quote: QuoteRow) => void
+     auditingId: string | null
+     onToggleFavorite: (quote: QuoteRow) => void
+     onToggleArchived: (quote: QuoteRow) => void
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
     factoryInputsCapturedLabel: string
 }) {
@@ -457,7 +488,7 @@ function SavedQualityLibraryView({
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>Open and save new version</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Start From</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Use as Starting Point</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> Preview</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>
                                                             {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
@@ -545,7 +576,7 @@ function SavedQualityLibraryView({
                                                             <tr key={record.id}>
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
                                                                 <td className="py-3 font-bold text-slate-900">
-                                                                    <div>v{Number(record.version_number ?? 1)}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></div>
+                                                                    <div>{getSavedCostingIdentity(record).label}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></div>
                                                                     {record.factory_profile_updated_at && <div className="mt-1 text-[10px] font-normal text-slate-500">{factoryInputsCapturedLabel} {format(new Date(record.factory_profile_updated_at), 'MMM d, yyyy')}</div>}
                                                                 </td>
                                                                 <td className="py-3 capitalize text-slate-600">
@@ -558,7 +589,7 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3 font-mono font-bold text-orange-700">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{formatCostingPercent(getActualMarginPct(record))}</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
-                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? 'Restoring…' : 'Archiving…' : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
+                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`}><Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} /></Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? 'Restoring…' : 'Archiving…' : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -593,6 +624,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [searchQuery, setSearchQuery] = useState('')
     const [costingSort, setCostingSort] = useState<SavedCostingSort>('recent')
     const [marginFilter, setMarginFilter] = useState<SavedCostingMarginFilter>('all')
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
     const [selectedCostingIds, setSelectedCostingIds] = useState<string[]>([])
     const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
@@ -608,18 +640,19 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             query: searchQuery,
             sort: costingSort,
             margin: marginFilter,
+            favorites: showFavoritesOnly,
         })
         if (!canUseProduction || !canUseQuotationWorkflow) return library.filter(quote => isStandaloneCosting(quote.record_kind))
         if (filterStatus === 'costings') return library.filter(quote => isStandaloneCosting(quote.record_kind))
         if (filterStatus === 'all') return library
         return library.filter(quote => canUseQuotationLifecycle(quote.record_kind, canUseProduction) && quote.status === filterStatus)
     },
-    [canUseProduction, canUseQuotationWorkflow, costingSort, filterStatus, marginFilter, quotes, searchQuery, showArchived])
+    [canUseProduction, canUseQuotationWorkflow, costingSort, filterStatus, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
     const qualityGroups = useMemo(() => {
         const groups = new Map<string, SavedQualityGroup>()
         const labelIndex = new Map<string, string>()
 
-        if (!showArchived) {
+        if (!showArchived && !showFavoritesOnly) {
             for (const template of initialTemplates.filter(item => Boolean(item.is_active) === !showArchived)) {
                 const key = `template:${template.id}`
                 groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at, currentRecipeCostPerM: null })
@@ -627,7 +660,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             }
         }
 
-        for (const record of quotes.filter(item => Boolean(item.is_archived) === showArchived)) {
+        for (const record of quotes.filter(item => Boolean(item.is_archived) === showArchived && (!showFavoritesOnly || item.is_favorite === true))) {
             const normalizedLabel = normalizeQualityKey(record.quality_label)
             const explicitTemplateKey = record.template_id ? `template:${record.template_id}` : null
             const key = explicitTemplateKey && groups.has(explicitTemplateKey)
@@ -654,13 +687,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         const visible = [...groups.values()]
             .map(group => ({
                 ...group,
-                records: filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: 'all' }),
+                records: filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: 'all', favorites: showFavoritesOnly }),
                 currentRecipeCostPerM: group.template && group.records.length === 0
                     ? getCurrentRecipeCostPerM(group.template, initialProfile, initialWorkers)
                     : null,
             }))
             .filter(group => !query || normalizeQualityKey(`${group.name} ${group.records.map(record => record.party_name).join(' ')}`).includes(query))
-            .filter(group => marginFilter === 'all' || filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: marginFilter }).length > 0)
+            .filter(group => marginFilter === 'all' || filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: marginFilter, favorites: showFavoritesOnly }).length > 0)
+            .filter(group => group.records.length > 0 || Boolean(group.template && !showFavoritesOnly))
 
         return visible.sort((a, b) => {
             if (costingSort === 'oldest') return Date.parse(a.updatedAt) - Date.parse(b.updatedAt)
@@ -672,35 +706,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             if (costingSort === 'cost_asc') return (a.records[0] ? getProductionCostPerM(a.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY) - (b.records[0] ? getProductionCostPerM(b.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY)
             return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
-    }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived])
+    }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
     const selectedCostings = useMemo(
         () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
         [quotes, selectedCostingIds],
     )
-    const selectedCostingStates = useMemo(
-        () => selectedCostings.map(costing => {
-            const state = buildDraftStateFromQuote(costing)
-            try {
-                const totals = calcFullTotals(state)
-                const historicalResult = getHistoricalCostingResult(costing)
-                const technicalDetailsVerified = Boolean(
-                    historicalResult
-                    && Number.isFinite(totals.totalProductionCostPerM)
-                    && Math.abs(totals.totalProductionCostPerM - historicalResult.productionCostPerM) <= 0.01,
-                )
-                return { state, totals, technicalDetailsVerified }
-            } catch {
-                return { state, totals: null, technicalDetailsVerified: false }
-            }
-        }),
-        [selectedCostings],
-    )
-    const selectedCostingMetrics = useMemo(
-        () => selectedCostings.map(costing => getSavedCostingMetrics(costing)),
-        [selectedCostings],
-    )
     const comparison = selectedCostings.length === 2
-        ? compareSavedCostings(selectedCostings[0], selectedCostings[1])
+        ? compareSavedCostingSnapshots(selectedCostings[0], selectedCostings[1])
         : null
     const exportModel = useMemo(() => {
         if (!quoteToExport) return null
@@ -716,6 +728,57 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             reconciliationStatus: historicalResult ? getCostingStatus(quoteToExport) : 'unreconstructable',
         })
     }, [quoteToExport])
+
+    const comparisonSections: ComparisonSection[] = comparison ? [
+        {
+            title: 'Yarn',
+            changed: comparison.yarn.changed,
+            rows: [
+                { label: 'Warp yarn cost', value: comparison.yarn.warp.costPerM, unit: 'money' as const, changed: comparison.yarn.warp.changed },
+                { label: 'Warp yarn rate', value: comparison.yarn.warp.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.warp.changed },
+                { label: 'Weft yarn cost', value: comparison.yarn.weft.costPerM, unit: 'money' as const, changed: comparison.yarn.weft.changed },
+                { label: 'Weft yarn rate', value: comparison.yarn.weft.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.weft.changed },
+            ],
+        },
+        {
+            title: 'Waste',
+            changed: comparison.waste.changed,
+            rows: [
+                { label: 'Yarn shortage / waste', value: comparison.waste.yarnShortagePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.waste.yarnShortagePct) },
+                { label: 'Warp crimp', value: comparison.waste.warpCrimpPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.waste.warpCrimpPct) },
+                { label: 'Yarn waste cost', value: comparison.waste.yarnAdjustmentCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.waste.yarnAdjustmentCostPerM) },
+            ],
+        },
+        {
+            title: 'Overhead',
+            changed: comparison.overhead.changed,
+            rows: [
+                { label: 'Overhead method', text: comparison.overhead.mode, unit: 'text' as const, changed: comparison.overhead.modeChanged },
+                { label: 'Overhead per metre', value: comparison.overhead.perM, unit: 'money' as const, changed: deltaChangedForUi(comparison.overhead.perM) },
+                { label: 'Monthly expenses', value: comparison.overhead.monthlyExpenseTotal, unit: 'number' as const, changed: deltaChangedForUi(comparison.overhead.monthlyExpenseTotal) },
+                { label: 'Monthly output', value: comparison.overhead.monthlyOutputM, unit: 'number' as const, changed: deltaChangedForUi(comparison.overhead.monthlyOutputM) },
+            ],
+        },
+        {
+            title: 'Margin',
+            changed: comparison.margin.changed,
+            rows: [
+                { label: 'Target margin', value: comparison.margin.targetPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.targetPct) },
+                { label: 'Actual margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
+            ],
+        },
+        {
+            title: 'Price',
+            changed: comparison.price.changed,
+            rows: [
+                { label: 'Production cost', value: comparison.price.productionCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.productionCostPerM) },
+                { label: comparisonPriceLabels[0], value: comparison.price.breakEvenPricePerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.breakEvenPricePerM) },
+                { label: 'Landed cost', value: comparison.price.landedCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.landedCostPerM) },
+                { label: 'Suggested selling price', value: comparison.price.sellingPricePerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.sellingPricePerM) },
+                { label: 'Expected profit per metre', value: comparison.price.expectedProfitPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.expectedProfitPerM) },
+            ],
+        },
+    ] : []
 
     const toggleCostingSelection = (id: string) => {
         setSelectedCostingIds(current => {
@@ -941,7 +1004,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px_170px_auto_auto]">
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px_170px_auto_auto_auto]">
                         <div className="relative">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <Input
@@ -983,6 +1046,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         >
                             <GitCompareArrows className="h-4 w-4" /> {t('common.compare_costings')} {selectedCostings.length || ''}
                         </Button>
+                        <Button
+                            variant={showFavoritesOnly ? 'secondary' : 'outline'}
+                            onClick={() => { setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
+                            className="h-10"
+                            aria-pressed={showFavoritesOnly}
+                        >
+                            <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {showFavoritesOnly ? 'All costings' : 'Favourites'}
+                        </Button>
                         <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
                         </Button>
@@ -1011,11 +1082,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 ? (canUseQuotationWorkflow ? t('common.no_costings_quotations_yet') : t('common.save_quality_or_cost_estimate'))
                                 : `No Quotations with status "${filterStatus}".`
                         }</p>
-                        {(searchQuery || marginFilter !== 'all') && (
+                        {(searchQuery || marginFilter !== 'all' || showFavoritesOnly) && (
                             <Button
                                 variant="link"
                                 size="sm"
-                                onClick={() => { setSearchQuery(''); setMarginFilter('all') }}
+                                onClick={() => { setSearchQuery(''); setMarginFilter('all'); setShowFavoritesOnly(false) }}
                                 className="mt-2 font-bold text-indigo-600"
                             >
                                 {t('common.clear_search_filters')}
@@ -1042,6 +1113,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onExport={setQuoteToExport}
                     onAudit={quote => { void auditQuote(quote) }}
                     auditingId={updatingId}
+                    onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
                     onOpenUsage={openAppliedProduction}
                     factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
@@ -1081,7 +1153,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 />
                                             </td>
                                             <td className="max-w-[240px] px-4 py-4">
-                                                <p className="truncate text-sm font-bold text-slate-950">{quote.quality_label || 'Untitled costing'} <span className="ml-1 text-xs font-semibold text-blue-600">v{Number(quote.version_number ?? 1)}</span></p>
+                                                <p className="truncate text-sm font-bold text-slate-950" aria-label={getLegacyVersionLabel(quote)}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                                     <span>Saved {format(new Date(quote.created_at), 'MMM d, yyyy')}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
@@ -1147,7 +1219,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 accent-blue-600"
                                             />
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-bold text-slate-950">{quality} <span className="ml-1 text-xs font-semibold text-blue-600">v{Number(quote.version_number ?? 1)}</span></p>
+                                                <p className="truncate text-sm font-bold text-slate-950" aria-label={getLegacyVersionLabel(quote)}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                                     <span>Updated {format(new Date(quote.updated_at), 'MMM d, yyyy · h:mm a')}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
@@ -1180,7 +1252,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {!quote.is_archived && <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-10 text-xs font-semibold text-blue-700">Open</Button>}
                                             <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Use as Starting Point" className="h-10 text-xs font-semibold">
-                                                <Copy className="h-3.5 w-3.5" /> Start From
+                                                <Copy className="h-3.5 w-3.5" /> Use as Starting Point
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => setQuoteToExport(quote)} className="h-10 text-xs font-semibold">
                                                 <Eye className="h-3.5 w-3.5" /> Preview
@@ -1412,49 +1484,55 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <DialogTitle className="flex items-center gap-2">
                             <GitCompareArrows className="h-5 w-5 text-blue-600" /> Compare Saved Costings
                         </DialogTitle>
-                        <DialogDescription>Review the commercial difference between two immutable costing snapshots.</DialogDescription>
+                        <DialogDescription>Compare two immutable snapshots using the same saved calculation and rounding contract. The current Rate Book is not read.</DialogDescription>
                     </DialogHeader>
                     {selectedCostings.length === 2 && comparison && (
-                        <div className="max-h-[60vh] overflow-auto rounded-xl border border-slate-200">
-                            <table className="w-full min-w-[680px] text-sm">
-                                <thead className="bg-slate-50 text-left">
-                                    <tr>
-                                        <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Metric</th>
-                                        {selectedCostings.map(costing => (
-                                            <th key={costing.id} className="px-4 py-3 font-bold text-slate-950">{costing.quality_label || 'Untitled costing'} · v{Number(costing.version_number ?? 1)} · {format(new Date(costing.created_at), 'MMM d, yyyy')}</th>
+                        <div className="space-y-3">
+                            <div className={`rounded-xl border px-4 py-3 text-xs ${comparison.comparable ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+                                <p className="font-bold">{comparison.comparable ? 'Canonical comparison ready' : 'Canonical comparison needs review'}</p>
+                                <p className="mt-1 leading-relaxed">{comparison.canonical.message || `Formula ${comparison.canonical.leftCalculationVersion || 'unknown'} · rounding ${comparison.canonical.leftSnapshotSchemaVersion ? `snapshot v${comparison.canonical.leftSnapshotSchemaVersion}` : 'legacy'} · detail source ${comparison.canonical.source.replace('_', ' ')}.`}</p>
+                            </div>
+                            <div className="max-h-[60vh] overflow-auto rounded-xl border border-slate-200">
+                                <table className="w-full min-w-[760px] text-sm">
+                                    <thead className="bg-slate-50 text-left">
+                                        <tr>
+                                            <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Metric</th>
+                                            {selectedCostings.map(costing => {
+                                                const identity = getSavedCostingIdentity(costing)
+                                                return <th key={costing.id} className="px-4 py-3 font-bold text-slate-950"><span className="block">{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-slate-500">saved {format(new Date(costing.created_at), 'MMM d, yyyy')}</span></th>
+                                            })}
+                                            <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Change</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {comparisonSections.map(section => (
+                                            <Fragment key={section.title}>
+                                                <tr key={`${section.title}-heading`} className="bg-slate-50/70">
+                                                    <th colSpan={4} className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-wider text-slate-600">
+                                                        <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-50 text-[10px] text-blue-700">Changed</Badge>}
+                                                    </th>
+                                                </tr>
+                                                {section.rows.map(row => {
+                                                    const left = row.unit === 'text' ? row.text.left || 'Not available' : formatComparisonValue(row.value.left, row.unit === 'rate' ? 'number' : row.unit)
+                                                    const right = row.unit === 'text' ? row.text.right || 'Not available' : formatComparisonValue(row.value.right, row.unit === 'rate' ? 'number' : row.unit)
+                                                    const change = row.unit === 'text'
+                                                        ? row.changed ? 'Changed' : 'No change'
+                                                        : formatComparisonDelta(row.value, row.unit === 'rate' ? 'number' : row.unit)
+                                                    const numericDelta = row.unit === 'text' ? null : row.value.delta
+                                                    return (
+                                                        <tr key={`${section.title}-${row.label}`}>
+                                                            <td className="px-4 py-3 font-semibold text-slate-600">{row.label}</td>
+                                                            <td className="px-4 py-3 font-mono font-semibold text-slate-900">{left}{row.unit === 'rate' && left !== 'Not available' ? '/kg' : ''}</td>
+                                                            <td className="px-4 py-3 font-mono font-semibold text-slate-900">{right}{row.unit === 'rate' && right !== 'Not available' ? '/kg' : ''}</td>
+                                                            <td className={`px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-amber-700' : 'text-blue-700' : 'text-slate-500'}`}>{change}</td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                            </Fragment>
                                         ))}
-                                        <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Change</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {[
-                                        ['Production cost', formatCostingMoneyPerM(selectedCostingMetrics[0]?.productionCostPerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.productionCostPerM ?? null), comparison.productionCostDelta, '₹', '/m'],
-                                        ['Break-even selling price', formatCostingMoneyPerM(selectedCostingMetrics[0]?.breakEvenPricePerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.breakEvenPricePerM ?? null), comparison.breakEvenDelta, '₹', '/m'],
-                                        ['Landed cost', formatCostingMoneyPerM(selectedCostingMetrics[0]?.landedCostPerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.landedCostPerM ?? null), comparison.landedCostDelta, '₹', '/m'],
-                                        ['Suggested selling price', formatCostingMoneyPerM(selectedCostingMetrics[0]?.suggestedSellingPricePerM ?? null), formatCostingMoneyPerM(selectedCostingMetrics[1]?.suggestedSellingPricePerM ?? null), comparison.sellingPriceDelta, '₹', '/m'],
-                                        ['Actual margin', formatCostingPercent(selectedCostingMetrics[0]?.actualMarginPct ?? null), formatCostingPercent(selectedCostingMetrics[1]?.actualMarginPct ?? null), comparison.marginDelta, '', ' pp'],
-                                        ['Expected profit', selectedCostingMetrics[0]?.expectedProfitTotal == null ? 'Not available' : `₹${selectedCostingMetrics[0].expectedProfitTotal.toFixed(2)}`, selectedCostingMetrics[1]?.expectedProfitTotal == null ? 'Not available' : `₹${selectedCostingMetrics[1].expectedProfitTotal.toFixed(2)}`, comparison.expectedProfitDelta, '₹', ''],
-                                        ['Quantity', `${Number(selectedCostings[0].meters).toLocaleString('en-IN')} m`, `${Number(selectedCostings[1].meters).toLocaleString('en-IN')} m`, comparison.quantityDelta, '', ' m'],
-                                        ['Warp yarn rate', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.warpRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.warpRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.warpRows[0]?.yarnRate ?? 0) : null, selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.warpRows[0]?.yarnRate ?? 0) : null), '₹', '/kg'],
-                                        ['Warp consumption', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.totalWarpKgPer100m ?? null : null, '', ' kg/100m'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.totalWarpKgPer100m ?? null : null, '', ' kg/100m'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.totalWarpKgPer100m ?? null : null, selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.totalWarpKgPer100m ?? null : null), '', ' kg'],
-                                        ['Weft yarn rate', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.weftRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.weftRows[0]?.yarnRate ?? 0) : null, '₹', '/kg'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? Number(selectedCostingStates[0].state.weftRows[0]?.yarnRate ?? 0) : null, selectedCostingStates[1]?.technicalDetailsVerified ? Number(selectedCostingStates[1].state.weftRows[0]?.yarnRate ?? 0) : null), '₹', '/kg'],
-                                        ['Processing', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.processingPerM ?? null : null, '₹', '/m'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.processingPerM ?? null : null, '₹', '/m'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.processingPerM ?? null : null, selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.processingPerM ?? null : null), '₹', '/m'],
-                                        ['Overhead', formatTechnicalMetric(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.overheadPerM ?? null : null, '₹', '/m'), formatTechnicalMetric(selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.overheadPerM ?? null : null, '₹', '/m'), technicalMetricDelta(selectedCostingStates[0]?.technicalDetailsVerified ? selectedCostingStates[0].totals?.overheadPerM ?? null : null, selectedCostingStates[1]?.technicalDetailsVerified ? selectedCostingStates[1].totals?.overheadPerM ?? null : null), '₹', '/m'],
-                                    ].map(([label, left, right, delta, prefix, suffix]) => {
-                                        const numericDelta = delta == null ? null : Number(delta)
-                                        return (
-                                            <tr key={String(label)}>
-                                                <td className="px-4 py-3 font-semibold text-slate-600">{label}</td>
-                                                <td className="px-4 py-3 font-mono font-semibold text-slate-900">{left}</td>
-                                                <td className="px-4 py-3 font-mono font-semibold text-slate-900">{right}</td>
-                                                <td className={`px-4 py-3 font-mono font-bold ${numericDelta == null ? 'text-slate-400' : numericDelta > 0 ? 'text-emerald-700' : numericDelta < 0 ? 'text-red-600' : 'text-slate-500'}`}>
-                                                    {numericDelta == null ? 'Not available' : `${numericDelta > 0 ? '+' : ''}${prefix}${numericDelta.toLocaleString('en-IN', { maximumFractionDigits: 2 })}${suffix}`}
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                     <DialogFooter>

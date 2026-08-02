@@ -101,7 +101,7 @@ function templateRecipeSignature(recipe: {
 
 function templateWriteError(error: { code?: string; message: string }) {
     if (error.code === '23505') {
-        return 'A saved quality with this name already exists. Choose Start From and give the new quality a different name.'
+        return 'A saved quality with this name already exists. Choose Use as Starting Point and give the new quality a different name.'
     }
     return error.message
 }
@@ -541,7 +541,7 @@ export async function saveAsFabricTemplate(data: {
                 idempotentReplay: true,
             }
         }
-        return { error: 'A saved quality with this name already exists. Choose Start From and give the new quality a different name.' }
+        return { error: 'A saved quality with this name already exists. Choose Use as Starting Point and give the new quality a different name.' }
     }
     if (sameName && !sameName.is_active) return { error: 'This quality name is archived. Restore that quality or choose a different name for the new recipe.' }
 
@@ -924,7 +924,7 @@ export async function renameTemplate(id: string, name: string, expectedUpdatedAt
         return { success: true, updatedAt: current.updated_at, noChange: true }
     }
     if (!isLikelyQualityNameCorrection(current.name, normalizedName)) {
-        return { error: 'Only a spelling or formatting correction is allowed here. For a different fabric construction, use Start From and save a new quality.' }
+        return { error: 'Only a spelling or formatting correction is allowed here. For a different fabric construction, use Use as Starting Point and save a new quality.' }
     }
 
     const { data: sameNameTemplates, error: sameNameError } = await supabase
@@ -934,7 +934,7 @@ export async function renameTemplate(id: string, name: string, expectedUpdatedAt
         .neq('id', id)
     if (sameNameError) return { error: sameNameError.message }
     const sameName = (sameNameTemplates ?? []).find(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(name))
-    if (sameName?.is_active) return { error: 'A saved quality with this name already exists. Choose a different name or use Start From.' }
+    if (sameName?.is_active) return { error: 'A saved quality with this name already exists. Choose a different name or use Use as Starting Point.' }
     if (sameName && !sameName.is_active) return { error: 'This quality name is archived. Restore that quality or choose a different name.' }
 
     const { data: updated, error } = await supabase
@@ -1127,7 +1127,7 @@ export async function saveEstimatorQuoteV3(params: {
         const archivedName = (archivedTemplates ?? []).some(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(params.qualityLabel))
         if (archivedName) return { error: 'This quality name is archived. Restore the saved quality or choose a different name before saving a new Cost Estimate.' }
         const existingName = (activeTemplates ?? []).some(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(params.qualityLabel))
-        if (existingName) return { error: 'This Saved Quality already exists. Select it from My Qualities to update it, or use Start From and save a new quality.' }
+        if (existingName) return { error: 'This Saved Quality already exists. Select it from My Qualities to update it, or use Use as Starting Point and save a new quality.' }
     }
     const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, {
         requireTapeLength: canUseProduction,
@@ -1888,7 +1888,7 @@ export async function updateSavedCostingLibraryState(input: {
     if (timestampError) return { error: timestampError }
     if (input.isArchived === undefined && input.isFavorite === undefined) return { error: 'No library change was requested.' }
 
-    const { user, profile } = await requireRole(['owner'])
+    const { user } = await requireRole(['owner'])
     const supabase = await createServerClient()
     try {
         await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
@@ -1896,20 +1896,16 @@ export async function updateSavedCostingLibraryState(input: {
         // Audit trigger falls back to auth.uid().
     }
 
-    const changes: { is_archived?: boolean; is_favorite?: boolean; updated_at: string } = { updated_at: new Date().toISOString() }
-    if (input.isArchived !== undefined) changes.is_archived = input.isArchived
-    if (input.isFavorite !== undefined) changes.is_favorite = input.isFavorite
-
-    const { data, error } = await supabase
-        .from('estimator_quotes')
-        .update(changes)
-        .eq('id', input.id)
-        .eq('org_id', profile.org_id)
-        .eq('updated_at', input.expectedUpdatedAt)
-        .select('id, updated_at, is_archived, is_favorite')
-        .maybeSingle()
-    if (error) return { error: error.message }
-    if (!data) return { error: 'This costing changed in another tab. Refresh Saved Costings and try again.' }
+    const { data, error } = await supabase.rpc('update_saved_costing_library_state_atomic', {
+        p_costing_id: input.id,
+        p_expected_updated_at: input.expectedUpdatedAt,
+        p_is_archived: input.isArchived ?? null,
+        p_is_favorite: input.isFavorite ?? null,
+    })
+    if (error) return { error: error.message || 'This costing changed in another tab. Refresh Saved Costings and try again.' }
+    if (!data || typeof data !== 'object' || !('id' in data)) {
+        return { error: 'The Saved Costing library update completed without returning its new state.' }
+    }
     revalidatePath('/owner/quotes')
     return { data }
 }

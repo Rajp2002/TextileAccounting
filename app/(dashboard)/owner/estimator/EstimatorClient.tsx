@@ -1842,7 +1842,7 @@ export default function EstimatorClient({
         if (autoRestoredDraftSavedAtRef.current === draft.savedAt) return
 
         // React StrictMode can replay mount effects. savedAt identifies this
-        // handoff so an explicit Open & Update / Start From action is applied
+        // handoff so an explicit Open & Update / Use as Starting Point action is applied
         // once without affecting the manual recovery flow for ordinary drafts.
         autoRestoredDraftSavedAtRef.current = draft.savedAt
         applyEstimatorDraft()
@@ -3238,8 +3238,8 @@ export default function EstimatorClient({
                                             setShowSaveTemplate(true)
                                         }}
                                         className="h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
-                                        title="Start From this saved quality and save it as a separate quality"
-                                        aria-label={`Start from ${appliedTemplate.name}; save as a new quality`}
+                                        title="Use as Starting Point for this saved quality and save it as a separate quality"
+                                        aria-label={`Use ${appliedTemplate.name} as a starting point; save as a new quality`}
                                     >
                                         <BookmarkPlus className="mr-1.5 h-4 w-4" />
                                         <span className="truncate">Save as New Quality</span>

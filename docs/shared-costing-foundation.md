@@ -28,6 +28,25 @@ Base standalone costings retain their `record_kind = 'costing'` semantics and ma
 
 Sprint 8 changes application behavior and snapshot persistence only; it adds no database migration.
 
+## Saved Costing identity and historical snapshots
+
+Every saved costing has two identities:
+
+- `costing_group_id` identifies the reusable costing lineage.
+- `version_number` identifies the immutable revision within that lineage.
+
+**Open and save new version** intentionally creates the next revision in the same group. **Use as Starting Point** creates a separate editable record and does not mutate or extend the source costing lineage until the owner saves the new work. Archive, restore, and favourite flags are library metadata only; they do not alter the saved recipe or canonical result.
+
+The canonical `costing_result_snapshot` is the comparison and historical source of truth. New snapshots carry a schema version and audit layers for yarn, waste, overhead, margin, and price. Older snapshots remain readable through a tolerant parser. Comparing two saved costings uses only the two persisted canonical snapshots and requires the same calculation and rounding contract; current factory defaults and the current Rate Book are deliberately excluded.
+
+This is the historical-economics rule: changing a default, reviewing a rate, changing a current rate, or changing a factory profile affects future calculations only. It never rewrites a saved costing snapshot.
+
+## Yarn Rate Book boundary
+
+Each yarn rate exposes the current value, previous value, effective date, source, notes, review interval, last review date, and history. A rate discovered from a saved quality or costing is marked for owner review. **Confirm current rate** records that review without changing the value. Stale, due-soon, and overdue statuses are visible and use the same explicit review flow.
+
+Rate discovery, review, save, archive, and restore are atomic server/database operations. The owner and organization are rechecked inside the mutation boundary, and optimistic timestamps prevent a stale browser tab from overwriting a newer Rate Book state. A discovered rate is not treated as trusted merely because it was found in a saved record.
+
 ## Durable record contexts
 
 Every `estimator_quotes` snapshot has a `record_kind`:
@@ -68,3 +87,5 @@ After Base upgrades to Full Suite:
 - Application and database conversion boundaries both reject non-quotation records.
 - `(org_id, costing_group_id, version_number)` is unique so a revision number cannot be reused within one costing lineage.
 - Saved snapshots are not retroactively changed when a default rate is reviewed.
+- Saved Costings search/sort/filter and comparison operate on persisted records, not today's defaults.
+- Rate Book updates affect only future calculations; a historical snapshot keeps its recorded yarn rates, waste, overhead, margin, and price.

@@ -10,7 +10,7 @@ Core Phase 1 pillar. The estimator is the commercial entry point for Weavly.
 
 The estimator lets an owner calculate the cost and quote price of a fabric from weaving-specific inputs. It covers warp/weft yarn rows, denier, beam ends, picks, reed space, yarn rates, GST, shortage, warp crimp, loom type, RPM, power, hours per shift, warping, sizing, winding, processing, finishing, overheads, fixed-worker overhead, commission, transport, and profit.
 
-Quotes save both the final commercial values and the estimator state snapshot so historical quote assumptions can be restored later.
+Saved costings and quotations save both the final commercial values and the estimator state snapshot so repeat qualities can be reopened without recalculating historical assumptions.
 
 ## Sprint 8 — Costing Trust Foundation
 
@@ -43,6 +43,19 @@ Sprint 9 makes editing and saving a costing predictable for Rajesh:
 
 Sprint 9 adds no schema migration. It continues to use the existing immutable costing revision RPC and database trigger protections.
 
+## Sprint 10 — Saved costings, rates, versions, and comparison
+
+Sprint 10 makes Base reusable for repeat customers and recurring fabric qualities while keeping historical economics immutable:
+
+- **Saved Costings** can be searched, sorted, filtered by active/archived state or favourites, archived, restored, and marked as a favourite. The list shows the stable costing group and version identity so Rajesh can distinguish a revision from a new starting point.
+- **Use as Starting Point** always opens a separate editable copy. It never edits the source snapshot or silently creates a new version in the source costing group. **Open and save new version** remains the explicit revision action.
+- Costing comparison is available for two saved costings from the same canonical snapshot contract. It reports meaningful changes in yarn layers/rates/cost, waste, overhead, margin, production and break-even totals, landed/selling price, and expected profit. Comparison reads the persisted snapshots only; it does not read today's Rate Book or factory defaults.
+- The Yarn Rate Book shows current and previous values, effective date, source, notes, review status, and review history. A discovered rate remains visibly unreviewed until the owner chooses **Confirm current rate**. Stale, due-soon, and overdue rates have an explicit review path.
+- Rate discovery and lifecycle writes use atomic server/database boundaries with tenant and owner checks. A rate update changes future calculations only; saved costing snapshots and saved quality recipe values remain unchanged.
+- Historical snapshots are parsed tolerantly, including older snapshots without the Sprint 10 audit fields. New snapshots carry a schema version and the audit details needed to explain yarn, waste, overhead, margin, and price changes.
+
+The Sprint 10 database migration adds the tenant-scoped Saved Costings state index, an optimistic-concurrency archive/favourite RPC, and an atomic yarn-rate discovery RPC. It does not rewrite existing costing rows.
+
 ## User Workflow
 
 1. Owner opens `/owner/estimator`.
@@ -58,6 +71,8 @@ Sprint 9 adds no schema migration. It continues to use the existing immutable co
 11. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state. The UI displays a warning banner to prevent stale draft collisions.
 12. Owner converts an accepted quote into an active order by clicking "Create Active Order" in Quote History.
 13. Owner can create a market run from estimator market mode.
+14. Owner reopens a saved costing, uses **Use as Starting Point** for a separate repeat-customer estimate, or saves an explicit new version in the same costing group.
+15. Owner compares two saved costings from the same snapshot contract, then archives or restores library records without changing their economics.
 
 ## Existing Workflow Translation
 
@@ -91,7 +106,7 @@ Weavly workflow:
 - Monthly output suggestions can use recent production.
 - Fixed workers can be merged into overhead items.
 - Scenario analysis helps the owner see sensitivity to margin/price assumptions.
-- Quote history lets the owner filter by status and restore or convert records.
+- Quote history and Saved Costings let the owner search, sort, filter, compare, favourite, archive, restore, and reopen records without changing their economics.
 - Reset and cancelled dialogs do not mutate saved quality or costing history.
 
 ## Data and Code
@@ -109,6 +124,7 @@ Weavly workflow:
   - `executeQuoteConversion` — shared service: validates quote, calls the RPC, rehydrates estimate state, upserts `order_yarn_requirements`.
   - `hydrateEstimateStateFromQuote` — reconstructs a full `EstimateState` from a stored quote row for yarn requirement computation.
 - `lib/estimator.ts`
+- `lib/saved-costings.ts`
 - `lib/finance.ts`
 - `factory_cost_profile`
 - `estimator_templates`
@@ -116,6 +132,7 @@ Weavly workflow:
 - `orders`
 - `order_yarn_requirements`
 - `market_runs`
+- `supabase/migrations/20260802121858_sprint10_saved_costing_library_state.sql`
 
 ## Downstream Effects
 
@@ -127,7 +144,9 @@ Weavly workflow:
 ## Readiness Notes
 
 - Formula tests are critical before launch.
-- Quote snapshots must remain stable after template or factory-profile edits.
+- Quote and costing snapshots must remain stable after template, factory-profile, or Rate Book edits.
+- Comparison must use the same persisted canonical snapshot contract on both sides; it must never recalculate history with current defaults.
+- Archive, restore, and favourite state are lifecycle metadata only and must not create a new economic version.
 - The first-time owner path should remain simple despite the advanced controls.
 - The `convert_accepted_quote_to_order` Supabase RPC returns a table with a column named `order_id`. Any UPDATE inside the function must qualify `estimator_quotes.order_id` explicitly to avoid PostgreSQL ambiguity errors.
 - A blank yarn component is an editor error, never a saveable economic assumption.
