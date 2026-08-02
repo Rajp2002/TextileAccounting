@@ -1,7 +1,7 @@
 # Sprint 10 — Saved Costings, Rates, Versions, and Comparison
 
 Date: 2026-08-02 IST
-Status: Release-ready
+Status: Production verified
 
 ## Objective
 
@@ -31,20 +31,21 @@ The migration does not rewrite existing `estimator_quotes` snapshots or rate his
 - `npx vitest run` — 133 test files passed; 859 tests passed; 1 skipped.
 - `npx tsc --noEmit --pretty false` — passed.
 - `npm run build` — passed; Next.js production build generated 45 static pages.
+- Vercel production build from merged `main` — passed; 133 test files and 860 tests passed, TypeScript passed, and the production artifact was generated successfully.
 - Targeted ESLint checks — passed.
 - `git diff --check` — passed.
 - Added `__tests__/sprint10-saved-costings-rates-comparison.test.ts` covering library filters/identity, canonical comparison, no current-rate recalculation, and UI/action/migration boundaries.
 
 ## Release evidence
 
-The migration dry-run identified only the Sprint 10 migration. The linked production migration, merged `main` commit, production deployment URL, and post-deploy verification are recorded below during release execution.
+The migration dry-run identified only the Sprint 10 migration. The linked production migration, merged `main` commit, production deployment URL, and post-deploy verification are recorded below.
 
 | Check | Evidence |
 | --- | --- |
-| Linked Supabase migration | Pending release execution |
-| Merged `main` commit | Pending release execution |
-| Production deployment | Pending release execution |
-| Post-deploy smoke check | Pending release execution |
+| Linked Supabase migration | `20260802121858_sprint10_saved_costing_library_state.sql` applied with `supabase db push --linked --yes`; migration ledger, index, and both RPC signatures verified remotely. |
+| Merged `main` commit | PR [#61](https://github.com/Rajp2002/TextileAccounting/pull/61) merged at commit `92f13fd7a48938d82710d6fcf7b98d8051b4c9d9`. |
+| Production deployment | Vercel deployment `dpl_72pe5B4Kx1mmxxkGb4tawGXC55Zb` is Ready and aliased to [textile-accounting.vercel.app](https://textile-accounting.vercel.app). |
+| Post-deploy smoke check | Production `/` and `/login` returned HTTP 200; deployment inspection reported Ready; no recent error logs were found. |
 
 ## Historical-economics acceptance test
 
