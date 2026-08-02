@@ -1,0 +1,36 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+
+describe('Estimator aesthetic and responsive refinement', () => {
+  const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+  const styles = read('app/globals.css')
+
+  it('uses an accessible progressive-disclosure pattern for pricing assumptions', () => {
+    expect(client).toContain('data-testid="pricing-assumptions-trigger"')
+    expect(client).toContain('aria-expanded={expanded}')
+    expect(client).toContain('aria-controls="pricing-assumptions-details"')
+    expect(client).toContain('estimator-touch-target')
+    expect(client).toContain('grid-rows-[0fr]')
+    expect(client).toContain('Technical details')
+    expect(client).toContain('Calculation snapshot')
+    expect(client).toContain('const [assumptionsExpanded, setAssumptionsExpanded] = useState(canUseProduction)')
+    expect(client).not.toContain('Assumptions used in this price')
+    expect(client).not.toContain('Reference rate')
+  })
+
+  it('keeps the result hierarchy and responsive layout width-driven', () => {
+    expect(client).toContain('Production cost / m')
+    expect(client).toContain('Suggested price / m')
+    expect(client).toContain('Actual margin')
+    expect(client).toContain('Break-even price / m')
+    expect(client).toContain('Material context')
+    expect(client).toContain('grid-cols-1 gap-3 min-[430px]:grid-cols-2')
+    expect(client).toContain('lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)]')
+    expect(client).toContain('id="estimator-form-panel"')
+    expect(styles).toContain('#pricing-assumptions-details')
+    expect(styles).toContain('@media (prefers-reduced-motion: reduce)')
+  })
+})

@@ -3,6 +3,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+.estimator-touch-target {
+  min-height: 44px;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* orientation:landscape media query variant — used by the bottom nav bar
@@ -460,6 +464,12 @@
     .animate-blob-drift-3,
     .animate-blob-drift-4 {
       animation: none;
+    }
+
+    #pricing-assumptions-details,
+    #pricing-assumptions-details *,
+    [data-testid="pricing-assumptions-trigger"] svg {
+      transition-duration: 0.01ms !important;
     }
   }
 

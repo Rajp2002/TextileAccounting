@@ -33,6 +33,7 @@ import {
     RotateCcw,
     Lock,
     AlertCircle,
+    Info,
     Zap,
     Play,
     CheckCircle2,
@@ -1039,75 +1040,137 @@ function assumptionSourceLabel(source: string): string {
 function CostingAssumptionsSummary({
     result,
     isStandaloneCostingSession,
+    expanded,
+    onToggle,
 }: {
     result: CostingResultSnapshot
     isStandaloneCostingSession: boolean
+    expanded: boolean
+    onToggle: () => void
 }) {
     const assumptions = result.assumptions
-    if (!assumptions) return null
-    const overhead = assumptions.overhead
-    const quantity = assumptions.quantity.activeRate
-    const hasQuantity = quantity != null && quantity > 0
+    const overhead = assumptions?.overhead
+    const quantity = assumptions?.quantity.activeRate ?? result.quantityM
+    const hasQuantity = quantity != null && Number.isFinite(quantity) && quantity > 0
+    const productionCostAvailable = Number.isFinite(result.productionCostPerM) && result.productionCostPerM > 0
+    const calculationIncomplete = !assumptions || (!isStandaloneCostingSession && hasQuantity && !result.quoteIsValid)
+    const warningItems = [
+        !hasQuantity ? 'Quantity not set' : null,
+        !productionCostAvailable ? 'Required cost unavailable' : null,
+        calculationIncomplete ? 'Calculation incomplete' : null,
+    ].filter((warning): warning is string => Boolean(warning))
+    const targetMargin = assumptions?.margin.activeRate ?? result.targetMarginPct
+    const commission = assumptions?.commission.activeRate ?? result.commissionPct
+    const overheadRate = overhead?.activeRatePerM ?? result.overheadPerM
+    const overheadDescription = overhead
+        ? overhead.source === 'monthly_expenses' ? 'Monthly expenses ÷ output' : 'Direct rate entered'
+        : result.overheadMode === 'monthly_expenses' ? 'Monthly expenses ÷ output' : 'Direct rate entered'
+    const activeAssumptionsCount = assumptions ? 4 : 0
+    const formatPercent = (value: number) => Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`
+    const displayQualityWarning = warningItems.length > 0
 
     return (
         <section
             data-testid="costing-assumptions-summary"
-            aria-label="Costing assumptions used in this price"
-            className="mt-4 border-t border-[var(--color-hairline)] pt-3"
+            aria-label="Pricing assumptions"
+            className="overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-[var(--color-canvas)]/70"
         >
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-body)]">
-                    Assumptions used in this price
-                </p>
-                <p className="text-[10px] font-medium text-[var(--color-muted)]">
-                    Canonical costing snapshot · {result.calculationVersion}
-                </p>
-            </div>
-
-            <div className="mt-2 overflow-x-auto rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)]">
-                <div className="grid min-w-[620px] grid-cols-[1.2fr_1fr_1fr_1.1fr] gap-2 border-b border-[var(--color-hairline)] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">
-                    <span>Overhead source</span>
-                    <span>Active rate</span>
-                    <span>Reference rate</span>
-                    <span>Price impact</span>
-                </div>
-                <div className="grid min-w-[620px] grid-cols-[1.2fr_1fr_1fr_1.1fr] gap-2 px-3 py-2.5 text-[11px]">
-                    <div>
-                        <p className="font-semibold text-[var(--color-ink)]">{assumptionSourceLabel(overhead.source)}</p>
-                        <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{overhead.mode === 'direct' ? 'Direct mode is active' : 'Monthly mode is active'}</p>
+            <button
+                type="button"
+                data-testid="pricing-assumptions-trigger"
+                aria-expanded={expanded}
+                aria-controls="pricing-assumptions-details"
+                aria-label={`Pricing assumptions. ${activeAssumptionsCount} active. ${formatPercent(targetMargin)} target margin. ${formatPercent(commission)} commission.${displayQualityWarning ? ` ${warningItems.join(', ')}.` : ''}`}
+                onClick={onToggle}
+                className="estimator-touch-target flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none transition-colors hover:bg-white/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] sm:px-4"
+            >
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-[13px] font-semibold text-[var(--color-ink)]">Pricing assumptions</span>
+                        {displayQualityWarning && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-warning-amber-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-warning-amber)]">
+                                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                                {warningItems.length} {warningItems.length === 1 ? 'warning' : 'warnings'}
+                            </span>
+                        )}
                     </div>
-                    <p className="font-mono font-semibold text-[var(--color-ink)]">₹{overhead.activeRatePerM.toFixed(2)}/m</p>
-                    <p className="font-mono font-semibold text-[var(--color-muted)]">
-                        {overhead.referenceRatePerM == null ? '—' : `₹${overhead.referenceRatePerM.toFixed(2)}/m`}
+                    <p className="mt-0.5 break-words text-[11px] font-medium leading-4 text-[var(--color-muted)]">
+                        {activeAssumptionsCount} active · {formatPercent(targetMargin)} target margin · {formatPercent(commission)} commission
+                        {displayQualityWarning && <span className="sr-only"> · {warningItems.join(', ')}</span>}
                     </p>
-                    <div>
-                        <p className="font-mono font-semibold text-[var(--color-ink)]">{formatSignedRupees(overhead.priceImpactPerM)}/m cost</p>
-                        <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{formatSignedRupees(overhead.quotePriceImpactPerM)}/m quote vs reference</p>
-                    </div>
                 </div>
-            </div>
+                <ChevronDown
+                    className={`h-5 w-5 shrink-0 text-[var(--color-muted)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
+                />
+            </button>
 
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Commission</p>
-                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">{result.commissionPct.toFixed(2)}%</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.commission.source)} · {formatSignedRupees(assumptions.commission.priceImpactPerM)}/m landed cost</p>
-                </div>
-                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Transport</p>
-                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">₹{result.transportPerM.toFixed(2)}/m</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.transport.source)} · {formatSignedRupees(assumptions.transport.priceImpactPerM)}/m impact</p>
-                </div>
-                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Target margin</p>
-                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">{result.targetMarginPct.toFixed(2)}%</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.margin.source)} · {formatSignedRupees(assumptions.margin.priceImpactPerM)}/m above break-even</p>
-                </div>
-                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Quantity</p>
-                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">{hasQuantity ? `${quantity.toLocaleString('en-IN')} m` : 'Not set'}</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.quantity.source)} · {isStandaloneCostingSession ? 'Optional; per-metre price unchanged' : 'Required before saving a quote'}</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">₹0.00/m price impact; changes order totals</p>
+            <div
+                id="pricing-assumptions-details"
+                aria-hidden={!expanded}
+                data-state={expanded ? 'open' : 'closed'}
+                className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+            >
+                <div className="min-h-0 overflow-hidden">
+                    <div className="border-t border-[var(--color-hairline)]/80">
+                        <div className="divide-y divide-[var(--color-hairline)]/70" role="list" aria-label="Pricing assumption details">
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                <div className="min-w-0">
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Overhead</p>
+                                    <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">{overheadDescription}</p>
+                                </div>
+                                <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">₹{overheadRate.toFixed(2)}/m</p>
+                            </div>
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                <div className="min-w-0">
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Commission</p>
+                                    <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">Selling commission</p>
+                                </div>
+                                <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">{formatPercent(commission)}</p>
+                            </div>
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                <div className="min-w-0">
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Transport</p>
+                                    <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">Delivery cost per metre</p>
+                                </div>
+                                <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">₹{result.transportPerM.toFixed(2)}/m</p>
+                            </div>
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                <div className="min-w-0">
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Target margin</p>
+                                    <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">Applied above break-even</p>
+                                </div>
+                                <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">{formatPercent(targetMargin)}</p>
+                            </div>
+                            <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4 ${!hasQuantity ? 'bg-[var(--color-warning-amber-soft)]/35' : ''}`} role="listitem">
+                                <div className="min-w-0">
+                                    <p className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--color-ink)]">
+                                        Quantity
+                                        {!hasQuantity && <AlertTriangle className="h-3.5 w-3.5 text-[var(--color-warning-amber)]" aria-label="Quantity not set" />}
+                                    </p>
+                                    <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">{isStandaloneCostingSession ? 'Optional; per-metre price unchanged' : 'Required before saving a quote'}</p>
+                                </div>
+                                <p className={`max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums ${hasQuantity ? 'text-[var(--color-ink)]' : 'text-[var(--color-warning-amber)]'}`}>{hasQuantity ? `${quantity.toLocaleString('en-IN')} m` : 'Not set'}</p>
+                            </div>
+                        </div>
+
+                        {warningItems.length > 0 && (
+                            <p className="flex items-start gap-1.5 border-t border-[var(--color-hairline)]/70 px-3 py-2.5 text-[11px] font-medium leading-4 text-[var(--color-warning-amber)] sm:px-4" role="status">
+                                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                <span>{warningItems.join(' · ')}</span>
+                            </p>
+                        )}
+
+                        <details className="border-t border-[var(--color-hairline)]/70 px-3 py-2.5 sm:px-4">
+                            <summary tabIndex={expanded ? 0 : -1} className="estimator-touch-target flex cursor-pointer list-none items-center gap-2 text-[11px] font-semibold text-[var(--color-muted)] outline-none focus-visible:text-[var(--color-yarn-orange-dark)] [&::-webkit-details-marker]:hidden">
+                                <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                Technical details
+                            </summary>
+                            <p className="pb-1 pl-5 text-[10px] leading-4 text-[var(--color-muted)]">
+                                Calculation snapshot <code className="font-mono text-[var(--color-body)]">{result.calculationVersion}</code> · {result.roundingPolicy}
+                            </p>
+                        </details>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1714,6 +1777,20 @@ export default function EstimatorClient({
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>(canUseProduction ? 'detailed' : 'quick')
+    const [assumptionsExpanded, setAssumptionsExpanded] = useState(canUseProduction)
+    const assumptionsManuallyToggledRef = useRef(false)
+
+    const handleEntryModeChange = useCallback((nextMode: 'quick' | 'detailed') => {
+        setEntryMode(nextMode)
+        if (!assumptionsManuallyToggledRef.current) {
+            setAssumptionsExpanded(nextMode === 'detailed')
+        }
+    }, [])
+
+    const toggleAssumptions = useCallback(() => {
+        assumptionsManuallyToggledRef.current = true
+        setAssumptionsExpanded(current => !current)
+    }, [])
 
     // Party rate memory — debounced with 800ms + 3-char min
     const [partyHint, setPartyHint] = useState<{
@@ -2308,6 +2385,8 @@ export default function EstimatorClient({
         })
         setMode(canUseProduction ? estimatorWorkflow.initialMode : 'quote')
         setEntryMode(canUseProduction ? 'detailed' : 'quick')
+        assumptionsManuallyToggledRef.current = false
+        setAssumptionsExpanded(canUseProduction)
         setOutputSuggestion(null)
         setWagePerMInput('')
         setAppliedTemplate(null)
@@ -2733,7 +2812,6 @@ export default function EstimatorClient({
     const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
     const displayMarginPct = hasValidCostResult
-        && hasOrderQty
         && costingResult.quoteIsValid
         && Number.isFinite(costingResult.actualMarginPct)
         ? costingResult.actualMarginPct
@@ -2949,98 +3027,138 @@ export default function EstimatorClient({
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
             <div className="sticky top-3 z-40 -mt-3 py-3">
                 <div className={hudShellClass}>
-                    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--color-hairline)] pb-2 text-[11px] text-[var(--color-muted)]">
-                        <span className="font-semibold uppercase tracking-[0.08em] text-[var(--color-body)]">{t('estimator.sprint1.active_record')}</span>
-                        <span>{t('estimator.sprint1.quality')}: <strong className="text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</strong></span>
-                        {sourceQuoteId && sourceRecordKind === 'costing' && (
-                            <span>{t('estimator.sprint1.costing')}: <strong className="text-[var(--color-ink)]">v{sourceQuoteVersionNumber ?? 1}</strong>{sourceQuoteCreatedAt ? ` · ${new Date(sourceQuoteCreatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
-                        )}
-                        {sourceQuoteId && sourceRecordKind === 'costing' && !sourceFactoryProfileUpdatedAt ? (
-                            <span>{t('estimator.sprint1.baseline_not_recorded')}</span>
-                        ) : sourceFactoryProfileUpdatedAt ? (
-                            <span>{t('estimator.sprint1.baseline_captured')}: <strong className="text-[var(--color-ink)]">{new Date(sourceFactoryProfileUpdatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
-                        ) : (
-                            <span>{t('estimator.sprint1.baseline_current')}</span>
-                        )}
-                        {!sourceQuoteId && <span>{t('estimator.sprint1.new_costing_snapshot')}</span>}
-                        <div className="ml-auto flex items-center gap-1 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
-                            <button type="button" role="tab" aria-selected={entryMode === 'quick'} onClick={() => setEntryMode('quick')} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${entryMode === 'quick' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                            <button type="button" role="tab" aria-selected={entryMode === 'detailed'} onClick={() => setEntryMode('detailed')} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${entryMode === 'detailed' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
-                        </div>
-                    </div>
-                    <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
-                        <div className="min-w-0 space-y-3">
-                            <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 xl:items-end 2xl:gap-1.5 ${canUseProduction ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
-                                <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.price_helpers.production_cost')}</p>
-                                    <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-ink)] sm:text-[32px] 2xl:text-[22px]">
-                                        {hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'}
-                                    </p>
-                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">
-                                        {mode === 'market' ? 'Target selling price' : t('estimator.price_helpers.suggested_selling_price')}
-                                    </p>
-                                    <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[32px] 2xl:text-[22px]">
-                                        {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
-                                    </p>
-                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
-                                </div>
-                                <div className="min-w-0 rounded-[12px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] px-3 py-2 2xl:px-2 2xl:py-1.5">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">Actual margin</p>
-                                    <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
-                                        {displayMarginPct === null ? '—' : `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%`}
-                                    </p>
-                                </div>
-                                <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
-                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.price_helpers.break_even')}</p>
-                                    <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-ink)] 2xl:text-[20px]">
-                                        {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
-                                            ? `₹${costingResult.breakEvenPricePerM.toFixed(2)}`
-                                            : '—'}
-                                    </p>
-                                    <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.price_helpers.break_even_hint')}</p>
-                                </div>
-                                {hasOrderQty && (
-                                    <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
-                                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
-                                        <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
-                                            {hasValidCostResult && costingResult.quoteIsValid
-                                                ? `₹${(costingResult.expectedProfitTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                : '—'}
-                                        </p>
-                                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">
-                                            {hasOrderQty ? `for ${Number(state.orderQuantityM).toLocaleString('en-IN')} m` : 'set costing quantity'}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex h-2.5 overflow-hidden rounded-full bg-[var(--color-surface-soft)]">
-                                    {costSegments.length > 0 ? costSegments.map(segment => (
-                                        <div
-                                            key={segment.label}
-                                            className={`${segment.color} min-w-[3px] border-r border-white last:border-r-0`}
-                                            style={{ width: `${Math.max(3, (segment.value / costStackTotal) * 100)}%` }}
-                                        />
-                                    )) : (
-                                        <div className="w-full bg-[var(--color-hairline)]" />
+                    <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                                    <p className="text-[12px] font-semibold tracking-[0.02em] text-[var(--color-ink)]" aria-label={t('estimator.sprint1.active_record')}>Active cost estimate</p>
+                                    <span className="max-w-full break-words rounded-full border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/60 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-yarn-orange-dark)]">
+                                        <span className="sr-only">{t('estimator.sprint1.quality')}: </span>{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                                    </span>
+                                    {sourceQuoteId && sourceRecordKind === 'costing' && (
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.sprint1.costing')} v{sourceQuoteVersionNumber ?? 1}{sourceQuoteCreatedAt ? ` · ${new Date(sourceQuoteCreatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
                                     )}
                                 </div>
-                                <div className="flex gap-x-4 gap-y-1 overflow-x-auto pb-1 text-[11px] font-semibold no-scrollbar">
-                                    {(costSegments.length > 0 ? costSegments : [{ label: 'Warp Yarn', value: 0, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' }]).map(segment => (
-                                        <span key={segment.label} className={`inline-flex shrink-0 items-center gap-1.5 ${segment.text}`}>
-                                            <span className={`h-2 w-2 rounded-full ${segment.color}`} />
-                                            {segment.label}
-                                        </span>
-                                    ))}
+                                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
+                                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-factory-green)]" aria-hidden="true" />
+                                        {sourceQuoteId && sourceRecordKind === 'costing' && !sourceFactoryProfileUpdatedAt
+                                            ? t('estimator.sprint1.baseline_not_recorded')
+                                            : sourceFactoryProfileUpdatedAt
+                                                ? `${t('estimator.sprint1.baseline_captured')}: ${new Date(sourceFactoryProfileUpdatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                : 'Current factory baseline'}
+                                    </span>
+                                    {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing snapshot</span>}
                                 </div>
                             </div>
+                            <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
+                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={entryMode === 'detailed' ? 'space-y-5' : 'grid gap-5 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-start'}>
+                        <div className={entryMode === 'detailed' ? 'grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)] lg:items-start' : 'min-w-0 space-y-3'}>
+                            <div className="min-w-0 space-y-4">
+                                <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+                                    <div className="min-w-0">
+                                        <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.production_cost')}>Production cost / m</p>
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
+                                            {hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'}
+                                        </p>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.suggested_selling_price')}>
+                                            {mode === 'market' ? 'Target price / m' : 'Suggested price / m'}
+                                        </p>
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                                            {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                                        </p>
+                                    </div>
+                                    <div className={`min-w-0 rounded-[12px] border px-3 py-2 ${displayMarginPct === null
+                                        ? 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'
+                                        : displayMarginPct > 0
+                                            ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)]'
+                                            : displayMarginPct < 0
+                                                ? 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)]'
+                                                : 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/55'}`}>
+                                        <p className={`mb-1 text-[11px] font-semibold leading-4 ${displayMarginPct === null
+                                            ? 'text-[var(--color-muted)]'
+                                            : displayMarginPct > 0
+                                                ? 'text-[var(--color-factory-green)]'
+                                                : displayMarginPct < 0
+                                                    ? 'text-[var(--color-risk-red)]'
+                                                    : 'text-[var(--color-warning-amber)]'}`}>Actual margin</p>
+                                        <p className={`max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums ${displayMarginPct === null
+                                            ? 'text-[var(--color-muted)]'
+                                            : displayMarginPct > 0
+                                                ? 'text-[var(--color-factory-green)]'
+                                                : displayMarginPct < 0
+                                                    ? 'text-[var(--color-risk-red)]'
+                                                    : 'text-[var(--color-warning-amber)]'}`}>
+                                            {displayMarginPct === null ? '—' : `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%`}
+                                        </p>
+                                        <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
+                                            {displayMarginPct === null ? 'Complete estimate' : displayMarginPct > 0 ? 'Above break-even' : displayMarginPct < 0 ? 'Below break-even' : 'At break-even'}
+                                        </p>
+                                    </div>
+                                    <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2">
+                                        <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.break_even')}>Break-even price / m</p>
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.45rem,3.5vw,1.9rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
+                                            {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
+                                                ? `₹${costingResult.breakEvenPricePerM.toFixed(2)}`
+                                                : '—'}
+                                        </p>
+                                        <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]" title={t('estimator.price_helpers.break_even_hint')}>Minimum at 0% margin</p>
+                                    </div>
+                                </div>
+
+                                {hasOrderQty && (
+                                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[var(--color-hairline)]/80 pt-3">
+                                        <span className="text-[11px] font-semibold text-[var(--color-muted)]">Expected profit</span>
+                                        <span className={`font-mono text-[14px] font-semibold tabular-nums ${costingResult.expectedProfitTotal != null && costingResult.expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
+                                            {hasValidCostResult && costingResult.quoteIsValid && costingResult.expectedProfitTotal != null
+                                                ? `₹${costingResult.expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                : '—'}
+                                        </span>
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">for {Number(state.orderQuantityM).toLocaleString('en-IN')} m</span>
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <div className="flex h-2.5 overflow-hidden rounded-full bg-[var(--color-surface-soft)]" aria-label="Cost composition">
+                                        {costSegments.length > 0 ? costSegments.map(segment => (
+                                            <div
+                                                key={segment.label}
+                                                className={`${segment.color} min-w-[3px] border-r border-white last:border-r-0`}
+                                                style={{ width: `${Math.max(3, (segment.value / costStackTotal) * 100)}%` }}
+                                            />
+                                        )) : (
+                                            <div className="w-full bg-[var(--color-hairline)]" />
+                                        )}
+                                    </div>
+                                    <div className="flex gap-x-4 gap-y-1 overflow-x-auto pb-1 text-[11px] font-semibold no-scrollbar">
+                                        {(costSegments.length > 0 ? costSegments : [{ label: 'Warp Yarn', value: 0, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' }]).map(segment => (
+                                            <span key={segment.label} className={`inline-flex shrink-0 items-center gap-1.5 ${segment.text}`}>
+                                                <span className={`h-2 w-2 rounded-full ${segment.color}`} />
+                                                {segment.label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-[var(--color-hairline)]/80 pt-3">
+                                    <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Material context</span>
+                                    <span className="max-w-full break-words text-[12px] font-semibold text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span>
+                                    <span className="text-[11px] font-medium text-[var(--color-muted)]">· Warp yarn {state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · Weft yarn {state.weftRows.length} component{state.weftRows.length === 1 ? '' : 's'}</span>
+                                </div>
+                            </div>
+
                             <CostingAssumptionsSummary
                                 result={costingResult}
                                 isStandaloneCostingSession={isStandaloneCostingSession}
+                                expanded={assumptionsExpanded}
+                                onToggle={toggleAssumptions}
                             />
                         </div>
 
@@ -3319,7 +3437,7 @@ export default function EstimatorClient({
             </div>
 
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
-            <div className={`${pageShellClass} space-y-7`}>
+            <div id="estimator-form-panel" className={`${pageShellClass} space-y-7`}>
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <section className="overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_8px_24px_rgba(30,37,40,0.055)]">
@@ -3468,9 +3586,9 @@ export default function EstimatorClient({
                         canUseProduction={canUseProduction}
                         widthUnit={widthUnit}
                         onWidthUnitChange={setWidthUnit}
-                        onOpenDetailed={() => setEntryMode('detailed')}
+                        onOpenDetailed={() => handleEntryModeChange('detailed')}
                         onOpenOverheadDetails={() => {
-                            setEntryMode('detailed')
+                            handleEntryModeChange('detailed')
                             setShowAdvancedOverhead(true)
                         }}
                         onOverheadModeChange={handleOverheadModeChange}
