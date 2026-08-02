@@ -43,8 +43,8 @@ The migration dry-run identified only the Sprint 10 migration. The linked produc
 | Check | Evidence |
 | --- | --- |
 | Linked Supabase migration | `20260802121858_sprint10_saved_costing_library_state.sql` applied with `supabase db push --linked --yes`; migration ledger, index, and both RPC signatures verified remotely. |
-| Merged `main` commit | PR [#61](https://github.com/Rajp2002/TextileAccounting/pull/61) merged at commit `92f13fd7a48938d82710d6fcf7b98d8051b4c9d9`. |
-| Production deployment | Vercel deployment `dpl_72pe5B4Kx1mmxxkGb4tawGXC55Zb` is Ready and aliased to [textile-accounting.vercel.app](https://textile-accounting.vercel.app). |
+| Merged `main` commit | Sprint 10 implementation PR [#61](https://github.com/Rajp2002/TextileAccounting/pull/61) merged at `92f13fd7a48938d82710d6fcf7b98d8051b4c9d9`; final evidence PR [#62](https://github.com/Rajp2002/TextileAccounting/pull/62) merged at `6a0ac680dc56ced627dea12e46746b941d645f69`. |
+| Production deployment | Final clean-main Vercel deployment `dpl_7ZLSrhcNbqa7piVQmHFVx9AMAvPs` is Ready and aliased to [textile-accounting.vercel.app](https://textile-accounting.vercel.app). |
 | Post-deploy smoke check | Production `/` and `/login` returned HTTP 200; deployment inspection reported Ready; no recent error logs were found. |
 
 ## Historical-economics acceptance test
