@@ -71,6 +71,7 @@ import {
     type DepreciationMeta,
     type FactorySections,
     type EstimatorV3Totals,
+    type CostingResultSnapshot,
 } from '@/lib/estimator'
 import { LoomConfigSection } from './LoomConfigSection'
 import {
@@ -955,6 +956,99 @@ function formatCalculatedMoney(value: number, valid: boolean, suffix = '') {
     return valid ? `₹${value.toFixed(2)}${suffix}` : '—'
 }
 
+function formatSignedRupees(value: number | null | undefined): string {
+    if (value == null || Math.abs(value) < 0.005) return '₹0.00'
+    return `${value > 0 ? '+' : '−'}₹${Math.abs(value).toFixed(2)}`
+}
+
+function assumptionSourceLabel(source: string): string {
+    switch (source) {
+        case 'direct_rate': return 'Direct rate entered'
+        case 'monthly_expenses': return 'Monthly expenses ÷ output'
+        case 'manual_input': return 'Estimator input'
+        case 'not_set': return 'Not set'
+        default: return 'Saved snapshot'
+    }
+}
+
+function CostingAssumptionsSummary({
+    result,
+    isStandaloneCostingSession,
+}: {
+    result: CostingResultSnapshot
+    isStandaloneCostingSession: boolean
+}) {
+    const assumptions = result.assumptions
+    if (!assumptions) return null
+    const overhead = assumptions.overhead
+    const quantity = assumptions.quantity.activeRate
+    const hasQuantity = quantity != null && quantity > 0
+
+    return (
+        <section
+            data-testid="costing-assumptions-summary"
+            aria-label="Costing assumptions used in this price"
+            className="mt-4 border-t border-[var(--color-hairline)] pt-3"
+        >
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-body)]">
+                    Assumptions used in this price
+                </p>
+                <p className="text-[10px] font-medium text-[var(--color-muted)]">
+                    Canonical costing snapshot · {result.calculationVersion}
+                </p>
+            </div>
+
+            <div className="mt-2 overflow-x-auto rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)]">
+                <div className="grid min-w-[620px] grid-cols-[1.2fr_1fr_1fr_1.1fr] gap-2 border-b border-[var(--color-hairline)] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">
+                    <span>Overhead source</span>
+                    <span>Active rate</span>
+                    <span>Reference rate</span>
+                    <span>Price impact</span>
+                </div>
+                <div className="grid min-w-[620px] grid-cols-[1.2fr_1fr_1fr_1.1fr] gap-2 px-3 py-2.5 text-[11px]">
+                    <div>
+                        <p className="font-semibold text-[var(--color-ink)]">{assumptionSourceLabel(overhead.source)}</p>
+                        <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{overhead.mode === 'direct' ? 'Direct mode is active' : 'Monthly mode is active'}</p>
+                    </div>
+                    <p className="font-mono font-semibold text-[var(--color-ink)]">₹{overhead.activeRatePerM.toFixed(2)}/m</p>
+                    <p className="font-mono font-semibold text-[var(--color-muted)]">
+                        {overhead.referenceRatePerM == null ? '—' : `₹${overhead.referenceRatePerM.toFixed(2)}/m`}
+                    </p>
+                    <div>
+                        <p className="font-mono font-semibold text-[var(--color-ink)]">{formatSignedRupees(overhead.priceImpactPerM)}/m cost</p>
+                        <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{formatSignedRupees(overhead.quotePriceImpactPerM)}/m quote vs reference</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Commission</p>
+                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">{result.commissionPct.toFixed(2)}%</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.commission.source)} · {formatSignedRupees(assumptions.commission.priceImpactPerM)}/m landed cost</p>
+                </div>
+                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Transport</p>
+                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">₹{result.transportPerM.toFixed(2)}/m</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.transport.source)} · {formatSignedRupees(assumptions.transport.priceImpactPerM)}/m impact</p>
+                </div>
+                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Target margin</p>
+                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">{result.targetMarginPct.toFixed(2)}%</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.margin.source)} · {formatSignedRupees(assumptions.margin.priceImpactPerM)}/m above break-even</p>
+                </div>
+                <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2.5 py-2">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">Quantity</p>
+                    <p className="mt-1 font-mono text-[12px] font-semibold text-[var(--color-ink)]">{hasQuantity ? `${quantity.toLocaleString('en-IN')} m` : 'Not set'}</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">{assumptionSourceLabel(assumptions.quantity.source)} · {isStandaloneCostingSession ? 'Optional; per-metre price unchanged' : 'Required before saving a quote'}</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">₹0.00/m price impact; changes order totals</p>
+                </div>
+            </div>
+        </section>
+    )
+}
+
 function CapacityMetricField({
     label, value, unit, onChange, hint,
 }: {
@@ -1112,9 +1206,15 @@ function QuickCostingView({
     state,
     dispatch,
     totals,
+    costingResult,
     hasValidCostResult,
     qualityLabel,
     setQualityLabel,
+    partyName,
+    setPartyName,
+    partyNames,
+    partyHint,
+    showPartyField,
     qualityLocked,
     canUseProduction,
     widthUnit,
@@ -1127,9 +1227,15 @@ function QuickCostingView({
     state: EstimateState
     dispatch: React.Dispatch<Action>
     totals: EstimatorV3Totals
+    costingResult: CostingResultSnapshot
     hasValidCostResult: boolean
     qualityLabel: string
     setQualityLabel: (value: string) => void
+    partyName: string
+    setPartyName: (value: string) => void
+    partyNames: string[]
+    partyHint: { quality_label: string; quote_price_per_meter: number; created_at: string } | null
+    showPartyField: boolean
     qualityLocked: boolean
     canUseProduction: boolean
     widthUnit: 'cm' | 'inch'
@@ -1164,6 +1270,29 @@ function QuickCostingView({
             <EstimatorCard accent="neutral">
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                    {showPartyField && (
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <Label className="text-[10px] font-bold uppercase text-slate-500">Party / Customer</Label>
+                            <Input
+                                list="quick-estimator-party-options"
+                                value={partyName}
+                                onChange={event => setPartyName(event.target.value)}
+                                placeholder="e.g. Sundaram Textiles"
+                                className="h-11 border-slate-200 font-bold"
+                            />
+                            <datalist id="quick-estimator-party-options">
+                                {partyNames.map(name => <option key={name} value={name} />)}
+                            </datalist>
+                            <p className="text-[10px] font-medium leading-normal text-slate-400">Required for a Full Suite quotation or party order.</p>
+                            {partyHint && (
+                                <p className="flex items-center gap-1 text-[10px] text-slate-500">
+                                    <span className="text-blue-500">💡</span>
+                                    Last quotation: <span className="font-bold text-slate-700">₹{partyHint.quote_price_per_meter.toFixed(2)}/m</span>
+                                    {' '}for <span className="font-medium">{partyHint.quality_label}</span>
+                                </p>
+                            )}
+                        </div>
+                    )}
                     <div className="space-y-1.5 sm:col-span-2">
                         <Label className="text-[10px] font-bold uppercase text-slate-500">Fabric quality name — REQUIRED</Label>
                         <Input
@@ -1331,16 +1460,16 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="overhead">
-                <SectionHeader title="Factory expenses" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={totals.overheadPerM} valid={hasValidCostResult} />} />
+                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
-                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">I know my factory cost per metre</p>
-                            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use a trusted ₹/m input.</p>
+                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
+                            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Enter the rate used in this costing; it is never inferred.</p>
                         </button>
                         <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => onOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
-                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">Calculate from monthly expenses</p>
-                            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use saved factory expenses.</p>
+                            <p className="text-[12px] font-semibold text-[var(--color-ink)]">Monthly expenses ÷ output</p>
+                            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use saved monthly expenses ÷ actual output.</p>
                         </button>
                     </div>
                     {state.overheadMode === 'direct' ? (
@@ -1354,7 +1483,14 @@ function QuickCostingView({
                     {directRateMissing && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Enter a direct rate greater than ₹0/m before saving.</p>}
                     <div className="flex items-center justify-between rounded-[10px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                         <span className="text-[11px] font-medium text-[var(--color-muted)]">Used in this costing</span>
-                        <span className="font-mono text-base font-semibold text-[var(--color-risk-red)]">{formatCalculatedMoney(totals.overheadPerM, hasValidCostResult, '/m')}</span>
+                        <span className="font-mono text-base font-semibold text-[var(--color-risk-red)]">{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</span>
+                    </div>
+                    <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 py-2 text-[10px] text-[var(--color-muted)]">
+                        <span className="font-semibold text-[var(--color-body)]">Source:</span> {assumptionSourceLabel(costingResult.overheadSource)}
+                        {' · '}
+                        <span className="font-semibold text-[var(--color-body)]">Reference:</span> {costingResult.overheadReferencePerM == null ? 'not entered' : `₹${costingResult.overheadReferencePerM.toFixed(2)}/m`}
+                        {' · '}
+                        <span className="font-semibold text-[var(--color-body)]">Impact:</span> {formatSignedRupees(costingResult.overheadPriceImpactPerM)}/m cost
                     </div>
                 </CardContent>
             </EstimatorCard>
@@ -1834,13 +1970,11 @@ export default function EstimatorClient({
             // Switching away from a direct rate must be explicit in state so
             // the calculation engine cannot silently keep using the old rate.
             dispatch({ type: 'SET', field: 'overheadOverridePerM', value: null })
-            return
         }
-        if (state.overheadOverridePerM == null || state.overheadOverridePerM <= 0) {
-            const suggestedRate = totals.overheadPerM > 0 ? Number(totals.overheadPerM.toFixed(2)) : null
-            dispatch({ type: 'SET', field: 'overheadOverridePerM', value: suggestedRate })
-        }
-    }, [state.overheadOverridePerM, totals.overheadPerM])
+        // Direct mode deliberately leaves the field empty until Rajesh enters
+        // a rate. A monthly calculation is a reference, never an auto-filled
+        // direct assumption.
+    }, [])
     const handleSuggestOutput = useCallback((dailyOutputM: number) => {
         dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: dailyOutputM })
         if (state.overheadMode === 'monthly_expenses' && state.loomCount > 0 && state.monthlyWorkingDays > 0) {
@@ -2471,7 +2605,6 @@ export default function EstimatorClient({
         )
     }
 
-    const { orderQuote } = totals
     const hasOrderQty    = !!(state.orderQuantityM && state.orderQuantityM > 0)
     const showPartyField = canUseProduction && !isStandaloneCostingSession && mode !== 'market'
     const requiresCommercialContext = !isStandaloneCostingSession
@@ -2485,7 +2618,7 @@ export default function EstimatorClient({
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
     const displayMarginPct = hasValidCostResult
         && hasOrderQty
-        && orderQuote?.isValid
+        && costingResult.quoteIsValid
         && Number.isFinite(costingResult.actualMarginPct)
         ? costingResult.actualMarginPct
         : null
@@ -2494,7 +2627,7 @@ export default function EstimatorClient({
         { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
         { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
         { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
-        { label: 'Overhead', value: totals.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
+        { label: 'Overhead', value: costingResult.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
         { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
     ].filter(segment => segment.value > 0) : []
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
@@ -2510,7 +2643,7 @@ export default function EstimatorClient({
                         ? 'Enter the Customer (Party) before preparing a quotation.'
                         : requiresCommercialContext && !hasOrderQty
                             ? 'Enter the quantity for this Cost Estimate before preparing a quotation.'
-                            : requiresCommercialContext && !orderQuote?.isValid
+                            : requiresCommercialContext && !costingResult.quoteIsValid
                                 ? 'Review the quotation assumptions before saving.'
                                 : null
     const auditLayerRows = [
@@ -2730,7 +2863,7 @@ export default function EstimatorClient({
                                         {mode === 'market' ? 'Target selling price' : t('estimator.price_helpers.suggested_selling_price')}
                                     </p>
                                     <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[32px] 2xl:text-[22px]">
-                                        {hasValidCostResult && orderQuote?.isValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                                        {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
                                     </p>
                                     <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">per metre</p>
                                 </div>
@@ -2753,7 +2886,7 @@ export default function EstimatorClient({
                                     <div className="min-w-0 border-l-0 border-[var(--color-hairline)] xl:border-l xl:pl-4 2xl:pl-2">
                                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Expected profit</p>
                                         <p className="font-mono text-[24px] font-semibold leading-none text-[var(--color-factory-green)] 2xl:text-[20px]">
-                                            {hasValidCostResult && orderQuote?.isValid
+                                            {hasValidCostResult && costingResult.quoteIsValid
                                                 ? `₹${(costingResult.expectedProfitTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                                 : '—'}
                                         </p>
@@ -2785,6 +2918,10 @@ export default function EstimatorClient({
                                     ))}
                                 </div>
                             </div>
+                            <CostingAssumptionsSummary
+                                result={costingResult}
+                                isStandaloneCostingSession={isStandaloneCostingSession}
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end 2xl:w-[520px]">
@@ -2797,10 +2934,10 @@ export default function EstimatorClient({
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={handleStartPartyOrder}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid)
                                             ? 'Complete party, quality, quantity, and cost result first.'
                                             : undefined
                                         }
@@ -2818,10 +2955,10 @@ export default function EstimatorClient({
                                             ? 'col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1'
                                             : 'h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]'}
                                         onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
-                                        disabled={savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !orderQuote?.isValid)}
+                                        disabled={savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid)}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
-                                        title={firstCostingReadinessMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !orderQuote?.isValid))
+                                        title={firstCostingReadinessMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid))
                                             ? (requiresCommercialContext ? 'Complete customer, quality, quantity, and cost result first.' : 'Complete quality and cost inputs first.')
                                             : undefined)}
                                     >
@@ -2858,7 +2995,7 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote', 'draft')}
-                                        disabled={savingQuote || !orderQuote?.isValid}
+                                        disabled={savingQuote || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
                                     >
@@ -2888,10 +3025,10 @@ export default function EstimatorClient({
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => handleSaveQuote('market')}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid)
                                             ? 'Complete Fabric Quality, quantity, and Cost Estimate first.'
                                             : undefined
                                         }
@@ -2907,7 +3044,7 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote')}
-                                        disabled={savingQuote || !orderQuote?.isValid}
+                                        disabled={savingQuote || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
                                     >
@@ -3005,7 +3142,7 @@ export default function EstimatorClient({
                         </p>
                     )}
 
-                    {(!canUseProduction || hasOrderQty) && orderQuote && (
+                    {(!canUseProduction || hasOrderQty) && costingResult.quoteIsValid && (
                         <div className="mt-4 flex items-center gap-3 border-t border-[var(--color-hairline)] pt-3">
                             <div className="shrink-0">
                                 <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.margin')}</p>
@@ -3173,9 +3310,15 @@ export default function EstimatorClient({
                         state={state}
                         dispatch={dispatch}
                         totals={totals}
+                        costingResult={costingResult}
                         hasValidCostResult={hasValidCostResult}
                         qualityLabel={qualityLabel}
                         setQualityLabel={setQualityLabel}
+                        partyName={partyName}
+                        setPartyName={setPartyName}
+                        partyNames={partyNames}
+                        partyHint={partyHint}
+                        showPartyField={showPartyField}
                         qualityLocked={Boolean(appliedTemplate)}
                         canUseProduction={canUseProduction}
                         widthUnit={widthUnit}
@@ -3792,7 +3935,7 @@ export default function EstimatorClient({
                         step={6}
                         badgeContent={
                             <div className="flex items-center gap-2">
-                                <SectionCostPill value={totals.overheadPerM} valid={hasValidCostResult} />
+                                <SectionCostPill value={costingResult.overheadPerM} valid={hasValidCostResult} />
                             </div>
                         }
                     />
@@ -3806,8 +3949,8 @@ export default function EstimatorClient({
 
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => handleOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
-                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">I know my factory cost per metre</p>
-                                    <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Use one trusted ₹/m factory rate.</p>
+                                    <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
+                                    <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Enter the rate used in this costing; it is never inferred.</p>
                                 </button>
                                 <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => handleOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
                                     <p className="text-[12px] font-semibold text-[var(--color-ink)]">Calculate from monthly expenses</p>
@@ -3855,7 +3998,7 @@ export default function EstimatorClient({
                                 <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3.5 py-3">
                                     <p className="text-[12px] font-medium text-[var(--color-ink)]">Monthly expenses are active</p>
                                     <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Saved rent, power, salaries, and other expenses are divided by actual monthly output. Expand the section below to edit them.</p>
-                                    <p className="mt-2 text-[11px] font-semibold text-[var(--color-factory-green)]">Current calculated overhead: {formatCalculatedMoney(totals.overheadPerM, hasValidCostResult, '/m')}</p>
+                                    <p className="mt-2 text-[11px] font-semibold text-[var(--color-factory-green)]">Current calculated overhead: {formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</p>
                                 </div>
                             )}
                         </div>
@@ -4163,7 +4306,7 @@ export default function EstimatorClient({
                                                         </div>
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                                                             <p className="text-[10px] text-[var(--color-muted)]">Your actual cost</p>
-                                                            <p className={`text-base font-semibold ${totals.overheadPerM > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>{formatCalculatedMoney(totals.overheadPerM, hasValidCostResult, '/m')}</p>
+                                                            <p className={`text-base font-semibold ${costingResult.overheadPerM > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</p>
                                                         </div>
                                                     </div>
                                                     {isZeroConfig && (
@@ -4189,7 +4332,7 @@ export default function EstimatorClient({
                                         <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
                                             <div>
                                                 <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-600/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
-                                                <p className="text-2xl font-semibold font-mono text-rose-700 leading-none">{formatCalculatedMoney(totals.overheadPerM, hasValidCostResult)}</p>
+                                                <p className="text-2xl font-semibold font-mono text-rose-700 leading-none">{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult)}</p>
                                                 {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
                                                     <p className="text-[9px] text-amber-600 font-bold mt-0.5">⚡ direct rate selected</p>
                                                 )}
@@ -4379,7 +4522,7 @@ export default function EstimatorClient({
                 <EstimatorCard accent="weft">
                     <SectionHeader title={!canUseProduction ? t('estimator.simulation.base_title') : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                             <NumField
                                 label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
                                 value={state.orderQuantityM}
@@ -4390,12 +4533,9 @@ export default function EstimatorClient({
                                 attentionWhenEmpty={requiresCommercialContext}
                                 hint={requiresCommercialContext ? t('estimator.simulation.quantity_hint') : 'Optional for a saved costing; enter it when you want order-level profit.'}
                             />
-                            {(!canUseProduction || hasOrderQty) && (
-                                <>
-                                    <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} />
-                                    <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} />
-                                </>
-                            )}
+                            <NumField label="Target margin" value={state.profitPct} onChange={v => dispatch({ type: 'SET', field: 'profitPct', value: v ?? 0 })} unit="%" step={0.5} />
+                            <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} />
+                            <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} />
                         </div>
                     </CardContent>
                 </EstimatorCard>

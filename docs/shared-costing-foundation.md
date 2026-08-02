@@ -4,6 +4,30 @@
 
 Base and Full Suite use one estimator, calculation engine, rate library, snapshot format, comparison model, and export system. Full Suite adds commercial and production capabilities around that foundation; upgrading never changes the meaning of an existing saved estimate.
 
+## Costing Trust Foundation (Sprint 8)
+
+The canonical costing path is:
+
+`EstimateState` → `calcFullTotals` → `buildCostingResult` → UI, export, and server persistence.
+
+Quick and Detailed Costing must consume the same `CostingResultSnapshot`. The snapshot records the active pricing assumptions, including:
+
+| Assumption | What is explicit | Price meaning |
+|---|---|---|
+| Overhead mode | Direct rate or monthly expenses ÷ output | Determines the active overhead ₹/m |
+| Overhead source | Entered direct rate or saved monthly expenses | Explains where the active rate came from |
+| Reference rate | Comparison value when available | Transparency only; never an implicit override |
+| Commission | Percentage | Landed-cost impact per metre |
+| Transport | ₹/m | Direct per-metre impact |
+| Target margin | Percentage | Quote price above break-even |
+| Quantity | Metres, or explicitly not set | Changes order totals, not per-metre price |
+
+Direct overhead is invalid until an explicit positive rate is entered. Monthly mode is invalid until the saved expense basis and output can produce a valid rate. The UI shows source, active rate, reference rate, and price impact before a save or quote action.
+
+Base standalone costings retain their `record_kind = 'costing'` semantics and may omit party and quantity. Full Suite quotation and party-order flows require their commercial context. All persisted scalar costing fields are derived from the same canonical snapshot stored in `costing_result_snapshot`.
+
+Sprint 8 changes application behavior and snapshot persistence only; it adds no database migration.
+
 ## Durable record contexts
 
 Every `estimator_quotes` snapshot has a `record_kind`:
