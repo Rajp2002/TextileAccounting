@@ -30,6 +30,19 @@ Full Suite Quick Costing includes Party / Customer in the same context as the qu
 
 The same canonical result snapshot is persisted alongside the recipe state, so scalar quote fields and the displayed result cannot silently diverge. Historical snapshots remain readable through the tolerant snapshot parser. Sprint 8 adds no schema migration.
 
+## Sprint 9 — Base editor, draft, and reset reliability
+
+Sprint 9 makes editing and saving a costing predictable for Rajesh:
+
+- **New Quality / Reset** rebuilds one clean baseline from the current factory profile. It clears the active quality/template lineage, party and instructions, transient warnings, dialogs, suggestions, and recoverable draft state.
+- Warp and weft rows have explicit **Add component** and **Remove** controls. A newly added blank row is visible and required, but blank component rows are hard-blocked from saving until they are removed or completed.
+- A warning review is resumable. After Rajesh chooses **Review and save**, the original save action continues automatically; he does not need to press Save again.
+- **Save Costing** creates an internal costing snapshot. **Save New Version** creates a new immutable costing snapshot while preserving earlier economics. **Save as New Quality** opens a separate reusable-quality dialog and cancelling it restores the prior quality lineage without mutation.
+- Base standalone costing keeps quantity and party optional. Quantity changes order totals when provided; it does not change the per-metre price.
+- Programmatic reset, draft restore, and successful save suppress autosave until a real user edit occurs, so stale fields cannot silently reappear as a fresh draft.
+
+Sprint 9 adds no schema migration. It continues to use the existing immutable costing revision RPC and database trigger protections.
+
 ## User Workflow
 
 1. Owner opens `/owner/estimator`.
@@ -37,13 +50,14 @@ The same canonical result snapshot is persisted alongside the recipe state, so s
 3. Owner enters fabric quality details: warp rows, weft rows, tape length, picks, denier, yarn rate, GST, shortage, and crimp.
 4. Owner configures loom assumptions: loom type, RPM, power, hours per shift, and sizing mode.
 5. Owner reviews cost stack and scenarios.
-6. Owner saves a reusable fabric template or updates an existing one.
-7. Owner enters party name, quality label, warp/weft instructions, meters, and margin.
-8. Owner saves the quote: chooses **Save Quote** (saves as draft) or **Save & Accept** (immediately locks the costing).
-9. Owner manages quote status in `/owner/quotes`: draft, accepted, or rejected (manual 'sent' step is collapsed from the UI but logged silently in database audit triggers). Accepting a draft quote prompts a locking confirmation dialog.
-10. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state. The UI displays a warning banner to prevent stale draft collisions.
-11. Owner converts an accepted quote into an active order by clicking "Create Active Order" in Quote History.
-12. Owner can create a market run from estimator market mode.
+6. Owner reviews warnings once, then chooses **Save Costing**, **Save New Version**, or **Save as New Quality** according to the intended record.
+7. Owner saves a reusable fabric template or updates an existing one.
+8. Owner enters party name, quality label, warp/weft instructions, meters, and margin.
+9. Owner saves the quote: chooses **Save Quote** (saves as draft) or **Save & Accept** (immediately locks the costing).
+10. Owner manages quote status in `/owner/quotes`: draft, accepted, or rejected (manual 'sent' step is collapsed from the UI but logged silently in database audit triggers). Accepting a draft quote prompts a locking confirmation dialog.
+11. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state. The UI displays a warning banner to prevent stale draft collisions.
+12. Owner converts an accepted quote into an active order by clicking "Create Active Order" in Quote History.
+13. Owner can create a market run from estimator market mode.
 
 ## Existing Workflow Translation
 
@@ -78,6 +92,7 @@ Weavly workflow:
 - Fixed workers can be merged into overhead items.
 - Scenario analysis helps the owner see sensitivity to margin/price assumptions.
 - Quote history lets the owner filter by status and restore or convert records.
+- Reset and cancelled dialogs do not mutate saved quality or costing history.
 
 ## Data and Code
 
@@ -88,6 +103,8 @@ Weavly workflow:
   - `startPartyOrderFromEstimator` — fast-path: creates accepted quote then immediately calls `executeQuoteConversion`.
   - `getActiveProductionTargets` — returns linkable orders/runs for the loom assignment picker.
 - `app/(dashboard)/owner/quotes/QuotesClient.tsx`
+- `hooks/useAutosave.ts`
+- `lib/estimator-validation.ts`
 - `lib/quotes/convert-accepted-quote-to-order.ts`
   - `executeQuoteConversion` — shared service: validates quote, calls the RPC, rehydrates estimate state, upserts `order_yarn_requirements`.
   - `hydrateEstimateStateFromQuote` — reconstructs a full `EstimateState` from a stored quote row for yarn requirement computation.
@@ -113,3 +130,5 @@ Weavly workflow:
 - Quote snapshots must remain stable after template or factory-profile edits.
 - The first-time owner path should remain simple despite the advanced controls.
 - The `convert_accepted_quote_to_order` Supabase RPC returns a table with a column named `order_id`. Any UPDATE inside the function must qualify `estimator_quotes.order_id` explicitly to avoid PostgreSQL ambiguity errors.
+- A blank yarn component is an editor error, never a saveable economic assumption.
+- Historical costing versions must remain immutable after a quality, rate book, or factory-profile change.

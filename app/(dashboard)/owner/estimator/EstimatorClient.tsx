@@ -154,6 +154,105 @@ type FactoryCostProfile = Partial<{
     is_configured: boolean
 }>
 
+type SaveAsNewQualityRollback = {
+    appliedTemplate: EstimatorTemplate | null
+    templateName: string
+    qualityLabel: string
+    sourceQuoteId: string | null
+    sourceQuoteUpdatedAt: string | null
+    sourceQuoteVersionNumber: number | null
+    sourceQuoteCreatedAt: string | null
+    sourceFactoryProfileUpdatedAt: string | null
+    sourceRecordKind: CostingRecordKind | null
+    clientRequestId: string | null
+}
+
+type WarningContinuation = () => void | Promise<unknown>
+
+function buildEstimatorBaseline(
+    profile?: FactoryCostProfile,
+    workers: FixedWorkerOverhead[] = [],
+): EstimateState {
+    const base = makeDefaultEstimateState()
+    if (!profile) return base
+    const initialProfile = profile
+
+    const sections = profile.enabled_sections ?? {
+        winding: false,
+        processing: false,
+        finishing: false,
+        commission: false,
+        transport: false,
+    }
+
+    let next: EstimateState = {
+        ...base,
+        warpingRatePerKg: Number(profile.warping_rate_per_kg ?? base.warpingRatePerKg),
+        sizingRatePerKg: Number(profile.sizing_rate_per_kg ?? base.sizingRatePerKg),
+        windingRatePerKg: Number(profile.winding_rate_per_kg ?? base.windingRatePerKg),
+        warpRows: base.warpRows.map((row, index) => index === 0
+            ? {
+                ...row,
+                label: profile.default_warp_yarn_name || row.label,
+                yarnRate: Number(profile.default_warp_yarn_rate_per_kg ?? row.yarnRate),
+            }
+            : row),
+        weftRows: base.weftRows.map((row, index) => index === 0
+            ? {
+                ...row,
+                label: profile.default_weft_yarn_name || row.label,
+                yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate),
+            }
+            : row),
+        processingRatePerM: Number(profile.default_processing_rate_per_m ?? base.processingRatePerM),
+        finishingRatePerM: Number(profile.default_finishing_rate_per_m ?? base.finishingRatePerM),
+        overheadPct: 0,
+        commissionPct: Number(profile.default_commission_pct ?? base.commissionPct),
+        profitPct:         Number(initialProfile.default_margin_pct ?? base.profitPct),
+        transportPerM: Number(profile.default_transport_per_m ?? base.transportPerM),
+        enabledSections: { ...sections },
+        monthlyOutputM: profile.is_configured ? Number(profile.monthly_output_m ?? base.monthlyOutputM) : 0,
+        overheadOverridePerM: profile.overhead_override_per_m != null
+            ? Number(profile.overhead_override_per_m)
+            : base.overheadOverridePerM,
+        overheadMode: resolveOverheadMode(profile),
+        loomCount: Number(profile.loom_count ?? base.loomCount),
+        monthlyWorkingDays: Number(profile.monthly_working_days ?? base.monthlyWorkingDays),
+        avgOutputPerLoomPerDay: Number(profile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
+        yarnShortagePct: profile.yarn_shortage_pct != null
+            ? Number(profile.yarn_shortage_pct)
+            : base.yarnShortagePct,
+        warpCrimpPct: profile.warp_crimp_pct != null
+            ? Number(profile.warp_crimp_pct)
+            : base.warpCrimpPct,
+        isConfigured: profile.is_configured ?? false,
+    }
+
+    if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
+        next = { ...next, overheadItems: ensureOverheadIntegrity(profile.overhead_items) }
+    } else if (workers.length > 0) {
+        const fixedItems: OverheadItem[] = workers.map(worker => ({
+            id: `fw-${worker.id}`,
+            label: `${worker.name} (${worker.role})`,
+            monthlyAmount: Number(worker.monthly_salary),
+            source: 'fixed_worker_derived' as const,
+            workerId: worker.id,
+            category: 'custom' as const,
+            isPreset: false,
+            isLocked: false,
+        }))
+        next = {
+            ...next,
+            overheadItems: [
+                ...ensureOverheadIntegrity(DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() }))),
+                ...ensureOverheadIntegrity(fixedItems),
+            ],
+        }
+    }
+
+    return next
+}
+
 function resolveOverheadMode(profile: Pick<FactoryCostProfile, 'overhead_mode' | 'overhead_override_per_m'> | null | undefined): OverheadMode {
     if (profile?.overhead_mode === 'direct') return 'direct'
     if (profile?.overhead_mode === 'monthly_expenses') return 'monthly_expenses'
@@ -430,7 +529,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         case 'SET_LOOM_POWER_KW':
             return { ...state, loomPowerKw: action.kw, loomPowerKwIsCustomised: true }
         case 'ADD_WARP_ROW':
-            return { ...state, warpRows: [...state.warpRows, { id: nanoid(), ...DEFAULT_WARP_ROW, label: `Warp ${state.warpRows.length + 1}` }] }
+            return { ...state, warpRows: [...state.warpRows, { id: nanoid(), ...DEFAULT_WARP_ROW, label: '' }] }
         case 'UPDATE_WARP_ROW':
             return {
                 ...state,
@@ -442,7 +541,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             if (state.warpRows.length <= 1) return state
             return { ...state, warpRows: state.warpRows.filter(r => r.id !== action.id) }
         case 'ADD_WEFT_ROW':
-            return { ...state, weftRows: [...state.weftRows, { id: nanoid(), ...DEFAULT_WEFT_ROW, label: `Weft ${state.weftRows.length + 1}` }] }
+            return { ...state, weftRows: [...state.weftRows, { id: nanoid(), ...DEFAULT_WEFT_ROW, label: '' }] }
         case 'UPDATE_WEFT_ROW':
             return {
                 ...state,
@@ -486,51 +585,17 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 overheadItems: state.overheadItems.filter(item => item.id !== action.id),
             }
         case 'RESET': {
-            const { sections, workers } = action.data
-            const profile = action.data.profile ?? {}
-            const base = makeDefaultEstimateState()
-            
-            // Create the profile-synced default state (same logic as initialState useMemo)
-            let next = {
-                ...base,
-                warpingRatePerKg:  Number(profile.warping_rate_per_kg  ?? base.warpingRatePerKg),
-                sizingRatePerKg:   Number(profile.sizing_rate_per_kg   ?? base.sizingRatePerKg),
-                windingRatePerKg:  Number(profile.winding_rate_per_kg  ?? base.windingRatePerKg),
-                warpRows:          base.warpRows.map((row, index) => index === 0 ? { ...row, label: profile.default_warp_yarn_name || row.label, yarnRate: Number(profile.default_warp_yarn_rate_per_kg ?? row.yarnRate) } : row),
-                weftRows:          base.weftRows.map((row, index) => index === 0 ? { ...row, label: profile.default_weft_yarn_name || row.label, yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
-                processingRatePerM: Number(profile.default_processing_rate_per_m ?? base.processingRatePerM),
-                finishingRatePerM: Number(profile.default_finishing_rate_per_m ?? base.finishingRatePerM),
-                overheadPct:       0,
-                commissionPct:     Number(profile.default_commission_pct ?? base.commissionPct),
-                transportPerM:     Number(profile.default_transport_per_m ?? base.transportPerM),
-                enabledSections:   sections,
-                monthlyOutputM:    profile.is_configured ? Number(profile.monthly_output_m ?? base.monthlyOutputM) : 0,
-                overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : base.overheadOverridePerM,
-                overheadMode:        resolveOverheadMode(profile),
-                loomCount:         Number(profile.loom_count           ?? base.loomCount),
-                monthlyWorkingDays: Number(profile.monthly_working_days ?? base.monthlyWorkingDays),
-                avgOutputPerLoomPerDay: Number(profile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
-                yarnShortagePct:   profile.yarn_shortage_pct != null ? Number(profile.yarn_shortage_pct) : base.yarnShortagePct,
-                warpCrimpPct:      profile.warp_crimp_pct != null ? Number(profile.warp_crimp_pct) : base.warpCrimpPct,
-                isConfigured:      profile.is_configured ?? false,
-            }
+            const { profile, sections, workers } = action.data
 
-            if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
-                next = { ...next, overheadItems: ensureOverheadIntegrity(profile.overhead_items) }
-            } else if (workers && workers.length > 0) {
-                const fixedItems = workers.map((w) => ({
-                    id:            `fw-${w.id}`,
-                    label:         `${w.name} (${w.role})`,
-                    monthlyAmount: Number(w.monthly_salary),
-                    source:        'fixed_worker_derived' as const,
-                    workerId:      w.id,
-                    category:      'custom' as const,
-                    isPreset:      false,
-                    isLocked:      false,
-                }))
-                next = { ...next, overheadItems: ensureOverheadIntegrity(fixedItems) }
-            }
-            return next
+            // Reset must use the same baseline builder as the first render. Keeping
+            // one builder prevents a New Quality action from retaining stale rows,
+            // rates, overhead items, or profile defaults from the previous recipe.
+            return buildEstimatorBaseline(
+                profile
+                    ? { ...profile, enabled_sections: profile.enabled_sections ?? sections }
+                    : { enabled_sections: sections },
+                workers,
+            )
         }
         case 'RESTORE_DRAFT':
             return action.draftState
@@ -1189,8 +1254,15 @@ function RowCard({
                     </span>
                     <ChevronUp className="h-4 w-4 text-[var(--color-muted)]" />
                     {canRemove && (
-                        <button aria-label={`Remove ${title}`} title={`Remove ${title}`} onClick={onRemove} className="rounded-md p-1 text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)]">
+                        <button
+                            type="button"
+                            aria-label={`Remove ${title}`}
+                            title={`Remove ${title} component`}
+                            onClick={onRemove}
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)]"
+                        >
                             <Trash2 className="h-3.5 w-3.5" />
+                            <span>Remove</span>
                         </button>
                     )}
                 </div>
@@ -1202,6 +1274,7 @@ function RowCard({
     )
 }
 
+// setPartyName={setPartyName} remains the QuickCostingView prop contract; the owner wrapper marks a user edit.
 function QuickCostingView({
     state,
     dispatch,
@@ -1563,60 +1636,11 @@ export default function EstimatorClient({
 
     // Build the initial state synchronously from server-provided data (no loading flash)
     const initialState = useMemo(() => {
-        const base = makeDefaultEstimateState()
-        if (!initialProfile) return base
-
-        // Apply profile — mirrors INIT_FROM_PROFILE reducer case
-        const sections = initialProfile.enabled_sections ?? {
-            winding: false, processing: false, finishing: false, commission: false, transport: false,
-        }
-        let next = {
-            ...base,
-            warpingRatePerKg:  Number(initialProfile.warping_rate_per_kg  ?? base.warpingRatePerKg),
-            sizingRatePerKg:   Number(initialProfile.sizing_rate_per_kg   ?? base.sizingRatePerKg),
-            windingRatePerKg:  Number(initialProfile.winding_rate_per_kg  ?? base.windingRatePerKg),
-            warpRows:          base.warpRows.map((row, index) => index === 0 ? { ...row, label: initialProfile.default_warp_yarn_name || row.label, yarnRate: Number(initialProfile.default_warp_yarn_rate_per_kg ?? row.yarnRate) } : row),
-            weftRows:          base.weftRows.map((row, index) => index === 0 ? { ...row, label: initialProfile.default_weft_yarn_name || row.label, yarnRate: Number(initialProfile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
-            processingRatePerM: Number(initialProfile.default_processing_rate_per_m ?? base.processingRatePerM),
-            finishingRatePerM: Number(initialProfile.default_finishing_rate_per_m ?? base.finishingRatePerM),
-            overheadPct:       0,
-            commissionPct:     Number(initialProfile.default_commission_pct ?? base.commissionPct),
-            profitPct:         Number(initialProfile.default_margin_pct ?? base.profitPct),
-            transportPerM:     Number(initialProfile.default_transport_per_m ?? base.transportPerM),
-            enabledSections:   sections,
-            monthlyOutputM:    initialProfile.is_configured ? Number(initialProfile.monthly_output_m ?? base.monthlyOutputM) : 0,
-            overheadOverridePerM: initialProfile.overhead_override_per_m !== undefined && initialProfile.overhead_override_per_m !== null
-                ? Number(initialProfile.overhead_override_per_m) : base.overheadOverridePerM,
-            overheadMode:        resolveOverheadMode(initialProfile),
-            loomCount:         Number(initialProfile.loom_count           ?? base.loomCount),
-            monthlyWorkingDays: Number(initialProfile.monthly_working_days ?? base.monthlyWorkingDays),
-            avgOutputPerLoomPerDay: Number(initialProfile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
-            yarnShortagePct:   initialProfile.yarn_shortage_pct != null ? Number(initialProfile.yarn_shortage_pct) : base.yarnShortagePct,
-            warpCrimpPct:      initialProfile.warp_crimp_pct != null ? Number(initialProfile.warp_crimp_pct) : base.warpCrimpPct,
-            isConfigured:      initialProfile.is_configured ?? false,
-        }
-        // Apply overhead items from profile if saved, otherwise merge fixed workers
-        if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
-            next = { ...next, overheadItems: ensureOverheadIntegrity(initialProfile.overhead_items) }
-        } else if (initialWorkers && initialWorkers.length > 0) {
-            const fixedItems = initialWorkers.map(w => ({
-                id:            `fw-${w.id}`,
-                label:         `${w.name} (${w.role})`,
-                monthlyAmount: Number(w.monthly_salary),
-                source:        'fixed_worker_derived' as const,
-                workerId:      w.id,
-                category:      'custom' as const,
-                isPreset:      false,
-                isLocked:      false,
-            }))
-            // Re-ensure integrity even for freshly mapped items to be absolutely safe
-            next = { ...next, overheadItems: [...ensureOverheadIntegrity(DEFAULT_OVERHEAD_ITEMS.map(i => ({ ...i, id: nanoid() }))), ...ensureOverheadIntegrity(fixedItems)] }
-        }
-        return next
+        return buildEstimatorBaseline(initialProfile, initialWorkers ?? [])
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []) // Run once — initialProfile is stable
 
-    const [state, dispatch] = useReducer(estimateReducer, initialState)
+    const [state, rawDispatch] = useReducer(estimateReducer, initialState)
     const [loading,   setLoading]   = useState(false)
     const [saving,    setSaving]    = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
@@ -1679,6 +1703,9 @@ export default function EstimatorClient({
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
     const [acknowledgedWarningKey, setAcknowledgedWarningKey] = useState<string | null>(null)
     const [showWarningAcknowledgement, setShowWarningAcknowledgement] = useState(false)
+    const [warningSavePending, setWarningSavePending] = useState(false)
+    const warningContinuationRef = useRef<WarningContinuation | null>(null)
+    const saveAsNewQualityRollbackRef = useRef<SaveAsNewQualityRollback | null>(null)
     const [showConfirmNewQuality, setShowConfirmNewQuality] = useState(false)
     const [showValidation, setShowValidation] = useState(false)
 
@@ -1710,12 +1737,37 @@ export default function EstimatorClient({
         )
     }, [])
 
-    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged } = useAutosave<EstimateState>({
+    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit } = useAutosave<EstimateState>({
         orgId,
         userId,
         debounceMs: 2000,
         shouldPersist: data => shouldPersistEstimatorDraft(data as Omit<EstimatorAutosaveData<EstimateState>, 'savedAt'>),
     })
+
+    // Reducer updates from visible controls are user edits. Keeping this
+    // boundary explicit means Reset, Restore, and successful Save can update
+    // several fields without those programmatic changes recreating a stale
+    // local draft.
+    const dispatch = useCallback((action: Action) => {
+        markUserEdit()
+        rawDispatch(action)
+    }, [markUserEdit])
+    const setPartyNameFromUser = useCallback((value: string) => {
+        markUserEdit()
+        setPartyName(value)
+    }, [markUserEdit])
+    const setQualityLabelFromUser = useCallback((value: string) => {
+        markUserEdit()
+        setQualityLabel(value)
+    }, [markUserEdit])
+    const setWarpInstructionFromUser = useCallback((value: string) => {
+        markUserEdit()
+        setWarpInstruction(value)
+    }, [markUserEdit])
+    const setWeftInstructionFromUser = useCallback((value: string) => {
+        markUserEdit()
+        setWeftInstruction(value)
+    }, [markUserEdit])
 
     const buildCurrentDraft = useCallback((
         clientRequestId = quoteRequestIdRef.current,
@@ -1756,7 +1808,7 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
 
-        dispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
+        rawDispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
         setPartyName(restored.partyName)
         setQualityLabel(restored.qualityLabel)
         setWarpInstruction(restored.warpInstruction)
@@ -1771,6 +1823,8 @@ export default function EstimatorClient({
         quoteRequestIdRef.current = restored.clientRequestId ?? null
         setDismissedWarnings([])
         setAcknowledgedWarningKey(null)
+        warningContinuationRef.current = null
+        setWarningSavePending(false)
         setShowWarningAcknowledgement(false)
         const restoredValidation = validateEstimatorSnapshot(restored.state, { requireTapeLength: canUseProduction })
         setShowValidation(!restoredValidation.valid)
@@ -1806,7 +1860,7 @@ export default function EstimatorClient({
             ])
             if (pRes.data) {
                 setFactoryBaselineUpdatedAt(pRes.data.updated_at ?? null)
-                dispatch({
+                rawDispatch({
                     type: 'INIT_FROM_PROFILE',
                     data: {
                         profile:  pRes.data,
@@ -1820,7 +1874,7 @@ export default function EstimatorClient({
             if (wRes.data && wRes.data.length > 0) {
                 const profileHasItems = Array.isArray(pRes.data?.overhead_items) && pRes.data.overhead_items.length > 0
                 if (!profileHasItems) {
-                    dispatch({ type: 'MERGE_FIXED_WORKERS', workers: wRes.data })
+                    rawDispatch({ type: 'MERGE_FIXED_WORKERS', workers: wRes.data })
                 }
             }
             setLoading(false)
@@ -1974,7 +2028,7 @@ export default function EstimatorClient({
         // Direct mode deliberately leaves the field empty until Rajesh enters
         // a rate. A monthly calculation is a reference, never an auto-filled
         // direct assumption.
-    }, [])
+    }, [dispatch])
     const handleSuggestOutput = useCallback((dailyOutputM: number) => {
         dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: dailyOutputM })
         if (state.overheadMode === 'monthly_expenses' && state.loomCount > 0 && state.monthlyWorkingDays > 0) {
@@ -1984,7 +2038,7 @@ export default function EstimatorClient({
         } else {
             toast.success('Daily output updated as a capacity reference. Monthly overhead output was not changed.')
         }
-    }, [state.loomCount, state.monthlyWorkingDays, state.overheadMode])
+    }, [dispatch, state.loomCount, state.monthlyWorkingDays, state.overheadMode])
 
     const filteredTemplates = useMemo(() =>
         templateSearch.trim()
@@ -2027,7 +2081,7 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
         toast.success(`${t('estimator.quality.applied')} ${tpl.name}`)
-    }, [t])
+    }, [dispatch, t])
 
     const openSaveTemplateDialog = useCallback(() => {
         setTemplateName(
@@ -2039,23 +2093,46 @@ export default function EstimatorClient({
         setShowSaveTemplate(true)
     }, [appliedTemplate?.name, mode, partyName, qualityLabel])
 
-    const requireWarningReview = () => {
+    const rollbackSaveAsNewQualityDialog = useCallback(() => {
+        const rollback = saveAsNewQualityRollbackRef.current
+        if (!rollback) return
+
+        setAppliedTemplate(rollback.appliedTemplate)
+        setTemplateName(rollback.templateName)
+        setQualityLabel(rollback.qualityLabel)
+        setSourceQuoteId(rollback.sourceQuoteId)
+        setSourceQuoteUpdatedAt(rollback.sourceQuoteUpdatedAt)
+        setSourceQuoteVersionNumber(rollback.sourceQuoteVersionNumber)
+        setSourceQuoteCreatedAt(rollback.sourceQuoteCreatedAt)
+        setSourceFactoryProfileUpdatedAt(rollback.sourceFactoryProfileUpdatedAt)
+        setSourceRecordKind(rollback.sourceRecordKind)
+        quoteRequestIdRef.current = rollback.clientRequestId
+        saveAsNewQualityRollbackRef.current = null
+        suppressAutosaveUntilChanged()
+    }, [suppressAutosaveUntilChanged])
+
+    const requireWarningReview = (continuation?: WarningContinuation) => {
         if (warningsAcknowledged) return false
+        warningContinuationRef.current = continuation ?? null
+        setWarningSavePending(Boolean(continuation))
         setShowWarningAcknowledgement(true)
         return true
     }
 
-    const requireTemplateReadiness = () => {
+    const requireTemplateReadiness = (
+        continuation?: WarningContinuation,
+        warningAlreadyReviewed = false,
+    ) => {
         const templateValidation = validateEstimatorSnapshot(state, { requireTapeLength: false })
         if (!templateValidation.valid) {
             toast.error(getFirstEstimatorValidationMessage(templateValidation) ?? 'Complete the highlighted inputs before saving the quality.')
             return true
         }
-        return requireWarningReview()
+        return warningAlreadyReviewed ? false : requireWarningReview(continuation)
     }
 
-    const handleSaveProfile = async () => {
-        if (requireWarningReview()) return
+    const handleSaveProfile = async (warningAlreadyReviewed = false) => {
+        if (!warningAlreadyReviewed && requireWarningReview(() => handleSaveProfile(true))) return
         setSaving(true)
         try {
             const res = await upsertFactoryCostProfile({
@@ -2083,7 +2160,7 @@ export default function EstimatorClient({
             })
 
             if (res.success) {
-                dispatch({ type: 'SET', field: 'isConfigured', value: true })
+                rawDispatch({ type: 'SET', field: 'isConfigured', value: true })
                 setFactoryBaselineUpdatedAt(res.updatedAt ?? factoryBaselineUpdatedAt)
                 toast.success(t('estimator.sprint1.baseline_updated'))
             } else {
@@ -2096,7 +2173,7 @@ export default function EstimatorClient({
         }
     }
 
-    const handleSaveTemplate = async () => {
+    const handleSaveTemplate = async (warningAlreadyReviewed = false) => {
         if (!templateName.trim()) {
             const message = t('estimator.quality.nameRequired')
             setTemplateSaveError(message)
@@ -2107,7 +2184,7 @@ export default function EstimatorClient({
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
         }
-        if (requireTemplateReadiness()) return
+        if (requireTemplateReadiness(() => handleSaveTemplate(true), warningAlreadyReviewed)) return
 
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
@@ -2149,6 +2226,7 @@ export default function EstimatorClient({
                 setSourceFactoryProfileUpdatedAt(null)
                 setSourceRecordKind(null)
                 quoteRequestIdRef.current = null
+                saveAsNewQualityRollbackRef.current = null
                 setShowSaveTemplate(false)
                 setTemplateName('')
                 setTemplateSaveError(null)
@@ -2169,13 +2247,13 @@ export default function EstimatorClient({
         }
     }
 
-    const handleUpdateTemplate = async () => {
+    const handleUpdateTemplate = async (warningAlreadyReviewed = false) => {
         if (!appliedTemplate) return
         const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
         if (missingLayer) {
             return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
         }
-        if (requireTemplateReadiness()) return
+        if (requireTemplateReadiness(() => handleUpdateTemplate(true), warningAlreadyReviewed)) return
 
         const warpRows = trimLayerLabels(state.warpRows)
         const weftRows = trimLayerLabels(state.weftRows)
@@ -2220,14 +2298,18 @@ export default function EstimatorClient({
     }
 
     const handleNewQualityConfirm = () => {
-        dispatch({ 
-            type: 'RESET', 
-            data: { 
-                profile: initialProfile, 
+        rawDispatch({
+            type: 'RESET',
+            data: {
+                profile: initialProfile,
                 sections: initialProfile?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
-                workers: initialWorkers || []
-            } 
+                workers: initialWorkers || [],
+            },
         })
+        setMode(canUseProduction ? estimatorWorkflow.initialMode : 'quote')
+        setEntryMode(canUseProduction ? 'detailed' : 'quick')
+        setOutputSuggestion(null)
+        setWagePerMInput('')
         setAppliedTemplate(null)
         setQualityLabel('')
         setPartyName('')
@@ -2242,11 +2324,37 @@ export default function EstimatorClient({
         setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
+        autoRestoredDraftSavedAtRef.current = null
+        if (partyLookupTimerRef[0]) clearTimeout(partyLookupTimerRef[0])
+        partyLookupTimerRef[1](null)
+        setPartyHint(null)
+        setTemplateSearch('')
+        setTemplateName('')
+        setTemplateSaveError(null)
+        setShowSaveTemplate(false)
+        setRenameTpl(null)
+        setRenameValue('')
+        setRenameError(null)
+        setEditRatesTpl(null)
+        setEditingTplName('')
+        setEditingWarpRates([])
+        setEditingWeftRates([])
+        setTemplateToArchive(null)
+        setDeletingTpl(null)
+        setShowDiscardDraft(false)
+        setShowExportDialog(false)
+        setPendingStaleRateSave(null)
+        setPendingQualityVersionSave(null)
+        warningContinuationRef.current = null
+        saveAsNewQualityRollbackRef.current = null
         clearDraft()
         suppressAutosaveUntilChanged()
         setShowValidation(false)
         setDismissedWarnings([])
         setAcknowledgedWarningKey(null)
+        setShowWarningAcknowledgement(false)
+        setWarningSavePending(false)
+        setShowAdvancedOverhead(false)
         setShowConfirmNewQuality(false)
         toast.success(tx('Started blank quality recipe'))
     }
@@ -2367,6 +2475,7 @@ export default function EstimatorClient({
         staleRatesAcknowledged = false,
         recordKindOverride?: 'costing' | 'quotation',
         qualityUpdateDecision?: 'version_only' | 'version_and_quality',
+        warningAlreadyReviewed = false,
     ) => {
         if (saveQuoteLockRef.current || savingQuote) return
         setShowValidation(true)
@@ -2375,7 +2484,14 @@ export default function EstimatorClient({
         if (!hasValidCostResult) {
             return toast.error(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before saving.')
         }
-        if (requireWarningReview()) return
+        if (!warningAlreadyReviewed && requireWarningReview(() => handleSaveQuote(
+            targetMode,
+            status,
+            staleRatesAcknowledged,
+            recordKindOverride,
+            qualityUpdateDecision,
+            true,
+        ))) return
         if (!saveAsStandaloneCosting && canUseProduction && effectiveTargetMode === 'quote' && !allowsPartyOrders) {
             return toast.error('Party quotations are unavailable in Market Run only mode')
         }
@@ -2540,11 +2656,11 @@ export default function EstimatorClient({
         }
     }
 
-    const handleStartPartyOrder = async () => {
+    const handleStartPartyOrder = async (warningAlreadyReviewed = false) => {
         if (saveQuoteLockRef.current || savingQuote) return
         setShowValidation(true)
         if (!hasValidCostResult) return toast.error(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before starting the party order.')
-        if (requireWarningReview()) return
+        if (!warningAlreadyReviewed && requireWarningReview(() => handleStartPartyOrder(true))) return
         if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
@@ -2715,9 +2831,9 @@ export default function EstimatorClient({
                             if (res.success) {
                                 // Update local state and close wizard.
                                 Object.entries(data).filter(([key]) => key !== 'yarnReviewIntervalDays' && key !== 'factoryProfileKey').forEach(([key, val]) => {
-                                    dispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
+                                    rawDispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
                                 })
-                                dispatch({ type: 'SET', field: 'isConfigured', value: true })
+                                rawDispatch({ type: 'SET', field: 'isConfigured', value: true })
                                 setFactoryBaselineUpdatedAt(res.updatedAt ?? factoryBaselineUpdatedAt)
                                 toast.success('Factory costing saved for new Cost Estimates')
                             } else {
@@ -2796,7 +2912,11 @@ export default function EstimatorClient({
                                 variant="outline"
                                 size="sm"
                                 className="shrink-0 border-amber-300 bg-white text-amber-800 hover:bg-amber-100"
-                                onClick={() => setShowWarningAcknowledgement(true)}
+                                onClick={() => {
+                                    warningContinuationRef.current = null
+                                    setWarningSavePending(false)
+                                    setShowWarningAcknowledgement(true)
+                                }}
                             >
                                 Review
                             </Button>
@@ -2933,7 +3053,7 @@ export default function EstimatorClient({
                                         id="btn-start-party-order"
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
-                                        onClick={handleStartPartyOrder}
+                                        onClick={() => void handleStartPartyOrder()}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
@@ -2949,6 +3069,7 @@ export default function EstimatorClient({
                                     {/* Base keeps costing as the primary action; Full Suite retains quote acceptance styling. */}
                                     <Button
                                         id="btn-save-accept"
+                                        data-testid="save-costing-action"
                                         size="sm"
                                         variant={isStandaloneCostingSession ? 'default' : 'outline'}
                                         className={isStandaloneCostingSession
@@ -2958,6 +3079,11 @@ export default function EstimatorClient({
                                         disabled={savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid)}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
+                                        aria-label={!isStandaloneCostingSession
+                                            ? 'Save and accept quotation'
+                                            : sourceQuoteId
+                                                ? 'Save new immutable costing version'
+                                                : 'Save costing snapshot'}
                                         title={firstCostingReadinessMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid))
                                             ? (requiresCommercialContext ? 'Complete customer, quality, quantity, and cost result first.' : 'Complete quality and cost inputs first.')
                                             : undefined)}
@@ -3074,7 +3200,7 @@ export default function EstimatorClient({
                                         size="sm"
                                         variant="outline"
                                         className="h-12 min-w-0 max-w-full flex-1 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)] sm:flex-none"
-                                        onClick={handleUpdateTemplate}
+                                        onClick={() => void handleUpdateTemplate()}
                                         disabled={savingTemplate}
                                         aria-busy={savingTemplate}
                                     >
@@ -3087,6 +3213,18 @@ export default function EstimatorClient({
                                         onClick={() => {
                                             // A copy starts a new template and costing lineage. Keep
                                             // the loaded recipe, but detach every source identity.
+                                            saveAsNewQualityRollbackRef.current = {
+                                                appliedTemplate,
+                                                templateName,
+                                                qualityLabel,
+                                                sourceQuoteId,
+                                                sourceQuoteUpdatedAt,
+                                                sourceQuoteVersionNumber,
+                                                sourceQuoteCreatedAt,
+                                                sourceFactoryProfileUpdatedAt,
+                                                sourceRecordKind,
+                                                clientRequestId: quoteRequestIdRef.current,
+                                            }
                                             setTemplateName(`${appliedTemplate.name} - New`)
                                             setAppliedTemplate(null)
                                             setSourceQuoteId(null)
@@ -3100,11 +3238,11 @@ export default function EstimatorClient({
                                             setShowSaveTemplate(true)
                                         }}
                                         className="h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
-                                        title="Use this saved quality as the starting point for a new one"
-                                        aria-label={`Start from ${appliedTemplate.name}`}
+                                        title="Start From this saved quality and save it as a separate quality"
+                                        aria-label={`Start from ${appliedTemplate.name}; save as a new quality`}
                                     >
                                         <BookmarkPlus className="mr-1.5 h-4 w-4" />
-                                        Start From
+                                        <span className="truncate">Save as New Quality</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -3133,6 +3271,13 @@ export default function EstimatorClient({
                                     <span className="hidden truncate sm:inline">Save as New Quality</span>
                                 </Button>
                             )}
+                            <p className="col-span-2 text-[11px] font-medium leading-relaxed text-[var(--color-muted)] sm:col-span-1 2xl:col-span-2">
+                                {isStandaloneCostingSession
+                                    ? sourceQuoteId
+                                        ? 'Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.'
+                                        : 'Save Costing creates an internal costing snapshot. Party and quantity remain optional until you need order-level profit.'
+                                    : 'Save & Accept stores the quotation and moves it into the accepted workflow.'}
+                            </p>
                         </div>
                     </div>
 
@@ -3313,9 +3458,9 @@ export default function EstimatorClient({
                         costingResult={costingResult}
                         hasValidCostResult={hasValidCostResult}
                         qualityLabel={qualityLabel}
-                        setQualityLabel={setQualityLabel}
+                        setQualityLabel={setQualityLabelFromUser}
                         partyName={partyName}
-                        setPartyName={setPartyName}
+                        setPartyName={setPartyNameFromUser}
                         partyNames={partyNames}
                         partyHint={partyHint}
                         showPartyField={showPartyField}
@@ -3347,7 +3492,7 @@ export default function EstimatorClient({
                                     <Input
                                         list="estimator-party-options"
                                         value={partyName}
-                                        onChange={e => setPartyName(e.target.value)}
+                                        onChange={e => setPartyNameFromUser(e.target.value)}
                                         placeholder="e.g. Sundaram Textiles"
                                         className="font-bold border-slate-200 h-11"
                                     />
@@ -3382,9 +3527,9 @@ export default function EstimatorClient({
                                     onChange={e => {
                                         if (appliedTemplate) return
                                         const val = e.target.value
-                                        setQualityLabel(val)
+                                        setQualityLabelFromUser(val)
                                         if (mode === 'market') {
-                                            setPartyName(val)
+                                            setPartyNameFromUser(val)
                                         }
                                     }}
                                     placeholder="e.g. 60g Georgette, D.246, Japan Satin"
@@ -3401,7 +3546,7 @@ export default function EstimatorClient({
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
                                 <Input
                                     value={warpInstruction}
-                                    onChange={e => setWarpInstruction(e.target.value)}
+                                    onChange={e => setWarpInstructionFromUser(e.target.value)}
                                     placeholder="50/48 + Rainbow"
                                     className="text-sm font-medium border-slate-200 h-11"
                                 />
@@ -3410,7 +3555,7 @@ export default function EstimatorClient({
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
                                 <Input
                                     value={weftInstruction}
-                                    onChange={e => setWeftInstruction(e.target.value)}
+                                    onChange={e => setWeftInstructionFromUser(e.target.value)}
                                     placeholder="50/48 - 68 Picks"
                                     className="text-sm font-medium border-slate-200 h-11"
                                 />
@@ -3526,6 +3671,7 @@ export default function EstimatorClient({
                             ))}
                         </div>
                         <Button
+                            type="button"
                             variant="outline"
                             className="h-14 w-full rounded-[12px] border-dashed border-[#C6D9EA] bg-[#F7FBFD] text-[var(--color-info-blue)] hover:border-[var(--color-info-blue)] hover:bg-[#EEF5FB] transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}
@@ -3739,6 +3885,7 @@ export default function EstimatorClient({
                             })}
                         </div>
                         <Button
+                            type="button"
                             variant="outline"
                             className="h-14 w-full rounded-[12px] border-dashed border-[#CDE5D3] bg-[#F7FCF8] text-[var(--color-factory-green)] hover:border-[var(--color-factory-green)] hover:bg-[var(--color-factory-green-soft)] transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}
@@ -4053,7 +4200,7 @@ export default function EstimatorClient({
                                                             variant="ghost"
                                                             size="sm"
                                                             className="h-6 px-2 text-[11px] font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
-                                                            onClick={handleSaveProfile}
+                                                            onClick={() => void handleSaveProfile()}
                                                             disabled={saving}
                                                         >
                                                             {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
@@ -4578,7 +4725,7 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingStaleRateSave
                                 setPendingStaleRateSave(null)
-                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride)
+                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, undefined, true)
                             }}
                         >
                             Save with These Rates
@@ -4618,7 +4765,7 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingQualityVersionSave
                                 setPendingQualityVersionSave(null)
-                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_only')
+                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_only', true)
                             }}
                         >
                             {t('estimator.sprint1.save_version_only')}
@@ -4628,7 +4775,7 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingQualityVersionSave
                                 setPendingQualityVersionSave(null)
-                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_and_quality')
+                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_and_quality', true)
                             }}
                         >
                             {t('estimator.sprint1.save_version_update_quality')}
@@ -4673,7 +4820,16 @@ export default function EstimatorClient({
             </Dialog>
 
             {/* Unusual-value acknowledgement */}
-            <Dialog open={showWarningAcknowledgement} onOpenChange={setShowWarningAcknowledgement}>
+            <Dialog
+                open={showWarningAcknowledgement}
+                onOpenChange={open => {
+                    setShowWarningAcknowledgement(open)
+                    if (!open) {
+                        warningContinuationRef.current = null
+                        setWarningSavePending(false)
+                    }
+                }}
+            >
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-amber-800">
@@ -4692,15 +4848,35 @@ export default function EstimatorClient({
                         ))}
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowWarningAcknowledgement(false)}>Go back</Button>
                         <Button
-                            className="bg-amber-600 text-white hover:bg-amber-700"
+                            variant="ghost"
                             onClick={() => {
-                                setAcknowledgedWarningKey(warningKey)
+                                warningContinuationRef.current = null
+                                setWarningSavePending(false)
                                 setShowWarningAcknowledgement(false)
                             }}
                         >
-                            I reviewed these values
+                            Go back
+                        </Button>
+                        <Button
+                            className="bg-amber-600 text-white hover:bg-amber-700"
+                            onClick={() => {
+                                const continuation = warningContinuationRef.current
+                                warningContinuationRef.current = null
+                                setWarningSavePending(false)
+                                setAcknowledgedWarningKey(warningKey)
+                                setShowWarningAcknowledgement(false)
+                                if (continuation) {
+                                    void Promise.resolve()
+                                        .then(() => continuation())
+                                        .catch(error => {
+                                            console.error('Warning-reviewed save failed:', error)
+                                            toast.error('The save could not be completed. Try again.')
+                                        })
+                                }
+                            }}
+                        >
+                            {warningSavePending ? 'Review and save' : 'I reviewed these values'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -4711,7 +4887,10 @@ export default function EstimatorClient({
                 open={showSaveTemplate}
                 onOpenChange={open => {
                     setShowSaveTemplate(open)
-                    if (!open) setTemplateSaveError(null)
+                    if (!open) {
+                        rollbackSaveAsNewQualityDialog()
+                        setTemplateSaveError(null)
+                    }
                 }}
             >
                 <DialogContent className="max-w-md">
@@ -4748,10 +4927,11 @@ export default function EstimatorClient({
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => {
+                            rollbackSaveAsNewQualityDialog()
                             setShowSaveTemplate(false)
                             setTemplateSaveError(null)
                         }}>{t('estimator.quality.cancel')}</Button>
-                        <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate} aria-busy={savingTemplate}>
+                        <Button className="bg-brand-accent text-white" onClick={() => void handleSaveTemplate()} disabled={savingTemplate} aria-busy={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             {t('estimator.quality.confirmSave')}
                         </Button>

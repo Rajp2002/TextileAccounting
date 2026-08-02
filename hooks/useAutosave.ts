@@ -34,6 +34,8 @@ interface UseAutosaveReturn<TState = unknown> {
   saveDraftNow: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => boolean
   /** Suppress the current programmatic state until the user edits again. */
   suppressAutosaveUntilChanged: () => void
+  /** Mark a user edit after a reset, restore, or successful save. */
+  markUserEdit: () => void
 }
 
 function safelyRemoveLocalStorageItem(key: string) {
@@ -67,29 +69,15 @@ export function useAutosave<TState = unknown>({
   const draftDecisionPendingRef = useRef(false)
   const writeGenerationRef = useRef(0)
   const suppressUntilChangeRef = useRef(false)
-  const suppressedFingerprintRef = useRef<string | null>(null)
-
-  const getFingerprint = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
-    try {
-      return JSON.stringify(data)
-    } catch {
-      return null
-    }
-  }, [])
 
   const isMeaningful = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
-    if (suppressUntilChangeRef.current) {
-      const fingerprint = getFingerprint(data)
-      if (suppressedFingerprintRef.current === null) {
-        suppressedFingerprintRef.current = fingerprint
-        return false
-      }
-      if (fingerprint === suppressedFingerprintRef.current) return false
-      suppressUntilChangeRef.current = false
-      suppressedFingerprintRef.current = null
-    }
+    // Reset, restore, and successful saves often update several React states
+    // in one turn. Do not infer that those programmatic changes are a user
+    // edit from a changing JSON fingerprint; the editor explicitly calls
+    // markUserEdit from real input/action handlers.
+    if (suppressUntilChangeRef.current) return false
     return shouldPersist ? shouldPersist(data as Omit<EstimatorAutosaveData<unknown>, 'savedAt'>) : true
-  }, [getFingerprint, shouldPersist])
+  }, [shouldPersist])
 
   const persistDraft = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
     if (draftDecisionPendingRef.current) return false
@@ -154,6 +142,7 @@ export function useAutosave<TState = unknown>({
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     draftDecisionPendingRef.current = false
+    suppressUntilChangeRef.current = true
     safelyRemoveLocalStorageItem(keyRef.current)
     setHasDraft(false)
     setDraft(null)
@@ -165,6 +154,7 @@ export function useAutosave<TState = unknown>({
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     draftDecisionPendingRef.current = false
+    suppressUntilChangeRef.current = true
     setHasDraft(false)
     // Remove the recovery item immediately. A meaningful restored edit can be
     // written again; an invalid/blank restored item cannot resurrect the banner.
@@ -177,6 +167,7 @@ export function useAutosave<TState = unknown>({
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     draftDecisionPendingRef.current = false
+    suppressUntilChangeRef.current = true
     safelyRemoveLocalStorageItem(keyRef.current)
     setHasDraft(false)
     setDraft(null)
@@ -184,10 +175,13 @@ export function useAutosave<TState = unknown>({
 
   const suppressAutosaveUntilChanged = useCallback(() => {
     suppressUntilChangeRef.current = true
-    suppressedFingerprintRef.current = null
     writeGenerationRef.current += 1
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
+  }, [])
+
+  const markUserEdit = useCallback(() => {
+    suppressUntilChangeRef.current = false
   }, [])
 
   // Cleanup timer on unmount
@@ -197,5 +191,5 @@ export function useAutosave<TState = unknown>({
     }
   }, [])
 
-  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged }
+  return { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit }
 }

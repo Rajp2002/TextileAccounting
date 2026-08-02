@@ -175,6 +175,35 @@ function addNumberIssue(
   }
 }
 
+function isBlankNumericValue(value: unknown): boolean {
+  if (value === null || value === undefined) return true
+  if (typeof value === 'string' && value.trim() === '') return true
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) && numericValue === 0
+}
+
+function isBlankWarpComponent(row: WarpRow): boolean {
+  return !row.label?.trim() && [
+    row.calcDenier,
+    row.cottonCountNe,
+    row.beamEnds,
+    row.yarnRate,
+    row.manualKgPer100m,
+  ].every(isBlankNumericValue)
+}
+
+function isBlankWeftComponent(row: WeftRow): boolean {
+  return !row.label?.trim() && [
+    row.picks,
+    row.reedSpace,
+    row.effectiveCostingWidthCm,
+    row.calcDenier,
+    row.cottonCountNe,
+    row.yarnRate,
+    row.manualKgPer100m,
+  ].every(isBlankNumericValue)
+}
+
 export function validateFactoryCostProfile(input: FactoryCostProfileInput): EstimatorValidationResult {
   const issues: EstimatorValidationIssue[] = []
   const warnings: EstimatorValidationIssue[] = []
@@ -265,6 +294,11 @@ function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidatio
     ? `Warp layer ${index + 1} (${row.label.trim()})`
     : `Warp layer ${index + 1}`
 
+  if (isBlankWarpComponent(row)) {
+    issues.push({ field: prefix, message: `Remove this blank warp component or complete it before saving.` })
+    return
+  }
+
   if (!row.label?.trim()) issues.push({ field: `${prefix}.label`, message: `${label} needs a label so its yarn and rate can be identified.` })
 
   if (row.calculationMode !== 'manual') {
@@ -304,6 +338,11 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
   const label = row.label?.trim()
     ? `Weft layer ${index + 1} (${row.label.trim()})`
     : `Weft layer ${index + 1}`
+
+  if (isBlankWeftComponent(row)) {
+    issues.push({ field: prefix, message: `Remove this blank weft component or complete it before saving.` })
+    return
+  }
 
   if (!row.label?.trim()) issues.push({ field: `${prefix}.label`, message: `${label} needs a label so its yarn and rate can be identified.` })
 
