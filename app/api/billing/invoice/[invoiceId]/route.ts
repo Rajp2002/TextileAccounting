@@ -57,7 +57,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ inv
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="weavly-gst-invoice-${safeNumber || 'invoice'}.pdf"`,
+      'Content-Disposition': `attachment; filename="weavly-gst-invoice-${safeNumber || 'invoice'}.pdf"`,
+      'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'private, no-store',
     },
   })

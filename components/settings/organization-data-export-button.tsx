@@ -11,7 +11,7 @@ import {
 } from '@/app/(dashboard)/owner/settings/data-export'
 import { downloadJson } from '@/lib/browser-download'
 
-type ExportStatus = 'idle' | 'preparing' | 'ready' | 'download-started' | 'failed'
+type ExportStatus = 'idle' | 'preparing' | 'ready' | 'download-started' | 'download-failed' | 'failed'
 
 function formatExportDate(value: string) {
     return new Date(value).toLocaleString('en-IN', {
@@ -79,7 +79,7 @@ export function OrganizationDataExportButton({
                 downloadJson(payload, payload.filename)
             } catch (error) {
                 setDownloadError(userFacingError(error, 'The browser could not start the download.'))
-                setStatus('download-started')
+                setStatus('download-failed')
                 toast.info('Export generated, but the browser could not start the download. Try again from this page.')
                 return
             }
@@ -100,12 +100,17 @@ export function OrganizationDataExportButton({
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
                 <Button data-testid={testId} onClick={download} disabled={isPending} className="gap-2">
-                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : status === 'failed' ? <RefreshCw className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-                    {isPending ? 'Preparing export' : status === 'failed' ? 'Retry export' : 'Download organization data'}
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : status === 'failed' || status === 'download-failed' ? <RefreshCw className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+                    {isPending ? 'Preparing export' : status === 'failed' || status === 'download-failed' ? 'Retry export' : 'Download organization data (complete export)'}
                 </Button>
                 {status === 'download-started' && (
                     <span role="status" className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Export generated; download requested
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Export generated; download requested (complete organization export)
+                    </span>
+                )}
+                {status === 'download-failed' && (
+                    <span role="alert" className="flex items-center gap-1 text-xs font-semibold text-red-700">
+                        <AlertTriangle className="h-3.5 w-3.5" /> Export generated; browser download failed
                     </span>
                 )}
                 {status === 'failed' && (

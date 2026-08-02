@@ -85,7 +85,7 @@ function UpgradeWall({
         '/owner/archive': 'Archive',
         '/owner/system-health': 'System Health',
     }
-    const featureName = routeLabels[routeName] ?? 'This Full Suite feature'
+    const featureName = routeLabels[routeName] ?? 'This connected factory feature'
     const premiumPrice = getBillingPrice('premium', 'initial_purchase')
     const premiumRenewal = getBillingPrice('premium', 'renewal')
     const formatAmount = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`
@@ -105,7 +105,7 @@ function UpgradeWall({
                     <p className="text-gray-500 mt-2 text-sm leading-relaxed">
                         {featureName} is part of the <strong>Weavly Full Suite</strong>.
                         {currentTier === 'base' && (
-                            <> Your <strong>Estimator Plan</strong> remains complete for calculating, saving, and updating fabric costings.</>
+                            <> Your <strong>Base Estimator workspace</strong> remains active and complete for calculating, saving, and exporting fabric costings and customer quotations.</>
                         )}
                     </p>
                 </div>

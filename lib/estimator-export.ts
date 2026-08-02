@@ -21,6 +21,15 @@ export type CostingExportOptions = {
   allowMissingValidUntil?: boolean
 }
 
+/** A customer quotation is a document artifact, not a tax invoice. */
+export const CUSTOMER_QUOTATION_NOT_TAX_INVOICE_NOTICE =
+  'This customer quotation is a document artifact only and is not a GST tax invoice.'
+
+const EXPORT_BUSINESS_NAME_MAX_LENGTH = 160
+const EXPORT_CUSTOMER_NAME_MAX_LENGTH = 160
+const EXPORT_REFERENCE_MAX_LENGTH = 80
+const EXPORT_NOTES_MAX_LENGTH = 2000
+
 export type CostingExportModel = {
   qualityLabel: string
   createdAt: string
@@ -46,6 +55,33 @@ function finiteOrZero(value: unknown) {
 function finiteNumber(value: unknown) {
   const numericValue = Number(value)
   return Number.isFinite(numericValue) ? numericValue : null
+}
+
+function normalizeText(value: unknown, maximum: number) {
+  return typeof value === 'string' ? value.trim().slice(0, maximum) : ''
+}
+
+function normalizeQuotationDate(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return ''
+  const candidate = value.trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return ''
+  const parsed = new Date(`${candidate}T00:00:00Z`)
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === candidate ? candidate : ''
+}
+
+/** Normalize the document context shared by preview, print, PDF, and filename generation. */
+export function normalizeCostingExportOptions(options: CostingExportOptions): CostingExportOptions {
+  return {
+    ...options,
+    mode: options.mode === 'customer' ? 'customer' : 'internal',
+    businessName: normalizeText(options.businessName, EXPORT_BUSINESS_NAME_MAX_LENGTH),
+    customerName: normalizeText(options.customerName, EXPORT_CUSTOMER_NAME_MAX_LENGTH),
+    validUntil: normalizeQuotationDate(options.validUntil),
+    notes: normalizeText(options.notes, EXPORT_NOTES_MAX_LENGTH),
+    showGstNote: Boolean(options.showGstNote),
+    documentReference: normalizeText(options.documentReference, EXPORT_REFERENCE_MAX_LENGTH) || undefined,
+    allowMissingValidUntil: Boolean(options.allowMissingValidUntil),
+  }
 }
 
 // Kept as a public export for existing callers. The implementation now lives
@@ -129,7 +165,8 @@ export function createCostingExportModel(input: {
   }
 }
 
-export function validateCostingExportInput(model: CostingExportModel | null, options: CostingExportOptions) {
+export function validateCostingExportInput(model: CostingExportModel | null, rawOptions: CostingExportOptions) {
+  const options = normalizeCostingExportOptions(rawOptions)
   if (!model) return ['The costing result is not ready yet.']
 
   const errors: string[] = []
@@ -150,13 +187,14 @@ export function validateCostingExportInput(model: CostingExportModel | null, opt
   if (!model.qualityLabel.trim()) errors.push('Quality is required before generating a document.')
   if (!Number.isFinite(model.productionCostPerM) || model.productionCostPerM <= 0) errors.push('Production cost is not valid. Review the costing before exporting.')
   if (!Number.isFinite(model.suggestedSellingPricePerM) || model.suggestedSellingPricePerM <= 0) errors.push('Selling price per metre is not valid. Review the commercial assumptions before exporting.')
+  if (typeof rawOptions.notes === 'string' && rawOptions.notes.trim().length > EXPORT_NOTES_MAX_LENGTH) errors.push(`Notes must be ${EXPORT_NOTES_MAX_LENGTH.toLocaleString('en-IN')} characters or fewer.`)
 
   if (options.mode === 'customer') {
     if (!options.customerName.trim()) errors.push('Enter the party or customer name before creating a quotation.')
     if (!Number.isFinite(model.quantityM) || model.quantityM <= 0) errors.push('Enter an order quantity before creating a Customer Quotation.')
-    const hasValidUntil = /^\d{4}-\d{2}-\d{2}$/.test(options.validUntil)
-      && Number.isFinite(Date.parse(`${options.validUntil}T00:00:00Z`))
-    if ((!options.validUntil && !options.allowMissingValidUntil) || (options.validUntil && !hasValidUntil)) {
+    const hasValidUntil = Boolean(options.validUntil)
+    const rawValidity = typeof rawOptions.validUntil === 'string' ? rawOptions.validUntil.trim() : ''
+    if ((!hasValidUntil && !options.allowMissingValidUntil) || (rawValidity && !hasValidUntil)) {
       errors.push('Choose a valid quotation validity date.')
     }
   }
@@ -183,7 +221,8 @@ function documentDate(value: string) {
   return parsed.toISOString().slice(0, 10)
 }
 
-export function getCostingExportFilename(model: CostingExportModel, options: CostingExportOptions) {
+export function getCostingExportFilename(model: CostingExportModel, rawOptions: CostingExportOptions) {
+  const options = normalizeCostingExportOptions(rawOptions)
   const documentType = options.mode === 'internal' ? 'cost-estimate' : 'quotation'
   const parts = [
     documentType,
@@ -195,7 +234,8 @@ export function getCostingExportFilename(model: CostingExportModel, options: Cos
   return `${parts.join('-')}.pdf`
 }
 
-export function buildQuotationShareMessage(model: CostingExportModel, options: CostingExportOptions) {
+export function buildQuotationShareMessage(model: CostingExportModel, rawOptions: CostingExportOptions) {
+  const options = normalizeCostingExportOptions(rawOptions)
   const reference = options.documentReference?.trim() || 'quotation'
   const quantity = model.quantityM > 0 ? `${model.quantityM.toLocaleString('en-IN')} m` : 'quantity to be confirmed'
   const validity = options.validUntil ? new Date(`${options.validUntil}T00:00:00`).toLocaleDateString('en-IN') : 'to be confirmed'
@@ -269,7 +309,8 @@ export function extractStyledCostingBody(html: string) {
   return `<style>${styles}</style><div class="costing-pdf-root">${body}</div>`
 }
 
-export function buildCostingPrintHtml(model: CostingExportModel, options: CostingExportOptions) {
+export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: CostingExportOptions) {
+  const options = normalizeCostingExportOptions(rawOptions)
   const isInternal = options.mode === 'internal'
   if (model.reconciliationStatus === 'unreconstructable') {
     const businessName = options.businessName.trim() || 'Weavly Cost Estimate'
@@ -297,6 +338,9 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
   const businessName = options.businessName.trim() || 'Weavly Cost Estimate'
   const quantity = model.quantityM > 0 ? `${model.quantityM.toLocaleString('en-IN')} m` : 'Not specified'
   const reference = options.documentReference?.trim() || ''
+  const customerDisclaimer = options.showGstNote
+    ? `GST will be charged as applicable on the final tax invoice. ${CUSTOMER_QUOTATION_NOT_TAX_INVOICE_NOTICE}`
+    : CUSTOMER_QUOTATION_NOT_TAX_INVOICE_NOTICE
 
   const costItems = [
     ['Warp yarn', model.result.breakdown.warpCostPerM],
@@ -366,7 +410,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, options: Costin
   <section class="summary">${summary}</section>
   ${isInternal ? internalSections : ''}
   ${notes ? `<section class="note"><strong>${isInternal ? 'Internal notes' : 'Notes & terms'}</strong>${escapeHtml(notes)}</section>` : ''}
-  ${!isInternal && options.showGstNote ? '<p class="gst">GST will be charged as applicable on the final tax invoice. This quotation is not a tax invoice.</p>' : ''}
+  ${!isInternal ? `<p class="gst">${escapeHtml(customerDisclaimer)}</p>` : ''}
   <footer class="footer"><span>Generated by <strong>Weavly Cost Estimate</strong></span><span>${isInternal ? 'Historical costings retain their saved assumptions.' : 'Thank you for the opportunity to quote.'}</span></footer>
 </main></body></html>`
 }

@@ -77,7 +77,8 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="weavly-payment-receipt-${fileSuffix || 'payment'}.pdf"`,
+      'Content-Disposition': `attachment; filename="weavly-payment-receipt-${fileSuffix || 'payment'}.pdf"`,
+      'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'private, no-store',
     },
   })

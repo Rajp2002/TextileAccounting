@@ -82,7 +82,7 @@ function getFeatureLabel(route: string | null): string | null {
         '/owner/archive': 'Archive',
         '/owner/system-health': 'System Health',
     }
-    return labels[route] ?? 'this Full Suite feature'
+    return labels[route] ?? 'this connected factory feature'
 }
 
 function trialDaysLeft(currentEnd: string | null): number {
@@ -133,7 +133,7 @@ function PlanCards({
             name: 'Weavly Estimator',
             badge: 'Standalone',
             renewal: '₹2,360 total/year (₹2,000 + ₹360 GST)',
-            features: ['Estimator workspace', 'Saved Fabric Qualities', 'Quotations', 'Draft recovery', 'Independent account access'],
+            features: ['Estimator workspace', 'Saved Fabric Qualities', 'Customer quotation documents', 'Draft recovery', 'Independent account access'],
             icon: Zap,
         },
         {
@@ -376,9 +376,13 @@ export default async function BillingPage({
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-400/20 border border-red-400/30 text-xs font-black uppercase tracking-widest text-red-100">
                                             <Lock className="w-3 h-3" /> Access Suspended
                                         </div>
-                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Plan expired.</h2>
+                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">
+                                            {subscription?.plan_tier === 'base' ? 'Estimator access expired.' : 'Factory access expired.'}
+                                        </h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            Your paid period has ended. Renew your previous plan or choose the plan that matches how you work.
+                                            {subscription?.plan_tier === 'base'
+                                                ? 'Your Estimator workspace period has ended. Renew it to continue creating and exporting costings and customer quotations.'
+                                                : 'Your connected factory period has ended. Renew it or choose the plan that matches how you work.'}
                                         </p>
                                     </>
                                 ) : (
@@ -458,7 +462,7 @@ export default async function BillingPage({
                                             </h2>
                                         <p className="mt-2 max-w-lg text-base leading-6 text-slate-500">
                                                 {tier === 'base'
-                                                    ? 'Your standalone Estimator plan is active and in good standing.'
+                                                    ? 'Your Estimator workspace is active and in good standing. Costing, saved qualities, and customer quotation documents are included.'
                                                     : 'Your Full Suite plan is active and in good standing.'}
                                             </p>
                                         </div>
@@ -569,18 +573,21 @@ export default async function BillingPage({
                                                 </p>
                                                 <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{p.method || 'UNSPECIFIED'}</p>
                                                 {p.status === 'captured' && (
-                                                    <Link
-                                                        href={`/api/billing/receipt/${p.id}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-orange-700 hover:underline"
-                                                    >
-                                                        Download receipt <ArrowRight className="h-3 w-3" />
-                                                    </Link>
+                                                    <>
+                                                        <Link
+                                                            href={`/api/billing/receipt/${p.id}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-orange-700 hover:underline"
+                                                        >
+                                                            Download receipt <ArrowRight className="h-3 w-3" />
+                                                        </Link>
+                                                        <p className="mt-1 text-[10px] text-slate-400">Payment receipt only · not a GST tax invoice</p>
+                                                    </>
                                                 )}
                                                 {p.status === 'captured' && invoiceByPaymentId.get(p.id)?.status === 'issued' && (
                                                     <Link href={`/api/billing/invoice/${invoiceByPaymentId.get(p.id)?.id}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-700 hover:underline">
-                                                        GST invoice <ArrowRight className="h-3 w-3" />
+                                                        GST invoice (tax invoice) <ArrowRight className="h-3 w-3" />
                                                     </Link>
                                                 )}
                                             </div>
@@ -626,7 +633,7 @@ export default async function BillingPage({
                                 </p>
                             )}
                             <p className="text-xs leading-relaxed text-slate-500">
-                                Payment receipts confirm payment. {billingInvoiceFeatureIsConfigured() ? 'GST invoices appear when approved supplier and billing details are complete.' : 'GST invoice issuance is waiting for approved supplier tax configuration; receipts remain available.'}
+                                A payment receipt confirms that money was received; it is not a GST tax invoice. {billingInvoiceFeatureIsConfigured() ? 'A separate GST tax invoice appears when approved supplier and billing details are complete.' : 'Separate GST tax invoice issuance is waiting for approved supplier tax configuration; payment receipts remain available.'}
                             </p>
                             {latestCapturedPayment && invoiceByPaymentId.get(latestCapturedPayment.id)?.status === 'issued' && (
                                 <Link href={`/api/billing/invoice/${invoiceByPaymentId.get(latestCapturedPayment.id)?.id}`} target="_blank" rel="noreferrer" className="group flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-sm font-medium text-blue-800 transition-colors hover:border-blue-300 hover:bg-blue-100">

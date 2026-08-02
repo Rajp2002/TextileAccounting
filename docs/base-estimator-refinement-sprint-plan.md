@@ -109,6 +109,15 @@ Make the Base plan feel like a complete textile costing desk rather than a restr
 - Browser flow verified on isolated QA: v1 to changed v2, contextual `₹/m` movement, unchanged quality name through **Use as Starting Point**, and organization-name export prefill.
 - Desktop and mobile screenshots are stored in `output/estimator-base-sprint/`; no browser-console errors were observed after reload.
 
+## Sprint 11 — Base documents, export, and billing trust (completed)
+
+- Added reliable Internal Cost Sheet and Customer Quotation PDF/print artifacts from one costing snapshot.
+- Enforced customer-output privacy: no internal cost, overhead, margin, or expected-profit fields appear in customer documents, and customer quotations explicitly remain document artifacts rather than GST tax invoices.
+- Standardized organization, customer, quantity, validity, notes, deterministic filenames, and visible browser download failures.
+- Completed organization JSON export coverage, export history, sensitive-field redaction, and generated/download-failed feedback.
+- Clarified Base activation, entitlement, renewal, expiry, payment receipt, and GST tax invoice states without relying on Full Suite terminology.
+- No new database migration was required; Sprint 11 uses the existing export-history and billing schema.
+
 ## Non-goals
 
 - Production orders, market runs, machines, supervisors, stock, dispatch, payroll, advances, or factory analytics.

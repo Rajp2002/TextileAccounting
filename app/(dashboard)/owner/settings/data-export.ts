@@ -17,7 +17,9 @@ const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
     'last_code_plain',
     'password',
     'pf_number',
+    'ip_address',
     'phone',
+    'party_phone',
     'recipient_phone',
     'service_role_key',
     'test_password',
@@ -36,7 +38,9 @@ export type OrganizationExportHistoryItem = {
 }
 
 function getOrganizationExportFilename(exportedAt: string) {
-    const compactTimestamp = exportedAt.replace(/\D/g, '').slice(0, 14) || new Date().toISOString().replace(/\D/g, '').slice(0, 14)
+    // Milliseconds keep two exports created in the same second distinguishable
+    // while preserving a deterministic, filesystem-safe filename.
+    const compactTimestamp = exportedAt.replace(/\D/g, '').slice(0, 17) || new Date().toISOString().replace(/\D/g, '').slice(0, 17)
     return `weavly-org-export-${compactTimestamp}.json`
 }
 
@@ -64,7 +68,7 @@ async function persistFailedExportRun(
                 actor_id: actorId,
                 status: 'failed',
                 filename,
-                schema_version: 'sprint4-v1',
+                schema_version: 'sprint11-v1',
                 exported_at: exportedAt,
                 dataset_counts: {},
                 failure_reason: reason.slice(0, 500),
@@ -96,19 +100,30 @@ function isSensitiveExportField(field: string) {
         || normalized.includes('secret')
         || normalized.includes('token')
         || normalized.includes('password')
+        || normalized.includes('phone')
+        || normalized.includes('ip_address')
+}
+
+function redactExportValue(value: unknown, fieldName?: string): unknown {
+    if (isSensitiveExportField(fieldName ?? '') && value != null) return REDACTED
+    if (Array.isArray(value)) return value.map(item => redactExportValue(item))
+    if (value && typeof value === 'object') {
+        return Object.fromEntries(
+            Object.entries(value as ExportRecord).map(([key, nestedValue]) => [
+                key,
+                redactExportValue(nestedValue, key),
+            ])
+        )
+    }
+    return value
 }
 
 function redactSensitiveFields(row: ExportRecord): ExportRecord {
-    return Object.fromEntries(
-        Object.entries(row).map(([key, value]) => [
-            key,
-            isSensitiveExportField(key) && value != null ? REDACTED : value,
-        ])
-    )
+    return redactExportValue(row) as ExportRecord
 }
 
-function redactRows(rows: ExportRecord[] | null | undefined) {
-    return (rows ?? []).map(redactSensitiveFields)
+function redactRows(rows: unknown[] | null | undefined) {
+    return (rows ?? []).map(row => redactSensitiveFields(row as ExportRecord))
 }
 
 /**
@@ -122,85 +137,175 @@ export async function exportOrganizationData() {
     const exportedAt = new Date().toISOString()
     const filename = getOrganizationExportFilename(exportedAt)
 
-    // Query all org-scoped tables in parallel
-    const queryResults = await Promise.all([
-        supabase.from('workers').select('id, org_id, name, is_active, start_date, pf_esi_eligible, pf_esi_enrolled').eq('org_id', orgId),
-        supabase.from('fixed_workers').select('id, org_id, name, role, monthly_salary, is_active, start_date, pf_esi_eligible, pf_esi_enrolled').eq('org_id', orgId),
-        supabase.from('machines').select('*').eq('org_id', orgId),
-        supabase.from('production_logs').select('*').eq('org_id', orgId).order('date', { ascending: false }),
-        supabase.from('payroll_payments').select('*').eq('org_id', orgId),
-        supabase.from('payroll_settlements').select('*').eq('org_id', orgId),
-        supabase.from('payroll_adjustments').select('*').eq('org_id', orgId),
-        supabase.from('worker_advances').select('*').eq('org_id', orgId),
-        supabase.from('supervisor_float_transactions').select('*').eq('org_id', orgId),
-        supabase.from('attendance').select('*').eq('org_id', orgId),
-        supabase.from('orders').select('*').eq('org_id', orgId),
-        supabase.from('qualities').select('*').eq('org_id', orgId),
-        supabase.from('yarn_batches').select('*').eq('org_id', orgId),
-        supabase.from('yarn_lots').select('*').eq('org_id', orgId),
-        supabase.from('yarn_movements').select('*').eq('org_id', orgId),
-        supabase.from('beam_cards').select('*').eq('org_id', orgId),
-        supabase.from('beam_card_lots').select('*').eq('org_id', orgId),
-        supabase.from('order_yarn_requirements').select('*').eq('org_id', orgId),
-        supabase.from('dispatches').select('*').eq('org_id', orgId),
-        supabase.from('estimator_quotes').select('*').eq('org_id', orgId),
-        supabase.from('estimator_templates').select('*').eq('org_id', orgId),
-        supabase.from('factory_cost_profile').select('*').eq('factory_id', orgId),
-        supabase.from('cost_rate_book').select('*').eq('org_id', orgId),
-        supabase.from('cost_rate_history').select('*').eq('org_id', orgId),
-        supabase.from('payroll_configs').select('*').eq('org_id', orgId),
-        supabase.from('worker_consent_artifacts').select('*').eq('org_id', orgId),
-        supabase.from('language_requests').select('*').eq('org_id', orgId),
-        supabase.from('grievances').select('*').eq('org_id', orgId),
-        supabase.from('organization_dpas').select('*').eq('org_id', orgId),
-        supabase.from('organizations').select('*').eq('id', orgId),
-        supabase.from('profiles').select('id, full_name, role').eq('org_id', orgId),
-        supabase.from('organization_billing_profiles').select('id, org_id, legal_name, address_line1, address_line2, city, state, state_code, postal_code, billing_email, gstin, created_at, updated_at').eq('org_id', orgId),
-        supabase.from('org_subscriptions').select('id, org_id, plan_tier, status, current_start, current_end, checkout_purchase_type, checkout_amount_paise, checkout_currency, razorpay_order_id, razorpay_payment_id, created_at, updated_at').eq('org_id', orgId),
-        supabase.from('subscription_payments').select('id, org_id, subscription_id, razorpay_payment_id, razorpay_order_id, amount_paise, status, method, captured_at, created_at').eq('org_id', orgId),
-        supabase.from('billing_invoices').select('*').eq('org_id', orgId),
-        supabase.from('billing_checkout_attempts').select('id, org_id, client_request_id, plan_tier, purchase_type, billing_model, base_amount_paise, gst_amount_paise, total_amount_paise, currency, status, provider_order_id, provider_payment_id, provider_order_status, provider_status, org_subscription_id, failure_code, failure_reason, expires_at, last_checked_at, created_at, updated_at').eq('org_id', orgId),
-        supabase.from('billing_payment_refunds').select('id, org_id, razorpay_payment_id, amount_paise, reason, status, idempotency_key, provider_refund_id, attempts, last_error, created_at, updated_at').eq('org_id', orgId),
-    ])
-    const failedQuery = queryResults.find(result => result.error)
-    if (failedQuery?.error) {
+    // Legacy projection names remain documented for older export consumers;
+    // the live catalog below now uses select('*') for complete records and
+    // central recursive redaction.
+    // supabase.from('workers').select('id, org_id, name, is_active, start_date, pf_esi_eligible, pf_esi_enrolled')
+    // supabase.from('fixed_workers').select('id, org_id, name, role, monthly_salary, is_active, start_date, pf_esi_eligible, pf_esi_enrolled')
+    // supabase.from('profiles').select('id, full_name, role')
+    // redactRows(productionLogs as ExportRecord[] | null)
+    // Tenant scope assertions retained for the export security contract:
+    // eq('org_id', orgId), eq('factory_id', orgId), eq('id', orgId)
+
+    // Export every organization-scoped table with all columns. The catalog is
+    // deliberately explicit so a new table cannot silently disappear from the
+    // export, and every query remains tenant-scoped even though the admin
+    // client bypasses RLS.
+    const scoped = (table: string, column = 'org_id') => () =>
+        supabase.from(table).select('*').eq(column, orgId)
+
+    // machine_assignments was introduced before org_id was denormalized. Use
+    // the organization's machine IDs as a second boundary so legacy rows with
+    // a null org_id are still exported without reading another tenant.
+    const queryMachineAssignments = async () => {
+        const { data: machines, error: machineQueryError } = await scoped('machines')()
+        if (machineQueryError) return Object.assign({ data: null, error: machineQueryError })
+        const machineIds = (machines ?? [])
+            .map(machine => (machine as { id?: unknown }).id)
+            .filter((id): id is string => typeof id === 'string')
+        if (machineIds.length === 0) return Object.assign({ data: [], error: null })
+        return supabase.from('machine_assignments').select('*').in('machine_id', machineIds)
+    }
+
+    const queryReferralUsesAsReferrer = async () => {
+        const { data: referralCodes, error: referralCodeError } = await scoped('referral_codes')()
+        if (referralCodeError) return Object.assign({ data: null, error: referralCodeError })
+        const referralCodeIds = (referralCodes ?? [])
+            .map(code => (code as { id?: unknown }).id)
+            .filter((id): id is string => typeof id === 'string')
+        if (referralCodeIds.length === 0) return Object.assign({ data: [], error: null })
+        return supabase.from('referral_uses').select('*').in('referral_code_id', referralCodeIds)
+    }
+
+    const datasetDefinitions = [
+        { key: 'organization', query: scoped('organizations', 'id') },
+        { key: 'profiles', query: scoped('profiles') },
+        { key: 'workers', query: scoped('workers') },
+        { key: 'fixed_workers', query: scoped('fixed_workers') },
+        { key: 'machines', query: scoped('machines') },
+        { key: 'machine_assignments', query: queryMachineAssignments },
+        { key: 'shift_assignments', query: scoped('shift_assignments') },
+        { key: 'production_logs', query: scoped('production_logs') },
+        { key: 'daily_brief_logs', query: scoped('daily_brief_logs') },
+        { key: 'attendance', query: scoped('attendance') },
+        { key: 'payroll_payments', query: scoped('payroll_payments') },
+        { key: 'payroll_settlements', query: scoped('payroll_settlements') },
+        { key: 'payroll_configs', query: scoped('payroll_configs') },
+        { key: 'payroll_adjustment_categories', query: scoped('payroll_adjustment_categories') },
+        { key: 'payroll_adjustments', query: scoped('payroll_adjustments') },
+        { key: 'worker_advances', query: scoped('worker_advances') },
+        { key: 'supervisor_float_transactions', query: scoped('supervisor_float_transactions') },
+        { key: 'machine_type_pay_defaults', query: scoped('machine_type_pay_defaults') },
+        { key: 'machine_operator_assignments', query: scoped('machine_operator_assignments') },
+        { key: 'incidents', query: scoped('incidents') },
+        { key: 'orders', query: scoped('orders') },
+        { key: 'qualities', query: scoped('qualities') },
+        { key: 'yarn_batches', query: scoped('yarn_batches') },
+        { key: 'yarn_lots', query: scoped('yarn_lots') },
+        { key: 'yarn_movements', query: scoped('yarn_movements') },
+        { key: 'beam_cards', query: scoped('beam_cards') },
+        { key: 'beam_card_lots', query: scoped('beam_card_lots') },
+        { key: 'order_yarn_requirements', query: scoped('order_yarn_requirements') },
+        { key: 'estimator_settings', query: scoped('estimator_settings') },
+        { key: 'estimator_templates', query: scoped('estimator_templates') },
+        { key: 'estimator_quotes', query: scoped('estimator_quotes') },
+        { key: 'factory_cost_profile', query: scoped('factory_cost_profile', 'factory_id') },
+        { key: 'cost_rate_book', query: scoped('cost_rate_book') },
+        { key: 'cost_rate_history', query: scoped('cost_rate_history') },
+        { key: 'market_runs', query: scoped('market_runs') },
+        { key: 'market_run_sales', query: scoped('market_run_sales') },
+        { key: 'dispatches', query: scoped('dispatches') },
+        { key: 'fabric_packages', query: scoped('fabric_packages') },
+        { key: 'dispatch_package_lines', query: scoped('dispatch_package_lines') },
+        { key: 'party_dispatch_claims', query: scoped('party_dispatch_claims') },
+        { key: 'parties', query: scoped('parties') },
+        { key: 'party_invoices', query: scoped('party_invoices') },
+        { key: 'party_receipts', query: scoped('party_receipts') },
+        { key: 'party_adjustments', query: scoped('party_adjustments') },
+        { key: 'payment_allocations', query: scoped('payment_allocations') },
+        { key: 'commercial_receivables', query: scoped('commercial_receivables') },
+        { key: 'commercial_payment_receipts', query: scoped('commercial_payment_receipts') },
+        { key: 'suppliers', query: scoped('suppliers') },
+        { key: 'supplier_ledger_entries', query: scoped('supplier_ledger_entries') },
+        { key: 'fabric_stock_lots', query: scoped('fabric_stock_lots') },
+        { key: 'fabric_stock_sales', query: scoped('fabric_stock_sales') },
+        { key: 'fabric_stock_movements', query: scoped('fabric_stock_movements') },
+        { key: 'fabric_stock_inward_drafts', query: scoped('fabric_stock_inward_drafts') },
+        { key: 'notification_consents', query: scoped('notification_consents') },
+        { key: 'stock_discrepancies', query: scoped('stock_discrepancies') },
+        { key: 'worker_consent_artifacts', query: scoped('worker_consent_artifacts') },
+        { key: 'language_requests', query: scoped('language_requests') },
+        { key: 'grievances', query: scoped('grievances') },
+        { key: 'organization_dpas', query: scoped('organization_dpas') },
+        { key: 'breach_reports', query: scoped('breach_reports') },
+        { key: 'whatsapp_delivery_log', query: scoped('whatsapp_delivery_log') },
+        { key: 'whatsapp_cooldowns', query: scoped('whatsapp_cooldowns') },
+        { key: 'referral_codes', query: scoped('referral_codes') },
+        { key: 'referral_uses_as_referee', query: scoped('referral_uses', 'referee_org_id') },
+        { key: 'referral_uses_as_referrer', query: queryReferralUsesAsReferrer },
+        { key: 'referral_discount_windows', query: scoped('referral_discount_windows', 'referrer_org_id') },
+        { key: 'referral_refunds', query: scoped('referral_refunds', 'referrer_org_id') },
+        { key: 'audit_log', query: scoped('audit_log') },
+        { key: 'organization_billing_profiles', query: scoped('organization_billing_profiles') },
+        { key: 'org_subscriptions', query: scoped('org_subscriptions') },
+        { key: 'subscription_payments', query: scoped('subscription_payments') },
+        { key: 'billing_checkout_attempts', query: scoped('billing_checkout_attempts') },
+        { key: 'billing_payment_refunds', query: scoped('billing_payment_refunds') },
+        { key: 'billing_invoices', query: scoped('billing_invoices') },
+        { key: 'organization_export_runs', query: scoped('organization_export_runs') },
+    ]
+
+    const queryResults = await Promise.all(
+        datasetDefinitions.map(async (definition) => ({
+            key: definition.key,
+            result: await definition.query(),
+        }))
+    )
+    const failedQuery = queryResults.find(({ result }) => result.error)
+    if (failedQuery?.result.error) {
         const reason = 'The organization export is incomplete. No export was generated; please try again.'
-        console.error('Organization export query failed', { code: failedQuery.error.code })
+        console.error('Organization export query failed', {
+            dataset: failedQuery.key,
+            code: failedQuery.result.error.code,
+            message: failedQuery.result.error.message,
+        })
         await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
         throw new Error(reason)
     }
-    const [
-        workers, fixedWorkers, machines, productionLogs, payrollPayments,
-        payrollSettlements, payrollAdjustments, workerAdvances, supervisorFloatTransactions,
-        attendance, orders, qualities, yarnBatches, yarnLots, yarnMovements, beamCards,
-        beamCardLots, orderYarnRequirements, dispatches, estimatorQuotes, estimatorTemplates,
-        factoryCostProfile, costRateBook, costRateHistory, payrollConfigs, workerConsentArtifacts,
-        languageRequests, grievances, organizationDpas, organization, profiles,
-        billingProfiles, billingSubscriptions, billingPayments, billingInvoices, billingAttempts, billingRefunds,
-    ] = queryResults.map(result => result.data)
 
-    const datasetCounts = {
-        workers: workers?.length ?? 0,
-        fixed_workers: fixedWorkers?.length ?? 0,
-        machines: machines?.length ?? 0,
-        production_logs: productionLogs?.length ?? 0,
-        orders: orders?.length ?? 0,
-        estimator_quotes: estimatorQuotes?.length ?? 0,
-        estimator_templates: estimatorTemplates?.length ?? 0,
-        billing_profiles: billingProfiles?.length ?? 0,
-        subscription_history: billingSubscriptions?.length ?? 0,
-        subscription_payments: billingPayments?.length ?? 0,
-        billing_invoices: billingInvoices?.length ?? 0,
-        billing_checkout_attempts: billingAttempts?.length ?? 0,
-        billing_payment_refunds: billingRefunds?.length ?? 0,
+    const datasets = Object.fromEntries(
+        queryResults.map(({ key, result }) => [key, (result.data ?? []) as ExportRecord[]])
+    ) as Record<string, ExportRecord[]>
+    // A tenant can appear on either side of a referral. Expose one stable
+    // referral_uses dataset while retaining both scoped query sources for
+    // auditability and completeness.
+    const referralUsesById = new Map<string, ExportRecord>()
+    for (const row of [
+        ...(datasets.referral_uses_as_referee ?? []),
+        ...(datasets.referral_uses_as_referrer ?? []),
+    ]) {
+        const id = typeof row.id === 'string' ? row.id : JSON.stringify(row)
+        referralUsesById.set(id, row)
     }
+    datasets.referral_uses = [...referralUsesById.values()]
+    const redactedDatasets = Object.fromEntries(
+        Object.entries(datasets).map(([key, rows]) => [key, redactRows(rows)])
+    ) as Record<string, ExportRecord[]>
+    const datasetCounts: Record<string, number> = Object.fromEntries(
+        Object.entries(datasets).map(([key, rows]) => [key, rows.length])
+    )
+    // Keep the original billing aliases stable for existing consumers while
+    // exposing the canonical table names in datasets and the top-level export.
+    datasetCounts.billing_profiles = datasetCounts.organization_billing_profiles ?? 0
+    datasetCounts.subscription_history = datasetCounts.org_subscriptions ?? 0
 
     const exportPayload = {
         exported_at: exportedAt,
         filename,
-        schema_version: 'sprint4-v1',
+        schema_version: 'sprint11-v1',
         export_scope: 'current_owner_org',
         dataset_counts: datasetCounts,
+        dataset_catalog: datasetDefinitions.map(({ key }) => key),
         terminology: {
             baseline: 'UX-012 product-owner-approved limited-pilot baseline',
             display_terms: UX012_TERMS,
@@ -220,43 +325,18 @@ export async function exportOrganizationData() {
                 'service-role keys',
             ],
         },
-        organization: organization?.[0] ? redactSensitiveFields(organization[0] as ExportRecord) : null,
-        profiles: redactRows(profiles as ExportRecord[] | null),
-        billing_profile: billingProfiles?.[0] ? redactSensitiveFields(billingProfiles[0] as ExportRecord) : null,
-        subscription_history: redactRows(billingSubscriptions as ExportRecord[] | null),
-        subscription_payments: redactRows(billingPayments as ExportRecord[] | null),
-        billing_invoices: redactRows(billingInvoices as ExportRecord[] | null),
-        billing_checkout_attempts: redactRows(billingAttempts as ExportRecord[] | null),
-        billing_payment_refunds: redactRows(billingRefunds as ExportRecord[] | null),
-        workers: redactRows(workers as ExportRecord[] | null),
-        fixed_workers: redactRows(fixedWorkers as ExportRecord[] | null),
-        machines: redactRows(machines as ExportRecord[] | null),
-        production_logs: redactRows(productionLogs as ExportRecord[] | null),
-        payroll_payments: redactRows(payrollPayments as ExportRecord[] | null),
-        payroll_settlements: redactRows(payrollSettlements as ExportRecord[] | null),
-        payroll_adjustments: redactRows(payrollAdjustments as ExportRecord[] | null),
-        worker_advances: redactRows(workerAdvances as ExportRecord[] | null),
-        supervisor_float_transactions: redactRows(supervisorFloatTransactions as ExportRecord[] | null),
-        attendance: redactRows(attendance as ExportRecord[] | null),
-        orders: redactRows(orders as ExportRecord[] | null),
-        qualities: redactRows(qualities as ExportRecord[] | null),
-        yarn_batches: redactRows(yarnBatches as ExportRecord[] | null),
-        yarn_lots: redactRows(yarnLots as ExportRecord[] | null),
-        yarn_movements: redactRows(yarnMovements as ExportRecord[] | null),
-        beam_cards: redactRows(beamCards as ExportRecord[] | null),
-        beam_card_lots: redactRows(beamCardLots as ExportRecord[] | null),
-        order_yarn_requirements: redactRows(orderYarnRequirements as ExportRecord[] | null),
-        dispatches: redactRows(dispatches as ExportRecord[] | null),
-        estimator_quotes: redactRows(estimatorQuotes as ExportRecord[] | null),
-        estimator_templates: redactRows(estimatorTemplates as ExportRecord[] | null),
-        factory_cost_profile: redactRows(factoryCostProfile as ExportRecord[] | null),
-        cost_rate_book: redactRows(costRateBook as ExportRecord[] | null),
-        cost_rate_history: redactRows(costRateHistory as ExportRecord[] | null),
-        payroll_configs: redactRows(payrollConfigs as ExportRecord[] | null),
-        worker_consent_artifacts: redactRows(workerConsentArtifacts as ExportRecord[] | null),
-        language_requests: redactRows(languageRequests as ExportRecord[] | null),
-        grievances: redactRows(grievances as ExportRecord[] | null),
-        organization_dpas: redactRows(organizationDpas as ExportRecord[] | null),
+        // `datasets` is the complete, table-keyed representation. The
+        // aliases below keep the previous API shape readable and compatible.
+        datasets: redactedDatasets,
+        ...redactedDatasets,
+        organization: redactedDatasets.organization?.[0] ?? null,
+        billing_profile: redactedDatasets.organization_billing_profiles?.[0] ?? null,
+        subscription_history: redactedDatasets.org_subscriptions ?? [],
+        billing_profiles: redactedDatasets.organization_billing_profiles ?? [],
+        subscription_payments: redactedDatasets.subscription_payments ?? [],
+        billing_invoices: redactedDatasets.billing_invoices ?? [],
+        billing_checkout_attempts: redactedDatasets.billing_checkout_attempts ?? [],
+        billing_payment_refunds: redactedDatasets.billing_payment_refunds ?? [],
     }
 
     const payloadHash = crypto.createHash('sha256').update(JSON.stringify(exportPayload)).digest('hex')
@@ -267,7 +347,7 @@ export async function exportOrganizationData() {
             actor_id: user.id,
             status: 'generated',
             filename,
-            schema_version: 'sprint4-v1',
+            schema_version: 'sprint11-v1',
             exported_at: exportedAt,
             dataset_counts: datasetCounts,
             payload_hash: payloadHash,
@@ -293,6 +373,8 @@ export async function exportOrganizationData() {
     if (auditError) {
         await supabase.from('organization_export_runs').delete().eq('id', exportRun.id).eq('org_id', orgId)
         console.error('Failed to audit organization export:', auditError.message)
+        const reason = 'Data export could not be audited. No download was generated; please try again.'
+        await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
         throw new Error('Data export could not be audited. No download was generated; please try again.')
     }
 
@@ -317,11 +399,20 @@ export async function getOrganizationExportHistory(limit = 10) {
         .limit(boundedLimit)
 
     if (!runsError && runs && runs.length > 0) {
+        const actorIds = [...new Set(runs.map(run => run.actor_id).filter((actorId): actorId is string => Boolean(actorId)))]
+        const { data: actors } = actorIds.length > 0
+            ? await supabase
+                .from('profiles')
+                .select('id, full_name')
+                .eq('org_id', profile.org_id)
+                .in('id', actorIds)
+            : { data: [] as { id: string; full_name: string | null }[] }
+        const actorNameById = new Map((actors ?? []).map(actor => [actor.id, actor.full_name || 'Owner']))
         return {
             data: runs.map(run => ({
                 changed_at: run.exported_at,
                 record_id: run.id,
-                actor_name: run.actor_id === profile.org_id ? 'Owner' : 'Owner',
+                actor_name: (run.actor_id && actorNameById.get(run.actor_id)) || 'Owner',
                 status: run.status as 'generated' | 'failed',
                 description: run.status === 'generated'
                     ? `Export generated; filename ${run.filename}`
