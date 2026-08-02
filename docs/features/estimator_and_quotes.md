@@ -56,6 +56,27 @@ Sprint 10 makes Base reusable for repeat customers and recurring fabric qualitie
 
 The Sprint 10 database migration adds the tenant-scoped Saved Costings state index, an optimistic-concurrency archive/favourite RPC, and an atomic yarn-rate discovery RPC. It does not rewrite existing costing rows.
 
+## Sprint 11 — Base documents, export, and billing trust
+
+Sprint 11 makes Base outputs reliable and commercially understandable without turning a customer quotation into a tax document:
+
+- Internal Cost Sheet and Customer Quotation outputs are built from the same normalized costing snapshot and calculation result. Internal output retains cost-stack, overhead, margin, and expected-profit detail; customer output contains only customer-facing commercial information.
+- Customer quotations are document artifacts only. Every customer quotation carries an explicit notice that it is not a GST tax invoice; GST wording, when enabled, points to the separate final tax invoice.
+- Organization, customer, quantity, validity date, and notes are normalized and validated at the export boundary. PDF, print, share, and download actions use deterministic filenames and surface browser save failures instead of reporting a false success.
+- Owner exports now cover the complete organization-scoped dataset catalog, include export counts and history, redact nested sensitive fields, and record generated or failed export runs.
+- Base billing language describes estimator activation, renewal, expiry, access, payment receipts, and GST tax invoices in Base terms. A payment receipt confirms money received; it is not a GST tax invoice.
+
+Sprint 11 adds no database migration. It reuses the existing `organization_export_runs` history table and billing schema; the linked production migration history is expected to remain aligned through `20260802121858_sprint10_saved_costing_library_state.sql`.
+
+### Sprint 11 data and code boundaries
+
+- `lib/estimator-export.ts` — normalized export options, shared costing model, privacy boundary, validity validation, and deterministic filenames.
+- `components/estimator/CostingExportDialog.tsx` — internal/customer document actions and visible browser success/failure feedback.
+- `app/(dashboard)/owner/settings/data-export.ts` — complete organization export catalog, redaction, counts, history, and audit handling.
+- `components/settings/organization-data-export-button.tsx` — generated/download-failed status handling.
+- `app/(dashboard)/owner/billing/page.tsx` and `components/billing/AccessGate.tsx` — Base access, renewal, expiry, receipt, and invoice terminology.
+- `app/api/billing/receipt/[paymentId]/route.ts` and `app/api/billing/invoice/[invoiceId]/route.ts` — deterministic attachment filenames and download response headers.
+
 ## User Workflow
 
 1. Owner opens `/owner/estimator`.

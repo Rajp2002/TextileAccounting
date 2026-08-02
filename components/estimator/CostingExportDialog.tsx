@@ -104,6 +104,7 @@ export function CostingExportDialog({
   const [internalNotes, setInternalNotes] = useState(defaultInternalNotes ?? '')
   const [showGstNote, setShowGstNote] = useState(true)
   const [status, setStatus] = useState<ExportStatus>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null)
   const [generatedFilename, setGeneratedFilename] = useState('')
   const [sharing, setSharing] = useState(false)
@@ -124,6 +125,7 @@ export function CostingExportDialog({
     setInternalNotes(defaultInternalNotes ?? '')
     setShowGstNote(true)
     setStatus('idle')
+    setErrorMessage(null)
     setGeneratedBlob(null)
     setGeneratedFilename('')
     setSharing(false)
@@ -162,12 +164,15 @@ export function CostingExportDialog({
     setGeneratedBlob(null)
     setGeneratedFilename('')
     setStatus('idle')
+    setErrorMessage(null)
   }
 
   const persistCustomerMetadata = async () => {
     if (!sourceQuoteId || sourceRecordKind !== 'quotation' || mode !== 'customer') return true
     if (!latestQuoteUpdatedAt) {
-      toast.error('Quotation version is missing. Refresh Quotations before exporting again.')
+      const message = 'Quotation version is missing. Refresh Quotations before exporting again.'
+      setErrorMessage(message)
+      toast.error(message)
       setStatus('failed')
       return false
     }
@@ -181,7 +186,9 @@ export function CostingExportDialog({
       customerTerms,
     })
     if (result.error || !result.data) {
-      toast.error(userFacingError(result.error, 'Quotation details could not be saved. Try again.'))
+      const message = userFacingError(result.error, 'Quotation details could not be saved. Try again.')
+      setErrorMessage(message)
+      toast.error(message)
       setStatus('failed')
       return false
     }
@@ -193,13 +200,17 @@ export function CostingExportDialog({
 
   const handlePrint = async () => {
     if (!model || validationErrors.length > 0) {
-      toast.error(validationErrors[0] ?? 'Complete the document details before printing.')
+      const message = validationErrors[0] ?? 'Complete the document details before printing.'
+      setErrorMessage(message)
+      toast.error(message)
       return
     }
 
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
-      toast.error('Allow pop-ups to print the document.')
+      const message = 'Allow pop-ups to print the document.'
+      setErrorMessage(message)
+      toast.error(message)
       return
     }
     printWindow.opener = null
@@ -215,21 +226,27 @@ export function CostingExportDialog({
       printWindow.focus()
       printWindow.print()
       setStatus('print-opened')
+      setErrorMessage(null)
     } catch (error) {
       printWindow.close()
       console.error(error)
       setStatus('failed')
-      toast.error('Print could not be opened. Try Download PDF instead.')
+      const message = 'Print could not be opened. Try Download PDF instead.'
+      setErrorMessage(message)
+      toast.error(message)
     }
   }
 
   const handlePdf = async () => {
     if (!model || validationErrors.length > 0) {
-      toast.error(validationErrors[0] ?? 'Complete the document details before generating the PDF.')
+      const message = validationErrors[0] ?? 'Complete the document details before generating the PDF.'
+      setErrorMessage(message)
+      toast.error(message)
       return
     }
 
     setStatus('generating')
+    setErrorMessage(null)
     try {
       if (!(await persistCustomerMetadata())) return
       setStatus('generating')
@@ -267,13 +284,17 @@ export function CostingExportDialog({
     } catch (error) {
       console.error(error)
       setStatus('failed')
-      toast.error('PDF generation failed. Retry or use Print as a fallback.')
+      const message = 'PDF generation failed. Retry or use Print as a fallback.'
+      setErrorMessage(message)
+      toast.error(message)
     }
   }
 
   const handleShare = async () => {
     if (!generatedBlob || !model) {
-      toast.error('Generate the PDF before sharing it.')
+      const message = 'Generate the PDF before sharing it.'
+      setErrorMessage(message)
+      toast.error(message)
       return
     }
 
@@ -294,7 +315,9 @@ export function CostingExportDialog({
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
         const shareWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
         if (!shareWindow) {
-          toast.error('WhatsApp could not be opened. Attach the downloaded PDF manually.')
+          const message = 'WhatsApp could not be opened. Attach the downloaded PDF manually.'
+          setErrorMessage(message)
+          toast.error(message)
           return
         }
         setStatus('share-opened')
@@ -305,7 +328,9 @@ export function CostingExportDialog({
         toast.info('Sharing cancelled')
       } else {
         console.error(error)
-        toast.error('Sharing could not be completed. The PDF is still available in Downloads.')
+        const message = 'Sharing could not be completed. The PDF is still available in Downloads.'
+        setErrorMessage(message)
+        toast.error(message)
       }
     } finally {
       setSharing(false)
@@ -415,8 +440,8 @@ export function CostingExportDialog({
               {mode === 'customer' && (
                 <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3">
                   <div>
-                    <Label htmlFor="export-gst-note">Show GST note</Label>
-                    <p className="text-xs text-slate-500">Clarifies that this is not a tax invoice.</p>
+                    <Label htmlFor="export-gst-note">Show GST detail note</Label>
+                    <p className="text-xs text-slate-500">The quotation-only, not-a-tax-invoice disclaimer is always shown.</p>
                   </div>
                   <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} />
                 </div>
@@ -452,6 +477,17 @@ export function CostingExportDialog({
                   <div>
                     <p className="font-bold">PDF generated and download started</p>
                     <p className="mt-1 text-xs">Check your browser Downloads folder. The system cannot verify the device save location.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {status === 'failed' && errorMessage && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-900" role="alert">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                  <div>
+                    <p className="font-bold">Document action failed</p>
+                    <p className="mt-1 text-xs">{errorMessage}</p>
                   </div>
                 </div>
               </div>
