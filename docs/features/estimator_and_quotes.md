@@ -1,6 +1,6 @@
 # Estimator and Quotes
 
-Last reviewed against the active codebase on May 31, 2026. Updated May 31, 2026.
+Last reviewed against the active codebase on August 2, 2026. Updated August 2, 2026.
 
 ## Phase 1 Status
 
@@ -11,6 +11,24 @@ Core Phase 1 pillar. The estimator is the commercial entry point for Weavly.
 The estimator lets an owner calculate the cost and quote price of a fabric from weaving-specific inputs. It covers warp/weft yarn rows, denier, beam ends, picks, reed space, yarn rates, GST, shortage, warp crimp, loom type, RPM, power, hours per shift, warping, sizing, winding, processing, finishing, overheads, fixed-worker overhead, commission, transport, and profit.
 
 Quotes save both the final commercial values and the estimator state snapshot so historical quote assumptions can be restored later.
+
+## Sprint 8 — Costing Trust Foundation
+
+Every price-changing assumption must be visible before Rajesh saves or quotes. Quick Costing and Detailed Costing use the same `calcFullTotals` → `buildCostingResult` pipeline; the resulting canonical costing snapshot drives the result cards, quote readiness, exports, and server-side persistence.
+
+### Overhead modes
+
+- **Direct overhead rate** uses only the explicit ₹/m rate entered for this costing. The UI does not auto-fill an example or silently copy a monthly reference into the direct rate.
+- **Monthly expenses ÷ output** uses the saved monthly expense items and actual monthly output. The calculated ₹/m value is the active rate for that costing.
+- The assumptions summary shows the selected source, active rate, reference rate, cost impact per metre, and quote-price impact versus the reference. A reference is explanatory only; it never overrides the selected mode.
+
+### Commercial assumptions
+
+The visible assumptions summary also shows commission, transport, target margin, and quantity. Commission, transport, and margin affect the canonical per-metre result. Quantity is explicit and affects order-level totals, not the per-metre price; it remains optional for Base standalone costings and is required for Full Suite quotations and party orders.
+
+Full Suite Quick Costing includes Party / Customer in the same context as the quality name. Base standalone costing keeps its existing semantics: a costing can be saved without party or quantity, while quotation and order actions retain their commercial requirements.
+
+The same canonical result snapshot is persisted alongside the recipe state, so scalar quote fields and the displayed result cannot silently diverge. Historical snapshots remain readable through the tolerant snapshot parser. Sprint 8 adds no schema migration.
 
 ## User Workflow
 

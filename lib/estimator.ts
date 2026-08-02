@@ -15,8 +15,9 @@
  *   Layer 6: Processing    = processingRatePerM  [optional, flat ₹/m]
  *   Layer 7: Finishing     = finishingRatePerM   [optional, flat ₹/m]
  *            directCost    = Layers 1–7
- *   Layer 8: Overhead      = Σ(overheadItems[i].monthlyAmount) / monthlyOutputM
- *              (sum of all fixed monthly factory costs divided by monthly output metres)
+ *   Layer 8: Overhead      = explicit direct ₹/m rate OR
+ *              Σ(overheadItems[i].monthlyAmount) / monthlyOutputM
+ *              (the selected method is preserved in the costing snapshot)
  *   ─────────────────────────────────────────────────────
  *   totalProductionCostPerM = directCost + overhead
  *
@@ -412,8 +413,15 @@ export interface CostingResultSnapshot {
   calculationVersion: string
   roundingPolicy: string
   quantityM: number | null
+  quoteIsValid: boolean
+  quoteErrorMessage: string | null
   productionCostPerM: number
   overheadPerM: number
+  overheadMode: OverheadMode
+  overheadSource: CostingOverheadSource
+  overheadReferencePerM: number | null
+  overheadPriceImpactPerM: number
+  overheadQuotePriceImpactPerM: number
   transportPerM: number
   commissionPct: number
   commissionPerM: number
@@ -438,11 +446,59 @@ export interface CostingResultSnapshot {
     overheadPerM: number
     productionCostPerM: number
   }
+  assumptions: CostingAssumptionsSnapshot | null
+}
+
+export type CostingOverheadSource = 'direct_rate' | 'monthly_expenses'
+export type CostingAssumptionSource = 'direct_rate' | 'monthly_expenses' | 'manual_input' | 'not_set'
+export type CostingAssumptionUnit = 'percent' | 'INR_per_meter' | 'meters'
+
+/**
+ * One price-changing input as it was used by the canonical result. Rates are
+ * intentionally paired with a unit so a persisted snapshot can be explained
+ * without reopening the estimator or relying on today's factory defaults.
+ */
+export interface CostingAssumptionLine {
+  source: CostingAssumptionSource
+  unit: CostingAssumptionUnit
+  activeRate: number | null
+  referenceRate: number | null
+  priceImpactPerM: number
+  priceImpactTotal: number | null
+}
+
+export interface CostingOverheadAssumptions {
+  mode: OverheadMode
+  source: CostingOverheadSource
+  activeRatePerM: number
+  referenceRatePerM: number | null
+  priceImpactPerM: number
+  quotePriceImpactPerM: number
+  priceImpactTotal: number | null
+  monthlyExpenseTotal: number
+  monthlyOutputM: number
+}
+
+export interface CostingAssumptionsSnapshot {
+  overhead: CostingOverheadAssumptions
+  commission: CostingAssumptionLine
+  transport: CostingAssumptionLine
+  margin: CostingAssumptionLine
+  quantity: CostingAssumptionLine
 }
 
 function finiteNumberOrZero(value: unknown): number {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
+}
+
+export function getEffectiveOverheadMode(
+  estimate: Pick<EstimateState, 'overheadMode' | 'overheadOverridePerM'>,
+): OverheadMode {
+  return estimate.overheadMode === 'direct'
+    || (estimate.overheadMode == null && estimate.overheadOverridePerM != null)
+    ? 'direct'
+    : 'monthly_expenses'
 }
 
 /**
@@ -715,6 +771,20 @@ export function calcOverheadCostPerMeter(
   }
 }
 
+function calculateSuggestedSellingPricePerM(params: {
+  totalProductionCostPerM: number
+  commissionPct: number
+  transportPerM: number
+  profitMarginPct: number
+}): number {
+  const P = new Decimal(params.totalProductionCostPerM)
+  const T = new Decimal(params.transportPerM)
+  const C = new Decimal(params.commissionPct).div(100)
+  const M = new Decimal(params.profitMarginPct).div(100)
+  const denominator = new Decimal(1).minus(C).minus(M)
+  return denominator.gt(0) ? P.plus(T).div(denominator).toNumber() : 0
+}
+
 /**
  * Order-level quote calculations.
  * Only called when the owner has entered an order quantity.
@@ -752,7 +822,12 @@ export function calcOrderQuote(params: {
     }
   }
 
-  const quotePricePerM   = P.plus(T).div(denominator)
+  const quotePricePerM   = new Decimal(calculateSuggestedSellingPricePerM({
+    totalProductionCostPerM,
+    commissionPct,
+    transportPerM,
+    profitMarginPct,
+  }))
   const commissionPerM   = quotePricePerM.times(C)
   const landedCostPerM   = P.plus(T).plus(commissionPerM)
   const profitPerM       = quotePricePerM.minus(landedCostPerM)
@@ -806,6 +881,7 @@ export function buildCostingResult(
   totals: EstimatorV3Totals,
 ): CostingResultSnapshot {
   const commercialInputs = getEffectiveCommercialInputs(estimate)
+  const overheadMode = getEffectiveOverheadMode(estimate)
   const hasFiniteProductionCost = Number.isFinite(totals.totalProductionCostPerM)
   const hasFiniteOrderQuote = Boolean(
     totals.orderQuote
@@ -859,13 +935,70 @@ export function buildCostingResult(
       ? new Decimal(profitPerM).div(suggestedSellingPricePerM).times(100).toNumber()
       : 0,
   )
+  const quoteIsValid = Boolean(totals.orderQuote?.isValid) && hasFiniteOrderQuote
+  const monthlyExpenseReferencePerM = estimate.monthlyOutputM > 0
+    ? normalizeCurrencySnapshot(new Decimal(totals.overheadTotalMonthly).div(estimate.monthlyOutputM).toNumber())
+    : null
+  const directRateReferencePerM = estimate.overheadOverridePerM == null
+    ? null
+    : normalizeCurrencySnapshot(estimate.overheadOverridePerM)
+  const overheadReferencePerM = overheadMode === 'direct'
+    ? monthlyExpenseReferencePerM
+    : directRateReferencePerM
+  const overheadPriceImpactPerM = overheadReferencePerM == null
+    ? 0
+    : normalizeCurrencySnapshot(overheadPerM - overheadReferencePerM)
+  const referenceQuotePricePerM = overheadReferencePerM == null || !hasFiniteProductionCost
+    ? null
+    : calculateSuggestedSellingPricePerM({
+      totalProductionCostPerM: totals.directCostPerM + overheadReferencePerM,
+      commissionPct: commercialInputs.commissionPct,
+      transportPerM: commercialInputs.transportPerM,
+      profitMarginPct: estimate.profitPct,
+    })
+  const overheadQuotePriceImpactPerM = quoteIsValid && referenceQuotePricePerM != null
+    ? normalizeCurrencySnapshot(suggestedSellingPricePerM - referenceQuotePricePerM)
+    : 0
+
+  const buildAssumptionLine = (params: {
+    source: CostingAssumptionSource
+    unit: CostingAssumptionUnit
+    activeRate: number | null
+    referenceRate: number | null
+    priceImpactPerM: number
+  }): CostingAssumptionLine => ({
+    ...params,
+    priceImpactTotal: quantityM == null
+      ? null
+      : normalizeCurrencySnapshot(params.priceImpactPerM * quantityM),
+  })
+  const overheadAssumptions: CostingOverheadAssumptions = {
+    mode: overheadMode,
+    source: overheadMode === 'direct' ? 'direct_rate' : 'monthly_expenses',
+    activeRatePerM: overheadPerM,
+    referenceRatePerM: overheadReferencePerM,
+    priceImpactPerM: overheadPriceImpactPerM,
+    quotePriceImpactPerM: overheadQuotePriceImpactPerM,
+    priceImpactTotal: quantityM == null
+      ? null
+      : normalizeCurrencySnapshot(overheadPriceImpactPerM * quantityM),
+    monthlyExpenseTotal: normalizeCurrencySnapshot(totals.overheadTotalMonthly),
+    monthlyOutputM: finiteNumberOrZero(estimate.monthlyOutputM),
+  }
 
   return {
     calculationVersion: COSTING_CALCULATION_VERSION,
     roundingPolicy: COSTING_ROUNDING_POLICY,
     quantityM,
+    quoteIsValid,
+    quoteErrorMessage: totals.orderQuote?.errorMessage ?? null,
     productionCostPerM,
     overheadPerM,
+    overheadMode,
+    overheadSource: overheadAssumptions.source,
+    overheadReferencePerM,
+    overheadPriceImpactPerM,
+    overheadQuotePriceImpactPerM,
     transportPerM,
     commissionPct: finiteNumberOrZero(commercialInputs.commissionPct),
     commissionPerM,
@@ -890,6 +1023,117 @@ export function buildCostingResult(
       overheadPerM,
       productionCostPerM,
     },
+    assumptions: {
+      overhead: overheadAssumptions,
+      commission: buildAssumptionLine({
+        source: 'manual_input',
+        unit: 'percent',
+        activeRate: finiteNumberOrZero(commercialInputs.commissionPct),
+        referenceRate: 0,
+        priceImpactPerM: commissionPerM,
+      }),
+      transport: buildAssumptionLine({
+        source: 'manual_input',
+        unit: 'INR_per_meter',
+        activeRate: transportPerM,
+        referenceRate: 0,
+        priceImpactPerM: transportPerM,
+      }),
+      margin: buildAssumptionLine({
+        source: 'manual_input',
+        unit: 'percent',
+        activeRate: finiteNumberOrZero(estimate.profitPct),
+        referenceRate: 0,
+        priceImpactPerM: normalizeCurrencySnapshot(suggestedSellingPricePerM - breakEvenPricePerM),
+      }),
+      quantity: {
+        source: quantityM == null ? 'not_set' : 'manual_input',
+        unit: 'meters',
+        activeRate: quantityM,
+        referenceRate: null,
+        // Quantity changes order totals, never the per-metre price. Keeping
+        // this explicit prevents an order quantity from becoming a hidden
+        // price input in either standalone or Full Suite costing.
+        priceImpactPerM: 0,
+        priceImpactTotal: null,
+      },
+    },
+  }
+}
+
+function parseCostingAssumptionLine(value: unknown): CostingAssumptionLine | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null
+  const raw = value as Record<string, unknown>
+  const validSources: CostingAssumptionSource[] = ['direct_rate', 'monthly_expenses', 'manual_input', 'not_set']
+  const validUnits: CostingAssumptionUnit[] = ['percent', 'INR_per_meter', 'meters']
+  if (!validSources.includes(raw.source as CostingAssumptionSource)) return null
+  if (!validUnits.includes(raw.unit as CostingAssumptionUnit)) return null
+  const activeRate = raw.activeRate == null ? null : Number(raw.activeRate)
+  const referenceRate = raw.referenceRate == null ? null : Number(raw.referenceRate)
+  const priceImpactPerM = Number(raw.priceImpactPerM)
+  const priceImpactTotal = raw.priceImpactTotal == null ? null : Number(raw.priceImpactTotal)
+  if (activeRate != null && !Number.isFinite(activeRate)) return null
+  if (referenceRate != null && !Number.isFinite(referenceRate)) return null
+  if (!Number.isFinite(priceImpactPerM)) return null
+  if (priceImpactTotal != null && !Number.isFinite(priceImpactTotal)) return null
+  return {
+    source: raw.source as CostingAssumptionSource,
+    unit: raw.unit as CostingAssumptionUnit,
+    activeRate,
+    referenceRate,
+    priceImpactPerM,
+    priceImpactTotal,
+  }
+}
+
+function parseCostingAssumptions(value: unknown): CostingAssumptionsSnapshot | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null
+  const raw = value as Record<string, unknown>
+  const overheadValue = raw.overhead
+  if (overheadValue === null || typeof overheadValue !== 'object' || Array.isArray(overheadValue)) return null
+  const overhead = overheadValue as Record<string, unknown>
+  const mode = overhead.mode
+  const source = overhead.source
+  if (mode !== 'direct' && mode !== 'monthly_expenses') return null
+  if (source !== 'direct_rate' && source !== 'monthly_expenses') return null
+  const readNullable = (key: string) => overhead[key] == null ? null : Number(overhead[key])
+  const activeRatePerM = Number(overhead.activeRatePerM)
+  const referenceRatePerM = readNullable('referenceRatePerM')
+  const priceImpactPerM = Number(overhead.priceImpactPerM)
+  const quotePriceImpactPerM = Number(overhead.quotePriceImpactPerM)
+  const priceImpactTotal = readNullable('priceImpactTotal')
+  const monthlyExpenseTotal = Number(overhead.monthlyExpenseTotal)
+  const monthlyOutputM = Number(overhead.monthlyOutputM)
+  if (!Number.isFinite(activeRatePerM)
+    || (referenceRatePerM != null && !Number.isFinite(referenceRatePerM))
+    || !Number.isFinite(priceImpactPerM)
+    || !Number.isFinite(quotePriceImpactPerM)
+    || (priceImpactTotal != null && !Number.isFinite(priceImpactTotal))
+    || !Number.isFinite(monthlyExpenseTotal)
+    || !Number.isFinite(monthlyOutputM)) return null
+
+  const commission = parseCostingAssumptionLine(raw.commission)
+  const transport = parseCostingAssumptionLine(raw.transport)
+  const margin = parseCostingAssumptionLine(raw.margin)
+  const quantity = parseCostingAssumptionLine(raw.quantity)
+  if (!commission || !transport || !margin || !quantity) return null
+
+  return {
+    overhead: {
+      mode,
+      source,
+      activeRatePerM,
+      referenceRatePerM,
+      priceImpactPerM,
+      quotePriceImpactPerM,
+      priceImpactTotal,
+      monthlyExpenseTotal,
+      monthlyOutputM,
+    },
+    commission,
+    transport,
+    margin,
+    quantity,
   }
 }
 
@@ -930,6 +1174,17 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
   if (totalOrderValue !== null && !Number.isFinite(totalOrderValue)) return null
   if (totalLandedCost !== null && !Number.isFinite(totalLandedCost)) return null
   if (expectedProfitTotal !== null && !Number.isFinite(expectedProfitTotal)) return null
+  if (raw.quoteIsValid != null && typeof raw.quoteIsValid !== 'boolean') return null
+  const assumptions = raw.assumptions == null ? null : parseCostingAssumptions(raw.assumptions)
+  if (raw.assumptions != null && !assumptions) return null
+  const overheadMode = raw.overheadMode === 'direct' ? 'direct' : 'monthly_expenses'
+  const overheadSource = raw.overheadSource === 'direct_rate' ? 'direct_rate' : 'monthly_expenses'
+  const overheadReferencePerM = raw.overheadReferencePerM == null ? null : Number(raw.overheadReferencePerM)
+  const overheadPriceImpactPerM = raw.overheadPriceImpactPerM == null ? 0 : Number(raw.overheadPriceImpactPerM)
+  const overheadQuotePriceImpactPerM = raw.overheadQuotePriceImpactPerM == null ? 0 : Number(raw.overheadQuotePriceImpactPerM)
+  if ((overheadReferencePerM != null && !Number.isFinite(overheadReferencePerM))
+    || !Number.isFinite(overheadPriceImpactPerM)
+    || !Number.isFinite(overheadQuotePriceImpactPerM)) return null
 
   const nonNegativeValues = [
     readCurrency('productionCostPerM'),
@@ -985,8 +1240,17 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
     calculationVersion: raw.calculationVersion,
     roundingPolicy: raw.roundingPolicy,
     quantityM: quantity,
+    quoteIsValid: raw.quoteIsValid == null ? true : raw.quoteIsValid,
+    quoteErrorMessage: raw.quoteErrorMessage == null
+      ? null
+      : typeof raw.quoteErrorMessage === 'string' ? raw.quoteErrorMessage : null,
     productionCostPerM: readCurrency('productionCostPerM')!,
     overheadPerM: readCurrency('overheadPerM')!,
+    overheadMode,
+    overheadSource,
+    overheadReferencePerM,
+    overheadPriceImpactPerM,
+    overheadQuotePriceImpactPerM,
     transportPerM: readCurrency('transportPerM')!,
     commissionPct: readCurrency('commissionPct')!,
     commissionPerM: readCurrency('commissionPerM')!,
@@ -1011,6 +1275,7 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
       overheadPerM: readBreakdownCurrency('overheadPerM')!,
       productionCostPerM: readBreakdownCurrency('productionCostPerM')!,
     },
+    assumptions,
   }
 }
 
@@ -1204,8 +1469,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   // path. An explicit monthly mode always uses monthly expenses; retaining a
   // stale direct override there would make the visible method contradict the
   // amount used in the costing.
-  const isDirectOverhead = estimate.overheadMode === 'direct'
-    || (estimate.overheadMode == null && estimate.overheadOverridePerM != null)
+  const isDirectOverhead = getEffectiveOverheadMode(estimate) === 'direct'
   const overheadPerM = isDirectOverhead
     ? new Decimal(estimate.overheadOverridePerM ?? 0)
     : new Decimal(calculatedOverheadPerM)

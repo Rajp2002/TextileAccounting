@@ -34,8 +34,8 @@ describe('Base P1 pilot remediation', () => {
     expect(client).toContain('placeholder="5000"')
     expect(actions).toContain('party_name:           params.partyName?.trim() || null')
     expect(actions).toContain("if (newRecordKind === 'quotation' && !params.partyName?.trim())")
-    expect(actions).toContain('order_quantity_m:     estimate.orderQuantityM')
-    expect(actions).toContain('meters:                   estimate.orderQuantityM ?? 0')
+    expect(actions).toContain('order_quantity_m:     authoritative.result.quantityM')
+    expect(actions).toContain('meters:                   authoritative.result.quantityM ?? 0')
     expect(actions).toContain("party_name: normalizeTemplateName(data.partyName || '') || null")
   })
 

@@ -52,7 +52,7 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("!canUseProduction ? t('estimator.simulation.base_title')")
         expect(estimator).toContain('placeholder="5000"')
-        expect(estimator).toContain("(!canUseProduction || hasOrderQty) && orderQuote")
+        expect(estimator).toContain('hasValidCostResult && costingResult.quoteIsValid')
     })
 
     it('keeps the costing backbone and terminology shared with Full Suite', () => {

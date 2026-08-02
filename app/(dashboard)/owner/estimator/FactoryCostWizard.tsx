@@ -44,7 +44,9 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const [selectedSections, setSelectedSections] = useState({ ...initialState.enabledSections })
     
     // Local state for the wizard inputs
-    const [overheadPerM, setOverheadPerM] = useState<number>(initialState.overheadOverridePerM ?? 0)
+    // A direct rate is a price-changing assumption. Keep it blank until the
+    // owner enters one instead of presenting an example as if it were real.
+    const [overheadPerM, setOverheadPerM] = useState<number | null>(initialState.overheadOverridePerM ?? null)
     const [loomCount, setLoomCount] = useState<number>(initialState.loomCount || 0)
     const [workingDays, setWorkingDays] = useState<number>(initialState.monthlyWorkingDays || 26)
     const [avgOutput, setAvgOutput] = useState<number>(initialState.avgOutputPerLoomPerDay || 50)
@@ -150,7 +152,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             return
         }
         const data = getCompletionData()
-        if (setupPath === 'direct' && overheadPerM <= 0) {
+        if (setupPath === 'direct' && (overheadPerM == null || overheadPerM <= 0)) {
             setValidationError('Enter the direct factory cost per metre before saving these defaults.')
             setStep('fast')
             return
@@ -338,13 +340,13 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     </div>
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Factory cost per metre (₹/m)</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Direct factory overhead (₹/m) — REQUIRED</Label>
                                             <div className="relative">
                                                 <Input 
                                                     type="number"
-                                                    value={overheadPerM || ''}
+                                                    value={overheadPerM ?? ''}
                                                     placeholder="Enter your rate"
-                                                    onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value) ?? 0)}
+                                                    onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value))}
                                                     className="h-14 text-2xl font-black text-indigo-600 pl-8 pr-12 rounded-xl border-slate-200 focus:ring-indigo-500/20"
                                                 />
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-400">₹</span>
@@ -352,7 +354,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                         </div>
                                         <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                                            &quot;Use the rate your unit already uses for rent, power, staff, repairs, and other factory expenses.&quot;
+                                            Enter the rate your unit already uses for rent, power, staff, repairs, and other fixed costs. No direct rate is inferred.
                                         </p>
                                     </div>
                                     {validationError && (

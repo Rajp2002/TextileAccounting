@@ -59,7 +59,7 @@ describe('Batch 24D EST-017 estimator double-submit guard', () => {
 
     it('keeps all estimator submit buttons disabled while the guarded submit is pending', () => {
         expect(estimatorClient).toContain('disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim()')
-        expect(estimatorClient).toContain('disabled={savingQuote || !orderQuote?.isValid}')
+        expect(estimatorClient).toContain('disabled={savingQuote || !costingResult.quoteIsValid}')
         expect(estimatorClient).toContain('disabled={savingQuote}')
     })
 })
