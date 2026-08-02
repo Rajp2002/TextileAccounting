@@ -1,7 +1,7 @@
 # Sprint 13 — Estimator Aesthetic and Responsive Refinement
 
 Date: 2026-08-03
-Status: **Implementation and local production-build QA complete; production promotion pending**
+Status: **Production-ready and live**
 Scope: owner estimator result cockpit, pricing-assumptions disclosure, responsive layout, accessibility polish
 
 ## Outcome
@@ -90,11 +90,18 @@ The build emitted only the existing Browserslist stale-data notice; no compilati
 - `__tests__/sprint-estimator-aesthetic.test.ts`
 - `output/playwright/estimator-refinement/*.png`
 
-## Production release handoff
+## Production release
 
-- Production target: `https://textile-accounting.vercel.app`
 - Release branch: `main`
-- Production deployment ID, commit SHA, final Vercel state, and post-promotion smoke result will be appended after the merged commit is promoted.
+- Merged release commit: `f450100` (`feat(estimator): refine responsive pricing disclosure`)
+- Vercel deployment: `dpl_FesAqLsyKFYyoHYUkgggDtYVofap`
+- Deployment state: `READY`
+- Production URL: `https://textile-accounting.vercel.app`
+- Deployment URL: `https://textile-accounting-mj7idm249-rajpatel86420-9825s-projects.vercel.app`
+- Aliases: `textile-accounting-rajpatel86420-9825s-projects.vercel.app` and `textile-accounting-git-main-rajpatel86420-9825s-projects.vercel.app`
+- Vercel prebuild: 132 test files passed, 2 skipped; 845 tests passed, 17 skipped; Next.js compilation and TypeScript completed successfully.
+- Production smoke check: `/` returned HTTP 200; `/owner/estimator` returned the expected HTTP 307 redirect to `/login` for an unauthenticated request.
+- Runtime logs after promotion: only the expected GET requests above; no error-level entries observed.
 
 ## Remaining limitations
 
