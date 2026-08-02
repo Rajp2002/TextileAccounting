@@ -12,6 +12,7 @@ The Sprint 7 closeout pack records the final Base UX polish release, merged main
 | --- | --- | --- |
 | Sprint 7 — Final UX Polish and Pilot Readiness | Production release verified; exact mutating pilot blocked by disposable QA plan entitlement | [Sprint 7 production closeout](SPRINT7_UX_POLISH_PRODUCTION_CLOSEOUT_2026-08-02.md) |
 | Sprint 9 — Base Editor, Draft, and Reset Reliability | Release-ready; production migration dry-run clean | [Sprint 9 production closeout](SPRINT9_BASE_EDITOR_DRAFT_RESET_RELIABILITY_2026-08-02.md) |
+| Sprint 10 — Saved Costings, Rates, Versions, and Comparison | Release-ready; production migration and deployment evidence recorded in the closeout pack | [Sprint 10 production closeout](SPRINT10_SAVED_COSTINGS_RATES_COMPARISON_2026-08-02.md) |
 
 | Row | Canonical requirement | Current classification | Closure pack |
 | --- | --- | --- | --- |

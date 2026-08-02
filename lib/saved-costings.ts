@@ -3,6 +3,8 @@ import {
   makeDefaultEstimateState,
   normalizeCurrencySnapshot,
   parseCostingResultSnapshot,
+  type CostingResultSnapshot,
+  type EstimatorYarnLayerAudit,
   type FactorySections,
   type OverheadMode,
   type LoomType,
@@ -23,6 +25,8 @@ export type SavedCostingListItem = {
   meters: number
   created_at: string
   updated_at: string
+  is_archived?: boolean
+  is_favorite?: boolean
   calculation_version?: string | null
   rounding_policy?: string | null
   production_cost_per_meter?: number | null
@@ -33,6 +37,14 @@ export type SavedCostingListItem = {
   expected_profit_total?: number | null
   actual_margin_percent?: number | null
   costing_result_snapshot?: unknown
+  /** Immutable technical recipe captured with the costing. */
+  warp_rows?: unknown
+  weft_rows?: unknown
+  snapshot_data?: unknown
+  yarn_shortage_pct?: unknown
+  warp_crimp_pct?: unknown
+  overhead_mode?: string | null
+  overhead_override_per_m?: unknown
   reconciliation_status?: string | null
   reconciliation_note?: string | null
 }
@@ -358,6 +370,7 @@ export function filterAndSortSavedCostings<T extends SavedCostingListItem>(
     query: string
     sort: SavedCostingSort
     margin: SavedCostingMarginFilter
+    favorites?: boolean
   },
 ) {
   const query = options.query.trim().toLocaleLowerCase('en-IN')
@@ -366,6 +379,7 @@ export function filterAndSortSavedCostings<T extends SavedCostingListItem>(
       const searchable = `${costing.quality_label ?? ''} ${costing.party_name ?? ''}`.toLocaleLowerCase('en-IN')
       const actualMargin = getSavedCostingMetrics(costing).actualMarginPct
       return (!query || searchable.includes(query))
+        && (!options.favorites || costing.is_favorite === true)
         && (options.margin === 'all' || (actualMargin != null && matchesMargin(actualMargin, options.margin)))
     })
     .sort((left, right) => {
@@ -427,4 +441,326 @@ export function getCostingVersionMovement(current: SavedCostingListItem, previou
   return currentMetrics.productionCostPerM != null && previousMetrics.productionCostPerM != null
     ? currentMetrics.productionCostPerM - previousMetrics.productionCostPerM
     : null
+}
+
+export type SavedCostingIdentity = {
+  groupId: string
+  versionNumber: number
+  label: string
+}
+
+/**
+ * Give every saved costing a stable, owner-visible identity.  The group is the
+ * lineage; the version is the immutable snapshot within that lineage.  Legacy
+ * rows without a group remain addressable by their own id instead of being
+ * silently merged with another quality.
+ */
+export function getSavedCostingIdentity(costing: VersionedSavedCostingListItem): SavedCostingIdentity {
+  const groupId = costing.costing_group_id || costing.id
+  const versionNumber = Math.max(1, Number(costing.version_number ?? 1) || 1)
+  const shortGroupId = groupId.length > 12 ? groupId.slice(0, 8) : groupId
+  const quality = costing.quality_label?.trim() || 'Untitled costing'
+  return {
+    groupId,
+    versionNumber,
+    label: `${quality} · group ${shortGroupId} · v${versionNumber}`,
+  }
+}
+
+export type SavedCostingDelta = {
+  left: number | null
+  right: number | null
+  delta: number | null
+}
+
+export type SavedCostingLayerComparison = {
+  changed: boolean
+  left: Array<{
+    name: string
+    ratePerKg: number | null
+    finalKgPer100m: number | null
+    wastePct: number | null
+    crimpPct: number | null
+    costPerM: number | null
+  }>
+  right: Array<{
+    name: string
+    ratePerKg: number | null
+    finalKgPer100m: number | null
+    wastePct: number | null
+    crimpPct: number | null
+    costPerM: number | null
+  }>
+  costPerM: SavedCostingDelta
+  ratePerKg: SavedCostingDelta
+}
+
+export type SavedCostingCanonicalComparison = {
+  comparable: boolean
+  canonical: {
+    leftAvailable: boolean
+    rightAvailable: boolean
+    sameSnapshotSchema: boolean
+    sameCalculationVersion: boolean
+    sameRoundingPolicy: boolean
+    leftSnapshotSchemaVersion: number | null
+    rightSnapshotSchemaVersion: number | null
+    leftCalculationVersion: string | null
+    rightCalculationVersion: string | null
+    source: 'canonical_result' | 'saved_inputs' | 'unavailable'
+    message: string | null
+  }
+  yarn: {
+    changed: boolean
+    warp: SavedCostingLayerComparison
+    weft: SavedCostingLayerComparison
+  }
+  waste: {
+    changed: boolean
+    yarnShortagePct: SavedCostingDelta
+    warpCrimpPct: SavedCostingDelta
+    yarnAdjustmentCostPerM: SavedCostingDelta
+  }
+  overhead: {
+    changed: boolean
+    modeChanged: boolean
+    mode: { left: string | null; right: string | null }
+    perM: SavedCostingDelta
+    monthlyExpenseTotal: SavedCostingDelta
+    monthlyOutputM: SavedCostingDelta
+  }
+  margin: {
+    changed: boolean
+    targetPct: SavedCostingDelta
+    actualPct: SavedCostingDelta
+  }
+  price: {
+    changed: boolean
+    productionCostPerM: SavedCostingDelta
+    breakEvenPricePerM: SavedCostingDelta
+    landedCostPerM: SavedCostingDelta
+    sellingPricePerM: SavedCostingDelta
+    expectedProfitPerM: SavedCostingDelta
+  }
+}
+
+type SavedCostingAuditLayer = {
+  name?: unknown
+  label?: unknown
+  yarnRate?: unknown
+  ratePerKg?: unknown
+  finalKgPer100m?: unknown
+  wastePct?: unknown
+  shortagePct?: unknown
+  crimpPct?: unknown
+  costPerMeter?: unknown
+}
+
+function numericOrNull(value: unknown): number | null {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function delta(left: unknown, right: unknown): SavedCostingDelta {
+  const leftValue = numericOrNull(left)
+  const rightValue = numericOrNull(right)
+  return {
+    left: leftValue,
+    right: rightValue,
+    delta: leftValue == null || rightValue == null ? null : normalizeCurrencySnapshot(rightValue - leftValue),
+  }
+}
+
+function deltaChanged(value: SavedCostingDelta) {
+  return value.delta != null && Math.abs(value.delta) > 0.0001
+}
+
+function readSavedRows(costing: SavedCostingListItem, key: 'warpRows' | 'weftRows') {
+  const direct = key === 'warpRows' ? costing.warp_rows : costing.weft_rows
+  if (Array.isArray(direct)) return direct as SavedCostingAuditLayer[]
+  const snapshot = asRecord(costing.snapshot_data)
+  return Array.isArray(snapshot[key]) ? snapshot[key] as SavedCostingAuditLayer[] : []
+}
+
+function layerSummaryFromAudit(layers: EstimatorYarnLayerAudit[] | undefined) {
+  return (layers ?? []).map(layer => ({
+    name: layer.name || 'Unnamed yarn',
+    ratePerKg: numericOrNull(layer.ratePerKg),
+    finalKgPer100m: numericOrNull(layer.finalKgPer100m),
+    wastePct: numericOrNull(layer.wastePct),
+    crimpPct: numericOrNull(layer.crimpPct),
+    costPerM: numericOrNull(layer.costPerMeter),
+  }))
+}
+
+function layerSummaryFromSavedRows(rows: SavedCostingAuditLayer[]) {
+  return rows.map(row => ({
+    name: typeof (row.name ?? row.label) === 'string' && String(row.name ?? row.label).trim()
+      ? String(row.name ?? row.label).trim()
+      : 'Unnamed yarn',
+    ratePerKg: numericOrNull(row.ratePerKg ?? row.yarnRate),
+    finalKgPer100m: numericOrNull(row.finalKgPer100m),
+    wastePct: numericOrNull(row.wastePct ?? row.shortagePct),
+    crimpPct: numericOrNull(row.crimpPct),
+    costPerM: numericOrNull(row.costPerMeter),
+  }))
+}
+
+function layerSignature(layers: SavedCostingLayerComparison['left']) {
+  return JSON.stringify(layers.map(layer => ({
+    name: layer.name.toLocaleLowerCase('en-IN'),
+    ratePerKg: layer.ratePerKg,
+    finalKgPer100m: layer.finalKgPer100m,
+    wastePct: layer.wastePct,
+    crimpPct: layer.crimpPct,
+    costPerM: layer.costPerM,
+  })))
+}
+
+function buildLayerComparison(
+  leftLayers: SavedCostingLayerComparison['left'],
+  rightLayers: SavedCostingLayerComparison['right'],
+  leftCost: unknown,
+  rightCost: unknown,
+): SavedCostingLayerComparison {
+  const costPerM = delta(leftCost, rightCost)
+  const leftRate = leftLayers.length === 1 ? leftLayers[0].ratePerKg : null
+  const rightRate = rightLayers.length === 1 ? rightLayers[0].ratePerKg : null
+  const ratePerKg = delta(leftRate, rightRate)
+  return {
+    changed: layerSignature(leftLayers) !== layerSignature(rightLayers) || deltaChanged(costPerM),
+    left: leftLayers,
+    right: rightLayers,
+    costPerM,
+    ratePerKg,
+  }
+}
+
+function getAuditForComparison(result: CostingResultSnapshot | null, costing: SavedCostingListItem, key: 'warp' | 'weft') {
+  const auditLayers = result?.audit?.[key]?.layers
+  if (auditLayers?.length) return layerSummaryFromAudit(auditLayers)
+  return layerSummaryFromSavedRows(readSavedRows(costing, key === 'warp' ? 'warpRows' : 'weftRows'))
+}
+
+/**
+ * Compare only persisted costing evidence.  The function never calls the
+ * estimator engine, reads factory defaults, or looks at the current Rate Book.
+ * That is the important boundary that keeps a historical comparison stable.
+ */
+export function compareSavedCostingSnapshots(
+  left: SavedCostingListItem,
+  right: SavedCostingListItem,
+): SavedCostingCanonicalComparison {
+  const leftResult = parseCostingResultSnapshot(left.costing_result_snapshot)
+  const rightResult = parseCostingResultSnapshot(right.costing_result_snapshot)
+  const leftAvailable = Boolean(leftResult)
+  const rightAvailable = Boolean(rightResult)
+  const sameSnapshotSchema = leftAvailable && rightAvailable
+    ? (leftResult?.snapshotSchemaVersion ?? 1) === (rightResult?.snapshotSchemaVersion ?? 1)
+    : false
+  const sameCalculationVersion = leftAvailable && rightAvailable
+    ? leftResult?.calculationVersion === rightResult?.calculationVersion
+    : false
+  const sameRoundingPolicy = leftAvailable && rightAvailable
+    ? leftResult?.roundingPolicy === rightResult?.roundingPolicy
+    : false
+  const comparable = leftAvailable && rightAvailable && sameSnapshotSchema && sameCalculationVersion && sameRoundingPolicy
+  const bothHaveAudit = Boolean(leftResult?.audit && rightResult?.audit)
+  const source = !comparable
+    ? 'unavailable'
+    : bothHaveAudit
+      ? 'canonical_result'
+      : 'saved_inputs'
+  const message = !leftAvailable || !rightAvailable
+    ? 'Both costings need a verified canonical result before they can be compared.'
+    : !sameSnapshotSchema || !sameCalculationVersion || !sameRoundingPolicy
+      ? 'These costings use different canonical calculation or rounding versions. Save a new version before comparing them.'
+      : null
+
+  const leftWarp = getAuditForComparison(leftResult, left, 'warp')
+  const rightWarp = getAuditForComparison(rightResult, right, 'warp')
+  const leftWeft = getAuditForComparison(leftResult, left, 'weft')
+  const rightWeft = getAuditForComparison(rightResult, right, 'weft')
+  const yarn = {
+    warp: buildLayerComparison(leftWarp, rightWarp, leftResult?.breakdown.warpCostPerM, rightResult?.breakdown.warpCostPerM),
+    weft: buildLayerComparison(leftWeft, rightWeft, leftResult?.breakdown.weftCostPerM, rightResult?.breakdown.weftCostPerM),
+  }
+
+  const leftSnapshot = asRecord(left.snapshot_data)
+  const rightSnapshot = asRecord(right.snapshot_data)
+  const leftShortage = left.yarn_shortage_pct ?? leftSnapshot.yarnShortagePct
+  const rightShortage = right.yarn_shortage_pct ?? rightSnapshot.yarnShortagePct
+  const leftCrimp = left.warp_crimp_pct ?? leftSnapshot.warpCrimpPct
+  const rightCrimp = right.warp_crimp_pct ?? rightSnapshot.warpCrimpPct
+  const waste = {
+    yarnShortagePct: delta(leftShortage, rightShortage),
+    warpCrimpPct: delta(leftCrimp, rightCrimp),
+    yarnAdjustmentCostPerM: delta(leftResult?.audit?.yarnAdjustmentCostPerMeter, rightResult?.audit?.yarnAdjustmentCostPerMeter),
+  }
+
+  const leftOverhead = leftResult?.assumptions?.overhead
+  const rightOverhead = rightResult?.assumptions?.overhead
+  const overheadModeLeft = leftResult?.overheadMode ?? leftOverhead?.mode ?? null
+  const overheadModeRight = rightResult?.overheadMode ?? rightOverhead?.mode ?? null
+  const overhead = {
+    mode: { left: overheadModeLeft, right: overheadModeRight },
+    modeChanged: overheadModeLeft !== overheadModeRight,
+    perM: delta(leftResult?.overheadPerM, rightResult?.overheadPerM),
+    monthlyExpenseTotal: delta(leftOverhead?.monthlyExpenseTotal, rightOverhead?.monthlyExpenseTotal),
+    monthlyOutputM: delta(leftOverhead?.monthlyOutputM, rightOverhead?.monthlyOutputM),
+  }
+
+  const margin = {
+    targetPct: delta(leftResult?.targetMarginPct, rightResult?.targetMarginPct),
+    actualPct: delta(leftResult?.actualMarginPct, rightResult?.actualMarginPct),
+  }
+  const price = {
+    productionCostPerM: delta(leftResult?.productionCostPerM, rightResult?.productionCostPerM),
+    breakEvenPricePerM: delta(leftResult?.breakEvenPricePerM, rightResult?.breakEvenPricePerM),
+    landedCostPerM: delta(leftResult?.landedCostPerM, rightResult?.landedCostPerM),
+    sellingPricePerM: delta(leftResult?.suggestedSellingPricePerM, rightResult?.suggestedSellingPricePerM),
+    expectedProfitPerM: delta(leftResult?.profitPerM, rightResult?.profitPerM),
+  }
+
+  return {
+    comparable,
+    canonical: {
+      leftAvailable,
+      rightAvailable,
+      sameSnapshotSchema,
+      sameCalculationVersion,
+      sameRoundingPolicy,
+      leftSnapshotSchemaVersion: leftResult?.snapshotSchemaVersion ?? null,
+      rightSnapshotSchemaVersion: rightResult?.snapshotSchemaVersion ?? null,
+      leftCalculationVersion: leftResult?.calculationVersion ?? null,
+      rightCalculationVersion: rightResult?.calculationVersion ?? null,
+      source,
+      message,
+    },
+    yarn: {
+      ...yarn,
+      changed: yarn.warp.changed || yarn.weft.changed,
+    },
+    waste: {
+      ...waste,
+      changed: deltaChanged(waste.yarnShortagePct)
+        || deltaChanged(waste.warpCrimpPct)
+        || deltaChanged(waste.yarnAdjustmentCostPerM),
+    },
+    overhead: {
+      ...overhead,
+      changed: overhead.modeChanged
+        || deltaChanged(overhead.perM)
+        || deltaChanged(overhead.monthlyExpenseTotal)
+        || deltaChanged(overhead.monthlyOutputM),
+    },
+    margin: {
+      ...margin,
+      changed: deltaChanged(margin.targetPct) || deltaChanged(margin.actualPct),
+    },
+    price: {
+      ...price,
+      changed: Object.values(price).some(deltaChanged),
+    },
+  }
 }

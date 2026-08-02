@@ -6,9 +6,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import {
     collectYarnRateCandidates,
-    getMissingYarnRateCandidates,
     getYarnRateConflicts,
-    normalizeYarnName,
     type YarnRateTemplate,
 } from '@/lib/yarn-rate-reconciliation'
 
@@ -131,113 +129,24 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
         weft_rows: costing.weft_rows,
     })) as YarnRateTemplate[]
     const savedYarnSources = [...qualityTemplates, ...savedCostings]
-    const today = new Date().toISOString().slice(0, 10)
     let rates = existingRates ?? []
 
-    // Remove only untouched yarn placeholders created by the old read-time
-    // seeding behavior. Any rate the owner saved has a history row and must be
-    // preserved, even if its source label still says "Estimator defaults".
-    const legacyDefaultIds = rates
-        .filter(rate =>
-            rate.is_active !== false
-            &&
-            (rate.category === 'yarn_warp' || rate.category === 'yarn_weft')
-            && rate.source === 'Estimator defaults'
-            && rate.apply_as_default
-        )
-        .map(rate => rate.id)
-    if (legacyDefaultIds.length) {
-        const { data: reviewedDefaults, error: historyError } = await supabase
-            .from('cost_rate_history')
-            .select('rate_id')
-            .eq('org_id', profile.org_id)
-            .in('rate_id', legacyDefaultIds)
-        if (historyError) return { error: historyError.message }
-
-        const reviewedIds = new Set((reviewedDefaults ?? []).map(row => row.rate_id))
-        const untouchedIds = legacyDefaultIds.filter(id => !reviewedIds.has(id))
-        if (untouchedIds.length) {
-            await setAuditActor(supabase, user.id)
-            const { error: cleanupError } = await supabase
-                .from('cost_rate_book')
-                .delete()
-                .eq('org_id', profile.org_id)
-                .in('id', untouchedIds)
-            if (cleanupError) return { error: cleanupError.message }
-            rates = rates.filter(rate => !untouchedIds.includes(rate.id))
-        }
-    }
-
     const savedCandidates = collectYarnRateCandidates(savedYarnSources)
-    const placeholderUpgrades = savedCandidates.flatMap(candidate => {
-        const existing = rates.find(rate =>
-            rate.is_active !== false
-            &&
-            rate.category === candidate.category
-            && normalizeYarnName(rate.name) === candidate.normalizedName
-            && Number(rate.current_value) === 0
-            && candidate.currentValue > 0
-        )
-        return existing ? [{ existing, candidate }] : []
-    })
-    if (placeholderUpgrades.length) {
+    if (savedCandidates.length) {
         await setAuditActor(supabase, user.id)
-        for (const { existing, candidate } of placeholderUpgrades) {
-            const { error: promoteError } = await supabase
-                .from('cost_rate_book')
-                .update({
-                    current_value: candidate.currentValue,
-                    effective_date: today,
-                    last_reviewed_at: today,
-                    source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
-                    notes: (candidate.conflict
-                        ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
-                        : `Discovered from ${candidate.yarnName} layers in a saved quality or costing.`).slice(0, 500),
-                    updated_by: user.id,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', existing.id)
-                .eq('org_id', profile.org_id)
-                .eq('current_value', 0)
-                .eq('is_active', true)
-            if (promoteError) return { error: promoteError.message }
+        for (const candidate of savedCandidates) {
+            const { error: discoverError } = await supabase.rpc('discover_yarn_rate_atomic', {
+                p_name: candidate.yarnName,
+                p_category: candidate.category,
+                p_current_value: candidate.currentValue,
+                p_review_interval_days: yarnReviewIntervalDays,
+                p_source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
+                p_notes: (candidate.conflict
+                    ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
+                    : `Discovered from ${candidate.yarnName} layers in a saved quality or costing.`).slice(0, 500),
+            })
+            if (discoverError) return { error: discoverError.message }
         }
-
-        const { data: refreshed, error: refreshError } = await supabase
-            .from('cost_rate_book')
-            .select('*')
-            .eq('org_id', profile.org_id)
-            .eq('is_active', true)
-            .order('category')
-            .order('name')
-        if (refreshError) return { error: refreshError.message }
-        rates = refreshed ?? []
-    }
-
-    const missingYarns = getMissingYarnRateCandidates(savedYarnSources, rates.filter(rate => rate.is_active !== false))
-    if (missingYarns.length) {
-        const discoveredRates = missingYarns.map(candidate => ({
-            org_id: profile.org_id,
-            name: candidate.yarnName,
-            category: candidate.category,
-            unit: 'per_kg',
-            current_value: candidate.currentValue,
-            effective_date: today,
-            last_reviewed_at: today,
-            review_interval_days: yarnReviewIntervalDays,
-            source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
-            notes: (candidate.conflict
-                ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
-                : `Discovered from ${candidate.yarnName} layers in a saved quality or costing.`).slice(0, 500),
-            apply_as_default: false,
-            created_by: user.id,
-            updated_by: user.id,
-        }))
-        await setAuditActor(supabase, user.id)
-        const { error: discoveredError } = await supabase
-            .from('cost_rate_book')
-            .upsert(discoveredRates, { onConflict: 'org_id,name,category', ignoreDuplicates: true })
-        if (discoveredError) return { error: discoveredError.message }
 
         const { data: refreshed, error: refreshError } = await supabase
             .from('cost_rate_book')

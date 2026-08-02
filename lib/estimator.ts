@@ -410,6 +410,8 @@ export interface EstimatorV3Totals {
  * the final INR values after the single approved rounding policy is applied.
  */
 export interface CostingResultSnapshot {
+  /** Version of the persisted canonical result shape, not the formula version. */
+  snapshotSchemaVersion?: number
   calculationVersion: string
   roundingPolicy: string
   quantityM: number | null
@@ -447,6 +449,12 @@ export interface CostingResultSnapshot {
     productionCostPerM: number
   }
   assumptions: CostingAssumptionsSnapshot | null
+  /**
+   * Immutable technical detail captured with the result.  Older rows do not
+   * have this field, so readers must treat it as optional rather than
+   * recalculating historical costings with today's defaults.
+   */
+  audit?: EstimatorCostAudit
 }
 
 export type CostingOverheadSource = 'direct_rate' | 'monthly_expenses'
@@ -987,6 +995,7 @@ export function buildCostingResult(
   }
 
   return {
+    snapshotSchemaVersion: 2,
     calculationVersion: COSTING_CALCULATION_VERSION,
     roundingPolicy: COSTING_ROUNDING_POLICY,
     quantityM,
@@ -1058,6 +1067,121 @@ export function buildCostingResult(
         priceImpactTotal: null,
       },
     },
+    audit: totals.audit,
+  }
+}
+
+function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYarnLayerAudit | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null
+  const raw = value as Record<string, unknown>
+  const readRequiredNumber = (key: string) => {
+    const parsed = Number(raw[key])
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const readNullableNumber = (key: string) => {
+    if (raw[key] === null || raw[key] === undefined) return null
+    const parsed = Number(raw[key])
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const requiredNumbers = [
+    'calcDenier',
+    'formulaKgPer100m',
+    'baseKgPer100mUsed',
+    'crimpPct',
+    'wastePct',
+    'totalAdjustmentPct',
+    'finalKgPer100m',
+    'ratePerKg',
+    'gstPct',
+    'costPerMeter',
+  ]
+  const parsedRequired = Object.fromEntries(requiredNumbers.map(key => [key, readRequiredNumber(key)]))
+  if (Object.values(parsedRequired).some(value => value === null)) return null
+
+  const mode = raw.mode === 'manual' ? 'manual' : raw.mode === 'formula' ? 'formula' : null
+  if (!mode) return null
+
+  const id = typeof raw.id === 'string' && raw.id ? raw.id : fallbackId
+  const name = typeof raw.name === 'string' ? raw.name : ''
+  const formulaDescription = typeof raw.formulaDescription === 'string' ? raw.formulaDescription : ''
+  const beamEnds = readNullableNumber('beamEnds')
+  const picks = readNullableNumber('picks')
+  const effectiveCostingWidthInches = readNullableNumber('effectiveCostingWidthInches')
+  const manualKgPer100m = readNullableNumber('manualKgPer100m')
+
+  return {
+    id,
+    name,
+    mode,
+    formulaDescription,
+    calcDenier: parsedRequired.calcDenier!,
+    beamEnds,
+    picks,
+    effectiveCostingWidthInches,
+    formulaKgPer100m: parsedRequired.formulaKgPer100m!,
+    manualKgPer100m,
+    baseKgPer100mUsed: parsedRequired.baseKgPer100mUsed!,
+    crimpPct: parsedRequired.crimpPct!,
+    wastePct: parsedRequired.wastePct!,
+    totalAdjustmentPct: parsedRequired.totalAdjustmentPct!,
+    finalKgPer100m: parsedRequired.finalKgPer100m!,
+    ratePerKg: parsedRequired.ratePerKg!,
+    gstPct: parsedRequired.gstPct!,
+    costPerMeter: parsedRequired.costPerMeter!,
+  }
+}
+
+function parseCostingAudit(value: unknown): EstimatorCostAudit | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null
+  const raw = value as Record<string, unknown>
+  const parseLayerGroup = (key: 'warp' | 'weft') => {
+    const group = raw[key]
+    if (group === null || typeof group !== 'object' || Array.isArray(group)) return null
+    const groupRecord = group as Record<string, unknown>
+    if (!Array.isArray(groupRecord.layers)) return null
+    const layers = groupRecord.layers
+      .map((layer, index) => parseCostingAuditLayer(layer, `${key}-${index}`))
+    if (layers.some(layer => layer === null)) return null
+    const totalCostPerMeter = Number(groupRecord.totalCostPerMeter)
+    if (!Number.isFinite(totalCostPerMeter)) return null
+    return { layers: layers as EstimatorYarnLayerAudit[], totalCostPerMeter }
+  }
+  const warp = parseLayerGroup('warp')
+  const weft = parseLayerGroup('weft')
+  if (!warp || !weft) return null
+
+  const readNumber = (key: string) => {
+    const parsed = Number(raw[key])
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const numericKeys = [
+    'yarnBaseCostPerMeter',
+    'yarnAdjustmentCostPerMeter',
+    'yarnTotalCostPerMeter',
+    'weaveCostPerMeter',
+    'warpingAndSizingCostPerMeter',
+    'overheadCostPerMeter',
+    'postProcessingCostPerMeter',
+    'logisticsCostPerMeter',
+    'directCostPerMeter',
+    'productionCostPerMeter',
+  ]
+  const parsed = Object.fromEntries(numericKeys.map(key => [key, readNumber(key)]))
+  if (Object.values(parsed).some(value => value === null)) return null
+
+  return {
+    warp,
+    weft,
+    yarnBaseCostPerMeter: parsed.yarnBaseCostPerMeter!,
+    yarnAdjustmentCostPerMeter: parsed.yarnAdjustmentCostPerMeter!,
+    yarnTotalCostPerMeter: parsed.yarnTotalCostPerMeter!,
+    weaveCostPerMeter: parsed.weaveCostPerMeter!,
+    warpingAndSizingCostPerMeter: parsed.warpingAndSizingCostPerMeter!,
+    overheadCostPerMeter: parsed.overheadCostPerMeter!,
+    postProcessingCostPerMeter: parsed.postProcessingCostPerMeter!,
+    logisticsCostPerMeter: parsed.logisticsCostPerMeter!,
+    directCostPerMeter: parsed.directCostPerMeter!,
+    productionCostPerMeter: parsed.productionCostPerMeter!,
   }
 }
 
@@ -1177,6 +1301,11 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
   if (raw.quoteIsValid != null && typeof raw.quoteIsValid !== 'boolean') return null
   const assumptions = raw.assumptions == null ? null : parseCostingAssumptions(raw.assumptions)
   if (raw.assumptions != null && !assumptions) return null
+  const snapshotSchemaVersion = raw.snapshotSchemaVersion == null ? 1 : Number(raw.snapshotSchemaVersion)
+  if (!Number.isInteger(snapshotSchemaVersion) || snapshotSchemaVersion < 1) return null
+  const parsedAudit = raw.audit == null ? null : parseCostingAudit(raw.audit)
+  if (raw.audit != null && !parsedAudit) return null
+  const audit = parsedAudit ?? undefined
   const overheadMode = raw.overheadMode === 'direct' ? 'direct' : 'monthly_expenses'
   const overheadSource = raw.overheadSource === 'direct_rate' ? 'direct_rate' : 'monthly_expenses'
   const overheadReferencePerM = raw.overheadReferencePerM == null ? null : Number(raw.overheadReferencePerM)
@@ -1237,6 +1366,7 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
   )) return null
 
   return {
+    snapshotSchemaVersion,
     calculationVersion: raw.calculationVersion,
     roundingPolicy: raw.roundingPolicy,
     quantityM: quantity,
@@ -1276,6 +1406,7 @@ export function parseCostingResultSnapshot(value: unknown): CostingResultSnapsho
       productionCostPerM: readBreakdownCurrency('productionCostPerM')!,
     },
     assumptions,
+    audit,
   }
 }
 
