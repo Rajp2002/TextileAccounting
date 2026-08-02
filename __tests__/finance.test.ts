@@ -270,8 +270,9 @@ describe('Finance: calculateRemainingDebt', () => {
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const RUN_LIVE_SUPABASE_TESTS = process.env.RUN_LIVE_SUPABASE_TESTS === '1'
 
-describe.skipIf(!SUPABASE_URL || !SUPABASE_KEY)(
+describe.skipIf(!RUN_LIVE_SUPABASE_TESTS || !SUPABASE_URL || !SUPABASE_KEY)(
     'Integration: Production Log Duplicate Entry',
     () => {
         it('accepts two 50m entries for the same worker, totaling 100m', async () => {
