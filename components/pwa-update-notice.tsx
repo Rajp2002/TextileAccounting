@@ -45,7 +45,9 @@ export function PwaUpdateNotice() {
             writeSessionFlag(UPDATE_TOAST_SHOWN_FLAG, '1')
             toast.info(t('common.pwa_update_title'), {
                 description: t('common.pwa_update_description'),
-                duration: Infinity,
+                // The session flag prevents repeat interruptions; a finite
+                // duration lets active costing continue without a persistent toast.
+                duration: 12000,
                 action: {
                     label: t('common.pwa_update_refresh'),
                     onClick: () => {

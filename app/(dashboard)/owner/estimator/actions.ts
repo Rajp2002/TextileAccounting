@@ -376,9 +376,15 @@ export async function upsertFactoryCostProfile(data: {
 
     if (data.overhead_mode === 'monthly_expenses' || (data.overhead_mode == null && data.overhead_override_per_m == null)) {
         const monthlyOutput = Number(data.monthly_output_m ?? 0)
+        const loomCount = Number(data.loom_count ?? 0)
+        const workingDays = Number(data.monthly_working_days ?? 0)
+        const avgOutput = Number(data.avg_output_per_loom_per_day ?? 0)
         const monthlyExpenses = Array.isArray(data.overhead_items)
             ? data.overhead_items.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
             : 0
+        if (!Number.isFinite(loomCount) || loomCount <= 0) return { error: 'Enter at least one loom before saving the monthly factory baseline.' }
+        if (!Number.isFinite(workingDays) || workingDays <= 0) return { error: 'Enter positive working days before saving the monthly factory baseline.' }
+        if (!Number.isFinite(avgOutput) || avgOutput <= 0) return { error: 'Enter positive daily output per loom before saving the monthly factory baseline.' }
         if (monthlyOutput <= 0) return { error: 'Enter the actual monthly output used to divide factory expenses.' }
         if (monthlyExpenses <= 0) return { error: 'Enter at least one monthly factory expense before saving these defaults.' }
     }
@@ -1915,6 +1921,7 @@ export async function updateQuoteStatus(
     status: 'draft' | 'sent' | 'accepted' | 'rejected',
     expectedUpdatedAt: string
 ) {
+    if (!UUID_PATTERN.test(id)) return { error: 'Quotation identifier is invalid.' }
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -1962,6 +1969,38 @@ export async function updateQuoteStatus(
     
     revalidatePath('/owner/quotes')
     return { success: true, data }
+}
+
+export async function getQuoteStatusHistory(id: string) {
+    if (!UUID_PATTERN.test(id)) return { error: 'Quotation identifier is invalid.' }
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('audit_log')
+        .select('changed_at, changed_by, old_data, new_data')
+        .eq('org_id', profile.org_id)
+        .eq('table_name', 'estimator_quotes')
+        .eq('record_id', id)
+        .order('changed_at', { ascending: true })
+
+    if (error) return { error: error.message }
+
+    const statusValues = new Set(['draft', 'sent', 'accepted', 'rejected'])
+    const getStatus = (value: unknown) => {
+        if (!value || typeof value !== 'object' || !('status' in value)) return null
+        const status = (value as { status?: unknown }).status
+        return typeof status === 'string' && statusValues.has(status) ? status : null
+    }
+
+    const history = (data ?? []).map(row => ({
+        changedAt: row.changed_at,
+        changedBy: row.changed_by,
+        from: getStatus(row.old_data),
+        to: getStatus(row.new_data),
+    })).filter(row => row.to && row.from !== row.to)
+
+    return { data: history }
 }
 
 export async function updateQuotationDocumentMetadata(input: {

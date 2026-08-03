@@ -23,10 +23,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
-import { getCurrentTimestampMs } from '@/lib/time'
+import { formatToSurat, getCurrentTimestampMs } from '@/lib/time'
 import {
     History,
     CheckCircle2,
@@ -52,6 +52,7 @@ import {
 } from 'lucide-react'
 import {
   compareSavedCostingSnapshots,
+  orderSavedCostingsForComparison,
   buildSavedQualityRecipeState,
   filterAndSortSavedCostings,
   getSavedCostingIdentity,
@@ -175,6 +176,13 @@ type QuoteRow = {
     orders?: QuoteLinkedOrder | QuoteLinkedOrder[] | null
 }
 
+type QuoteStatusHistoryRow = {
+    changedAt: string
+    changedBy: string | null
+    from: QuoteStatus | null
+    to: QuoteStatus | null
+}
+
 function getLinkedOrder(quote: QuoteRow) {
     return Array.isArray(quote.orders) ? quote.orders[0] : quote.orders
 }
@@ -290,6 +298,10 @@ function formatCostingMoneyPerM(value: number | null) {
 
 function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
+}
+
+function formatQuoteTimestamp(value: string | null | undefined) {
+    return value ? formatToSurat(value, 'd MMM yyyy, h:mm a') : 'Not recorded'
 }
 
 function getLegacyVersionLabel(costing: Pick<QuoteRow, 'quality_label' | 'version_number'>) {
@@ -492,7 +504,7 @@ function SavedQualityLibraryView({
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> Preview</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>
                                                             {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                                            {updatingId === latest.id ? latest.is_archived ? 'Restoring…' : 'Archiving…' : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
+                                                        {updatingId === latest.id ? latest.is_archived ? `Restoring ${getSavedCostingIdentity(latest).label}…` : `Archiving ${getSavedCostingIdentity(latest).label}…` : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
                                                         </Button>
                                                     </div>
                                                         </div>
@@ -589,7 +601,7 @@ function SavedQualityLibraryView({
                                                                 <td className="py-3 font-mono font-bold text-orange-700">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</td>
                                                                 <td className="py-3 font-mono font-bold text-emerald-700">{formatCostingPercent(getActualMarginPct(record))}</td>
                                                                 <td className="py-3 text-slate-600">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
-                                                                <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`}><Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} /></Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? 'Restoring…' : 'Archiving…' : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
+                                    <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`}><Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} /></Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? `Restoring ${group.name}…` : `Archiving ${group.name}…` : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -628,6 +640,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [selectedCostingIds, setSelectedCostingIds] = useState<string[]>([])
     const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
+    const [quoteHistoryFor, setQuoteHistoryFor] = useState<QuoteRow | null>(null)
+    const [quoteHistoryRows, setQuoteHistoryRows] = useState<QuoteStatusHistoryRow[]>([])
+    const [quoteHistoryLoading, setQuoteHistoryLoading] = useState(false)
+    const [quoteHistoryError, setQuoteHistoryError] = useState<string | null>(null)
     const [quoteToArchive, setQuoteToArchive] = useState<QuoteRow | null>(null)
     const [showArchived, setShowArchived] = useState(false)
     const [expandedQualityKey, setExpandedQualityKey] = useState<string | null>(null)
@@ -711,8 +727,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
         [quotes, selectedCostingIds],
     )
-    const comparison = selectedCostings.length === 2
-        ? compareSavedCostingSnapshots(selectedCostings[0], selectedCostings[1])
+    const comparisonCostings = useMemo(
+        () => orderSavedCostingsForComparison(selectedCostings),
+        [selectedCostings],
+    )
+    const comparison = comparisonCostings.length === 2
+        ? compareSavedCostingSnapshots(comparisonCostings[0], comparisonCostings[1])
         : null
     const exportModel = useMemo(() => {
         if (!quoteToExport) return null
@@ -802,9 +822,31 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             toast.error(userFacingError(res.error, 'The quotation status could not be updated. Try again.'))
             return false
         } else {
-            toast.success(`Quote marked as ${newStatus}`)
+            toast.success(`Quotation marked as ${STATUS_CONFIG[newStatus].label}`, {
+                description: `Status updated ${formatQuoteTimestamp(res.data?.updated_at)}.`,
+            })
             setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...res.data, status: newStatus } : q))
+            setQuoteToExport(current => current?.id === id ? { ...current, ...res.data, status: newStatus } : current)
             return true
+        }
+    }
+
+    const openQuoteHistory = async (quote: QuoteRow) => {
+        setQuoteHistoryFor(quote)
+        setQuoteHistoryRows([])
+        setQuoteHistoryError(null)
+        setQuoteHistoryLoading(true)
+        try {
+            const result = await getQuoteStatusHistory(quote.id)
+            if (result.error) {
+                setQuoteHistoryError(userFacingError(result.error, 'Quotation history could not be loaded.'))
+            } else {
+                setQuoteHistoryRows(result.data as QuoteStatusHistoryRow[])
+            }
+        } catch (error) {
+            setQuoteHistoryError(userFacingError(error, 'Quotation history could not be loaded.'))
+        } finally {
+            setQuoteHistoryLoading(false)
         }
     }
 
@@ -1003,15 +1045,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </div>}
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px_170px_auto_auto_auto]">
-                        <div className="relative">
+            <div className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                    <div className="grid min-w-0 gap-3 lg:grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_210px_170px_auto_auto_auto]">
+                        <div className="relative min-w-0">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <Input
                                 value={searchQuery}
                                 onChange={event => setSearchQuery(event.target.value)}
                                 placeholder={canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}
-                                className="h-10 pl-9"
+                                className="h-10 w-full min-w-0 pl-9"
                             />
                         </div>
                         <select
@@ -1263,7 +1305,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <Star className="h-3.5 w-3.5" fill={quote.is_favorite ? 'currentColor' : 'none'} /> {quote.is_favorite ? 'Favourited' : 'Favourite'}
                                             </Button>
                                             <Button variant="ghost" size="sm" onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 text-xs text-slate-600" aria-label={`${quote.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${quote.quality_label || 'costing'}`}>
-                                                {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === quote.id ? quote.is_archived ? 'Restoring…' : 'Archiving…' : quote.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
+                                                {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === quote.id ? quote.is_archived ? `Restoring ${quote.quality_label || 'costing'}…` : `Archiving ${quote.quality_label || 'costing'}…` : quote.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -1294,10 +1336,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none truncate">
                                                 {isCosting ? `Saved Costing · v${Number(quote.version_number ?? 1)}` : quote.quality_label}
                                             </p>
+                                            {hasQuotationLifecycle && <p className="text-[11px] font-medium text-slate-500">Status updated {formatQuoteTimestamp(quote.updated_at)}</p>}
                                         </div>
                                         <div className="flex flex-wrap justify-end gap-1">
                                             <Badge variant="outline" className={`${isCosting ? 'border-orange-200 bg-orange-50 text-orange-700' : STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
-                                                {isCosting ? (quote.id === updatingId ? 'Updating' : 'Saved Costing') : quote.status}
+                                                {isCosting ? (quote.id === updatingId ? 'Updating' : 'Saved Costing') : STATUS_CONFIG[quote.status]?.label ?? quote.status}
                                             </Badge>
                                             {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
                                         </div>
@@ -1360,6 +1403,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => setQuoteToExport(quote)}>
                                                     <Eye className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> {t('common.preview')}
                                                 </Button>
+                                                {hasQuotationLifecycle && <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:h-7 lg:px-2" onClick={() => { void openQuoteHistory(quote) }}>
+                                                    <History className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> History
+                                                </Button>}
                                                 {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-amber-700 lg:h-7 lg:px-2" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id}>
                                                     {updatingId === quote.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin lg:h-3 lg:w-3" /> : <CheckCircle2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />} {updatingId === quote.id ? 'Checking…' : 'Check saved numbers'}
                                                 </Button>}
@@ -1442,6 +1488,53 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </div>
             )}
 
+            <Dialog open={Boolean(quoteHistoryFor)} onOpenChange={open => {
+                if (!open) {
+                    setQuoteHistoryFor(null)
+                    setQuoteHistoryRows([])
+                    setQuoteHistoryError(null)
+                }
+            }}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><History className="h-5 w-5 text-blue-600" /> Quotation history</DialogTitle>
+                        <DialogDescription>
+                            {quoteHistoryFor?.party_name || 'Quotation'} · {quoteHistoryFor?.quality_label || 'Unnamed quality'}. Status changes and their recorded times are shown here.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {quoteHistoryLoading ? (
+                        <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500" role="status" aria-live="polite"><Loader2 className="h-5 w-5 animate-spin text-blue-600" /> Loading quotation history…</div>
+                    ) : quoteHistoryError ? (
+                        <p role="alert" className="py-8 text-center text-sm font-medium text-destructive">{quoteHistoryError}</p>
+                    ) : quoteHistoryRows.length > 0 ? (
+                        <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+                            {quoteHistoryRows.map((row, index) => {
+                                const toConfig = row.to ? STATUS_CONFIG[row.to] : null
+                                const fromLabel = row.from ? STATUS_CONFIG[row.from].label : 'Created'
+                                return (
+                                    <div key={`${row.changedAt}-${index}`} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                                        <span className={`mt-0.5 inline-flex min-h-7 items-center rounded-full border px-2 text-[11px] font-bold ${toConfig?.color ?? 'border-slate-200 bg-white text-slate-700'}`}>
+                                            {toConfig?.label ?? row.to ?? 'Recorded'}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-slate-900">{fromLabel} <span className="font-normal text-slate-500">→</span> {toConfig?.label ?? row.to ?? 'Recorded'}</p>
+                                            <p className="mt-1 text-xs text-slate-500">{formatQuoteTimestamp(row.changedAt)} · {row.changedBy ? 'Owner action' : 'System record'}</p>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
+                            No status changes recorded yet. This quotation is currently <span className="font-bold">{quoteHistoryFor ? STATUS_CONFIG[quoteHistoryFor.status].label : 'Draft'}</span>.
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setQuoteHistoryFor(null)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
              <CostingExportDialog
                 open={Boolean(quoteToExport)}
                 onOpenChange={open => { if (!open) setQuoteToExport(null) }}
@@ -1486,20 +1579,21 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </DialogTitle>
                         <DialogDescription>Compare two immutable snapshots using the same saved calculation and rounding contract. The current Rate Book is not read.</DialogDescription>
                     </DialogHeader>
-                    {selectedCostings.length === 2 && comparison && (
+                    {comparisonCostings.length === 2 && comparison && (
                         <div className="space-y-3">
                             <div className={`rounded-xl border px-4 py-3 text-xs ${comparison.comparable ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
                                 <p className="font-bold">{comparison.comparable ? 'Canonical comparison ready' : 'Canonical comparison needs review'}</p>
                                 <p className="mt-1 leading-relaxed">{comparison.canonical.message || `Formula ${comparison.canonical.leftCalculationVersion || 'unknown'} · rounding ${comparison.canonical.leftSnapshotSchemaVersion ? `snapshot v${comparison.canonical.leftSnapshotSchemaVersion}` : 'legacy'} · detail source ${comparison.canonical.source.replace('_', ' ')}.`}</p>
+                                <p className="mt-1 font-semibold">Change is calculated as New minus Old.</p>
                             </div>
                             <div className="max-h-[60vh] overflow-auto rounded-xl border border-slate-200">
                                 <table className="w-full min-w-[760px] text-sm">
                                     <thead className="bg-slate-50 text-left">
                                         <tr>
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Metric</th>
-                                            {selectedCostings.map(costing => {
+                                            {comparisonCostings.map((costing, index) => {
                                                 const identity = getSavedCostingIdentity(costing)
-                                                return <th key={costing.id} className="px-4 py-3 font-bold text-slate-950"><span className="block">{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-slate-500">saved {format(new Date(costing.created_at), 'MMM d, yyyy')}</span></th>
+                                                return <th key={costing.id} className="px-4 py-3 font-bold text-slate-950"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block text-xs font-semibold text-slate-700">{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-slate-500">saved {format(new Date(costing.created_at), 'MMM d, yyyy')}</span></th>
                                             })}
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Change</th>
                                         </tr>

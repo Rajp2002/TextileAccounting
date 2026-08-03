@@ -970,3 +970,20 @@ Use the exact READY production deployment and a disposable entitled owner worksp
 - Production mobile checks passed for the six Base routes; Gujarati switch success feedback and Saved Costing/unavailable-value behavior were observed.
 - The exact mutating Rajesh journey was blocked by the isolated QA account's missing Full Suite entitlement. The attempted 50-loom write was rejected before persistence; reconciliation returned zero machines, workers, payroll configs, and estimator quotes. No payment or bypass was performed.
 - Disposition: Sprint 7 production UX is verified. Exact pilot execution is `blocked` pending an entitled disposable QA workspace. Full legacy Gujarati/Hindi translation coverage remains a follow-up, not an inferred PASS.
+# Sprint 14 persona retest gate — 2026-08-03
+
+Run this gate before any release promotion after the persona-test NO-GO remediation:
+
+1. Use an isolated owner QA account and a disposable tenant; do not use production credentials or records.
+2. Set factory setup to zero looms, zero working days, zero productivity, and zero output one at a time. Confirm the next step is disabled, no `÷ 0m` cost is shown, and the server rejects direct invalid saves.
+3. Create two costings where the newer snapshot has the higher margin/price. Select them in reverse order and confirm the comparison still labels Old/New and reports New minus Old.
+4. Set a global/default weft waste and a different row waste, including explicit row waste `0`. Confirm the detailed screen and cost breakdown identify the applied row value unambiguously.
+5. Generate a quotation, mark it sent, reopen it, and confirm Draft/Sent/Accepted/Rejected status, updated timestamp, and history are visible.
+6. Save a recipe and a costing snapshot deliberately. Confirm the UI explains the initial v1 snapshot and does not imply two accidental identical versions.
+7. Test Restore, Rename, and Discard on an unsaved draft, then reload the estimator and confirm stale values are not silently restored.
+8. Verify the update notice can disappear during an active costing session and does not return repeatedly in that session.
+9. Verify Rate Book effective/review/recorded dates around midnight Asia/Kolkata and confirm the saved date matches the entered date.
+10. Exercise Quick/Detailed and expanded/collapsed assumptions at 320, 480, 768, 1024, 1280, and 1440px. Check `scrollWidth === clientWidth`, keyboard focus, reduced motion, long names, and large currency values.
+11. Record GST invoice availability and Gujarati/Hindi coverage as explicit pilot sign-off decisions; do not mark them pass from source review alone.
+
+Required evidence: sanitized screenshots, browser console status, viewport/overflow measurements, focused test output, and the QA tenant cleanup result.

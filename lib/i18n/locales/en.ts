@@ -81,7 +81,7 @@ export const en = {
     production_cost: "Production Cost",
     production_cost_per_m: "Production Cost / m",
     suggested_selling_price: "Suggested Selling Price",
-    suggested_selling_price_per_m: "Suggested Selling Price / m",
+    suggested_selling_price_per_m: "Suggested price / m",
     break_even_price_per_m: "Break-even Price / m",
     current_yarn_rate: "Current Yarn Rate",
     yarn_rate_book: "Yarn Rate Book",

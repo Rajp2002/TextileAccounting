@@ -185,6 +185,12 @@ function PlanCards({
                             <ul className="flex-1 space-y-3">
                                 {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm leading-tight text-slate-600"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{feature}</li>)}
                             </ul>
+                            <p className={`rounded-xl border p-3 text-xs leading-relaxed ${billingInvoiceFeatureIsConfigured() ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+                                <span className="font-bold">GST tax invoice:</span>{' '}
+                                {billingInvoiceFeatureIsConfigured()
+                                    ? 'Available after approved supplier tax details and your billing profile are complete.'
+                                    : 'Not currently enabled. Payment provides a receipt only until supplier tax configuration is completed.'}
+                            </p>
                             <SubscribeButton
                                 planTier={plan.tier}
                                 tierName={plan.name}

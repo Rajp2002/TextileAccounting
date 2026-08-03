@@ -49,6 +49,23 @@ export type SavedCostingListItem = {
   reconciliation_note?: string | null
 }
 
+type ComparisonOrderingItem = Pick<SavedCostingListItem, 'id' | 'created_at'> & {
+  version_number?: number | null
+}
+
+/**
+ * Put two immutable snapshots into a stable Old → New order before the
+ * comparison engine is called. The engine intentionally keeps its left/right
+ * contract; the UI owns the meaning of those columns.
+ */
+export function orderSavedCostingsForComparison<T extends ComparisonOrderingItem>(costings: T[]): T[] {
+  return [...costings].sort((left, right) => (
+    Date.parse(left.created_at) - Date.parse(right.created_at)
+    || Number(left.version_number ?? 1) - Number(right.version_number ?? 1)
+    || left.id.localeCompare(right.id)
+  ))
+}
+
 export type SavedCostingMetrics = {
   productionCostPerM: number | null
   breakEvenPricePerM: number | null

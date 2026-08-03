@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { format } from 'date-fns'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -51,6 +50,8 @@ import {
 } from '@/lib/yarn-rate-reconciliation'
 import { parseNonNegativeInput } from '@/lib/numeric-input'
 import { useTranslation } from '@/lib/i18n/context'
+import { formatDateOnly } from '@/lib/format'
+import { formatToSurat } from '@/lib/time'
 
 type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
 type RateHistoryRow = {
@@ -75,7 +76,7 @@ type PendingRateAction = {
 const YARN_CATEGORIES: YarnRateCategory[] = ['yarn_warp', 'yarn_weft']
 
 function today() {
-    return new Date().toISOString().slice(0, 10)
+    return formatToSurat(new Date(), 'yyyy-MM-dd')
 }
 
 function defaultDraft(reviewIntervalDays: number, category: YarnRateCategory = 'yarn_warp'): CostRateInput {
@@ -113,7 +114,7 @@ function rowToDraft(rate: CostRateRow): CostRateInput {
 function ReviewBadge({ rate }: { rate: CostRateRow }) {
     const status = getRateReviewStatus(rate)
     if (status === 'needs_review') return <div><span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700"><Info className="h-3 w-3" /> Owner review needed</span><p className="mt-1 text-[11px] text-blue-700">Discovered from a saved quality or costing</p></div>
-    const due = format(getRateReviewDueDate(rate), 'd MMM yyyy')
+    const due = formatToSurat(getRateReviewDueDate(rate), 'd MMM yyyy')
     if (status === 'overdue') return <div><span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-bold text-red-700"><Clock3 className="h-3 w-3" /> Review overdue</span><p className="mt-1 text-[11px] text-red-600">Due {due}</p></div>
     if (status === 'due_soon') return <div><span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700"><CalendarClock className="h-3 w-3" /> Review due</span><p className="mt-1 text-[11px] text-amber-700">Due {due}</p></div>
     return <div><span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3" /> Current</span><p className="mt-1 text-[11px] text-slate-500">Next review {due}</p></div>
@@ -311,14 +312,19 @@ export default function RatesClient({
         })
     }
 
+    const pendingRateName = pendingAction
+        ? rates.find(rate => rate.id === pendingAction.id)?.name
+            ?? (archiveRate?.id === pendingAction.id ? archiveRate.name : null)
+            ?? 'selected rate'
+        : null
     const pendingMessage = pendingAction?.kind === 'save'
         ? 'Saving this yarn rate…'
         : pendingAction?.kind === 'review'
             ? 'Confirming the current yarn rate…'
             : pendingAction?.kind === 'archive'
-                ? 'Archiving the yarn rate…'
+                ? `Archiving “${pendingRateName}”…`
                 : pendingAction?.kind === 'restore'
-                    ? 'Restoring the yarn rate…'
+                    ? `Restoring “${pendingRateName}”…`
                     : historyLoading
                         ? 'Loading rate activity…'
                         : null
@@ -356,7 +362,7 @@ export default function RatesClient({
                 <CardContent className="grid gap-4 p-5 sm:grid-cols-3 sm:divide-x sm:divide-slate-200">
                     <div className="flex items-center gap-3 sm:px-3"><span className="rounded-full bg-blue-50 p-3 text-blue-700"><CircleDollarSign className="h-5 w-5" /></span><div><p className="text-2xl font-black text-blue-700">{activeYarnRates.length}</p><p className="text-sm text-slate-600">active yarn rates</p></div></div>
                     <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-amber-50 p-3 text-amber-700"><CalendarClock className="h-5 w-5" /></span><div><p className="text-2xl font-black text-orange-600">{dueCount}</p><p className="text-sm text-slate-600">due for review</p></div></div>
-                    <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-emerald-50 p-3 text-emerald-700"><CheckCircle2 className="h-5 w-5" /></span><div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Last reviewed</p><p className="mt-1 text-base font-bold text-slate-950">{mostRecentReview ? format(new Date(`${mostRecentReview}T00:00:00`), 'd MMM yyyy') : 'Not reviewed'}</p></div></div>
+                    <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-emerald-50 p-3 text-emerald-700"><CheckCircle2 className="h-5 w-5" /></span><div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Last reviewed</p><p className="mt-1 text-base font-bold text-slate-950">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not reviewed'}</p></div></div>
                 </CardContent>
             </Card>
 
@@ -391,7 +397,7 @@ export default function RatesClient({
                                                 <td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td>
                                                 <td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td>
                                                 <td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
-                                                <td className="px-4 py-4 text-sm text-slate-600">{format(new Date(`${rate.effective_date}T00:00:00`), 'd MMM yyyy')}</td>
+                                                <td className="px-4 py-4 text-sm text-slate-600">{formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                                                 <td className="px-4 py-4"><ReviewBadge rate={rate} /></td>
                                                 <td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td>
                                                 <td className="px-4 py-4">
@@ -402,7 +408,7 @@ export default function RatesClient({
                                                         {!archived && <Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-3.5 w-3.5" /> Change rate</Button>}
                                                         <Button variant="ghost" size="sm" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-3.5 w-3.5" /> Activity</Button>
                                                         <Button variant="ghost" size="sm" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="text-slate-500">
-                                                            {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {actionKind === 'archive' ? 'Archiving…' : actionKind === 'restore' ? 'Restoring…' : archived ? 'Restore rate' : 'Archive rate'}
+                                                            {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate'}
                                                         </Button>
                                                     </div>
                                                 </td>
@@ -428,7 +434,7 @@ export default function RatesClient({
                                                 {!archived && <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-4 w-4" /> Change rate</Button>}
                                                 <Button variant="outline" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-4 w-4" /> Activity</Button>
                                                 <Button variant="outline" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`}>
-                                                    {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {actionKind === 'archive' ? 'Archiving…' : actionKind === 'restore' ? 'Restoring…' : archived ? 'Restore rate' : 'Archive rate'}
+                                                    {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate'}
                                                 </Button>
                                             </div>
                                         </CardContent>
@@ -524,7 +530,7 @@ export default function RatesClient({
                             const previous = row.previous_value ?? historyRows[index + 1]?.value
                             const eventLabel = historyRate ? getRateHistoryEventLabel(row.value, previous, historyRate.unit, row.event_type) : 'Value recorded'
                             return <div key={row.id} className="rounded-lg border border-slate-200 p-4">
-                                <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-slate-950">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-slate-600">{eventLabel}</p></div><p className="text-right text-xs text-slate-500">Effective {format(new Date(`${row.effective_date}T00:00:00`), 'd MMM yyyy')}<br />Recorded {format(new Date(row.created_at), 'd MMM yyyy, h:mm a')}</p></div>
+                                                <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-slate-950">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-slate-600">{eventLabel}</p></div><p className="text-right text-xs text-slate-500">Effective {formatDateOnly(row.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}<br />Recorded {formatToSurat(row.created_at, 'd MMM yyyy, h:mm a')}</p></div>
                                 <p className="mt-2 text-sm font-medium text-slate-700">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-slate-500">{row.notes}</p>}<p className="mt-2 text-[11px] text-slate-400">Recorded by {row.actor_name || (row.changed_by ? 'owner' : 'system')}</p>
                             </div>
                         })}</div>
@@ -542,7 +548,7 @@ export default function RatesClient({
                     {archiveError && <p role="alert" className="text-sm font-medium text-destructive">{archiveError}</p>}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setArchiveRate(null); setArchiveError(null) }} disabled={isPending}>Cancel</Button>
-                        <Button variant={archiveRate?.is_active === false ? 'default' : 'destructive'} onClick={handleArchive} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {isPending ? archiveRate?.is_active === false ? 'Restoring…' : 'Archiving…' : archiveRate?.is_active === false ? 'Restore rate' : 'Archive rate'}</Button>
+                        <Button variant={archiveRate?.is_active === false ? 'default' : 'destructive'} onClick={handleArchive} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {isPending ? archiveRate?.is_active === false ? `Restoring ${archiveRate?.name ?? 'rate'}…` : `Archiving ${archiveRate?.name ?? 'rate'}…` : archiveRate?.is_active === false ? 'Restore rate' : 'Archive rate'}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
