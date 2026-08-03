@@ -667,6 +667,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [quoteHistoryLoading, setQuoteHistoryLoading] = useState(false)
     const [quoteHistoryError, setQuoteHistoryError] = useState<string | null>(null)
     const [quoteToArchive, setQuoteToArchive] = useState<QuoteRow | null>(null)
+    const [archiveAction, setArchiveAction] = useState<'archive' | 'restore'>('archive')
     const [showArchived, setShowArchived] = useState(false)
     const [expandedQualityKey, setExpandedQualityKey] = useState<string | null>(null)
     const showQualityLibrary = !canUseQuotationWorkflow
@@ -730,7 +731,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     ? getCurrentRecipeCostPerM(group.template, initialProfile, initialWorkers)
                     : null,
             }))
-            .filter(group => !query || normalizeQualityKey(`${group.name} ${group.records.map(record => record.party_name).join(' ')}`).includes(query))
+            .filter(group => !query || normalizeQualityKey(`${group.name} ${group.records.map(record => `${record.party_name ?? ''} ${record.quotation_reference ?? ''} ${record.record_kind === 'costing' ? 'costing' : 'quotation'} ${record.status ?? ''}`).join(' ')}`).includes(query))
             .filter(group => marginFilter === 'all' || filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: marginFilter, favorites: showFavoritesOnly }).length > 0)
             .filter(group => group.records.length > 0 || Boolean(group.template && !showFavoritesOnly))
 
@@ -1002,7 +1003,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 return
             }
             setQuotes(current => current.map(item => item.id === quote.id ? { ...item, ...result.data } : item))
-            toast.success(tx(changes.isArchived === true ? 'Costing snapshot archived' : changes.isArchived === false ? 'Costing snapshot restored' : changes.isFavorite ? 'Added to favourites' : 'Removed from favourites'))
+            const recordLabel = quote.quality_label?.trim() || quote.party_name?.trim() || 'Untitled costing'
+            const recordType = quote.record_kind === 'quotation' ? 'Quotation' : 'Costing snapshot'
+            toast.success(tx(changes.isArchived === true
+                ? `${recordType === 'Costing snapshot' ? 'Costing snapshot archived' : 'Quotation archived'} · “${recordLabel}”`
+                : changes.isArchived === false
+                    ? `${recordType === 'Costing snapshot' ? 'Costing snapshot restored' : 'Quotation restored'} · “${recordLabel}”`
+                    : changes.isFavorite
+                        ? 'Added to favourites'
+                        : 'Removed from favourites'))
         } catch (error) {
             toast.error(tx(userFacingError(error, 'Saved costing could not be updated. Try again.')))
             console.error(error)
@@ -1034,18 +1043,16 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     }
 
     const requestArchiveState = (quote: QuoteRow) => {
-        if (quote.is_archived) {
-            void handleLibraryState(quote, { isArchived: false })
-            return
-        }
+        setArchiveAction(quote.is_archived ? 'restore' : 'archive')
         setQuoteToArchive(quote)
     }
 
     const confirmArchiveSnapshot = async () => {
         if (!quoteToArchive) return
         const target = quoteToArchive
+        const action = archiveAction
         setQuoteToArchive(null)
-        await handleLibraryState(target, { isArchived: true })
+        await handleLibraryState(target, { isArchived: action === 'restore' ? false : true })
     }
 
     return (
@@ -1086,10 +1093,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <div className="grid min-w-0 gap-3 lg:grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_210px_170px_auto_auto_auto]">
                         <div className="relative min-w-0">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Label htmlFor="saved-costings-search" className="sr-only">{canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}</Label>
                             <Input
+                                id="saved-costings-search"
                                 value={searchQuery}
                                 onChange={event => setSearchQuery(event.target.value)}
-                                placeholder={canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}
+                                placeholder="Search saved records…"
+                                aria-label={canUseQuotationWorkflow ? 'Search saved qualities, costings, quotations, and party names' : 'Search saved qualities and costings'}
+                                aria-describedby="saved-costings-search-help"
                                 className="h-10 w-full min-w-0 pl-9"
                             />
                         </div>
@@ -1147,6 +1158,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · expand a quality to review its costing history.`
                             : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'} shown · select any two to compare.`}
                     </p>
+                    <p id="saved-costings-search-help" className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                        {canUseQuotationWorkflow
+                            ? 'Searches saved quality names, costing snapshots, quotation references, statuses, and party names. Yarn rates are in the Rate Book.'
+                            : 'Searches saved quality names, costing snapshots, and costing versions. Yarn rates are in the Rate Book.'}
+                    </p>
                 </div>
 
             {(showQualityLibrary ? qualityGroups.length === 0 : filteredQuotes.length === 0) ? (
@@ -1155,11 +1171,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <div className="p-3 bg-white rounded-full shadow-sm shadow-slate-200/50">
                             <FileText className="h-6 w-6 text-slate-400" />
                         </div>
-                        <p className="text-sm font-bold text-slate-600">{canUseQuotationWorkflow ? t('common.no_costings_quotations') : t('common.no_saved_qualities_costings')}</p>
-                        <p className="text-xs text-slate-500 max-w-xs">{
-                            filterStatus === 'all'
-                                ? (canUseQuotationWorkflow ? t('common.no_costings_quotations_yet') : t('common.save_quality_or_cost_estimate'))
-                                : `No Quotations with status "${filterStatus}".`
+                        <p className="text-sm font-bold text-slate-600">{searchQuery.trim()
+                            ? `No saved records match “${searchQuery.trim()}”.`
+                            : canUseQuotationWorkflow ? t('common.no_costings_quotations') : t('common.no_saved_qualities_costings')}</p>
+                        <p className="max-w-xs text-xs text-slate-500">{
+                            searchQuery.trim()
+                                ? 'Try a quality name, party name, quotation reference, or clear the search.'
+                                : showArchived
+                                    ? 'No archived records are showing. Switch to Active or save a costing first.'
+                                    : filterStatus === 'all'
+                                        ? (canUseQuotationWorkflow ? t('common.no_costings_quotations_yet') : t('common.save_quality_or_cost_estimate'))
+                                        : `No Quotations with status "${filterStatus}".`
                         }</p>
                         {(searchQuery || marginFilter !== 'all' || showFavoritesOnly) && (
                             <Button
@@ -1615,12 +1637,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <ConfirmActionDialog
                 open={Boolean(quoteToArchive)}
                 onOpenChange={open => { if (!open && updatingId !== quoteToArchive?.id) setQuoteToArchive(null) }}
-                title={`Archive costing snapshot${quoteToArchive?.quality_label ? ` · ${quoteToArchive.quality_label}` : ''}?`}
-                description={`${tx('This archives only this costing snapshot.')} ${t('base_plan.archive.description')} ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')} Existing saved values remain unchanged.`}
-                confirmLabel="Archive snapshot"
-                cancelLabel="Keep snapshot"
+                title={`${archiveAction === 'restore' ? 'Restore' : 'Archive'} ${quoteToArchive?.record_kind === 'quotation' ? 'quotation' : 'costing snapshot'} · ${quoteToArchive?.quality_label || quoteToArchive?.party_name || 'Untitled record'}?`}
+                description={`${archiveAction === 'restore' ? 'This restores the named record to the active library.' : tx('This archives only this costing snapshot.')} ${t('base_plan.archive.description')} ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')} Existing saved values remain unchanged.`}
+                confirmLabel={archiveAction === 'restore' ? 'Restore snapshot' : 'Archive snapshot'}
+                cancelLabel={archiveAction === 'restore' ? 'Keep archived' : 'Keep snapshot'}
                 onConfirm={confirmArchiveSnapshot}
-                isDestructive
+                isDestructive={archiveAction === 'archive'}
                 isLoading={updatingId === quoteToArchive?.id}
             />
 

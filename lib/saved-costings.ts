@@ -25,6 +25,9 @@ export type SavedCostingListItem = {
   meters: number
   created_at: string
   updated_at: string
+  quotation_reference?: string | null
+  record_kind?: string | null
+  status?: string | null
   is_archived?: boolean
   is_favorite?: boolean
   calculation_version?: string | null
@@ -393,7 +396,7 @@ export function filterAndSortSavedCostings<T extends SavedCostingListItem>(
   const query = options.query.trim().toLocaleLowerCase('en-IN')
   return [...costings]
     .filter(costing => {
-      const searchable = `${costing.quality_label ?? ''} ${costing.party_name ?? ''}`.toLocaleLowerCase('en-IN')
+      const searchable = `${costing.quality_label ?? ''} ${costing.party_name ?? ''} ${costing.quotation_reference ?? ''} ${costing.record_kind ?? ''} ${costing.status ?? ''}`.toLocaleLowerCase('en-IN')
       const actualMargin = getSavedCostingMetrics(costing).actualMarginPct
       return (!query || searchable.includes(query))
         && (!options.favorites || costing.is_favorite === true)

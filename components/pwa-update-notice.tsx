@@ -5,7 +5,11 @@ import { toast } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 
 const UPDATE_REFRESH_FLAG = 'weavly_pwa_update_refreshing'
-const UPDATE_TOAST_SHOWN_FLAG = 'weavly_pwa_update_toast_seen'
+const UPDATE_TOAST_SHOWN_FLAG_PREFIX = 'weavly_pwa_update_toast_seen:'
+// The legacy name remains the base of the versioned session key. The old
+// session-only check was readSessionFlag(UPDATE_TOAST_SHOWN_FLAG); appending
+// the worker URL prevents repeat notices while allowing a new version through.
+const UPDATE_TOAST_SHOWN_FLAG = UPDATE_TOAST_SHOWN_FLAG_PREFIX
 
 function readSessionFlag(key: string) {
     try {
@@ -31,6 +35,13 @@ function removeSessionFlag(key: string) {
     }
 }
 
+function getUpdateVersionKey(registration: ServiceWorkerRegistration) {
+    // A versioned worker URL is the browser-visible identity for a deployed
+    // worker. Keeping it in the session key means a new deployment can notify
+    // once without repeating the same interruption on every route.
+    return registration.waiting?.scriptURL || registration.installing?.scriptURL || 'unknown'
+}
+
 export function PwaUpdateNotice() {
     const { t } = useTranslation()
 
@@ -41,12 +52,16 @@ export function PwaUpdateNotice() {
 
         const showUpdateToast = (registration: ServiceWorkerRegistration) => {
             if (disposed) return
-            if (readSessionFlag(UPDATE_TOAST_SHOWN_FLAG)) return
-            writeSessionFlag(UPDATE_TOAST_SHOWN_FLAG, '1')
+            const versionKey = `${UPDATE_TOAST_SHOWN_FLAG}${encodeURIComponent(getUpdateVersionKey(registration))}`
+            if (readSessionFlag(versionKey)) return
+            writeSessionFlag(versionKey, '1')
             toast.info(t('common.pwa_update_title'), {
-                description: t('common.pwa_update_description'),
-                // The session flag prevents repeat interruptions; a finite
-                // duration lets active costing continue without a persistent toast.
+                description: `${t('common.pwa_update_description')} You can keep working; refresh after the current costing or quotation says Saved.`,
+                // Keep the notice in the top toast lane so it cannot cover the
+                // lower save/quote action area on a phone. It is dismissible and
+                // finite, so an active costing is never held hostage by it.
+                position: 'top-center',
+                closeButton: true,
                 duration: 12000,
                 action: {
                     label: t('common.pwa_update_refresh'),

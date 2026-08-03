@@ -261,6 +261,65 @@ function buildEstimatorBaseline(
     return next
 }
 
+const GREY_FABRIC_STARTER_LABEL = '50×50 Grey Fabric (example)'
+
+function buildGreyFabricStarterState(
+    profile?: FactoryCostProfile,
+    sections: FactorySections = DEFAULT_FACTORY_SECTIONS,
+    workers: FixedWorkerOverhead[] = [],
+): EstimateState {
+    const base = buildEstimatorBaseline(profile ?? { enabled_sections: sections }, workers)
+    const configuredSections = {
+        ...base.enabledSections,
+        // The example demonstrates the commercial assumptions without changing
+        // the user's saved factory profile for future estimates.
+        commission: true,
+        transport: true,
+    }
+
+    return {
+        ...base,
+        warpRows: [{
+            id: nanoid(),
+            ...DEFAULT_WARP_ROW,
+            label: 'Warp yarn',
+            calcDenier: 150,
+            beamEnds: 3500,
+            yarnRate: 220,
+            gstPct: 5,
+        }],
+        weftRows: [{
+            id: nanoid(),
+            ...DEFAULT_WEFT_ROW,
+            label: 'Weft yarn',
+            picks: 52,
+            effectiveCostingWidthCm: 160.02,
+            reedSpace: 160.02,
+            calcDenier: 150,
+            yarnRate: 220,
+            gstPct: 5,
+        }],
+        tapeLengthM: 1000,
+        warpCrimpPct: 5,
+        yarnShortagePct: 3,
+        perPickCostPaisa: 0.16,
+        warpingRatePerKg: base.warpingRatePerKg > 0 ? base.warpingRatePerKg : 8,
+        sizingRatePerKg: base.sizingRatePerKg > 0 ? base.sizingRatePerKg : 4,
+        overheadMode: 'direct',
+        overheadOverridePerM: base.overheadOverridePerM != null && base.overheadOverridePerM > 0
+            ? base.overheadOverridePerM
+            : 8,
+        monthlyOutputM: 10000,
+        loomCount: 4,
+        monthlyWorkingDays: 26,
+        avgOutputPerLoomPerDay: 100,
+        commissionPct: 2,
+        transportPerM: 1.5,
+        profitPct: base.profitPct > 0 ? base.profitPct : 10,
+        enabledSections: configuredSections,
+    }
+}
+
 function resolveOverheadMode(profile: Pick<FactoryCostProfile, 'overhead_mode' | 'overhead_override_per_m'> | null | undefined): OverheadMode {
     if (profile?.overhead_mode === 'direct') return 'direct'
     if (profile?.overhead_mode === 'monthly_expenses') return 'monthly_expenses'
@@ -389,6 +448,7 @@ type Action =
     | { type: 'INIT_FROM_PROFILE'; data: { profile: FactoryCostProfile; sections: FactorySections } }
     | { type: 'MERGE_FIXED_WORKERS'; workers: FixedWorkerOverhead[] }
     | { type: 'APPLY_TEMPLATE'; template: EstimatorTemplate }
+    | { type: 'APPLY_GREY_FABRIC_STARTER'; data: { profile?: FactoryCostProfile; sections: FactorySections; workers: FixedWorkerOverhead[] } }
     | { type: 'SET'; field: keyof EstimateState; value: EstimateStateValue }
     | { type: 'SET_LOOM_TYPE'; loomType: LoomType | null }
     | { type: 'SET_LOOM_RPM'; rpm: number | null }
@@ -516,6 +576,8 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 overheadMode: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? 'direct' : state.overheadMode,
             }
         }
+        case 'APPLY_GREY_FABRIC_STARTER':
+            return buildGreyFabricStarterState(action.data.profile, action.data.sections, action.data.workers)
         case 'SET':
             return { ...state, [action.field]: action.value }
         case 'SET_LOOM_TYPE': {
@@ -1376,6 +1438,8 @@ function QuickCostingView({
     canUseProduction,
     widthUnit,
     onWidthUnitChange,
+    showStarterRecipe,
+    onUseStarterRecipe,
     onOpenDetailed,
     onOpenOverheadDetails,
     onOverheadModeChange,
@@ -1397,6 +1461,8 @@ function QuickCostingView({
     canUseProduction: boolean
     widthUnit: 'cm' | 'inch'
     onWidthUnitChange: (value: 'cm' | 'inch') => void
+    showStarterRecipe: boolean
+    onUseStarterRecipe: () => void
     onOpenDetailed: () => void
     onOpenOverheadDetails: () => void
     onOverheadModeChange: (mode: OverheadMode) => void
@@ -1416,13 +1482,37 @@ function QuickCostingView({
                             <h2 className="text-[15px] font-semibold text-[var(--color-ink)]">Quick Costing</h2>
                             <span className="rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-[10px] font-semibold text-[var(--color-yarn-orange-dark)]">same calculation engine</span>
                         </div>
-                        <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]/75">Enter the numbers you use for a quality. Advanced capacity and monthly expense details stay out of the way until you need them.</p>
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]/75">Enter the numbers you use for a quality. Capacity and monthly expense details stay out of the way until you need them.</p>
                     </div>
                     <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={onOpenDetailed}>
                         <Calculator className="h-3.5 w-3.5" /> Detailed view
                     </Button>
                 </div>
             </section>
+
+            {showStarterRecipe && (
+                <section className="rounded-[14px] border border-blue-200 bg-blue-50/70 px-4 py-4 shadow-[0_4px_16px_rgba(30,37,40,0.03)] sm:px-5" aria-labelledby="grey-fabric-starter-title">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Sparkles className="h-4 w-4 shrink-0 text-blue-600" />
+                                <h3 id="grey-fabric-starter-title" className="text-sm font-bold text-slate-900">Try a grey-fabric example</h3>
+                                <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-blue-700">example only</span>
+                            </div>
+                            <p className="mt-1 text-xs leading-relaxed text-slate-600">See where PPI, finished width, crimp, waste, rates, capacity, commission, transport, and margin enter the calculation. Replace every value with your rate book before saving.</p>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium text-slate-700 sm:grid-cols-4">
+                                <span className="rounded-lg bg-white/80 px-2.5 py-2">150D · 3,500 warp ends</span>
+                                <span className="rounded-lg bg-white/80 px-2.5 py-2">52 PPI · 63 inch width</span>
+                                <span className="rounded-lg bg-white/80 px-2.5 py-2">5% crimp · 3% waste</span>
+                                <span className="rounded-lg bg-white/80 px-2.5 py-2">4 looms · 10,000 m/month</span>
+                            </div>
+                        </div>
+                        <Button type="button" size="sm" className="min-h-11 shrink-0 bg-blue-700 text-white hover:bg-blue-800" onClick={onUseStarterRecipe}>
+                            Use example values
+                        </Button>
+                    </div>
+                </section>
+            )}
 
             <EstimatorCard accent="neutral">
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} />
@@ -1559,8 +1649,8 @@ function QuickCostingView({
                             <RowCard key={row.id} title="Weft yarn" index={index} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
-                                <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" />
-                                <WidthField label="Effective costing width (finished width)" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} hint={row.calculationMode === 'manual' ? 'Saved for audit' : 'Used in weft formula'} />
+                                <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" hint="PPI means picks per inch: weft threads in one inch." />
+                                <WidthField label="Effective costing width (finished width)" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} />
                                 {row.calculationMode === 'manual' ? (
                                     <NumField label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} attentionWhenEmpty />
                                 ) : (
@@ -1590,7 +1680,7 @@ function QuickCostingView({
                         </div>
                     </div>
                     <details className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3">
-                        <summary className="cursor-pointer text-xs font-semibold text-[var(--color-body)]">Optional loom class and output suggestion</summary>
+                        <summary className="cursor-pointer text-xs font-semibold text-[var(--color-body)]">Optional loom capacity and output</summary>
                         <div className="mt-3">
                             <LoomConfigSection
                                 state={state}
@@ -1640,7 +1730,7 @@ function QuickCostingView({
                         <NumField label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} attentionWhenEmpty />
                     ) : (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                            <NumField label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} attentionWhenEmpty hint="Saved expenses are divided by this output." />
+                            <NumField label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} attentionWhenEmpty hint="Metres actually produced each month; saved expenses are divided by this." />
                             <Button type="button" variant="outline" className="h-11 gap-1.5" onClick={onOpenOverheadDetails}><Calculator className="h-3.5 w-3.5" /> Edit expenses</Button>
                         </div>
                     )}
@@ -1662,9 +1752,9 @@ function QuickCostingView({
             <EstimatorCard accent="neutral">
                 <SectionHeader title="Selling and quantity (optional for Base)" icon={Coins} accent="neutral" step={7} />
                 <CardContent className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
-                    <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} />
-                    <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} />
-                    <NumField label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} />
+                    <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} hint="Your desired profit above break-even." />
+                    <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} hint="Broker or agent share of the selling price." />
+                    <NumField label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} hint="Delivery cost added per metre." />
                     <NumField label="Costing quantity" value={state.orderQuantityM} onChange={value => dispatch({ type: 'SET', field: 'orderQuantityM', value })} unit="m" step={100} placeholder="Optional" hint="Needed for order-level profit and quotations." />
                 </CardContent>
             </EstimatorCard>
@@ -1778,6 +1868,7 @@ export default function EstimatorClient({
     const [showDiscardDraft, setShowDiscardDraft] = useState(false)
     const [showRenameDraft, setShowRenameDraft] = useState(false)
     const [draftRenameValue, setDraftRenameValue] = useState('')
+    const [draftBannerHidden, setDraftBannerHidden] = useState(false)
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
         targetMode: 'quote' | 'market'
@@ -1884,6 +1975,43 @@ export default function EstimatorClient({
         markUserEdit()
         setWeftInstruction(value)
     }, [markUserEdit])
+
+    const applyStarterRecipe = useCallback(() => {
+        dispatch({
+            type: 'APPLY_GREY_FABRIC_STARTER',
+            data: {
+                profile: initialProfile,
+                sections: initialProfile?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
+                workers: initialWorkers || [],
+            },
+        })
+        setEntryMode('quick')
+        setAssumptionsExpanded(false)
+        assumptionsManuallyToggledRef.current = false
+        setOutputSuggestion(null)
+        setWagePerMInput('')
+        setAppliedTemplate(null)
+        setPartyNameFromUser('')
+        setQualityLabelFromUser(GREY_FABRIC_STARTER_LABEL)
+        setWarpInstructionFromUser('')
+        setWeftInstructionFromUser('')
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
+        autoRestoredDraftSavedAtRef.current = null
+        setShowValidation(false)
+        lastGeneratedWarp.current = null
+        lastGeneratedWeft.current = null
+        toast.info(tx('Grey-fabric example loaded'), {
+            description: tx('Replace the example values with your current rate book before saving.'),
+        })
+    }, [dispatch, initialProfile, initialWorkers, setPartyNameFromUser, setQualityLabelFromUser, setWarpInstructionFromUser, setWeftInstructionFromUser, tx])
 
     const buildCurrentDraft = useCallback((
         clientRequestId = quoteRequestIdRef.current,
@@ -2887,6 +3015,14 @@ export default function EstimatorClient({
     const showPartyField = canUseProduction && !isStandaloneCostingSession && mode !== 'market'
     const requiresCommercialContext = !isStandaloneCostingSession
     const actionReadinessId = 'estimator-action-readiness'
+    const hasStarterInputs = Boolean(
+        qualityLabel.trim()
+        || partyName.trim()
+        || state.warpRows.some(row => Number(row.calcDenier) > 0 || Number(row.beamEnds) > 0 || Number(row.manualKgPer100m) > 0)
+        || state.weftRows.some(row => Number(row.calcDenier) > 0 || Number(row.picks) > 0 || Number(row.effectiveCostingWidthCm) > 0 || Number(row.manualKgPer100m) > 0)
+        || Number(state.perPickCostPaisa) > 0
+    )
+    const showStarterRecipe = !hasDraft && !draft && !hasStarterInputs
 
     // Validation: Pilot Safety Rails
     const isZeroConfig = state.overheadMode === 'monthly_expenses'
@@ -2909,7 +3045,7 @@ export default function EstimatorClient({
     ].filter(segment => segment.value > 0) : []
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
     const actionReadinessMessage = savingQuote
-        ? 'Saving this Cost Estimate…'
+        ? 'Saving costing…'
         : !hasValidCostResult
             ? (firstCostingReadinessMessage ?? 'Complete the highlighted Cost Estimate inputs before saving.')
             : !qualityLabel.trim()
@@ -3013,9 +3149,9 @@ export default function EstimatorClient({
             <ArchivePolicyNotice />
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
-            {hasDraft && draft && (
+            {hasDraft && draft && !draftBannerHidden && (
                 <div className={pageShellClass}>
-                    <div className="flex flex-wrap items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                         <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
                         <p className="text-sm text-amber-800 flex-1">
                             {draft.sourceQuoteId ? (
@@ -3044,7 +3180,7 @@ export default function EstimatorClient({
                             onClick={applyEstimatorDraft}
                             className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-amber-700 underline underline-offset-2 hover:bg-amber-100 hover:text-amber-900"
                         >
-                            {draft.sourceQuoteId ? 'Load Specs' : 'Restore'}
+                            Restore
                         </button>
                         <button
                             onClick={() => { setDraftRenameValue(draft.qualityLabel || ''); setShowRenameDraft(true) }}
@@ -3057,6 +3193,18 @@ export default function EstimatorClient({
                             className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
                             aria-label="Dismiss unsaved Cost Estimate draft"
                         ><X className="h-3.5 w-3.5" aria-hidden="true" /> <span>Discard</span></button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setDraftBannerHidden(true)
+                                toast.info(tx('Draft kept for later'), {
+                                    description: tx('It stays on this device until you restore or discard it.'),
+                                })
+                            }}
+                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                        >
+                            Keep for later
+                        </button>
                     </div>
                 </div>
             )}
@@ -3136,7 +3284,7 @@ export default function EstimatorClient({
             )}
 
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
-            <div className="sticky top-3 z-40 -mt-3 py-3">
+            <div className="relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
                 <div className={hudShellClass}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -3715,6 +3863,8 @@ export default function EstimatorClient({
                         canUseProduction={canUseProduction}
                         widthUnit={widthUnit}
                         onWidthUnitChange={setWidthUnit}
+                        showStarterRecipe={showStarterRecipe}
+                        onUseStarterRecipe={applyStarterRecipe}
                         onOpenDetailed={() => handleEntryModeChange('detailed')}
                         onOpenOverheadDetails={() => {
                             handleEntryModeChange('detailed')
@@ -5267,7 +5417,7 @@ export default function EstimatorClient({
                         <DialogDescription>{tx('This removes the unfinished Cost Estimate saved on this device. Saved qualities, costings, and quotations are not affected.')}</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>{tx('Keep draft')}</Button>
+                        <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>{tx('Keep for later')}</Button>
                         <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success(tx('Cost Estimate draft discarded')) }}>{tx('Discard draft')}</Button>
                     </DialogFooter>
                 </DialogContent>
