@@ -21,6 +21,10 @@ export function formatToSurat(date: Date | number | string, pattern: string): st
     return formatInTimeZone(date, SURAT_TIMEZONE, pattern)
 }
 
+export function formatSuratDateTime(date: Date | number | string): string {
+    return `${formatToSurat(date, 'd MMM yyyy, h:mm a')} IST`
+}
+
 /**
  * Helper to get strictly today's date formatted as YYYY-MM-DD in Surat.
  * Use this when checking attendance bounds or defaults.

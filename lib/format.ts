@@ -1,3 +1,5 @@
+import { SURAT_TIMEZONE } from './time'
+
 export function formatMeters(n: number): string {
   if (n >= 100_000) return `${(n / 1000).toFixed(1)}k m`
   return `${n.toLocaleString('en-IN')} m`
@@ -39,11 +41,28 @@ export function formatDateOnly(
   value: string,
   options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
 ): string {
-  const localDate = dateOnlyToLocalDate(value)
-  const date = localDate ?? new Date(value)
-  return date.toLocaleDateString('en-IN', options)
+  // Date-only values are business dates, not UTC instants. Pin them to
+  // midnight in Surat so an owner in another device timezone sees the same
+  // date that was entered in the factory.
+  const datePart = /^\d{4}-\d{2}-\d{2}/.exec(value)?.[0]
+  const date = datePart ? new Date(`${datePart}T00:00:00+05:30`) : new Date(value)
+  return date.toLocaleDateString('en-IN', { ...options, timeZone: SURAT_TIMEZONE })
 }
 
 export function formatDate(dateStr: string): string {
   return formatDateOnly(dateStr)
+}
+
+export function formatDateTime(
+  value: string | number | Date,
+  options: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  },
+): string {
+  return new Date(value).toLocaleString('en-IN', { ...options, timeZone: SURAT_TIMEZONE })
 }

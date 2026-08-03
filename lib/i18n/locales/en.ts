@@ -986,7 +986,7 @@ export const en = {
       settingsEmpty: "No qualities saved yet. Open Cost Estimate and use \"Save Quality\" to create your first one.",
       settingsDeleteConfirm: "Archive this quality? It can be restored later.",
       archiveTitle: "Archive saved quality?",
-      archiveDescription: "Archive “{name}”? It will remain in History and can be restored later. Existing saved costings will not change.",
+      archiveDescription: "Archive “{name}”? It will be removed from active lists, remain in History, and can be restored later. Permanent deletion is unavailable here; the record remains stored under the organisation's retention/privacy controls. Existing saved costings will not change.",
       archiveConfirm: "Archive quality"
     },
     order_basics: {
@@ -1216,5 +1216,53 @@ export const en = {
     confirm_reversal: "Confirm Reversal",
     cancel: "Cancel",
     invalid_code: "Invalid access code",
+  },
+  base_plan: {
+    language_promise: "The Base Plan is available in English, Hindi, and Gujarati.",
+    glossary_title: "Factory terms",
+    glossary_help: "These terms stay in the familiar factory form; the explanation tells staff what the field means.",
+    glossary: {
+      warp: "Warp — lengthwise yarn in the fabric.",
+      weft: "Weft — yarn inserted across the warp.",
+      ppi: "PPI — picks per inch, the weft-density measure.",
+      crimp: "Crimp — extra yarn taken up during weaving.",
+      waste: "Waste — yarn allowance not expected in finished fabric.",
+      pick_rate: "Pick rate — loom charge for each pick.",
+      costing: "Costing — internal production-cost calculation.",
+      quotation: "Quotation — customer-facing price document.",
+      trader: "Trader — buyer/customer account.",
+      margin: "Margin — planned amount above production cost.",
+      gst: "GST — Goods and Services Tax included in the payment total.",
+    },
+    archive: {
+      title: "Archive and restore",
+      description: "Archive removes a record from active lists; it does not erase the record.",
+      restore: "Open Archive/History to restore it later.",
+      deletion: "Permanent deletion is not available in this workflow.",
+      privacy: "The archived record remains stored for restore and organization export under the organisation's retention/privacy controls.",
+      costing_snapshot: "This archives only this costing snapshot.",
+      rate_description: "This removes the rate from the active Rate Book. Saved Qualities keep their recipe values, and costing snapshots remain unchanged.",
+    },
+    billing: {
+      status: "GST status: Not-Supported for this pilot.",
+      receipt_only: "You receive a payment receipt (PDF) for a captured payment. It is not a GST tax invoice.",
+      future_review: "GST tax invoice support will be reviewed after Weavly is incorporated.",
+      checkout: "Before you pay: the document you receive is a payment receipt (PDF) only. This pilot does not issue a GST tax invoice.",
+      success: "Payment receipt available in Billing. No GST tax invoice is issued for this pilot.",
+    },
+    export: {
+      timezone: "Audit dates and times use Asia/Kolkata (IST).",
+    },
+    status: {
+      saving: "Saving…",
+      saved: "Saved",
+      save_failed: "Could not save. Check the highlighted fields and try again.",
+      archive_failed: "Could not archive this record. Refresh and try again.",
+      restore_failed: "Could not restore this record. Refresh and try again.",
+      browser_storage_quote_error: "Browser storage is unavailable. The quote could not be opened in the estimator.",
+      save_cost_estimate_error: "Failed to save the Cost Estimate. Try again.",
+      data_export_generated: "Data export generated",
+      latest_saved_costing_breakdown: "Latest Saved Costing breakdown",
+    },
   }
 }

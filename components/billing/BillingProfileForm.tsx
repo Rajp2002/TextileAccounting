@@ -33,8 +33,8 @@ export function BillingProfileForm({ initialProfile }: { initialProfile: Billing
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div>
-        <h2 className="text-base font-bold text-slate-950">Billing details</h2>
-        <p className="mt-1 text-xs leading-relaxed text-slate-500">A payment receipt is not a GST tax invoice. Complete these details before payment if you need a formal invoice; supplier tax configuration must also be enabled.</p>
+        <h2 className="text-base font-bold text-slate-950">Future GST setup details</h2>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">This pilot issues a payment receipt only. These details are kept for future supplier setup and will not produce a GST tax invoice today.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="billing-legal-name">Legal or business name</Label><Input id="billing-legal-name" value={form.legalName} onChange={event => update('legalName', event.target.value)} placeholder="Your factory or business name" /></div>

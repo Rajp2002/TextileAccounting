@@ -65,12 +65,12 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 function formatDate(date: string | null | undefined) {
     if (!date) return 'Not set'
-    return new Date(date).toLocaleDateString('en-IN', {
+    return `${new Date(date).toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
         timeZone: 'Asia/Kolkata',
-    })
+    })} IST`
 }
 
 function SettingsSection({
@@ -131,7 +131,7 @@ function PanelHeading({
 }
 
 export default function SettingsPage() {
-    const { t } = useTranslation()
+    const { t, tx } = useTranslation()
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
@@ -168,10 +168,10 @@ export default function SettingsPage() {
             queryClient.invalidateQueries({ queryKey: ['organization'] })
             setFactoryName(newName)
             setIsEditingName(false)
-            toast.success('Factory name updated successfully')
+            toast.success(tx('Factory name updated successfully'))
         },
         onError: (err: unknown) => {
-            toast.error(getErrorMessage(err, 'Failed to update name'))
+            toast.error(tx(getErrorMessage(err, 'Failed to update name')))
         }
     })
 
@@ -190,10 +190,10 @@ export default function SettingsPage() {
                 join_code_expires_at: data.expiresAt,
             }))
             setRegenerateDialogOpen(false)
-            toast.success('Join code regenerated. The old code is now invalid.')
+            toast.success(tx('Join code regenerated. The old code is now invalid.'))
         },
         onError: (err: unknown) => {
-            toast.error(getErrorMessage(err, 'Failed to regenerate code'))
+            toast.error(tx(getErrorMessage(err, 'Failed to regenerate code')))
         }
     })
 
@@ -208,10 +208,10 @@ export default function SettingsPage() {
                 old ? { ...old, production_mode: productionMode } : old
             )
             queryClient.invalidateQueries({ queryKey: ['organization'] })
-            toast.success('Production mode updated')
+            toast.success(tx('Production mode updated'))
         },
         onError: (err: unknown) => {
-            toast.error(getErrorMessage(err, 'Failed to update production mode'))
+            toast.error(tx(getErrorMessage(err, 'Failed to update production mode')))
         }
     })
 
@@ -255,13 +255,13 @@ export default function SettingsPage() {
     function copyJoinCode() {
         if (!org?.join_code) return
         navigator.clipboard.writeText(org.join_code)
-        toast.success('Join code copied!')
+        toast.success(tx('Join code copied!'))
     }
 
     function refreshSettings() {
         queryClient.invalidateQueries({ queryKey: ['organization'] })
         queryClient.invalidateQueries({ queryKey: ['user_profile_id'] })
-        toast.success('Settings refreshed')
+        toast.success(tx('Settings refreshed'))
     }
 
     return (
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                 </div>
                 <Button variant="outline" size="sm" className="w-fit gap-2" onClick={refreshSettings}>
                     <RefreshCw className="h-3.5 w-3.5" />
-                    Refresh
+                    {tx('Refresh')}
                 </Button>
             </div>
 

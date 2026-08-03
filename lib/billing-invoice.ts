@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getBillingPrice, type BillingPurchaseType, type PurchasablePlanTier } from '@/lib/billing-constants'
+import { BILLING_DOCUMENT_POLICY, isGstInvoiceSupported } from '@/lib/billing-document-policy'
 
 type BillingProfile = {
   legal_name: string
@@ -78,6 +79,10 @@ export async function ensureBillingInvoice({
   purchaseType: BillingPurchaseType
   amountPaise: number
 }): Promise<{ issued: boolean; invoice?: IssuedInvoice; reason?: string }> {
+  if (!isGstInvoiceSupported()) {
+    return { issued: false, reason: 'GST tax invoices are not supported for the current paid pilot.' }
+  }
+
   if (!invoiceFeatureEnabled()) return { issued: false, reason: 'GST invoice feature is not enabled.' }
 
   const supplier = supplierConfig()
@@ -183,5 +188,5 @@ export async function ensureBillingInvoice({
 }
 
 export function billingInvoiceFeatureIsConfigured() {
-  return invoiceFeatureEnabled() && Boolean(supplierConfig())
+  return BILLING_DOCUMENT_POLICY.state === 'supported' && invoiceFeatureEnabled() && Boolean(supplierConfig())
 }

@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateGstInvoicePdf } from '@/lib/generate-gst-invoice'
+import { isGstInvoiceSupported } from '@/lib/billing-document-policy'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ invoiceId: string }> }) {
+  if (!isGstInvoiceSupported()) {
+    return NextResponse.json({ error: 'GST tax invoices are not supported for the current paid pilot.' }, { status: 404 })
+  }
+
   const { invoiceId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

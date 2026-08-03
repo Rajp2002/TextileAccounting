@@ -148,6 +148,6 @@ describe('Batch 24G security and audit source guardrails', () => {
         expect(settingsPage).toContain('<OrganizationDataExportButton />')
         expect(exportButton).toContain('exportOrganizationData()')
         expect(exportButton).toContain('downloadJson(payload, payload.filename)')
-        expect(exportButton).toContain("toast.success('Data export generated'")
+        expect(exportButton).toContain("toast.success(tx('Data export generated'")
     })
 })

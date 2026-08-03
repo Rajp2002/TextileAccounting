@@ -8,6 +8,7 @@ import { Loader2, CreditCard, RefreshCw, ShieldCheck } from 'lucide-react'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { cn } from '@/lib/utils'
 import type { BillingPurchaseType, PurchasablePlanTier } from '@/lib/billing-constants'
+import { useTranslation } from '@/lib/i18n/context'
 
 type RazorpayCheckoutOptions = {
     key: string
@@ -87,6 +88,7 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
     const [loading, setLoading] = useState(false)
     const [outcome, setOutcome] = useState<PaymentOutcome | null>(null)
     const router = useRouter()
+    const { t, tx } = useTranslation()
 
     const tryLoadScript = (url: string): Promise<boolean> => new Promise((resolve) => {
         const script = document.createElement('script')
@@ -125,20 +127,20 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
             const state = data.state
             if (state === 'activated') {
                 setOutcome({ state: 'success', planName, purchaseType, amount, paymentId: data.paymentId ?? paymentId ?? undefined, orderId, activeUntil: data.activeUntil })
-                toast.success(`${planName} is now active.`)
+                toast.success(tx(`${planName} is now active. ${t('base_plan.billing.success')}`))
                 if (data.paymentId ?? paymentId) onSuccess?.((data.paymentId ?? paymentId) as string)
                 router.refresh()
                 return
             }
             if (state === 'failed' || state === 'cancelled' || state === 'refunded') {
                 setOutcome({ state: 'retryable', planName, purchaseType, amount, paymentId: data.paymentId ?? paymentId ?? undefined, orderId, message: data.message ?? 'No payment was captured. You can safely try again.' })
-                toast.info('No payment was captured. You can safely try again.')
+                toast.info(tx('No payment was captured. You can safely try again.'))
                 router.refresh()
                 return
             }
             if (state === 'duplicate' || state === 'reconciliation_required') {
                 setOutcome({ state: 'reconciliation', planName, purchaseType, amount, paymentId: data.paymentId ?? paymentId ?? undefined, orderId, message: data.message ?? 'Payment received, but it needs verification. Do not pay again.' })
-                toast.info('Payment received. Do not pay again while we verify it.')
+                toast.info(tx('Payment received. Do not pay again while we verify it.'))
                 return
             }
             setOutcome({ state: state === 'authorized' || state === 'processing' ? 'pending' : 'checking', planName, purchaseType, amount, paymentId: data.paymentId ?? paymentId ?? undefined, orderId, message: data.message ?? 'We could not confirm the bank result yet. Check again before retrying.' })
@@ -216,13 +218,13 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
                 paymentHandled = true
                 setLoading(false)
                 setOutcome({ state: 'retryable', planName: checkoutPlanName, purchaseType, amount, orderId, message: 'Payment failed. No access was activated; you can safely try again.' })
-                toast.info('Payment failed. You can safely try again.')
+                toast.info(tx('Payment failed. You can safely try again.'))
                 void markCheckoutRetryable(orderId, 'failed')
             })
 
             rzp.open()
         } catch (err) {
-            toast.error(getErrorMessage(err, 'Something went wrong. Please try again.'))
+            toast.error(tx(getErrorMessage(err, 'Something went wrong. Please try again.')))
             setLoading(false)
         }
     }
@@ -235,37 +237,40 @@ export function SubscribeButton({ planTier = 'premium', tierName, displayAmount,
 
     return (
         <div className="space-y-3">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950" role="note">
+                <span className="font-bold">{t('base_plan.billing.status')}</span> {t('base_plan.billing.checkout')}
+            </p>
             {outcome ? (
                 <div className={cn('rounded-xl border p-4 text-sm', outcomeTone)} role="status" aria-live="polite">
                     <p className="flex items-center gap-2 font-bold">
                         {outcome.state === 'success' ? <ShieldCheck className="h-4 w-4" /> : <RefreshCw className={cn('h-4 w-4', (outcome.state === 'checking' || outcome.state === 'pending') && 'animate-spin')} />}
-                        {outcome.state === 'success' ? `${outcome.planName} payment received` : outcome.state === 'retryable' ? 'Payment not completed' : outcome.state === 'reconciliation' ? 'Payment needs verification' : 'Payment status is being checked'}
+                        {tx(outcome.state === 'success' ? `${outcome.planName} payment received` : outcome.state === 'retryable' ? 'Payment not completed' : outcome.state === 'reconciliation' ? 'Payment needs verification' : 'Payment status is being checked')}
                     </p>
                     <p className="mt-1 text-xs leading-relaxed opacity-80">
                         {outcome.state === 'success'
-                            ? `Paid ${displayAmount ?? `₹${(outcome.amount / 100).toLocaleString('en-IN')}`}${outcome.activeUntil ? ` · Active until ${new Date(outcome.activeUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}` : ''}.`
-                            : outcome.message ?? 'We are checking the provider result. Please do not pay again.'}
+                            ? tx(`Paid ${displayAmount ?? `₹${(outcome.amount / 100).toLocaleString('en-IN')}`}${outcome.activeUntil ? ` · Active until ${new Date(outcome.activeUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })} IST` : ''}. ${t('base_plan.billing.success')}`)
+                            : tx(outcome.message ?? 'We are checking the provider result. Please do not pay again.')}
                     </p>
                     {outcome.paymentId && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider opacity-60">Payment ref. {outcome.paymentId.slice(-8)}</p>}
                     {outcome.state !== 'success' && outcome.orderId && outcome.state !== 'retryable' && (
                         <Button type="button" variant="outline" size="sm" onClick={() => void checkPaymentStatus({ orderId: outcome.orderId as string, paymentId: outcome.paymentId, planName: outcome.planName, purchaseType: outcome.purchaseType, amount: outcome.amount })} disabled={loading} className="mt-3 gap-2 bg-white/70">
-                            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Check payment status
+                            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx('Check payment status')}
                         </Button>
                     )}
                     {outcome.state === 'retryable' && (
                         <Button type="button" size="sm" onClick={handleSubscribe} disabled={loading} className="mt-3 gap-2 bg-red-700 text-white hover:bg-red-800">
-                            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Try again
+                            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx('Try again')}
                         </Button>
                     )}
                     {outcome.state === 'success' && successHref && (
                         <Link href={successHref} className="mt-3 inline-flex items-center rounded-lg bg-white/80 px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm hover:bg-white">
-                            {successLabel ?? 'Continue'}
+                            {tx(successLabel ?? 'Continue')}
                         </Link>
                     )}
                 </div>
             ) : (
                 <Button type="button" id={`subscribe-btn-${planTier}`} onClick={handleSubscribe} disabled={loading} size="lg" className={cn('w-full gap-2 bg-amber-600 text-white shadow-lg shadow-amber-200/50 transition-all hover:bg-amber-700', className)}>
-                    {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Opening secure payment...</> : <><CreditCard className="h-4 w-4" /> {buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'base' ? '₹8,260' : '₹29,500')} & Activate`}</>}
+                    {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {tx('Opening secure payment...')}</> : <><CreditCard className="h-4 w-4" /> {tx(buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'base' ? '₹8,260' : '₹29,500')} & Activate`)}</>}
                 </Button>
             )}
         </div>

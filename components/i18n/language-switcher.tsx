@@ -34,12 +34,7 @@ export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitc
     const result = await setLanguage(nextLanguage)
     if (result.ok) {
       const targetLabel = LANGUAGES.find(item => item.code === result.language)?.label ?? result.language
-      const successTitle = result.language === "hi"
-        ? `भाषा बदलकर ${targetLabel} हो गई`
-        : result.language === "gu"
-          ? `ભાષા ${targetLabel} માં બદલાઈ`
-          : `Language changed to ${targetLabel}`
-      toast.success(successTitle)
+      toast.success(t("common.language_changed", { language: targetLabel }))
     } else if (result.error !== "Language change was superseded.") {
       const targetLabel = LANGUAGES.find(item => item.code === nextLanguage)?.label ?? nextLanguage
       const failureTitle = nextLanguage === "hi" ? `${targetLabel} लोड नहीं हो सकी` : nextLanguage === "gu" ? `${targetLabel} લોડ થઈ શકી નથી` : `Could not load ${targetLabel}`
