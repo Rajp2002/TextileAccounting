@@ -2,6 +2,8 @@
 
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 
+export type EstimatorQuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+
 export const ESTIMATOR_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 const ESTIMATOR_CLIENT_REQUEST_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -17,6 +19,9 @@ export interface EstimatorAutosaveData<TState = unknown> {
   sourceQuoteUpdatedAt?: string
   sourceQuoteVersionNumber?: number
   sourceQuoteCreatedAt?: string
+  /** Status and inputs of the quotation being reopened, when editing in place. */
+  sourceQuoteStatus?: EstimatorQuoteStatus
+  sourceState?: TState
   sourceFactoryProfileUpdatedAt?: string
   sourceRecordKind?: CostingRecordKind
   templateId?: string
@@ -65,6 +70,13 @@ export function parseEstimatorDraft<TState = unknown>(
         ? Number(parsed.sourceQuoteVersionNumber)
         : undefined,
       sourceQuoteCreatedAt: typeof parsed.sourceQuoteCreatedAt === 'string' ? parsed.sourceQuoteCreatedAt : undefined,
+      sourceQuoteStatus: parsed.sourceQuoteStatus === 'draft'
+        || parsed.sourceQuoteStatus === 'sent'
+        || parsed.sourceQuoteStatus === 'accepted'
+        || parsed.sourceQuoteStatus === 'rejected'
+        ? parsed.sourceQuoteStatus
+        : undefined,
+      sourceState: parsed.sourceState as TState | undefined,
       sourceFactoryProfileUpdatedAt: typeof parsed.sourceFactoryProfileUpdatedAt === 'string' ? parsed.sourceFactoryProfileUpdatedAt : undefined,
       sourceRecordKind: parsed.sourceRecordKind === 'costing' || parsed.sourceRecordKind === 'quotation' || parsed.sourceRecordKind === 'market_run'
         ? parsed.sourceRecordKind

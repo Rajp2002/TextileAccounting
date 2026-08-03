@@ -498,6 +498,7 @@ export type SavedCostingLayerComparison = {
     finalKgPer100m: number | null
     wastePct: number | null
     crimpPct: number | null
+    effectiveCostingWidthInches: number | null
     costPerM: number | null
   }>
   right: Array<{
@@ -506,10 +507,13 @@ export type SavedCostingLayerComparison = {
     finalKgPer100m: number | null
     wastePct: number | null
     crimpPct: number | null
+    effectiveCostingWidthInches: number | null
     costPerM: number | null
   }>
   costPerM: SavedCostingDelta
   ratePerKg: SavedCostingDelta
+  wastePct: SavedCostingDelta
+  widthInches: SavedCostingDelta
 }
 
 export type SavedCostingCanonicalComparison = {
@@ -546,6 +550,11 @@ export type SavedCostingCanonicalComparison = {
     monthlyExpenseTotal: SavedCostingDelta
     monthlyOutputM: SavedCostingDelta
   }
+  commercial: {
+    changed: boolean
+    commissionPct: SavedCostingDelta
+    transportPerM: SavedCostingDelta
+  }
   margin: {
     changed: boolean
     targetPct: SavedCostingDelta
@@ -570,6 +579,9 @@ type SavedCostingAuditLayer = {
   wastePct?: unknown
   shortagePct?: unknown
   crimpPct?: unknown
+  effectiveCostingWidthInches?: unknown
+  effectiveCostingWidthCm?: unknown
+  reedSpace?: unknown
   costPerMeter?: unknown
 }
 
@@ -606,6 +618,7 @@ function layerSummaryFromAudit(layers: EstimatorYarnLayerAudit[] | undefined) {
     finalKgPer100m: numericOrNull(layer.finalKgPer100m),
     wastePct: numericOrNull(layer.wastePct),
     crimpPct: numericOrNull(layer.crimpPct),
+    effectiveCostingWidthInches: numericOrNull(layer.effectiveCostingWidthInches),
     costPerM: numericOrNull(layer.costPerMeter),
   }))
 }
@@ -619,6 +632,15 @@ function layerSummaryFromSavedRows(rows: SavedCostingAuditLayer[]) {
     finalKgPer100m: numericOrNull(row.finalKgPer100m),
     wastePct: numericOrNull(row.wastePct ?? row.shortagePct),
     crimpPct: numericOrNull(row.crimpPct),
+    effectiveCostingWidthInches: numericOrNull(
+      row.effectiveCostingWidthInches
+        ?? (numericOrNull(row.effectiveCostingWidthCm) == null
+          ? null
+          : Number(row.effectiveCostingWidthCm) / 2.54)
+        ?? (numericOrNull(row.reedSpace) == null
+          ? null
+          : Number(row.reedSpace) / 2.54),
+    ),
     costPerM: numericOrNull(row.costPerMeter),
   }))
 }
@@ -630,6 +652,7 @@ function layerSignature(layers: SavedCostingLayerComparison['left']) {
     finalKgPer100m: layer.finalKgPer100m,
     wastePct: layer.wastePct,
     crimpPct: layer.crimpPct,
+    effectiveCostingWidthInches: layer.effectiveCostingWidthInches,
     costPerM: layer.costPerM,
   })))
 }
@@ -644,12 +667,23 @@ function buildLayerComparison(
   const leftRate = leftLayers.length === 1 ? leftLayers[0].ratePerKg : null
   const rightRate = rightLayers.length === 1 ? rightLayers[0].ratePerKg : null
   const ratePerKg = delta(leftRate, rightRate)
+  const leftWaste = leftLayers.length === 1 ? leftLayers[0].wastePct : null
+  const rightWaste = rightLayers.length === 1 ? rightLayers[0].wastePct : null
+  const wastePct = delta(leftWaste, rightWaste)
+  const leftWidth = leftLayers.length === 1 ? leftLayers[0].effectiveCostingWidthInches : null
+  const rightWidth = rightLayers.length === 1 ? rightLayers[0].effectiveCostingWidthInches : null
+  const widthInches = delta(leftWidth, rightWidth)
   return {
-    changed: layerSignature(leftLayers) !== layerSignature(rightLayers) || deltaChanged(costPerM),
+    changed: layerSignature(leftLayers) !== layerSignature(rightLayers)
+      || deltaChanged(costPerM)
+      || deltaChanged(wastePct)
+      || deltaChanged(widthInches),
     left: leftLayers,
     right: rightLayers,
     costPerM,
     ratePerKg,
+    wastePct,
+    widthInches,
   }
 }
 
@@ -727,6 +761,11 @@ export function compareSavedCostingSnapshots(
     monthlyOutputM: delta(leftOverhead?.monthlyOutputM, rightOverhead?.monthlyOutputM),
   }
 
+  const commercial = {
+    commissionPct: delta(leftResult?.commissionPct, rightResult?.commissionPct),
+    transportPerM: delta(leftResult?.transportPerM, rightResult?.transportPerM),
+  }
+
   const margin = {
     targetPct: delta(leftResult?.targetMarginPct, rightResult?.targetMarginPct),
     actualPct: delta(leftResult?.actualMarginPct, rightResult?.actualMarginPct),
@@ -770,6 +809,10 @@ export function compareSavedCostingSnapshots(
         || deltaChanged(overhead.perM)
         || deltaChanged(overhead.monthlyExpenseTotal)
         || deltaChanged(overhead.monthlyOutputM),
+    },
+    commercial: {
+      ...commercial,
+      changed: deltaChanged(commercial.commissionPct) || deltaChanged(commercial.transportPerM),
     },
     margin: {
       ...margin,

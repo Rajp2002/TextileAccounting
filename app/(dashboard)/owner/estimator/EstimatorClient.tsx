@@ -110,7 +110,8 @@ import {
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
 import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
-import type { EstimatorAutosaveData } from '@/lib/estimator-drafts'
+import type { EstimatorAutosaveData, EstimatorQuoteStatus } from '@/lib/estimator-drafts'
+import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
@@ -167,6 +168,8 @@ type SaveAsNewQualityRollback = {
     sourceQuoteUpdatedAt: string | null
     sourceQuoteVersionNumber: number | null
     sourceQuoteCreatedAt: string | null
+    sourceQuoteStatus: EstimatorQuoteStatus | null
+    sourceState: EstimateState | null
     sourceFactoryProfileUpdatedAt: string | null
     sourceRecordKind: CostingRecordKind | null
     clientRequestId: string | null
@@ -777,19 +780,19 @@ function StepperField({
 }
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false,
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
     unit?: string; step?: number; min?: number; hint?: string; warning?: string
-    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean
+    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean
 }) {
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     // Estimator defaults are stored as numeric zero for calculations, but an
     // empty control with a zero placeholder is a better editing experience:
     // the first digit typed replaces the visual default instead of appending
     // to it (for example, entering 55 must never appear as 055).
-    const displayValue = value === 0 ? '' : (value ?? '')
-    const displayPlaceholder = value === 0 ? (placeholder ?? '0') : placeholder
+    const displayValue = value === 0 && !preserveZero ? '' : (value ?? '')
+    const displayPlaceholder = value === 0 && !preserveZero ? (placeholder ?? '0') : placeholder
     return (
         <div className="space-y-1.5 min-w-0">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
@@ -1287,11 +1290,22 @@ function trimLayerLabels<T extends WarpRow | WeftRow>(rows: T[]) {
     return rows.map(row => ({ ...row, label: row.label?.trim() }))
 }
 
+function formatWasteProvenance(
+    rowWaste: number | null,
+    defaultWaste: number,
+    appliedWaste: number,
+    formulaAdjustment: number,
+) {
+    const source = rowWaste !== null && rowWaste !== undefined ? 'Override' : 'Default'
+    const sourceValue = rowWaste !== null && rowWaste !== undefined ? rowWaste : defaultWaste
+    return `${source} ${sourceValue.toFixed(1)}% → applied ${appliedWaste.toFixed(1)}% · formula ${formulaAdjustment.toFixed(1)}%`
+}
+
 function RowCard({
-    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, showCalculatedValues = true, children, accent = 'indigo'
+    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, adjustmentDetail, showCalculatedValues = true, children, accent = 'indigo'
 }: {
     title: string; index: number; onRemove: () => void; canRemove: boolean
-    kgPer100m: number; costPer100m: number; adjustmentPct?: number; showCalculatedValues?: boolean; children: React.ReactNode; accent?: 'indigo' | 'emerald'
+    kgPer100m: number; costPer100m: number; adjustmentPct?: number; adjustmentDetail?: string; showCalculatedValues?: boolean; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
     const colors = {
         indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]', dot: 'bg-[var(--color-info-blue)]' },
@@ -1313,6 +1327,9 @@ function RowCard({
                         <Badge variant="outline" className={`h-5 rounded-[6px] px-1.5 py-0 text-[10px] font-semibold ${c.badge}`}>
                             {accent === 'emerald' ? 'Applied waste' : 'Total adjustment'} {adjustmentPct.toFixed(1)}%
                         </Badge>
+                    )}
+                    {adjustmentDetail && showCalculatedValues && (
+                        <span className="text-[10px] font-medium text-[var(--color-muted)]">{adjustmentDetail}</span>
                     )}
                 </div>
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
@@ -1458,6 +1475,7 @@ function QuickCostingView({
                         onChange={value => dispatch({ type: 'SET', field: 'yarnShortagePct', value: value ?? 0 })}
                         unit="%"
                         step={0.5}
+                        preserveZero
                         hint="Used when a yarn row has no row-specific waste."
                     />
                     {canUseProduction && (
@@ -1494,6 +1512,12 @@ function QuickCostingView({
                             kgPer100m={totals.warpRows[index]?.kgPer100m ?? 0}
                             costPer100m={totals.warpRows[index]?.costPer100m ?? 0}
                             adjustmentPct={totals.warpRows[index]?.totalAdjustmentPct ?? 0}
+                            adjustmentDetail={formatWasteProvenance(
+                                row.shortagePct,
+                                totals.warpRows[index]?.defaultWastePct ?? state.yarnShortagePct,
+                                totals.warpRows[index]?.wastePct ?? state.yarnShortagePct,
+                                totals.warpRows[index]?.totalAdjustmentPct ?? 0,
+                            )}
                             showCalculatedValues={hasValidCostResult}
                         >
                             <CalculationModeField
@@ -1509,7 +1533,7 @@ function QuickCostingView({
                                     <NumField label="Beam ends" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} />
                                 </>
                             )}
-                            <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct || 0}% default`} />
+                            <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
                             <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} attentionWhenEmpty />
                             <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} />
                         </RowCard>
@@ -1532,7 +1556,7 @@ function QuickCostingView({
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         return (
-                            <RowCard key={row.id} title="Weft yarn" index={index} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} showCalculatedValues={hasValidCostResult}>
+                            <RowCard key={row.id} title="Weft yarn" index={index} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
                                 <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" />
@@ -1542,7 +1566,7 @@ function QuickCostingView({
                                 ) : (
                                     <YarnDensityFields row={row} onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })} />
                                 )}
-                                <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct || 0}% default`} />
+                                <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
                             <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} attentionWhenEmpty />
                                 <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} />
                             </RowCard>
@@ -1731,9 +1755,18 @@ export default function EstimatorClient({
     const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
     const [sourceQuoteVersionNumber, setSourceQuoteVersionNumber] = useState<number | null>(null)
     const [sourceQuoteCreatedAt, setSourceQuoteCreatedAt] = useState<string | null>(null)
+    const [sourceQuoteStatus, setSourceQuoteStatus] = useState<EstimatorQuoteStatus | null>(null)
+    const [sourceState, setSourceState] = useState<EstimateState | null>(null)
     const [sourceFactoryProfileUpdatedAt, setSourceFactoryProfileUpdatedAt] = useState<string | null>(null)
     const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
     const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
+    const versionInputChanges = useMemo(
+        () => summarizeCostingInputChanges(sourceState, state),
+        [sourceState, state],
+    )
+    const versionInputChangeSummary = versionInputChanges.length > 0
+        ? versionInputChanges.join(', ')
+        : null
     const quoteRequestIdRef = useRef<string | null>(null)
     const autoRestoredDraftSavedAtRef = useRef<number | null>(null)
 
@@ -1865,6 +1898,8 @@ export default function EstimatorClient({
         sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
         sourceQuoteVersionNumber: sourceQuoteVersionNumber ?? undefined,
         sourceQuoteCreatedAt: sourceQuoteCreatedAt ?? undefined,
+        sourceQuoteStatus: sourceQuoteStatus ?? undefined,
+        sourceState: sourceState ?? undefined,
         sourceFactoryProfileUpdatedAt: sourceFactoryProfileUpdatedAt ?? undefined,
         sourceRecordKind: recordKindOverride ?? sourceRecordKind ?? undefined,
         templateId: appliedTemplate?.id,
@@ -1877,6 +1912,8 @@ export default function EstimatorClient({
         sourceQuoteUpdatedAt,
         sourceQuoteVersionNumber,
         sourceQuoteCreatedAt,
+        sourceQuoteStatus,
+        sourceState,
         sourceFactoryProfileUpdatedAt,
         sourceRecordKind,
         state,
@@ -1900,6 +1937,8 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
         setSourceQuoteVersionNumber(restored.sourceQuoteVersionNumber ?? null)
         setSourceQuoteCreatedAt(restored.sourceQuoteCreatedAt ?? null)
+        setSourceQuoteStatus(restored.sourceQuoteStatus ?? null)
+        setSourceState(restored.sourceState ?? null)
         setSourceFactoryProfileUpdatedAt(restored.sourceFactoryProfileUpdatedAt ?? null)
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
@@ -2156,6 +2195,8 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(null)
         setSourceQuoteVersionNumber(null)
         setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
@@ -2187,6 +2228,8 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(rollback.sourceQuoteUpdatedAt)
         setSourceQuoteVersionNumber(rollback.sourceQuoteVersionNumber)
         setSourceQuoteCreatedAt(rollback.sourceQuoteCreatedAt)
+        setSourceQuoteStatus(rollback.sourceQuoteStatus)
+        setSourceState(rollback.sourceState)
         setSourceFactoryProfileUpdatedAt(rollback.sourceFactoryProfileUpdatedAt)
         setSourceRecordKind(rollback.sourceRecordKind)
         quoteRequestIdRef.current = rollback.clientRequestId
@@ -2312,6 +2355,8 @@ export default function EstimatorClient({
                 setSourceQuoteUpdatedAt(null)
                 setSourceQuoteVersionNumber(null)
                 setSourceQuoteCreatedAt(null)
+                setSourceQuoteStatus(null)
+                setSourceState(null)
                 setSourceFactoryProfileUpdatedAt(null)
                 setSourceRecordKind(null)
                 quoteRequestIdRef.current = null
@@ -2322,7 +2367,7 @@ export default function EstimatorClient({
                 clearDraft()
                 suppressAutosaveUntilChanged()
                 toast.success(t('estimator.quality.saved'), {
-                    description: tx('This also created the initial v1 costing snapshot. Use Save Costing only when you intentionally want another costing version.'),
+                    description: tx(`Recipe saved for reuse. Costing snapshot v${res.versionNumber ?? 1} · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you intentionally want another costing version.`),
                 })
             } else {
                 const message = res.error ?? t('estimator.quality.saveFailed')
@@ -2414,6 +2459,8 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(null)
         setSourceQuoteVersionNumber(null)
         setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
@@ -2503,6 +2550,8 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(null)
         setSourceQuoteVersionNumber(null)
         setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
@@ -2522,6 +2571,8 @@ export default function EstimatorClient({
         setSourceQuoteUpdatedAt(null)
         setSourceQuoteVersionNumber(null)
         setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
@@ -2574,6 +2625,11 @@ export default function EstimatorClient({
         setShowValidation(true)
         const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
         const effectiveTargetMode = saveAsStandaloneCosting ? 'quote' : targetMode
+        const statusForSave: 'draft' | 'sent' | 'accepted' | 'rejected' = !saveAsStandaloneCosting
+            && sourceQuoteId
+            && sourceQuoteStatus
+            ? sourceQuoteStatus
+            : status
         if (!hasValidCostResult) {
             return toast.error(tx(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before saving.'))
         }
@@ -2673,6 +2729,8 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     setSourceQuoteVersionNumber(null)
                     setSourceQuoteCreatedAt(null)
+                    setSourceQuoteStatus(null)
+                    setSourceState(null)
                     setSourceFactoryProfileUpdatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
@@ -2689,7 +2747,7 @@ export default function EstimatorClient({
                     estimate:                state,
                     quotePricePerM:          costingResult.suggestedSellingPricePerM,
                     totalProductionCostPerM: costingResult.productionCostPerM,
-                    status:                  status,
+                    status:                  statusForSave,
                     recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
                     sourceQuoteId:           sourceQuoteId ?? undefined,
                     expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
@@ -2721,16 +2779,25 @@ export default function EstimatorClient({
                     setSourceQuoteUpdatedAt(null)
                     setSourceQuoteVersionNumber(null)
                     setSourceQuoteCreatedAt(null)
+                    setSourceQuoteStatus(null)
+                    setSourceState(null)
                     setSourceFactoryProfileUpdatedAt(null)
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
-                    toast.success(tx(!saveAsStandaloneCosting
-                        ? (status === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
-                        : ('noChange' in res && res.noChange)
-                            ? t('estimator.sprint1.costing_no_change', { version: String(('versionNumber' in res && res.versionNumber) || 1) })
-                            : (qualityUpdateDecision === 'version_and_quality'
-                                ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
-                                : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))))
+                    const savedVersion = 'versionNumber' in res && res.versionNumber ? res.versionNumber : 1
+                    const savedAt = 'updatedAt' in res && res.updatedAt ? res.updatedAt : new Date().toISOString()
+                    toast.success(
+                        tx(!saveAsStandaloneCosting
+                            ? (statusForSave === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
+                            : ('noChange' in res && res.noChange)
+                                ? t('estimator.sprint1.costing_no_change', { version: String(('versionNumber' in res && res.versionNumber) || 1) })
+                                : (qualityUpdateDecision === 'version_and_quality'
+                                    ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
+                                    : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))),
+                        {
+                            description: tx(`${!saveAsStandaloneCosting ? 'Quotation' : 'Costing snapshot'} v${savedVersion} · ${formatSuratDateTime(savedAt)} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status preserved as ${sourceQuoteStatus}` : ''}.`),
+                        },
+                    )
                     router.push('/owner/quotes')
                 } else {
                     toast.error(tx(userFacingError(res.error, 'The Customer Quotation could not be saved. Try again.')))
@@ -2792,6 +2859,8 @@ export default function EstimatorClient({
             setSourceQuoteUpdatedAt(null)
             setSourceQuoteVersionNumber(null)
             setSourceQuoteCreatedAt(null)
+            setSourceQuoteStatus(null)
+            setSourceState(null)
             setSourceFactoryProfileUpdatedAt(null)
             setSourceRecordKind(null)
             quoteRequestIdRef.current = null
@@ -3092,6 +3161,14 @@ export default function EstimatorClient({
                                     </span>
                                     {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing snapshot</span>}
                                 </div>
+                                {sourceQuoteId && (
+                                    <p className="mt-2 max-w-3xl text-[10px] font-medium leading-4 text-[var(--color-muted)]">
+                                        {versionInputChangeSummary
+                                            ? `Changed inputs since v${sourceQuoteVersionNumber ?? 1}: ${versionInputChangeSummary}. Create new version is deliberate; review this summary before saving.`
+                                            : `No costing inputs changed since v${sourceQuoteVersionNumber ?? 1}. Saving again keeps the same version and will not create a duplicate snapshot.`}
+                                        {sourceRecordKind === 'quotation' && sourceQuoteStatus && ` Existing quotation status stays ${sourceQuoteStatus} until you use the allowed status action.`}
+                                    </p>
+                                )}
                             </div>
                             <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
                                 <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
@@ -3204,6 +3281,12 @@ export default function EstimatorClient({
                             />
                         </div>
 
+                        <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)] 2xl:col-span-2">
+                            <p><span className="font-semibold text-[var(--color-ink)]">Save quality/recipe:</span> reusable construction and assumptions.</p>
+                            <p><span className="font-semibold text-[var(--color-ink)]">Save costing snapshot:</span> frozen result for this rate/date/quantity.</p>
+                            <p><span className="font-semibold text-[var(--color-ink)]">Create new version:</span> deliberate action with the changed-input summary above; an ordinary repeat save does not create a duplicate.</p>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end 2xl:w-[520px]">
 
                             {mode === 'quote' || isStandaloneCostingSession ? (
@@ -3240,7 +3323,7 @@ export default function EstimatorClient({
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                         aria-busy={savingQuote}
                                         aria-label={!isStandaloneCostingSession
-                                            ? 'Save and accept quotation'
+                                            ? sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'
                                             : sourceQuoteId
                                                 ? 'Save new immutable costing version'
                                                 : 'Save costing snapshot'}
@@ -3249,7 +3332,7 @@ export default function EstimatorClient({
                                             : undefined)}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{tx(!isStandaloneCostingSession ? 'Save & Accept' : (sourceQuoteId ? 'Save New Version' : 'Save Costing'))}</span>
+                                        <span className="truncate">{tx(!isStandaloneCostingSession ? (sourceQuoteId ? 'Save Quotation' : 'Save & Accept') : (sourceQuoteId ? 'Save New Version' : 'Save Costing'))}</span>
                                     </Button>
 
                                     {isStandaloneCostingSession && (
@@ -3381,6 +3464,8 @@ export default function EstimatorClient({
                                                 sourceQuoteUpdatedAt,
                                                 sourceQuoteVersionNumber,
                                                 sourceQuoteCreatedAt,
+                                                sourceQuoteStatus,
+                                                sourceState,
                                                 sourceFactoryProfileUpdatedAt,
                                                 sourceRecordKind,
                                                 clientRequestId: quoteRequestIdRef.current,
@@ -3391,6 +3476,8 @@ export default function EstimatorClient({
                                             setSourceQuoteUpdatedAt(null)
                                             setSourceQuoteVersionNumber(null)
                                             setSourceQuoteCreatedAt(null)
+                                            setSourceQuoteStatus(null)
+                                            setSourceState(null)
                                             setSourceFactoryProfileUpdatedAt(null)
                                             setSourceRecordKind(null)
                                             quoteRequestIdRef.current = null
@@ -3783,6 +3870,12 @@ export default function EstimatorClient({
                                     kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
                                     adjustmentPct={totals.warpRows[i]?.totalAdjustmentPct ?? 0}
+                                    adjustmentDetail={formatWasteProvenance(
+                                        row.shortagePct,
+                                        totals.warpRows[i]?.defaultWastePct ?? state.yarnShortagePct,
+                                        totals.warpRows[i]?.wastePct ?? state.yarnShortagePct,
+                                        totals.warpRows[i]?.totalAdjustmentPct ?? 0,
+                                    )}
                                     showCalculatedValues={hasValidCostResult}
                                 >
                                     <CalculationModeField
@@ -3806,7 +3899,7 @@ export default function EstimatorClient({
                                             <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
                                         </>
                                     )}
-                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -3950,6 +4043,12 @@ export default function EstimatorClient({
                                 ?? (row.shortagePct !== null && row.shortagePct !== undefined ? row.shortagePct : state.yarnShortagePct)
                             ))
                             const appliedWasteLabel = appliedWaste.map((value, index) => `Row ${index + 1}: ${Number(value).toFixed(1)}%`).join(' · ')
+                            const effectiveWasteLabel = state.weftRows.map((row, index) => {
+                                const auditRow = totals.weftRows[index]
+                                const applied = auditRow?.wastePct ?? (row.shortagePct ?? state.yarnShortagePct)
+                                const effective = auditRow?.totalAdjustmentPct ?? applied
+                                return `Row ${index + 1}: ${Number(effective).toFixed(1)}%`
+                            }).join(' · ')
                             return (
                                 <div className="mb-6 overflow-hidden rounded-[13px] border border-[#CDE5D3] bg-[#F7FCF8]">
                                     <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
@@ -3961,7 +4060,7 @@ export default function EstimatorClient({
                                             <p className="mt-1 text-[11px] font-medium text-[var(--color-muted)]">Used only when a weft row has no row-specific value. A row value of 0 means no waste.</p>
                                         </div>
                                         <span className="flex shrink-0 items-center gap-2 font-mono text-sm font-semibold text-[var(--color-factory-green)]">
-                                            <span>{state.yarnShortagePct || 0}%</span>
+                                            <span>{state.yarnShortagePct ?? 0}%</span>
                                             <span className="rounded-[7px] border border-[#CDE5D3] bg-white px-2.5 py-1 text-base">default</span>
                                         </span>
                                     </div>
@@ -3969,7 +4068,7 @@ export default function EstimatorClient({
                                         Applied to pricing: <span className="font-mono">{appliedWasteLabel}</span>
                                     </div>
                                     <div className="border-t border-[#CDE5D3] px-4 py-2.5 text-[11px] font-medium text-[var(--color-muted)]" data-testid="effective-weft-waste-summary">
-                                        Effective weft wastage used in formula: <span className="font-mono font-semibold text-[var(--color-ink)]">{appliedWasteLabel}</span>
+                                        Effective weft wastage used in formula: <span className="font-mono font-semibold text-[var(--color-ink)]">{effectiveWasteLabel}</span> <span>(effective waste after construction adjustments; value entering formula)</span>
                                     </div>
                                 </div>
                             )
@@ -3996,6 +4095,12 @@ export default function EstimatorClient({
                                         kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
                                         costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
                                         adjustmentPct={totals.weftRows[i]?.totalAdjustmentPct ?? 0}
+                                        adjustmentDetail={formatWasteProvenance(
+                                            row.shortagePct,
+                                            totals.weftRows[i]?.defaultWastePct ?? state.yarnShortagePct,
+                                            totals.weftRows[i]?.wastePct ?? state.yarnShortagePct,
+                                            totals.weftRows[i]?.totalAdjustmentPct ?? 0,
+                                        )}
                                         showCalculatedValues={hasValidCostResult}
                                     >
                                         <CalculationModeField
@@ -4036,7 +4141,7 @@ export default function EstimatorClient({
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })}
                                             />
                                         )}
-                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
                                             const isUnusuallyLow = templateRate !== null
@@ -4754,7 +4859,11 @@ export default function EstimatorClient({
                                         <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
                                         <div>
                                             <p className="font-mono text-[var(--color-warning-amber)]">{layer.totalAdjustmentPct.toFixed(1)}%</p>
-                                            <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.crimpPct.toFixed(1)}% crimp + {layer.wastePct.toFixed(1)}% waste</p>
+                                            <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.crimpPct.toFixed(1)}% crimp + {layer.wastePct.toFixed(1)}% applied waste</p>
+                                            <p className="mt-1 text-[10px] font-medium leading-tight text-[var(--color-muted)]">
+                                                Default waste {layer.defaultWastePct.toFixed(1)}% · {layer.wastePctSource === 'row_override' ? 'Override' : layer.wastePctSource === 'default' ? 'Default' : 'Saved value'} applied {layer.wastePct.toFixed(1)}%
+                                            </p>
+                                            <p className="text-[10px] font-semibold leading-tight text-[var(--color-ink)]">Effective waste after construction adjustments: {layer.totalAdjustmentPct.toFixed(1)}% enters formula</p>
                                         </div>
                                         <p className="font-mono text-[var(--color-ink)]">{layer.finalKgPer100m.toFixed(3)}</p>
                                         <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(0)}/kg</p>
