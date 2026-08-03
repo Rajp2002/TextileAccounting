@@ -1362,6 +1362,10 @@ export async function saveEstimatorQuoteV3(params: {
         if (sourceRecordKind === 'quotation' && !allowsPartyOrders) {
             return { error: 'Party quotations are unavailable in Market Run only mode.' }
         }
+        const editableQuotationPayload = sourceRecordKind === 'quotation'
+            && ['draft', 'sent', 'rejected'].includes(source.status)
+            ? { ...quotePayload, status: source.status }
+            : quotePayload
         if (shouldCreateImmutableRevision(sourceRecordKind, source.status, Boolean(source.order_id))) {
             if (sourceRecordKind === 'costing') {
                 const { data: latestCosting, error: latestCostingError } = await supabase
@@ -1407,7 +1411,7 @@ export async function saveEstimatorQuoteV3(params: {
         if (canUseProduction && sourceRecordKind === 'quotation' && !source.order_id && ['draft', 'sent', 'rejected'].includes(source.status)) {
             const { data: updated, error: updateError } = await supabase
                 .from('estimator_quotes')
-                .update(quotePayload)
+                .update(editableQuotationPayload)
                 .eq('id', source.id)
                 .eq('org_id', profile.org_id)
                 .is('order_id', null)
@@ -1956,7 +1960,10 @@ export async function updateQuoteStatus(
     }
 
     if (!allowedTransitions[current.status]?.includes(status)) {
-        return { error: `Invalid quote transition from "${current.status}" to "${status}".` }
+        const nextAction = allowedTransitions[current.status]?.length
+            ? `Next allowed action: ${allowedTransitions[current.status].join(' or ')}.`
+            : 'No further status changes are allowed; create a new quotation from the saved snapshot.'
+        return { error: `Invalid quote transition from "${current.status}" to "${status}". ${nextAction}` }
     }
 
     const { data, error } = await supabase

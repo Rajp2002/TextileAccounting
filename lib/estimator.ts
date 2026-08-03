@@ -64,6 +64,7 @@ export type LoomType = keyof typeof LOOM_TYPE_DEFAULTS
 export type YarnCalculationMode = 'formula' | 'manual'
 export type YarnLinearDensityUnit = 'denier' | 'cotton_count_ne'
 export type WidthUnit = 'cm' | 'inch'
+export type CostingWasteSource = 'default' | 'row_override' | 'unknown'
 
 /**
  * English cotton count (Ne) is an indirect system: higher counts are finer.
@@ -289,6 +290,8 @@ export interface WarpRowResult extends WarpRow {
   baseKgPer100mUsed: number
   crimpPct: number
   wastePct: number
+  defaultWastePct: number
+  wastePctSource: CostingWasteSource
   totalAdjustmentPct: number
   finalKgPer100m: number
   ratePerKg: number
@@ -306,6 +309,8 @@ export interface WeftRowResult extends WeftRow {
   baseKgPer100mUsed: number
   crimpPct: number
   wastePct: number
+  defaultWastePct: number
+  wastePctSource: CostingWasteSource
   totalAdjustmentPct: number
   finalKgPer100m: number
   ratePerKg: number
@@ -331,6 +336,8 @@ export interface EstimatorYarnLayerAudit {
   baseKgPer100mUsed: number
   crimpPct: number
   wastePct: number
+  defaultWastePct: number
+  wastePctSource: CostingWasteSource
   totalAdjustmentPct: number
   finalKgPer100m: number
   ratePerKg: number
@@ -1108,6 +1115,15 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
   const picks = readNullableNumber('picks')
   const effectiveCostingWidthInches = readNullableNumber('effectiveCostingWidthInches')
   const manualKgPer100m = readNullableNumber('manualKgPer100m')
+  // Older snapshots did not persist waste provenance. Their applied waste is
+  // still truthful, so retain it as the best available default and make the
+  // source explicit as unknown instead of inventing an override.
+  const defaultWastePct = readNullableNumber('defaultWastePct') ?? parsedRequired.wastePct!
+  const wastePctSource: CostingWasteSource = raw.wastePctSource === 'row_override'
+    ? 'row_override'
+    : raw.wastePctSource === 'default'
+      ? 'default'
+      : 'unknown'
 
   return {
     id,
@@ -1123,6 +1139,8 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
     baseKgPer100mUsed: parsedRequired.baseKgPer100mUsed!,
     crimpPct: parsedRequired.crimpPct!,
     wastePct: parsedRequired.wastePct!,
+    defaultWastePct,
+    wastePctSource,
     totalAdjustmentPct: parsedRequired.totalAdjustmentPct!,
     finalKgPer100m: parsedRequired.finalKgPer100m!,
     ratePerKg: parsedRequired.ratePerKg!,
@@ -1459,7 +1477,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     const baseKgPer100mUsed = mode === 'manual'
       ? Math.max(0, manualKgPer100m ?? 0)
       : formulaKgPer100m
-    const wastePct = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
+    const hasRowWasteOverride = r.shortagePct !== null && r.shortagePct !== undefined
+    const wastePct = hasRowWasteOverride ? r.shortagePct! : globalShortage
     const totalAdjustmentPct = new Decimal(warpCrimpPct).plus(wastePct)
     const finalKgPer100m = new Decimal(baseKgPer100mUsed)
       .times(new Decimal(1).plus(totalAdjustmentPct.div(100)))
@@ -1481,6 +1500,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       baseKgPer100mUsed,
       crimpPct: warpCrimpPct,
       wastePct,
+      defaultWastePct: globalShortage,
+      wastePctSource: hasRowWasteOverride ? 'row_override' : 'default',
       totalAdjustmentPct: totalAdjustmentPct.toNumber(),
       finalKgPer100m,
       ratePerKg: r.yarnRate,
@@ -1504,7 +1525,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     const baseKgPer100mUsed = mode === 'manual'
       ? Math.max(0, manualKgPer100m ?? 0)
       : formulaKgPer100m
-    const wastePct = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
+    const hasRowWasteOverride = r.shortagePct !== null && r.shortagePct !== undefined
+    const wastePct = hasRowWasteOverride ? r.shortagePct! : globalShortage
     const totalAdjustmentPct = new Decimal(wastePct)
     const finalKgPer100m = new Decimal(baseKgPer100mUsed)
       .times(new Decimal(1).plus(totalAdjustmentPct.div(100)))
@@ -1525,6 +1547,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       baseKgPer100mUsed,
       crimpPct: 0,
       wastePct,
+      defaultWastePct: globalShortage,
+      wastePctSource: hasRowWasteOverride ? 'row_override' : 'default',
       totalAdjustmentPct: totalAdjustmentPct.toNumber(),
       finalKgPer100m,
       ratePerKg: r.yarnRate,
@@ -1656,6 +1680,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       baseKgPer100mUsed: row.baseKgPer100mUsed,
       crimpPct: row.crimpPct,
       wastePct: row.wastePct,
+      defaultWastePct: row.defaultWastePct,
+      wastePctSource: row.wastePctSource,
       totalAdjustmentPct: row.totalAdjustmentPct,
       finalKgPer100m: row.finalKgPer100m,
       ratePerKg: row.ratePerKg,

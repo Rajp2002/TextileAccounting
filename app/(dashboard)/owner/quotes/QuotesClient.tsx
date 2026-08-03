@@ -113,6 +113,7 @@ type QuoteRow = {
     intended_margin_percent: number
     created_at: string
     updated_at: string
+    sent_at?: string | null
     quotation_reference?: string | null
     quotation_valid_until?: string | null
     customer_terms?: string | null
@@ -298,12 +299,24 @@ function formatCostingMoneyPerM(value: number | null) {
     return value == null ? 'Not available' : `₹${value.toFixed(2)}/m`
 }
 
+function formatQuotationAmount(pricePerM: number | null, meters: number | null | undefined) {
+    const quantity = Number(meters ?? 0)
+    if (pricePerM == null || !Number.isFinite(quantity) || quantity <= 0) return 'Not available'
+    return `₹${(pricePerM * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
 }
 
 function formatQuoteTimestamp(value: string | null | undefined) {
     return value ? formatSuratDateTime(value) : 'Not recorded'
+}
+
+function getQuotationNextAction(status: QuoteStatus) {
+    if (status === 'draft') return 'Next allowed action: Mark as sent.'
+    if (status === 'sent') return 'Next allowed action: Accept or reject.'
+    return 'No further status changes; create a new quotation from this saved snapshot.'
 }
 
 function getLegacyVersionLabel(costing: Pick<QuoteRow, 'quality_label' | 'version_number'>) {
@@ -765,8 +778,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             rows: [
                 { label: 'Warp yarn cost', value: comparison.yarn.warp.costPerM, unit: 'money' as const, changed: comparison.yarn.warp.changed },
                 { label: 'Warp yarn rate', value: comparison.yarn.warp.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.warp.changed },
+                { label: 'Warp applied waste', value: comparison.yarn.warp.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.warp.wastePct) },
                 { label: 'Weft yarn cost', value: comparison.yarn.weft.costPerM, unit: 'money' as const, changed: comparison.yarn.weft.changed },
                 { label: 'Weft yarn rate', value: comparison.yarn.weft.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.weft.changed },
+                { label: 'Weft applied waste', value: comparison.yarn.weft.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.weft.wastePct) },
+                { label: 'Weft costing width (in)', value: comparison.yarn.weft.widthInches, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.weft.widthInches) },
             ],
         },
         {
@@ -794,6 +810,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             rows: [
                 { label: 'Target margin', value: comparison.margin.targetPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.targetPct) },
                 { label: 'Actual margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
+            ],
+        },
+        {
+            title: 'Commercial',
+            changed: comparison.commercial.changed,
+            rows: [
+                { label: 'Broker commission', value: comparison.commercial.commissionPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.commercial.commissionPct) },
+                { label: 'Transport', value: comparison.commercial.transportPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.commercial.transportPerM) },
             ],
         },
         {
@@ -903,8 +927,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             const isCosting = isStandaloneCosting(quote.record_kind)
             const createsQuotationFromCosting = canUseQuotationWorkflow && isDuplicate && isCosting
             const startsNewBaseQuality = isDuplicate && isCosting && !canUseQuotationWorkflow
+            const restoredState = buildDraftStateFromQuote(quote)
             const newDraft: EstimatorAutosaveData<QuoteDraftState> = {
-                state: buildDraftStateFromQuote(quote),
+                state: restoredState,
                 partyName: createsQuotationFromCosting ? '' : quote.party_name || '',
                 // A Base starting point is intentionally detached from both
                 // the old snapshot and its Saved Quality. Requiring a fresh
@@ -922,6 +947,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 sourceQuoteUpdatedAt: isDuplicate ? undefined : quote.updated_at,
                 sourceQuoteVersionNumber: isDuplicate ? undefined : Number(quote.version_number ?? 1),
                 sourceQuoteCreatedAt: isDuplicate ? undefined : quote.created_at,
+                sourceQuoteStatus: isDuplicate ? undefined : quote.status,
+                sourceState: isDuplicate ? undefined : restoredState,
                 sourceFactoryProfileUpdatedAt: isDuplicate ? undefined : quote.factory_profile_updated_at ?? undefined,
                 sourceRecordKind: createsQuotationFromCosting
                     ? undefined
@@ -1356,6 +1383,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         </div>
                                     </div>
 
+                                    {hasQuotationLifecycle && (
+                                        <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/50 p-3 text-[11px] text-slate-600">
+                                            <p className="font-bold uppercase tracking-wide text-blue-700">Quotation ledger</p>
+                                            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+                                                <p><span className="font-semibold text-slate-500">Identifier:</span> {quote.quotation_reference || `QT-${quote.id.slice(0, 8).toUpperCase()}`}</p>
+                                                <p><span className="font-semibold text-slate-500">Customer:</span> {quote.party_name || 'Not recorded'}</p>
+                                                <p><span className="font-semibold text-slate-500">Created:</span> {formatQuoteTimestamp(quote.created_at)}</p>
+                                                <p><span className="font-semibold text-slate-500">Valid until:</span> {quote.quotation_valid_until ? formatDateOnly(quote.quotation_valid_until, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set'}</p>
+                                                <p><span className="font-semibold text-slate-500">Price basis:</span> {formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)} · {Number(quote.meters || 0).toLocaleString('en-IN')} m</p>
+                                                <p><span className="font-semibold text-slate-500">Quoted amount:</span> {formatQuotationAmount(metrics.suggestedSellingPricePerM, quote.meters)}</p>
+                                                <p><span className="font-semibold text-slate-500">Sent:</span> {formatQuoteTimestamp(quote.sent_at)}</p>
+                                            </div>
+                                            <p className="mt-2 font-medium text-slate-500">{getQuotationNextAction(quote.status)}</p>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{isCosting ? t('common.suggested_selling_price_per_m') : t('common.quotation_price')}</p>
@@ -1509,7 +1552,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><History className="h-5 w-5 text-blue-600" /> Quotation history</DialogTitle>
                         <DialogDescription>
-                            {quoteHistoryFor?.party_name || 'Quotation'} · {quoteHistoryFor?.quality_label || 'Unnamed quality'}. Status changes and their recorded times are shown here.
+                            {quoteHistoryFor?.party_name || 'Quotation'} · {quoteHistoryFor?.quality_label || 'Unnamed quality'}. Status changes and their recorded times are shown here. Sent: {formatQuoteTimestamp(quoteHistoryFor?.sent_at)}.
                         </DialogDescription>
                     </DialogHeader>
                     {quoteHistoryLoading ? (
