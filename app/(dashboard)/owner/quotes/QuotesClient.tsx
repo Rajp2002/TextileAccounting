@@ -26,7 +26,8 @@ import {
 import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
-import { formatToSurat, getCurrentTimestampMs } from '@/lib/time'
+import { formatDateOnly } from '@/lib/format'
+import { formatSuratDateTime, getCurrentTimestampMs } from '@/lib/time'
 import {
     History,
     CheckCircle2,
@@ -69,6 +70,7 @@ import {
 } from '@/lib/saved-costings'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
@@ -301,7 +303,7 @@ function formatCostingPercent(value: number | null) {
 }
 
 function formatQuoteTimestamp(value: string | null | undefined) {
-    return value ? formatToSurat(value, 'd MMM yyyy, h:mm a') : 'Not recorded'
+    return value ? formatSuratDateTime(value) : 'Not recorded'
 }
 
 function getLegacyVersionLabel(costing: Pick<QuoteRow, 'quality_label' | 'version_number'>) {
@@ -400,7 +402,7 @@ function SavedQualityLibraryView({
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
     factoryInputsCapturedLabel: string
 }) {
-    const { t } = useTranslation()
+    const { t, tx } = useTranslation()
 
     return (
         <div className="space-y-3">
@@ -430,22 +432,22 @@ function SavedQualityLibraryView({
                                     <span className="min-w-0">
                                         <span className="flex flex-wrap items-center gap-2">
                                             <span className="truncate text-base font-black text-slate-950">{group.name}</span>
-                                            {group.template && <Badge variant="outline" className="border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700">Fabric Quality</Badge>}
-                                            {group.template?.is_active === false && <Badge variant="outline" className="border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-600">Archived · read-only</Badge>}
+                                            {group.template && <Badge variant="outline" className="border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700">{tx('Fabric Quality')}</Badge>}
+                                            {group.template?.is_active === false && <Badge variant="outline" className="border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-600">{tx('Archived · read-only')}</Badge>}
                                             {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
                                             {latest && getCostingStatus(latest) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(latest))}</Badge>}
                                         </span>
                                         <span className="mt-1 block text-xs text-slate-500">
                                             {group.records.length > 0
-                                                ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${format(new Date(group.updatedAt), 'MMM d, yyyy')}`
-                                                : 'Saved recipe · no saved costing yet'}
+                                                ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatDateOnly(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                : tx('Saved recipe · no saved costing yet')}
                                         </span>
                                     </span>
                                 </button>
 
                                 <div className={`grid gap-2 ${canUseProduction ? 'grid-cols-1 sm:grid-cols-3 sm:min-w-[420px]' : 'grid-cols-1 sm:grid-cols-2 sm:min-w-[300px]'}`}>
                                     <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{latest ? 'Latest cost' : 'Current recipe'}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tx(latest ? 'Latest cost' : 'Current recipe')}</p>
                                         <p className="mt-1 font-mono text-sm font-black text-slate-900">{latest
                                             ? formatCostingMoneyPerM(getProductionCostPerM(latest))
                                             : group.currentRecipeCostPerM != null
@@ -454,17 +456,17 @@ function SavedQualityLibraryView({
                                     </div>
                                     {canUseProduction ? <>
                                         <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Used for</p>
-                                            <p className="mt-1 text-sm font-black text-slate-900">{usages.length} {usages.length === 1 ? 'run' : 'runs'}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tx('Used for')}</p>
+                                            <p className="mt-1 text-sm font-black text-slate-900">{tx(`${usages.length} ${usages.length === 1 ? 'run' : 'runs'}`)}</p>
                                         </div>
                                         <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Produced</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tx('Produced')}</p>
                                             <p className="mt-1 text-sm font-black text-slate-900">{totalProduced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m</p>
                                         </div>
                                     </> : (
                                         <div className="rounded-lg bg-slate-50 px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">History</p>
-                                            <p className="mt-1 text-sm font-black text-slate-900">{group.records.length} {group.records.length === 1 ? 'snapshot' : 'snapshots'}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tx('History')}</p>
+                                            <p className="mt-1 text-sm font-black text-slate-900">{tx(`${group.records.length} ${group.records.length === 1 ? 'snapshot' : 'snapshots'}`)}</p>
                                         </div>
                                     )}
                                 </div>
@@ -484,34 +486,34 @@ function SavedQualityLibraryView({
                                     {!latest || !latestResult ? (
                                         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
                                             {latest ? <AlertTriangle className="h-6 w-6 text-amber-500" /> : <FileText className="h-6 w-6 text-slate-400" />}
-                                            <p className="mt-3 text-sm font-bold text-slate-700">{latest
+                                            <p className="mt-3 text-sm font-bold text-slate-700">{tx(latest
                                                 ? 'Detailed breakdown unavailable for this older Saved Costing'
                                                 : group.currentRecipeCostPerM != null
                                                     ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
-                                                    : 'No costing saved for this quality yet'}</p>
-                                            <p className="mt-1 max-w-md text-xs text-slate-500">{latest
+                                                    : 'No costing saved for this quality yet')}</p>
+                                            <p className="mt-1 max-w-md text-xs text-slate-500">{tx(latest
                                                 ? 'The saved commercial totals remain available in Saved Costing history. Open and save this snapshot once to refresh its detailed analysis.'
                                                 : group.currentRecipeCostPerM != null
                                                     ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
                                                     : canUseProduction
                                                         ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
-                                                    : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'}</p>
+                                                    : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.')}</p>
                                         </div>
                                     ) : (
                                         <div className={`grid gap-4 ${canUseProduction ? 'xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
                                             <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
-                                                        <p className="text-sm font-black text-slate-950">Latest Saved Costing breakdown</p>
-                                                        <p className="mt-1 text-xs text-slate-500">Snapshot v{Number(latest.version_number ?? 1)} · {format(new Date(latest.created_at), 'MMM d, yyyy')}</p>
+                                                        <p className="text-sm font-black text-slate-950">{tx('Latest Saved Costing breakdown')}</p>
+                                                        <p className="mt-1 text-xs text-slate-500">Snapshot v{Number(latest.version_number ?? 1)} · {formatDateOnly(latest.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>Open and save new version</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> Use as Starting Point</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> Preview</Button>
+                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>{tx('Open and save new version')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>
                                                             {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                                        {updatingId === latest.id ? latest.is_archived ? `Restoring ${getSavedCostingIdentity(latest).label}…` : `Archiving ${getSavedCostingIdentity(latest).label}…` : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
+                                                        {tx(updatingId === latest.id ? latest.is_archived ? `Restoring ${getSavedCostingIdentity(latest).label}…` : `Archiving ${getSavedCostingIdentity(latest).label}…` : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
                                                         </Button>
                                                     </div>
                                                         </div>
@@ -538,9 +540,9 @@ function SavedQualityLibraryView({
                                                 </div>
                                                 {getCostingStatus(latest) !== 'verified' && (
                                                     <div className="mt-3 flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900 sm:flex-row sm:items-center sm:justify-between">
-                                                        <div><p className="font-bold">Saved costing needs a check</p><p className="mt-1">{latest.reconciliation_note || getCostingTrustCopy(getCostingStatus(latest))}</p></div>
+                                                        <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(latest.reconciliation_note || getCostingTrustCopy(getCostingStatus(latest)))}</p></div>
                                                         <Button variant="outline" size="sm" onClick={() => onAudit(latest)} disabled={auditingId === latest.id} aria-busy={auditingId === latest.id} className="shrink-0 border-amber-300 bg-white text-amber-900 hover:bg-amber-100">
-                                                            {auditingId === latest.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {auditingId === latest.id ? 'Checking…' : 'Check saved numbers'}
+                                                            {auditingId === latest.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx(auditingId === latest.id ? 'Checking…' : 'Check saved numbers')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -595,8 +597,8 @@ function SavedQualityLibraryView({
                                                             <tr key={record.id}>
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
                                                                 <td className="py-3 font-bold text-slate-900">
-                                                                    <div>{getSavedCostingIdentity(record).label}<span className="ml-2 font-normal text-slate-500">{format(new Date(record.created_at), 'MMM d, yyyy')}</span></div>
-                                                                    {record.factory_profile_updated_at && <div className="mt-1 text-[10px] font-normal text-slate-500">{factoryInputsCapturedLabel} {format(new Date(record.factory_profile_updated_at), 'MMM d, yyyy')}</div>}
+                                                                    <div>{getSavedCostingIdentity(record).label}<span className="ml-2 font-normal text-slate-500">{formatDateOnly(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
+                                                                    {record.factory_profile_updated_at && <div className="mt-1 text-[10px] font-normal text-slate-500">{factoryInputsCapturedLabel} {formatDateOnly(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                                                                 </td>
                                                                 <td className="py-3 capitalize text-slate-600">
                                                                     <div className="flex flex-wrap items-center gap-2">
@@ -627,7 +629,7 @@ function SavedQualityLibraryView({
 }
 
 export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
-    const { t } = useTranslation()
+    const { t, tx } = useTranslation()
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -826,11 +828,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         const res = await updateQuoteStatus(id, newStatus, quote.updated_at)
         setUpdatingId(null)
         if (res.error) {
-            toast.error(userFacingError(res.error, 'The quotation status could not be updated. Try again.'))
+            toast.error(tx(userFacingError(res.error, 'The quotation status could not be updated. Try again.')))
             return false
         } else {
-            toast.success(`Quotation marked as ${STATUS_CONFIG[newStatus].label}`, {
-                description: `Status updated ${formatQuoteTimestamp(res.data?.updated_at)}.`,
+            toast.success(tx(`Quotation marked as ${STATUS_CONFIG[newStatus].label}`), {
+                description: tx(`Status updated ${formatQuoteTimestamp(res.data?.updated_at)}.`),
             })
             setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...res.data, status: newStatus } : q))
             setQuoteToExport(current => current?.id === id ? { ...current, ...res.data, status: newStatus } : current)
@@ -870,7 +872,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
         const meters = Number(convertMeters)
         if (!Number.isFinite(meters) || meters <= 0) {
-            toast.error('Enter a valid order quantity before creating the active order')
+            toast.error(tx('Enter a valid order quantity before creating the active order'))
             return
         }
 
@@ -884,11 +886,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         setUpdatingId(null)
 
         if ('error' in res) {
-            toast.error(userFacingError(res.error, 'The accepted quotation could not be converted into an order. Try again.'))
+            toast.error(tx(userFacingError(res.error, 'The accepted quotation could not be converted into an order. Try again.')))
             return
         }
 
-        toast.success('Accepted quote converted into an active order')
+        toast.success(tx('Accepted quote converted into an active order'))
         setQuoteToConvert(null)
         router.push(`/owner/orders?orderId=${res.orderId}`)
     }
@@ -930,14 +932,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
             setQuoteToRestore(null)
             setExistingDraftForRestore(null)
-            toast.success(createsQuotationFromCosting
+            toast.success(tx(createsQuotationFromCosting
                 ? 'Costing loaded as a new customer quotation draft'
                 : isDuplicate
                     ? (startsNewBaseQuality ? 'Starting point loaded. Enter a new Saved Quality name before saving.' : canUseQuotationWorkflow ? 'Quotation copied into a new Cost Estimate draft' : 'Costing loaded as a starting point')
-                    : isCosting ? 'Costing snapshot restored' : 'Quotation snapshot restored')
+                    : isCosting ? 'Costing snapshot restored' : 'Quotation snapshot restored'))
             router.push('/owner/estimator')
         } catch (error) {
-            toast.error('Browser storage is unavailable. The quote could not be opened in the estimator.')
+            toast.error(tx('Browser storage is unavailable. The quote could not be opened in the estimator.'))
             console.error(error)
         }
     }
@@ -955,7 +957,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             }
             restoreQuoteToEstimator(quote, mode)
         } catch (e) {
-            toast.error('Failed to restore snapshot')
+            toast.error(tx('Failed to restore snapshot'))
             console.error(e)
         }
     }
@@ -969,13 +971,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 ...changes,
             })
             if (result.error || !result.data) {
-                toast.error(userFacingError(result.error, 'Saved costing could not be updated. Try again.'))
+                toast.error(tx(userFacingError(result.error, 'Saved costing could not be updated. Try again.')))
                 return
             }
             setQuotes(current => current.map(item => item.id === quote.id ? { ...item, ...result.data } : item))
-            toast.success(changes.isArchived === true ? 'Costing snapshot archived' : changes.isArchived === false ? 'Costing snapshot restored' : changes.isFavorite ? 'Added to favourites' : 'Removed from favourites')
+            toast.success(tx(changes.isArchived === true ? 'Costing snapshot archived' : changes.isArchived === false ? 'Costing snapshot restored' : changes.isFavorite ? 'Added to favourites' : 'Removed from favourites'))
         } catch (error) {
-            toast.error(userFacingError(error, 'Saved costing could not be updated. Try again.'))
+            toast.error(tx(userFacingError(error, 'Saved costing could not be updated. Try again.')))
             console.error(error)
         } finally {
             setUpdatingId(null)
@@ -987,17 +989,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         try {
             const result = await auditHistoricalCostingSnapshot(quote.id, quote.updated_at)
             if (result.error || !result.data || !result.audit) {
-                toast.error(userFacingError(result.error, 'Saved costing could not be checked. Try again.'))
+                toast.error(tx(userFacingError(result.error, 'Saved costing could not be checked. Try again.')))
                 return
             }
             setQuotes(current => current.map(item => item.id === quote.id ? { ...item, ...result.data } : item))
             if (result.audit.status === 'verified') {
-                toast.success('Saved costing checked. Its canonical result is consistent.')
+                toast.success(tx('Saved costing checked. Its canonical result is consistent.'))
             } else {
-                toast.success(`Saved values preserved. ${getCostingTrustCopy(result.audit.status)}`)
+                toast.success(tx(`Saved values preserved. ${getCostingTrustCopy(result.audit.status)}`))
             }
         } catch (error) {
-            toast.error(userFacingError(error, 'Saved costing could not be checked. Try again.'))
+            toast.error(tx(userFacingError(error, 'Saved costing could not be checked. Try again.')))
             console.error(error)
         } finally {
             setUpdatingId(null)
@@ -1021,6 +1023,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <div className="max-w-6xl mx-auto space-y-6">
+            <ArchivePolicyNotice />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -1204,7 +1207,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <td className="max-w-[240px] px-4 py-4">
                                                 <p className="truncate text-sm font-bold text-slate-950" aria-label={getLegacyVersionLabel(quote)}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                                    <span>Saved {format(new Date(quote.created_at), 'MMM d, yyyy')}</span>
+                                                    <span>Saved {formatDateOnly(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
                                                 </div>
                                             </td>
@@ -1221,18 +1224,18 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 {formatCostingPercent(metrics.actualMarginPct)}
                                             </td>
                                             <td className="px-4 py-4 text-sm font-medium text-slate-600">{Number(quote.meters || 0).toLocaleString('en-IN')} m</td>
-                                            <td className="px-4 py-4 text-xs font-medium text-slate-500">{format(new Date(quote.updated_at), 'MMM d, yyyy')}<br />{format(new Date(quote.updated_at), 'h:mm a')}</td>
+                                            <td className="px-4 py-4 text-xs font-medium text-slate-500">{formatSuratDateTime(quote.updated_at)}</td>
                                             <td className="px-4 py-4">
                                                 <div className="flex justify-end gap-1">
-                                                    {!quote.is_archived && <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-9 text-xs font-semibold text-blue-700">Open</Button>}
+                                                    {!quote.is_archived && <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-9 text-xs font-semibold text-blue-700">{tx('Open')}</Button>}
                                                     <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
-                                                        <Copy className="h-3.5 w-3.5" /> Use as Starting Point
+                                                        <Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}
                                                     </Button>
                                                     <Button variant="ghost" size="sm" onClick={() => setQuoteToExport(quote)} className="h-9 text-xs font-semibold">
-                                                        <Eye className="h-3.5 w-3.5" /> Preview
+                                                        <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
                                                     </Button>
                                                     {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" size="sm" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id} className="h-9 text-xs font-semibold text-amber-700">
-                                                        {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {updatingId === quote.id ? 'Checking…' : 'Check saved numbers'}
+                                                        {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(updatingId === quote.id ? 'Checking…' : 'Check saved numbers')}
                                                     </Button>}
                                                     <Button variant="ghost" size="icon" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 w-9 text-amber-500' : 'h-9 w-9 text-slate-500'} aria-label={quote.is_favorite ? `Remove ${quote.quality_label || 'costing'} from favourites` : `Add ${quote.quality_label || 'costing'} to favourites`}>
                                                         <Star className="h-4 w-4" fill={quote.is_favorite ? 'currentColor' : 'none'} />
@@ -1270,7 +1273,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-sm font-bold text-slate-950" aria-label={getLegacyVersionLabel(quote)}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                                    <span>Updated {format(new Date(quote.updated_at), 'MMM d, yyyy · h:mm a')}</span>
+                                                    <span>Updated {formatSuratDateTime(quote.updated_at)}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <Badge variant="outline" className="border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold text-amber-800">{getCostingBadge(getCostingStatus(quote))}</Badge>}
                                                 </div>
                                             </div>
@@ -1301,18 +1304,18 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {!quote.is_archived && <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-10 text-xs font-semibold text-blue-700">Open</Button>}
                                             <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Use as Starting Point" className="h-10 text-xs font-semibold">
-                                                <Copy className="h-3.5 w-3.5" /> Use as Starting Point
+                                                <Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => setQuoteToExport(quote)} className="h-10 text-xs font-semibold">
-                                                <Eye className="h-3.5 w-3.5" /> Preview
+                                                <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
                                             </Button>
                                         </div>
                                         <div className="mt-2 grid grid-cols-2 gap-2">
                                             <Button variant="ghost" size="sm" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 text-xs text-amber-600' : 'h-9 text-xs text-slate-600'}>
-                                                <Star className="h-3.5 w-3.5" fill={quote.is_favorite ? 'currentColor' : 'none'} /> {quote.is_favorite ? 'Favourited' : 'Favourite'}
+                                                <Star className="h-3.5 w-3.5" fill={quote.is_favorite ? 'currentColor' : 'none'} /> {tx(quote.is_favorite ? 'Favourited' : 'Favourite')}
                                             </Button>
                                             <Button variant="ghost" size="sm" onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 text-xs text-slate-600" aria-label={`${quote.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${quote.quality_label || 'costing'}`}>
-                                                {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === quote.id ? quote.is_archived ? `Restoring ${quote.quality_label || 'costing'}…` : `Archiving ${quote.quality_label || 'costing'}…` : quote.is_archived ? 'Restore snapshot' : 'Archive snapshot'}
+                                                {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {tx(updatingId === quote.id ? quote.is_archived ? `Restoring ${quote.quality_label || 'costing'}…` : `Archiving ${quote.quality_label || 'costing'}…` : quote.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -1375,7 +1378,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         </div>
                                         <div>
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">{t('common.date')}</p>
-                                            <p className="text-xs font-bold text-slate-600 mt-0.5">{format(new Date(quote.created_at), 'MMM d, yyyy')}</p>
+                                            <p className="text-xs font-bold text-slate-600 mt-0.5">{formatDateOnly(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                         </div>
                                     </div>
 
@@ -1570,7 +1573,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 open={Boolean(quoteToArchive)}
                 onOpenChange={open => { if (!open && updatingId !== quoteToArchive?.id) setQuoteToArchive(null) }}
                 title={`Archive costing snapshot${quoteToArchive?.quality_label ? ` · ${quoteToArchive.quality_label}` : ''}?`}
-                description="This archives only this costing snapshot. The Saved Quality, other costing versions, and all historical saved values remain unchanged. You can restore this snapshot later."
+                description={`${tx('This archives only this costing snapshot.')} ${t('base_plan.archive.description')} ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')} Existing saved values remain unchanged.`}
                 confirmLabel="Archive snapshot"
                 cancelLabel="Keep snapshot"
                 onConfirm={confirmArchiveSnapshot}
@@ -1601,7 +1604,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Metric</th>
                                             {comparisonCostings.map((costing, index) => {
                                                 const identity = getSavedCostingIdentity(costing)
-                                                return <th key={costing.id} className="px-4 py-3 font-bold text-slate-950"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block text-xs font-semibold text-slate-700">{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-slate-500">saved {format(new Date(costing.created_at), 'MMM d, yyyy')}</span></th>
+                                                return <th key={costing.id} className="px-4 py-3 font-bold text-slate-950"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block text-xs font-semibold text-slate-700">{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-slate-500">saved {formatDateOnly(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
                                             })}
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-500">Change</th>
                                         </tr>
@@ -1783,7 +1786,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 {existingDraftForRestore.qualityLabel || 'No quality label'}
                             </p>
                             <p className="mt-2 text-xs font-medium text-amber-800">
-                                Saved {format(new Date(existingDraftForRestore.savedAt), 'MMM d, h:mm a')}
+                                Saved {formatSuratDateTime(existingDraftForRestore.savedAt)}
                             </p>
                         </div>
                     )}

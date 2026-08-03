@@ -7,6 +7,7 @@ import { getArchivedDispatchGroups, getArchivedOrders, type ArchivedDispatchGrou
 import { getMarketRuns } from '../estimator/actions'
 import { formatDateOnly } from '@/lib/format'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
+import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,6 +222,7 @@ export default async function ArchivePage() {
 
     return (
         <div className="space-y-6">
+            <ArchivePolicyNotice />
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-slate-900">Archive</h1>

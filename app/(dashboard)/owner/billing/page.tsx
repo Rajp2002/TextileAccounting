@@ -3,7 +3,7 @@ import { requireRole } from '@/lib/auth'
 import { getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
-import { BillingProfileForm } from '@/components/billing/BillingProfileForm'
+import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
@@ -28,7 +28,6 @@ import {
     type BillingPurchaseDecision,
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
-import { billingInvoiceFeatureIsConfigured } from '@/lib/billing-invoice'
 import { type BillingAttemptRow } from '@/lib/billing-attempts'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -47,18 +46,18 @@ type SubscriptionPaymentRow = {
 
 function formatDate(iso: string | null): string {
     if (!iso) return '—'
-    return new Date(iso).toLocaleDateString('en-IN', {
+    return `${new Date(iso).toLocaleDateString('en-IN', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
         timeZone: 'Asia/Kolkata',
-    })
+    })} IST`
 }
 
 function formatShortDate(iso: string | null): string {
     if (!iso) return '—'
-    return new Date(iso).toLocaleDateString('en-IN', {
+    return `${new Date(iso).toLocaleDateString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric',
         timeZone: 'Asia/Kolkata',
-    })
+    })} IST`
 }
 
 function formatAmount(paise: number): string {
@@ -185,12 +184,7 @@ function PlanCards({
                             <ul className="flex-1 space-y-3">
                                 {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm leading-tight text-slate-600"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{feature}</li>)}
                             </ul>
-                            <p className={`rounded-xl border p-3 text-xs leading-relaxed ${billingInvoiceFeatureIsConfigured() ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
-                                <span className="font-bold">GST tax invoice:</span>{' '}
-                                {billingInvoiceFeatureIsConfigured()
-                                    ? 'Available after approved supplier tax details and your billing profile are complete.'
-                                    : 'Not currently enabled. Payment provides a receipt only until supplier tax configuration is completed.'}
-                            </p>
+                            <BillingDocumentNotice compact />
                             <SubscribeButton
                                 planTier={plan.tier}
                                 tierName={plan.name}
@@ -229,7 +223,7 @@ export default async function BillingPage({
     const supabase = await createClient()
     const { tier, subscription } = await getSubscriptionDetail(profile.org_id)
 
-    const [paymentsResult, subscriptionsResult, attemptsResult, invoicesResult, billingProfileResult] = await Promise.all([
+    const [paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         supabase
             .from('subscription_payments')
             .select('*')
@@ -246,36 +240,11 @@ export default async function BillingPage({
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
             .limit(1),
-        supabase
-            .from('billing_invoices')
-            .select('id, subscription_payment_id, invoice_number, status, issued_at')
-            .eq('org_id', profile.org_id)
-            .eq('status', 'issued')
-            .order('issued_at', { ascending: false }),
-        supabase
-            .from('organization_billing_profiles')
-            .select('id, legal_name, address_line1, address_line2, city, state, state_code, postal_code, billing_email, gstin')
-            .eq('org_id', profile.org_id)
-            .maybeSingle(),
     ])
     const payments = paymentsResult.data ?? []
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
     const latestAttempt = (attemptsResult.data?.[0] ?? null) as BillingAttemptRow | null
-    const invoiceByPaymentId = new Map((invoicesResult.data ?? []).map(invoice => [invoice.subscription_payment_id, invoice]))
-    const billingProfile = billingProfileResult.data ? {
-        id: billingProfileResult.data.id,
-        legalName: billingProfileResult.data.legal_name,
-        addressLine1: billingProfileResult.data.address_line1,
-        addressLine2: billingProfileResult.data.address_line2 ?? '',
-        city: billingProfileResult.data.city,
-        state: billingProfileResult.data.state,
-        stateCode: billingProfileResult.data.state_code,
-        postalCode: billingProfileResult.data.postal_code,
-        billingEmail: billingProfileResult.data.billing_email,
-        gstin: billingProfileResult.data.gstin ?? '',
-    } : null
-
     // Billing lifecycle is evaluated on the server so expired paid customers
     // see renewal pricing while trials still see first-year pricing.
     const billingNow = new Date()
@@ -318,7 +287,8 @@ export default async function BillingPage({
                 <div>
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">Account</p>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">Billing & Plan</h1>
-                    <p className="mt-2 text-sm text-slate-500">See your plan, payment status, manual renewal, and receipts.</p>
+                    <p className="mt-2 text-sm text-slate-500">See your plan, payment status, manual renewal, and payment receipts.</p>
+                    <BillingDocumentNotice />
                     {requestedFeature && tier === 'none' && (
                         <p className="mt-2 text-sm font-semibold text-orange-700">
                             You arrived here from {requestedFeature}. Choose a plan to unlock it.
@@ -591,11 +561,6 @@ export default async function BillingPage({
                                                         <p className="mt-1 text-[10px] text-slate-400">Payment receipt only · not a GST tax invoice</p>
                                                     </>
                                                 )}
-                                                {p.status === 'captured' && invoiceByPaymentId.get(p.id)?.status === 'issued' && (
-                                                    <Link href={`/api/billing/invoice/${invoiceByPaymentId.get(p.id)?.id}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-700 hover:underline">
-                                                        GST invoice (tax invoice) <ArrowRight className="h-3 w-3" />
-                                                    </Link>
-                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -638,17 +603,8 @@ export default async function BillingPage({
                                     Payment receipts appear here after a successful payment.
                                 </p>
                             )}
-                            <p className="text-xs leading-relaxed text-slate-500">
-                                A payment receipt confirms that money was received; it is not a GST tax invoice. {billingInvoiceFeatureIsConfigured() ? 'A separate GST tax invoice appears when approved supplier and billing details are complete.' : 'Separate GST tax invoice issuance is waiting for approved supplier tax configuration; payment receipts remain available.'}
-                            </p>
-                            {latestCapturedPayment && invoiceByPaymentId.get(latestCapturedPayment.id)?.status === 'issued' && (
-                                <Link href={`/api/billing/invoice/${invoiceByPaymentId.get(latestCapturedPayment.id)?.id}`} target="_blank" rel="noreferrer" className="group flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-sm font-medium text-blue-800 transition-colors hover:border-blue-300 hover:bg-blue-100">
-                                    <span className="flex items-center gap-2"><ReceiptText className="h-4 w-4" />Download latest GST invoice</span><ArrowRight className="h-4 w-4" />
-                                </Link>
-                            )}
+                            <BillingDocumentNotice compact />
                         </div>
-
-                        <BillingProfileForm initialProfile={billingProfile} />
 
                         {/* Test mode notice */}
                         {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (

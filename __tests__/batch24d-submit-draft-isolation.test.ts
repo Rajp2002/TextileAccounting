@@ -43,7 +43,7 @@ describe('Batch 24D EST-017 estimator double-submit guard', () => {
         expect(saveHandler).toContain('} finally {')
         expect(saveHandler).toContain('setSavingQuote(false)')
         expect(saveHandler).toContain('saveQuoteLockRef.current = false')
-        expect(saveHandler).toContain("toast.error(userFacingError(error, 'Failed to save the Cost Estimate. Try again.'), {")
+        expect(saveHandler).toContain("toast.error(tx(userFacingError(error, 'Failed to save the Cost Estimate. Try again.')), {")
     })
 
     it('keeps the normal quote and market-run submit paths intact behind the guard', () => {

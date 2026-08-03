@@ -48,6 +48,35 @@ export const UX012_PRIORITY_HELPERS = {
     fabricQuality: 'The fabric construction/specification, not a grade, Market Run, or Party Order.',
 } as const
 
+/** Base Plan costing terms retained in the Surat factory vocabulary. */
+export const BASE_PLAN_FACTORY_TERMS = {
+    warp: 'warp',
+    weft: 'weft',
+    ppi: 'PPI',
+    crimp: 'crimp',
+    waste: 'waste',
+    pickRate: 'pick rate',
+    costing: 'costing',
+    quotation: 'quotation',
+    trader: 'trader',
+    margin: 'margin',
+    gst: 'GST',
+} as const
+
+export const BASE_PLAN_FACTORY_TERM_HELP = {
+    warp: 'Warp is the lengthwise yarn in the fabric.',
+    weft: 'Weft is the yarn inserted across the warp.',
+    ppi: 'PPI means picks per inch, the weft-density measure.',
+    crimp: 'Crimp is the extra yarn taken up during weaving.',
+    waste: 'Waste is the yarn allowance not expected in finished fabric.',
+    pickRate: 'Pick rate is the loom charge for each pick.',
+    costing: 'Costing is the internal production-cost calculation.',
+    quotation: 'A quotation is the customer-facing price document.',
+    trader: 'Trader means the buyer/customer account.',
+    margin: 'Margin is the planned amount above production cost.',
+    gst: 'GST means Goods and Services Tax included in the payment total.',
+} as const
+
 export const UX012_DISTINCTIONS = [
     'Counter Reading vs Metres Produced This Shift',
     'Fabric Quality vs Market Run vs Party Order',

@@ -129,7 +129,7 @@ describe('Estimator persistence safety', () => {
 
         expect(autosave).toContain('function safelyRemoveLocalStorageItem(key: string)')
         expect(autosave).toContain('safelyRemoveLocalStorageItem(keyRef.current)')
-        expect(quotesClient).toContain("toast.error('Browser storage is unavailable. The quote could not be opened in the estimator.')")
+        expect(quotesClient).toContain("toast.error(tx('Browser storage is unavailable. The quote could not be opened in the estimator.'))")
     })
 })
 

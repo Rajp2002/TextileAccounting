@@ -981,7 +981,7 @@ export const hi = {
       settingsEmpty: "अभी तक कोई क्वालिटी सहेजी नहीं गई है। अपनी पहली क्वालिटी बनाने के लिए एस्टीमेटर खोलें और \"क्वालिटी सहेजें\" का उपयोग करें।",
       settingsDeleteConfirm: "क्या इस क्वालिटी को आर्काइव करना है? इसे बाद में रिस्टोर किया जा सकता है।",
       archiveTitle: "सेव की गई क्वालिटी आर्काइव करें?",
-      archiveDescription: "“{name}” आर्काइव करें? यह History में रहेगी और बाद में रिस्टोर की जा सकती है। पुरानी सेव की गई कॉस्टिंग नहीं बदलेगी।",
+      archiveDescription: "“{name}” आर्काइव करें? यह सक्रिय सूचियों से हटेगी, History में रहेगी और बाद में रिस्टोर की जा सकती है। यहाँ स्थायी डिलीट उपलब्ध नहीं है; रिकॉर्ड संगठन की retention/privacy व्यवस्था के अनुसार सेव रहेगा। पुरानी सेव की गई कॉस्टिंग नहीं बदलेगी।",
       archiveConfirm: "क्वालिटी आर्काइव करें"
     },
     order_basics: {
@@ -1211,5 +1211,53 @@ export const hi = {
     confirm_reversal: "पुष्टि करें और वापस करें",
     cancel: "रद्द करें",
     invalid_code: "अमान्य एक्सेस कोड",
+  },
+  base_plan: {
+    language_promise: "Base Plan English, Hindi और Gujarati — तीनों भाषाओं में उपलब्ध है।",
+    glossary_title: "फैक्ट्री के शब्द",
+    glossary_help: "ये शब्द फैक्ट्री में इस्तेमाल होने वाले रूप में रखे गए हैं; नीचे का अर्थ स्टाफ को फ़ील्ड समझाता है।",
+    glossary: {
+      warp: "warp — कपड़े में लंबाई की दिशा वाला सूत।",
+      weft: "weft — warp के आर-पार डाला जाने वाला सूत।",
+      ppi: "PPI — picks per inch, weft की घनत्व माप।",
+      crimp: "crimp — बुनाई के दौरान लिया गया अतिरिक्त सूत।",
+      waste: "waste — तैयार कपड़े में न रहने वाला सूत allowance।",
+      pick_rate: "pick rate — हर pick का loom charge।",
+      costing: "costing — उत्पादन लागत की अंदरूनी गणना।",
+      quotation: "quotation — ग्राहक को दिया जाने वाला कीमत दस्तावेज़।",
+      trader: "trader — buyer/customer account।",
+      margin: "margin — production cost के ऊपर रखा गया planned amount।",
+      gst: "GST — भुगतान total में शामिल Goods and Services Tax।",
+    },
+    archive: {
+      title: "Archive और restore",
+      description: "Archive record को सक्रिय सूचियों से हटाता है; record मिटता नहीं है।",
+      restore: "बाद में उसे Archive/History से restore किया जा सकता है।",
+      deletion: "इस workflow में स्थायी deletion उपलब्ध नहीं है।",
+      privacy: "Archived record restore और organization export के लिए organisation के data-retention और privacy नियमों के तहत सुरक्षित रहता है।",
+      costing_snapshot: "यह केवल इस costing snapshot को archive करता है।",
+      rate_description: "यह rate को active Rate Book से हटाता है। Saved Qualities की recipe values बनी रहती हैं और costing snapshots में बदलाव नहीं होता।",
+    },
+    billing: {
+      status: "GST स्थिति: इस pilot में Not-Supported।",
+      receipt_only: "Captured payment के लिए payment receipt (PDF) मिलेगी। यह GST tax invoice नहीं है।",
+      future_review: "GST tax invoice सुविधा Weavly के incorporated होने के बाद review की जाएगी।",
+      checkout: "Payment से पहले: आपको केवल payment receipt (PDF) मिलेगी। यह pilot GST tax invoice जारी नहीं करता।",
+      success: "Billing में payment receipt उपलब्ध है। इस pilot में GST tax invoice जारी नहीं होती।",
+    },
+    export: {
+      timezone: "Audit की तारीख और समय Asia/Kolkata (IST) में दिखते हैं।",
+    },
+    status: {
+      saving: "सेव किया जा रहा है…",
+      saved: "सेव हो गया",
+      save_failed: "सेव नहीं हो सका। चिन्हित फ़ील्ड जाँचें और फिर कोशिश करें।",
+      archive_failed: "यह record archive नहीं हो सका। पेज refresh करके फिर कोशिश करें।",
+      restore_failed: "यह record restore नहीं हो सका। पेज refresh करके फिर कोशिश करें।",
+      browser_storage_quote_error: "Browser storage उपलब्ध नहीं है। Quotation को estimator में खोला नहीं जा सका।",
+      save_cost_estimate_error: "Cost Estimate सेव नहीं हो सका। फिर कोशिश करें।",
+      data_export_generated: "Data export तैयार है",
+      latest_saved_costing_breakdown: "Latest Saved Costing का breakdown",
+    },
   }
 }
