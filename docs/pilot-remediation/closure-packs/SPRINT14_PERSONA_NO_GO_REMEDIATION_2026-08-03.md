@@ -1,6 +1,6 @@
 # Sprint 14 — Persona Test NO-GO Remediation
 
-Date: 2026-08-03  
+Date: 2026-08-03
 Status: **Code remediation complete; pilot remains NO-GO pending product/configuration gates and authenticated retest**
 
 ## Decision
@@ -55,4 +55,3 @@ Do not push/merge/deploy this remediation until:
 2. GST tax-invoice issuance is either enabled with approved supplier configuration or explicitly accepted as a post-pilot limitation by the product/business owner.
 3. Gujarati/Hindi support is either completed for the pilot surface or explicitly labeled as partial support.
 4. The persona test confirms the two Critical issues and the quotation/waste trust issues are resolved in the browser.
-
