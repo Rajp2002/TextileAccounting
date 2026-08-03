@@ -51,6 +51,9 @@ function validEstimate(): EstimateState {
         warpingRatePerKg: 2,
         sizingRatePerKg: 1.5,
         monthlyOutputM: 10_000,
+        loomCount: 24,
+        monthlyWorkingDays: 26,
+        avgOutputPerLoomPerDay: 50,
         orderQuantityM: 1500,
         overheadItems: [],
     }

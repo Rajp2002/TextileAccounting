@@ -47,9 +47,15 @@ The code changes below are ready for a controlled QA retest, but they do not by 
 - Focused remediation suite: **20 tests passed** across the new pilot suite and existing estimator/comparison readiness suites.
 - Authenticated browser retest: **blocked**. The local route correctly redirected to `/login`; the available private QA credential was rejected, and the connected in-app browser had no signed-in tab. No auth bypass or test data mutation was performed.
 
+## Publication
+
+- PR [#64](https://github.com/Rajp2002/TextileAccounting/pull/64) merged into `main` on 2026-08-03 as merge commit `c87b334`.
+- The Vercel PR check passed for the merged source.
+- This is a source-publication record only. It does not authorize production deployment, pilot sign-off, or a change from NO-GO to GO.
+
 ## Release gate
 
-Do not push/merge/deploy this remediation until:
+Do not deploy or mark this remediation pilot-ready until:
 
 1. A valid isolated owner QA account is supplied/configured and the persona flow is rerun at 320, 480, 768, 1024, 1280, and 1440px widths.
 2. GST tax-invoice issuance is either enabled with approved supplier configuration or explicitly accepted as a post-pilot limitation by the product/business owner.

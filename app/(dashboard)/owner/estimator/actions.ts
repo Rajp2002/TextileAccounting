@@ -512,6 +512,7 @@ export async function saveAsFabricTemplate(data: {
         quotePricePerM: snapshotTotals.quotePricePerM,
         targetMeters: snapshotEstimate.orderQuantityM,
         requireTapeLength: false,
+        requireCapacity: true,
         result: snapshotTotals.result,
         totals: snapshotTotals.totals,
     }))
@@ -1137,6 +1138,7 @@ export async function saveEstimatorQuoteV3(params: {
     }
     const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, {
         requireTapeLength: canUseProduction,
+        requireCapacity: true,
     }))
     if (snapshotError) return { error: snapshotError }
     const authoritative = getAuthoritativeQuoteTotals(estimate)
@@ -1146,6 +1148,7 @@ export async function saveEstimatorQuoteV3(params: {
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters: estimate.orderQuantityM,
         requireTapeLength: canUseProduction,
+        requireCapacity: true,
         result: authoritative.result,
         totals: authoritative.totals,
     }))
@@ -1565,7 +1568,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
     const deadline = input.deadline?.trim() || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
 
     const estimateForOrder = { ...input.estimatorState, orderQuantityM: targetMeters }
-    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimateForOrder))
+    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimateForOrder, { requireCapacity: true }))
     if (snapshotError) return { error: snapshotError }
     const totals = calcFullTotals(estimateForOrder)
     const authoritative = getAuthoritativeQuoteTotals(estimateForOrder, totals)
@@ -1575,6 +1578,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
         totalProductionCostPerM: authoritative.productionCostPerM,
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters,
+        requireCapacity: true,
         result: authoritative.result,
         totals: authoritative.totals,
     }))
@@ -2134,7 +2138,7 @@ export async function createMarketRunFromEstimator(params: {
     }
 
     const estimate = { ...params.estimate, orderQuantityM: targetMeters }
-    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate))
+    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, { requireCapacity: true }))
     if (snapshotError) return { error: snapshotError }
     const authoritative = getAuthoritativeQuoteTotals(estimate)
     const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
@@ -2142,6 +2146,7 @@ export async function createMarketRunFromEstimator(params: {
         totalProductionCostPerM: authoritative.productionCostPerM,
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters,
+        requireCapacity: true,
         result: authoritative.result,
         totals: authoritative.totals,
     }))

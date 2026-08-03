@@ -12,6 +12,14 @@ Pilot-ready means the product can be used by a Surat grey-fabric factory without
 6. No destructive production mutation is used as proof outside an isolated QA tenant, rollback-only transaction, or disposable environment.
 7. UX-012's amended pre-pilot baseline is deployed and regression-tested; the actual pilot-user terminology feedback/correction/reconfirmation action remains an explicit operating control until completed.
 
+## Current Sprint 14 status — 2026-08-03
+
+The Sprint 14 persona-test remediation is merged into `main` through [PR #64](https://github.com/Rajp2002/TextileAccounting/pull/64), merge commit `c87b334`, with the Vercel check passing. This is source publication only: pilot readiness remains **NO-GO** until the authenticated persona retest, GST tax-invoice decision, and Gujarati/Hindi support decision are completed and documented.
+
+## Current Sprint 15 code-gate status — 2026-08-03
+
+The estimator trust-gate implementation and local regression checks are complete; see [`SPRINT15_CODE_TRUST_GATE_2026-08-03.md`](closure-packs/SPRINT15_CODE_TRUST_GATE_2026-08-03.md). This remains **NO-GO** until an isolated authenticated owner retest proves the deployed costing truth, quotation lifecycle/history, snapshot immutability, responsive behavior, GST document decision, and language coverage.
+
 ## Domain Gates
 
 Security:

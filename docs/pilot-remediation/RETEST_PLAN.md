@@ -2,6 +2,11 @@
 
 This plan defines the proof needed for remediation batches. Commands are run from the repository root: `/Users/rajpatel/Projects/textile Saas`.
 
+Sprint 15 code-gate evidence is recorded in
+[`closure-packs/SPRINT15_CODE_TRUST_GATE_2026-08-03.md`](closure-packs/SPRINT15_CODE_TRUST_GATE_2026-08-03.md).
+It records automated proof only; it does not replace the authenticated persona
+retest or change the current NO-GO disposition.
+
 ## Global Local Gates
 
 Run these before promoting any batch:
@@ -972,7 +977,7 @@ Use the exact READY production deployment and a disposable entitled owner worksp
 - Disposition: Sprint 7 production UX is verified. Exact pilot execution is `blocked` pending an entitled disposable QA workspace. Full legacy Gujarati/Hindi translation coverage remains a follow-up, not an inferred PASS.
 # Sprint 14 persona retest gate — 2026-08-03
 
-Run this gate before any release promotion after the persona-test NO-GO remediation:
+The source remediation was published through [PR #64](https://github.com/Rajp2002/TextileAccounting/pull/64) and merged into `main` as `c87b334` on 2026-08-03. The Vercel check passed, but this does not change the pilot decision. Run this gate before deployment or any release promotion after the persona-test NO-GO remediation:
 
 1. Use an isolated owner QA account and a disposable tenant; do not use production credentials or records.
 2. Set factory setup to zero looms, zero working days, zero productivity, and zero output one at a time. Confirm the next step is disabled, no `÷ 0m` cost is shown, and the server rejects direct invalid saves.
