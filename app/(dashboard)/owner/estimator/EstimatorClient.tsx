@@ -1906,7 +1906,7 @@ export default function EstimatorClient({
         warningContinuationRef.current = null
         setWarningSavePending(false)
         setShowWarningAcknowledgement(false)
-        const restoredValidation = validateEstimatorSnapshot(restored.state, { requireTapeLength: canUseProduction })
+        const restoredValidation = validateEstimatorSnapshot(restored.state, { requireTapeLength: canUseProduction, requireCapacity: true })
         setShowValidation(!restoredValidation.valid)
         if (!restoredValidation.valid) {
             toast.error('This Cost Estimate draft is incomplete. Check the highlighted fields before saving.')
@@ -2043,7 +2043,7 @@ export default function EstimatorClient({
     }, [isStandaloneCostingSession, mode, partyName])
 
     const estimatorValidation = useMemo(
-        () => validateEstimatorSnapshot(state, { requireTapeLength: canUseProduction }),
+        () => validateEstimatorSnapshot(state, { requireTapeLength: canUseProduction, requireCapacity: true }),
         [canUseProduction, state],
     )
     const firstEstimatorValidationMessage = useMemo(
@@ -2203,7 +2203,13 @@ export default function EstimatorClient({
         continuation?: WarningContinuation,
         warningAlreadyReviewed = false,
     ) => {
-        const templateValidation = validateEstimatorSnapshot(state, { requireTapeLength: false })
+        // Updating an existing quality changes the reusable recipe only. A new
+        // quality also creates its initial costing snapshot, so it must pass
+        // the stricter capacity gate before the snapshot can be persisted.
+        const templateValidation = validateEstimatorSnapshot(state, {
+            requireTapeLength: false,
+            requireCapacity: !appliedTemplate,
+        })
         if (!templateValidation.valid) {
             toast.error(getFirstEstimatorValidationMessage(templateValidation) ?? 'Complete the highlighted inputs before saving the quality.')
             return true
@@ -3019,7 +3025,7 @@ export default function EstimatorClient({
                     <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-900">
                         <div className="flex items-start gap-3">
                             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm font-bold">Complete the highlighted inputs before saving</p>
                                 <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-red-800">
                                     {estimatorValidation.issues.slice(0, 6).map(issue => (
@@ -3030,6 +3036,25 @@ export default function EstimatorClient({
                                     <p className="mt-1 text-xs font-semibold text-red-700">+{estimatorValidation.issues.length - 6} more input issue(s)</p>
                                 )}
                             </div>
+                            {estimatorValidation.issues.some(issue => (
+                                issue.field === 'loomCount'
+                                || issue.field === 'monthlyWorkingDays'
+                                || issue.field === 'avgOutputPerLoomPerDay'
+                                || issue.field === 'monthlyOutputM'
+                            )) && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="shrink-0 border-red-300 bg-white text-red-800 hover:bg-red-100"
+                                    onClick={() => {
+                                        handleEntryModeChange('detailed')
+                                        setShowAdvancedOverhead(true)
+                                    }}
+                                >
+                                    Open capacity inputs
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -3936,6 +3961,9 @@ export default function EstimatorClient({
                                     </div>
                                     <div className="border-t border-[#CDE5D3] px-4 py-2.5 text-[11px] font-semibold text-[var(--color-factory-green)]" data-testid="applied-weft-waste-summary">
                                         Applied to pricing: <span className="font-mono">{appliedWasteLabel}</span>
+                                    </div>
+                                    <div className="border-t border-[#CDE5D3] px-4 py-2.5 text-[11px] font-medium text-[var(--color-muted)]" data-testid="effective-weft-waste-summary">
+                                        Effective weft wastage used in formula: <span className="font-mono font-semibold text-[var(--color-ink)]">{appliedWasteLabel}</span>
                                     </div>
                                 </div>
                             )

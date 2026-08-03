@@ -383,7 +383,7 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
 
 export function validateEstimatorSnapshot(
   estimate: EstimateState,
-  options: { requireTapeLength?: boolean } = {},
+  options: { requireTapeLength?: boolean; requireCapacity?: boolean } = {},
 ): EstimatorValidationResult {
   const issues: EstimatorValidationIssue[] = []
   const warnings: EstimatorValidationIssue[] = []
@@ -441,6 +441,7 @@ export function validateEstimatorSnapshot(
   addNumberIssue(issues, warnings, 'warpCrimpPct', 'Warp crimp %', estimate.warpCrimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
   const overheadMode = estimate.overheadMode
     ?? (estimate.overheadOverridePerM != null ? 'direct' : 'monthly_expenses')
+  const requireCapacity = options.requireCapacity === true
   if (!['direct', 'monthly_expenses'].includes(overheadMode)) {
     issues.push({ field: 'overheadMode', message: 'Choose a valid overhead calculation method.' })
   }
@@ -458,8 +459,8 @@ export function validateEstimatorSnapshot(
   }
   addNumberIssue(issues, warnings, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, {
     max: MAX_TARGET_METERS,
-    allowZero: overheadMode === 'direct',
-    required: overheadMode === 'monthly_expenses',
+    allowZero: !requireCapacity && overheadMode === 'direct',
+    required: requireCapacity || overheadMode === 'monthly_expenses',
   })
   addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
@@ -477,11 +478,11 @@ export function validateEstimatorSnapshot(
       message: `Transport is set to ₹${Number(estimate.transportPerM).toFixed(2)}/m, so it will be included even though the transport section is switched off.`,
     })
   }
-  addNumberIssue(issues, warnings, 'loomCount', 'Loom count', estimate.loomCount, { max: MAX_LOOMS, allowZero: true })
+  addNumberIssue(issues, warnings, 'loomCount', 'Loom count', estimate.loomCount, { max: MAX_LOOMS, allowZero: !requireCapacity })
   addNumberIssue(issues, warnings, 'monthlyWorkingDays', 'Monthly working days', estimate.monthlyWorkingDays, { max: MAX_WORKING_DAYS })
   addNumberIssue(issues, warnings, 'avgOutputPerLoomPerDay', 'Average output per loom per day', estimate.avgOutputPerLoomPerDay, {
     max: MAX_OUTPUT_PER_LOOM_PER_DAY,
-    allowZero: estimate.loomCount === 0,
+    allowZero: !requireCapacity && estimate.loomCount === 0,
     warningMax: MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY,
     warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.',
   })
@@ -548,11 +549,13 @@ export function validateEstimatorQuoteBoundary(input: {
   quotePricePerM: number
   targetMeters?: number | null
   requireTapeLength?: boolean
+  requireCapacity?: boolean
   result?: CostingResultSnapshot | null
   totals?: EstimatorV3Totals | null
 }): EstimatorValidationResult {
   const snapshotValidation = validateEstimatorSnapshot(input.estimate, {
     requireTapeLength: input.requireTapeLength,
+    requireCapacity: input.requireCapacity ?? true,
   })
   const issues = snapshotValidation.valid ? [] : [...snapshotValidation.issues]
   const warnings = snapshotValidation.warnings ? [...snapshotValidation.warnings] : []

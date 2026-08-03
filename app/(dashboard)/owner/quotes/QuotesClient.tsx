@@ -329,10 +329,17 @@ function formatComparisonValue(value: number | null, unit: 'money' | 'percent' |
 
 function formatComparisonDelta(value: SavedCostingDelta, unit: 'money' | 'percent' | 'number') {
     if (value.delta == null) return 'Not available'
-    const prefix = value.delta > 0 ? '+' : ''
-    if (unit === 'money') return `${prefix}₹${value.delta.toFixed(2)}/m`
-    if (unit === 'percent') return `${prefix}${value.delta.toFixed(1)} pp`
-    return `${prefix}${value.delta.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+    if (Math.abs(value.delta) <= 0.0001) return 'No change'
+    const direction = value.delta > 0 ? 'higher' : 'lower'
+    if (unit === 'money') return `₹${Math.abs(value.delta).toFixed(2)}/m ${direction}`
+    if (unit === 'percent') return `${Math.abs(value.delta).toFixed(1)} pp ${direction}`
+    return `${Math.abs(value.delta).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${direction}`
+}
+
+function formatSuggestedPriceMovement(value: SavedCostingDelta) {
+    if (value.delta == null) return 'New suggested selling price is not available for this comparison.'
+    if (Math.abs(value.delta) <= 0.0001) return 'New suggested selling price is unchanged from Old.'
+    return `New suggested selling price is ₹${Math.abs(value.delta).toFixed(2)}/m ${value.delta > 0 ? 'higher' : 'lower'} than Old.`
 }
 
 function deltaChangedForUi(value: SavedCostingDelta) {
@@ -1585,6 +1592,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 <p className="font-bold">{comparison.comparable ? 'Canonical comparison ready' : 'Canonical comparison needs review'}</p>
                                 <p className="mt-1 leading-relaxed">{comparison.canonical.message || `Formula ${comparison.canonical.leftCalculationVersion || 'unknown'} · rounding ${comparison.canonical.leftSnapshotSchemaVersion ? `snapshot v${comparison.canonical.leftSnapshotSchemaVersion}` : 'legacy'} · detail source ${comparison.canonical.source.replace('_', ' ')}.`}</p>
                                 <p className="mt-1 font-semibold">Change is calculated as New minus Old.</p>
+                                <p className="mt-1 font-semibold">{formatSuggestedPriceMovement(comparison.price.sellingPricePerM)}</p>
                             </div>
                             <div className="max-h-[60vh] overflow-auto rounded-xl border border-slate-200">
                                 <table className="w-full min-w-[760px] text-sm">
