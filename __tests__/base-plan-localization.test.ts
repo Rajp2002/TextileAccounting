@@ -1,0 +1,26 @@
+import { describe, expect, it } from 'vitest'
+import { BASE_PLAN_PHRASES, isBasePlanSurfacePath } from '../lib/i18n/base-plan-phrases'
+import { translateStrictBasePlanText } from '../lib/i18n/runtime'
+
+describe('Base Plan strict localization', () => {
+  it('localizes the legacy estimator labels without dropping the factory vocabulary', () => {
+    expect(translateStrictBasePlanText('Pricing assumptions', 'hi')).toBe('कीमत धारणाएँ')
+    expect(translateStrictBasePlanText('Save quality/recipe: reusable construction and assumptions.', 'hi')).toBe(
+      'सेव करें क्वालिटी/रेसिपी: दोबारा उपयोग योग्य बनावट और धारणाएँ.',
+    )
+    expect(translateStrictBasePlanText('PPI means picks per inch: weft threads in one inch.', 'gu')).toBe(
+      'PPI એટલે picks per inch: weft દોરા માં એક ઇંચ.',
+    )
+  })
+
+  it('covers the Base upgrade wall with complete phrases', () => {
+    expect(BASE_PLAN_PHRASES.hi['Unlock Party Orders']).toBe('पार्टी ऑर्डर अनलॉक करें')
+    expect(BASE_PLAN_PHRASES.gu['Unlock Party Orders']).toBe('પાર્ટી ઑર્ડર અનલૉક કરો')
+  })
+
+  it('limits strict cleanup to Base-plan surfaces', () => {
+    expect(isBasePlanSurfacePath('/owner/estimator')).toBe(true)
+    expect(isBasePlanSurfacePath('/owner/orders')).toBe(true)
+    expect(isBasePlanSurfacePath('/owner/payroll')).toBe(false)
+  })
+})
