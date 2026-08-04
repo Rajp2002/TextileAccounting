@@ -7,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import {
     Calculator,
     TrendingUp,
@@ -806,11 +805,12 @@ function StepperField({
             <Label className={`block text-[11px] font-semibold uppercase tracking-[0.05em] ${accentStyles.text}`}>
                 {label}
             </Label>
-            <div className="inline-flex h-10 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
+            <div className="inline-flex h-11 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
                 <button
                     type="button"
                     onClick={decrement}
-                    className="flex w-10 items-center justify-center border-r border-[var(--color-hairline)] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                    aria-label={`Decrease ${label}`}
+                    className="flex w-11 items-center justify-center border-r border-[var(--color-hairline)] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)]"
                 >
                     <Minus className="h-3.5 w-3.5" />
                 </button>
@@ -825,13 +825,14 @@ function StepperField({
                     }}
                     className="h-full w-16 rounded-none border-0 bg-white p-0 text-center font-mono text-sm font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-                <span className="flex w-10 items-center justify-center border-l border-r border-[var(--color-hairline)] text-xs font-semibold text-[var(--color-muted)]">
+                <span className="flex w-11 items-center justify-center border-l border-r border-[var(--color-hairline)] text-xs font-semibold text-[var(--color-muted)]">
                     {unit}
                 </span>
                 <button
                     type="button"
                     onClick={increment}
-                    className="flex w-10 items-center justify-center text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                    aria-label={`Increase ${label}`}
+                    className="flex w-11 items-center justify-center text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)]"
                 >
                     <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -887,9 +888,10 @@ function NumField({
                         <p className="text-[10px] font-medium leading-tight text-[var(--color-warning-amber)]">{warning}</p>
                     </div>
                     {onDismissWarning && (
-                        <button 
+                        <button
+                            type="button"
                             onClick={onDismissWarning}
-                            className="text-xs text-slate-400 hover:text-slate-600 underline text-left pl-4"
+                            className="estimator-touch-target rounded px-1 text-left text-xs text-slate-400 underline hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]"
                         >
                             Dismiss
                         </button>
@@ -1054,7 +1056,7 @@ function WidthField({
                             <button
                                 type="button"
                                 onClick={onUseInches}
-                                className="shrink-0 rounded border border-[var(--color-warning-amber)] px-1.5 py-0.5 text-[9px] font-bold underline-offset-2 hover:bg-white"
+                                className="estimator-touch-target shrink-0 rounded border border-[var(--color-warning-amber)] px-2 py-1 text-[9px] font-bold underline-offset-2 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]"
                             >
                                 Use inches
                             </button>
@@ -1318,13 +1320,14 @@ function CalculationModeField({
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 Mode
             </Label>
-            <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+            <div className="grid min-h-[52px] grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
                 {(['formula', 'manual'] as YarnCalculationMode[]).map(mode => (
                     <button
                         key={mode}
                         type="button"
                         onClick={() => onChange(mode)}
-                        className={`rounded-[7px] px-1 text-[11px] font-semibold whitespace-nowrap transition-all ${
+                        aria-pressed={value === mode}
+                        className={`min-h-11 rounded-[7px] px-1 text-[11px] font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
                             value === mode
                                 ? 'border border-[var(--color-hairline)] bg-white text-[var(--color-ink)] shadow-sm'
                                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
@@ -1364,58 +1367,92 @@ function formatWasteProvenance(
 }
 
 function RowCard({
-    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, adjustmentDetail, showCalculatedValues = true, children, accent = 'indigo'
+    title, index, componentName, ratePerKg, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, adjustmentDetail, showCalculatedValues = true, children, accent = 'indigo'
 }: {
-    title: string; index: number; onRemove: () => void; canRemove: boolean
+    title: string; index: number; componentName?: string; ratePerKg?: number; onRemove: () => void; canRemove: boolean
     kgPer100m: number; costPer100m: number; adjustmentPct?: number; adjustmentDetail?: string; showCalculatedValues?: boolean; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
     const colors = {
-        indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]', dot: 'bg-[var(--color-info-blue)]' },
-        emerald: { strip: 'bg-[#F7FCF8]', badge: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[#CDE5D3]', dot: 'bg-[var(--color-factory-green)]' },
+        indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]' },
+        emerald: { strip: 'bg-[#F7FCF8]', badge: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[#CDE5D3]' },
     }
     const c = colors[accent]
+    const [expanded, setExpanded] = useState(false)
+    const expandedManuallyRef = useRef(false)
+    const detailsId = `yarn-component-${accent}-${index}-details`
+    const displayName = componentName?.trim() || `${title} ${index + 1}`
+    const costPerM = costPer100m / 100
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 768px)')
+        const syncToViewport = () => {
+            if (!expandedManuallyRef.current) setExpanded(mediaQuery.matches)
+        }
+        syncToViewport()
+        mediaQuery.addEventListener?.('change', syncToViewport)
+        return () => mediaQuery.removeEventListener?.('change', syncToViewport)
+    }, [])
+
     return (
-        <div className="group overflow-hidden rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)]">
-            <div className={`flex flex-col gap-2 border-b border-[var(--color-hairline)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${c.strip}`}>
-                <div className="flex min-w-0 items-center gap-2">
-                    <span className={`rounded-[6px] border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] ${c.badge}`}>
-                        {title} {index + 1}
+        <div data-testid={`yarn-component-${accent}-${index}`} className="group overflow-hidden rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)]">
+            <div className={`flex min-w-0 items-stretch gap-1 border-b border-[var(--color-hairline)] ${c.strip}`}>
+                <button
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-controls={detailsId}
+                    aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayName} details`}
+                    onClick={() => {
+                        expandedManuallyRef.current = true
+                        setExpanded(value => !value)
+                    }}
+                    className="estimator-touch-target flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left outline-none transition-colors hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] sm:px-4"
+                >
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] border text-[10px] font-semibold uppercase tracking-[0.05em] ${c.badge}`}>
+                        {index + 1}
                     </span>
-                    <span className={`h-2 w-2 rounded-full ${c.dot}`} />
-                    <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-semibold text-[var(--color-muted)]">
-                        {showCalculatedValues ? `${kgPer100m.toFixed(3)} kg/100m` : '—'}
-                    </Badge>
-                    {adjustmentPct != null && showCalculatedValues && (
-                        <Badge variant="outline" className={`h-5 rounded-[6px] px-1.5 py-0 text-[10px] font-semibold ${c.badge}`}>
-                            {accent === 'emerald' ? 'Applied waste' : 'Total adjustment'} {adjustmentPct.toFixed(1)}%
-                        </Badge>
-                    )}
+                    <span className="min-w-0 flex-1">
+                        <span className="block break-words text-[13px] font-semibold leading-4 text-[var(--color-ink)]">{displayName}</span>
+                        <span className="mt-0.5 block break-words text-[10px] font-medium leading-4 text-[var(--color-muted)]">
+                            {title} · {showCalculatedValues ? `${kgPer100m.toFixed(3)} kg/100m` : 'Complete inputs'}
+                            {ratePerKg != null && ratePerKg > 0 ? ` · ₹${ratePerKg.toFixed(2)}/kg` : ''}
+                        </span>
+                    </span>
+                    <span className="flex min-w-[4.25rem] shrink-0 flex-col items-end gap-1 text-right">
+                        <span className={`break-words font-mono text-[12px] font-semibold tabular-nums ${showCalculatedValues ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>
+                            {showCalculatedValues ? `₹${costPerM.toFixed(2)}/m` : '—'}
+                        </span>
+                        {adjustmentPct != null && showCalculatedValues && (
+                            <span className={`max-w-full break-words rounded-[6px] border px-1.5 py-0.5 text-[9px] font-semibold leading-3 ${c.badge}`}>
+                                {accent === 'emerald' ? 'Waste' : 'Total adj.'} {adjustmentPct.toFixed(1)}%
+                            </span>
+                        )}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--color-muted)] transition-transform duration-200 motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+                {canRemove && (
+                    <button
+                        type="button"
+                        aria-label={`Remove ${title}`}
+                        title={`Remove ${displayName}`}
+                        onClick={onRemove}
+                        className="estimator-touch-target mr-1 inline-flex shrink-0 items-center justify-center rounded-md px-2 text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] sm:mr-2"
+                    >
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                )}
+            </div>
+            {expanded && (
+                <div id={detailsId} className="border-t border-[var(--color-hairline)]/70 bg-white">
                     {adjustmentDetail && showCalculatedValues && (
-                        <span className="text-[10px] font-medium text-[var(--color-muted)]">{adjustmentDetail}</span>
+                        <p className="border-b border-[var(--color-hairline)]/70 px-4 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
+                            Applied waste and adjustment: {adjustmentDetail}
+                        </p>
                     )}
+                    <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-5'}`}>
+                        {children}
+                    </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 sm:justify-end">
-                    <span className="text-xs font-semibold text-[var(--color-muted)]">
-                        {showCalculatedValues ? `₹${costPer100m.toFixed(2)}/100m` : '—'}
-                    </span>
-                    <ChevronUp className="h-4 w-4 text-[var(--color-muted)]" />
-                    {canRemove && (
-                        <button
-                            type="button"
-                            aria-label={`Remove ${title}`}
-                            title={`Remove ${title} component`}
-                            onClick={onRemove}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)]"
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span>Remove</span>
-                        </button>
-                    )}
-                </div>
-            </div>
-            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-5'}`}>
-                {children}
-            </div>
+            )}
         </div>
     )
 }
@@ -1596,6 +1633,8 @@ function QuickCostingView({
                             key={row.id}
                             title="Warp yarn"
                             index={index}
+                            componentName={row.label}
+                            ratePerKg={row.yarnRate}
                             accent="indigo"
                             canRemove={state.warpRows.length > 1}
                             onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
@@ -1646,7 +1685,7 @@ function QuickCostingView({
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         return (
-                            <RowCard key={row.id} title="Weft yarn" index={index} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
+                            <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
                                 <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" hint="PPI means picks per inch: weft threads in one inch." />
@@ -1913,9 +1952,15 @@ export default function EstimatorClient({
     const handleEntryModeChange = useCallback((nextMode: 'quick' | 'detailed') => {
         setEntryMode(nextMode)
         if (!assumptionsManuallyToggledRef.current) {
-            setAssumptionsExpanded(nextMode === 'detailed')
+            setAssumptionsExpanded(false)
         }
     }, [])
+
+    useEffect(() => {
+        if (assumptionsManuallyToggledRef.current) return
+        const isDesktop = window.matchMedia('(min-width: 768px)').matches
+        setAssumptionsExpanded(entryMode === 'detailed' && isDesktop)
+    }, [entryMode])
 
     const toggleAssumptions = useCallback(() => {
         assumptionsManuallyToggledRef.current = true
@@ -3028,7 +3073,7 @@ export default function EstimatorClient({
     const isZeroConfig = state.overheadMode === 'monthly_expenses'
         && state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
     const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
-    const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5"
+    const hudShellClass = "w-full rounded-[16px] border border-[var(--color-hairline)] bg-white/95 px-3 py-3 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:rounded-[18px] sm:px-5 sm:py-4"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
     const displayMarginPct = hasValidCostResult
         && costingResult.quoteIsValid
@@ -3059,6 +3104,26 @@ export default function EstimatorClient({
                             : requiresCommercialContext && !costingResult.quoteIsValid
                                 ? 'Review the quotation assumptions before saving.'
                                 : null
+    const validityStatus = costingReadiness.status === 'ready'
+        ? {
+            label: 'Costing valid',
+            description: 'Price and break-even are calculated from the current inputs.',
+            icon: CheckCircle2,
+            className: 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]',
+        }
+        : costingReadiness.status === 'warning_ack_required'
+            ? {
+                label: 'Review values before saving',
+                description: 'The price is visible, but unusual inputs need acknowledgement.',
+                icon: AlertTriangle,
+                className: 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/70 text-[var(--color-warning-amber)]',
+            }
+            : {
+                label: 'Costing not ready',
+                description: 'Complete the highlighted inputs before using this price.',
+                icon: AlertCircle,
+                className: 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]',
+            }
     const auditLayerRows = [
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
         ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
@@ -3144,9 +3209,6 @@ export default function EstimatorClient({
                     }}
                 />
             )}
-
-            <BasePlanFactoryGlossary />
-            <ArchivePolicyNotice />
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && !draftBannerHidden && (
@@ -3324,13 +3386,20 @@ export default function EstimatorClient({
                             </div>
                         </div>
                     </div>
+                    <div data-testid="costing-validity" className={`mb-4 flex min-h-11 items-start gap-2.5 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
+                        <validityStatus.icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                        <div className="min-w-0">
+                            <span className="font-semibold">{validityStatus.label}</span>
+                            <span className="ml-1.5 font-medium opacity-85">{validityStatus.description}</span>
+                        </div>
+                    </div>
                     <div className={entryMode === 'detailed' ? 'space-y-5' : 'grid gap-5 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-start'}>
                         <div className={entryMode === 'detailed' ? 'grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)] lg:items-start' : 'min-w-0 space-y-3'}>
                             <div className="min-w-0 space-y-4">
-                                <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+                                <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                                     <div className="min-w-0">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.production_cost')}>Production cost / m</p>
-                                        <p className="max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
                                             {hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'}
                                         </p>
                                     </div>
@@ -3338,11 +3407,12 @@ export default function EstimatorClient({
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.suggested_selling_price')}>
                                             {mode === 'market' ? 'Target price / m' : t('common.suggested_selling_price_per_m')}
                                         </p>
-                                        <p className="max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
                                             {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
                                         </p>
                                     </div>
-                                    <div className={`min-w-0 rounded-[12px] border px-3 py-2 ${displayMarginPct === null
+                                    <div className="col-span-2 grid grid-cols-2 gap-3 border-y border-[var(--color-hairline)]/80 py-3 sm:gap-4 xl:col-span-2 xl:border-y-0 xl:border-l xl:pl-4 xl:py-0">
+                                    <div className={`min-w-0 rounded-[10px] border px-2.5 py-2 sm:px-3 ${displayMarginPct === null
                                         ? 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'
                                         : displayMarginPct > 0
                                             ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)]'
@@ -3356,7 +3426,7 @@ export default function EstimatorClient({
                                                 : displayMarginPct < 0
                                                     ? 'text-[var(--color-risk-red)]'
                                                     : 'text-[var(--color-warning-amber)]'}`}>Actual margin</p>
-                                        <p className={`max-w-full break-words font-mono text-[clamp(1.65rem,4vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums ${displayMarginPct === null
+                                        <p className={`max-w-full break-words font-mono text-[clamp(1.3rem,6vw,1.75rem)] font-semibold leading-[1.05] tracking-tight tabular-nums ${displayMarginPct === null
                                             ? 'text-[var(--color-muted)]'
                                             : displayMarginPct > 0
                                                 ? 'text-[var(--color-factory-green)]'
@@ -3369,14 +3439,15 @@ export default function EstimatorClient({
                                             {displayMarginPct === null ? 'Complete estimate' : displayMarginPct > 0 ? 'Above break-even' : displayMarginPct < 0 ? 'Below break-even' : 'At break-even'}
                                         </p>
                                     </div>
-                                    <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2">
+                                    <div className="min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-2.5 py-2 sm:px-3">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.break_even')}>Break-even price / m</p>
-                                        <p className="max-w-full break-words font-mono text-[clamp(1.45rem,3.5vw,1.9rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.3rem,6vw,1.75rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
                                             {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
                                                 ? `₹${costingResult.breakEvenPricePerM.toFixed(2)}`
                                                 : '—'}
                                         </p>
                                         <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]" title={t('estimator.price_helpers.break_even_hint')}>Minimum at 0% margin</p>
+                                    </div>
                                     </div>
                                 </div>
 
@@ -3713,6 +3784,10 @@ export default function EstimatorClient({
                 </div>
             </div>
 
+            {/* Supporting context stays available after the decision cockpit. */}
+            <BasePlanFactoryGlossary />
+            <ArchivePolicyNotice />
+
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div id="estimator-form-panel" className={`${pageShellClass} space-y-7`}>
                 {/* Saved Qualities Row */}
@@ -4014,6 +4089,8 @@ export default function EstimatorClient({
                                     key={row.id}
                                     title={t('estimator.warp.layer')}
                                     index={i}
+                                    componentName={row.label}
+                                    ratePerKg={row.yarnRate}
                                     accent="indigo"
                                     canRemove={state.warpRows.length > 1}
                                     onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
@@ -4239,6 +4316,8 @@ export default function EstimatorClient({
                                         key={row.id}
                                         title={t('estimator.weft.layer')}
                                         index={i}
+                                        componentName={row.label}
+                                        ratePerKg={row.yarnRate}
                                         accent="emerald"
                                         canRemove={state.weftRows.length > 1}
                                         onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })}
