@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { toast } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 
-const UPDATE_REFRESH_FLAG = 'weavly_pwa_update_refreshing'
 const UPDATE_TOAST_SHOWN_FLAG_PREFIX = 'weavly_pwa_update_toast_seen:'
-// The legacy name remains the base of the versioned session key. The old
-// session-only check was readSessionFlag(UPDATE_TOAST_SHOWN_FLAG); appending
-// the worker URL prevents repeat notices while allowing a new version through.
+// The versioned session key prevents repeat notices for the same worker while
+// allowing a later deployment to notify once. The legacy session-only check
+// was readSessionFlag(UPDATE_TOAST_SHOWN_FLAG); versioning it avoids suppressing
+// notices for future deployments.
 const UPDATE_TOAST_SHOWN_FLAG = UPDATE_TOAST_SHOWN_FLAG_PREFIX
 
 function readSessionFlag(key: string) {
@@ -24,14 +24,6 @@ function writeSessionFlag(key: string, value: string) {
         sessionStorage.setItem(key, value)
     } catch {
         // A restricted browser storage context must not block app use.
-    }
-}
-
-function removeSessionFlag(key: string) {
-    try {
-        sessionStorage.removeItem(key)
-    } catch {
-        // Best effort only.
     }
 }
 
@@ -57,16 +49,21 @@ export function PwaUpdateNotice() {
             writeSessionFlag(versionKey, '1')
             toast.info(t('common.pwa_update_title'), {
                 description: `${t('common.pwa_update_description')} You can keep working; refresh after the current costing or quotation says Saved.`,
-                // Keep the notice in the top toast lane so it cannot cover the
-                // lower save/quote action area on a phone. It is dismissible and
-                // finite, so an active costing is never held hostage by it.
-                position: 'top-center',
+                // Keep the notice in a predictable corner instead of covering
+                // the page's main content. The explicit colors also keep the
+                // description readable on white public/auth screens.
+                position: 'top-right',
+                descriptionClassName: '!text-ink !opacity-100',
+                style: {
+                    '--normal-bg': 'var(--weavly-surface)',
+                    '--normal-text': 'var(--weavly-ink)',
+                    '--normal-border': 'var(--weavly-hairline)',
+                } as CSSProperties,
                 closeButton: true,
                 duration: 12000,
                 action: {
                     label: t('common.pwa_update_refresh'),
                     onClick: () => {
-                        writeSessionFlag(UPDATE_REFRESH_FLAG, '1')
                         const waitingWorker = registration.waiting
                         if (!waitingWorker) {
                             window.location.reload()
@@ -88,43 +85,72 @@ export function PwaUpdateNotice() {
         }
 
         const watchWorker = (registration: ServiceWorkerRegistration, worker: ServiceWorker | null) => {
-            if (!worker) return
-            worker.addEventListener('statechange', () => {
+            if (!worker) return () => {}
+
+            const handleStateChange = () => {
                 if (worker.state === 'installed' && navigator.serviceWorker.controller) {
                     showUpdateToast(registration)
                 }
-            })
+            }
+
+            worker.addEventListener('statechange', handleStateChange)
+            return () => worker.removeEventListener('statechange', handleStateChange)
         }
+
+        let removeInstallingWorkerListener = () => {}
+        let cleanupRegistrationListeners = () => {}
 
         navigator.serviceWorker.ready.then((registration) => {
             if (disposed) return
-            if (registration.waiting && navigator.serviceWorker.controller) {
-                showUpdateToast(registration)
+
+            // A waiting worker can be left behind by another tab. Do not turn
+            // a fresh navigation into an interruption; only announce workers
+            // that finish installing while this tab is already open.
+            const handleUpdateFound = () => {
+                removeInstallingWorkerListener()
+                removeInstallingWorkerListener = watchWorker(registration, registration.installing)
             }
-            registration.addEventListener('updatefound', () => watchWorker(registration, registration.installing))
-            // Do not rely on the browser's periodic update cadence. Checking
-            // after listeners are attached lets an active draft tab observe a
-            // newly deployed worker before the user navigates or reloads.
-            void registration.update().catch(() => {
-                // Update checks are best-effort and must not interrupt drafts.
-            })
+            registration.addEventListener('updatefound', handleUpdateFound)
+
+            // A fresh tab should not trigger an update check just to display a
+            // refresh prompt. Recheck when an already-used tab returns to the
+            // foreground, which still lets long-lived tabs pick up deployments
+            // without interrupting their initial navigation.
+            let hasCompletedInitialVisibility = document.visibilityState === 'visible'
+            let wasHiddenAfterInitialVisibility = false
+            const handleVisibilityChange = () => {
+                if (document.visibilityState === 'hidden') {
+                    if (hasCompletedInitialVisibility) wasHiddenAfterInitialVisibility = true
+                    return
+                }
+
+                if (!hasCompletedInitialVisibility) {
+                    hasCompletedInitialVisibility = true
+                    return
+                }
+
+                if (!wasHiddenAfterInitialVisibility) return
+                wasHiddenAfterInitialVisibility = false
+                void registration.update().catch(() => {
+                    // Update checks are best-effort and must not interrupt drafts.
+                })
+            }
+
+            document.addEventListener('visibilitychange', handleVisibilityChange)
+
+            cleanupRegistrationListeners = () => {
+                registration.removeEventListener('updatefound', handleUpdateFound)
+                document.removeEventListener('visibilitychange', handleVisibilityChange)
+                removeInstallingWorkerListener()
+            }
         }).catch(() => {
             // Service-worker registration is best-effort and should not block app use.
         })
 
-        const handleControllerChange = () => {
-            if (readSessionFlag(UPDATE_REFRESH_FLAG)) {
-                removeSessionFlag(UPDATE_REFRESH_FLAG)
-                return
-            }
-            void navigator.serviceWorker.ready.then(showUpdateToast)
-        }
-
-        navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
-
         return () => {
             disposed = true
-            navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+            cleanupRegistrationListeners()
+            removeInstallingWorkerListener()
         }
     }, [t])
 
