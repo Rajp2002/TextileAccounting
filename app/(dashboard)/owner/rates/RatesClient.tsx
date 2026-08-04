@@ -39,6 +39,8 @@ import {
     COST_RATE_CATEGORY_LABELS,
     filterCostRates,
     formatRateValue,
+    getCostRateDisplayNotes,
+    getCostRateDisplaySource,
     getRateReviewDueDate,
     getRateHistoryEventLabel,
     getRateReviewStatus,
@@ -185,8 +187,13 @@ export default function RatesClient({
                 }
                 const savedRate = result.data as CostRateRow
                 setRates(current => {
+                    const previousRate = current.find(rate => rate.id === savedRate.id)
                     const next = current.filter(rate => rate.id !== savedRate.id)
-                    return [...next, savedRate]
+                    return [...next, {
+                        ...savedRate,
+                        discovery_source: savedRate.discovery_source ?? previousRate?.discovery_source ?? null,
+                        fabric_names: savedRate.fabric_names ?? previousRate?.fabric_names ?? [],
+                    }]
                 })
                 const savedYarnName = normalizeYarnName(target.name)
                 if (target.category === 'yarn_warp' || target.category === 'yarn_weft') {
@@ -248,11 +255,7 @@ export default function RatesClient({
             toast.error(tx('The discovered yarn rate is still loading. Refresh and try again.'))
             return
         }
-        setDraft({
-            ...rowToDraft(rate),
-            source: 'Manually resolved in Yarn Rate Book',
-            notes: `Unified ${conflict.yarnName} across ${new Set(conflict.usages.map(usage => usage.templateId)).size} saved qualities.`,
-        })
+        setDraft(rowToDraft(rate))
         setShowConflicts(false)
     }
 
@@ -318,6 +321,9 @@ export default function RatesClient({
             ?? (archiveRate?.id === pendingAction.id ? archiveRate.name : null)
             ?? 'selected rate'
         : null
+    const draftRate = draft?.id ? rates.find(rate => rate.id === draft.id) ?? null : null
+    const draftHasFabricUsage = Boolean(draftRate?.fabric_names?.length)
+    const draftHasDiscoverySource = Boolean(draftRate?.discovery_source)
     const pendingMessage = pendingAction?.kind === 'save'
         ? tx('Saving this yarn rate…')
         : pendingAction?.kind === 'review'
@@ -331,11 +337,11 @@ export default function RatesClient({
                         : null
 
     return (
-        <div className="mx-auto max-w-6xl space-y-6">
+        <div className="mx-auto w-full max-w-7xl space-y-6">
             <ArchivePolicyNotice />
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                    <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> {t('common.yarn_rate_book')}</h1>
+                    <h1 aria-label={tx('Yarn Rate Book')} className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-950"><Tags className="h-6 w-6 text-orange-600" /> {t('common.yarn_rate_book')}</h1>
                     <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500">{tx('Keep one current rate for every yarn used across your Saved Qualities. Confirm discovered rates here, or change a rate when your supplier price changes. Existing costing snapshots stay unchanged.')}</p>
                 </div>
                 <Button onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className="h-11 bg-orange-600 text-white hover:bg-orange-700"><Plus className="h-4 w-4" /> {tx('Add Yarn Rate')}</Button>
@@ -375,20 +381,29 @@ export default function RatesClient({
                 </div>
 
                 <div className="grid gap-3 border-b border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_220px_180px_auto]">
-                    <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Label htmlFor="yarn-rate-search" className="sr-only">Search yarn rates, sources, and notes</Label><Input id="yarn-rate-search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search yarn rates…" aria-describedby="yarn-rate-search-help" className="h-10 pl-9" /></div>
+                    <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Label htmlFor="yarn-rate-search" className="sr-only">Search yarn rates, sources, notes, and fabrics</Label><Input id="yarn-rate-search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search yarn rates…" aria-describedby="yarn-rate-search-help" className="h-10 pl-9" /></div>
                     <select aria-label="Filter yarn rates by use" value={category} onChange={event => setCategory(event.target.value as YarnRateCategory | 'all')} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700"><option value="all">All yarns</option>{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select>
                     <select aria-label="Filter rates by review status" value={reviewStatus} onChange={event => setReviewStatus(event.target.value as RateReviewStatus | 'all')} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700"><option value="all">Review status</option><option value="needs_review">Owner review needed</option><option value="current">Current</option><option value="due_soon">Due soon</option><option value="overdue">Overdue</option></select>
                     <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => setShowArchived(current => !current)} className="h-10">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}</Button>
                 </div>
-                <p id="yarn-rate-search-help" className="px-4 pb-3 text-[11px] leading-relaxed text-slate-500">Searches yarn rate names, sources, and notes in this Rate Book. Saved qualities and costing snapshots are searched in the Costings library.</p>
+                <p id="yarn-rate-search-help" className="px-4 pb-3 text-[11px] leading-relaxed text-slate-500">Searches yarn rate names, sources, notes, and fabric usage in this Rate Book. Saved qualities and costing snapshots are searched in the Costings library.</p>
 
                 {visibleRates.length === 0 ? (
                     <div className="px-6 py-14 text-center"><Tags className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-bold text-slate-700">{showArchived ? 'No archived yarn rates' : yarnRates.filter(rate => rate.is_active !== false).length === 0 ? 'No yarn rates yet' : 'No matching yarn rates'}</p><p className="mt-1 text-sm text-slate-500">{showArchived ? 'Archived rates stay available here for audit and can be restored when needed.' : yarnRates.length === 0 ? 'Save a quality or costing and its yarn rates will appear here automatically.' : hasActiveFilters ? 'Clear or adjust the filters to see more yarn rates.' : 'Add a yarn rate to continue.'}</p></div>
                 ) : (
                     <>
-                        <div className="hidden overflow-x-auto md:block">
-                            <table className="w-full min-w-[1000px] text-left">
-                                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Yarn / Use</th><th className="px-4 py-3">{t('common.current_yarn_rate')}</th><th className="px-4 py-3">Previous rate</th><th className="px-4 py-3">Effective from</th><th className="px-4 py-3">Review status</th><th className="px-4 py-3">Source / Notes</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
+                        <div className="hidden lg:block">
+                            <table className="w-full table-fixed text-left text-[12px]">
+                                <colgroup>
+                                    <col className="w-[13%]" />
+                                    <col className="w-[11%]" />
+                                    <col className="w-[10%]" />
+                                    <col className="w-[10%]" />
+                                    <col className="w-[15%]" />
+                                    <col className="w-[18%]" />
+                                    <col className="w-[23%]" />
+                                </colgroup>
+                                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-3">Yarn / Use</th><th className="px-3 py-3">{t('common.current_yarn_rate')}</th><th className="px-3 py-3">Previous rate</th><th className="px-3 py-3">Effective from</th><th className="px-3 py-3">Review status</th><th className="px-3 py-3">Source / Notes</th><th className="px-3 py-3 text-right">Actions</th></tr></thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {visibleRates.map(rate => {
                                         const reviewState = getRateReviewStatus(rate)
@@ -397,20 +412,20 @@ export default function RatesClient({
                                         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
                                         return (
                                             <tr key={rate.id} className={archived ? 'bg-slate-50 opacity-80' : reviewState === 'overdue' ? 'bg-red-50/70 hover:bg-red-50' : reviewState === 'due_soon' ? 'bg-amber-50/70 hover:bg-amber-50' : reviewState === 'needs_review' ? 'bg-blue-50/60 hover:bg-blue-50' : 'hover:bg-slate-50/70'}>
-                                                <td className="px-4 py-4"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td>
-                                                <td className="px-4 py-4"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[11px] font-semibold text-emerald-700">Default for new costings</p>}</td>
-                                                <td className="px-4 py-4 font-mono text-sm text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
-                                                <td className="px-4 py-4 text-sm text-slate-600">{formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                                                <td className="px-4 py-4"><ReviewBadge rate={rate} /></td>
-                                                <td className="max-w-[220px] px-4 py-4"><p className="truncate text-sm font-medium text-slate-800">{rate.source || 'No source'}</p><p className="mt-1 truncate text-xs text-slate-500">{rate.notes || 'No notes'}</p></td>
-                                                <td className="px-4 py-4">
-                                                    <div className="flex justify-end gap-1">
-                                                        {!archived && reviewState !== 'current' && <Button variant="outline" size="sm" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>
+                                                <td className="px-3 py-3 align-top"><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-[11px] text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td>
+                                                <td className="px-3 py-3 align-top"><p className="font-mono font-bold text-slate-900">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-emerald-700">Default for new costings</p>}</td>
+                                                <td className="px-3 py-3 align-top font-mono text-[11px] text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
+                                                <td className="px-3 py-3 align-top text-[11px] text-slate-600">{formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                                                <td className="px-3 py-3 align-top"><ReviewBadge rate={rate} /></td>
+                                                <td className="px-3 py-3 align-top"><p className="break-words text-[11px] font-medium text-slate-800">{getCostRateDisplaySource(rate) || 'No source'}</p><p className="mt-1 whitespace-normal break-words text-[11px] leading-snug text-slate-500">{getCostRateDisplayNotes(rate) || 'No notes'}</p></td>
+                                                <td className="px-3 py-3 align-top">
+                                                    <div className="flex flex-wrap justify-end gap-1">
+                                                        {!archived && reviewState !== 'current' && <Button variant="outline" size="xs" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>
                                                             {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
                                                         </Button>}
-                                                        {!archived && <Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>}
-                                                        <Button variant="ghost" size="sm" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-3.5 w-3.5" /> {tx('Activity')}</Button>
-                                                        <Button variant="ghost" size="sm" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="text-slate-500">
+                                                        {!archived && <Button variant="outline" size="xs" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>}
+                                                        <Button variant="ghost" size="xs" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-3.5 w-3.5" /> {tx('Activity')}</Button>
+                                                        <Button variant="ghost" size="xs" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="text-slate-500">
                                                             {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
                                                         </Button>
                                                     </div>
@@ -421,7 +436,7 @@ export default function RatesClient({
                                 </tbody>
                             </table>
                         </div>
-                        <div className="space-y-3 p-3 md:hidden">
+                        <div className="space-y-3 p-3 lg:hidden">
                             {visibleRates.map(rate => {
                                 const reviewState = getRateReviewStatus(rate)
                                 const archived = rate.is_active === false
@@ -432,6 +447,7 @@ export default function RatesClient({
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{rate.name}</p><p className="mt-1 text-xs text-slate-500">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
                                             <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-white/70 p-3"><div><p className="text-[10px] font-bold uppercase text-slate-500">{t('common.current_yarn_rate')}</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-500">Previous rate</p><p className="mt-1 font-mono font-semibold text-slate-600">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
+                                            <div className="mt-3 rounded-lg border border-slate-200 bg-white/70 p-3"><p className="text-[10px] font-bold uppercase text-slate-500">Source</p><p className="mt-1 text-sm font-medium text-slate-800">{getCostRateDisplaySource(rate) || 'No source'}</p><p className="mt-3 text-[10px] font-bold uppercase text-slate-500">Notes</p><p className="mt-1 whitespace-normal break-words text-xs text-slate-600">{getCostRateDisplayNotes(rate) || 'No notes'}</p></div>
                                             <div className="mt-3 grid grid-cols-2 gap-2">
                                                 {!archived && reviewState !== 'current' && <Button variant="outline" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={tx(`${reviewLabel} for ${rate.name}`)}>{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</Button>}
                                                 {!archived && <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-4 w-4" /> {tx('Change rate')}</Button>}
@@ -493,8 +509,8 @@ export default function RatesClient({
                         {draft.id && <p className="-mt-3 text-xs leading-relaxed text-slate-500">Category and unit stay fixed for a linked yarn so saved qualities and historical costings keep the same meaning.</p>}
                         <div className="space-y-1.5"><Label>{t('common.current_yarn_rate')}</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', parseNonNegativeInput(event.target.value) ?? 0)} className="font-mono" /></div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Effective from</Label><Input type="date" value={draft.effectiveDate} onChange={event => updateDraft('effectiveDate', event.target.value)} /></div><div className="space-y-1.5"><Label>Review date</Label><Input type="date" value={draft.lastReviewedAt} onChange={event => updateDraft('lastReviewedAt', event.target.value)} /></div></div>
-                        <div className="space-y-1.5"><Label>Source</Label><Input value={draft.source} onChange={event => updateDraft('source', event.target.value)} placeholder="Supplier quote, email, internal rate card…" /></div>
-                        <div className="space-y-1.5"><Label>Notes</Label><Textarea value={draft.notes} onChange={event => updateDraft('notes', event.target.value)} placeholder="Why this rate changed or how it should be used" maxLength={500} /><p className="text-right text-xs text-slate-400">{draft.notes?.length ?? 0}/500</p></div>
+                        <div className="space-y-1.5"><Label>Source</Label><Input value={draft.source} onChange={event => updateDraft('source', event.target.value)} placeholder="Supplier quote, email, internal rate card…" disabled={draftHasDiscoverySource} />{draftHasDiscoverySource && <p className="text-xs leading-relaxed text-slate-500">This is the source where the yarn was first discovered. It stays tied to the initial saved quality or costing.</p>}</div>
+                        <div className="space-y-1.5"><Label>Notes</Label><Textarea value={draftHasFabricUsage ? getCostRateDisplayNotes(draftRate ?? { notes: draft.notes ?? null, fabric_names: [] }) ?? draft.notes : draft.notes} onChange={event => updateDraft('notes', event.target.value)} placeholder="Why this rate changed or how it should be used" maxLength={500} disabled={draftHasFabricUsage} />{draftHasFabricUsage ? <p className="text-xs leading-relaxed text-slate-500">Automatically lists every saved fabric that currently uses this yarn.</p> : <p className="text-right text-xs text-slate-400">{draft.notes?.length ?? 0}/500</p>}</div>
                         <div className="space-y-1.5"><Label>Review every</Label><select value={draft.reviewIntervalDays} onChange={event => updateDraft('reviewIntervalDays', Number(event.target.value))} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"><option value="30">30 days</option><option value="60">60 days</option><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option></select></div>
                     </div>}
                     <SheetFooter className="border-t border-slate-200 p-6 sm:flex-row"><Button variant="outline" onClick={() => setDraft(null)} className="flex-1" disabled={isPending}>{tx('Cancel')}</Button><Button onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined} className="flex-1 bg-orange-600 text-white hover:bg-orange-700">{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {isPending ? tx('Saving…') : tx('Save current rate')}</Button></SheetFooter>
@@ -510,8 +526,8 @@ export default function RatesClient({
                     </DialogHeader>
                     {reviewRate && <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-950">
                         <div className="flex items-start justify-between gap-3"><div><p className="font-bold">{reviewRate.name}</p><p className="mt-1 text-xs text-blue-800">{COST_RATE_CATEGORY_LABELS[reviewRate.category]}</p></div><p className="font-mono text-lg font-black">{formatRateValue(Number(reviewRate.current_value), reviewRate.unit)}</p></div>
-                        <p className="text-xs leading-relaxed text-blue-800">Source: {reviewRate.source || 'Not recorded'}</p>
-                        {reviewRate.notes && <p className="text-xs leading-relaxed text-blue-800">{reviewRate.notes}</p>}
+                        <p className="text-xs leading-relaxed text-blue-800">Source: {getCostRateDisplaySource(reviewRate) || 'Not recorded'}</p>
+                        {getCostRateDisplayNotes(reviewRate) && <p className="text-xs leading-relaxed text-blue-800">{getCostRateDisplayNotes(reviewRate)}</p>}
                     </div>}
                     {reviewError && <p role="alert" className="text-sm font-medium text-destructive">{reviewError}</p>}
                     <DialogFooter>

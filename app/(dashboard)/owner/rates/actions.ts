@@ -6,7 +6,10 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import {
     collectYarnRateCandidates,
+    getYarnRateDiscoverySource,
     getYarnRateConflicts,
+    isYarnRateDiscoverySource,
+    normalizeYarnName,
     type YarnRateTemplate,
 } from '@/lib/yarn-rate-reconciliation'
 
@@ -121,10 +124,14 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
         return { error: templatesResult.error?.message ?? costingsResult.error?.message }
     }
 
-    const qualityTemplates = (templatesResult.data ?? []) as YarnRateTemplate[]
+    const qualityTemplates = (templatesResult.data ?? []).map(template => ({
+        ...template,
+        discoverySource: 'saved_quality' as const,
+    })) as YarnRateTemplate[]
     const savedCostings: YarnRateTemplate[] = (costingsResult.data ?? []).map(costing => ({
         id: `costing:${costing.id}`,
         name: costing.quality_label?.trim() || costing.party_name?.trim() || 'Saved costing',
+        discoverySource: 'saved_costing',
         warp_rows: costing.warp_rows,
         weft_rows: costing.weft_rows,
     })) as YarnRateTemplate[]
@@ -140,10 +147,8 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
                 p_category: candidate.category,
                 p_current_value: candidate.currentValue,
                 p_review_interval_days: yarnReviewIntervalDays,
-                p_source: candidate.conflict ? 'Saved qualities or costings — review needed' : 'Saved quality or costing',
-                p_notes: (candidate.conflict
-                    ? `Different saved rates found: ${candidate.conflict.rates.map(value => `₹${value}/kg`).join(', ')}. Choose one current rate.`
-                    : `Discovered from ${candidate.yarnName} layers in a saved quality or costing.`).slice(0, 500),
+                p_source: candidate.discoverySource === 'saved_quality' ? 'Saved quality' : 'Saved costing',
+                p_notes: candidate.usageNotes.slice(0, 500),
             })
             if (discoverError) return { error: discoverError.message }
         }
@@ -178,8 +183,22 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
     if (reviewedError) return { error: reviewedError.message }
 
     const reviewedRateIds = new Set((reviewedRows ?? []).map(row => row.rate_id))
+    const candidateByKey = new Map(savedCandidates.map(candidate => [
+        `${candidate.category}:${candidate.normalizedName}`,
+        candidate,
+    ]))
     return {
-        data: rates.map(rate => ({ ...rate, is_reviewed: reviewedRateIds.has(rate.id) })),
+        data: rates.map(rate => {
+            const candidate = candidateByKey.get(`${rate.category}:${normalizeYarnName(rate.name)}`)
+            return {
+                ...rate,
+                is_reviewed: reviewedRateIds.has(rate.id),
+                discovery_source: candidate && isYarnRateDiscoverySource(rate.source)
+                    ? getYarnRateDiscoverySource(rate.source) ?? candidate.discoverySource
+                    : null,
+                fabric_names: candidate?.fabricNames ?? [],
+            }
+        }),
         conflicts: getYarnRateConflicts(savedYarnSources),
         yarnReviewIntervalDays,
     }

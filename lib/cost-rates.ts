@@ -1,4 +1,9 @@
 import type { CostRateCategory, CostRateUnit } from '@/app/(dashboard)/owner/rates/actions'
+import {
+    formatYarnRateUsageNotes,
+    YARN_RATE_DISCOVERY_SOURCE_LABELS,
+    type YarnRateDiscoverySource,
+} from './yarn-rate-reconciliation'
 
 export type CostRateRow = {
     id: string
@@ -17,6 +22,10 @@ export type CostRateRow = {
     is_active?: boolean
     /** A discovered rate is persisted for convenience, but is not trusted until the owner saves/reviews it. */
     is_reviewed?: boolean
+    /** Derived from the current saved qualities/costings; it is not part of the financial rate snapshot. */
+    discovery_source?: YarnRateDiscoverySource | null
+    /** Current fabric names using this yarn, derived from saved quality/costing recipes. */
+    fabric_names?: string[]
 }
 
 export type RateReviewStatus = 'needs_review' | 'current' | 'due_soon' | 'overdue'
@@ -47,6 +56,18 @@ export function formatRateValue(value: number, unit: CostRateUnit) {
     const suffix = unit === 'per_kg' ? '/kg' : unit === 'per_m' ? '/m' : '%'
     const prefix = unit === 'percent' ? '' : '₹'
     return `${prefix}${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${suffix}`
+}
+
+export function getCostRateDisplaySource(rate: Pick<CostRateRow, 'source' | 'discovery_source'>) {
+    return rate.discovery_source
+        ? YARN_RATE_DISCOVERY_SOURCE_LABELS[rate.discovery_source]
+        : rate.source
+}
+
+export function getCostRateDisplayNotes(rate: Pick<CostRateRow, 'notes' | 'fabric_names'>) {
+    return rate.fabric_names?.length
+        ? formatYarnRateUsageNotes(rate.fabric_names)
+        : rate.notes
 }
 
 /**
@@ -85,7 +106,14 @@ export function filterCostRates<T extends CostRateRow>(
 ) {
     const query = options.query.trim().toLocaleLowerCase('en-IN')
     return rates.filter(rate => {
-        const matchesQuery = !query || `${rate.name} ${rate.source ?? ''} ${rate.notes ?? ''}`.toLocaleLowerCase('en-IN').includes(query)
+        const searchText = [
+            rate.name,
+            getCostRateDisplaySource(rate),
+            getCostRateDisplayNotes(rate),
+            rate.source,
+            rate.notes,
+        ].filter(Boolean).join(' ')
+        const matchesQuery = !query || searchText.toLocaleLowerCase('en-IN').includes(query)
         const matchesCategory = options.category === 'all' || rate.category === options.category
         const matchesStatus = options.status === 'all' || getRateReviewStatus(rate, now) === options.status
         return matchesQuery && matchesCategory && matchesStatus
