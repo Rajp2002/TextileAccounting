@@ -11,6 +11,12 @@ describe('Base Plan strict localization', () => {
     expect(translateStrictBasePlanText('PPI means picks per inch: weft threads in one inch.', 'gu')).toBe(
       'PPI એટલે picks per inch: weft દોરા માં એક ઇંચ.',
     )
+    expect(translateStrictBasePlanText('Warp layer 1 (Warp yarn) denier must be greater than 0.', 'hi')).toBe(
+      'Warp लेयर 1 (Warp यार्न) डेनियर का मान 0 से अधिक होना चाहिए।',
+    )
+    expect(translateStrictBasePlanText('Pricing assumptions. 4 active. 10% target margin. 0% commission.', 'gu')).toBe(
+      'કિંમતની ધારણાઓ. 4 સક્રિય · 10% લક્ષ્ય margin · 0% કમિશન.',
+    )
   })
 
   it('covers the Base upgrade wall with complete phrases', () => {

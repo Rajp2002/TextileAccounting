@@ -142,7 +142,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                     <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2">
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
+                            <p data-i18n-skip="true" className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
                             <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Estimator Plan'}</p>
                         </div>
                     </div>
@@ -201,7 +201,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
             {/* User footer */}
             <div className="border-t border-white/10 p-4">
                 {userName && (
-                    <p className="mb-3 truncate text-xs font-medium text-zinc-400">{userName}</p>
+                    <p data-i18n-skip="true" className="mb-3 truncate text-xs font-medium text-zinc-400">{userName}</p>
                 )}
                 <div className="flex flex-col gap-3">
                     {!hasPremium && (

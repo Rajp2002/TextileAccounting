@@ -225,6 +225,7 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     costing: "costing",
     customer: "ग्राहक",
     data: "डेटा",
+    denier: "डेनियर",
     default: "डिफ़ॉल्ट",
     did: "क्या",
     direct: "सीधा",
@@ -259,6 +260,7 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     issued: "जारी",
     keep: "रखें",
     label: "लेबल",
+    layer: "लेयर",
     later: "बाद में",
     linear: "लीनियर",
     length: "लंबाई",
@@ -326,6 +328,13 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     selling: "बिक्री",
     separate: "अलग",
     shown: "दिखाया गया",
+    billing: "बिलिंग",
+    period: "अवधि",
+    annual: "वार्षिक",
+    renewal: "रिन्यूअल",
+    included: "शामिल",
+    every: "हर",
+    year: "वर्ष",
     snapshot: "स्नैपशॉट",
     snapshots: "स्नैपशॉट",
     special: "विशेष",
@@ -582,6 +591,7 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     costing: "costing",
     customer: "ગ્રાહક",
     data: "ડેટા",
+    denier: "ડેનિયર",
     default: "ડિફૉલ્ટ",
     did: "શું",
     direct: "સીધો",
@@ -616,6 +626,7 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     issued: "જારી",
     keep: "જાળવો",
     label: "લેબલ",
+    layer: "લેયર",
     later: "પછી",
     linear: "લિનિયર",
     length: "લંબાઈ",
@@ -683,6 +694,13 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     selling: "વેચાણ",
     separate: "અલગ",
     shown: "દર્શાવેલ",
+    billing: "બિલિંગ",
+    period: "સમયગાળો",
+    annual: "વાર્ષિક",
+    renewal: "રિન્યુઅલ",
+    included: "સામેલ",
+    every: "દરેક",
+    year: "વર્ષ",
     snapshot: "સ્નૅપશૉટ",
     snapshots: "સ્નૅપશૉટ",
     special: "વિશેષ",
@@ -1117,9 +1135,10 @@ export function translateFallbackUiText(
 export function translateStrictBasePlanText(source: string, language: RuntimeLanguage): string | undefined {
   if (language === "en" || !source) return undefined
 
+  const patternedSource = translateStrictBasePlanPattern(source, language) ?? source
   const dictionary = WORD_TRANSLATIONS[language]
-  const segments = protectDomainTerms(source, language, true)
-  let translatedAny = false
+  const segments = protectDomainTerms(patternedSource, language, true)
+  let translatedAny = patternedSource !== source
 
   const translated = segments
     .map((segment) => {
@@ -1139,6 +1158,47 @@ export function translateStrictBasePlanText(source: string, language: RuntimeLan
     .join("")
 
   return translatedAny && translated !== source ? translated : undefined
+}
+
+function translateStrictBasePlanPattern(source: string, language: LocalLanguage) {
+  const greaterThanZero = source.match(/^(.+?) must be greater than 0\.?$/i)
+  if (greaterThanZero) {
+    return language === "hi"
+      ? `${greaterThanZero[1]} का मान 0 से अधिक होना चाहिए।`
+      : `${greaterThanZero[1]} નું માન 0 કરતાં વધુ હોવું જોઈએ.`
+  }
+
+  const required = source.match(/^(.+?) is required\.?$/i)
+  if (required) {
+    return language === "hi"
+      ? `${required[1]} ज़रूरी है।`
+      : `${required[1]} જરૂરી છે.`
+  }
+
+  const invalid = source.match(/^(.+?) is invalid\.?$/i)
+  if (invalid) {
+    return language === "hi"
+      ? `${invalid[1]} मान्य नहीं है।`
+      : `${invalid[1]} માન્ય નથી.`
+  }
+
+  const quantityStatus = source.match(/^Quantity not set(?:, (.+))?\.?$/i)
+  if (quantityStatus) {
+    const suffix = quantityStatus[1] ? `, ${quantityStatus[1]}` : ""
+    return language === "hi"
+      ? `मात्रा सेट नहीं है${suffix}`
+      : `જથ્થો સેટ કરેલો નથી${suffix}`
+  }
+
+  const pricingAssumptions = source.match(/^Pricing assumptions\. (\d+) active\. (.+?) target margin\. (.+?) commission\.(.*)$/i)
+  if (pricingAssumptions) {
+    const [_, active, margin, commission, suffix] = pricingAssumptions
+    return language === "hi"
+      ? `कीमत की धारणाएँ। ${active} सक्रिय · ${margin} लक्ष्य margin · ${commission} कमीशन।${suffix}`
+      : `કિંમતની ધારણાઓ. ${active} સક્રિય · ${margin} લક્ષ્ય margin · ${commission} કમિશન.${suffix}`
+  }
+
+  return undefined
 }
 
 export function applyTranslationGuards(source: string, target: string, language: RuntimeLanguage) {
