@@ -3,6 +3,7 @@ import type { WarpRow, WeftRow } from '../lib/estimator'
 import {
     applyYarnRateToTemplate,
     collectYarnRateCandidates,
+    formatYarnRateUsageNotes,
     getMissingYarnRateCandidates,
     getYarnRateConflicts,
     normalizeYarnName,
@@ -37,12 +38,14 @@ const templates = [
     {
         id: 'quality-a',
         name: 'Assam Silk',
+        discoverySource: 'saved_quality' as const,
         warp_rows: [warp('warp-a', '30/1000  MUALTI', 322)],
         weft_rows: [weft('weft-a', '190 SLUB', 240)],
     },
     {
         id: 'quality-b',
         name: 'Assam Silk Fine',
+        discoverySource: 'saved_quality' as const,
         warp_rows: [warp('warp-b', ' 30/1000 MUALTI ', 335)],
         weft_rows: [weft('weft-b', '190 slub', 240)],
     },
@@ -67,6 +70,17 @@ describe('saved-quality yarn rate reconciliation', () => {
             category: 'yarn_warp',
             currentValue: 322,
         })
+    })
+
+    it('keeps the initial discovery source and lists every fabric using the yarn', () => {
+        const candidate = collectYarnRateCandidates(templates).find(item => item.yarnName === '30/1000 MUALTI')
+
+        expect(candidate).toMatchObject({
+            discoverySource: 'saved_quality',
+            fabricNames: ['Assam Silk', 'Assam Silk Fine'],
+            usageNotes: 'Used in: Assam Silk, Assam Silk Fine',
+        })
+        expect(formatYarnRateUsageNotes(['Assam Silk', 'Assam Silk', '  Assam Silk Fine  '])).toBe('Used in: Assam Silk, Assam Silk Fine')
     })
 
     it('discovers yarn rates from standalone saved costing snapshots', () => {

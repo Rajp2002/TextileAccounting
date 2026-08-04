@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { filterCostRates, formatRateValue, getRateReviewDueDate, getRateReviewStatus, type CostRateRow } from '../lib/cost-rates'
+import {
+    filterCostRates,
+    formatRateValue,
+    getCostRateDisplayNotes,
+    getCostRateDisplaySource,
+    getRateReviewDueDate,
+    getRateReviewStatus,
+    type CostRateRow,
+} from '../lib/cost-rates'
 
 const base: CostRateRow = {
     id: '00000000-0000-4000-8000-000000000001',
@@ -37,5 +45,19 @@ describe('cost rate review memory', () => {
     it('formats money and percentage units clearly', () => {
         expect(formatRateValue(110, 'per_kg')).toBe('₹110.00/kg')
         expect(formatRateValue(2.5, 'percent')).toBe('2.50%')
+    })
+
+    it('prefers derived yarn provenance and fabric usage for the Rate Book display', () => {
+        const linked = {
+            ...base,
+            source: 'Saved quality or costing',
+            notes: 'Legacy discovery text',
+            discovery_source: 'saved_quality' as const,
+            fabric_names: ['Assam Silk', 'Assam Silk Fine'],
+        }
+
+        expect(getCostRateDisplaySource(linked)).toBe('Saved quality')
+        expect(getCostRateDisplayNotes(linked)).toBe('Used in: Assam Silk, Assam Silk Fine')
+        expect(filterCostRates([linked], { query: 'assam silk fine', category: 'all', status: 'all' })).toHaveLength(1)
     })
 })

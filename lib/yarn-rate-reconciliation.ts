@@ -2,9 +2,17 @@ import type { WarpRow, WeftRow } from '@/lib/estimator'
 
 export type YarnLayerKind = 'warp' | 'weft'
 
+export type YarnRateDiscoverySource = 'saved_quality' | 'saved_costing'
+
+export const YARN_RATE_DISCOVERY_SOURCE_LABELS: Record<YarnRateDiscoverySource, string> = {
+    saved_quality: 'Saved quality',
+    saved_costing: 'Saved costing',
+}
+
 export type YarnRateTemplate = {
     id: string
     name: string
+    discoverySource?: YarnRateDiscoverySource
     warp_rows?: WarpRow[] | null
     weft_rows?: WeftRow[] | null
 }
@@ -30,6 +38,9 @@ export type YarnRateCandidate = {
     category: 'yarn_warp' | 'yarn_weft'
     currentValue: number
     conflict: YarnRateConflict | null
+    discoverySource: YarnRateDiscoverySource
+    fabricNames: string[]
+    usageNotes: string
 }
 
 export type ExistingYarnRate = {
@@ -41,12 +52,41 @@ type MutableYarnCandidate = {
     yarnName: string
     normalizedName: string
     firstLayer: YarnLayerKind
+    discoverySource: YarnRateDiscoverySource
     usages: YarnRateUsage[]
 }
 
 export function normalizeYarnName(value: unknown): string {
     if (typeof value !== 'string') return ''
     return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-IN')
+}
+
+export function formatYarnRateUsageNotes(fabricNames: string[]): string {
+    const uniqueNames = Array.from(new Set(
+        fabricNames
+            .map(name => name.normalize('NFKC').trim().replace(/\s+/g, ' '))
+            .filter(Boolean),
+    ))
+    return uniqueNames.length ? `Used in: ${uniqueNames.join(', ')}` : ''
+}
+
+export function isYarnRateDiscoverySource(value: unknown): boolean {
+    return Boolean(getYarnRateDiscoverySource(value)) || isAmbiguousYarnRateDiscoverySource(value)
+}
+
+export function getYarnRateDiscoverySource(value: unknown): YarnRateDiscoverySource | null {
+    if (typeof value !== 'string') return null
+    const normalized = value.trim().toLocaleLowerCase('en-IN')
+    if (normalized === 'saved quality') return 'saved_quality'
+    if (normalized === 'saved costing') return 'saved_costing'
+    return null
+}
+
+function isAmbiguousYarnRateDiscoverySource(value: unknown): boolean {
+    if (typeof value !== 'string') return false
+    const normalized = value.trim().toLocaleLowerCase('en-IN')
+    return normalized === 'saved quality or costing'
+        || normalized === 'saved qualities or costings — review needed'
 }
 
 function normalizeRate(value: unknown): number | null {
@@ -74,6 +114,7 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
                     yarnName: row.label!.normalize('NFKC').trim().replace(/\s+/g, ' '),
                     normalizedName,
                     firstLayer: kind,
+                    discoverySource: template.discoverySource ?? 'saved_quality',
                     usages: [],
                 }
                 candidate.usages.push({
@@ -91,6 +132,9 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
     return Array.from(byName.values())
         .map(candidate => {
             const rates = Array.from(new Set(candidate.usages.map(usage => usage.rate))).sort((a, b) => a - b)
+            const fabricNames = Array.from(new Map(
+                candidate.usages.map(usage => [usage.templateId, usage.templateName]),
+            ).values())
             const conflict = rates.length > 1
                 ? {
                     yarnName: candidate.yarnName,
@@ -105,6 +149,9 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
                 category: candidate.firstLayer === 'warp' ? 'yarn_warp' as const : 'yarn_weft' as const,
                 currentValue: rates[0] ?? 0,
                 conflict,
+                discoverySource: candidate.discoverySource,
+                fabricNames,
+                usageNotes: formatYarnRateUsageNotes(fabricNames),
             }
         })
         .sort((a, b) => a.yarnName.localeCompare(b.yarnName, 'en-IN'))
