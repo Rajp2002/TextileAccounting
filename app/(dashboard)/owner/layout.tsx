@@ -76,7 +76,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
-                <main className="mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
+                <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
                     <OwnerPlanProvider tier={subscriptionTier}>{children}</OwnerPlanProvider>
                 </main>
             </div>

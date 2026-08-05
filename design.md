@@ -57,7 +57,7 @@ Prefer Tailwind tokens backed by CSS variables instead of hard-coded hex values.
 | `loom` | `--weavly-loom-navy` | `#18252E` | Dark industrial surfaces |
 | `ink` | `--weavly-ink` | `#1E2528` | Headings and strong text |
 | `body` | `--weavly-body` | `#3F4542` | Main body text |
-| `subtle` | `--weavly-subtle` | `#9A9587` | Low emphasis text |
+| `subtle` | `--weavly-subtle` | `#6B6D64` | Low emphasis text that remains readable at compact sizes |
 | `hairline` | `--weavly-hairline` | `#DED2BD` | Borders |
 | `hairline-strong` | `--weavly-hairline-strong` | `#CBB894` | Hover/strong borders |
 
