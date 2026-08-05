@@ -102,8 +102,8 @@
   --color-hairline-strong: #CBB894;
   --color-ink: #1E2528;
   --color-body: #3F4542;
-  --color-muted: #74746A;
-  --color-subtle: #9A9587;
+  --color-muted: #5F625A;
+  --color-subtle: #6B6D64;
   --color-yarn-orange: #D96B1C;
   --color-yarn-orange-dark: #9E4212;
   --color-factory-green: #285C3B;
@@ -134,8 +134,8 @@
 
   --weavly-ink: #1E2528;
   --weavly-body: #3F4542;
-  --weavly-muted: #74746A;
-  --weavly-subtle: #9A9587;
+  --weavly-muted: #5F625A;
+  --weavly-subtle: #6B6D64;
 
   --weavly-hairline: #DED2BD;
   --weavly-hairline-strong: #CBB894;
@@ -277,6 +277,64 @@
 }
 
 @layer utilities {
+  /* Dashboard copy often uses 10–12px labels and helper text. The default
+     Tailwind gray/slate 400–500 colors are too faint at that size on the
+     warm, light operational surfaces. Keep the correction scoped to the
+     dashboard content so marketing pages and the dark navigation retain
+     their separate contrast treatment. */
+  :root:not(.dark) .dashboard-main .text-slate-500 {
+    color: #475569;
+  }
+
+  :root:not(.dark) .dashboard-main .text-muted {
+    color: var(--weavly-muted);
+  }
+
+  :root:not(.dark) .dashboard-main .text-slate-400 {
+    color: #64748B;
+  }
+
+  :root:not(.dark) .dashboard-main .text-gray-500 {
+    color: #4B5563;
+  }
+
+  :root:not(.dark) .dashboard-main .text-gray-400 {
+    color: #6B7280;
+  }
+
+  :root:not(.dark) .dashboard-main .text-zinc-500 {
+    color: #52525B;
+  }
+
+  :root:not(.dark) .dashboard-main .text-zinc-400 {
+    color: #71717A;
+  }
+
+  /* Preserve light text when one of the dashboard's dark summary panels is
+     the reading surface. */
+  :root:not(.dark) .dashboard-main :is(
+    [class~="bg-slate-950"],
+    [class~="bg-slate-900"],
+    [class~="bg-slate-900/70"],
+    [class~="bg-zinc-950"],
+    [class~="bg-zinc-900"],
+    [class~="bg-zinc-900/60"],
+    [class~="bg-loom"],
+    [class~="bg-black"]
+  ) :is(.text-slate-500, .text-slate-400, .text-gray-500, .text-gray-400, .text-zinc-500, .text-zinc-400),
+  :root:not(.dark) .dashboard-main :is(
+    [class~="bg-slate-950"],
+    [class~="bg-slate-900"],
+    [class~="bg-slate-900/70"],
+    [class~="bg-zinc-950"],
+    [class~="bg-zinc-900"],
+    [class~="bg-zinc-900/60"],
+    [class~="bg-loom"],
+    [class~="bg-black"]
+  ):is(.text-slate-500, .text-slate-400, .text-gray-500, .text-gray-400, .text-zinc-500, .text-zinc-400) {
+    color: #CBD5E1;
+  }
+
   /* Landing-page sections become discrete slides on roomy desktop viewports.
      Small and short screens keep natural document flow so content is never clipped. */
   .landing-section {

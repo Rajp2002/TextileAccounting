@@ -55,7 +55,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
              *   rounded screen corners / Dynamic Island eat into the sides.
              */}
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
-                <main className="mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 py-4 xs:px-3 md:px-6 md:py-6 lg:px-8">
+                <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 py-4 xs:px-3 md:px-6 md:py-6 lg:px-8">
                     <OfflineSyncProvider>
                         {children}
                     </OfflineSyncProvider>
