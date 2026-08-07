@@ -3349,6 +3349,10 @@ export default function EstimatorClient({
                 </div>
             )}
 
+            {/* The result cockpit and form share the main column so supporting
+                reference content can stay aligned at the top-right on desktop. */}
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-6">
+                <div className="min-w-0 space-y-5 xl:col-start-1 xl:row-start-1">
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
             <div className="relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
                 <div className={hudShellClass}>
@@ -3791,18 +3795,8 @@ export default function EstimatorClient({
                 </div>
             </div>
 
-            {/* Supporting context stays available after the decision cockpit. */}
-            <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_16rem] 2xl:gap-6">
-                <aside
-                    className="space-y-3 2xl:sticky 2xl:top-24 2xl:col-start-2 2xl:row-start-1"
-                    aria-label="Estimator reference information"
-                >
-                    <BasePlanFactoryGlossary />
-                    <ArchivePolicyNotice />
-                </aside>
-
-                {/* ── MAIN FORM ────────────────────────────────────────────── */}
-                <div id="estimator-form-panel" className={`${pageShellClass} space-y-7 2xl:col-start-1 2xl:row-start-1`}>
+            {/* ── MAIN FORM ────────────────────────────────────────────── */}
+            <div id="estimator-form-panel" className={`${pageShellClass} space-y-7`}>
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <section className="overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_8px_24px_rgba(30,37,40,0.055)]">
@@ -5215,7 +5209,16 @@ export default function EstimatorClient({
                 </EstimatorCard>
                 </>
                 )}
+            </div>
                 </div>
+
+                <aside
+                    className="space-y-3 xl:sticky xl:top-24 xl:col-start-2 xl:row-start-1"
+                    aria-label="Estimator reference information"
+                >
+                    <BasePlanFactoryGlossary />
+                    <ArchivePolicyNotice />
+                </aside>
             </div>
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
