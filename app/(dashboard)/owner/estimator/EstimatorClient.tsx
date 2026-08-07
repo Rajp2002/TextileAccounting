@@ -3080,6 +3080,10 @@ export default function EstimatorClient({
         && Number.isFinite(costingResult.actualMarginPct)
         ? costingResult.actualMarginPct
         : null
+    const breakEvenMatchesProductionCost = hasValidCostResult
+        && costingResult.quoteIsValid
+        && breakEvenScenario?.quotePricePerM != null
+        && costingResult.breakEvenPricePerM.toFixed(2) === costingResult.productionCostPerM.toFixed(2)
     const costSegments = hasValidCostResult ? [
         { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
         { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
@@ -3396,12 +3400,15 @@ export default function EstimatorClient({
                     <div className={entryMode === 'detailed' ? 'space-y-5' : 'grid gap-5 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-start'}>
                         <div className={entryMode === 'detailed' ? 'grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)] lg:items-start' : 'min-w-0 space-y-3'}>
                             <div className="min-w-0 space-y-4">
-                                <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+                                <div className={`grid min-w-0 grid-cols-2 gap-3 sm:gap-4 ${breakEvenMatchesProductionCost ? 'xl:grid-cols-3' : 'xl:grid-cols-4'}`}>
                                     <div className="min-w-0">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.production_cost')}>Production cost / m</p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
                                             {hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'}
                                         </p>
+                                        {breakEvenMatchesProductionCost && (
+                                            <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]" title={t('estimator.price_helpers.break_even_hint')}>Break-even floor</p>
+                                        )}
                                     </div>
                                     <div className="min-w-0">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.suggested_selling_price')}>
@@ -3411,7 +3418,7 @@ export default function EstimatorClient({
                                             {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
                                         </p>
                                     </div>
-                                    <div className="col-span-2 grid grid-cols-2 gap-3 border-y border-[var(--color-hairline)]/80 py-3 sm:gap-4 xl:col-span-2 xl:border-y-0 xl:border-l xl:pl-4 xl:py-0">
+                                    <div className={`col-span-2 grid gap-3 border-y border-[var(--color-hairline)]/80 py-3 sm:gap-4 ${breakEvenMatchesProductionCost ? 'grid-cols-1 xl:col-span-1' : 'grid-cols-2 xl:col-span-2'} xl:border-y-0 xl:border-l xl:pl-4 xl:py-0`}>
                                     <div className={`min-w-0 rounded-[10px] border px-2.5 py-2 sm:px-3 ${displayMarginPct === null
                                         ? 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'
                                         : displayMarginPct > 0
@@ -3439,7 +3446,7 @@ export default function EstimatorClient({
                                             {displayMarginPct === null ? 'Complete estimate' : displayMarginPct > 0 ? 'Above break-even' : displayMarginPct < 0 ? 'Below break-even' : 'At break-even'}
                                         </p>
                                     </div>
-                                    <div className="min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-2.5 py-2 sm:px-3">
+                                    {!breakEvenMatchesProductionCost && <div className="min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-2.5 py-2 sm:px-3">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.break_even')}>Break-even price / m</p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.3rem,6vw,1.75rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
                                             {hasValidCostResult && breakEvenScenario?.quotePricePerM != null
@@ -3447,7 +3454,7 @@ export default function EstimatorClient({
                                                 : '—'}
                                         </p>
                                         <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]" title={t('estimator.price_helpers.break_even_hint')}>Minimum at 0% margin</p>
-                                    </div>
+                                    </div>}
                                     </div>
                                 </div>
 
@@ -3785,11 +3792,17 @@ export default function EstimatorClient({
             </div>
 
             {/* Supporting context stays available after the decision cockpit. */}
-            <BasePlanFactoryGlossary />
-            <ArchivePolicyNotice />
+            <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_16rem] 2xl:gap-6">
+                <aside
+                    className="space-y-3 2xl:sticky 2xl:top-24 2xl:col-start-2 2xl:row-start-1"
+                    aria-label="Estimator reference information"
+                >
+                    <BasePlanFactoryGlossary />
+                    <ArchivePolicyNotice />
+                </aside>
 
-            {/* ── MAIN FORM ────────────────────────────────────────────── */}
-            <div id="estimator-form-panel" className={`${pageShellClass} space-y-7`}>
+                {/* ── MAIN FORM ────────────────────────────────────────────── */}
+                <div id="estimator-form-panel" className={`${pageShellClass} space-y-7 2xl:col-start-1 2xl:row-start-1`}>
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <section className="overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_8px_24px_rgba(30,37,40,0.055)]">
@@ -5202,6 +5215,7 @@ export default function EstimatorClient({
                 </EstimatorCard>
                 </>
                 )}
+                </div>
             </div>
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
