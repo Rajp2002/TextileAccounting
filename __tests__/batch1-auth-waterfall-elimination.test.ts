@@ -90,8 +90,8 @@ describe('Batch 1 — AccessGate uses cached helpers', () => {
         expect(gate).not.toContain('supabase.auth.getUser()')
     })
 
-    it('imports getCachedOrgTier instead of getOrgTier', () => {
-        expect(gate).toContain('getCachedOrgTier')
+    it('imports getCachedOrgPlanAccess instead of getOrgTier', () => {
+        expect(gate).toContain('getCachedOrgPlanAccess')
         // Should not import the uncached getOrgTier
         expect(gate).not.toMatch(/import[^;]*\bgetOrgTier\b[^;]*from/)
     })

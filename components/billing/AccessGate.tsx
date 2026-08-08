@@ -1,5 +1,5 @@
 import { getCachedSession } from '@/lib/auth'
-import { getCachedOrgTier, tierSatisfies, type SubscriptionTier } from '@/lib/subscription'
+import { getCachedOrgPlanAccess, tierSatisfies, type SubscriptionTier } from '@/lib/subscription'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Calculator, Zap, Star, ArrowRight, ArrowLeft } from 'lucide-react'
@@ -22,7 +22,7 @@ interface AccessGateProps {
  * - If the user is 'none' (no subscription) → redirects to /owner/billing.
  * - If tier is 'base' but 'premium' is required → shows upgrade wall.
  *
- * Uses getCachedSession() and getCachedOrgTier() so that the auth + profiles
+ * Uses getCachedSession() and getCachedOrgPlanAccess() so that the auth + profiles
  * and org_subscriptions queries are deduplicated per request. When the owner
  * layout, AccessGate, and the page's own requireRole() all run within the same
  * request, Supabase is contacted only once for each.
@@ -39,12 +39,13 @@ export default async function AccessGate({
     const session = await perf.measure('authSession', () => getCachedSession(), 0)
     if (!session) redirect('/login')
 
-    // getCachedOrgTier() is similarly deduplicated within the request.
-    const tier = await perf.measure(
+    // Billing entitlement and selected product experience are resolved together.
+    const planAccess = await perf.measure(
         'profileOrgTier',
-        () => getCachedOrgTier(session.profile.org_id),
+        () => getCachedOrgPlanAccess(session.profile.org_id),
         1
     )
+    const tier = planAccess.effectiveTier
     perf.log({ required_tier: requiredTier })
 
     // No subscription at all → send to billing
@@ -57,8 +58,63 @@ export default async function AccessGate({
         return <>{children}</>
     }
 
+    if (
+        requiredTier === 'premium'
+        && planAccess.subscriptionTier === 'premium'
+        && planAccess.productExperience === 'base'
+    ) {
+        return <BaseExperienceWall routeName={routeName} />
+    }
+
     // Tier is insufficient (base trying to access premium) → show upgrade wall
     return <UpgradeWall currentTier={tier} routeName={routeName} />
+}
+
+function BaseExperienceWall({ routeName }: { routeName: string }) {
+    const routeLabels: Record<string, string> = {
+        '/owner/today': 'Factory Today',
+        '/owner/analytics': 'Analytics',
+        '/owner/orders': 'Party Orders',
+        '/owner/market-runs': 'Market Runs',
+        '/owner/stock': 'Godown Stock',
+        '/owner/dispatches': 'Dispatches',
+        '/owner/commercials': 'Commercials',
+        '/owner/payroll': 'Payroll',
+        '/owner/advances': 'Worker Advances',
+        '/owner/fixed-workers': 'Fixed Workers',
+        '/owner/machines': 'Loom Management',
+        '/owner/archive': 'Archive',
+        '/owner/system-health': 'System Health',
+    }
+    const featureName = routeLabels[routeName] ?? 'This factory feature'
+
+    return (
+        <div className="flex min-h-[60vh] items-center justify-center p-6">
+            <div className="w-full max-w-md space-y-6 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 shadow-sm">
+                    <Calculator className="h-8 w-8 text-orange-600" />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Base Plan workspace is active</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                        {featureName} is hidden while this account uses the Base Plan experience. Your Full Suite plan and existing factory records are unchanged.
+                    </p>
+                </div>
+                <Link href="/owner/estimator" className="block">
+                    <Button variant="outline" size="lg" className="w-full gap-2 rounded-xl">
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Cost Estimates
+                    </Button>
+                </Link>
+                <Link href="/owner/settings#workspace-experience" className="block">
+                    <Button size="lg" className="w-full gap-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700">
+                        Switch back to Full Suite
+                        <ArrowRight className="h-4 w-4" />
+                    </Button>
+                </Link>
+            </div>
+        </div>
+    )
 }
 
 // ─── Upgrade Wall UI ──────────────────────────────────────────────────────────

@@ -1,8 +1,20 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { resolveEffectiveSubscription, type SubscriptionTier } from './subscription-access'
+import {
+    resolveEffectiveSubscription,
+    resolveOrgPlanAccess,
+    type OrgPlanAccess,
+    type SubscriptionTier,
+} from './subscription-access'
 
-export { resolveEffectiveSubscription, tierSatisfies, type SubscriptionTier } from './subscription-access'
+export {
+    resolveEffectiveSubscription,
+    resolveOrgPlanAccess,
+    tierSatisfies,
+    type OrgPlanAccess,
+    type ProductExperience,
+    type SubscriptionTier,
+} from './subscription-access'
 
 /**
  * Subscription tier hierarchy:
@@ -18,16 +30,21 @@ export { resolveEffectiveSubscription, tierSatisfies, type SubscriptionTier } fr
  * Resolves every current subscription row so a later failed/cancelled payment
  * attempt cannot hide an older paid entitlement that has not expired.
  */
-export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
+export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
     const supabase = await createClient()
 
     const { data } = await supabase
-        .from('org_subscriptions')
-        .select('status, plan_tier, current_start, current_end, created_at')
-        .eq('org_id', orgId)
-        .order('created_at', { ascending: false })
+        .from('organizations')
+        .select('product_experience, org_subscriptions(status, plan_tier, current_start, current_end, created_at)')
+        .eq('id', orgId)
+        .maybeSingle()
 
-    return resolveEffectiveSubscription(data ?? []).tier
+    const subscriptionTier = resolveEffectiveSubscription(data?.org_subscriptions ?? []).tier
+    return resolveOrgPlanAccess(subscriptionTier, data?.product_experience)
+}
+
+export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
+    return (await getOrgPlanAccess(orgId)).effectiveTier
 }
 
 /**
@@ -37,7 +54,10 @@ export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
  * the same server request (e.g., AccessGate in nested layouts) share one
  * org_subscriptions DB query.
  */
-export const getCachedOrgTier = cache(getOrgTier)
+export const getCachedOrgPlanAccess = cache(getOrgPlanAccess)
+export const getCachedOrgTier = cache(async (orgId: string) => (
+    await getCachedOrgPlanAccess(orgId)
+).effectiveTier)
 
 // ─── getSubscriptionDetail ────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { createPerfTimer } from '@/lib/perf'
-import { getCachedOrgTier } from '@/lib/subscription'
+import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
@@ -47,11 +47,11 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         .eq('org_id', userOrgId)
         .eq('is_active', true)
         .in('category', ['yarn_warp', 'yarn_weft'])
-    const [{ data: org }, subscriptionTier, { data: reviewRates }] = await Promise.all([
+    const [{ data: org }, planAccess, { data: reviewRates }] = await Promise.all([
         orgPromise,
         signInTelemetry.measure(
             'tier_lookup',
-            () => perf.measure('businessData', () => getCachedOrgTier(userOrgId), 1)
+            () => perf.measure('businessData', () => getCachedOrgPlanAccess(userOrgId), 1)
         ),
         reviewRatesPromise,
     ])
@@ -70,14 +70,14 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
                 factoryName={factoryName}
                 userName={userFullName || undefined}
                 productionMode={productionMode}
-                subscriptionTier={subscriptionTier}
+                subscriptionTier={planAccess.effectiveTier}
                 yarnReviewDueCount={yarnReviewDueCount}
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
                 <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
-                    <OwnerPlanProvider tier={subscriptionTier}>{children}</OwnerPlanProvider>
+                    <OwnerPlanProvider access={planAccess}>{children}</OwnerPlanProvider>
                 </main>
             </div>
 

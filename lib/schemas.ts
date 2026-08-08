@@ -87,6 +87,7 @@ export const UpdateOrgNameSchema = z.object({
 })
 
 export const ProductionModeSchema = z.enum(['market_run', 'order_based', 'both'])
+export const ProductExperienceSchema = z.enum(['base', 'full_suite'])
 
 /**
  * JoinOrgSchema — supervisor join form (F1 spec §4)

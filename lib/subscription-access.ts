@@ -1,5 +1,15 @@
 /** Pure subscription access resolution shared by server code and unit tests. */
 export type SubscriptionTier = 'none' | 'trial' | 'base' | 'premium'
+export type ProductExperience = 'base' | 'full_suite'
+
+export type OrgPlanAccess = {
+  /** Paid/trial entitlement retained for billing and conversion eligibility. */
+  subscriptionTier: SubscriptionTier
+  /** Tier the product should enforce for navigation, routes, and actions. */
+  effectiveTier: SubscriptionTier
+  productExperience: ProductExperience
+  canSwitchExperience: boolean
+}
 
 type SubscriptionAccessRow = {
   status: string
@@ -23,6 +33,33 @@ export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'prem
   if (actual === 'none') return false
   if (actual === 'trial' || actual === 'premium') return true
   return actual === 'base' && required === 'base'
+}
+
+export function normalizeProductExperience(value: unknown): ProductExperience {
+  return value === 'base' ? 'base' : 'full_suite'
+}
+
+/**
+ * A Full Suite customer may deliberately use the Base Plan workspace without
+ * changing or destroying their paid subscription. The selected experience can
+ * only reduce access; it can never elevate a Base subscription to Full Suite.
+ */
+export function resolveOrgPlanAccess(
+  subscriptionTier: SubscriptionTier,
+  productExperienceValue: unknown,
+): OrgPlanAccess {
+  const productExperience = normalizeProductExperience(productExperienceValue)
+  const hasFullSuiteEntitlement = tierSatisfies(subscriptionTier, 'premium')
+
+  return {
+    subscriptionTier,
+    effectiveTier: productExperience === 'base' && hasFullSuiteEntitlement
+      ? 'base'
+      : subscriptionTier,
+    productExperience,
+    // Initial rollout conversion is limited to activated paid Full Suite orgs.
+    canSwitchExperience: subscriptionTier === 'premium',
+  }
 }
 
 function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): boolean {

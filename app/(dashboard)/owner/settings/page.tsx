@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -39,7 +40,7 @@ import { toast, userFacingError } from '@/lib/app-notifications'
 import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
-import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
+import { updateOrganizationName, updateOrganizationProductionMode, updateOrganizationProductExperience } from '@/app/(dashboard)/owner/actions'
 import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
 import { DeleteAccountCard } from '@/components/settings/delete-account-card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -47,7 +48,7 @@ import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMo
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
+import { useOwnerPlanAccess } from '@/components/providers/owner-plan-provider'
 import { tierSatisfies } from '@/lib/subscription-access'
 import { SupervisorAccessManager } from '@/components/settings/supervisor-access-manager'
 
@@ -133,10 +134,12 @@ function PanelHeading({
 
 export default function SettingsPage() {
     const { t, tx } = useTranslation()
+    const router = useRouter()
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
-    const subscriptionTier = useOwnerPlan()
+    const planAccess = useOwnerPlanAccess()
+    const subscriptionTier = planAccess.effectiveTier
     const hasPremium = tierSatisfies(subscriptionTier, 'premium')
 
     const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
@@ -213,6 +216,23 @@ export default function SettingsPage() {
         },
         onError: (err: unknown) => {
             toast.error(tx(getErrorMessage(err, 'Failed to update production mode')))
+        }
+    })
+
+    const updateProductExperienceMutation = useMutation({
+        mutationFn: async (productExperience: 'base' | 'full_suite') => {
+            const result = await updateOrganizationProductExperience(productExperience)
+            if (result.error) throw new Error(result.error)
+            return result
+        },
+        onSuccess: (_result, productExperience) => {
+            toast.success(tx(productExperience === 'base'
+                ? 'Base Plan workspace is now active'
+                : 'Full Suite workspace is now active'))
+            router.refresh()
+        },
+        onError: (err: unknown) => {
+            toast.error(tx(getErrorMessage(err, 'Failed to switch workspace experience')))
         }
     })
 
@@ -418,6 +438,67 @@ export default function SettingsPage() {
                             </div>
                         </SettingsPanel>
                     </SettingsSection>
+
+                    {planAccess.canSwitchExperience && (
+                        <SettingsSection id="workspace-experience" title="Workspace Experience" icon={SlidersHorizontal}>
+                            <SettingsPanel className="p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={SlidersHorizontal}
+                                    title="Choose the workspace for this rollout"
+                                    description="Your paid Full Suite plan stays active. This setting only changes which product experience the organization uses."
+                                />
+                                <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                                    {([
+                                        {
+                                            value: 'base' as const,
+                                            title: 'Base Plan',
+                                            description: 'Cost Estimates, Saved Costings, Yarn Rate Book, settings, and billing.',
+                                        },
+                                        {
+                                            value: 'full_suite' as const,
+                                            title: 'Full Suite',
+                                            description: 'All factory, production, workforce, stock, dispatch, and costing workflows.',
+                                        },
+                                    ]).map((option) => {
+                                        const selected = planAccess.productExperience === option.value
+                                        return (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                disabled={updateProductExperienceMutation.isPending}
+                                                onClick={() => {
+                                                    if (!selected) updateProductExperienceMutation.mutate(option.value)
+                                                }}
+                                                className={cn(
+                                                    'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 disabled:cursor-wait disabled:opacity-70',
+                                                    selected
+                                                        ? 'border-saffron bg-saffron-soft/60'
+                                                        : 'border-hairline bg-canvas/70 hover:border-saffron/50 hover:bg-saffron-soft/25'
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <span className="font-semibold text-ink">{tx(option.title)}</span>
+                                                    {selected ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            {tx('Active')}
+                                                        </span>
+                                                    ) : updateProductExperienceMutation.isPending ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                                    ) : null}
+                                                </div>
+                                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx(option.description)}</p>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
+                                    {tx('Existing production and factory records are never deleted. Switch back to Full Suite at any time to use them again.')}
+                                </p>
+                            </SettingsPanel>
+                        </SettingsSection>
+                    )}
 
                     {hasPremium && (
                         <SettingsSection id="supervisors-access" title="Supervisors & Access" icon={Users}>

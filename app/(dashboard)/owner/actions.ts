@@ -16,6 +16,7 @@ import {
     PositiveIntSchema,
     UpdateOrgNameSchema,
     ProductionModeSchema,
+    ProductExperienceSchema,
     safeParse,
 } from '@/lib/schemas'
 import { eraseWorkerPII } from './actions/compliance'
@@ -37,6 +38,7 @@ import {
     type OperatorWorkerType,
 } from '@/lib/machine-operator-payroll'
 import { WorkerAgeVerificationSchema, workerValidationError } from '@/lib/worker-validation'
+import { getSubscriptionDetail } from '@/lib/subscription'
 
 export type ProductionTargetOption = {
     source_type: 'order' | 'market_run'
@@ -915,6 +917,39 @@ export async function updateOrganizationProductionMode(productionMode: string) {
     revalidatePath('/owner/settings')
     revalidatePath('/owner/today')
     return { success: true, productionMode: parsed.data }
+}
+
+export async function updateOrganizationProductExperience(productExperience: string) {
+    const { user, profile } = await requireRole(['owner'])
+    const parsed = safeParse(ProductExperienceSchema, productExperience)
+    if ('error' in parsed) return { error: parsed.error }
+
+    // Keep the billing entitlement immutable. Only an activated paid Full Suite
+    // organization may choose between the Full Suite and Base experiences.
+    const subscription = await getSubscriptionDetail(profile.org_id)
+    if (subscription.tier !== 'premium') {
+        return { error: 'An active Full Suite plan is required to switch workspace experience.' }
+    }
+
+    const supabase = await createServerClient()
+    await setAuditActorForMutation(supabase, user.id)
+
+    const { data, error } = await supabase
+        .from('organizations')
+        .update({ product_experience: parsed.data })
+        .eq('id', profile.org_id)
+        .select('id')
+        .maybeSingle()
+
+    if (error || !data) {
+        console.error('Failed to update product experience:', error)
+        return { error: 'Failed to switch workspace experience. Please try again.' }
+    }
+
+    revalidatePath('/onboarding')
+    revalidatePath('/owner', 'layout')
+    revalidatePath('/owner/settings')
+    return { success: true, productExperience: parsed.data }
 }
 
 export async function setBeamTrackingEnabled(enabled: boolean) {
