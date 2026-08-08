@@ -789,6 +789,8 @@ function StepperField({
     step = 0.5,
     hint,
     accent = 'warp',
+    ghostValue,
+    ghostPlaceholder,
 }: {
     label: string
     value: number
@@ -797,10 +799,13 @@ function StepperField({
     step?: number
     hint?: string
     accent?: EstimatorAccent
+    ghostValue?: number
+    ghostPlaceholder?: string
 }) {
     const accentStyles = getAccentStyles(accent)
     const decrement = () => onChange(Math.max(0, Number((value - step).toFixed(2))))
     const increment = () => onChange(Number((value + step).toFixed(2)))
+    const isGhostValue = ghostValue !== undefined && value === ghostValue
     return (
         <div className="min-w-0 space-y-2">
             <Label className={`block text-[11px] font-semibold uppercase tracking-[0.05em] ${accentStyles.text}`}>
@@ -817,14 +822,15 @@ function StepperField({
                 </button>
                 <Input
                     type="number"
-                    value={value}
+                    value={isGhostValue ? '' : value}
+                    placeholder={isGhostValue ? (ghostPlaceholder ?? String(ghostValue)) : undefined}
                     step={step}
                     min={0}
                     onChange={e => {
                         const next = parseNonNegativeInput(e.target.value)
                         if (next !== null) onChange(next)
                     }}
-                    className="h-full w-16 rounded-none border-0 bg-white p-0 text-center font-mono text-sm font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="h-full w-16 rounded-none border-0 bg-white p-0 text-center font-mono text-sm font-semibold text-[var(--color-ink)] placeholder:text-[var(--color-muted)] shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="flex w-11 items-center justify-center border-l border-r border-[var(--color-hairline)] text-xs font-semibold text-[var(--color-muted)]">
                     {unit}
@@ -844,19 +850,22 @@ function StepperField({
 }
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false, ghostValue,
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
     unit?: string; step?: number; min?: number; hint?: string; warning?: string
-    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean
+    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean; ghostValue?: number
 }) {
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     // Estimator defaults are stored as numeric zero for calculations, but an
     // empty control with a zero placeholder is a better editing experience:
     // the first digit typed replaces the visual default instead of appending
     // to it (for example, entering 55 must never appear as 055).
-    const displayValue = value === 0 && !preserveZero ? '' : (value ?? '')
-    const displayPlaceholder = value === 0 && !preserveZero ? (placeholder ?? '0') : placeholder
+    const isGhostValue = ghostValue !== undefined && value === ghostValue
+    const displayValue = isGhostValue || (value === 0 && !preserveZero) ? '' : (value ?? '')
+    const displayPlaceholder = isGhostValue || (value === 0 && !preserveZero)
+        ? (placeholder ?? (ghostValue !== undefined ? String(ghostValue) : '0'))
+        : placeholder
     return (
         <div className="space-y-1.5 min-w-0">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
@@ -871,7 +880,7 @@ function NumField({
                         const val = parseNumericInput(e.target.value, { min })
                         onChange(val)
                     }}
-                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-10 sm:pr-14 border focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-10 sm:pr-14 border placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
                         isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
                 />
@@ -963,6 +972,7 @@ function YarnDensityFields({
                 }}
                 unit={unit === 'cotton_count_ne' ? 'Ne' : 'D'}
                 step={0.1}
+                placeholder={unit === 'cotton_count_ne' ? 'e.g. 40' : 'e.g. 75'}
                 hint={unit === 'cotton_count_ne' && effectiveDenier > 0
                     ? `Converted for costing: ${effectiveDenier.toFixed(3)} D (5315 ÷ Ne)`
                     : 'Enter total linear density after any ply or doubling'}
@@ -981,6 +991,7 @@ function WidthField({
     hint,
     warning,
     onUseInches,
+    placeholder,
 }: {
     label: string
     value: number
@@ -989,6 +1000,7 @@ function WidthField({
     hint?: string
     warning?: string
     onUseInches?: () => void
+    placeholder?: string
 }) {
     const displayValue = useMemo(() => {
         if (!value) return ''
@@ -1027,6 +1039,7 @@ function WidthField({
                     type="number"
                     step={unit === 'cm' ? 1 : 0.1}
                     min={0}
+                    placeholder={placeholder}
                     value={displayValue}
                     onChange={e => {
                         const raw = parseNonNegativeInput(e.target.value) ?? 0
@@ -1037,7 +1050,7 @@ function WidthField({
                             onChange(raw)
                         }
                     }}
-                    className="h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-[var(--color-hairline)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)]"
+                    className="h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-[var(--color-hairline)] placeholder:text-[var(--color-muted)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)]"
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                     {unit}
@@ -1250,23 +1263,27 @@ function CostingAssumptionsSummary({
 }
 
 function CapacityMetricField({
-    label, value, unit, onChange, hint,
+    label, value, unit, onChange, hint, ghostValue, placeholder,
 }: {
     label: string
     value: number | null
     unit: string
     onChange: (value: number | null) => void
     hint?: string
+    ghostValue?: number
+    placeholder?: string
 }) {
+    const isGhostValue = ghostValue !== undefined && value === ghostValue
     return (
         <div className="rounded-[10px] border border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-canvas)] to-[var(--color-surface-soft)] px-3 py-2.5">
             <Label className="text-[10px] font-medium uppercase tracking-[0.05em] text-[var(--color-muted)]">{label}</Label>
             <div className="mt-1 flex items-end gap-1">
                 <Input
                     type="number"
-                    value={value ?? ''}
+                    value={isGhostValue ? '' : (value ?? '')}
+                    placeholder={isGhostValue ? (placeholder ?? String(ghostValue)) : placeholder}
                     onChange={e => onChange(parseNonNegativeInput(e.target.value))}
-                    className="h-7 border-0 bg-transparent p-0 text-lg font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0"
+                    className="h-7 border-0 bg-transparent p-0 text-lg font-semibold text-[var(--color-ink)] placeholder:text-[var(--color-muted)] shadow-none focus-visible:ring-0"
                 />
                 <span className="pb-0.5 text-[11px] font-medium text-[var(--color-muted)]">{unit}</span>
             </div>
@@ -1284,23 +1301,28 @@ function LayerNameField({
     label,
     value,
     placeholder,
+    ghostValue,
     onChange,
 }: {
     label: string
     value: string
     placeholder: string
+    ghostValue?: string
     onChange: (value: string) => void
 }) {
+    const ghostText = ghostValue ?? placeholder
+    const isGhostValue = Boolean(value?.trim()) && value.trim() === ghostText.trim()
+    const inputValue = isGhostValue ? '' : value
     return (
         <div className="space-y-1.5 min-w-0">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 {label}
             </Label>
             <Input
-                value={value}
-                placeholder={placeholder}
+                value={inputValue}
+                placeholder={isGhostValue ? ghostText : placeholder}
                 onChange={e => onChange(e.target.value)}
-                className={`h-11 rounded-[9px] border font-semibold focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
+                className={`h-11 rounded-[9px] border font-semibold placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
                     value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
                 }`}
             />
@@ -1483,11 +1505,9 @@ function WeavingRateFields({
 }) {
     const totalPicks = state.weftRows.reduce((sum, row) => sum + row.picks, 0)
     const calculatedRatePerM = totalPicks > 0 ? state.perPickCostPaisa * totalPicks : 0
-    const directRateValue = directRateInput !== ''
-        ? directRateInput
-        : calculatedRatePerM > 0
-            ? calculatedRatePerM.toFixed(2)
-            : ''
+    const directRatePlaceholder = inputMode === 'perMeter' && calculatedRatePerM > 0
+        ? calculatedRatePerM.toFixed(2)
+        : inputMode === 'perMeter' ? 'e.g. 8.00' : 'e.g. 16'
     const paisaPerPickDisplay = state.perPickCostPaisa > 0
         ? Math.round(state.perPickCostPaisa * 100 * 10000) / 10000
         : ''
@@ -1552,8 +1572,8 @@ function WeavingRateFields({
                             type="number"
                             min={0}
                             step={inputMode === 'perMeter' ? 0.01 : 0.1}
-                            placeholder={inputMode === 'perMeter' ? 'e.g. 8.00' : 'e.g. 16'}
-                            value={inputMode === 'perMeter' ? directRateValue : paisaPerPickDisplay}
+                            placeholder={directRatePlaceholder}
+                            value={inputMode === 'perMeter' ? directRateInput : paisaPerPickDisplay}
                             onChange={event => {
                                 const raw = event.target.value
                                 if (inputMode === 'perMeter') {
@@ -1579,7 +1599,7 @@ function WeavingRateFields({
                             onFocus={event => {
                                 if (inputMode === 'perMeter') event.currentTarget.select()
                             }}
-                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold text-[var(--color-warning-amber)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.perPickCostPaisa <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold text-[var(--color-warning-amber)] placeholder:text-[var(--color-muted)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.perPickCostPaisa <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
                         />
                         <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
                             {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
@@ -1757,6 +1777,8 @@ function QuickCostingView({
                         onChange={value => dispatch({ type: 'SET', field: 'warpCrimpPct', value: value ?? 0 })}
                         unit="%"
                         step={0.5}
+                        ghostValue={5}
+                        placeholder="5"
                         hint="Applied to warp consumption and beam planning."
                     />
                     <NumField
@@ -1766,6 +1788,8 @@ function QuickCostingView({
                         unit="%"
                         step={0.5}
                         preserveZero
+                        ghostValue={0}
+                        placeholder="0"
                         hint="Used when a yarn row has no row-specific waste."
                     />
                     {canUseProduction && (
@@ -1774,6 +1798,7 @@ function QuickCostingView({
                             value={state.tapeLengthM}
                             onChange={value => dispatch({ type: 'SET', field: 'tapeLengthM', value: value ?? 0 })}
                             unit="m"
+                            placeholder="e.g. 1000"
                             attentionWhenEmpty
                             hint="Required for beam planning and party orders."
                         />
@@ -1818,16 +1843,16 @@ function QuickCostingView({
                             />
                             <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Warp ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })} />
                             {row.calculationMode === 'manual' ? (
-                                <NumField label="Warp consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} attentionWhenEmpty />
+                                <NumField label="Warp consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 3.25" attentionWhenEmpty />
                             ) : (
                                 <>
                                     <YarnDensityFields row={row} onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })} />
-                                    <NumField label="Beam ends" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} />
+                                    <NumField label="Beam ends" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} placeholder="e.g. 3200" />
                                 </>
                             )}
-                            <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
-                            <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} attentionWhenEmpty />
-                            <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} />
+                            <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
+                            <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} placeholder="e.g. 110" attentionWhenEmpty />
+                            <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
                         </RowCard>
                     ))}
                     <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-[10px] border-dashed border-[#C6D9EA] bg-[#F7FBFD] text-[var(--color-info-blue)]" onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}>
@@ -1851,16 +1876,16 @@ function QuickCostingView({
                             <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
-                                <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" hint="PPI means picks per inch: weft threads in one inch." />
-                                <WidthField label="Effective costing width (finished width)" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} />
+                                <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." />
+                                <WidthField label="Effective costing width (finished width)" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} />
                                 {row.calculationMode === 'manual' ? (
-                                    <NumField label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} attentionWhenEmpty />
+                                    <NumField label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 2.75" attentionWhenEmpty />
                                 ) : (
                                     <YarnDensityFields row={row} onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })} />
                                 )}
-                                <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
-                            <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} attentionWhenEmpty />
-                                <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} />
+                                <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
+                            <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} placeholder="e.g. 110" attentionWhenEmpty />
+                                <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
                             </RowCard>
                         )
                     })}
@@ -1890,14 +1915,14 @@ function QuickCostingView({
                 <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <NumField label="Warping rate" value={state.warpingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.1} />
+                        <NumField label="Warping rate" value={state.warpingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.1} placeholder="e.g. 8" />
                         <div className="space-y-2 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3">
                             <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Sizing</p>
                             <div className="flex flex-wrap gap-3 text-xs font-semibold text-[var(--color-body)]">
                                 <label className="flex items-center gap-1.5"><input type="radio" name="quick-sizing-mode" checked={state.sizingMode === 'in_house'} onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })} /> In-house</label>
                                 <label className="flex items-center gap-1.5"><input type="radio" name="quick-sizing-mode" checked={state.sizingMode === 'outsourced'} onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })} /> Outsourced</label>
                             </div>
-                            {state.sizingMode === 'outsourced' ? <NumField label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} /> : <p className="text-[10px] italic text-[var(--color-muted)]">In-house sizing is treated as factory overhead.</p>}
+                            {state.sizingMode === 'outsourced' ? <NumField label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} placeholder="e.g. 10" /> : <p className="text-[10px] italic text-[var(--color-muted)]">In-house sizing is treated as factory overhead.</p>}
                         </div>
                     </div>
                 </CardContent>
@@ -1917,10 +1942,10 @@ function QuickCostingView({
                         </button>
                     </div>
                     {state.overheadMode === 'direct' ? (
-                        <NumField label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} attentionWhenEmpty />
+                        <NumField label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} placeholder="e.g. 12.50" attentionWhenEmpty />
                     ) : (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                            <NumField label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} attentionWhenEmpty hint="Metres actually produced each month; saved expenses are divided by this." />
+                            <NumField label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} placeholder="e.g. 10,000" attentionWhenEmpty hint="Metres actually produced each month; saved expenses are divided by this." />
                             <Button type="button" variant="outline" className="h-11 gap-1.5" onClick={onOpenOverheadDetails}><Calculator className="h-3.5 w-3.5" /> Edit expenses</Button>
                         </div>
                     )}
@@ -1942,9 +1967,9 @@ function QuickCostingView({
             <EstimatorCard accent="neutral">
                 <SectionHeader title="Selling and quantity (optional for Base)" icon={Coins} accent="neutral" step={7} />
                 <CardContent className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
-                    <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} hint="Your desired profit above break-even." />
-                    <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} hint="Broker or agent share of the selling price." />
-                    <NumField label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} hint="Delivery cost added per metre." />
+                    <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" hint="Your desired profit above break-even." />
+                    <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" hint="Broker or agent share of the selling price." />
+                    <NumField label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} placeholder="e.g. 1.50" hint="Delivery cost added per metre." />
                     <NumField label="Costing quantity" value={state.orderQuantityM} onChange={value => dispatch({ type: 'SET', field: 'orderQuantityM', value })} unit="m" step={100} placeholder="Optional" hint="Needed for order-level profit and quotations." />
                 </CardContent>
             </EstimatorCard>
@@ -4200,19 +4225,19 @@ export default function EstimatorClient({
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
                                 <Input
-                                    value={warpInstruction}
+                                    value={warpInstruction === lastGeneratedWarp.current ? '' : warpInstruction}
                                     onChange={e => setWarpInstructionFromUser(e.target.value)}
-                                    placeholder="50/48 + Rainbow"
-                                    className="text-sm font-medium border-slate-200 h-11"
+                                    placeholder={lastGeneratedWarp.current || '50/48 + Rainbow'}
+                                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
                                 />
                             </div>
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
                                 <Input
-                                    value={weftInstruction}
+                                    value={weftInstruction === lastGeneratedWeft.current ? '' : weftInstruction}
                                     onChange={e => setWeftInstructionFromUser(e.target.value)}
-                                    placeholder="50/48 - 68 Picks"
-                                    className="text-sm font-medium border-slate-200 h-11"
+                                    placeholder={lastGeneratedWeft.current || '50/48 - 68 Picks'}
+                                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
                                 />
                             </div>
                         </div>
@@ -4237,6 +4262,8 @@ export default function EstimatorClient({
                                     label="Warp Crimp (Take-up)"
                                     value={state.warpCrimpPct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })}
+                                    ghostValue={5}
+                                    ghostPlaceholder="5"
                                     hint="Beam shrink relative to tape length"
                                     accent="warp"
                                 />
@@ -4246,6 +4273,8 @@ export default function EstimatorClient({
                                     label="Default Yarn Waste"
                                     value={state.yarnShortagePct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
+                                    ghostValue={0}
+                                    ghostPlaceholder="0"
                                     hint="Blank row waste uses this default. Row value 0 means no waste."
                                     accent="warp"
                                 />
@@ -4292,24 +4321,25 @@ export default function EstimatorClient({
                                         value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
                                         onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calculationMode', value })}
                                     />
-                                    <LayerNameField
-                                        label={t('estimator.field_labels.layer_name')}
-                                        value={row.label ?? ''}
-                                        placeholder={`${t('estimator.warp.layer')} ${i + 1}`}
-                                        onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
-                                    />
+                                        <LayerNameField
+                                            label={t('estimator.field_labels.layer_name')}
+                                            value={row.label ?? ''}
+                                            placeholder={`${t('estimator.warp.layer')} ${i + 1}`}
+                                            ghostValue={`Warp ${i + 1}`}
+                                            onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
+                                        />
                                     {row.calculationMode === 'manual' ? (
-                                        <NumField label="Warp Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Kilograms of Warp Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
+                                        <NumField label="Warp Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} placeholder="e.g. 3.25" hint="Kilograms of Warp Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
                                     ) : (
                                         <>
                                             <YarnDensityFields
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })}
                                             />
-                                            <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
+                                            <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} placeholder="e.g. 3200" />
                                         </>
                                     )}
-                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -4322,14 +4352,15 @@ export default function EstimatorClient({
                                                 label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                                 value={row.yarnRate} 
                                                 onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
-                                                step={1} 
+                                                step={1}
+                                                placeholder="e.g. 110"
                                                 attentionWhenEmpty
                                                 warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                 onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
                                             />
                                         )
                                     })()}
-                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} />
+                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
                                 </RowCard>
                             ))}
                         </div>
@@ -4358,6 +4389,7 @@ export default function EstimatorClient({
                                                 value={state.tapeLengthM}
                                                 onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v ?? 0 })}
                                                 unit="m"
+                                                placeholder="e.g. 1000"
                                                 attentionWhenEmpty
                                             />
                                         </div>
@@ -4523,9 +4555,10 @@ export default function EstimatorClient({
                                             label={t('estimator.field_labels.layer_name')}
                                             value={row.label ?? ''}
                                             placeholder={`${t('estimator.weft.layer')} ${i + 1}`}
+                                            ghostValue={`Weft ${i + 1}`}
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
-                                        <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
+                                        <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" />
                                         <WidthField
                                             label="Effective costing width (finished width)"
                                             value={effectiveCostingWidthCm}
@@ -4534,6 +4567,7 @@ export default function EstimatorClient({
                                                 dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })
                                             }}
                                             unit={widthUnit}
+                                            placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'}
                                             hint={row.calculationMode === 'manual' ? 'Saved for audit; manual kg bypasses formula' : 'Used for weft yarn formula'}
                                             warning={effectiveWidthWarning}
                                             onUseInches={effectiveWidthWarning && widthUnit === 'cm'
@@ -4546,14 +4580,14 @@ export default function EstimatorClient({
                                                 : undefined}
                                         />
                                         {row.calculationMode === 'manual' ? (
-                                            <NumField label="Weft Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Kilograms of Weft Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
+                                            <NumField label="Weft Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} placeholder="e.g. 2.75" hint="Kilograms of Weft Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
                                         ) : (
                                             <YarnDensityFields
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })}
                                             />
                                         )}
-                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
                                             const isUnusuallyLow = templateRate !== null
@@ -4566,13 +4600,14 @@ export default function EstimatorClient({
                                                     label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                                     value={row.yarnRate}
                                                     onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })}
+                                                    placeholder="e.g. 110"
                                                     attentionWhenEmpty
                                                     warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                     onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
                                                 />
                                             )
                                         })()}
-                                        <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} />
+                                        <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
                                     </RowCard>
                                 )
                             })}
@@ -4610,7 +4645,7 @@ export default function EstimatorClient({
                     <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
+                            <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} placeholder="e.g. 8" />
                         </div>
 
                         {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
@@ -4651,6 +4686,7 @@ export default function EstimatorClient({
                                         value={state.sizingRatePerKg}
                                         onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
                                         step={0.5}
+                                        placeholder="e.g. 10"
                                         hint="Typical Surat outsourced sizing: ₹8–15/kg"
                                     />
                                 </div>
@@ -4811,18 +4847,24 @@ export default function EstimatorClient({
                                                             value={state.loomCount} 
                                                             onChange={v => dispatch({ type: 'SET', field: 'loomCount', value: v ?? 0 })} 
                                                             unit="machines"
+                                                            ghostValue={0}
+                                                            placeholder="e.g. 24"
                                                         />
                                                         <CapacityMetricField
                                                             label="Avg Daily Output" 
                                                             value={state.avgOutputPerLoomPerDay} 
                                                             onChange={v => dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: v ?? 0 })} 
                                                             unit="m/day" 
+                                                            ghostValue={50}
+                                                            placeholder="50"
                                                         />
                                                         <CapacityMetricField
                                                             label="Working Days" 
                                                             value={state.monthlyWorkingDays} 
                                                             onChange={v => dispatch({ type: 'SET', field: 'monthlyWorkingDays', value: v ?? 0 })} 
                                                             unit="days" 
+                                                            ghostValue={26}
+                                                            placeholder="26"
                                                             hint="Standard 26-day month"
                                                         />
                                                     </div>
@@ -4862,10 +4904,11 @@ export default function EstimatorClient({
                                                                         <div className="flex-1 flex items-center gap-2">
                                                                             {isLocked && <Lock className="h-3 w-3 text-[var(--color-muted)] shrink-0" />}
                                                                             <Input
-                                                                                value={item.label}
+                                                                                value={!isPreset && item.label === 'New Item' ? '' : item.label}
+                                                                                placeholder={!isPreset && item.label === 'New Item' ? 'Item name' : undefined}
                                                                                 disabled={isPreset}
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
-                                                                                className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
+                                                                                className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium placeholder:text-[var(--color-muted)] focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
                                                                             />
                                                                             {isLocked && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">auto-calc</span>}
                                                                             {isElectricity && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">per machine helper</span>}
@@ -4876,10 +4919,11 @@ export default function EstimatorClient({
                                                                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">₹</span>
                                                                             <Input
                                                                                 type="number"
-                                                                                value={item.monthlyAmount}
+                                                                                value={item.monthlyAmount === 0 ? '' : item.monthlyAmount}
+                                                                                placeholder="e.g. 25,000"
                                                                                 disabled={isLocked}
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                             />
                                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--color-muted)] font-medium pointer-events-none">/mo</span>
                                                                         </div>
@@ -4918,18 +4962,20 @@ export default function EstimatorClient({
                                                                                         <span className="text-[8px] uppercase font-semibold text-slate-400">Units/Machine</span>
                                                                                         <Input 
                                                                                             type="number" 
-                                                                                            value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth ?? 0} 
+                                                                                            value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth || ''}
+                                                                                            placeholder="e.g. 500"
                                                                                             onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { unitsPerLoomPerMonth: parseNonNegativeInput(e.target.value) ?? 0, type: 'electricity', mode: 'per_loom' } })}
-                                                                                            className="h-6 text-[10px] font-mono font-bold px-1.5"
+                                                                                            className="h-6 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] px-1.5"
                                                                                         />
                                                                                     </div>
                                                                                     <div className="flex flex-col gap-0.5">
                                                                                         <span className="text-[8px] uppercase font-semibold text-slate-400">Rate/Unit</span>
                                                                                         <Input 
                                                                                             type="number" 
-                                                                                            value={(item.meta as ElectricityMeta)?.ratePerUnit ?? 0} 
+                                                                                            value={(item.meta as ElectricityMeta)?.ratePerUnit || ''}
+                                                                                            placeholder="e.g. 8"
                                                                                             onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { ratePerUnit: parseNonNegativeInput(e.target.value) ?? 0, type: 'electricity', mode: 'per_loom' } })}
-                                                                                            className="h-6 text-[10px] font-mono font-bold px-1.5"
+                                                                                            className="h-6 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] px-1.5"
                                                                                         />
                                                                                     </div>
                                                                                 </>
@@ -4945,9 +4991,10 @@ export default function EstimatorClient({
                                                                                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                                                     <Input 
                                                                                         type="number" 
-                                                                                        value={(item.meta as DepreciationMeta)?.avgCostPerLoom ?? 1000000} 
+                                                                                        value={(item.meta as DepreciationMeta)?.avgCostPerLoom || ''}
+                                                                                        placeholder="e.g. 10,00,000"
                                                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { avgCostPerLoom: parseNonNegativeInput(e.target.value) ?? 0, type: 'depreciation' } })}
-                                                                                        className="h-7 text-[10px] font-mono font-bold pl-4 pr-1.5"
+                                                                                        className="h-7 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] pl-4 pr-1.5"
                                                                                     />
                                                                                 </div>
                                                                             </div>
@@ -4955,9 +5002,10 @@ export default function EstimatorClient({
                                                                                 <span className="text-[8px] uppercase font-semibold text-slate-400">Lifespan (Years)</span>
                                                                                 <Input 
                                                                                     type="number" 
-                                                                                    value={(item.meta as DepreciationMeta)?.usefulLifeYears ?? 10} 
+                                                                                    value={(item.meta as DepreciationMeta)?.usefulLifeYears === 10 ? '' : ((item.meta as DepreciationMeta)?.usefulLifeYears ?? '')}
+                                                                                    placeholder="10"
                                                                                     onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { usefulLifeYears: parseNumericInput(e.target.value, { min: 1 }) ?? 1, type: 'depreciation' } })}
-                                                                                    className="h-7 text-[10px] font-mono font-bold px-2"
+                                                                                    className="h-7 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] px-2"
                                                                                 />
                                                                             </div>
                                                                         </div>
@@ -4994,9 +5042,10 @@ export default function EstimatorClient({
                                                                 <div className="relative">
                                                                     <Input
                                                                         type="number"
-                                                                        value={state.monthlyOutputM}
+                                                                        value={state.monthlyOutputM || ''}
+                                                                        placeholder="e.g. 10,000"
                                                                         onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                        className="h-10 rounded-[9px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pr-9 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                                        className="h-10 rounded-[9px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                     />
                                                                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m</span>
                                                                 </div>
@@ -5096,17 +5145,17 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
-                                <NumField label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" />
+                                <NumField label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}
                             {state.enabledSections.processing ? (
-                                <NumField label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" />
+                                <NumField label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 2" />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
                             )}
                             {state.enabledSections.finishing ? (
-                                <NumField label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" />
+                                <NumField label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 1.50" />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
                             )}
@@ -5279,9 +5328,9 @@ export default function EstimatorClient({
                                 attentionWhenEmpty={requiresCommercialContext}
                                 hint={requiresCommercialContext ? t('estimator.simulation.quantity_hint') : 'Optional for a saved costing; enter it when you want order-level profit.'}
                             />
-                            <NumField label="Target margin" value={state.profitPct} onChange={v => dispatch({ type: 'SET', field: 'profitPct', value: v ?? 0 })} unit="%" step={0.5} />
-                            <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} />
-                            <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} />
+                            <NumField label="Target margin" value={state.profitPct} onChange={v => dispatch({ type: 'SET', field: 'profitPct', value: v ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" />
+                            <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" />
+                            <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} placeholder="e.g. 1.50" />
                         </div>
                     </CardContent>
                 </EstimatorCard>

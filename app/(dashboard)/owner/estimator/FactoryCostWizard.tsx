@@ -34,6 +34,22 @@ interface FactoryCostWizardProps {
     saving: boolean
 }
 
+function getFactoryDefaultValue(label: string, initialState: EstimateState): number {
+    switch (label) {
+        case 'Warping': return initialState.warpingRatePerKg
+        case 'Sizing': return initialState.sizingRatePerKg
+        case 'Winding': return initialState.windingRatePerKg
+        case 'Processing': return initialState.processingRatePerM
+        case 'Finishing': return initialState.finishingRatePerM
+        case 'Broker commission': return initialState.commissionPct || 0
+        case 'Target margin': return initialState.profitPct || 10
+        case 'Transport charge': return initialState.transportPerM
+        case 'Warp crimp': return initialState.warpCrimpPct
+        case 'Default yarn waste': return initialState.yarnShortagePct
+        default: return 0
+    }
+}
+
 export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, saving }: FactoryCostWizardProps) {
     const [step, setStep] = useState<'intro' | 'profile' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
@@ -42,6 +58,13 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const [pendingWarnings, setPendingWarnings] = useState<EstimatorValidationIssue[]>([])
     const [selectedProfileId, setSelectedProfileId] = useState<FactoryProfileId | null>(null)
     const [selectedSections, setSelectedSections] = useState({ ...initialState.enabledSections })
+
+    const initialRent = initialState.overheadItems.find(item => item.category === 'rent')?.monthlyAmount ?? 0
+    const initialElectricity = initialState.overheadItems.find(item => item.category === 'electricity')?.monthlyAmount ?? 0
+    const initialStaff = initialState.overheadItems.find(item => item.category === 'admin')?.monthlyAmount ?? 0
+    const initialOtherExpenses = initialState.overheadItems
+        .filter(item => !['rent', 'electricity', 'admin'].includes(item.category))
+        .reduce((sum, item) => sum + item.monthlyAmount, 0)
     
     // Local state for the wizard inputs
     // A direct rate is a price-changing assumption. Keep it blank until the
@@ -53,12 +76,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const [monthlyOutput, setMonthlyOutput] = useState<number>(initialState.monthlyOutputM || 0)
     
     // Monthly expenses for detailed path
-    const [rent, setRent] = useState<number>(() => initialState.overheadItems.find(item => item.category === 'rent')?.monthlyAmount ?? 0)
-    const [electricity, setElectricity] = useState<number>(() => initialState.overheadItems.find(item => item.category === 'electricity')?.monthlyAmount ?? 0)
-    const [staff, setStaff] = useState<number>(() => initialState.overheadItems.find(item => item.category === 'admin')?.monthlyAmount ?? 0)
-    const [others, setOthers] = useState<number>(() => initialState.overheadItems
-        .filter(item => !['rent', 'electricity', 'admin'].includes(item.category))
-        .reduce((sum, item) => sum + item.monthlyAmount, 0))
+    const [rent, setRent] = useState<number>(initialRent)
+    const [electricity, setElectricity] = useState<number>(initialElectricity)
+    const [staff, setStaff] = useState<number>(initialStaff)
+    const [others, setOthers] = useState<number>(initialOtherExpenses)
     const [warpingRate, setWarpingRate] = useState<number>(initialState.warpingRatePerKg)
     const [sizingRate, setSizingRate] = useState<number>(initialState.sizingRatePerKg)
     const [windingRate, setWindingRate] = useState<number>(initialState.windingRatePerKg)
@@ -390,8 +411,8 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <div className="relative">
                                                 <Input 
                                                     type="number"
-                                                    value={overheadPerM ?? ''}
-                                                    placeholder="Enter your rate"
+                                                    value={overheadPerM === (initialState.overheadOverridePerM ?? null) ? '' : (overheadPerM ?? '')}
+                                                    placeholder={initialState.overheadOverridePerM != null ? String(initialState.overheadOverridePerM) : 'Enter your rate'}
                                                     onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value))}
                                                     className="h-14 text-2xl font-black text-indigo-600 pl-8 pr-12 rounded-xl border-slate-200 focus:ring-indigo-500/20"
                                                 />
@@ -429,11 +450,12 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     <div className="grid gap-4">
                                         <div className="space-y-1.5">
                                             <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Total Loom Count</Label>
-                                            <Input 
-                                                type="number" 
+                                            <Input
+                                                type="number"
                                                 min={1}
                                                 step={1}
                                                 value={loomCount || ''}
+                                                placeholder="e.g. 24"
                                                 onChange={e => setLoomCount(parseNonNegativeInput(e.target.value) ?? 0)}
                                                 aria-invalid={loomCount <= 0}
                                                 className="h-10 font-bold"
@@ -447,7 +469,8 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     type="number" 
                                                     min={1}
                                                     step={1}
-                                                    value={workingDays} 
+                                                    value={workingDays === (initialState.monthlyWorkingDays || 26) ? '' : workingDays}
+                                                    placeholder={String(initialState.monthlyWorkingDays || 26)}
                                                     onChange={e => setWorkingDays(parseNumericInput(e.target.value, { min: 1 }) ?? 0)}
                                                     aria-invalid={workingDays <= 0}
                                                     className="h-10 font-bold"
@@ -459,7 +482,8 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     type="number" 
                                                     min={0.01}
                                                     step={0.01}
-                                                    value={avgOutput} 
+                                                    value={avgOutput === (initialState.avgOutputPerLoomPerDay || 50) ? '' : avgOutput}
+                                                    placeholder={String(initialState.avgOutputPerLoomPerDay || 50)}
                                                     onChange={e => setAvgOutput(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     aria-invalid={avgOutput <= 0}
                                                     className="h-10 font-bold"
@@ -481,9 +505,9 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     type="number"
                                                     min={1}
                                                     value={monthlyOutput || ''}
+                                                    placeholder="e.g. 45,000"
                                                     onChange={event => setMonthlyOutput(parseNumericInput(event.target.value, { min: 1 }) ?? 0)}
                                                     aria-invalid={monthlyOutput <= 0}
-                                                     placeholder="e.g. 45,000"
                                                     className="h-10 pr-10 font-mono font-bold"
                                                 />
                                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/mo</span>
@@ -526,9 +550,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Label className="text-[9px] uppercase font-bold text-slate-400">Rent / Lease</Label>
                                                 <Input 
                                                     type="number" 
-                                                    value={rent} 
-                                                onChange={e => setRent(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
+                                                    value={rent === initialRent ? '' : rent}
+                                                    placeholder={initialRent > 0 ? String(initialRent) : 'e.g. 1,00,000'}
+                                                    onChange={e => setRent(parseNonNegativeInput(e.target.value) ?? 0)}
+                                                    className="h-8 border-none bg-transparent font-black placeholder:text-slate-400 p-0 focus-visible:ring-0"
                                                 />
                                             </div>
                                         </div>
@@ -540,9 +565,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Label className="text-[9px] uppercase font-bold text-slate-400">Electricity & Power</Label>
                                                 <Input 
                                                     type="number" 
-                                                    value={electricity} 
+                                                    value={electricity === initialElectricity ? '' : electricity}
+                                                    placeholder={initialElectricity > 0 ? String(initialElectricity) : 'e.g. 25,000'}
                                                     onChange={e => setElectricity(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
+                                                    className="h-8 border-none bg-transparent font-black placeholder:text-slate-400 p-0 focus-visible:ring-0"
                                                 />
                                             </div>
                                         </div>
@@ -554,9 +580,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Label className="text-[9px] uppercase font-bold text-slate-400">Fixed Staff Salary</Label>
                                                 <Input 
                                                     type="number" 
-                                                    value={staff} 
+                                                    value={staff === initialStaff ? '' : staff}
+                                                    placeholder={initialStaff > 0 ? String(initialStaff) : 'e.g. 50,000'}
                                                     onChange={e => setStaff(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
+                                                    className="h-8 border-none bg-transparent font-black placeholder:text-slate-400 p-0 focus-visible:ring-0"
                                                 />
                                             </div>
                                         </div>
@@ -568,9 +595,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Label className="text-[9px] uppercase font-bold text-slate-400">Others (Repairs, Oil, etc.)</Label>
                                                 <Input 
                                                     type="number" 
-                                                    value={others} 
+                                                    value={others === initialOtherExpenses ? '' : others}
+                                                    placeholder={initialOtherExpenses > 0 ? String(initialOtherExpenses) : 'e.g. 10,000'}
                                                     onChange={e => setOthers(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black p-0 focus-visible:ring-0"
+                                                    className="h-8 border-none bg-transparent font-black placeholder:text-slate-400 p-0 focus-visible:ring-0"
                                                 />
                                             </div>
                                         </div>
@@ -645,23 +673,28 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             : label === 'Broker commission' ? selectedSections.commission
                                             : label === 'Transport charge' ? selectedSections.transport
                                             : true,
-                                        ).map(([label, value, setter, unit, inputStep]) => (
-                                            <div key={String(label)} className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">{String(label)}</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        min={0}
-                                                        max={label === 'Broker commission' || label === 'Target margin' ? 99.99 : undefined}
-                                                        step={Number(inputStep)}
-                                                        value={Number(value)}
-                                                        onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}
-                                                        className="h-11 pr-14 font-mono font-bold"
-                                                    />
-                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{String(unit)}</span>
+                                        ).map(([label, value, setter, unit, inputStep]) => {
+                                            const ghostValue = getFactoryDefaultValue(String(label), initialState)
+                                            const isGhostValue = Number(value) === ghostValue
+                                            return (
+                                                <div key={String(label)} className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">{String(label)}</Label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            type="number"
+                                                            min={0}
+                                                            max={label === 'Broker commission' || label === 'Target margin' ? 99.99 : undefined}
+                                                            step={Number(inputStep)}
+                                                            value={isGhostValue ? '' : Number(value)}
+                                                            placeholder={isGhostValue ? String(ghostValue) : undefined}
+                                                            onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}
+                                                            className="h-11 pr-14 font-mono font-bold placeholder:text-slate-400"
+                                                        />
+                                                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{String(unit)}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                         <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
                                             <Label htmlFor="onboarding-yarn-review" className="text-[10px] font-black uppercase tracking-wider text-slate-500">Review yarn rates</Label>
                                             <select
