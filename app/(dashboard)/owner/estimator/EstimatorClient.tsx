@@ -1448,7 +1448,7 @@ function RowCard({
                             Applied waste and adjustment: {adjustmentDetail}
                         </p>
                     )}
-                    <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-5'}`}>
+                    <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-[minmax(140px,1.2fr)_minmax(96px,1fr)_repeat(5,minmax(0,1fr))]' : '2xl:grid-cols-5'}`}>
                         {children}
                     </div>
                 </div>
