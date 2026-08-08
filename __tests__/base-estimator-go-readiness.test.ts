@@ -90,7 +90,7 @@ describe('Base Estimator Go-readiness hardening', () => {
     const estimator = source('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     expect(estimator).not.toContain('Scenario Analysis')
     expect(estimator).not.toContain('customTargetPrice')
-    expect(estimator).toContain("accent === 'indigo' ? '2xl:grid-cols-[minmax(140px,1.2fr)_minmax(96px,1fr)_repeat(5,minmax(0,1fr))]' : '2xl:grid-cols-5'")
+    expect(estimator).toContain("accent === 'indigo' ? 'lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5'")
     expect(estimator).toContain("variant={isStandaloneCostingSession ? 'default' : 'outline'}")
 
     const savedCostings = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')

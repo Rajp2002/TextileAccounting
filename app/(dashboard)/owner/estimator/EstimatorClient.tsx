@@ -1448,7 +1448,9 @@ function RowCard({
                             Applied waste and adjustment: {adjustmentDetail}
                         </p>
                     )}
-                    <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-[minmax(140px,1.2fr)_minmax(96px,1fr)_repeat(5,minmax(0,1fr))]' : '2xl:grid-cols-5'}`}>
+                    {/* Warp rows have eight formula fields; four desktop columns keep the
+                        fields balanced across two readable rows instead of leaving GST alone. */}
+                    <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 [&_button]:text-xs [&_input]:text-sm [&_label]:text-xs [&_select]:text-sm ${accent === 'indigo' ? 'lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5'}`}>
                         {children}
                     </div>
                 </div>
