@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
     calcFullTotals,
+    calcPerPickCostFromWeavingRate,
     calcOrderQuote,
     calcWarpYarnKg,
     calcWeaveCostPerMeter,
@@ -886,9 +887,7 @@ describe('Loom weave wage UX and paise/rupee conversion safety', () => {
         const totalPicks = 68
         const wagePerMeter = 8 // User enters ₹8/m
         
-        // UI Action: derived = wageNum / totalPicks
-        const derived = wagePerMeter / totalPicks
-        const perPickCostPaisaInternal = Math.round(derived * 10000) / 10000
+        const perPickCostPaisaInternal = calcPerPickCostFromWeavingRate(wagePerMeter, totalPicks)
         
         // Assert internal rate is stored in Rupees per pick
         expect(perPickCostPaisaInternal).toBe(0.1176)
@@ -902,6 +901,11 @@ describe('Loom weave wage UX and paise/rupee conversion safety', () => {
         // Assert weave cost remains correct (approx ₹8.00/m)
         const weaveCost = calcWeaveCostPerMeter(totalPicks, perPickCostPaisaInternal)
         expect(round2(weaveCost)).toBe(8.00)
+    })
+
+    it('does not derive a per-pick rate until total picks are available', () => {
+        expect(calcPerPickCostFromWeavingRate(8, 0)).toBe(0)
+        expect(calcPerPickCostFromWeavingRate(0, 68)).toBe(0)
     })
 
     it('handles paise direct entry correctly', () => {

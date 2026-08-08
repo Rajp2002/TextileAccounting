@@ -169,6 +169,18 @@ export function calcWorkerRateSnapshot(
   return normalizeCurrencySnapshot(totalPicks.times(perPickCostPaisa).toString())
 }
 
+/**
+ * Convert a direct weaving charge per metre into the internal ₹/pick value.
+ * The estimator stores the per-pick value in rupees for backward compatibility,
+ * while the UI exposes the equivalent value in paise when that mode is chosen.
+ */
+export function calcPerPickCostFromWeavingRate(weavingRatePerM: number, totalPicks: number): number {
+  const rate = Number(weavingRatePerM)
+  const picks = Number(totalPicks)
+  if (!Number.isFinite(rate) || rate <= 0 || !Number.isFinite(picks) || picks <= 0) return 0
+  return Math.round((rate / picks) * 10000) / 10000
+}
+
 /** Which optional cost sections apply to this factory/estimate */
 export interface FactorySections {
   winding:    boolean   // yarn arrives on hanks, needs rewinding onto cones

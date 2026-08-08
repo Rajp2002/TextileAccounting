@@ -96,7 +96,7 @@ describe('Batch 11 estimator server-boundary validation', () => {
                 'Add at least one warp row before saving.',
                 'Weft layer 1 (Main Weft) picks must be greater than 0.',
                 'Weft layer 1 (Main Weft) effective costing width is outside the supported range.',
-                'Weaving rate per pick must be greater than 0.',
+                'Weaving rate must be greater than 0.',
                 'Production cost per meter must be greater than 0.',
             ]))
         }

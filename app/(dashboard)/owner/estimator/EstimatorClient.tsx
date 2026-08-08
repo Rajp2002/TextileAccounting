@@ -47,6 +47,7 @@ import {
     calcFullTotals,
     buildCostingResult,
     runScenarios,
+    calcPerPickCostFromWeavingRate,
     makeDefaultEstimateState,
     DEFAULT_WARP_ROW,
     DEFAULT_WEFT_ROW,
@@ -73,7 +74,6 @@ import {
     type EstimatorV3Totals,
     type CostingResultSnapshot,
 } from '@/lib/estimator'
-import { LoomConfigSection } from './LoomConfigSection'
 import {
     getFactoryCostProfile,
     getEstimatorTemplates,
@@ -1457,6 +1457,161 @@ function RowCard({
     )
 }
 
+type WeavingRateInputMode = 'perMeter' | 'perPick'
+
+function WeavingRateFields({
+    state,
+    dispatch,
+    totals,
+    hasValidCostResult,
+    inputMode,
+    onInputModeChange,
+    directRateInput,
+    onDirectRateInputChange,
+}: {
+    state: EstimateState
+    dispatch: React.Dispatch<Action>
+    totals: EstimatorV3Totals
+    hasValidCostResult: boolean
+    inputMode: WeavingRateInputMode
+    onInputModeChange: (mode: WeavingRateInputMode) => void
+    directRateInput: string
+    onDirectRateInputChange: (value: string) => void
+}) {
+    const totalPicks = state.weftRows.reduce((sum, row) => sum + row.picks, 0)
+    const calculatedRatePerM = totalPicks > 0 ? state.perPickCostPaisa * totalPicks : 0
+    const directRateValue = directRateInput !== ''
+        ? directRateInput
+        : calculatedRatePerM > 0
+            ? calculatedRatePerM.toFixed(2)
+            : ''
+    const paisaPerPickDisplay = state.perPickCostPaisa > 0
+        ? Math.round(state.perPickCostPaisa * 100 * 10000) / 10000
+        : ''
+    const rateInputId = inputMode === 'perMeter' ? 'weaving-rate-per-meter' : 'weaving-rate-paisa-per-pick'
+
+    // If the owner enters the direct ₹/m rate before completing the PPI
+    // fields, apply it as soon as total picks become available.
+    useEffect(() => {
+        if (inputMode !== 'perMeter') return
+        const directRate = parseNonNegativeInput(directRateInput)
+        if (directRate === null || totalPicks <= 0) return
+        const nextPerPickCost = calcPerPickCostFromWeavingRate(directRate, totalPicks)
+        if (nextPerPickCost !== state.perPickCostPaisa) {
+            dispatch({ type: 'SET', field: 'perPickCostPaisa', value: nextPerPickCost })
+        }
+    }, [directRateInput, dispatch, inputMode, state.perPickCostPaisa, totalPicks])
+
+    const handleInputModeChange = (nextMode: WeavingRateInputMode) => {
+        onDirectRateInputChange('')
+        onInputModeChange(nextMode)
+    }
+
+    return (
+        <div className="space-y-3 rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-3 py-3 sm:px-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                    <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Weaving rate input</p>
+                </div>
+                <div className="flex items-center gap-2" role="group" aria-label="Weaving rate input mode">
+                    <span className="text-[10px] font-medium text-[var(--color-muted)]">Enter as</span>
+                    <div className="inline-flex rounded-[8px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] p-0.5">
+                        <button
+                            type="button"
+                            aria-pressed={inputMode === 'perMeter'}
+                            onClick={() => handleInputModeChange('perMeter')}
+                            className={`rounded-[6px] px-2.5 py-1.5 text-[10px] font-semibold transition-colors ${inputMode === 'perMeter' ? 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-body)]'}`}
+                        >
+                            Weaving rate (₹/m)
+                        </button>
+                        <button
+                            type="button"
+                            aria-pressed={inputMode === 'perPick'}
+                            onClick={() => handleInputModeChange('perPick')}
+                            className={`rounded-[6px] px-2.5 py-1.5 text-[10px] font-semibold transition-colors ${inputMode === 'perPick' ? 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-body)]'}`}
+                        >
+                            Paisa per pick
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                    <Label htmlFor={rateInputId} className="flex h-8 items-end text-[10px] font-medium uppercase tracking-wider text-[var(--color-warning-amber)]">
+                        {inputMode === 'perMeter' ? 'Weaving rate' : 'Paisa per pick'}
+                    </Label>
+                    <div className="relative">
+                        <Input
+                            id={rateInputId}
+                            aria-label={inputMode === 'perMeter' ? 'Weaving rate in rupees per metre' : 'Paisa per pick'}
+                            type="number"
+                            min={0}
+                            step={inputMode === 'perMeter' ? 0.01 : 0.1}
+                            placeholder={inputMode === 'perMeter' ? 'e.g. 8.00' : 'e.g. 16'}
+                            value={inputMode === 'perMeter' ? directRateValue : paisaPerPickDisplay}
+                            onChange={event => {
+                                const raw = event.target.value
+                                if (inputMode === 'perMeter') {
+                                    onDirectRateInputChange(raw)
+                                    const directRate = parseNonNegativeInput(raw)
+                                    if (directRate === null) {
+                                        dispatch({ type: 'SET', field: 'perPickCostPaisa', value: 0 })
+                                    } else if (totalPicks > 0) {
+                                        dispatch({
+                                            type: 'SET',
+                                            field: 'perPickCostPaisa',
+                                            value: calcPerPickCostFromWeavingRate(directRate, totalPicks),
+                                        })
+                                    }
+                                    return
+                                }
+
+                                const paisa = parseNonNegativeInput(raw)
+                                if (paisa === null) return
+                                onDirectRateInputChange('')
+                                dispatch({ type: 'SET', field: 'perPickCostPaisa', value: paisa / 100 })
+                            }}
+                            onFocus={event => {
+                                if (inputMode === 'perMeter') event.currentTarget.select()
+                            }}
+                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold text-[var(--color-warning-amber)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.perPickCostPaisa <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                        />
+                        <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
+                            {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
+                        </span>
+                    </div>
+                    <InlineInputWarning show={state.perPickCostPaisa <= 0}>Required</InlineInputWarning>
+                    {inputMode === 'perMeter' && (
+                        <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">
+                            Converted from {totalPicks} total picks to paise per pick.
+                        </p>
+                    )}
+                </div>
+
+                <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas-white)] px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Calculated loom cost</p>
+                    <p className="mt-1 font-mono text-xl font-semibold text-[var(--color-warning-amber)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</p>
+                    <p className="mt-1 text-[10px] text-[var(--color-muted)]">
+                        {totalPicks} total picks × {paisaPerPickDisplay || '—'} paise per pick
+                    </p>
+                </div>
+            </div>
+
+            {hasValidCostResult && totals.weaveCostPerM > 100 && (
+                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 shadow-sm">
+                    <span className="shrink-0 text-sm">⚠️</span>
+                    <div>
+                        <p className="font-bold">Unusually High Weave Cost ({formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')})</p>
+                        <p className="mt-0.5 font-medium text-amber-700">Check that the weaving rate and unit are correct.</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
 // setPartyName={setPartyName} remains the QuickCostingView prop contract; the owner wrapper marks a user edit.
 function QuickCostingView({
     state,
@@ -1480,7 +1635,10 @@ function QuickCostingView({
     onOpenDetailed,
     onOpenOverheadDetails,
     onOverheadModeChange,
-    onSuggestOutput,
+    weavingRateInputMode,
+    onWeavingRateInputModeChange,
+    directWeavingRateInput,
+    onDirectWeavingRateInputChange,
 }: {
     state: EstimateState
     dispatch: React.Dispatch<Action>
@@ -1503,10 +1661,12 @@ function QuickCostingView({
     onOpenDetailed: () => void
     onOpenOverheadDetails: () => void
     onOverheadModeChange: (mode: OverheadMode) => void
-    onSuggestOutput: (dailyOutputM: number) => void
+    weavingRateInputMode: WeavingRateInputMode
+    onWeavingRateInputModeChange: (mode: WeavingRateInputMode) => void
+    directWeavingRateInput: string
+    onDirectWeavingRateInputChange: (value: string) => void
 }) {
     const { t } = useTranslation()
-    const totalPicks = state.weftRows.reduce((sum, row) => sum + row.picks, 0)
     const directRateMissing = state.overheadMode === 'direct' && (!state.overheadOverridePerM || state.overheadOverridePerM <= 0)
 
     return (
@@ -1710,28 +1870,16 @@ function QuickCostingView({
             <EstimatorCard accent="weave">
                 <SectionHeader title="Weaving cost" icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <NumField label="Weaving rate" value={state.perPickCostPaisa * 100} onChange={value => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: (value ?? 0) / 100 })} unit="paise/pick" step={0.1} attentionWhenEmpty hint={`At ${totalPicks} picks: ${formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}`} />
-                        <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-3 py-2.5">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Calculated loom cost</p>
-                            <p className="mt-1 font-mono text-xl font-semibold text-[var(--color-warning-amber)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</p>
-                            <p className="mt-1 text-[10px] text-[var(--color-muted)]">{totalPicks} total picks × paise per pick</p>
-                        </div>
-                    </div>
-                    <details className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3">
-                        <summary className="cursor-pointer text-xs font-semibold text-[var(--color-body)]">Optional loom capacity and output</summary>
-                        <div className="mt-3">
-                            <LoomConfigSection
-                                state={state}
-                                totalPicks={totalPicks}
-                                onSetLoomType={loomType => dispatch({ type: 'SET_LOOM_TYPE', loomType })}
-                                onSetLoomRpm={rpm => dispatch({ type: 'SET_LOOM_RPM', rpm })}
-                                onSetLoomPowerKw={kw => dispatch({ type: 'SET_LOOM_POWER_KW', kw })}
-                                onSetHoursPerShift={hours => dispatch({ type: 'SET', field: 'hoursPerShift', value: hours })}
-                                onSuggestOutput={onSuggestOutput}
-                            />
-                        </div>
-                    </details>
+                    <WeavingRateFields
+                        state={state}
+                        dispatch={dispatch}
+                        totals={totals}
+                        hasValidCostResult={hasValidCostResult}
+                        inputMode={weavingRateInputMode}
+                        onInputModeChange={onWeavingRateInputModeChange}
+                        directRateInput={directWeavingRateInput}
+                        onDirectRateInputChange={onDirectWeavingRateInputChange}
+                    />
                 </CardContent>
             </EstimatorCard>
 
@@ -1870,8 +2018,10 @@ export default function EstimatorClient({
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
 
-    // Loom wage per meter input — bidirectional with perPickCostPaisa
-    const [wagePerMInput, setWagePerMInput] = useState<string>('')
+    // The direct ₹/m entry is the default; the per-pick mode remains available
+    // for factories that already keep their rate book in paise per pick.
+    const [weavingRateInputMode, setWeavingRateInputMode] = useState<WeavingRateInputMode>('perMeter')
+    const [directWeavingRateInput, setDirectWeavingRateInput] = useState<string>('')
 
     const [partyName,       setPartyName]       = useState('')
     const [partyNames,      setPartyNames]      = useState(initialPartyNames)
@@ -2034,7 +2184,8 @@ export default function EstimatorClient({
         setAssumptionsExpanded(false)
         assumptionsManuallyToggledRef.current = false
         setOutputSuggestion(null)
-        setWagePerMInput('')
+        setWeavingRateInputMode('perMeter')
+        setDirectWeavingRateInput('')
         setAppliedTemplate(null)
         setPartyNameFromUser('')
         setQualityLabelFromUser(GREY_FABRIC_STARTER_LABEL)
@@ -2102,6 +2253,7 @@ export default function EstimatorClient({
         lastGeneratedWeft.current = null
 
         rawDispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
+        setDirectWeavingRateInput('')
         setPartyName(restored.partyName)
         setQualityLabel(restored.qualityLabel)
         setWarpInstruction(restored.warpInstruction)
@@ -2324,17 +2476,6 @@ export default function EstimatorClient({
         // a rate. A monthly calculation is a reference, never an auto-filled
         // direct assumption.
     }, [dispatch])
-    const handleSuggestOutput = useCallback((dailyOutputM: number) => {
-        dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: dailyOutputM })
-        if (state.overheadMode === 'monthly_expenses' && state.loomCount > 0 && state.monthlyWorkingDays > 0) {
-            const suggestedMonthlyOutput = Math.round(dailyOutputM * state.loomCount * state.monthlyWorkingDays)
-            dispatch({ type: 'SET', field: 'monthlyOutputM', value: suggestedMonthlyOutput })
-            toast.success(tx(`Applied ${suggestedMonthlyOutput.toLocaleString('en-IN')} m/month to monthly overhead output.`))
-        } else {
-            toast.success(tx('Daily output updated as a capacity reference. Monthly overhead output was not changed.'))
-        }
-    }, [dispatch, state.loomCount, state.monthlyWorkingDays, state.overheadMode, tx])
-
     const filteredTemplates = useMemo(() =>
         templateSearch.trim()
             ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
@@ -2358,6 +2499,7 @@ export default function EstimatorClient({
     }
 
     const applyTemplate = useCallback((tpl: EstimatorTemplate) => {
+        setDirectWeavingRateInput('')
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
@@ -2620,7 +2762,8 @@ export default function EstimatorClient({
         assumptionsManuallyToggledRef.current = false
         setAssumptionsExpanded(false)
         setOutputSuggestion(null)
-        setWagePerMInput('')
+        setWeavingRateInputMode('perMeter')
+        setDirectWeavingRateInput('')
         setAppliedTemplate(null)
         setQualityLabel('')
         setPartyName('')
@@ -2713,6 +2856,7 @@ export default function EstimatorClient({
         const refreshed = tRes.data?.find(template => template.id === editRatesTpl.id)
         if (tRes.data) setTemplates(tRes.data)
         
+        setDirectWeavingRateInput('')
         dispatch({
             type: 'APPLY_TEMPLATE',
             template: refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
@@ -2737,6 +2881,7 @@ export default function EstimatorClient({
     /** Apply template directly (without editing rates). */
     const handleApplyCurrentRates = () => {
         if (!editRatesTpl) return
+        setDirectWeavingRateInput('')
         dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
         setAppliedTemplate(editRatesTpl)
         setQualityLabel(editRatesTpl.name)
@@ -3349,10 +3494,10 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {/* The result cockpit and form share the main column so supporting
-                reference content can stay aligned at the top-right on desktop. */}
-            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-6">
-                <div className="min-w-0 space-y-5 xl:col-start-1 xl:row-start-1">
+            {/* Keep the costing workspace at its full width. The reference
+                rail is taken out of this flow on wide desktop viewports so it
+                can use the otherwise empty space at the far right. */}
+            <div className="relative min-w-0">
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
             <div className="relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
                 <div className={hudShellClass}>
@@ -3795,8 +3940,16 @@ export default function EstimatorClient({
                 </div>
             </div>
 
+            <aside
+                className="estimator-reference-rail space-y-3"
+                aria-label="Estimator reference information"
+            >
+                <BasePlanFactoryGlossary />
+                <ArchivePolicyNotice />
+            </aside>
+
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
-            <div id="estimator-form-panel" className={`${pageShellClass} space-y-7`}>
+            <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`}>
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <section className="overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_8px_24px_rgba(30,37,40,0.055)]">
@@ -3953,7 +4106,10 @@ export default function EstimatorClient({
                             setShowAdvancedOverhead(true)
                         }}
                         onOverheadModeChange={handleOverheadModeChange}
-                        onSuggestOutput={handleSuggestOutput}
+                        weavingRateInputMode={weavingRateInputMode}
+                        onWeavingRateInputModeChange={setWeavingRateInputMode}
+                        directWeavingRateInput={directWeavingRateInput}
+                        onDirectWeavingRateInputChange={setDirectWeavingRateInput}
                     />
                 ) : (
                 <>
@@ -4416,114 +4572,16 @@ export default function EstimatorClient({
                 <EstimatorCard accent="weave">
                     <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
-
-                        {/* ── Loom Type Selector ── renders above Loom Wage ── */}
-                        {(() => {
-                            const totalPicks = state.weftRows.reduce((a, b) => a + b.picks, 0)
-                            return (
-                                <LoomConfigSection
-                                    state={state}
-                                    totalPicks={totalPicks}
-                                    onSetLoomType={lt => dispatch({ type: 'SET_LOOM_TYPE', loomType: lt })}
-                                    onSetLoomRpm={rpm => dispatch({ type: 'SET_LOOM_RPM', rpm })}
-                                    onSetLoomPowerKw={kw => dispatch({ type: 'SET_LOOM_POWER_KW', kw })}
-                                    onSetHoursPerShift={h => dispatch({ type: 'SET', field: 'hoursPerShift', value: h })}
-                                    onSuggestOutput={handleSuggestOutput}
-                                />
-                            )
-                        })()}
-
-                        {/* ── Loom Wage per Meter → auto-derives paisa/pick ── */}
-                        {(() => {
-                            const totalPicks = state.weftRows.reduce((a, b) => a + b.picks, 0)
-                            const perPickCostRupees = state.perPickCostPaisa
-                            const paisaPerPickDisplay = Math.round(perPickCostRupees * 100 * 10000) / 10000
-                            const derivedWagePerM = totalPicks > 0
-                                ? (perPickCostRupees * totalPicks).toFixed(2)
-                                : '0.00'
-                            return (
-                                <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-4 py-3.5">
-                                    <div className="flex items-center gap-2">
-                                        <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
-                                        <p className="text-[11px] font-semibold uppercase text-[var(--color-warning-amber)]">Loom Weave Wage</p>
-                                        <span className="ml-auto rounded-full bg-[var(--color-warning-amber-soft)] px-2 py-0.5 text-[10px] text-[var(--color-warning-amber)]">₹/m ↔ paise/pick</span>
-                                    </div>
-
-                                    <div className="mt-3 grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
-                                        {/* Input: ₹ per meter */}
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-medium text-[var(--color-warning-amber)]">Wage per Meter (₹/m)</Label>
-                                            <div className="relative group">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--color-muted)] pointer-events-none">₹</span>
-                                                <Input
-                                                    type="number"
-                                                    min={0}
-                                                    step={0.5}
-                                                    placeholder={derivedWagePerM}
-                                                    value={wagePerMInput}
-                                                    onChange={e => {
-                                                        const raw = e.target.value
-                                                        setWagePerMInput(raw)
-                                                        const wageNum = parseNonNegativeInput(raw)
-                                                        if (wageNum !== null && wageNum > 0 && totalPicks > 0) {
-                                                            const derived = wageNum / totalPicks
-                                                            dispatch({ type: 'SET', field: 'perPickCostPaisa', value: Math.round(derived * 10000) / 10000 })
-                                                        }
-                                                    }}
-                                                    onBlur={() => setWagePerMInput('')}
-                                                    className="h-10 rounded-[10px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-8 pr-14 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                                />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">/m</span>
-                                            </div>
-                                            <InlineInputWarning show={state.perPickCostPaisa <= 0}>Required</InlineInputWarning>
-                                        </div>
-
-                                        <div className="hidden rounded-[6px] bg-[var(--color-warning-amber-soft)] px-2 py-1 text-center text-[11px] text-[var(--color-warning-amber)] md:block">↔</div>
-
-                                        {/* Display: derived paise/pick + live impact */}
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-medium text-[var(--color-muted)]">Paisa per pick</Label>
-                                            <div className="relative group">
-                                                <Input
-                                                    type="number"
-                                                    min={0}
-                                                    step={0.1}
-                                                    value={paisaPerPickDisplay}
-                                                    onChange={e => {
-                                                        const v = parseNonNegativeInput(e.target.value)
-                                                        if (v === null) return
-                                                        dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v / 100 })
-                                                        setWagePerMInput('')
-                                                    }}
-                                                    className={`h-10 rounded-[10px] border pr-16 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                                                        state.perPickCostPaisa <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'
-                                                    }`}
-                                                />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">paise</span>
-                                            </div>
-                                            <InlineInputWarning show={state.perPickCostPaisa <= 0}>Required</InlineInputWarning>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center justify-between border-t border-[var(--color-warning-amber-soft)] pt-3">
-                                        <span className="text-[11px] text-[var(--color-warning-amber)]">At {totalPicks} picks</span>
-                                        <span className="text-sm font-semibold text-[var(--color-warning-amber)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</span>
-                                    </div>
-
-                                    {/* Unusually High Weave Cost Warning */}
-                                    {hasValidCostResult && totals.weaveCostPerM > 100 && (
-                                        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-xs flex items-start gap-2.5 shadow-sm">
-                                            <span className="text-sm shrink-0">⚠️</span>
-                                            <div>
-                                                <p className="font-bold">Unusually High Weave Cost ({formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')})</p>
-                                                <p className="text-amber-700 mt-0.5 font-medium">This weave cost looks unusually high. Did you mean paise per pick?</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })()}
-
+                        <WeavingRateFields
+                            state={state}
+                            dispatch={dispatch}
+                            totals={totals}
+                            hasValidCostResult={hasValidCostResult}
+                            inputMode={weavingRateInputMode}
+                            onInputModeChange={setWeavingRateInputMode}
+                            directRateInput={directWeavingRateInput}
+                            onDirectRateInputChange={setDirectWeavingRateInput}
+                        />
                     </CardContent>
                 </EstimatorCard>
 
@@ -5210,15 +5268,6 @@ export default function EstimatorClient({
                 </>
                 )}
             </div>
-                </div>
-
-                <aside
-                    className="space-y-3 xl:sticky xl:top-24 xl:col-start-2 xl:row-start-1"
-                    aria-label="Estimator reference information"
-                >
-                    <BasePlanFactoryGlossary />
-                    <ArchivePolicyNotice />
-                </aside>
             </div>
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
