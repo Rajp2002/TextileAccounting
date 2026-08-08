@@ -41,6 +41,7 @@ import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
 import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
+import { DeleteAccountCard } from '@/components/settings/delete-account-card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { Badge } from '@/components/ui/badge'
@@ -497,6 +498,10 @@ export default function SettingsPage() {
                                 </Link>
                             </div>
                         </SettingsPanel>
+                    </SettingsSection>
+
+                    <SettingsSection id="account-deletion" title="Account" icon={User}>
+                        <DeleteAccountCard organizationName={org?.name || ''} />
                     </SettingsSection>
 
                     <SettingsSection id="cost-profile" title={hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'} icon={Factory}>
