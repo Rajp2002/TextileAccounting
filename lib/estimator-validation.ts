@@ -1,6 +1,7 @@
 import {
   getEffectiveCostingWidthCm,
   getEffectiveCommercialInputs,
+  getEffectiveOverheadMode,
   getEffectiveYarnDenier,
   LOOM_TYPE_DEFAULTS,
   calculateBreakEvenPricePerM,
@@ -70,6 +71,19 @@ const MAX_COMMON_CRIMP_PCT = 15
 const MAX_COMMON_WASTE_PCT = 15
 const MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY = 500
 export const UNUSUALLY_LOW_DENIER = 20
+
+/**
+ * Factory capacity is the denominator for monthly-expense overhead and is
+ * also required when the estimate will drive a production workflow. A
+ * standalone costing with an explicit direct ₹/m overhead rate does not use
+ * loom count or factory capacity in its production-cost formula.
+ */
+export function requiresFactoryCapacity(
+  estimate: Pick<EstimateState, 'overheadMode' | 'overheadOverridePerM'>,
+  productionWorkflow = false,
+): boolean {
+  return productionWorkflow || getEffectiveOverheadMode(estimate) === 'monthly_expenses'
+}
 
 export function getYarnDensityWarning(effectiveDenier: number): string | undefined {
   if (!Number.isFinite(effectiveDenier) || effectiveDenier <= 0) {

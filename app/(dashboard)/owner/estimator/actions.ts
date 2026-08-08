@@ -4,7 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
-import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
+import { getFirstEstimatorValidationMessage, requiresFactoryCapacity, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -505,6 +505,11 @@ export async function saveAsFabricTemplate(data: {
         warpRows: data.warpRows,
         weftRows: data.weftRows,
     }
+    const effectiveTier = await getOrgTier(profile.org_id)
+    const requireCapacity = requiresFactoryCapacity(
+        snapshotEstimate,
+        tierSatisfies(effectiveTier, 'premium'),
+    )
     const snapshotTotals = getAuthoritativeQuoteTotals(snapshotEstimate)
     const snapshotBoundaryError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
         estimate: snapshotEstimate,
@@ -512,7 +517,7 @@ export async function saveAsFabricTemplate(data: {
         quotePricePerM: snapshotTotals.quotePricePerM,
         targetMeters: snapshotEstimate.orderQuantityM,
         requireTapeLength: false,
-        requireCapacity: true,
+        requireCapacity,
         result: snapshotTotals.result,
         totals: snapshotTotals.totals,
     }))
@@ -1136,9 +1141,10 @@ export async function saveEstimatorQuoteV3(params: {
         const existingName = (activeTemplates ?? []).some(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(params.qualityLabel))
         if (existingName) return { error: 'This Saved Quality already exists. Select it from My Qualities to update it, or use Use as Starting Point and save a new quality.' }
     }
+    const requireCapacity = requiresFactoryCapacity(estimate, newRecordKind === 'quotation')
     const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, {
         requireTapeLength: canUseProduction,
-        requireCapacity: true,
+        requireCapacity,
     }))
     if (snapshotError) return { error: snapshotError }
     const authoritative = getAuthoritativeQuoteTotals(estimate)
@@ -1148,7 +1154,7 @@ export async function saveEstimatorQuoteV3(params: {
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters: estimate.orderQuantityM,
         requireTapeLength: canUseProduction,
-        requireCapacity: true,
+        requireCapacity,
         result: authoritative.result,
         totals: authoritative.totals,
     }))

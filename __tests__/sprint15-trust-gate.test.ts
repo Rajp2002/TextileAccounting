@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
 import {
   getEstimatorReadiness,
+  requiresFactoryCapacity,
   validateEstimatorQuoteBoundary,
   validateEstimatorSnapshot,
 } from '../lib/estimator-validation'
@@ -76,6 +77,43 @@ describe('Sprint 15 Base estimator trust gates', () => {
       requireTapeLength: false,
       requireCapacity: false,
     }).valid).toBe(true)
+  })
+
+  it('does not require hidden factory capacity for a direct-rate Base costing', () => {
+    const estimate = makeCompleteDirectEstimate()
+    estimate.loomCount = 0
+    estimate.monthlyOutputM = 0
+    estimate.avgOutputPerLoomPerDay = 0
+
+    expect(requiresFactoryCapacity(estimate)).toBe(false)
+    expect(requiresFactoryCapacity(estimate, true)).toBe(true)
+
+    const validation = validateEstimatorSnapshot(estimate, {
+      requireTapeLength: false,
+      requireCapacity: requiresFactoryCapacity(estimate),
+    })
+    expect(validation.valid).toBe(true)
+
+    const totals = calcFullTotals(estimate)
+    const result = buildCostingResult(estimate, totals)
+    expect(result.overheadSource).toBe('direct_rate')
+    expect(result.overheadPerM).toBe(3)
+    expect(result.productionCostPerM).toBeGreaterThan(0)
+
+    estimate.overheadMode = 'monthly_expenses'
+    estimate.overheadOverridePerM = null
+    expect(requiresFactoryCapacity(estimate)).toBe(true)
+
+    const client = fs.readFileSync(
+      path.join(root, 'app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
+      'utf8',
+    )
+    const actions = fs.readFileSync(
+      path.join(root, 'app/(dashboard)/owner/estimator/actions.ts'),
+      'utf8',
+    )
+    expect(client).toContain('requireCapacity: requireCapacityForCurrentCosting')
+    expect(actions).toContain("requiresFactoryCapacity(estimate, newRecordKind === 'quotation')")
   })
 
   it('does not display or persist money for an incomplete capacity profile', () => {

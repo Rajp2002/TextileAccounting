@@ -106,6 +106,7 @@ import {
     getFirstEstimatorValidationMessage,
     getEstimatorReadiness,
     getYarnDensityWarning,
+    requiresFactoryCapacity,
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
 import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
@@ -2275,7 +2276,13 @@ export default function EstimatorClient({
         warningContinuationRef.current = null
         setWarningSavePending(false)
         setShowWarningAcknowledgement(false)
-        const restoredValidation = validateEstimatorSnapshot(restored.state, { requireTapeLength: canUseProduction, requireCapacity: true })
+        const restoredValidation = validateEstimatorSnapshot(restored.state, {
+            requireTapeLength: canUseProduction,
+            requireCapacity: requiresFactoryCapacity(
+                restored.state,
+                canUseProduction && restored.sourceRecordKind !== 'costing',
+            ),
+        })
         setShowValidation(!restoredValidation.valid)
         if (!restoredValidation.valid) {
             toast.error(tx('This Cost Estimate draft is incomplete. Check the highlighted fields before saving.'))
@@ -2411,9 +2418,16 @@ export default function EstimatorClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isStandaloneCostingSession, mode, partyName])
 
+    const requireCapacityForCurrentCosting = requiresFactoryCapacity(
+        state,
+        canUseProduction && !isStandaloneCostingSession,
+    )
     const estimatorValidation = useMemo(
-        () => validateEstimatorSnapshot(state, { requireTapeLength: canUseProduction, requireCapacity: true }),
-        [canUseProduction, state],
+        () => validateEstimatorSnapshot(state, {
+            requireTapeLength: canUseProduction,
+            requireCapacity: requireCapacityForCurrentCosting,
+        }),
+        [canUseProduction, requireCapacityForCurrentCosting, state],
     )
     const firstEstimatorValidationMessage = useMemo(
         () => getFirstEstimatorValidationMessage(estimatorValidation),
@@ -2567,11 +2581,12 @@ export default function EstimatorClient({
         warningAlreadyReviewed = false,
     ) => {
         // Updating an existing quality changes the reusable recipe only. A new
-        // quality also creates its initial costing snapshot, so it must pass
-        // the stricter capacity gate before the snapshot can be persisted.
+        // quality also creates its initial costing snapshot. Capacity is
+        // required when that snapshot uses monthly expenses, or when the Full
+        // Suite workflow will use it for production.
         const templateValidation = validateEstimatorSnapshot(state, {
             requireTapeLength: false,
-            requireCapacity: !appliedTemplate,
+            requireCapacity: !appliedTemplate && requiresFactoryCapacity(state, canUseProduction),
         })
         if (!templateValidation.valid) {
             toast.error(tx(getFirstEstimatorValidationMessage(templateValidation) ?? 'Complete the highlighted inputs before saving the quality.'))
