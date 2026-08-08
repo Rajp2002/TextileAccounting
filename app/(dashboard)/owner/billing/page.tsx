@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
+    BILLING_SELF_SERVE_PLAN_TIERS,
     getBillingPlan,
     getBillingPrice,
     RENEWAL_ELIGIBILITY_DAYS,
@@ -121,10 +122,12 @@ function PlanCards({
     label,
     currentTier,
     decisions,
+    visibleTiers,
 }: {
     label: string
     currentTier: string
     decisions: Record<PurchasablePlanTier, BillingPurchaseDecision>
+    visibleTiers: readonly PurchasablePlanTier[]
 }) {
     const plans = [
         {
@@ -144,11 +147,14 @@ function PlanCards({
             icon: Star,
         },
     ]
+        .filter((plan) => visibleTiers.includes(plan.tier))
         .filter((plan) => currentTier !== 'base' || plan.tier === 'premium')
         .filter((plan) => decisions[plan.tier].allowed)
 
+    if (plans.length === 0) return null
+
     return (
-        <div className="space-y-5">
+        <div className="space-y-5 pt-4">
             <div>
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">Plans</p>
                 <h2 className="text-2xl font-bold tracking-tight text-slate-950">{label}</h2>
@@ -270,6 +276,10 @@ export default async function BillingPage({
     const isPending = checkoutPresentation.state === 'pending'
     const isRetryable = checkoutPresentation.state === 'retryable'
     const activeRenewalDecision = activePaidTier ? purchaseDecisions[activePaidTier] : null
+    const hasPaidPremiumHistory = purchaseDecisions.premium.purchaseType === 'renewal'
+    const visiblePlanTiers: readonly PurchasablePlanTier[] = tier === 'trial' || hasPaidPremiumHistory
+        ? ['base', 'premium']
+        : BILLING_SELF_SERVE_PLAN_TIERS
     const renewalAvailable = Boolean(
         activeRenewalDecision?.allowed
         && activeRenewalDecision.purchaseType === 'renewal'
@@ -368,7 +378,7 @@ export default async function BillingPage({
                                         </div>
                                         <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Choose your Weavly workspace.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            Start with the standalone Estimator for costing and quotes, or choose Full Suite for production, stock, dispatch, and payroll.
+                                            Start with the standalone Estimator for costing, saved qualities, and customer quotations.
                                         </p>
                                     </>
                                 )}
@@ -495,13 +505,12 @@ export default async function BillingPage({
 
                     {/* 2. PLAN CARDS SECTION (If not premium or if base) */}
                     {(tier !== 'premium' && !isActivating && !isPending) && (
-                        <div className="pt-4">
-                            <PlanCards
-                                label={tier === 'base' ? 'Upgrade to Weavly Full Suite' : 'Select your Weavly Plan'}
-                                currentTier={tier}
-                                decisions={purchaseDecisions}
-                            />
-                        </div>
+                        <PlanCards
+                            label={tier === 'base' ? 'Upgrade to Weavly Full Suite' : 'Select Weavly Estimator'}
+                            currentTier={tier}
+                            decisions={purchaseDecisions}
+                            visibleTiers={visiblePlanTiers}
+                        />
                     )}
 
                     {/* 3. PAYMENT HISTORY - CLEAN & COMPACT */}

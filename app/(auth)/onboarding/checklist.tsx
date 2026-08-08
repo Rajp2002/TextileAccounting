@@ -21,7 +21,7 @@ import { addMeterWorkersBulk } from '@/app/(dashboard)/supervisor/actions'
 import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
-import { getBillingPlan, getBillingPrice } from '@/lib/billing-constants'
+import { BILLING_SELF_SERVE_DEFAULT_TIER, getBillingPlan, getBillingPrice } from '@/lib/billing-constants'
 import { BrandBackground } from '@/components/brand-background'
 import { LoomiAvatar } from '@/components/onboarding/loomi-avatar'
 import { PRODUCTION_MODE_OPTIONS, type ProductionMode } from '@/lib/production-mode'
@@ -657,12 +657,12 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
  // ─── Plan Selection Form ──────────────────────────────────────────────────────────
 
 function PlanSelectionForm({ onDone }: { onDone: () => void }) {
-    const plan = getBillingPlan('premium')
-    const price = getBillingPrice('premium', 'initial_purchase')
+    const plan = getBillingPlan(BILLING_SELF_SERVE_DEFAULT_TIER)
+    const price = getBillingPrice(BILLING_SELF_SERVE_DEFAULT_TIER, 'initial_purchase')
 
     return (
         <div className="pt-4 border-t border-gray-100 space-y-4">
-            <p className="text-sm text-gray-500">Choose a paid plan to activate continued factory access.</p>
+            <p className="text-sm text-gray-500">Choose the paid Estimator plan to activate your costing workspace.</p>
 
             <div className="grid grid-cols-1 gap-3">
                 <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -675,7 +675,7 @@ function PlanSelectionForm({ onDone }: { onDone: () => void }) {
                     </div>
                     <div className="w-full sm:w-auto shrink-0">
                         <SubscribeButton
-                            planTier="premium"
+                            planTier={BILLING_SELF_SERVE_DEFAULT_TIER}
                             tierName={plan.name}
                             displayAmount={`₹${(price.totalPaise / 100).toLocaleString('en-IN')}`}
                             onSuccess={() => onDone()}

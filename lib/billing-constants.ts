@@ -4,6 +4,16 @@ export const GST_RATE = 0.18
 export type PurchasablePlanTier = 'base' | 'premium'
 export type BillingPurchaseType = 'initial_purchase' | 'renewal'
 
+/**
+ * Temporary self-serve rollout surface for the Estimator-first release.
+ *
+ * Keep the Full Suite in the catalog and server-side billing lifecycle so
+ * existing tenants and a future self-serve rollout do not need new billing
+ * architecture. This list only controls which plans new accounts can select.
+ */
+export const BILLING_SELF_SERVE_PLAN_TIERS: readonly PurchasablePlanTier[] = ['base']
+export const BILLING_SELF_SERVE_DEFAULT_TIER: PurchasablePlanTier = 'base'
+
 export const BILLING_PLANS = {
   base: {
     tier: 'base',
