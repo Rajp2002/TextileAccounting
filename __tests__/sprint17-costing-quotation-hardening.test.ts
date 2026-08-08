@@ -177,7 +177,8 @@ describe('Sprint 17 costing and quotation hardening', () => {
   it('keeps the quotation ledger and archive/restore boundaries explicit', () => {
     const quotes = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
-    const migration = read('supabase/migrations/20260803100000_sprint17_quotation_ledger_hardening.sql')
+    const migration = read('supabase/migrations/20260808121411_sprint17_quotation_ledger_hardening.sql')
+    const hardeningMigration = read('supabase/migrations/20260808121531_harden_quotation_sent_stamp_search_path.sql')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
     expect(quotes).toContain('Quotation ledger')
@@ -187,6 +188,7 @@ describe('Sprint 17 costing and quotation hardening', () => {
     expect(actions).toContain('Next allowed action:')
     expect(migration).toContain('sent_at')
     expect(migration).toContain('stamp_estimator_quote_sent_at')
+    expect(hardeningMigration).toContain('SET search_path = pg_catalog, public')
     expect(estimator).toContain('Save quality/recipe:')
     expect(estimator).toContain('Save costing snapshot:')
     expect(estimator).toContain('Create new version:')

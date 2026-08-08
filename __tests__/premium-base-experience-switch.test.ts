@@ -34,7 +34,7 @@ describe('Full Suite to Base Plan experience switch', () => {
   })
 
   it('persists a constrained organization preference and enforces it for Premium RLS checks', () => {
-    const migration = read('supabase/migrations/20260808120003_premium_base_experience_switch.sql')
+    const migration = read('supabase/migrations/20260808121430_premium_base_experience_switch.sql')
 
     expect(migration).toContain("ADD COLUMN IF NOT EXISTS product_experience text NOT NULL DEFAULT 'full_suite'")
     expect(migration).toContain("CHECK (product_experience IN ('base', 'full_suite'))")

@@ -6,7 +6,7 @@ function source(path: string) {
 }
 
 describe('permanent account deletion guardrails', () => {
-    const migration = source('supabase/migrations/20260808064552_permanently_delete_account_data.sql')
+    const migration = source('supabase/migrations/20260808115518_20260808064552_permanently_delete_account_data.sql')
     const action = source('app/(dashboard)/owner/settings/account-deletion.ts')
     const card = source('components/settings/delete-account-card.tsx')
     const settings = source('app/(dashboard)/owner/settings/page.tsx')
