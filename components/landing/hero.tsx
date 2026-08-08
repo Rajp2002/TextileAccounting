@@ -3,13 +3,13 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
-const proofItems = ['GST-inclusive pricing', 'Manual annual renewal', 'Works as an installable PWA']
+const proofItems = ['Base Plan available now', 'GST-inclusive pricing', 'Works as an installable PWA']
 
-const ownerSignals = [
-    'Production still pending this shift',
-    'Machines that need assignment',
-    'Sold fabric waiting for dispatch',
-    'Worker Hisaab and Upaad due',
+const estimatorSignals = [
+    'Production cost per metre',
+    'Warp and weft assumptions',
+    'Margin and break-even price',
+    'Save Costing and Export Cost Sheet',
 ]
 
 export default function LandingHero() {
@@ -19,15 +19,15 @@ export default function LandingHero() {
                 <div className="mx-auto w-full max-w-7xl px-3 py-8 xs:px-6 xs:py-14 lg:px-8 lg:pb-12 lg:pt-28">
                     <div className="mx-auto max-w-6xl text-center">
                         <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-700 dark:text-orange-400 xs:text-xs xs:tracking-[0.32em]">
-                            Built for grey fabric weaving factories
+                            Estimator-first for grey fabric weaving factories
                         </p>
 
                         <h1 className="mx-auto mt-5 max-w-6xl text-4xl font-black leading-[1.02] tracking-normal text-zinc-950 xs:mt-7 xs:text-5xl sm:text-7xl lg:text-[5.25rem] dark:text-white">
-                            Know what needs attention before the next shift starts.
+                            Know your cost before you commit to the next order.
                         </h1>
 
                         <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-600 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
-                            Weavly gives factory owners one live record for Cost Estimates, Quotations, Orders, Market Runs, shift production, Godown Stock, Dispatches, Party Ledger, Upaad, and Worker Hisaab.
+                            Weavly gives factory owners a focused costing desk for fabric qualities, yarn assumptions, landed cost, margin, saved costings, and cost-sheet exports.
                         </p>
 
                         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -37,7 +37,7 @@ export default function LandingHero() {
                                     size="lg"
                                     className="w-full rounded-md bg-zinc-950 px-8 py-6 text-base font-bold text-white shadow-xl shadow-zinc-950/10 transition-all hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 sm:w-auto"
                                 >
-                                    Request pilot access
+                                    Start with the Base Plan
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
@@ -48,7 +48,7 @@ export default function LandingHero() {
                                     variant="outline"
                                     className="w-full rounded-md border border-zinc-300 bg-white/80 px-8 py-6 text-base font-bold transition-all hover:border-orange-500 hover:text-orange-700 dark:border-zinc-600 dark:bg-zinc-950/50 dark:text-white dark:hover:border-orange-500 sm:w-auto"
                                 >
-                                    See the real product
+                                    See the estimator
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
@@ -68,27 +68,23 @@ export default function LandingHero() {
                             <Link href="/login" className="font-semibold text-orange-700 hover:underline dark:text-orange-500">
                                 Log in
                             </Link>
-                            <span className="px-2 text-zinc-300">|</span>
-                            <Link href="/join" className="font-semibold text-zinc-600 hover:text-zinc-950 hover:underline dark:text-zinc-300 dark:hover:text-white">
-                                Supervisor join
-                            </Link>
                         </p>
                     </div>
                 </div>
             </section>
 
-            <section className="landing-section relative z-10 isolate overflow-hidden" id="product" aria-label="Current Weavly product view">
+            <section className="landing-section relative z-10 isolate overflow-hidden" id="product" aria-label="Current Weavly estimator view">
                 <div className="mx-auto grid w-full max-w-7xl gap-7 px-3 py-14 xs:px-6 sm:py-20 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:px-8 lg:py-12">
                     <div className="max-w-xl">
-                        <p className="text-xs font-black uppercase tracking-[0.3em] text-orange-700 dark:text-orange-400">The actual owner workspace</p>
+                        <p className="text-xs font-black uppercase tracking-[0.3em] text-orange-700 dark:text-orange-400">The actual Base Plan workspace</p>
                         <h2 className="mt-4 text-4xl font-black leading-[1.05] text-zinc-950 sm:text-6xl dark:text-white">
-                            Open the app. See the factory’s action list.
+                            Open the app. See the numbers before you quote.
                         </h2>
                         <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                            Factory Today brings the records an owner checks most into one screen—what is pending, what is at risk, and where to act next.
+                            The Base Plan keeps the first release focused: build a reliable cost estimate, understand the margin, reuse a fabric quality, and export the costing when you are ready.
                         </p>
                         <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                            {ownerSignals.map((signal) => (
+                            {estimatorSignals.map((signal) => (
                                 <li key={signal} className="flex items-start gap-3 text-sm font-bold leading-6 text-zinc-800 dark:text-zinc-200">
                                     <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-orange-600" aria-hidden="true" />
                                     {signal}
@@ -96,7 +92,7 @@ export default function LandingHero() {
                             ))}
                         </ul>
                         <p className="mt-7 border-l-2 border-orange-500 pl-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                            Authentic Weavly owner-screen capture from the current QA build. Demo factory data shown.
+                            Authentic Weavly Estimator owner-screen capture from the current QA build. Demo costing data shown.
                         </p>
                     </div>
 
@@ -107,12 +103,12 @@ export default function LandingHero() {
                                 <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
                                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
                                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                                <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Factory Today · Owner view</span>
+                                <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Cost Estimate · Owner view</span>
                             </div>
                             <div className="relative aspect-[16/10] overflow-hidden bg-[#fff8ea]">
                                 <Image
-                                    src="/images/factory-today-owner.png"
-                                    alt="Current Weavly Factory Today owner dashboard showing production, machines, stock, dispatch, party ledger, and worker Hisaab status"
+                                    src="/images/estimator-owner.png"
+                                    alt="Current Weavly Estimator owner workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
                                     fill
                                     priority
                                     sizes="(max-width: 1024px) 100vw, 62vw"

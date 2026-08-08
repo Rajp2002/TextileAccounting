@@ -103,7 +103,7 @@ export default function LandingHeader() {
                             </Link>
                             <Link href="/signup">
                                 <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-orange-500/20 rounded-md px-6 font-semibold transition-all">
-                                    Request Pilot
+                                    Request Base Plan access
                                 </Button>
                             </Link>
                         </div>
@@ -149,7 +149,7 @@ export default function LandingHeader() {
                                         <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-gray-600 hover:bg-white/10 text-gray-200">Log in</Button>
                                     </Link>
                                     <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-md py-6 font-semibold shadow-md">Request Pilot</Button>
+                                        <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-md py-6 font-semibold shadow-md">Request Base Plan access</Button>
                                     </Link>
                                 </div>
                             </div>

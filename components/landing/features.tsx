@@ -1,56 +1,56 @@
-import { Calculator, ClipboardList, Factory, MessageCircle, ReceiptIndianRupee, Truck } from 'lucide-react'
+import { Calculator, ClipboardList, Copy, Download, MessageCircle, ReceiptIndianRupee } from 'lucide-react'
 
 const painPoints = [
-    'Shift production arrives late from notebooks or WhatsApp.',
-    'Worker Hisaab depends on production totals that workers can dispute.',
-    'Orders fall behind pace before the owner notices.',
-    'Godown Stock, Delivery Challans, shortages, and Party collections live in separate places.',
     'Yarn price changes make quotation margins hard to trust.',
+    'Cost assumptions are spread across spreadsheets, notebooks, and memory.',
+    'The same fabric quality gets rebuilt from scratch for every new costing.',
+    'Landed cost, break-even price, and target margin are hard to see together.',
+    'Draft costings disappear before the next customer conversation.',
 ]
 
-const replaces = ['Production register', 'Hajiri book', 'Excel costing sheet', 'Delivery Challan', 'WhatsApp follow-ups', 'Worker Hisaab slips']
+const replaces = ['Excel costing sheet', 'Handwritten yarn rates', 'Repeated calculations', 'Margin guesswork', 'Scattered price notes', 'Lost costing drafts']
 
 const workflow = [
     {
         title: 'Create a Cost Estimate',
-        description: 'Enter warp and weft details, factory costs, GST, shortage, and margin. Save the costing as a reusable quality or lock it into a Quotation.',
-        outcome: 'Know landed cost, selling price, and expected margin before saying yes.',
+        description: 'Enter warp and weft details, factory costs, GST, shortage, transport, commission, and margin in one guided workspace.',
+        outcome: 'Know landed cost, break-even price, and expected margin before saying yes.',
         icon: Calculator,
     },
     {
-        title: 'Start an Order or Market Run',
-        description: 'Convert an accepted Quotation into a Party Order, or start market maal when client demand is light. Then assign machines and workers.',
-        outcome: 'Every running machine is tied to a costed production target.',
-        icon: Factory,
+        title: 'Reuse a Saved Quality',
+        description: 'Keep fabric construction and costing assumptions together so the next estimate starts from a known baseline.',
+        outcome: 'Spend less time re-entering the same factory knowledge.',
+        icon: Copy,
     },
     {
-        title: 'Log every shift',
-        description: 'Supervisors enter machine status, worker assignment, and total metres produced from the mobile floor workflow.',
-        outcome: 'The same shift record updates progress, expected stock, and Worker Hisaab.',
+        title: 'Check the margin',
+        description: 'See production cost per metre, suggested price, actual margin, break-even price, and the assumptions behind the result.',
+        outcome: 'Make pricing decisions from visible inputs instead of a guessed total.',
         icon: ClipboardList,
     },
     {
-        title: 'Sell, dispatch, and settle',
-        description: 'Track Godown Stock, Party sales, Delivery Challan batches, received metres, shortages, collections, Upaad, and Worker Hisaab.',
-        outcome: 'Close the loop from metres produced to cash collected and workers paid.',
-        icon: Truck,
+        title: 'Save or export the costing',
+        description: 'Save a costing for later comparison or export a clean cost sheet when you need to share the numbers.',
+        outcome: 'Keep the decision record ready for the next customer conversation.',
+        icon: Download,
     },
 ]
 
 const trustItems = [
     {
-        title: 'Factory vocabulary inside the product',
-        copy: 'Market runs, Upaad, Kharchi, metres produced each shift, machine assignments, worker rates, and dispatch shortages are first-class workflows.',
+        title: 'Factory vocabulary inside the estimator',
+        copy: 'Warp, weft, PPI, crimp, waste, pick rate, costing, quotation, margin, and GST are explained in the language your costing desk already uses.',
         icon: ReceiptIndianRupee,
     },
     {
-        title: 'Built for the floor, not just the office',
-        copy: 'Built for repeated supervisor use in patchy factory conditions. Mobile screens are designed for quick daily entry.',
+        title: 'Built for the costing conversation',
+        copy: 'Open the installable PWA on the device you already use, keep the assumptions visible, and return to saved work when the next price request arrives.',
         icon: ClipboardList,
     },
     {
-        title: 'WhatsApp where it actually helps',
-        copy: 'Daily briefs, payslips, Upaad receipts, and access-code requests reach owners and workers without replacing core records.',
+        title: 'Full Suite in development',
+        copy: 'Production logging, stock, dispatch, payroll, and connected factory dashboards are planned for a later Full Suite release. They are not part of the Base Plan today.',
         icon: MessageCircle,
     },
 ]
@@ -67,7 +67,7 @@ export default function LandingFeatures() {
                                 Stop running the factory from registers, memory, and missed calls.
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                                Weavly is built for owners who need production, dispatch, and Worker Hisaab to agree with each other before small mistakes become expensive disputes.
+                                Weavly is built for owners who need yarn inputs, factory costs, and margin to agree before a price becomes a promise.
                             </p>
                         </div>
 
@@ -108,13 +108,13 @@ export default function LandingFeatures() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
                         <div>
-                            <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Factory workflow</p>
+                            <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Estimator workflow</p>
                             <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                                One operating loop from costing to collection.
+                                One clear loop from inputs to Cost Sheet.
                             </h2>
                         </div>
                         <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
-                            Weavly follows how a weaving unit actually moves work: calculate the Cost Estimate, issue the Quotation, run an Order or market maal, log shift totals, manage Godown Stock, dispatch, collect, and settle workers.
+                            Weavly follows the costing decision a weaving unit makes before work begins: define the fabric quality, capture yarn rates, apply factory costs, review margin, save the costing, and export the Cost Sheet.
                         </p>
                     </div>
 
@@ -149,13 +149,13 @@ export default function LandingFeatures() {
                     <div className="overflow-hidden border border-orange-200 bg-orange-50/60 shadow-[0_28px_90px_rgba(154,52,18,0.08)]">
                         <div className="grid gap-10 border-b border-orange-200/70 p-6 sm:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:p-12">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
+                            <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700">ESTIMATOR-FIRST, FACTORY-LITERATE</p>
                                 <h2 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl">
-                                    Every term in the product is a term from your factory floor.
+                                    Every number in the estimator should make sense on your factory floor.
                                 </h2>
                             </div>
                             <p className="text-lg leading-8 text-zinc-600 lg:pt-12">
-                                The product vocabulary, mobile workflows, and WhatsApp touchpoints are designed around the operating reality of Indian weaving units.
+                                The first release stays deliberately focused on the costing work that happens before production: capture the right assumptions, trust the math, and carry the costing into the next conversation.
                             </p>
                         </div>
 

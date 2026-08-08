@@ -36,20 +36,20 @@ export default function Home() {
           <div className="px-6 py-20 sm:px-6 sm:py-28 lg:px-8">
             <div className="relative mx-auto max-w-5xl text-center">
               <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-700">
-                Start with one supervisor and one shift
+                Start with one factory and one costing desk
               </p>
               <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-black tracking-normal text-zinc-950 xs:text-4xl sm:text-6xl">
-                Bring your active work, machines, stock, dispatches, and Hisaab into one record.
+                Bring your yarn assumptions, factory costs, and margin into one costing record.
                 <br />
-                <span className="text-orange-600">Run the next shift with a clearer action list.</span>
+                <span className="text-orange-600">Make the next price conversation clearer.</span>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-600 sm:text-lg">
-                A focused pilot is enough: one supervisor logs metres from the floor, the owner sees what is pending, and Worker Hisaab starts from the same production record.
+                A focused pilot is enough: one owner creates a reliable costing, saves the factory baseline, and exports a clear Cost Sheet. Full Suite factory operations are in development.
               </p>
               <div className="mt-9 flex items-center justify-center gap-x-6">
                 <Link href="/signup">
                   <Button size="lg" className="rounded-md px-8 py-6 text-base font-bold bg-zinc-950 text-white hover:bg-zinc-800 shadow-xl shadow-zinc-950/10 transition-all group">
-                    Request Pilot Access <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    Request Base Plan access <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
               </div>

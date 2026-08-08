@@ -1,48 +1,33 @@
 import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { BILLING_PLANS, type PurchasablePlanTier } from '@/lib/billing-constants'
+import { BILLING_PLANS, BILLING_SELF_SERVE_PLAN_TIERS } from '@/lib/billing-constants'
 
-const planDetails: Record<PurchasablePlanTier, {
-    badge: string
-    description: string
-    features: string[]
-}> = {
-    base: {
-        badge: 'Costing desk',
-        description: 'For owners who want reliable costing, saved costing history, and margin control without moving factory-floor operations yet.',
-        features: [
-            'Warp and weft cost estimator',
-            'Fabric templates and saved qualities',
-            'Quote history and draft recovery',
-            'Margin and landed-cost visibility',
-            'Independent owner access',
-        ],
-    },
-    premium: {
-        badge: 'Complete factory',
-        description: 'For factories ready to connect quotes, looms, shift logs, stock, dispatches, payroll, and owner visibility.',
-        features: [
-            'Everything in Weavly Estimator',
-            'Production and order tracking',
-            'Shift production logs with shift-total meters',
-            'Market runs and godown stock',
-            'Dispatches and sale records',
-            'Payroll, advances, and settlement',
-            'Operational analytics for owners',
-            'Unlimited machines and workers',
-        ],
-    },
-}
+const basePlanDetails = {
+    badge: 'Base Plan · available now',
+    description: 'A focused costing desk for owners who want reliable fabric costing, reusable qualities, saved costing history, and margin control before connecting factory-floor operations.',
+    features: [
+        'Warp and weft cost estimator',
+        'Fabric templates and saved qualities',
+        'Saved costing history and draft recovery',
+        'Margin, break-even, and landed-cost visibility',
+        'Cost Sheet export',
+        'Independent owner access',
+    ],
+} as const
 
 function formatRupees(paise: number) {
     return `₹${(paise / 100).toLocaleString('en-IN')}`
 }
 
 export default function LandingPricing() {
-    const plans = (['base', 'premium'] as const).map((tier) => ({
-        ...BILLING_PLANS[tier],
-        ...planDetails[tier],
-    }))
+    const plans = BILLING_SELF_SERVE_PLAN_TIERS.flatMap((tier) => {
+        if (tier !== 'base') return []
+
+        return [{
+            ...BILLING_PLANS.base,
+            ...basePlanDetails,
+        }]
+    })
 
     return (
         <section className="landing-section relative overflow-hidden py-20 sm:py-28 lg:py-16" id="pricing">
@@ -51,12 +36,12 @@ export default function LandingPricing() {
                     <div>
                         <p className="text-xs font-black uppercase leading-7 tracking-[0.32em] text-orange-700 dark:text-orange-500">Pricing</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                            Pay for the first year. Renew for less.
+                            Start with the Base Estimator.
                         </h2>
                     </div>
                     <div className="max-w-2xl lg:ml-auto">
                         <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                            Start with the Estimator or bring the full factory workflow into Weavly. Both plans include a full year of access, with a lower annual renewal from year two.
+                            The current rollout is intentionally focused on the Base Plan: one reliable costing desk for fabric qualities, saved costings, and margin-aware pricing.
                         </p>
                         <p className="mt-3 text-sm text-zinc-400 dark:text-zinc-500">
                             Prices below show the GST-inclusive total and its 18% breakdown. Renewal is manual and opens 30 days before expiry. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
@@ -64,9 +49,8 @@ export default function LandingPricing() {
                     </div>
                 </div>
 
-                <div className="mt-10 grid gap-5 lg:grid-cols-2">
-                    {plans.map((plan, index) => {
-                        const isPremium = index === 1
+                <div className="mx-auto mt-10 max-w-3xl">
+                    {plans.map((plan) => {
                         const firstYearBase = formatRupees(plan.firstYearBasePaise)
                         const firstYearGst = formatRupees(plan.firstYearGstPaise)
                         const firstYearTotal = formatRupees(plan.firstYearTotalPaise)
@@ -77,18 +61,18 @@ export default function LandingPricing() {
                         return (
                             <div
                                 key={plan.tier}
-                                className={`flex flex-col border p-6 backdrop-blur sm:p-8 ${isPremium ? 'border-orange-300 bg-orange-50/80 shadow-[0_30px_90px_rgba(154,52,18,0.14)]' : 'border-zinc-200 bg-white/92 shadow-[0_24px_70px_rgba(154,52,18,0.08)] dark:border-white/10 dark:bg-zinc-950/75'}`}
+                                className="flex flex-col border border-orange-300 bg-orange-50/80 p-6 shadow-[0_30px_90px_rgba(154,52,18,0.14)] backdrop-blur sm:p-8"
                             >
                                 <div className="flex flex-wrap items-center gap-3">
                                     <h3 className="text-2xl font-black text-zinc-950">{plan.name}</h3>
-                                    <span className={`border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${isPremium ? 'border-orange-400 bg-orange-100 text-orange-700' : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300'}`}>
+                                    <span className="border border-orange-400 bg-orange-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-orange-700">
                                         {plan.badge}
                                     </span>
                                 </div>
                                 <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">{plan.description}</p>
 
                                 <div className="mt-7 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
-                                    <div className={`border p-5 ${isPremium ? 'border-orange-200 bg-white/70' : 'border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5'}`}>
+                                    <div className="border border-orange-200 bg-white/70 p-5">
                                         <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">First year</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
                                             <span className="text-5xl font-black tracking-tight text-zinc-950">{firstYearTotal}</span>
@@ -96,7 +80,7 @@ export default function LandingPricing() {
                                         </p>
                                         <p className="mt-2 text-xs text-zinc-500">{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
                                     </div>
-                                    <div className={`border p-5 ${isPremium ? 'border-orange-300 bg-orange-100/60' : 'border-orange-200 bg-orange-50/70 dark:border-orange-500/20 dark:bg-orange-500/10'}`}>
+                                    <div className="border border-orange-300 bg-orange-100/60 p-5">
                                         <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">Renewal from year 2</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-1">
                                             <span className="text-3xl font-black tracking-tight text-zinc-950">{renewalTotal}</span>
@@ -106,8 +90,8 @@ export default function LandingPricing() {
                                     </div>
                                 </div>
 
-                                <Button asChild className={`mt-6 w-full rounded-md py-6 font-bold ${isPremium ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md shadow-orange-500/20' : 'bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100'}`}>
-                                    <a href="/signup">Choose this plan</a>
+                                <Button asChild className="mt-6 w-full rounded-md bg-orange-600 py-6 font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-700">
+                                    <a href="/signup">Request Base Plan access</a>
                                 </Button>
 
                                 <div className="mt-7 grid gap-3 text-sm leading-6 text-zinc-600 sm:grid-cols-2">
@@ -123,9 +107,9 @@ export default function LandingPricing() {
                     })}
                 </div>
 
-                <div className="mt-5 flex flex-col gap-2 border border-orange-200 bg-orange-50/80 px-5 py-4 text-sm text-zinc-700 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-zinc-300">
-                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> Multi-factory pricing is quoted after a workflow review.</p>
-                    <a className="font-bold text-orange-700 underline decoration-orange-300 underline-offset-4 hover:text-orange-800 dark:text-orange-300" href="/signup">Request pilot access</a>
+                <div className="mx-auto mt-5 flex max-w-3xl flex-col gap-2 border border-orange-200 bg-orange-50/80 px-5 py-4 text-sm text-zinc-700 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-zinc-300">
+                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> Full Suite production, stock, dispatch, payroll, and analytics are in development and are not available for purchase yet.</p>
+                    <a className="shrink-0 font-bold text-orange-700 underline decoration-orange-300 underline-offset-4 hover:text-orange-800 dark:text-orange-300" href="/signup">Request access</a>
                 </div>
             </div>
         </section>

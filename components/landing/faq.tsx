@@ -1,27 +1,27 @@
 const faqs = [
     {
         question: 'Does Weavly work for grey fabric weaving factories?',
-        answer: 'Yes. The workflows are designed around Cost Estimates, Machine Assignments, Metres Produced This Shift, Market Runs, dispatch tracking, Upaad, and Piece-Rate Worker Hisaab.',
+        answer: 'Yes. The current Base Plan is designed around the costing work before production: fabric qualities, warp and weft inputs, factory costs, GST, margin, break-even price, saved costings, and Cost Sheet exports.',
     },
     {
-        question: 'Can my supervisor use this on the factory floor?',
-        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update Machine status, enter Metres Produced This Shift, and submit shift logs.',
+        question: 'What is included in the current rollout?',
+        answer: 'The paid Base Plan includes the Estimator, reusable fabric qualities, saved costing history, configurable costing defaults, margin visibility, and Cost Sheet export. Full Suite factory operations are in development and are not available yet.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',
-        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions, with drafts kept on the device while you are signed in. Saving production, kharchi, payroll, sale, dispatch, and payment entries requires an internet connection.',
+        answer: 'The Estimator works as an installable PWA, and drafts can remain on the device while you are signed in. Saving a costing and exporting a Cost Sheet requires an internet connection.',
     },
     {
         question: 'What does Weavly replace?',
-        answer: 'It brings the production register, Excel costing sheet, order list, Godown Stock ledger, Delivery Challan follow-ups, Party receivables, Upaad, and Worker Hisaab into one connected record.',
+        answer: 'It replaces the spreadsheet and handwritten work used to rebuild yarn assumptions, factory costs, landed cost, break-even price, and margin for each costing.',
     },
     {
-        question: 'Is factory and worker data secure?',
-        answer: 'Weavly uses tenant isolation, row-level security, role-based access, and DPDP-aware privacy controls so each factory can access only its own data and authorized staff records.',
+        question: 'Is my costing data secure?',
+        answer: 'Weavly uses tenant isolation, row-level security, role-based access, and DPDP-aware privacy controls so each factory can access only its own account and costing data.',
     },
     {
-        question: 'Can I start with only one floor or supervisor?',
-        answer: 'Yes. The best pilot is small: one factory floor, a few machines, active orders or market runs, and one supervisor using the daily production flow.',
+        question: 'Can I start with only the costing desk?',
+        answer: 'Yes. That is the intended Base Plan rollout: start with one factory, one owner, and a clear costing process before considering the Full Suite when it becomes available.',
     },
 ]
 
