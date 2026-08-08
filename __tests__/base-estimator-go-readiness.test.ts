@@ -91,6 +91,10 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(estimator).not.toContain('Scenario Analysis')
     expect(estimator).not.toContain('customTargetPrice')
     expect(estimator).toContain("accent === 'indigo' ? 'lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5'")
+    expect(estimator).toContain('<div className="space-y-2 2xl:w-[520px]">')
+    expect(estimator).toContain('<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">')
+    expect(estimator).toContain('data-testid="save-as-new-quality"')
+    expect(estimator).toContain('id="export-cost-sheet-hint" className="w-full text-xs')
     expect(estimator).toContain("variant={isStandaloneCostingSession ? 'default' : 'outline'}")
 
     const savedCostings = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')

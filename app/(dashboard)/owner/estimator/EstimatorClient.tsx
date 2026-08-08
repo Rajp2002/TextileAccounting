@@ -3664,7 +3664,8 @@ export default function EstimatorClient({
                             <p><span className="font-semibold text-[var(--color-ink)]">Create new version:</span> deliberate action with the changed-input summary above; an ordinary repeat save does not create a duplicate.</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end 2xl:w-[520px]">
+                        <div className="space-y-2 2xl:w-[520px]">
+                            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
 
                             {mode === 'quote' || isStandaloneCostingSession ? (
                                 <>
@@ -3726,12 +3727,6 @@ export default function EstimatorClient({
                                             <FileDown className="h-3.5 w-3.5 shrink-0" />
                                             <span className="truncate">{tx('Export Cost Sheet')}</span>
                                         </Button>
-                                    )}
-
-                                    {isStandaloneCostingSession && !exportModel && (
-                                        <p id="export-cost-sheet-hint" className="col-span-2 text-xs font-medium leading-relaxed text-amber-700 sm:col-span-1">
-                                            {tx('Complete the highlighted inputs before creating an Internal Cost Sheet or Customer Quotation.')}
-                                        </p>
                                     )}
 
                                     {/* TERTIARY: Save Quote */}
@@ -3828,7 +3823,8 @@ export default function EstimatorClient({
                                         <span className="truncate">{tx(savingTemplate ? 'Saving Fabric Quality…' : 'Update Fabric Quality')}</span>
                                     </Button>
                                     <Button
-                                        variant="ghost"
+                                        data-testid="save-as-new-quality"
+                                        variant="outline"
                                         size="sm"
                                         onClick={() => {
                                             // A copy starts a new template and costing lineage. Keep
@@ -3861,7 +3857,7 @@ export default function EstimatorClient({
                                             setTemplateSaveError(null)
                                             setShowSaveTemplate(true)
                                         }}
-                                        className="h-12 px-3 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                        className="h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)]"
                                         title={tx('Use as Starting Point for this saved quality and save it as a separate quality')}
                                         aria-label={tx(`Use ${appliedTemplate.name} as a starting point; save as a new quality`)}
                                     >
@@ -3880,9 +3876,10 @@ export default function EstimatorClient({
                                 </div>
                             ) : (
                                 <Button
+                                    data-testid="save-as-new-quality"
                                     size="sm"
-                                    variant="ghost"
-                                    className="h-12 flex-none rounded-[10px] px-4 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                    variant="outline"
+                                    className="col-span-2 h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setTemplateSaveError(null)
@@ -3895,7 +3892,13 @@ export default function EstimatorClient({
                                     <span className="hidden truncate sm:inline">{tx('Save as New Quality')}</span>
                                 </Button>
                             )}
-                            <p className="col-span-2 text-[11px] font-medium leading-relaxed text-[var(--color-muted)] sm:col-span-1 2xl:col-span-2">
+                            </div>
+                            {isStandaloneCostingSession && !exportModel && (
+                                <p id="export-cost-sheet-hint" className="w-full text-xs font-medium leading-relaxed text-amber-700">
+                                    {tx('Complete the highlighted inputs before creating an Internal Cost Sheet or Customer Quotation.')}
+                                </p>
+                            )}
+                            <p className="text-[11px] font-medium leading-relaxed text-[var(--color-muted)]">
                                 {isStandaloneCostingSession
                                         ? sourceQuoteId
                                         ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
