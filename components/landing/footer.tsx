@@ -13,16 +13,15 @@ const footerSections = [
             { name: 'Real Product View', href: '/#product' },
             { name: 'Workflow', href: '/#workflow' },
             { name: 'Pricing', href: '/#pricing' },
-            { name: 'Worker Hisaab', href: '/#features' },
+            { name: 'Saved Costings', href: '/#product' },
         ]
     },
     {
         title: 'Resources',
         links: [
             { name: 'FAQ', href: '/#faq' },
-            { name: 'Owner Dashboard', href: '/login' },
-            { name: 'Supervisor App', href: '/join' },
-            { name: 'Request Pilot', href: '/signup' },
+            { name: 'Base Plan workspace', href: '/login' },
+            { name: 'Request Base Plan access', href: '/signup' },
         ]
     },
     {
@@ -54,7 +53,7 @@ export default function LandingFooter() {
                                 </div>
                             </Link>
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
-                                Built for grey fabric weaving factories that need Cost Estimates, Machine production, dispatch, and Worker Hisaab in one operating record.
+                                Built for grey fabric weaving factories that want reliable Cost Estimates, saved costings, and margin visibility in one focused workspace.
                             </p>
                         </div>
 
@@ -123,7 +122,7 @@ export default function LandingFooter() {
                             &copy; {getCurrentSuratYear()} Weavly. All rights reserved.
                         </p>
                         <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <span>Built securely for Indian textile factory operations.</span>
+                            <span>Built securely for Indian textile costing workflows.</span>
                         </div>
                     </div>
                 </div>

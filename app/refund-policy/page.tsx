@@ -4,7 +4,7 @@ import { PolicyContactPanel, PolicyPage, PolicySection } from '@/components/poli
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
-    description: 'Learn about Weavly\'s refund, cancellation, and data export policies for implementation services and annual maintenance.',
+    description: 'Learn about Weavly Base Plan refund, cancellation, renewal, and costing-data export policies.',
 }
 
 const sections = [
@@ -22,7 +22,7 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="Clear rules for implementation work, annual maintenance, cancellations, refunds, payment receipts, and data export when service ends."
+            description="Clear rules for Base Plan setup, annual renewal, cancellations, refunds, payment receipts, and costing-data export when service ends."
             lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
@@ -54,7 +54,7 @@ export default function RefundPolicyPage() {
                     <li>Your access will continue until the end of the paid annual service period.</li>
                     <li>No further annual renewal charge will be made after cancellation is confirmed.</li>
                     <li>Your data will remain accessible for <strong>30 days</strong> after the paid service period ends, during which you may export your data.</li>
-                    <li>After the 30-day export window, your production logs, payroll records, and operational data will be permanently deleted.</li>
+                    <li>After the 30-day export window, your saved costings, fabric qualities, drafts, and other Base Plan data will be permanently deleted.</li>
                     <li>Account information (name, email) is retained for 180 days per regulatory requirements, then deleted.</li>
                 </ul>
             </PolicySection>
@@ -62,7 +62,7 @@ export default function RefundPolicyPage() {
             <PolicySection id="refunds" title="3. Refund Policy">
                 <h3>3.1 First-Year Plan Subscriptions</h3>
                 <p>
-                    First-year payments include platform access and setup assistance (₹8,260 total for Weavly Cost Estimate; ₹29,500 total for Weavly Full Suite, including the displayed GST component).
+                    First-year Base Plan payments include platform access and setup assistance at ₹8,260 total, including the displayed GST component.
                 </p>
                 <ul>
                     <li><strong>Before setup or onboarding work starts</strong> — The fee is fully refundable if requested within 7 days of payment and before workspace activation.</li>
@@ -72,7 +72,7 @@ export default function RefundPolicyPage() {
 
                 <h3>3.2 Annual Renewals</h3>
                 <p>
-                    Subsequent annual renewal fees are ₹2,360 total/year for Weavly Cost Estimate and ₹8,260 total/year for Weavly Full Suite, including the displayed GST component.
+                    The subsequent Base Plan annual renewal fee is ₹2,360 total/year, including the displayed GST component.
                 </p>
                 <ul>
                     <li><strong>Cancellation before renewal</strong> — Renewals are manual. They become available during the final 30 days of the current paid period, and no automatic charge will be made.</li>
@@ -99,12 +99,10 @@ export default function RefundPolicyPage() {
                     Upon cancellation, you have a 30-day window to export your data. We provide data export functionality within the application. Exported data includes:
                 </p>
                 <ul>
-                    <li>Production logs</li>
-                    <li>Payroll settlement records</li>
-                    <li>Worker and machine data</li>
-                    <li>Attendance records</li>
-                    <li>Advance/Upaad records</li>
-                    <li>Order and inventory data</li>
+                    <li>Saved costings and costing drafts</li>
+                    <li>Fabric qualities and costing assumptions</li>
+                    <li>Customer or party details entered into a costing</li>
+                    <li>Cost Sheet exports and related business data</li>
                 </ul>
             </PolicySection>
 

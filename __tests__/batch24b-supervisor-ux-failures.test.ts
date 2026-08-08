@@ -44,10 +44,10 @@ describe('Batch 24B supervisor production UX fixes', () => {
         expect(copySources).not.toMatch(/meter readings in one record/i)
         expect(copySources).not.toContain('Shift production logs with meter readings')
 
-        expect(copySources).toContain('enter shift-total meters')
-        expect(copySources).toContain('Shift production logs with shift-total meters')
-        expect(copySources).toContain('daily shift-meter totals')
-        expect(copySources).toContain('log shift totals')
+        expect(copySources).toContain('Base Plan')
+        expect(copySources).toContain('Estimator')
+        expect(copySources).toContain('Full Suite')
+        expect(copySources).toContain('in development')
     })
 
     it('PROD-013 flags suspiciously large positive meters without hard-blocking valid production', () => {

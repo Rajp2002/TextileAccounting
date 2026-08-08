@@ -5,7 +5,7 @@ import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/
 
 export const metadata: Metadata = {
     title: 'Terms of Service — Weavly',
-    description: 'Terms and conditions governing your use of the Weavly textile production management platform.',
+    description: 'Terms and conditions governing your use of the Weavly Base Plan costing platform.',
 }
 
 const sections = [
@@ -14,8 +14,7 @@ const sections = [
     { href: '#subscription-payment', title: 'Commercial Terms & Payment' },
     { href: '#data-ownership', title: 'Data Ownership' },
     { href: '#acceptable-use', title: 'Acceptable Use' },
-    { href: '#labor-compliance', title: 'Labor Compliance' },
-    { href: '#analytics-disclaimer', title: 'Analytics Disclaimer' },
+    { href: '#costing-disclaimer', title: 'Costing Disclaimer' },
     { href: '#liability', title: 'Liability' },
     { href: '#intellectual-property', title: 'Intellectual Property' },
     { href: '#termination', title: 'Termination' },
@@ -30,12 +29,7 @@ const plans = [
     {
         name: 'Weavly Cost Estimate (Base Plan)',
         price: '₹8,260 total first year, then ₹2,360 total/year renewal',
-        details: 'Warp and Weft yarn cost estimates, fabric templates, quotation history, margin and landed-cost visibility',
-    },
-    {
-        name: 'Weavly Full Suite (Premium Plan)',
-        price: '₹29,500 total first year, then ₹8,260 total/year renewal',
-        details: 'Complete factory operations including quotes, production tracking, shift logs, godown stock, dispatches, worker payroll, and owner analytics',
+        details: 'Warp and weft yarn cost estimates, fabric templates, saved costing history, Cost Sheet export, and margin and landed-cost visibility',
     },
 ]
 
@@ -44,34 +38,35 @@ export default function TermsOfServicePage() {
         <PolicyPage
             activePath="/terms"
             title="Terms of Service"
-            description="The operating agreement for using Weavly: what the platform provides, what factory owners remain responsible for, and how billing, data, and disputes are handled."
+            description="The operating agreement for using the Weavly Base Plan: what the costing workspace provides, what factory owners remain responsible for, and how billing, data, and disputes are handled."
             lastUpdated="July 13, 2026"
             sections={sections}
             facts={[
                 { label: 'Renewal window', value: 'Manual renewal from 30 days before expiry', icon: CalendarDays },
                 { label: 'Commercial model', value: 'Upfront first year plus annual renewal', icon: IndianRupee },
-                { label: 'Data export', value: '30-day window after termination', icon: Database },
+                { label: 'Data export', value: 'Saved costing export during a 30-day window', icon: Database },
                 { label: 'Jurisdiction', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                These Terms of Service (&quot;Terms&quot;) govern your use of the Weavly platform (&quot;Service&quot;), operated by Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By creating an account or using the Service, you agree to be bound by these Terms. If you do not agree, do not use the Service.
+                These Terms of Service (&quot;Terms&quot;) govern your use of the Weavly Base Plan (&quot;Service&quot;), operated by Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By creating an account or using the Service, you agree to be bound by these Terms. If you do not agree, do not use the Service.
             </p>
 
             <PolicySection id="service-description" title="1. Service Description">
                 <p>
-                    Weavly is a multi-tenant Software-as-a-Service (SaaS) platform designed for textile mills and weaving factories. The Service provides:
+                    Weavly is a multi-tenant Software-as-a-Service (SaaS) platform designed for textile mills and weaving factories. The current paid Service is the Base Plan, a focused costing workspace that provides:
                 </p>
                 <ul>
-                    <li>Daily production logging and shift management</li>
-                    <li>Piece-rate and fixed-salary payroll calculation and settlement</li>
-                    <li>Worker and machine management</li>
-                    <li>Attendance tracking for day-to-day workers</li>
-                    <li>Cash advance (Upaad) tracking and auto-deduction</li>
-                    <li>Customer order management with progress tracking and forecasting</li>
-                    <li>Yarn-to-fabric inventory management and yield analytics</li>
-                    <li>Optional WhatsApp production summaries, where enabled</li>
+                    <li>Warp and weft yarn cost estimation</li>
+                    <li>Fabric quality templates and reusable costing assumptions</li>
+                    <li>Factory cost, GST, shortage, transport, commission, and margin configuration</li>
+                    <li>Saved costing history and draft recovery</li>
+                    <li>Production cost, landed cost, break-even price, and margin visibility</li>
+                    <li>Cost Sheet export</li>
                 </ul>
+                <PolicyCallout tone="neutral" title="Current rollout boundary">
+                    <p>The Base Plan is the only plan currently available for new subscriptions. Production logging, worker and machine operations, stock, dispatch, payroll, and connected factory analytics are planned for a later Full Suite release and are not available for purchase under these Terms.</p>
+                </PolicyCallout>
             </PolicySection>
 
             <PolicySection id="account-registration" title="2. Account Registration">
@@ -80,7 +75,7 @@ export default function TermsOfServicePage() {
                     <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
                     <li>You must not share your account with third parties or allow unauthorized access.</li>
                     <li>You must be at least 18 years of age to create an account.</li>
-                    <li>Factory Owners are responsible for the actions of Supervisors they authorize via the Factory Join Code.</li>
+                    <li>Owners are responsible for the accuracy and lawful use of the information entered into their workspace.</li>
                 </ul>
             </PolicySection>
 
@@ -120,6 +115,9 @@ export default function TermsOfServicePage() {
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                     Listed prices are GST-inclusive totals at the displayed 18% rate. The taxable amount and GST component are shown separately for clarity. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
                 </p>
+                <p>
+                    At this rollout, only the Weavly Cost Estimate (Base Plan) may be selected by a new subscriber. The Full Suite is in development, is not currently available for purchase, and does not create any present entitlement under these Terms.
+                </p>
 
                 <h3>3.2 Subscription and Billing</h3>
                 <ul>
@@ -136,7 +134,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="data-ownership" title="4. Data Ownership">
                 <p>
-                    <strong>Your data belongs to you.</strong> All production logs, payroll records, worker information, order details, inventory data, and any other content you create on the platform remains your property. We do not claim ownership over your data. We act solely as a data processor on your behalf.
+                    <strong>Your data belongs to you.</strong> Costing inputs, fabric qualities, saved costings, drafts, customer or party details, and any other content you create in the Base Plan remains your property. We do not claim ownership over your data. We act solely as a data processor on your behalf.
                 </p>
                 <p>
                     Upon account termination, you will have a 30-day window to export your data. After this period, your data will be deleted in accordance with our <Link href="/privacy">Privacy Policy</Link>.
@@ -150,50 +148,39 @@ export default function TermsOfServicePage() {
                     <li>Attempt to gain unauthorized access to other organizations&apos; data.</li>
                     <li>Reverse engineer, decompile, or disassemble any part of the Service.</li>
                     <li>Use the Service to store or process data of individuals under 18 years of age.</li>
-                    <li>Circumvent security features including the access code system, row-level security, or authentication mechanisms.</li>
+                    <li>Circumvent security features including row-level security or authentication mechanisms.</li>
                     <li>Use the Service in a manner that could damage, disable, or impair the platform.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="labor-compliance" title="6. Labor Law &amp; Statutory Compliance Disclaimer">
-                <PolicyCallout tone="red" title="Important Legal Disclaimer regarding OSHWC, ESI, EPF, and Minimum Wages">
+            <PolicySection id="costing-disclaimer" title="6. Costing &amp; Tax Disclaimer">
+                <PolicyCallout tone="amber" title="Important: Cost Estimates Are Not Accounting or Tax Advice">
                     <p>
-                        Weavly provides software tools to assist with factory management and calculation. However, <strong>Weavly is NOT a legal, HR, or compliance advisor.</strong> You, as the factory owner, are solely responsible for ensuring that your factory complies with all applicable local, state, and central labor laws, including but not limited to the Occupational Safety, Health and Working Conditions Code (OSHWC), the Employees&apos; Provident Funds and Miscellaneous Provisions Act, the Employees&apos; State Insurance Act, and the Code on Wages.
+                        Weavly provides software tools to help organize costing inputs and calculate estimates. However, <strong>Weavly is not an accountant, tax advisor, legal advisor, or compliance advisor.</strong> You remain responsible for verifying yarn rates, consumption, factory costs, GST treatment, margin assumptions, and any price or business decision made using the Service.
                     </p>
                     <p>
-                        <strong>We accept zero liability</strong> for any statutory fines, penalties, labor disputes, unpaid wages, or compensation claims resulting from data entered into Weavly, algorithmic output, or your use (or misuse) of the platform. The platform&apos;s fields for ESI and PF tracking are provided for your administrative convenience only and do not guarantee legal compliance.
-                    </p>
-                </PolicyCallout>
-            </PolicySection>
-
-            <PolicySection id="analytics-disclaimer" title="7. Analytics Disclaimer">
-                <PolicyCallout tone="amber" title="Important: Yield Analytics &amp; Loss Estimates">
-                    <p>
-                        The Yarn-to-Fabric Yield Engine provides <strong>estimated</strong> efficiency variances and monetary loss calculations based on data you provide (batch weights, target yields, production logs, and sale prices). These calculations are mathematical estimates and may be subject to inaccuracies arising from measurement errors, data entry errors, or incorrect configuration of quality parameters.
-                    </p>
-                    <p>
-                        <strong>Yield analytics should not be used as the sole basis for employment decisions, accusations of theft or misconduct, or legal proceedings.</strong> Weavly is not liable for any decisions made based on yield analytics outputs. Users are responsible for independently verifying analytical findings before taking action.
+                        Costing results are mathematical estimates based on the data and configuration you provide. <strong>They should not be treated as guaranteed production costs, tax determinations, statutory records, or the sole basis for a commercial or legal decision.</strong> Weavly is not liable for losses caused by inaccurate inputs, outdated rates, measurement errors, or reliance on an unverified estimate.
                     </p>
                 </PolicyCallout>
             </PolicySection>
 
-            <PolicySection id="liability" title="8. Limitation of Liability">
+            <PolicySection id="liability" title="7. Limitation of Liability">
                 <ul>
                     <li>The Service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any kind, express or implied.</li>
                     <li>We do not warrant that the Service will be uninterrupted, error-free, or completely secure.</li>
                     <li>Our total liability for any claims arising from or related to the Service shall not exceed the total fees paid by you in the 12 months preceding the claim.</li>
                     <li>We shall not be liable for any indirect, incidental, special, consequential, or punitive damages.</li>
-                    <li>We are not responsible for losses arising from inaccurate data entered by users, including but not limited to incorrect production figures, machine rates, or quality parameters.</li>
+                    <li>We are not responsible for losses arising from inaccurate data entered by users, including but not limited to incorrect yarn rates, cost assumptions, quantities, GST inputs, or quality parameters.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="intellectual-property" title="9. Intellectual Property">
+            <PolicySection id="intellectual-property" title="8. Intellectual Property">
                 <p>
                     The Weavly platform, including its source code, design, user interface, brand name, logo, and documentation, is the exclusive intellectual property of Weavly. You are granted a limited, non-exclusive, non-transferable license to access and use the Service for the duration of your paid service period.
                 </p>
             </PolicySection>
 
-            <PolicySection id="termination" title="10. Termination">
+            <PolicySection id="termination" title="9. Termination">
                 <ul>
                     <li><strong>By you</strong> — You may cancel annual maintenance before the next renewal. Your access continues until the end of the paid annual service period.</li>
                     <li><strong>By us</strong> — We may suspend or terminate your account for violation of these Terms, non-payment, or any activity that threatens the security or integrity of the platform. We will provide reasonable notice except in cases of severe violations.</li>
@@ -204,25 +191,25 @@ export default function TermsOfServicePage() {
                 </p>
             </PolicySection>
 
-            <PolicySection id="indemnification" title="11. Indemnification">
+            <PolicySection id="indemnification" title="10. Indemnification">
                 <p>
                     You agree to indemnify, defend, and hold harmless Weavly, its officers, employees, and agents from any claims, damages, losses, fines, or expenses arising from:
                 </p>
                 <ul>
                     <li>Your use or misuse of the Service.</li>
                     <li>Your violation of these Terms.</li>
-                    <li>Your violation of any third-party rights (including worker data privacy right under the DPDP Act).</li>
-                    <li><strong>Any unpaid statutory dues, including but not limited to EPF, ESI, TDS, or minimum wages, and any related penalties or legal action taken against your factory by government authorities.</strong></li>
+                    <li>Your violation of any third-party rights, including privacy rights under the DPDP Act.</li>
+                    <li><strong>Any unpaid tax, statutory, or regulatory obligations arising from your business and any related penalties or legal action taken by government authorities.</strong></li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="modifications" title="12. Modifications to Terms">
+            <PolicySection id="modifications" title="11. Modifications to Terms">
                 <p>
                     We may update these Terms from time to time. Material changes will be communicated via the platform or email at least 30 days before they take effect. Continued use of the Service after changes constitutes acceptance. If you do not agree with the updated Terms, you must stop using the Service and cancel your next renewal.
                 </p>
             </PolicySection>
 
-            <PolicySection id="disputes" title="13. Governing Law &amp; Dispute Resolution">
+            <PolicySection id="disputes" title="12. Governing Law &amp; Dispute Resolution">
                 <p>
                     These Terms shall be governed by and construed in accordance with the laws of the Republic of India. Any dispute arising from these Terms or the use of the Service shall be resolved through:
                 </p>
@@ -233,13 +220,13 @@ export default function TermsOfServicePage() {
                 </ol>
             </PolicySection>
 
-            <PolicySection id="severability" title="14. Severability">
+            <PolicySection id="severability" title="13. Severability">
                 <p>
                     If any provision of these Terms is found to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions shall continue in full force and effect.
                 </p>
             </PolicySection>
 
-            <PolicySection id="contact" title="15. Contact">
+            <PolicySection id="contact" title="14. Contact">
                 <p>For questions about these Terms, contact:</p>
                 <PolicyContactPanel
                     title="Weavly Legal"
