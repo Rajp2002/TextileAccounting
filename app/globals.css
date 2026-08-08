@@ -419,6 +419,30 @@
     display: none;
   }
 
+  /* The estimator's decision surface should keep its full width. On a wide
+     desktop viewport the glossary/archive references use the spare viewport
+     margin instead of becoming a second grid column that compresses it. */
+  .estimator-reference-rail {
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+
+  @media (min-width: 1660px) {
+    .estimator-reference-rail {
+      position: fixed;
+      top: 50%;
+      right: 0.75rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      margin-top: 0;
+      padding-bottom: 0.25rem;
+      transform: translateY(-50%);
+      scrollbar-width: thin;
+    }
+  }
+
   @media (min-width: 768px) and (max-width: 1699.98px) {
     .settings-page-frame {
       margin-left: var(--settings-sidebar-guard);
