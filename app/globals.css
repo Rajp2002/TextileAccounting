@@ -430,15 +430,14 @@
   @media (min-width: 1660px) {
     .estimator-reference-rail {
       position: fixed;
-      top: 50%;
+      top: 6rem;
       right: 0.75rem;
       z-index: 30;
       width: 14rem;
-      max-height: calc(100vh - 2rem);
+      max-height: calc(100vh - 7rem);
       overflow-y: auto;
       margin-top: 0;
       padding-bottom: 0.25rem;
-      transform: translateY(-50%);
       scrollbar-width: thin;
     }
   }
