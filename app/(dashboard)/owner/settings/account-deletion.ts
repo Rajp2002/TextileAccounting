@@ -19,6 +19,15 @@ export type DeleteAccountResult = { success: true } | { error: string }
 
 const cancellableSubscriptionStatuses = ['created', 'pending', 'authenticated', 'active', 'paused'] as const
 
+function hasOpenBillingWindow(currentEnd: string | null | undefined, nowMs = Date.now()) {
+    if (!currentEnd) return true
+
+    const endMs = Date.parse(currentEnd)
+    // An invalid non-null timestamp is treated as open so a malformed billing
+    // row cannot accidentally bypass provider cancellation.
+    return !Number.isFinite(endMs) || endMs > nowMs
+}
+
 /**
  * Permanently removes the authenticated owner's organization and every
  * associated account. The database RPC owns the destructive transaction; this
@@ -61,7 +70,7 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
 
     const { data: subscriptions, error: subscriptionError } = await admin
         .from('org_subscriptions')
-        .select('razorpay_subscription_id, status')
+        .select('razorpay_subscription_id, status, current_end')
         .eq('org_id', organization.id)
         .in('status', [...cancellableSubscriptionStatuses])
         .not('razorpay_subscription_id', 'is', null)
@@ -75,6 +84,7 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
 
     const subscriptionIds = [...new Set(
         (subscriptions ?? [])
+            .filter(subscription => hasOpenBillingWindow(subscription.current_end))
             .map(subscription => subscription.razorpay_subscription_id)
             .filter((id): id is string => typeof id === 'string' && id.length > 0)
     )]

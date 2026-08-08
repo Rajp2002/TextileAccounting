@@ -46,6 +46,8 @@ describe('permanent account deletion guardrails', () => {
         expect(action).toContain("const { profile, user } = await requireRole(['owner'])")
         expect(action).toContain('getRazorpay()')
         expect(action).toContain('subscriptions.cancel(subscriptionId, false)')
+        expect(action).toContain("select('razorpay_subscription_id, status, current_end')")
+        expect(action).toContain('hasOpenBillingWindow(subscription.current_end)')
         expect(action).toContain("supabase.rpc('delete_account_permanently'")
         expect(action).toContain('No database rows were deleted')
         expect(action).toContain('getDestructiveLimiter')
