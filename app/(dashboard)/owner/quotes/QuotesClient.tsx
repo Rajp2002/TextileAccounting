@@ -46,8 +46,10 @@ import {
     Star,
     Archive,
     ArchiveRestore,
+    BookmarkPlus,
     ChevronDown,
     ChevronRight,
+    Download,
     Factory,
     Layers3,
     ExternalLink,
@@ -418,6 +420,7 @@ function SavedQualityLibraryView({
     onToggleComparison,
     onOpen,
     onStartFrom,
+    onSaveAsNewQuality,
      onExport,
      onAudit,
      auditingId,
@@ -435,7 +438,8 @@ function SavedQualityLibraryView({
     onToggleComparison: (id: string) => void
     onOpen: (quote: QuoteRow) => void
     onStartFrom: (quote: QuoteRow) => void
-     onExport: (quote: QuoteRow) => void
+    onSaveAsNewQuality: (quote: QuoteRow) => void
+    onExport: (quote: QuoteRow) => void
      onAudit: (quote: QuoteRow) => void
      auditingId: string | null
      onToggleFavorite: (quote: QuoteRow) => void
@@ -472,7 +476,7 @@ function SavedQualityLibraryView({
                                     </span>
                                     <span className="min-w-0">
                                         <span className="flex flex-wrap items-center gap-2">
-                                            <span className="truncate text-base font-black text-ink">{group.name}</span>
+                                            <span className="truncate text-base font-black text-ink" title={group.name}>{group.name}</span>
                                             {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
                                             {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-[10px] font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
                                             {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
@@ -541,9 +545,16 @@ function SavedQualityLibraryView({
                                                         : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.')}</p>
                                             {latest && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                                    {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open and save new version')}</Button>}
-                                                    <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
-                                                    <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                    {canUseProduction ? <>
+                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open and save new version')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                    </> : <>
+                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as New Quality')}</Button>
+                                                    </>}
                                                 </div>
                                             )}
                                         </div>
@@ -556,9 +567,16 @@ function SavedQualityLibraryView({
                                                         <p className="mt-1 text-xs text-subtle">Snapshot v{Number(latest.version_number ?? 1)} · {formatDateOnly(latest.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>{tx('Open and save new version')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                        {canUseProduction ? <>
+                                                            {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>{tx('Open and save new version')}</Button>}
+                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                        </> : <>
+                                                            {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as New Quality')}</Button>
+                                                        </>}
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>
                                                             {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
                                                         {tx(updatingId === latest.id ? latest.is_archived ? `Restoring ${getSavedCostingIdentity(latest).label}…` : `Archiving ${getSavedCostingIdentity(latest).label}…` : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
@@ -645,7 +663,7 @@ function SavedQualityLibraryView({
                                                             <tr key={record.id}>
                                                                 <td className="py-3"><input type="checkbox" checked={selectedCostingIds.includes(record.id)} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" /></td>
                                                                 <td className="py-3 font-bold text-ink">
-                                                                    <div>{getSavedCostingIdentity(record).label}<span className="ml-2 font-normal text-subtle">{formatDateOnly(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
+                                                                    <div title={getSavedCostingIdentity(record).label}>{getSavedCostingIdentity(record).label}<span className="ml-2 font-normal text-subtle">{formatDateOnly(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
                                                                     {record.factory_profile_updated_at && <div className="mt-1 text-[10px] font-normal text-subtle">{factoryInputsCapturedLabel} {formatDateOnly(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                                                                 </td>
                                                                 <td className="py-3 capitalize text-body">
@@ -922,6 +940,29 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 .filter((section): section is ComparisonSection => Boolean(section)),
         })).filter(group => group.sections.length > 0)
         : []
+
+    const comparisonSummary = comparisonCostings.length === 2 ? [
+        {
+            label: 'Cost',
+            oldValue: formatCostingMoneyPerM(getProductionCostPerM(comparisonCostings[0])),
+            newValue: formatCostingMoneyPerM(getProductionCostPerM(comparisonCostings[1])),
+        },
+        {
+            label: 'Selling price',
+            oldValue: formatCostingMoneyPerM(getSuggestedSellingPricePerM(comparisonCostings[0])),
+            newValue: formatCostingMoneyPerM(getSuggestedSellingPricePerM(comparisonCostings[1])),
+        },
+        {
+            label: 'Margin',
+            oldValue: formatCostingPercent(getActualMarginPct(comparisonCostings[0])),
+            newValue: formatCostingPercent(getActualMarginPct(comparisonCostings[1])),
+        },
+        {
+            label: 'Quantity',
+            oldValue: `${Number(comparisonCostings[0].meters || 0).toLocaleString('en-IN')} m`,
+            newValue: `${Number(comparisonCostings[1].meters || 0).toLocaleString('en-IN')} m`,
+        },
+    ] : []
 
     const ensureQuoteDetail = async (quote: QuoteRow) => {
         if (quote.costing_result_snapshot || quote.snapshot_data || quote.warp_rows || quote.weft_rows || quote.orders) return quote
@@ -1210,7 +1251,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             </Toolbar>}
 
             <Toolbar className="overflow-hidden">
-                    <div className="grid min-w-0 gap-3 lg:grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_210px_170px_auto_auto_auto]">
+                    <div className="grid min-w-0 gap-3 lg:grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_210px_170px_auto_auto]">
                         <div className="relative min-w-0">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
                             <Label htmlFor="saved-costings-search" className="sr-only">{canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}</Label>
@@ -1248,15 +1289,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             <option value="over_20">Over 20%</option>
                         </select>
                         <Button
-                            variant="outline"
-                            disabled={selectedCostings.length !== 2}
-                            aria-describedby={selectedCostings.length !== 2 ? 'compare-costings-help' : undefined}
-                            onClick={() => setShowComparison(true)}
-                            className="h-10"
-                        >
-                            <GitCompareArrows className="h-4 w-4" /> {t('common.compare_costings')} {selectedCostings.length || ''}
-                        </Button>
-                        <Button
                             variant={showFavoritesOnly ? 'secondary' : 'outline'}
                             onClick={() => { setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
                             className="h-10"
@@ -1268,9 +1300,24 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
                         </Button>
                     </div>
-                    {selectedCostings.length !== 2 && (
+                    {selectedCostings.length === 2 ? (
+                        <div className="mt-3 flex flex-col gap-3 rounded-lg border border-info/25 bg-info-soft/60 p-3 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
+                            <div>
+                                <p className="text-xs font-bold text-info">Two costings selected</p>
+                                <p className="mt-1 text-xs leading-relaxed text-body">Compare them when you need to explain a change in cost, selling price, margin, or quantity.</p>
+                            </div>
+                            <div className="flex shrink-0 flex-wrap gap-2">
+                                <Button variant="secondary" onClick={() => setShowComparison(true)} className="h-9">
+                                    <GitCompareArrows className="h-4 w-4" /> {t('common.compare_costings')}
+                                </Button>
+                                <Button variant="ghost" onClick={() => setSelectedCostingIds([])} className="h-9 text-body">Clear selection</Button>
+                            </div>
+                        </div>
+                    ) : (
                         <p id="compare-costings-help" className="mt-2 text-xs font-medium text-body">
-                            {t('common.compare_costings_hint')}
+                            {selectedCostings.length === 1
+                                ? 'One costing selected. Select one more if you want to compare.'
+                                : 'Compare Costings is optional. Select two snapshots when you need to understand a change.'}
                         </p>
                     )}
                     <p className="mt-2 text-xs text-body">
@@ -1327,6 +1374,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onToggleComparison={toggleCostingSelection}
                     onOpen={quote => { void handleRestore(quote, 'edit') }}
                     onStartFrom={quote => { void handleRestore(quote, 'duplicate') }}
+                    onSaveAsNewQuality={quote => { void handleRestore(quote, 'duplicate') }}
                     onExport={quote => { void openQuoteExport(quote) }}
                     onAudit={quote => { void auditQuote(quote) }}
                     auditingId={updatingId}
@@ -1370,7 +1418,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 />
                                             </td>
                                             <td className="max-w-[240px] px-4 py-4">
-                                                <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)}>{getSavedCostingIdentity(quote).label}</p>
+                                                <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)} title={getSavedCostingIdentity(quote).label}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-subtle">
                                                     <span>Saved {formatDateOnly(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(quote))} />}
@@ -1436,7 +1484,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 className="mt-1 h-4 w-4 shrink-0 rounded border-hairline accent-saffron"
                                             />
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)}>{getSavedCostingIdentity(quote).label}</p>
+                                                <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)} title={getSavedCostingIdentity(quote).label}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-subtle">
                                                     <span>Updated {formatSuratDateTime(quote.updated_at)}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(quote))} />}
@@ -1505,7 +1553,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 <CardContent className="p-5 flex flex-col h-full">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="space-y-1 w-full min-w-0 pr-2">
-                                            <h3 className="truncate text-lg font-black tracking-tight text-ink">
+                                            <h3 className="truncate text-lg font-black tracking-tight text-ink" title={isCosting ? (quote.quality_label || 'Untitled costing') : (quote.party_name || '')}>
                                                 {isCosting ? (quote.quality_label || 'Untitled costing') : quote.party_name}
                                             </h3>
                                             <p className="truncate text-xs font-bold uppercase leading-none tracking-widest text-subtle">
@@ -1781,14 +1829,36 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 <p className="mt-1 font-semibold">Change is calculated as New minus Old. Cost-driving changes are separated from reference/context changes.</p>
                                 <p className="mt-1 font-semibold">{formatSuggestedPriceMovement(comparison.price.sellingPricePerM)}</p>
                             </div>
-                            <div className="max-h-[60vh] overflow-auto rounded-xl border border-hairline">
-                                <table className="w-full min-w-[760px] text-sm">
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                {comparisonSummary.map(metric => (
+                                    <div key={metric.label} className="rounded-xl border border-hairline bg-surface-soft p-3">
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{metric.label}</p>
+                                        <div className="mt-2 grid grid-cols-2 gap-2">
+                                            <div>
+                                                <p className="text-[10px] font-semibold text-subtle">Old</p>
+                                                <p className="mt-0.5 truncate font-mono text-sm font-bold text-ink" title={metric.oldValue}>{metric.oldValue}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-semibold text-subtle">New</p>
+                                                <p className="mt-0.5 truncate font-mono text-sm font-bold text-ink" title={metric.newValue}>{metric.newValue}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <details className="group rounded-xl border border-hairline bg-surface">
+                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-body marker:content-none">
+                                    <span>View calculation details (optional)</span>
+                                    <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
+                                </summary>
+                                <div className="max-h-[60vh] overflow-auto border-t border-hairline">
+                                    <table className="w-full min-w-[760px] text-sm">
                                     <thead className="bg-surface-soft text-left">
                                         <tr>
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-subtle">Metric</th>
                                             {comparisonCostings.map((costing, index) => {
                                                 const identity = getSavedCostingIdentity(costing)
-                                                return <th key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block text-xs font-semibold text-body">{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatDateOnly(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
+                                                return <th key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] truncate text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatDateOnly(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
                                             })}
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-subtle">Change</th>
                                         </tr>
@@ -1838,8 +1908,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             </Fragment>
                                         ))}
                                     </tbody>
-                                </table>
-                            </div>
+                                    </table>
+                                </div>
+                            </details>
                         </div>
                     )}
                     <DialogFooter>

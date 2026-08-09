@@ -351,9 +351,36 @@ export default function RatesClient({
                 setRates(current => current.map(rate => rate.id === target.id
                     ? { ...rate, is_active: result.isActive ?? restoring, updated_at: result.updatedAt ?? rate.updated_at }
                     : rate))
-                toast.success(tx(restoring
-                    ? 'Rate restored to the active Rate Book. Existing costing snapshots were not changed.'
-                    : 'Rate archived from the active Rate Book. Saved Qualities and costing snapshots were not changed.'))
+                if (restoring) {
+                    toast.success(tx('Rate restored to the active Rate Book. Existing costing snapshots were not changed.'))
+                } else {
+                    const archivedUpdatedAt = result.updatedAt ?? target.updated_at
+                    toast.success(tx('Rate archived from the active Rate Book. Saved Qualities and costing snapshots were not changed.'), {
+                        action: {
+                            label: tx('Undo'),
+                            onClick: () => {
+                                setPendingAction({ id: target.id, kind: 'restore' })
+                                startTransition(async () => {
+                                    try {
+                                        const undoResult = await restoreCostRate(target.id, archivedUpdatedAt)
+                                        if (undoResult.error) {
+                                            toast.error(tx(userFacingError(undoResult.error, 'The archive could not be undone. Refresh and try again.')))
+                                            return
+                                        }
+                                        setRates(current => current.map(rate => rate.id === target.id
+                                            ? { ...rate, is_active: true, updated_at: undoResult.updatedAt ?? rate.updated_at }
+                                            : rate))
+                                        toast.success(tx('Archive undone. The rate is active again.'))
+                                    } catch (error) {
+                                        toast.error(tx(userFacingError(error, 'The archive could not be undone. Refresh and try again.')))
+                                    } finally {
+                                        setPendingAction(null)
+                                    }
+                                })
+                            },
+                        },
+                    })
+                }
                 setArchiveRate(null)
             } catch (error) {
                 const message = tx(userFacingError(error, `Rate could not be ${restoring ? 'restored' : 'archived'}. Try again.`))
@@ -453,8 +480,8 @@ export default function RatesClient({
 
                 <Toolbar className="grid gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none lg:grid-cols-[minmax(0,1fr)_220px_180px_auto]">
                     <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" /><Label htmlFor="yarn-rate-search" className="sr-only">Search yarn rates, sources, notes, and fabrics</Label><Input id="yarn-rate-search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search yarn rates…" aria-describedby="yarn-rate-search-help" className="h-10 pl-9" /></div>
-                    <select aria-label="Filter yarn rates by use" value={category} onChange={event => setCategory(event.target.value as YarnRateCategory | 'all')} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"><option value="all">All yarns</option>{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select>
-                    <select aria-label="Filter rates by review status" value={reviewStatus} onChange={event => setReviewStatus(event.target.value as RateReviewStatus | 'all')} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"><option value="all">Review status</option><option value="needs_review">Owner review needed</option><option value="current">Current</option><option value="due_soon">Due soon</option><option value="overdue">Overdue</option></select>
+                    <select aria-label="Filter yarn rates by direction" value={category} onChange={event => setCategory(event.target.value as YarnRateCategory | 'all')} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"><option value="all">Warp + Weft</option><option value="yarn_warp">Warp</option><option value="yarn_weft">Weft</option></select>
+                    <select aria-label="Filter rates by review status" value={reviewStatus} onChange={event => setReviewStatus(event.target.value as RateReviewStatus | 'all')} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"><option value="all">All statuses</option><option value="needs_review">Needs Review</option><option value="current">Current</option><option value="due_soon">Due soon</option><option value="overdue">Overdue</option></select>
                     <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => setShowArchived(current => !current)} className="h-10">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}</Button>
                 </Toolbar>
                 <p id="yarn-rate-search-help" className="px-4 pb-3 text-[11px] leading-relaxed text-body sm:px-5">Searches yarn rate names, sources, notes, and fabric usage in this Rate Book. Saved qualities and costing snapshots are searched in the Costings library.</p>
@@ -621,26 +648,30 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={Boolean(historyRate)} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
-                <DialogContent className="sm:max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><History className="h-5 w-5 text-info" /> {historyRate?.name} activity</DialogTitle>
-                        <DialogDescription>Reviews and saved values are shown here for audit. Existing costing snapshots retain their own numbers.</DialogDescription>
-                    </DialogHeader>
-                    {historyLoading ? <div className="flex items-center justify-center gap-2 py-10 text-sm text-subtle" role="status" aria-live="polite"><Loader2 className="h-6 w-6 animate-spin text-saffron" /> {tx('Loading rate activity…')}</div>
-                        : historyError ? <div className="py-10 text-center text-sm font-medium text-destructive" role="alert">{historyError}</div>
-                        : historyRows.length ? <div className="max-h-[420px] space-y-3 overflow-y-auto">{historyRows.map((row, index) => {
-                            const previous = row.previous_value ?? historyRows[index + 1]?.value
-                            const eventLabel = historyRate ? getRateHistoryEventLabel(row.value, previous, historyRate.unit, row.event_type) : 'Value recorded'
-                            return <div key={row.id} className="rounded-lg border border-hairline bg-surface p-4">
-                                                <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-ink">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-body">{eventLabel}</p></div><p className="text-right text-xs text-subtle">Effective {formatDateOnly(row.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}<br />Recorded {formatSuratDateTime(row.created_at)}</p></div>
-                                <p className="mt-2 text-sm font-medium text-body">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-subtle">{row.notes}</p>}<p className="mt-2 text-[11px] text-subtle">Recorded by {row.actor_name || (row.changed_by ? 'owner' : 'system')}</p>
-                            </div>
-                        })}</div>
-                        : <div className="py-10 text-center text-sm text-subtle">No activity recorded yet. Confirm or change this rate to create the first entry.</div>}
-                    <DialogFooter><Button variant="outline" onClick={() => { setHistoryRate(null); setHistoryError(null) }}>{tx('Close')}</Button></DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <Sheet open={Boolean(historyRate)} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
+                <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+                    <SheetHeader className="border-b border-hairline px-6 py-5">
+                        <SheetTitle className="flex items-center gap-2"><History className="h-5 w-5 text-info" /> {historyRate?.name} activity</SheetTitle>
+                        <SheetDescription>Reviews and saved values are shown here for audit. Existing costing snapshots retain their own numbers.</SheetDescription>
+                    </SheetHeader>
+                    <div className="px-6 py-2">
+                        {historyLoading ? <div className="flex items-center justify-center gap-2 py-10 text-sm text-subtle" role="status" aria-live="polite"><Loader2 className="h-6 w-6 animate-spin text-saffron" /> {tx('Loading rate activity…')}</div>
+                            : historyError ? <div className="py-10 text-center text-sm font-medium text-destructive" role="alert">{historyError}</div>
+                            : historyRows.length ? <div className="space-y-3">{historyRows.map((row, index) => {
+                                const previous = row.previous_value ?? historyRows[index + 1]?.value
+                                const eventLabel = historyRate ? getRateHistoryEventLabel(row.value, previous, historyRate.unit, row.event_type) : 'Value recorded'
+                                return <div key={row.id} className="rounded-lg border border-hairline bg-surface p-4">
+                                    <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-ink">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-body">{eventLabel}</p></div><p className="text-right text-xs text-subtle">Effective {formatDateOnly(row.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}<br />Recorded {formatSuratDateTime(row.created_at)}</p></div>
+                                    <p className="mt-2 text-sm font-medium text-body">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-subtle">{row.notes}</p>}<p className="mt-2 text-[11px] text-subtle">Recorded by {row.actor_name || (row.changed_by ? 'owner' : 'system')}</p>
+                                </div>
+                            })}</div>
+                            : <div className="py-10 text-center text-sm text-subtle">No activity recorded yet. Confirm or change this rate to create the first entry.</div>}
+                    </div>
+                    <SheetFooter className="border-t border-hairline p-6">
+                        <Button variant="outline" onClick={() => { setHistoryRate(null); setHistoryError(null) }}>{tx('Close')}</Button>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
 
             <Dialog open={Boolean(archiveRate)} onOpenChange={open => { if (!open && !isPending) { setArchiveRate(null); setArchiveError(null) } }}>
                 <DialogContent className="sm:max-w-md">

@@ -318,8 +318,7 @@ export default async function BillingPage({
                 title="Billing & Plan"
                 description={(
                     <>
-                        <span>See your plan, payment status, manual renewal, and payment receipts.</span>
-                        <span className="mt-2 block"><BillingDocumentNotice /></span>
+                        <span>See your current plan, renewal date, payment history, and billing documents.</span>
                         {requestedFeature && tier === 'none' && (
                             <span className="mt-2 block font-semibold text-saffron-deep">
                                 You arrived here from {requestedFeature}. Choose a plan to unlock it.
@@ -456,7 +455,10 @@ export default async function BillingPage({
                                 <div className="flex flex-col gap-8 md:flex-row md:justify-between">
                                     <div className="space-y-5">
                                         <div>
-                                            <StatusBadge status="active" />
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Current plan</p>
+                                                <StatusBadge status="active" />
+                                            </div>
                                         </div>
                                         <div className="space-y-1">
                                             <h2 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-ink">
@@ -533,12 +535,11 @@ export default async function BillingPage({
                     )}
 
                     {/* 3. PAYMENT HISTORY - CLEAN & COMPACT */}
-                    {payments && payments.length > 0 && (
-                        <div className="space-y-6 pt-6">
-                            <SectionHeader icon={ReceiptText} title="Payment history" />
-                            <Card className="gap-0 overflow-hidden p-0">
-                                <div className="divide-y divide-hairline">
-                                    {(payments as SubscriptionPaymentRow[]).map((p) => (
+                    <div className="space-y-4 pt-2">
+                        <SectionHeader icon={ReceiptText} title="Payment history" />
+                        {payments && payments.length > 0 ? <Card className="gap-0 overflow-hidden p-0">
+                            <div className="divide-y divide-hairline">
+                                {(payments as SubscriptionPaymentRow[]).map((p) => (
                                         <div key={p.id} className="group flex flex-col gap-3 p-5 transition-colors hover:bg-surface-soft sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex items-center gap-5">
                                                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border ${
@@ -588,11 +589,13 @@ export default async function BillingPage({
                                                 )}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </Card>
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        </Card> : <Card className="border-dashed p-5">
+                            <p className="text-sm font-semibold text-ink">No payment history yet.</p>
+                            <p className="mt-1 text-sm leading-relaxed text-subtle">Successful payments and downloadable receipts will appear here.</p>
+                        </Card>}
+                    </div>
                 </div>
 
                 {/* Right/Side Column */}

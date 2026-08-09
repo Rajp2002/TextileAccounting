@@ -342,8 +342,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'Factory type' : 'Factory Type')}</Label>
-                        <p className="mt-1 text-xs text-muted-foreground">{tx('Choose a starting setup. It is a preview until you save it for new Cost Estimates.')}</p>
+                        <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'How should Weavly start your setup?' : 'How does your factory work?')}</Label>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{tx('Pick the closest starting point. It only turns optional cost sections on or off; you can fine-tune the amounts below.')}</p>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
                         {FACTORY_COST_PRESETS.map(preset => (
@@ -351,10 +351,13 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 key={preset.id}
                                 type="button"
                                 onClick={() => applyPreset(preset)}
+                                aria-label={`${tx('Use')} ${tx(preset.label)} factory setup`}
                                 className={`min-h-[112px] rounded-lg border p-3.5 text-left transition-all duration-150 ${
                                     activePreset === preset.id
                                         ? 'border-saffron bg-saffron-soft/65 shadow-sm ring-2 ring-saffron/15'
-                                        : 'border-hairline bg-canvas/55 hover:border-hairline-strong hover:bg-surface'
+                                        : preset.recommended
+                                            ? 'border-saffron/45 bg-saffron-soft/20 hover:border-saffron hover:bg-saffron-soft/40'
+                                            : 'border-hairline bg-canvas/55 hover:border-hairline-strong hover:bg-surface'
                                 }`}
                             >
                                 <div className="text-xl mb-1">{preset.emoji}</div>
@@ -435,8 +438,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                     : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
                             )}
                         >
-                            <div className="text-sm font-semibold text-ink">I know my factory cost per metre</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Use the ₹/m rate you already trust.</div>
+                            <div className="text-sm font-semibold text-ink">I already know my factory cost per metre</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Use a ₹/m rate you already trust; no monthly expense breakdown is needed.</div>
                         </button>
                         <button
                             type="button"
@@ -449,10 +452,15 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                     : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
                             )}
                         >
-                            <div className="text-sm font-semibold text-ink">Calculate from monthly expenses</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Calculate ₹/m from rent, power, salaries, and actual output.</div>
+                            <div className="flex items-center gap-2 text-sm font-semibold text-ink"><span>Calculate from monthly expenses</span><span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-deep">Recommended</span></div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Weavly divides rent, power, salaries, and other monthly costs by your actual output.</div>
                         </button>
                     </div>
+                    <p className="rounded-lg border border-info/20 bg-info-soft/55 px-3 py-2 text-xs leading-relaxed text-info">
+                        {overheadMode === 'monthly_expenses'
+                            ? 'Recommended for most factories: enter real monthly expenses and output so the per-metre cost is easy to explain.'
+                            : 'Use direct ₹/m when your factory already maintains a trusted per-metre overhead rate.'}
+                    </p>
 
                     {overheadMode === 'direct' ? (
                         <div className="rounded-lg border border-saffron/30 bg-saffron-soft/30 p-4">
