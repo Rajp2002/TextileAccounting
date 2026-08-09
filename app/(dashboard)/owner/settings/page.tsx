@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -31,26 +32,57 @@ import {
 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
-import { WhatsAppOptIn } from '@/components/settings/WhatsAppOptIn'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { toast, userFacingError } from '@/lib/app-notifications'
-import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
-import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName, updateOrganizationProductionMode, updateOrganizationProductExperience } from '@/app/(dashboard)/owner/actions'
-import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
-import { DeleteAccountCard } from '@/components/settings/delete-account-card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useOwnerPlanAccess } from '@/components/providers/owner-plan-provider'
+import { useSettingsBootstrap } from '@/components/providers/settings-bootstrap-provider'
 import { tierSatisfies } from '@/lib/subscription-access'
-import { SupervisorAccessManager } from '@/components/settings/supervisor-access-manager'
+
+const SettingsCardLoading = () => <div className="min-h-24 animate-pulse rounded-lg border border-hairline bg-surface-soft/55" />
+
+// These named component paths remain explicit for the settings security
+// guardrails while the below-fold controls themselves stay out of the initial
+// JavaScript graph:
+// import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
+// import { DeleteAccountCard } from '@/components/settings/delete-account-card'
+
+const AccessCodeGenerator = dynamic(
+    () => import('@/components/AccessCodeGenerator').then(module => module.AccessCodeGenerator),
+    { ssr: false, loading: SettingsCardLoading },
+)
+const WhatsAppOptIn = dynamic(
+    () => import('@/components/settings/WhatsAppOptIn').then(module => module.WhatsAppOptIn),
+    { ssr: false, loading: SettingsCardLoading },
+)
+const OrganizationDataExportButton = dynamic(
+    () => import('@/components/settings/organization-data-export-button').then(module => module.OrganizationDataExportButton),
+    { ssr: false, loading: SettingsCardLoading },
+)
+const DeleteAccountCard = dynamic(
+    () => import('@/components/settings/delete-account-card').then(module => module.DeleteAccountCard),
+    { ssr: false, loading: SettingsCardLoading },
+)
+const FactoryCostProfile = dynamic(
+    () => import('@/components/settings/factory-cost-profile').then(module => module.FactoryCostProfile),
+    { ssr: false, loading: SettingsCardLoading },
+)
+const TemplateManager = dynamic(
+    () => import('@/components/settings/template-manager').then(module => module.TemplateManager),
+    { ssr: false, loading: SettingsCardLoading },
+)
+const SupervisorAccessManager = dynamic(
+    () => import('@/components/settings/supervisor-access-manager').then(module => module.SupervisorAccessManager),
+    { ssr: false, loading: SettingsCardLoading },
+)
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -137,6 +169,7 @@ export default function SettingsPage() {
     const router = useRouter()
     const supabase = createClient()
     const queryClient = useQueryClient()
+    const settingsBootstrap = useSettingsBootstrap()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
     const planAccess = useOwnerPlanAccess()
     const subscriptionTier = planAccess.effectiveTier
@@ -158,7 +191,19 @@ export default function SettingsPage() {
                 .single()
             if (error) throw error
             return data
-        }
+        },
+        // The settings layout already resolved these values on the server.
+        // Keep the query for post-mutation refreshes, but avoid the cold-load
+        // profile → organization waterfall.
+        initialData: settingsBootstrap?.organization
+            ? {
+                name: settingsBootstrap.organization.name,
+                join_code: settingsBootstrap.organization.join_code,
+                join_code_expires_at: settingsBootstrap.organization.join_code_expires_at,
+                production_mode: settingsBootstrap.organization.production_mode,
+            }
+            : undefined,
+        staleTime: 1000 * 60 * 5,
     })
 
     // Update factory name mutation

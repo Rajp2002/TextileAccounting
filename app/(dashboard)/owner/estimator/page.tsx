@@ -2,32 +2,30 @@ import { getEstimatorPartyNames, getFactoryCostProfile, getEstimatorTemplates, g
 import EstimatorClient from './EstimatorClient'
 import { Suspense } from 'react'
 import { requireRole } from '@/lib/auth'
-import { getOrgTier, tierSatisfies } from '@/lib/subscription'
-import { createClient } from '@/lib/supabase/server'
-import { getOrganizationProductionMode } from '@/lib/production-mode'
-import { getCostRates } from '../rates/actions'
-import { getRateReviewStatus, type CostRateRow } from '@/lib/cost-rates'
+import { getCachedOrgPlanAccess, tierSatisfies } from '@/lib/subscription'
+import { normalizeProductionMode } from '@/lib/production-mode'
+import { getStaleDefaultCostRateNames } from '../rates/actions'
+import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
 export default async function EstimatorPage() {
     const { user, profile } = await requireRole(['owner'])
-    const subscriptionTier = await getOrgTier(profile.org_id)
+    // AccessGate and the owner shell already resolve this request-scoped
+    // entitlement. Reuse that promise instead of issuing a second org-tier
+    // query before the estimator reads can start.
+    const planAccess = await getCachedOrgPlanAccess(profile.org_id)
+    const subscriptionTier = planAccess.effectiveTier
     const canUseProduction = tierSatisfies(subscriptionTier, 'premium')
-    const supabase = await createClient()
 
-    // Parallelize server-side data fetching for zero-latency initial load
-    const [profileRes, templatesRes, workersRes, productionModeRes, costRatesRes, organizationRes, partiesRes] = await Promise.all([
+    const [profileRes, templatesRes, workersRes, organizationRes, rateReviewRes, partiesRes] = await Promise.all([
         getFactoryCostProfile(),
         getEstimatorTemplates(),
         canUseProduction ? getFixedWorkersForOverhead() : Promise.resolve({ data: [] }),
-        getOrganizationProductionMode(supabase, profile.org_id),
-        getCostRates(),
-        supabase.from('organizations').select('name').eq('id', profile.org_id).maybeSingle(),
+        getCachedOwnerOrganization(profile.org_id),
+        getStaleDefaultCostRateNames(),
         canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
     ])
 
-    const staleDefaultRateNames = ((costRatesRes.data ?? []) as CostRateRow[])
-        .filter(rate => rate.apply_as_default && getRateReviewStatus(rate) === 'overdue')
-        .map(rate => rate.name)
+    const staleDefaultRateNames = rateReviewRes.data ?? []
 
     return (
         <Suspense fallback={<div className="p-20 text-center">Loading Cost Estimate...</div>}>
@@ -38,7 +36,7 @@ export default async function EstimatorPage() {
                 userId={user.id}
                 orgId={profile.org_id}
                 canUseProduction={canUseProduction}
-                productionMode={productionModeRes.productionMode}
+                productionMode={normalizeProductionMode(organizationRes.data?.production_mode)}
                 staleDefaultRateNames={staleDefaultRateNames}
                 organizationName={organizationRes.data?.name ?? ''}
                 initialPartyNames={partiesRes.data ?? []}

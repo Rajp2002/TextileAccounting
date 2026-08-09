@@ -222,14 +222,17 @@ export default async function BillingPage({
     const { profile } = await requireRole(['owner'])
     if (!profile.org_id) redirect('/owner/today')
 
-    const query = searchParams ? await searchParams : {}
-    const requestedRoute = typeof query.from === 'string' ? query.from : null
-    const requestedFeature = getFeatureLabel(requestedRoute)
+    const queryPromise: Promise<{ from?: string | string[] }> = searchParams
+        ? searchParams
+        : Promise.resolve({})
 
     const supabase = await createClient()
-    const { tier, subscription } = await getSubscriptionDetail(profile.org_id)
-
-    const [paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
+    // These reads are independent after the role check. Starting them
+    // together avoids waiting on subscription details and referral data before
+    // the payment-history queries can begin.
+    const [query, subscriptionDetail, paymentsResult, subscriptionsResult, attemptsResult, referralStats] = await Promise.all([
+        queryPromise,
+        getSubscriptionDetail(profile.org_id),
         supabase
             .from('subscription_payments')
             .select('*')
@@ -246,7 +249,11 @@ export default async function BillingPage({
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
             .limit(1),
+        getReferralStatsAction(),
     ])
+    const { tier, subscription } = subscriptionDetail
+    const requestedRoute = typeof query.from === 'string' ? query.from : null
+    const requestedFeature = getFeatureLabel(requestedRoute)
     const payments = paymentsResult.data ?? []
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
@@ -264,8 +271,6 @@ export default async function BillingPage({
     const activePaidTier = tier === 'base' || tier === 'premium' ? tier : null
     const activePlan = activePaidTier ? getBillingPlan(activePaidTier) : null
     const activeRenewalPrice = activePaidTier ? getBillingPrice(activePaidTier, 'renewal') : null
-
-    const referralStats = await getReferralStatsAction()
 
     const checkoutPresentation = resolveBillingCheckoutPresentation(
         billingSubscriptions,

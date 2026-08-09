@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { getOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getCachedOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getRateReviewStatus } from '@/lib/cost-rates'
 import {
     collectYarnRateCandidates,
     getYarnRateDiscoverySource,
@@ -50,7 +51,7 @@ const UNITS = new Set<CostRateUnit>(['per_kg', 'per_m', 'percent'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 async function requireBaseTier(orgId: string) {
-    return tierSatisfies(await getOrgTier(orgId), 'base')
+    return tierSatisfies(await getCachedOrgTier(orgId), 'base')
         ? null
         : 'An active Weavly Estimator or Full Suite subscription is required.'
 }
@@ -69,6 +70,34 @@ function validateRate(input: CostRateInput) {
     return null
 }
 
+/**
+ * Lightweight read for the Estimator shell. The full Rate Book loader also
+ * discovers missing yarn rates from every saved quality and costing; that
+ * work is only needed when opening the Rate Book itself, not to mark stale
+ * default rates on the Estimator sidebar.
+ */
+export async function getStaleDefaultCostRateNames(): Promise<{ data?: string[]; error?: string }> {
+    const { profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+        .from('cost_rate_book')
+        .select('name, last_reviewed_at, review_interval_days')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+        .eq('apply_as_default', true)
+
+    if (error) return { error: error.message }
+
+    return {
+        data: (data ?? [])
+            .filter(rate => getRateReviewStatus(rate) === 'overdue')
+            .map(rate => rate.name),
+    }
+}
+
 async function setAuditActor(supabase: Awaited<ReturnType<typeof createServerClient>>, userId: string) {
     try {
         await supabase.rpc('set_actor_for_audit', { p_actor_id: userId })
@@ -83,28 +112,24 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
 
+    const includeArchived = Boolean(options?.includeArchived)
     let ratesQuery = supabase
             .from('cost_rate_book')
             .select('*')
             .eq('org_id', profile.org_id)
             .order('category')
             .order('name')
-    if (!options?.includeArchived) ratesQuery = ratesQuery.eq('is_active', true)
+    if (!includeArchived) ratesQuery = ratesQuery.eq('is_active', true)
 
-    const [ratesResult, profileResult] = await Promise.all([
+    // These four reads do not depend on one another. Starting them as one
+    // batch removes a full Supabase round trip from the Rate Book cold path.
+    const [ratesResult, profileResult, templatesResult, costingsResult] = await Promise.all([
         ratesQuery,
         supabase
             .from('factory_cost_profile')
             .select('yarn_review_interval_days')
             .eq('factory_id', profile.org_id)
             .maybeSingle(),
-    ])
-    const { data: existingRates, error } = ratesResult
-    if (error) return { error: error.message }
-    if (profileResult.error) return { error: profileResult.error.message }
-    const yarnReviewIntervalDays = Number(profileResult.data?.yarn_review_interval_days ?? 90)
-
-    const [templatesResult, costingsResult] = await Promise.all([
         supabase
             .from('estimator_templates')
             .select('id, name, warp_rows, weft_rows')
@@ -120,6 +145,11 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
             // standalone costings saved before the database trigger existed.
             .is('template_id', null),
     ])
+    const { data: existingRates, error } = ratesResult
+    if (error) return { error: error.message }
+    if (profileResult.error) return { error: profileResult.error.message }
+    const yarnReviewIntervalDays = Number(profileResult.data?.yarn_review_interval_days ?? 90)
+
     if (templatesResult.error || costingsResult.error) {
         return { error: templatesResult.error?.message ?? costingsResult.error?.message }
     }
@@ -153,26 +183,17 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
             if (discoverError) return { error: discoverError.message }
         }
 
-        const { data: refreshed, error: refreshError } = await supabase
+        let refreshedQuery = supabase
             .from('cost_rate_book')
             .select('*')
             .eq('org_id', profile.org_id)
-            .eq('is_active', true)
+        if (!includeArchived) refreshedQuery = refreshedQuery.eq('is_active', true)
+
+        const { data: refreshed, error: refreshError } = await refreshedQuery
             .order('category')
             .order('name')
         if (refreshError) return { error: refreshError.message }
         rates = refreshed ?? []
-    }
-
-    if (options?.includeArchived) {
-        const { data: allRates, error: allRatesError } = await supabase
-            .from('cost_rate_book')
-            .select('*')
-            .eq('org_id', profile.org_id)
-            .order('category')
-            .order('name')
-        if (allRatesError) return { error: allRatesError.message }
-        rates = allRates ?? []
     }
 
     const { data: reviewedRows, error: reviewedError } = await supabase

@@ -104,7 +104,14 @@ export function getUserClaims(user: User): AuthClaims {
  */
 export const getCachedSession = cache(async (): Promise<{
     user: User
-    profile: { role: string; org_id: string; full_name: string | undefined }
+    profile: {
+        role: string
+        org_id: string
+        full_name: string | undefined
+        phone: string | null
+        whatsapp_number: string | null
+        whatsapp_opted_in: boolean
+    }
 } | null> => {
     if (process.env.NODE_ENV === 'development') {
         // This log fires at most once per request — confirms deduplication is working.
@@ -123,11 +130,14 @@ export const getCachedSession = cache(async (): Promise<{
 
     // Always validate authorization-critical claims against the profile row.
     // JWT app_metadata is useful for routing, but server actions/data loaders must
-    // not trust user_metadata or stale client-controlled claims for org scoping.
-    const admin = createAdminClient()
-    const { data: dbProfile } = await admin
-        .from('profiles')
-        .select('role, org_id, full_name, access_revoked_at')
+     // not trust user_metadata or stale client-controlled claims for org scoping.
+     const admin = createAdminClient()
+     const { data: dbProfile } = await admin
+         .from('profiles')
+         // The original authorization projection remains the baseline; the
+         // Settings contact fields are added to this same round trip below.
+         // .select('role, org_id, full_name, access_revoked_at')
+         .select('role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in, access_revoked_at')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -136,11 +146,14 @@ export const getCachedSession = cache(async (): Promise<{
     const role = dbProfile?.role ?? undefined
     const org_id = dbProfile?.org_id ?? undefined
     const full_name = dbProfile?.full_name ?? undefined
+    const phone = dbProfile?.phone ?? null
+    const whatsapp_number = dbProfile?.whatsapp_number ?? null
+    const whatsapp_opted_in = dbProfile?.whatsapp_opted_in ?? false
 
     // Account exists in auth but profile is missing/broken — treat as unauthenticated
     if (!role || !org_id) return null
 
-    return { user, profile: { role, org_id, full_name } }
+    return { user, profile: { role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in } }
 })
 
 /**
@@ -154,7 +167,7 @@ export const getCachedSession = cache(async (): Promise<{
  * contacted once per request (subsequent calls are cache hits).
  *
  * @param allowedRoles - array of roles permitted to call this action
- * @returns { user, profile: { role, org_id, full_name } } on success
+ * @returns { user, profile: { role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in } } on success
  * @throws redirect to /login if user is not authenticated or unauthorized
  */
 export async function requireRole(allowedRoles: string[]) {
@@ -165,7 +178,7 @@ export async function requireRole(allowedRoles: string[]) {
     }
 
     const { user, profile } = session
-    const { role, org_id, full_name } = profile
+    const { role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in } = profile
 
     if (!allowedRoles.includes(role)) {
         redirect(getRoleHomePath(role))
@@ -173,7 +186,7 @@ export async function requireRole(allowedRoles: string[]) {
 
     return {
         user,
-        profile: { role, org_id, full_name }
+        profile: { role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in }
     }
 }
 
