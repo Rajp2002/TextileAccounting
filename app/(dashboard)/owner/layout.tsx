@@ -12,6 +12,8 @@ import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
+import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
+import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
 
 /**
  * The owner chrome is intentionally split into a static frame and two secure
@@ -42,10 +44,14 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
     const perf = createPerfTimer('/owner/* layout')
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
-    const { profile } = await signInTelemetry.measure(
+    const { profile, user } = await signInTelemetry.measure(
         'auth_profile',
         () => perf.measure('authSession', () => requireRole(['owner']), 2),
     )
+    const cacheScope = createPrincipalCacheScope({
+        userId: user.id,
+        organizationId: profile.org_id,
+    })
 
     const [{ data: organization }, planAccess] = await Promise.all([
         signInTelemetry.measure(
@@ -67,7 +73,12 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
     perf.log({ organization_state: 'verified' })
     signInTelemetry.log('success', { route: '/owner/*' })
 
-    return <OwnerPlanProvider access={planAccess}>{children}</OwnerPlanProvider>
+    return (
+        <OwnerPlanProvider access={planAccess}>
+            <AuthBoundaryCleanup scope={cacheScope} />
+            {children}
+        </OwnerPlanProvider>
+    )
 }
 
 async function OwnerSidebarBoundary() {

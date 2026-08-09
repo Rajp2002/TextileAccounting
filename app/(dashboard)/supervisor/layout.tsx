@@ -6,17 +6,20 @@ import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { BrandBackground } from '@/components/brand-background'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import QueryProvider from '@/components/query-provider'
+import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
+import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs.
     // requireRole() uses getCachedSession() internally — subsequent calls in
     // page server actions within this request will be cache hits.
-    const { profile } = await signInTelemetry.measure(
+    const { profile, user } = await signInTelemetry.measure(
         'auth_profile',
         () => requireRole(['supervisor', 'owner'])
     )
     const userOrgId = profile.org_id
+    const cacheScope = createPrincipalCacheScope({ userId: user.id, organizationId: userOrgId })
     const userFullName = profile.full_name
 
     // Fetch factory name for the sidebar
@@ -59,8 +62,9 @@ export default async function SupervisorLayout({ children }: { children: React.R
              */}
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
                 <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 py-4 xs:px-3 md:px-6 md:py-6 lg:px-8">
-                    <QueryProvider>
-                        <OfflineSyncProvider>
+                    <QueryProvider scope={cacheScope}>
+                        <AuthBoundaryCleanup scope={cacheScope} />
+                        <OfflineSyncProvider scope={cacheScope}>
                             {children}
                         </OfflineSyncProvider>
                     </QueryProvider>

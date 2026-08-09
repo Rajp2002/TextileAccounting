@@ -1,15 +1,19 @@
 'use client'
 
 import type { FormEvent } from 'react'
-import { useRef } from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import LoadingModal from './loading-modal'
 import { useTranslation } from '@/lib/i18n/context'
-
-import { globalQueryClient } from '@/lib/query-client-registry'
-import { clearClientSessionState } from '@/lib/client-storage-cleanup'
+import { detachActiveQueryNamespace } from '@/lib/query-client-registry'
+import {
+    createLogoutTraceId,
+    markLogoutTraceStage,
+    recordLogoutCleanupCompleted,
+    startLogoutTrace,
+} from '@/lib/logout-trace'
+import { scheduleClientSessionCleanup } from '@/lib/client-storage-cleanup'
 
 interface LogoutButtonProps {
     variant?: 'sidebar' | 'header'
@@ -18,26 +22,33 @@ interface LogoutButtonProps {
 
 export default function LogoutButton({ variant = 'sidebar', className }: LogoutButtonProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const [traceId, setTraceId] = useState<string | null>(null)
     const formRef = useRef<HTMLFormElement>(null)
+    const traceInputRef = useRef<HTMLInputElement>(null)
     const readyForServerLogoutRef = useRef(false)
     const { t } = useTranslation()
 
-    const handleLogout = async (event: FormEvent<HTMLFormElement>) => {
+    const handleLogout = (event: FormEvent<HTMLFormElement>) => {
         if (readyForServerLogoutRef.current) return
 
         event.preventDefault()
+        const nextTraceId = createLogoutTraceId()
+        setTraceId(nextTraceId)
+        if (traceInputRef.current) traceInputRef.current.value = nextTraceId
+        startLogoutTrace(nextTraceId)
         setIsLoggingOut(true)
-        // Clear React Query cache immediately to prevent session leakage
-        if (globalQueryClient) {
-            globalQueryClient.clear()
-        }
 
-        try {
-            await clearClientSessionState()
-        } catch (error) {
-            console.warn('Unable to complete client session cleanup before logout', error)
-        }
+        // Namespace detachment is the synchronous security boundary. Physical
+        // browser storage deletion is housekeeping and must not delay the
+        // native sign-out POST or its server-side redirect.
+        const retiredScope = detachActiveQueryNamespace()
+        markLogoutTraceStage(nextTraceId, 'cache_namespace_rotated')
+        scheduleClientSessionCleanup({
+            scope: retiredScope,
+            onComplete: (result) => recordLogoutCleanupCompleted(nextTraceId, result),
+        })
 
+        markLogoutTraceStage(nextTraceId, 'signout_navigation_started')
         readyForServerLogoutRef.current = true
         formRef.current?.requestSubmit()
         // The native POST response performs a full-page redirect to /login.
@@ -48,6 +59,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
         return (
             <>
                 <form ref={formRef} action="/auth/signout" method="post" onSubmit={handleLogout}>
+                    <input ref={traceInputRef} type="hidden" name="traceId" value={traceId ?? ''} />
                     <button
                         type="submit"
                         disabled={isLoggingOut}
@@ -70,6 +82,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
     return (
         <>
             <form ref={formRef} action="/auth/signout" method="post" onSubmit={handleLogout}>
+                <input ref={traceInputRef} type="hidden" name="traceId" value={traceId ?? ''} />
                 <button
                     type="submit"
                     disabled={isLoggingOut}
