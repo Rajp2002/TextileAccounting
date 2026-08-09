@@ -39,4 +39,11 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(styles).toContain('#pricing-assumptions-details')
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)')
   })
+
+  it('keeps the saved-quality loading badge stable on narrow screens', () => {
+    expect(client).toContain('flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center')
+    expect(client).toContain('role="status"')
+    expect(client).toContain('aria-live="polite"')
+    expect(client).toContain('shrink-0 items-center whitespace-nowrap rounded-full')
+  })
 })

@@ -4336,9 +4336,13 @@ export default function EstimatorClient({
                                 <BookmarkPlus className="h-5 w-5" aria-hidden="true" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                                <div className="flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2.5 sm:gap-y-1">
                                     <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-yarn-orange-dark)]">{t('estimator.quality.savedQualitiesEyebrow')}</p>
-                                    <span className="inline-flex items-center rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-[10px] font-bold text-[var(--color-yarn-orange-dark)]">
+                                    <span
+                                        role="status"
+                                        aria-live="polite"
+                                        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-[10px] font-bold text-[var(--color-yarn-orange-dark)]"
+                                    >
                                         {templatesLoaded ? t('estimator.quality.savedQualityCount', { count: templates.length }) : tx('Loading saved qualities…')}
                                     </span>
                                 </div>
