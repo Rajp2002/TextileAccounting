@@ -960,6 +960,7 @@ function WidthField({
     warning,
     onUseInches,
     placeholder,
+    attentionWhenEmpty = false,
 }: {
     label: string
     value: number
@@ -969,7 +970,9 @@ function WidthField({
     warning?: string
     onUseInches?: () => void
     placeholder?: string
+    attentionWhenEmpty?: boolean
 }) {
+    const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     const displayValue = useMemo(() => {
         if (!value) return ''
         if (unit === 'inch') {
@@ -999,7 +1002,7 @@ function WidthField({
 
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+            <Label className={`flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>
                 {label}
             </Label>
             <div className="relative group">
@@ -1018,13 +1021,15 @@ function WidthField({
                             onChange(raw)
                         }
                     }}
-                    className="h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-[var(--color-hairline)] placeholder:text-[var(--color-muted)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)]"
+                    aria-invalid={isEmpty || undefined}
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 placeholder:text-[var(--color-muted)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] ${isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-white border-[var(--color-hairline)]'}`}
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                     {unit}
                 </span>
             </div>
             <div className="flex flex-col gap-0.5 mt-1">
+                {isEmpty && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
                 {value > 0 && (
                     <p className="text-[10px] text-[var(--color-factory-green)] font-semibold leading-tight flex items-center gap-1 bg-[var(--color-factory-green-soft)] py-0.5 px-2 rounded-md self-start border border-[#CDE5D3]">
                         {secondaryReadout}
@@ -1568,6 +1573,9 @@ function WeavingRateFields({
         ? Math.round(state.perPickCostPaisa * 100 * 10000) / 10000
         : ''
     const rateInputId = inputMode === 'perMeter' ? 'weaving-rate-per-meter' : 'weaving-rate-paisa-per-pick'
+    const isRateEmpty = inputMode === 'perMeter'
+        ? (parseNonNegativeInput(directRateInput) ?? 0) <= 0
+        : state.perPickCostPaisa <= 0
 
     // If the owner enters the direct ₹/m rate before completing the PPI
     // fields, apply it as soon as total picks become available.
@@ -1619,7 +1627,7 @@ function WeavingRateFields({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                     <Label htmlFor={rateInputId} className="flex h-8 items-end text-[10px] font-medium uppercase tracking-wider text-[var(--color-warning-amber)]">
-                        {inputMode === 'perMeter' ? 'Weaving rate' : 'Paisa per pick'}
+                        {inputMode === 'perMeter' ? 'Weaving rate — REQUIRED' : 'Paisa per pick — REQUIRED'}
                     </Label>
                     <div className="relative">
                         <Input
@@ -1648,20 +1656,25 @@ function WeavingRateFields({
                                 }
 
                                 const paisa = parseNonNegativeInput(raw)
-                                if (paisa === null) return
+                                if (paisa === null) {
+                                    onDirectRateInputChange('')
+                                    dispatch({ type: 'SET', field: 'perPickCostPaisa', value: 0 })
+                                    return
+                                }
                                 onDirectRateInputChange('')
                                 dispatch({ type: 'SET', field: 'perPickCostPaisa', value: paisa / 100 })
                             }}
                             onFocus={event => {
                                 if (inputMode === 'perMeter') event.currentTarget.select()
                             }}
-                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold text-[var(--color-warning-amber)] placeholder:text-[var(--color-muted)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.perPickCostPaisa <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                            aria-invalid={isRateEmpty || undefined}
+                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold text-[var(--color-warning-amber)] placeholder:text-[var(--color-muted)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
                         />
                         <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
                             {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
                         </span>
                     </div>
-                    <InlineInputWarning show={state.perPickCostPaisa <= 0}>Required</InlineInputWarning>
+                    <InlineInputWarning show={isRateEmpty}>Required</InlineInputWarning>
                     {inputMode === 'perMeter' && (
                         <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">
                             Converted from {totalPicks} total picks to paise per pick.
@@ -1903,7 +1916,7 @@ function QuickCostingView({
                             ) : (
                                 <>
                                     <YarnDensityFields row={row} onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })} />
-                                    <NumField label="Beam ends" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} placeholder="e.g. 3200" />
+                                    <NumField label="Beam ends — REQUIRED" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
                                 </>
                             )}
                             <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
@@ -1932,8 +1945,8 @@ function QuickCostingView({
                             <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
-                                <NumField label="Picks" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." />
-                                <WidthField label="Effective costing width (finished width)" value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} />
+                                <NumField label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
+                                <WidthField label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`} value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} attentionWhenEmpty={row.calculationMode !== 'manual'} />
                                 {row.calculationMode === 'manual' ? (
                                     <NumField label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 2.75" attentionWhenEmpty />
                                 ) : (
@@ -4612,7 +4625,7 @@ export default function EstimatorClient({
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })}
                                             />
-                                            <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} placeholder="e.g. 3200" />
+                                            <NumField label={`${t('estimator.field_labels.beam_ends')} — REQUIRED`} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
                                         </>
                                     )}
                                     <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
@@ -4834,9 +4847,9 @@ export default function EstimatorClient({
                                             ghostValue={`Weft ${i + 1}`}
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
-                                        <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" />
+                                        <NumField label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" attentionWhenEmpty />
                                         <WidthField
-                                            label="Effective costing width (finished width)"
+                                            label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`}
                                             value={effectiveCostingWidthCm}
                                             onChange={v => {
                                                 dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value: v })
@@ -4846,6 +4859,7 @@ export default function EstimatorClient({
                                             placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'}
                                             hint={row.calculationMode === 'manual' ? 'Saved for audit; manual kg bypasses formula' : 'Used for weft yarn formula'}
                                             warning={effectiveWidthWarning}
+                                            attentionWhenEmpty={row.calculationMode !== 'manual'}
                                             onUseInches={effectiveWidthWarning && widthUnit === 'cm'
                                                 ? () => {
                                                     const inches = effectiveCostingWidthCm
@@ -5016,7 +5030,7 @@ export default function EstimatorClient({
                             <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3.5">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct factory cost per metre (₹/m)</p>
+                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct factory cost per metre (₹/m) — REQUIRED</p>
                                                 <p className="text-[11px] text-[var(--color-muted)]">Required when you choose a direct factory cost per metre.</p>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -5029,7 +5043,9 @@ export default function EstimatorClient({
                                                         placeholder="e.g. 12.50"
                                                         value={state.overheadOverridePerM ?? ''}
                                                         onChange={e => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: parseNonNegativeInput(e.target.value) })}
-                                                        className={`h-10 w-full rounded-[9px] bg-[var(--color-canvas-white)] pl-8 pr-4 text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)]'}`}
+                                                        aria-label="Direct factory overhead per metre"
+                                                        aria-invalid={state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 || undefined}
+                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
                                                     />
                                                 </div>
                                             </div>
@@ -5300,7 +5316,7 @@ export default function EstimatorClient({
                                                         <div className="space-y-3">
                                                             <div className="space-y-1.5">
                                                                 <div className="flex items-center justify-between">
-                                                                    <Label className="text-[10px] font-medium uppercase text-[var(--color-muted)]">Actual monthly output (m)</Label>
+                                                                    <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Actual monthly output (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
                                                                     {canUseProduction && state.overheadMode === 'monthly_expenses' && (
                                                                         <Button
                                                                             variant="ghost"
@@ -5321,10 +5337,14 @@ export default function EstimatorClient({
                                                                         value={state.monthlyOutputM || ''}
                                                                         placeholder="e.g. 10,000"
                                                                         onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                        className="h-10 rounded-[9px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                                        aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
+                                                                        className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
                                                                     />
                                                                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m</span>
                                                                 </div>
+                                                                {state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) && (
+                                                                    <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required for monthly-expense overhead.</p>
+                                                                )}
                                                             </div>
 
                                                             {/* Output Suggestion Panel */}
