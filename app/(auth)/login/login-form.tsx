@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,6 @@ import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
 import LoadingModal from '@/components/auth/loading-modal'
-import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
 
 function createTraceId() {
@@ -21,7 +20,6 @@ function createTraceId() {
 }
 
 export default function LoginForm() {
-    const sessionCleanupRef = useRef<ReturnType<typeof clearClientSessionState> | null>(null)
     const [loading, setLoading]             = useState(false)
     const [isRedirecting, setIsRedirecting] = useState(false)
     const [email, setEmail]                 = useState('')
@@ -29,11 +27,6 @@ export default function LoginForm() {
     const [showPassword, setShowPassword]   = useState(false)
 
     useEffect(() => {
-        // Start clearing user-scoped browser data as soon as the login screen is
-        // shown. In the common case this finishes while the user enters their
-        // credentials, so IndexedDB startup is not part of click-to-dashboard.
-        sessionCleanupRef.current = clearClientSessionState()
-
         const params = new URLSearchParams(window.location.search)
         if (params.get('message') === 'password-updated') {
             toast.success('Password updated. Please sign in with your new password.')
@@ -48,25 +41,13 @@ export default function LoginForm() {
         const traceId = createTraceId()
         const clickStartedAt = Date.now()
         const authStartedAt = performance.now()
-        const cleanupWaitStartedAt = performance.now()
         let authRoundTripMs = 0
-        let cleanupWaitMs = 0
 
         try {
-            // These operations are independent: cache cleanup touches only
-            // browser storage while signIn writes the server-side auth cookies.
-            // Waiting for both keeps cross-user cache isolation without adding
-            // cleanup time in front of the network request.
-            const cleanupPromise = (sessionCleanupRef.current ?? clearClientSessionState()).finally(() => {
-                cleanupWaitMs = performance.now() - cleanupWaitStartedAt
-            })
             const signInPromise = signIn({ email: email.trim(), password, traceId }).finally(() => {
                 authRoundTripMs = performance.now() - authStartedAt
             })
-            const [, result] = await Promise.all([
-                cleanupPromise,
-                signInPromise,
-            ])
+            const result = await signInPromise
 
             if (result && 'error' in result) {
                 toast.error(result.error)
@@ -82,7 +63,7 @@ export default function LoginForm() {
                     clickStartedAt,
                     actionCompletedAt: Date.now(),
                     authRoundTripMs,
-                    cleanupWaitMs,
+                    cleanupWaitMs: 0,
                 }))
             } catch {
                 // Telemetry must never delay or block navigation.
@@ -159,6 +140,7 @@ export default function LoginForm() {
                 <Button
                     type="submit"
                     id="login-btn"
+                    data-login-primary="true"
                     className="w-full h-12 text-base font-semibold transition-transform active:scale-[0.98]"
                     disabled={loading}
                 >

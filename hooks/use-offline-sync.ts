@@ -1,22 +1,25 @@
 'use client'
 
 import { useCallback, useEffect } from 'react'
-import { db } from '@/lib/db'
+import { discardPendingMutations, getPendingMutations } from '@/lib/db'
 import { toast } from 'sonner'
 import { useOnlineStatus } from '@/hooks/use-online-status'
+import { isPrincipalCacheScope } from '@/lib/auth-cache-scope'
 
-export function useOfflineSync() {
+export function useOfflineSync(scope?: string | null) {
     const isOnline = useOnlineStatus()
     const syncMutations = useCallback(async () => {
-        const pendingMutations = await db.mutations.where('synced').equals(0).toArray()
+        if (!isPrincipalCacheScope(scope)) return
+
+        const pendingMutations = await getPendingMutations(scope)
 
         if (pendingMutations.length === 0) return
 
-        await db.mutations.where('synced').equals(0).delete()
+        await discardPendingMutations(scope)
         toast.error(
             `${pendingMutations.length} unsupported offline change${pendingMutations.length === 1 ? '' : 's'} discarded. Re-enter it while online.`
         )
-    }, [])
+    }, [scope])
 
     useEffect(() => {
         if (!isOnline) return

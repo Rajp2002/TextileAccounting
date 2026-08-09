@@ -11,7 +11,7 @@ describe('Sprint 21 Base route boundaries', () => {
         for (const route of ['estimator', 'rates', 'quotes']) {
             expect(read(`app/(dashboard)/owner/${route}/layout.tsx`)).not.toContain('QueryProvider')
         }
-        expect(read('app/(dashboard)/owner/settings/layout.tsx')).toContain('<QueryProvider>')
+        expect(read('app/(dashboard)/owner/settings/layout.tsx')).toContain('<QueryProvider scope={cacheScope}>')
     })
 
     it('keeps interaction-only estimator and costing-detail code out of the first graph', () => {

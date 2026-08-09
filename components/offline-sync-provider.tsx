@@ -3,9 +3,9 @@
 import { useOfflineSync } from '@/hooks/use-offline-sync'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 
-export function OfflineSyncProvider({ children }: { children: React.ReactNode }) {
+export function OfflineSyncProvider({ children, scope }: { children: React.ReactNode; scope?: string | null }) {
     // Initialize background sync
-    useOfflineSync()
+    useOfflineSync(scope)
     const isOnline = useOnlineStatus()
 
     return (
