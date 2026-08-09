@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useReducer, useEffect, useMemo, useCallback, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
@@ -114,7 +115,6 @@ import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
 import type { EstimatorAutosaveData, EstimatorQuoteStatus } from '@/lib/estimator-drafts'
 import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
 import { createClientRequestUuid } from '@/lib/client-request-id'
-import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
@@ -123,6 +123,11 @@ import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
+
+const CostingExportDialog = dynamic(
+    () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
+    { ssr: false, loading: () => null },
+)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -5637,14 +5642,16 @@ export default function EstimatorClient({
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
 
-            <CostingExportDialog
-                open={showExportDialog}
-                onOpenChange={setShowExportDialog}
-                model={exportModel}
-                defaultCustomerName={showPartyField ? partyName : ''}
-                defaultBusinessName={organizationName}
-                defaultMode={isStandaloneCostingSession ? 'internal' : 'customer'}
-            />
+            {showExportDialog && (
+                <CostingExportDialog
+                    open
+                    onOpenChange={setShowExportDialog}
+                    model={exportModel}
+                    defaultCustomerName={showPartyField ? partyName : ''}
+                    defaultBusinessName={organizationName}
+                    defaultMode={isStandaloneCostingSession ? 'internal' : 'customer'}
+                />
+            )}
 
             <Dialog open={Boolean(pendingStaleRateSave)} onOpenChange={open => { if (!open) setPendingStaleRateSave(null) }}>
                 <DialogContent className="sm:max-w-lg">

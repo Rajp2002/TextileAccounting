@@ -8,6 +8,7 @@ import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
+import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const perf = createPerfTimer('/owner/* layout')
@@ -28,25 +29,19 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     let factoryName = 'Weavly'
     let productionMode = normalizeProductionMode(null)
 
-    const supabase = await createClient()
     const orgPromise = signInTelemetry.measure(
         'organization_query',
-        () => perf.measure(
-            'profileOrgTier',
-            () => supabase
-                .from('organizations')
-                .select('name, production_mode')
-                .eq('id', userOrgId)
-                .single(),
-            1
-        )
+        () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(userOrgId), 1)
     )
-    const reviewRatesPromise = supabase
-        .from('cost_rate_book')
-        .select('last_reviewed_at, review_interval_days')
-        .eq('org_id', userOrgId)
-        .eq('is_active', true)
-        .in('category', ['yarn_warp', 'yarn_weft'])
+    const reviewRatesPromise = (async () => {
+        const supabase = await createClient()
+        return supabase
+            .from('cost_rate_book')
+            .select('last_reviewed_at, review_interval_days')
+            .eq('org_id', userOrgId)
+            .eq('is_active', true)
+            .in('category', ['yarn_warp', 'yarn_weft'])
+    })()
     const [{ data: org }, planAccess, { data: reviewRates }] = await Promise.all([
         orgPromise,
         signInTelemetry.measure(

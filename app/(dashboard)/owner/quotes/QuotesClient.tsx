@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Fragment, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
@@ -68,12 +69,16 @@ import {
   type SavedCostingSort,
   type SavedCostingDelta,
 } from '@/lib/saved-costings'
-import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
+
+const CostingExportDialog = dynamic(
+    () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
+    { ssr: false, loading: () => null },
+)
 
 const STATUS_CONFIG = {
     draft:    { label: 'Draft',    color: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -1677,32 +1682,32 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </DialogContent>
             </Dialog>
 
-             <CostingExportDialog
-                open={Boolean(quoteToExport)}
-                onOpenChange={open => { if (!open) setQuoteToExport(null) }}
-                model={exportModel}
-                defaultCustomerName={quoteToExport?.party_name ?? ''}
-                defaultBusinessName={organizationName}
-                defaultMode={isStandaloneCosting(quoteToExport?.record_kind) ? 'internal' : 'customer'}
-                defaultValidUntil={quoteToExport?.quotation_valid_until}
-                defaultCustomerTerms={quoteToExport?.customer_terms}
-                documentReference={quoteToExport?.quotation_reference}
-                sourceQuoteId={quoteToExport?.id}
-                sourceQuoteUpdatedAt={quoteToExport?.updated_at}
-                sourceQuoteStatus={quoteToExport?.status}
-                sourceRecordKind={quoteToExport?.record_kind === 'quotation' ? 'quotation' : 'costing'}
-                onQuoteUpdated={data => {
-                    if (!quoteToExport) return
-                    setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
-                    setQuoteToExport(current => current ? { ...current, ...data } : current)
-                }}
-                onMarkAsSent={quoteToExport
-                    && quoteToExport.record_kind === 'quotation'
-                    && canUseQuotationLifecycle(quoteToExport.record_kind, canUseQuotationWorkflow)
-                    && quoteToExport.status === 'draft'
-                    ? () => handleStatusChange(quoteToExport.id, 'sent')
-                    : undefined}
-             />
+            {quoteToExport && (
+                <CostingExportDialog
+                    open
+                    onOpenChange={open => { if (!open) setQuoteToExport(null) }}
+                    model={exportModel}
+                    defaultCustomerName={quoteToExport.party_name ?? ''}
+                    defaultBusinessName={organizationName}
+                    defaultMode={isStandaloneCosting(quoteToExport.record_kind) ? 'internal' : 'customer'}
+                    defaultValidUntil={quoteToExport.quotation_valid_until}
+                    defaultCustomerTerms={quoteToExport.customer_terms}
+                    documentReference={quoteToExport.quotation_reference}
+                    sourceQuoteId={quoteToExport.id}
+                    sourceQuoteUpdatedAt={quoteToExport.updated_at}
+                    sourceQuoteStatus={quoteToExport.status}
+                    sourceRecordKind={quoteToExport.record_kind === 'quotation' ? 'quotation' : 'costing'}
+                    onQuoteUpdated={data => {
+                        setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
+                        setQuoteToExport(current => current ? { ...current, ...data } : current)
+                    }}
+                    onMarkAsSent={quoteToExport.record_kind === 'quotation'
+                        && canUseQuotationLifecycle(quoteToExport.record_kind, canUseQuotationWorkflow)
+                        && quoteToExport.status === 'draft'
+                        ? () => handleStatusChange(quoteToExport.id, 'sent')
+                        : undefined}
+                />
+            )}
 
             <ConfirmActionDialog
                 open={Boolean(quoteToArchive)}

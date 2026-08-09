@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { measurePerf } from '@/lib/perf'
+import { useSettingsBootstrap } from '@/components/providers/settings-bootstrap-provider'
 
 function subscribeToHydration(callback: () => void) {
     const timeout = window.setTimeout(callback, 0)
@@ -30,6 +31,7 @@ function useHydrated() {
 export function useUserProfile(perfRouteName?: string) {
     const supabase = createClient()
     const mounted = useHydrated()
+    const settingsBootstrap = useSettingsBootstrap()
 
     const userQuery = useQuery({
         queryKey: ['auth_user_id'],
@@ -53,6 +55,7 @@ export function useUserProfile(perfRouteName?: string) {
                 )
                 : getUserId()
         },
+        initialData: settingsBootstrap?.profile.userId,
         staleTime: 1000 * 60 * 30,
     })
 
@@ -86,6 +89,7 @@ export function useUserProfile(perfRouteName?: string) {
                 )
                 : getProfile()
         },
+        initialData: settingsBootstrap?.profile,
         staleTime: 1000 * 60 * 30,
     })
 
