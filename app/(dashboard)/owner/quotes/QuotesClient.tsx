@@ -81,11 +81,6 @@ const CostingExportDialog = dynamic(
     { ssr: false, loading: () => null },
 )
 
-const CostingExportDialog = dynamic(
-    () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
-    { ssr: false, loading: () => null },
-)
-
 const STATUS_CONFIG = {
     draft:    { label: 'Draft',    color: 'bg-slate-100 text-slate-700 border-slate-200' },
     sent:     { label: 'Sent',     color: 'bg-blue-50 text-blue-700 border-blue-200' },
