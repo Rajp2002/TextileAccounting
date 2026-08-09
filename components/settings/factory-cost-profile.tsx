@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect, useId, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from '@/lib/app-notifications'
-import { DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
+import { DEFAULT_FACTORY_SECTIONS, DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
 import { userFacingError } from '@/lib/app-notifications'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
@@ -101,6 +101,7 @@ function SectionToggle({
 
 export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
     const [loading, setLoading]   = useState(true)
+    const [loadError, setLoadError] = useState<string | null>(null)
     const [saving, setSaving]     = useState(false)
     const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
     const [presetToReplace, setPresetToReplace] = useState<(typeof FACTORY_COST_PRESETS)[number] | null>(null)
@@ -136,55 +137,68 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [monthlyWorkingDays, setMonthlyWorkingDays] = useState(26)
     const [avgOutputPerLoomPerDay, setAvgOutputPerLoomPerDay] = useState(50)
 
-    useEffect(() => {
-        async function load() {
-            setLoading(true)
+    const loadProfile = useCallback(async () => {
+        setLoading(true)
+        setLoadError(null)
+        try {
             const res = await getFactoryCostProfile()
-            if (res.data) {
-                const d = res.data
-                setLastSavedAt(d.updated_at ?? null)
-                setRates({
-                    warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
-                    sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
-                    winding_rate_per_kg:     Number(d.winding_rate_per_kg    ?? 0),
-                    default_commission_pct:  Number(d.default_commission_pct ?? 0),
-                    default_margin_pct:      Number(d.default_margin_pct     ?? 10.00),
-                    default_transport_per_m: Number(d.default_transport_per_m ?? 0),
-                    yarn_review_interval_days: Number(d.yarn_review_interval_days ?? 90),
-                    default_processing_rate_per_m: Number(d.default_processing_rate_per_m ?? 0),
-                    default_finishing_rate_per_m: Number(d.default_finishing_rate_per_m ?? 0),
-                })
-                const loadedMode: OverheadMode = d.overhead_mode === 'direct'
-                    || (d.overhead_mode == null && d.overhead_override_per_m != null)
-                    ? 'direct'
-                    : 'monthly_expenses'
-                setOverheadMode(loadedMode)
-                setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
-                setOverheadItems(ensureOverheadIntegrity(
-                    Array.isArray(d.overhead_items) && d.overhead_items.length > 0
-                        ? d.overhead_items
-                        : DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
-                ))
-                setMonthlyOutputM(d.is_configured ? Number(d.monthly_output_m ?? 0) : 0)
-                setLoomCount(Number(d.loom_count ?? 0))
-                setMonthlyWorkingDays(Number(d.monthly_working_days ?? 26))
-                setAvgOutputPerLoomPerDay(Number(d.avg_output_per_loom_per_day ?? 50))
-                setLastSavedAt(d.updated_at ?? null)
-                if (d.enabled_sections) {
-                    const loadedSections = d.enabled_sections as FactorySections
-                    setSections(loadedSections)
-                    const persistedProfile = d.factory_profile_key as FactoryProfileId | undefined
-                    setActivePreset(
-                        persistedProfile && persistedProfile !== 'unselected'
-                            ? persistedProfile
-                            : getMatchingFactoryProfileId(loadedSections) || 'custom',
-                    )
-                }
+            if (!res.data) {
+                setLoadError(userFacingError(res.error, 'Factory costing defaults could not be loaded. Refresh and try again.'))
+                return
             }
+
+            const d = res.data
+            setLastSavedAt(d.updated_at ?? null)
+            setRates({
+                warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
+                sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
+                winding_rate_per_kg:     Number(d.winding_rate_per_kg    ?? 0),
+                default_commission_pct:  Number(d.default_commission_pct ?? 0),
+                default_margin_pct:      Number(d.default_margin_pct     ?? 10.00),
+                default_transport_per_m: Number(d.default_transport_per_m ?? 0),
+                yarn_review_interval_days: Number(d.yarn_review_interval_days ?? 90),
+                default_processing_rate_per_m: Number(d.default_processing_rate_per_m ?? 0),
+                default_finishing_rate_per_m: Number(d.default_finishing_rate_per_m ?? 0),
+            })
+            const loadedMode: OverheadMode = d.overhead_mode === 'direct'
+                || (d.overhead_mode == null && d.overhead_override_per_m != null)
+                ? 'direct'
+                : 'monthly_expenses'
+            setOverheadMode(loadedMode)
+            setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
+            setOverheadItems(ensureOverheadIntegrity(
+                Array.isArray(d.overhead_items) && d.overhead_items.length > 0
+                    ? d.overhead_items
+                    : DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
+            ))
+            // Persisted values are authoritative even for profiles created by an
+            // older release that did not set is_configured after the first save.
+            setMonthlyOutputM(Number(d.monthly_output_m ?? 0))
+            setLoomCount(Number(d.loom_count ?? 0))
+            setMonthlyWorkingDays(Number(d.monthly_working_days ?? 26))
+            setAvgOutputPerLoomPerDay(Number(d.avg_output_per_loom_per_day ?? 50))
+
+            const loadedSections: FactorySections = {
+                ...DEFAULT_FACTORY_SECTIONS,
+                ...(d.enabled_sections as Partial<FactorySections> | null | undefined),
+            }
+            setSections(loadedSections)
+            const persistedProfile = d.factory_profile_key as FactoryProfileId | undefined
+            setActivePreset(
+                persistedProfile && persistedProfile !== 'unselected'
+                    ? persistedProfile
+                    : getMatchingFactoryProfileId(loadedSections) || 'custom',
+            )
+        } catch (error) {
+            setLoadError(userFacingError(error, 'Factory costing defaults could not be loaded. Refresh and try again.'))
+        } finally {
             setLoading(false)
         }
-        load()
     }, [])
+
+    useEffect(() => {
+        void loadProfile()
+    }, [loadProfile])
 
     const applyPresetImmediately = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
         setActivePreset(preset.id)
@@ -279,6 +293,26 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
                 <CardContent className="flex items-center justify-center h-40">
                     <Loader2 className="h-6 w-6 animate-spin text-saffron" />
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (loadError) {
+        return (
+            <Card role="alert" className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+                <CardContent className="space-y-4 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-ink">{standaloneEstimator ? 'Cost Estimate Defaults are unavailable' : 'Factory Cost Profile is unavailable'}</p>
+                            <p className="text-sm leading-relaxed text-muted-foreground">{loadError}</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void loadProfile()}>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Retry
+                    </Button>
                 </CardContent>
             </Card>
         )
