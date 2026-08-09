@@ -47,6 +47,7 @@ import { useOwnerPlanAccess } from '@/components/providers/owner-plan-provider'
 import { useSettingsBootstrap } from '@/components/providers/settings-bootstrap-provider'
 import { tierSatisfies } from '@/lib/subscription-access'
 import { RouteMilestones } from '@/components/performance/route-milestones'
+import { PageHeader } from '@/components/ui/page-header'
 
 const SettingsCardLoading = () => <div className="min-h-24 animate-pulse rounded-lg border border-hairline bg-surface-soft/55" />
 
@@ -134,7 +135,7 @@ function SettingsPanel({ className, children }: { className?: string; children: 
     return (
         <div
             className={cn(
-                'rounded-lg border border-hairline bg-surface/95 shadow-[var(--shadow-card)] backdrop-blur-sm',
+                'rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]',
                 className
             )}
         >
@@ -334,16 +335,18 @@ export default function SettingsPage() {
     return (
         <div className="settings-page-frame">
             <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
-            <div id="overview" className="mb-5 flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                    <h1 className="text-3xl font-bold tracking-tight text-ink">{t('settings.title')}</h1>
-                    <p className="mt-1 text-base text-muted-foreground">{hasPremium ? t('settings.subtitle') : 'Business profile, costing defaults, saved qualities, and account access.'}</p>
-                </div>
-                <Button variant="outline" size="sm" className="w-fit gap-2" onClick={refreshSettings}>
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    {tx('Refresh')}
-                </Button>
-            </div>
+            <PageHeader
+                id="overview"
+                icon={SlidersHorizontal}
+                title={t('settings.title')}
+                description={hasPremium ? t('settings.subtitle') : 'Business profile, costing defaults, saved qualities, and account access.'}
+                actions={(
+                    <Button variant="outline" className="w-fit gap-2" onClick={refreshSettings}>
+                        <RefreshCw className="h-4 w-4" />
+                        {tx('Refresh')}
+                    </Button>
+                )}
+            />
 
             <div className="settings-layout-grid">
                 <div className="min-w-0 space-y-5">
@@ -407,7 +410,7 @@ export default function SettingsPage() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        className="border-info/25 bg-white text-info hover:bg-info-soft"
+                                                        className="border-info/25 bg-surface text-info hover:bg-info-soft"
                                                         onClick={copyJoinCode}
                                                         disabled={!org?.join_code}
                                                     >
@@ -419,7 +422,7 @@ export default function SettingsPage() {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="border-saffron/30 bg-white text-saffron-deep hover:bg-saffron-soft"
+                                                                className="border-saffron/30 bg-surface text-saffron-deep hover:bg-saffron-soft"
                                                             >
                                                                 <RefreshCw className="h-3.5 w-3.5" />
                                                                 Regenerate
@@ -621,7 +624,7 @@ export default function SettingsPage() {
                             />
                             <div className="mt-5">
                                 <OrganizationDataExportButton />
-                                <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                                <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:text-saffron">
                                     View export history
                                 </Link>
                             </div>

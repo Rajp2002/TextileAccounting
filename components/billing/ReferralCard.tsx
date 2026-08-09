@@ -43,15 +43,15 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
     }
 
     return (
-        <Card className="overflow-hidden rounded-2xl border-emerald-200 bg-emerald-950 text-white shadow-[0_8px_30px_rgba(6,78,59,0.12)]">
+        <Card className="overflow-hidden border-loom-elevated bg-loom text-white shadow-[var(--shadow-panel)]">
             <CardHeader className="border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                        <Gift className="h-5 w-5 text-emerald-300" />
+                        <Gift className="h-5 w-5 text-saffron" />
                     </div>
                     <div>
                         <CardTitle className="text-lg text-white">Refer & Earn</CardTitle>
-                        <p className="mt-0.5 text-xs text-emerald-200/70">
+                        <p className="mt-0.5 text-xs text-surface-muted">
                             Get 10% off your next annual plan payment per paid referral.
                         </p>
                     </div>
@@ -61,14 +61,14 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                 
                 {/* Stats Grid - more compact and informative */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col justify-center rounded-xl border border-white/10 bg-white/5 p-3.5">
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Total referrals</p>
+                    <div className="flex flex-col justify-center rounded-lg border border-white/10 bg-white/5 p-3.5">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-saffron">Total referrals</p>
                         <div className="flex items-baseline gap-1.5">
                             <span className="text-2xl font-bold leading-none text-white">{stats.total || 0}</span>
-                            <span className="text-xs font-medium text-emerald-200/70">{stats.converted || 0} converted</span>
+                            <span className="text-xs font-medium text-surface-muted">{stats.converted || 0} converted</span>
                         </div>
                     </div>
-                    <div className="flex flex-col justify-center rounded-xl bg-emerald-400 p-3.5 text-emerald-950">
+                    <div className="flex flex-col justify-center rounded-lg bg-saffron p-3.5 text-ink">
                         <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider">Current reward</p>
                         <div className="flex items-baseline gap-0.5">
                             <span className="text-2xl font-bold leading-none">{stats.currentDiscountPct || 0}%</span>
@@ -80,17 +80,17 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                 {/* Journey to 100% Free - Simplified progress */}
                 <div className="relative pt-1">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-medium text-emerald-100">Journey to 100% free</span>
-                        <div className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-emerald-200">
+                        <span className="text-xs font-medium text-surface-muted">Journey to 100% free</span>
+                        <div className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-surface-muted">
                             {stats.currentDiscountPct || 0}% / 100%
                         </div>
                     </div>
                     <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10 p-0.5">
                         <div 
-                            className="relative h-full rounded-full bg-emerald-400 transition-all duration-1000 ease-out"
+                            className="relative h-full rounded-full bg-saffron transition-all duration-700 ease-out"
                             style={{ width: `${Math.min(100, stats.currentDiscountPct || 0)}%` }}
                         >
-                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                            <div className="absolute inset-0 bg-white/20" />
                         </div>
                     </div>
                 </div>
@@ -98,10 +98,10 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                 {/* Code & Share - Compact grouping */}
                 <div className="space-y-4 pt-2">
                     <div className="relative group">
-                        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-emerald-300">
+                        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-saffron">
                             Your Unique Code
                         </label>
-                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-1.5 transition-colors focus-within:border-emerald-400">
+                        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1.5 transition-colors focus-within:border-saffron">
                             <input 
                                 readOnly 
                                 value={referralCode}
@@ -112,7 +112,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
-                                    className="h-10 w-10 rounded-lg text-emerald-300 hover:bg-white/10 hover:text-white"
+                                    className="h-10 w-10 rounded-lg text-saffron hover:bg-white/10 hover:text-white"
                                     onClick={copyToClipboard}
                                     title="Copy Code"
                                 >
@@ -120,7 +120,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                 </Button>
                                 <Button 
                                     onClick={shareWhatsApp}
-                                    className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-emerald-400 px-4 text-[11px] font-bold uppercase tracking-wider text-emerald-950 shadow-none hover:bg-emerald-300"
+                                    className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-saffron px-4 text-[11px] font-semibold uppercase tracking-wider text-white shadow-none hover:bg-saffron-deep"
                                 >
                                     <Share2 className="h-4 w-4" />
                                     Share
@@ -132,20 +132,20 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
 
                 {/* Active & Upcoming Windows - more compact */}
                 {stats.activeWindows && stats.activeWindows.length > 0 && (
-                    <div className="pt-2 border-t border-emerald-50">
-                        <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest mb-3">Active Schedule</p>
+                    <div className="border-t border-white/10 pt-2">
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-surface-muted">Active schedule</p>
                         <div className="space-y-2">
                             {stats.activeWindows.slice(0, 3).map((w, i: number) => {
                                 const isFuture = Date.parse(w.valid_from) > getCurrentTimestampMs()
                                 const expiryDate = formatToSurat(w.valid_until, 'MMM yyyy')
                                 return (
-                                    <div key={i} className="flex items-center justify-between bg-emerald-50/50 rounded-xl px-3 py-2 border border-emerald-100/50 text-[11px]">
+                                    <div key={i} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[11px]">
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${isFuture ? 'bg-amber-400' : 'bg-emerald-500 shadow-[0_0_8px_#10b981]'}`} />
-                                            <span className="text-emerald-900 font-bold">10% Off</span>
-                                            {isFuture && <span className="text-[9px] text-amber-600 font-black uppercase ml-1">Pending</span>}
+                                            <div className={`h-1.5 w-1.5 rounded-full ${isFuture ? 'bg-warning' : 'bg-success'}`} />
+                                            <span className="font-semibold text-white">10% Off</span>
+                                            {isFuture && <span className="ml-1 text-[9px] font-semibold uppercase text-warning">Pending</span>}
                                         </div>
-                                        <div className="text-emerald-700/60 font-medium">Till {expiryDate}</div>
+                                        <div className="font-medium text-surface-muted">Till {expiryDate}</div>
                                     </div>
                                 )
                             })}
