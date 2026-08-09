@@ -11,7 +11,7 @@ import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { getOrgTier, tierSatisfies } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
-import { buildSavedQualityRecipeState } from '@/lib/saved-costings'
+import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
@@ -465,7 +465,57 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     const { data, error } = await query
 
     if (error) return { error: error.message }
-    return { data: data ?? [] }
+
+    const templates = data ?? []
+    // Base is a repeat-costing product: when a quality is reopened, its
+    // current recipe/rate rows should combine with the latest linked costing
+    // assumptions. Full Suite keeps its existing quality-vs-quotation
+    // separation and does not receive this Base-only enrichment.
+    const effectiveTier = await getOrgTier(profile.org_id)
+    if (effectiveTier !== 'base' || templates.length === 0) return { data: templates }
+
+    const templateIds = templates.map(template => template.id).filter(Boolean)
+    const { data: costings, error: costingError } = await supabase
+        .from('estimator_quotes')
+        .select(`
+            template_id,
+            updated_at,
+            warping_rate_per_kg,
+            sizing_rate_per_kg,
+            winding_rate_per_kg,
+            processing_rate_per_m,
+            finishing_rate_per_m,
+            overhead_items,
+            monthly_output_m,
+            overhead_override_per_m,
+            commission_pct,
+            transport_per_m,
+            profit_margin_pct,
+            order_quantity_m,
+            enabled_sections,
+            loom_count,
+            monthly_working_days,
+            avg_output_per_loom_per_day
+        `)
+        .eq('org_id', profile.org_id)
+        .eq('record_kind', 'costing')
+        .in('template_id', templateIds)
+        .order('updated_at', { ascending: false })
+
+    if (costingError) return { error: costingError.message }
+
+    const latestByTemplate = new Map<string, SavedQualityCostingReuse>()
+    for (const costing of costings ?? []) {
+        if (!costing.template_id || latestByTemplate.has(costing.template_id)) continue
+        latestByTemplate.set(costing.template_id, costing)
+    }
+
+    return {
+        data: templates.map(template => ({
+            ...template,
+            latest_costing_reuse: latestByTemplate.get(template.id) ?? null,
+        })),
+    }
 }
 
 export async function saveAsFabricTemplate(data: {
