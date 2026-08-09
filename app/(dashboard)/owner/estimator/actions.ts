@@ -404,6 +404,10 @@ export async function upsertFactoryCostProfile(data: {
     const { expectedUpdatedAt, ...profileData } = data
     const normalizedProfileData = {
         ...profileData,
+        // A successful save from Settings or the Estimator completes the
+        // first-run baseline. Keep this explicit so monthly output and other
+        // persisted defaults are hydrated on the next cold load.
+        is_configured: data.is_configured ?? true,
         // Retain the legacy database column for older readers, but do not
         // calculate or expose an overhead percentage in the new workflow.
         overhead_pct: 0,
