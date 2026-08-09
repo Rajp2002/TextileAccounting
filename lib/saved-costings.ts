@@ -493,6 +493,11 @@ export type SavedCostingDelta = {
   delta: number | null
 }
 
+export type SavedCostingOverheadApplicability = {
+  left: boolean
+  right: boolean
+}
+
 export type SavedCostingLayerComparison = {
   changed: boolean
   left: Array<{
@@ -547,11 +552,15 @@ export type SavedCostingCanonicalComparison = {
   }
   overhead: {
     changed: boolean
+    costDrivingChanged: boolean
+    referenceChanged: boolean
     modeChanged: boolean
     mode: { left: string | null; right: string | null }
     perM: SavedCostingDelta
     monthlyExpenseTotal: SavedCostingDelta
     monthlyOutputM: SavedCostingDelta
+    monthlyExpenseTotalUsedForCosting: SavedCostingOverheadApplicability
+    monthlyOutputUsedForCosting: SavedCostingOverheadApplicability
   }
   commercial: {
     changed: boolean
@@ -756,13 +765,36 @@ export function compareSavedCostingSnapshots(
   const rightOverhead = rightResult?.assumptions?.overhead
   const overheadModeLeft = leftResult?.overheadMode ?? leftOverhead?.mode ?? null
   const overheadModeRight = rightResult?.overheadMode ?? rightOverhead?.mode ?? null
+  const monthlyExpenseTotalUsedForCosting = {
+    left: overheadModeLeft === 'monthly_expenses',
+    right: overheadModeRight === 'monthly_expenses',
+  }
+  const monthlyOutputUsedForCosting = {
+    left: overheadModeLeft === 'monthly_expenses',
+    right: overheadModeRight === 'monthly_expenses',
+  }
   const overhead = {
     mode: { left: overheadModeLeft, right: overheadModeRight },
     modeChanged: overheadModeLeft !== overheadModeRight,
     perM: delta(leftResult?.overheadPerM, rightResult?.overheadPerM),
     monthlyExpenseTotal: delta(leftOverhead?.monthlyExpenseTotal, rightOverhead?.monthlyExpenseTotal),
     monthlyOutputM: delta(leftOverhead?.monthlyOutputM, rightOverhead?.monthlyOutputM),
+    monthlyExpenseTotalUsedForCosting,
+    monthlyOutputUsedForCosting,
   }
+
+  const monthlyExpenseChanged = deltaChanged(overhead.monthlyExpenseTotal)
+  const monthlyOutputChanged = deltaChanged(overhead.monthlyOutputM)
+  const anyMonthlyExpenseUsedForCosting = monthlyExpenseTotalUsedForCosting.left
+    || monthlyExpenseTotalUsedForCosting.right
+  const anyMonthlyOutputUsedForCosting = monthlyOutputUsedForCosting.left
+    || monthlyOutputUsedForCosting.right
+  const costDrivingChanged = overhead.modeChanged
+    || deltaChanged(overhead.perM)
+    || (anyMonthlyExpenseUsedForCosting && monthlyExpenseChanged)
+    || (anyMonthlyOutputUsedForCosting && monthlyOutputChanged)
+  const referenceChanged = (!anyMonthlyExpenseUsedForCosting && monthlyExpenseChanged)
+    || (!anyMonthlyOutputUsedForCosting && monthlyOutputChanged)
 
   const commercial = {
     commissionPct: delta(leftResult?.commissionPct, rightResult?.commissionPct),
@@ -808,10 +840,12 @@ export function compareSavedCostingSnapshots(
     },
     overhead: {
       ...overhead,
+      costDrivingChanged,
+      referenceChanged,
       changed: overhead.modeChanged
         || deltaChanged(overhead.perM)
-        || deltaChanged(overhead.monthlyExpenseTotal)
-        || deltaChanged(overhead.monthlyOutputM),
+        || monthlyExpenseChanged
+        || monthlyOutputChanged,
     },
     commercial: {
       ...commercial,

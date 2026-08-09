@@ -325,14 +325,28 @@ function getLegacyVersionLabel(costing: Pick<QuoteRow, 'quality_label' | 'versio
 
 const comparisonPriceLabels = ['Break-even selling price'] as const
 
+type ComparisonChangeGroup = 'cost-driving' | 'reference'
+
+type ComparisonRowMeta = {
+    group?: ComparisonChangeGroup
+    context?: { left: string; right: string }
+}
+
 type ComparisonTableRow =
-    | { label: string; unit: 'text'; text: { left: string | null; right: string | null }; changed: boolean }
-    | { label: string; unit: 'money' | 'percent' | 'number' | 'rate'; value: SavedCostingDelta; changed: boolean }
+    | ({ label: string; unit: 'text'; text: { left: string | null; right: string | null }; changed: boolean } & ComparisonRowMeta)
+    | ({ label: string; unit: 'money' | 'percent' | 'number' | 'rate'; value: SavedCostingDelta; changed: boolean } & ComparisonRowMeta)
 
 type ComparisonSection = {
     title: string
     changed: boolean
     rows: ComparisonTableRow[]
+}
+
+type ComparisonGroup = {
+    key: ComparisonChangeGroup
+    title: string
+    description: string
+    sections: ComparisonSection[]
 }
 
 function formatComparisonValue(value: number | null, unit: 'money' | 'percent' | 'number') {
@@ -801,8 +815,40 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             rows: [
                 { label: 'Overhead method', text: comparison.overhead.mode, unit: 'text' as const, changed: comparison.overhead.modeChanged },
                 { label: 'Overhead per metre', value: comparison.overhead.perM, unit: 'money' as const, changed: deltaChangedForUi(comparison.overhead.perM) },
-                { label: 'Monthly expenses', value: comparison.overhead.monthlyExpenseTotal, unit: 'number' as const, changed: deltaChangedForUi(comparison.overhead.monthlyExpenseTotal) },
-                { label: 'Monthly output', value: comparison.overhead.monthlyOutputM, unit: 'number' as const, changed: deltaChangedForUi(comparison.overhead.monthlyOutputM) },
+                {
+                    label: 'Monthly expenses',
+                    value: comparison.overhead.monthlyExpenseTotal,
+                    unit: 'number' as const,
+                    changed: deltaChangedForUi(comparison.overhead.monthlyExpenseTotal),
+                    group: comparison.overhead.monthlyExpenseTotalUsedForCosting.left || comparison.overhead.monthlyExpenseTotalUsedForCosting.right
+                        ? 'cost-driving'
+                        : 'reference',
+                    context: {
+                        left: comparison.overhead.monthlyExpenseTotalUsedForCosting.left
+                            ? 'Used in monthly-expense overhead'
+                            : 'Reference only; direct ₹/m overhead is used',
+                        right: comparison.overhead.monthlyExpenseTotalUsedForCosting.right
+                            ? 'Used in monthly-expense overhead'
+                            : 'Reference only; direct ₹/m overhead is used',
+                    },
+                },
+                {
+                    label: 'Monthly output',
+                    value: comparison.overhead.monthlyOutputM,
+                    unit: 'number' as const,
+                    changed: deltaChangedForUi(comparison.overhead.monthlyOutputM),
+                    group: comparison.overhead.monthlyOutputUsedForCosting.left || comparison.overhead.monthlyOutputUsedForCosting.right
+                        ? 'cost-driving'
+                        : 'reference',
+                    context: {
+                        left: comparison.overhead.monthlyOutputUsedForCosting.left
+                            ? 'Used as the monthly-expense denominator'
+                            : 'Reference only; direct ₹/m overhead is used',
+                        right: comparison.overhead.monthlyOutputUsedForCosting.right
+                            ? 'Used as the monthly-expense denominator'
+                            : 'Reference only; direct ₹/m overhead is used',
+                    },
+                },
             ],
         },
         {
@@ -833,6 +879,27 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             ],
         },
     ] : []
+
+    const comparisonGroups: ComparisonGroup[] = comparison
+        ? (['cost-driving', 'reference'] as const).map(group => ({
+            key: group,
+            title: group === 'cost-driving' ? 'Cost-driving changes' : 'Reference/context changes',
+            description: group === 'cost-driving'
+                ? 'Cost-driving assumptions and their resulting price movement. These changes can explain the New minus Old result.'
+                : 'Values retained for capacity and factory context. Direct overhead uses the saved ₹/m rate, so monthly expenses and output do not change that costing.',
+            sections: comparisonSections
+                .map(section => {
+                    const rows = section.rows.filter(row => {
+                        const rowGroup = row.group ?? 'cost-driving'
+                        return rowGroup === group && (group === 'cost-driving' || row.changed)
+                    })
+                    return rows.length > 0
+                        ? { ...section, rows, changed: rows.some(row => row.changed) }
+                        : null
+                })
+                .filter((section): section is ComparisonSection => Boolean(section)),
+        })).filter(group => group.sections.length > 0)
+        : []
 
     const toggleCostingSelection = (id: string) => {
         setSelectedCostingIds(current => {
@@ -1662,7 +1729,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             <div className={`rounded-xl border px-4 py-3 text-xs ${comparison.comparable ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
                                 <p className="font-bold">{comparison.comparable ? 'Canonical comparison ready' : 'Canonical comparison needs review'}</p>
                                 <p className="mt-1 leading-relaxed">{comparison.canonical.message || `Formula ${comparison.canonical.leftCalculationVersion || 'unknown'} · rounding ${comparison.canonical.leftSnapshotSchemaVersion ? `snapshot v${comparison.canonical.leftSnapshotSchemaVersion}` : 'legacy'} · detail source ${comparison.canonical.source.replace('_', ' ')}.`}</p>
-                                <p className="mt-1 font-semibold">Change is calculated as New minus Old.</p>
+                                <p className="mt-1 font-semibold">Change is calculated as New minus Old. Cost-driving changes are separated from reference/context changes.</p>
                                 <p className="mt-1 font-semibold">{formatSuggestedPriceMovement(comparison.price.sellingPricePerM)}</p>
                             </div>
                             <div className="max-h-[60vh] overflow-auto rounded-xl border border-slate-200">
@@ -1678,29 +1745,47 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {comparisonSections.map(section => (
-                                            <Fragment key={section.title}>
-                                                <tr key={`${section.title}-heading`} className="bg-slate-50/70">
-                                                    <th colSpan={4} className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-wider text-slate-600">
-                                                        <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-50 text-[10px] text-blue-700">Changed</Badge>}
+                                        {comparisonGroups.map(group => (
+                                            <Fragment key={group.key}>
+                                                <tr className="bg-blue-50/70">
+                                                    <th colSpan={4} className="px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-blue-900">
+                                                        {group.title}
                                                     </th>
                                                 </tr>
-                                                {section.rows.map(row => {
-                                                    const left = row.unit === 'text' ? row.text.left || 'Not available' : formatComparisonValue(row.value.left, row.unit === 'rate' ? 'number' : row.unit)
-                                                    const right = row.unit === 'text' ? row.text.right || 'Not available' : formatComparisonValue(row.value.right, row.unit === 'rate' ? 'number' : row.unit)
-                                                    const change = row.unit === 'text'
-                                                        ? row.changed ? 'Changed' : 'No change'
-                                                        : formatComparisonDelta(row.value, row.unit === 'rate' ? 'number' : row.unit)
-                                                    const numericDelta = row.unit === 'text' ? null : row.value.delta
-                                                    return (
-                                                        <tr key={`${section.title}-${row.label}`}>
-                                                            <td className="px-4 py-3 font-semibold text-slate-600">{row.label}</td>
-                                                            <td className="px-4 py-3 font-mono font-semibold text-slate-900">{left}{row.unit === 'rate' && left !== 'Not available' ? '/kg' : ''}</td>
-                                                            <td className="px-4 py-3 font-mono font-semibold text-slate-900">{right}{row.unit === 'rate' && right !== 'Not available' ? '/kg' : ''}</td>
-                                                            <td className={`px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-amber-700' : 'text-blue-700' : 'text-slate-500'}`}>{change}</td>
+                                                <tr className="bg-blue-50/30">
+                                                    <td colSpan={4} className="px-4 py-2 text-xs leading-relaxed text-slate-600">{group.description}</td>
+                                                </tr>
+                                                {group.sections.map(section => (
+                                                    <Fragment key={`${group.key}-${section.title}`}>
+                                                        <tr key={`${group.key}-${section.title}-heading`} className="bg-slate-50/70">
+                                                            <th colSpan={4} className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-wider text-slate-600">
+                                                                <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-50 text-[10px] text-blue-700">Changed</Badge>}
+                                                            </th>
                                                         </tr>
-                                                    )
-                                                })}
+                                                        {section.rows.map(row => {
+                                                            const left = row.unit === 'text' ? row.text.left || 'Not available' : formatComparisonValue(row.value.left, row.unit === 'rate' ? 'number' : row.unit)
+                                                            const right = row.unit === 'text' ? row.text.right || 'Not available' : formatComparisonValue(row.value.right, row.unit === 'rate' ? 'number' : row.unit)
+                                                            const change = row.unit === 'text'
+                                                                ? row.changed ? 'Changed' : 'No change'
+                                                                : formatComparisonDelta(row.value, row.unit === 'rate' ? 'number' : row.unit)
+                                                            const numericDelta = row.unit === 'text' ? null : row.value.delta
+                                                            return (
+                                                                <tr key={`${group.key}-${section.title}-${row.label}`}>
+                                                                    <td className="px-4 py-3 font-semibold text-slate-600">{row.label}</td>
+                                                                    <td className="px-4 py-3 font-mono font-semibold text-slate-900">
+                                                                        <span>{left}{row.unit === 'rate' && left !== 'Not available' ? '/kg' : ''}</span>
+                                                                        {row.context?.left && <span className="mt-1 block font-sans text-[10px] font-medium leading-4 text-slate-500">{row.context.left}</span>}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 font-mono font-semibold text-slate-900">
+                                                                        <span>{right}{row.unit === 'rate' && right !== 'Not available' ? '/kg' : ''}</span>
+                                                                        {row.context?.right && <span className="mt-1 block font-sans text-[10px] font-medium leading-4 text-slate-500">{row.context.right}</span>}
+                                                                    </td>
+                                                                    <td className={`px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-amber-700' : 'text-blue-700' : 'text-slate-500'}`}>{change}</td>
+                                                                </tr>
+                                                            )
+                                                        })}
+                                                    </Fragment>
+                                                ))}
                                             </Fragment>
                                         ))}
                                     </tbody>

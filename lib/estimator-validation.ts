@@ -72,6 +72,10 @@ const MAX_COMMON_WASTE_PCT = 15
 const MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY = 500
 export const UNUSUALLY_LOW_DENIER = 20
 
+function formatValidationNumber(value: number): string {
+  return value.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+}
+
 /**
  * Factory capacity is the denominator for monthly-expense overhead and is
  * also required when the estimate will drive a production workflow. A
@@ -533,9 +537,13 @@ export function validateEstimatorSnapshot(
 
   const ratedCapacity = Number(estimate.loomCount) * Number(estimate.monthlyWorkingDays) * Number(estimate.avgOutputPerLoomPerDay)
   if (Number.isFinite(ratedCapacity) && ratedCapacity > 0 && Number(estimate.monthlyOutputM) > ratedCapacity) {
+    const monthlyOutput = Number(estimate.monthlyOutputM)
+    const overheadImpact = overheadMode === 'direct'
+      ? 'Direct overhead uses the saved ₹/m rate, so monthly output is a reference check and does not change this costing.'
+      : 'Monthly output is the denominator for monthly-expense overhead, so it changes the overhead cost per metre.'
     warnings.push({
       field: 'monthlyOutputM',
-      message: 'Monthly output is above the rated loom capacity. Confirm the loom count, working days, and daily output.',
+      message: `Monthly output is above the rated loom capacity. Actual output is ${formatValidationNumber(monthlyOutput)} m versus ${formatValidationNumber(ratedCapacity)} m rated capacity (${formatValidationNumber(Number(estimate.loomCount))} looms × ${formatValidationNumber(Number(estimate.monthlyWorkingDays))} working days × ${formatValidationNumber(Number(estimate.avgOutputPerLoomPerDay))} m/loom/day). ${overheadImpact} Confirm the capacity inputs.`,
     })
   }
 
