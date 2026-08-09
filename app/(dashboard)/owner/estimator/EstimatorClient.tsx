@@ -2617,6 +2617,17 @@ export default function EstimatorClient({
             ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
             : templates,
     [templates, templateSearch])
+    const hasActiveQualityRecipeChanges = appliedTemplate
+        ? hasSavedQualityRecipeChanges(appliedTemplate, state)
+        : false
+    const topCostingSaveDisabled = savingQuote
+        || !canPersistCostResult
+        || !hasValidCostResult
+        || !qualityLabel.trim()
+        || totals.totalProductionCostPerM <= 0
+    const topCostingActionLabel = sourceQuoteId && sourceRecordKind === 'costing'
+        ? 'Save New Version'
+        : 'Save Costing'
 
     const updateSavedQualitiesScrollState = useCallback(() => {
         const rail = savedQualitiesRailRef.current
@@ -2724,6 +2735,57 @@ export default function EstimatorClient({
         setTemplateSaveError(null)
         setShowSaveTemplate(true)
     }, [appliedTemplate?.name, mode, partyName, qualityLabel])
+
+    const openSaveAsNewQualityDialog = useCallback(() => {
+        if (!appliedTemplate) {
+            openSaveTemplateDialog()
+            return
+        }
+
+        // A copy starts a new template and costing lineage. Keep the loaded
+        // recipe, but detach every source identity before asking for the new
+        // quality name.
+        saveAsNewQualityRollbackRef.current = {
+            appliedTemplate,
+            templateName,
+            qualityLabel,
+            sourceQuoteId,
+            sourceQuoteUpdatedAt,
+            sourceQuoteVersionNumber,
+            sourceQuoteCreatedAt,
+            sourceQuoteStatus,
+            sourceState,
+            sourceFactoryProfileUpdatedAt,
+            sourceRecordKind,
+            clientRequestId: quoteRequestIdRef.current,
+        }
+        setTemplateName(`${appliedTemplate.name} - New`)
+        setAppliedTemplate(null)
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
+        setTemplateSaveError(null)
+        setShowSaveTemplate(true)
+    }, [
+        appliedTemplate,
+        openSaveTemplateDialog,
+        qualityLabel,
+        sourceFactoryProfileUpdatedAt,
+        sourceQuoteCreatedAt,
+        sourceQuoteId,
+        sourceQuoteStatus,
+        sourceQuoteUpdatedAt,
+        sourceQuoteVersionNumber,
+        sourceRecordKind,
+        sourceState,
+        templateName,
+    ])
 
     const rollbackSaveAsNewQualityDialog = useCallback(() => {
         const rollback = saveAsNewQualityRollbackRef.current
@@ -4008,8 +4070,9 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="h-12 min-w-0 max-w-full flex-1 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)] sm:flex-none"
                                         onClick={() => void handleUpdateTemplate()}
-                                        disabled={savingTemplate}
+                                        disabled={savingTemplate || !hasActiveQualityRecipeChanges}
                                         aria-busy={savingTemplate}
+                                        title={!hasActiveQualityRecipeChanges ? tx('No Saved Quality changes to update') : undefined}
                                     >
                                         {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 text-brand-accent shrink-0" />}
                                         <span className="truncate">{tx(savingTemplate ? 'Saving Fabric Quality…' : 'Update Fabric Quality')}</span>
@@ -4018,37 +4081,7 @@ export default function EstimatorClient({
                                         data-testid="save-as-new-quality"
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => {
-                                            // A copy starts a new template and costing lineage. Keep
-                                            // the loaded recipe, but detach every source identity.
-                                            saveAsNewQualityRollbackRef.current = {
-                                                appliedTemplate,
-                                                templateName,
-                                                qualityLabel,
-                                                sourceQuoteId,
-                                                sourceQuoteUpdatedAt,
-                                                sourceQuoteVersionNumber,
-                                                sourceQuoteCreatedAt,
-                                                sourceQuoteStatus,
-                                                sourceState,
-                                                sourceFactoryProfileUpdatedAt,
-                                                sourceRecordKind,
-                                                clientRequestId: quoteRequestIdRef.current,
-                                            }
-                                            setTemplateName(`${appliedTemplate.name} - New`)
-                                            setAppliedTemplate(null)
-                                            setSourceQuoteId(null)
-                                            setSourceQuoteUpdatedAt(null)
-                                            setSourceQuoteVersionNumber(null)
-                                            setSourceQuoteCreatedAt(null)
-                                            setSourceQuoteStatus(null)
-                                            setSourceState(null)
-                                            setSourceFactoryProfileUpdatedAt(null)
-                                            setSourceRecordKind(null)
-                                            quoteRequestIdRef.current = null
-                                            setTemplateSaveError(null)
-                                            setShowSaveTemplate(true)
-                                        }}
+                                        onClick={() => openSaveAsNewQualityDialog()}
                                         className="h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)]"
                                         title={tx('Use as Starting Point for this saved quality and save it as a separate quality')}
                                         aria-label={tx(`Use ${appliedTemplate.name} as a starting point; save as a new quality`)}
@@ -4072,11 +4105,7 @@ export default function EstimatorClient({
                                     size="sm"
                                     variant="outline"
                                     className="col-span-2 h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:col-span-1"
-                                    onClick={() => {
-                                        setTemplateName(qualityLabel.trim())
-                                        setTemplateSaveError(null)
-                                        setShowSaveTemplate(true)
-                                    }}
+                                    onClick={() => openSaveAsNewQualityDialog()}
                                     aria-label={tx('Save as New Quality')}
                                 >
                                     <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
@@ -4210,15 +4239,60 @@ export default function EstimatorClient({
                                 </div>
                             ) : <div className="hidden sm:block" />}
 
-                            <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0">
-                                <Button
-                                    size="sm"
-                                    onClick={() => openSaveTemplateDialog()}
-                                    className="h-11 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)] sm:w-auto"
-                                >
-                                    <Save className="h-4 w-4" />
-                                    {t('estimator.quality.saveCurrentAsQuality')}
-                                </Button>
+                            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                                {appliedTemplate ? (
+                                    <>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => void handleUpdateTemplate()}
+                                            disabled={savingTemplate || !hasActiveQualityRecipeChanges}
+                                            aria-busy={savingTemplate}
+                                            title={!hasActiveQualityRecipeChanges ? tx('No Saved Quality changes to update') : undefined}
+                                            className="h-11 w-full rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
+                                        >
+                                            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                            {tx(savingTemplate ? 'Saving Fabric Quality…' : 'Update Fabric Quality')}
+                                        </Button>
+                                        <Button
+                                            data-testid="save-as-new-quality-top"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => openSaveAsNewQualityDialog()}
+                                            className="h-11 w-full rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:w-auto"
+                                            title={tx('Use as Starting Point for this saved quality and save it as a separate quality')}
+                                        >
+                                            <BookmarkPlus className="h-4 w-4" />
+                                            {tx('Save as New Quality')}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button
+                                        size="sm"
+                                        onClick={() => openSaveTemplateDialog()}
+                                        className="h-11 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)] sm:w-auto"
+                                    >
+                                        <Save className="h-4 w-4" />
+                                        {t('estimator.quality.saveCurrentAsQuality')}
+                                    </Button>
+                                )}
+                                {isStandaloneCostingSession && (
+                                    <Button
+                                        data-testid="save-costing-action-top"
+                                        size="sm"
+                                        onClick={() => void handleSaveQuote('quote', 'draft')}
+                                        disabled={topCostingSaveDisabled}
+                                        aria-busy={savingQuote}
+                                        aria-label={tx(topCostingActionLabel)}
+                                        title={topCostingSaveDisabled
+                                            ? tx(firstCostingReadinessMessage ?? 'Complete quality and cost inputs first.')
+                                            : undefined}
+                                        className="h-11 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
+                                    >
+                                        {savingQuote ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                                        {tx(topCostingActionLabel)}
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outline"
                                     size="sm"

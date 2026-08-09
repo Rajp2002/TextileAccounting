@@ -14,6 +14,9 @@ describe('Sprint 1 costing save trust', () => {
 
     it('keeps quality updates separate from costing snapshots', () => {
         expect(estimator).toContain('Update Fabric Quality')
+        expect(estimator).toContain('hasActiveQualityRecipeChanges')
+        expect(estimator).toContain('openSaveAsNewQualityDialog')
+        expect(estimator).toContain('data-testid="save-costing-action-top"')
         expect(estimator).toContain("estimator.sprint1.quality_updated_no_snapshot")
         expect(estimator).toContain("estimator.sprint1.save_version_only")
         expect(estimator).toContain("estimator.sprint1.save_version_update_quality")
