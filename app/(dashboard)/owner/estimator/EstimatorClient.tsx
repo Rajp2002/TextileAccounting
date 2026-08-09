@@ -2212,6 +2212,10 @@ export default function EstimatorClient({
     // Template search
     const [templateSearch,   setTemplateSearch]   = useState('')
     const savedQualitiesRailRef = useRef<HTMLDivElement>(null)
+    const [savedQualitiesScrollState, setSavedQualitiesScrollState] = useState({
+        canScrollLeft: false,
+        canScrollRight: false,
+    })
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
@@ -2614,11 +2618,61 @@ export default function EstimatorClient({
             : templates,
     [templates, templateSearch])
 
+    const updateSavedQualitiesScrollState = useCallback(() => {
+        const rail = savedQualitiesRailRef.current
+        if (!rail) return
+
+        const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth)
+        const nextState = {
+            canScrollLeft: rail.scrollLeft > 2,
+            canScrollRight: rail.scrollLeft < maxScrollLeft - 2,
+        }
+
+        setSavedQualitiesScrollState(current => (
+            current.canScrollLeft === nextState.canScrollLeft
+                && current.canScrollRight === nextState.canScrollRight
+                ? current
+                : nextState
+        ))
+    }, [])
+
+    useEffect(() => {
+        const rail = savedQualitiesRailRef.current
+        if (!rail) return
+
+        updateSavedQualitiesScrollState()
+        rail.addEventListener('scroll', updateSavedQualitiesScrollState, { passive: true })
+        window.addEventListener('resize', updateSavedQualitiesScrollState)
+
+        const resizeObserver = typeof ResizeObserver !== 'undefined'
+            ? new ResizeObserver(updateSavedQualitiesScrollState)
+            : null
+        resizeObserver?.observe(rail)
+
+        return () => {
+            rail.removeEventListener('scroll', updateSavedQualitiesScrollState)
+            window.removeEventListener('resize', updateSavedQualitiesScrollState)
+            resizeObserver?.disconnect()
+        }
+    }, [filteredTemplates, updateSavedQualitiesScrollState])
+
     const scrollSavedQualities = useCallback((direction: 'left' | 'right') => {
         const rail = savedQualitiesRailRef.current
         if (!rail) return
-        const distance = Math.max(240, Math.round(rail.clientWidth * 0.8))
-        rail.scrollBy({ left: direction === 'left' ? -distance : distance, behavior: 'smooth' })
+
+        const firstCard = rail.querySelector<HTMLElement>('[data-saved-quality-card]')
+        const railStyles = window.getComputedStyle(rail)
+        const gap = Number.parseFloat(railStyles.columnGap || railStyles.gap) || 0
+        const distance = firstCard
+            ? firstCard.getBoundingClientRect().width + gap
+            : Math.max(240, Math.round(rail.clientWidth * 0.8))
+        const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth)
+        const nextScrollLeft = Math.min(
+            maxScrollLeft,
+            Math.max(0, rail.scrollLeft + (direction === 'left' ? -distance : distance)),
+        )
+
+        rail.scrollTo({ left: nextScrollLeft, behavior: 'smooth' })
     }, [])
 
     const handleAutoSuggestOutput = async () => {
@@ -4207,7 +4261,9 @@ export default function EstimatorClient({
                                             <button
                                                 type="button"
                                                 onClick={() => scrollSavedQualities('left')}
-                                                className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_3px_10px_rgba(30,37,40,0.12)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)]"
+                                                disabled={!savedQualitiesScrollState.canScrollLeft}
+                                                aria-disabled={!savedQualitiesScrollState.canScrollLeft}
+                                                className="estimator-touch-target absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-[13px] border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_4px_14px_rgba(30,37,40,0.13)] backdrop-blur transition-[border-color,box-shadow,color,transform,opacity] hover:scale-[1.03] hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] hover:shadow-[0_6px_16px_rgba(217,107,28,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35 disabled:shadow-none"
                                                 aria-label={t('estimator.quality.previousSavedQualities')}
                                                 title={t('estimator.quality.previousSavedQualities')}
                                             >
@@ -4216,7 +4272,9 @@ export default function EstimatorClient({
                                             <button
                                                 type="button"
                                                 onClick={() => scrollSavedQualities('right')}
-                                                className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_3px_10px_rgba(30,37,40,0.12)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)]"
+                                                disabled={!savedQualitiesScrollState.canScrollRight}
+                                                aria-disabled={!savedQualitiesScrollState.canScrollRight}
+                                                className="estimator-touch-target absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-[13px] border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_4px_14px_rgba(30,37,40,0.13)] backdrop-blur transition-[border-color,box-shadow,color,transform,opacity] hover:scale-[1.03] hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] hover:shadow-[0_6px_16px_rgba(217,107,28,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35 disabled:shadow-none"
                                                 aria-label={t('estimator.quality.nextSavedQualities')}
                                                 title={t('estimator.quality.nextSavedQualities')}
                                             >
@@ -4226,7 +4284,7 @@ export default function EstimatorClient({
                                     )}
                                     <div
                                         ref={savedQualitiesRailRef}
-                                        className="mobile-scroll-x flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-7 pb-2 pt-1 scroll-smooth no-scrollbar"
+                                        className="mobile-scroll-x flex snap-x snap-mandatory gap-3 overflow-x-auto px-12 pb-3 pt-1 scroll-smooth no-scrollbar"
                                         role="list"
                                         aria-label={t('estimator.quality.savedRecipesLabel')}
                                     >
@@ -4235,6 +4293,7 @@ export default function EstimatorClient({
                                         return (
                                             <div
                                                 key={tpl.id}
+                                                data-saved-quality-card
                                                 role="listitem"
                                                 className={`group flex w-[78vw] max-w-[340px] shrink-0 snap-start items-stretch overflow-hidden rounded-[12px] border transition-colors ${
                                                     isActive
