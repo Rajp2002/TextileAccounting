@@ -55,6 +55,7 @@ import {
     DEFAULT_WEFT_ROW,
     DEFAULT_OVERHEAD_ITEMS,
     DEFAULT_FACTORY_SECTIONS,
+    DEFAULT_WARP_CRIMP_PCT,
     ensureOverheadIntegrity,
     getEffectiveYarnDenier,
     getEffectiveCostingWidthCm,
@@ -1832,8 +1833,8 @@ function QuickCostingView({
                         onChange={value => dispatch({ type: 'SET', field: 'warpCrimpPct', value: value ?? 0 })}
                         unit="%"
                         step={0.5}
-                        ghostValue={5}
-                        placeholder="5"
+                        ghostValue={DEFAULT_WARP_CRIMP_PCT}
+                        placeholder={String(DEFAULT_WARP_CRIMP_PCT)}
                         hint="Applied to warp consumption and beam planning."
                     />
                     <NumField
@@ -4537,8 +4538,8 @@ export default function EstimatorClient({
                                     label="Warp Crimp (Take-up)"
                                     value={state.warpCrimpPct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })}
-                                    ghostValue={5}
-                                    ghostPlaceholder="5"
+                                    ghostValue={DEFAULT_WARP_CRIMP_PCT}
+                                    ghostPlaceholder={String(DEFAULT_WARP_CRIMP_PCT)}
                                     hint="Beam shrink relative to tape length"
                                     accent="warp"
                                 />

@@ -398,6 +398,52 @@ describe('Estimator formula primitives', () => {
 })
 
 describe('Estimator full totals', () => {
+    it('keeps the blank crimp default neutral while preserving explicit crimp costing', () => {
+        const base = makeDefaultEstimateState()
+        const estimate: EstimateState = {
+            ...base,
+            warpRows: [
+                {
+                    id: 'quality-2-warp-1',
+                    calcDenier: 40,
+                    beamEnds: 5500,
+                    yarnRate: 187,
+                    gstPct: 0,
+                    shortagePct: null,
+                },
+                {
+                    id: 'quality-2-warp-2',
+                    calcDenier: 155,
+                    beamEnds: 1250,
+                    yarnRate: 333,
+                    gstPct: 0,
+                    shortagePct: null,
+                },
+            ],
+            weftRows: [{
+                id: 'quality-2-weft-1',
+                picks: 58,
+                reedSpace: 54 * 2.54,
+                effectiveCostingWidthCm: 54 * 2.54,
+                calcDenier: 125,
+                yarnRate: 192,
+                gstPct: 0,
+                shortagePct: null,
+            }],
+            perPickCostPaisa: 8.10 / 58,
+            yarnShortagePct: 10,
+            warpCrimpPct: 0,
+            overheadItems: [],
+            overheadMode: 'direct',
+            overheadOverridePerM: 12.75,
+        }
+
+        expect(makeDefaultEstimateState().warpCrimpPct).toBe(0)
+        expect(round2(calcFullTotals(estimate).totalProductionCostPerM)).toBe(42.95)
+        expect(round2(calcFullTotals({ ...estimate, warpCrimpPct: 1 }).totalProductionCostPerM)).toBe(43.07)
+        expect(round2(calcFullTotals({ ...estimate, warpCrimpPct: 5 }).totalProductionCostPerM)).toBe(43.54)
+    })
+
     it('honors an explicitly entered transport cost even when a stale section toggle is off', () => {
         const estimate = makeFactoryFormulaQaEstimate()
         estimate.orderQuantityM = 0

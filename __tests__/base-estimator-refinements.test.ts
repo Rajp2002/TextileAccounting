@@ -69,6 +69,7 @@ describe('Base costing exports', () => {
   state.weftRows = [{ ...state.weftRows[0], label: 'Weft Main', picks: 68, reedSpace: 110, calcDenier: 75, yarnRate: 110, gstPct: 5 }]
   state.tapeLengthM = 1000
   state.perPickCostPaisa = 0.08
+  state.warpCrimpPct = 5
   state.overheadMode = 'direct'
   state.overheadOverridePerM = 3
   state.monthlyOutputM = 10000

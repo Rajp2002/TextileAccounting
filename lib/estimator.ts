@@ -1794,6 +1794,11 @@ export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
   transport:  false,
 }
 
+// A blank/new estimate has no crimp assumption. The UI may show a grey 0
+// placeholder, but the stored value must also be numeric zero so it cannot
+// silently affect costing.
+export const DEFAULT_WARP_CRIMP_PCT = 0
+
 /** Default overhead items — shown before fixed workers are loaded from DB */
 export const DEFAULT_OVERHEAD_ITEMS: Omit<OverheadItem, 'id'>[] = [
   { label: 'Rent / Lease',         monthlyAmount: 0, source: 'manual', category: 'rent', isPreset: true, isLocked: false },
@@ -1814,7 +1819,7 @@ export function makeDefaultEstimateState(): EstimateState {
     processingRatePerM: 0,
     finishingRatePerM:  0,
     yarnShortagePct:    0,  // default waste — applied per-row when row's shortagePct is null
-    warpCrimpPct:       5.0, // default 5% take-up
+    warpCrimpPct:       DEFAULT_WARP_CRIMP_PCT,
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     0,
     overheadOverridePerM: null,
