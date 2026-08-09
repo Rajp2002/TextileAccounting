@@ -205,11 +205,111 @@ export type SavedQualityFactoryProfile = Partial<{
   is_configured: boolean
 }>
 
+/**
+ * The latest costing inputs used when a Base Saved Quality is reopened.
+ *
+ * Saved qualities keep the live recipe and current yarn-rate rows in
+ * estimator_templates. The linked costing snapshot is the durable source for
+ * the other inputs that make a repeat costing comparable: overhead basis,
+ * commercial terms, quantity, and optional-section enablement.
+ */
+export type SavedQualityCostingReuse = Partial<{
+  updated_at: string | null
+  warping_rate_per_kg: unknown
+  sizing_rate_per_kg: unknown
+  winding_rate_per_kg: unknown
+  processing_rate_per_m: unknown
+  finishing_rate_per_m: unknown
+  overhead_items: unknown[] | null
+  monthly_output_m: unknown
+  overhead_override_per_m: unknown
+  overhead_mode: OverheadMode | null
+  commission_pct: unknown
+  transport_per_m: unknown
+  profit_margin_pct: unknown
+  order_quantity_m: unknown
+  enabled_sections: unknown
+  loom_count: unknown
+  monthly_working_days: unknown
+  avg_output_per_loom_per_day: unknown
+}>
+
 export type SavedQualityFixedWorker = {
   id: number
   name: string
   role: string
   monthly_salary: number
+}
+
+function finiteOrFallback(value: unknown, fallback: number): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function nullableFiniteOrFallback(value: unknown, fallback: number | null): number | null {
+  if (value === null) return null
+  if (value === undefined || value === '') return fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function normalizeSavedSections(value: unknown, fallback: FactorySections): FactorySections {
+  const raw = asRecord(value)
+  return {
+    winding: typeof raw.winding === 'boolean' ? raw.winding : fallback.winding,
+    processing: typeof raw.processing === 'boolean' ? raw.processing : fallback.processing,
+    finishing: typeof raw.finishing === 'boolean' ? raw.finishing : fallback.finishing,
+    commission: typeof raw.commission === 'boolean' ? raw.commission : fallback.commission,
+    transport: typeof raw.transport === 'boolean' ? raw.transport : fallback.transport,
+  }
+}
+
+/**
+ * Restore the non-recipe inputs of a saved costing onto the current factory
+ * baseline. The caller applies the Saved Quality's current recipe afterward,
+ * so a Rate Book change remains visible while the commercial/overhead context
+ * stays comparable to the saved costing.
+ */
+export function restoreSavedQualityCostingAssumptions(
+  state: ReturnType<typeof makeDefaultEstimateState>,
+  reuse: SavedQualityCostingReuse | null | undefined,
+) {
+  if (!reuse) return state
+
+  const directOverheadValue = nullableFiniteOrFallback(
+    reuse.overhead_override_per_m,
+    state.overheadOverridePerM,
+  )
+  const overheadMode = reuse.overhead_mode === 'direct' || reuse.overhead_mode === 'monthly_expenses'
+    ? reuse.overhead_mode
+    : reuse.overhead_override_per_m !== undefined
+      ? directOverheadValue !== null ? 'direct' : 'monthly_expenses'
+      : state.overheadMode
+
+  return {
+    ...state,
+    warpingRatePerKg: finiteOrFallback(reuse.warping_rate_per_kg, state.warpingRatePerKg),
+    sizingRatePerKg: finiteOrFallback(reuse.sizing_rate_per_kg, state.sizingRatePerKg),
+    windingRatePerKg: finiteOrFallback(reuse.winding_rate_per_kg, state.windingRatePerKg),
+    processingRatePerM: finiteOrFallback(reuse.processing_rate_per_m, state.processingRatePerM),
+    finishingRatePerM: finiteOrFallback(reuse.finishing_rate_per_m, state.finishingRatePerM),
+    overheadItems: Array.isArray(reuse.overhead_items)
+      ? ensureOverheadIntegrity(reuse.overhead_items)
+      : state.overheadItems,
+    monthlyOutputM: finiteOrFallback(reuse.monthly_output_m, state.monthlyOutputM),
+    overheadOverridePerM: directOverheadValue,
+    overheadMode,
+    commissionPct: finiteOrFallback(reuse.commission_pct, state.commissionPct),
+    transportPerM: finiteOrFallback(reuse.transport_per_m, state.transportPerM),
+    profitPct: finiteOrFallback(reuse.profit_margin_pct, state.profitPct),
+    orderQuantityM: reuse.order_quantity_m === undefined
+      ? state.orderQuantityM
+      : nullableFiniteOrFallback(reuse.order_quantity_m, state.orderQuantityM),
+    enabledSections: normalizeSavedSections(reuse.enabled_sections, state.enabledSections),
+    loomCount: finiteOrFallback(reuse.loom_count, state.loomCount),
+    monthlyWorkingDays: finiteOrFallback(reuse.monthly_working_days, state.monthlyWorkingDays),
+    avgOutputPerLoomPerDay: finiteOrFallback(reuse.avg_output_per_loom_per_day, state.avgOutputPerLoomPerDay),
+  }
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

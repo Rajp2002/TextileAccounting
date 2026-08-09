@@ -17,6 +17,8 @@ describe('Base Plan strict localization', () => {
     expect(translateStrictBasePlanText('Pricing assumptions. 4 active. 10% target margin. 0% commission.', 'gu')).toBe(
       'કિંમતની ધારણાઓ. 4 સક્રિય · 10% લક્ષ્ય margin · 0% કમિશન.',
     )
+    expect(translateStrictBasePlanText('Pay ₹8,260 & Activate', 'hi')).toBe('₹8,260 भुगतान करें और सक्रिय करें')
+    expect(translateStrictBasePlanText('Renew for ₹2,360', 'gu')).toBe('₹2,360 માટે રિન્યુ કરો')
   })
 
   it('covers the Base upgrade wall with complete phrases', () => {

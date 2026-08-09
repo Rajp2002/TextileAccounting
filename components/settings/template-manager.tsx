@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Archive, ArchiveRestore, FileText, Layers, Hash } from 'lucide-react'
+import { Loader2, Archive, ArchiveRestore, FileText, Layers, Hash, AlertCircle, RefreshCw } from 'lucide-react'
 import { getEstimatorTemplates, archiveTemplate, restoreTemplate } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
@@ -30,23 +30,34 @@ interface TemplateV3 {
 export function TemplateManager({ className }: { className?: string }) {
     const { t } = useTranslation()
     const [loading,   setLoading]   = useState(true)
+    const [loadError, setLoadError] = useState<string | null>(null)
     const [qualities, setQualities] = useState<TemplateV3[]>([])
     const [qualityToArchive, setQualityToArchive] = useState<TemplateV3 | null>(null)
     const [archivingQualityId, setArchivingQualityId] = useState<string | null>(null)
 
-    const load = async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
+    const load = useCallback(async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
         if (showLoading) setLoading(true)
-        const res = await getEstimatorTemplates({ includeArchived: true })
-        if (res.data) setQualities(res.data as TemplateV3[])
-        setLoading(false)
-    }
+        setLoadError(null)
+        try {
+            const res = await getEstimatorTemplates({ includeArchived: true })
+            if (!res.data) {
+                setLoadError(userFacingError(res.error, 'Saved fabric qualities could not be loaded. Refresh and try again.'))
+                return
+            }
+            setQualities(res.data as TemplateV3[])
+        } catch (error) {
+            setLoadError(userFacingError(error, 'Saved fabric qualities could not be loaded. Refresh and try again.'))
+        } finally {
+            setLoading(false)
+        }
+    }, [])
 
     useEffect(() => {
         const timer = setTimeout(() => {
             void load({ showLoading: false })
         }, 0)
         return () => clearTimeout(timer)
-    }, [])
+    }, [load])
 
     const handleArchive = async (quality: TemplateV3) => {
         const archived = quality.is_active === false
@@ -61,6 +72,8 @@ export function TemplateManager({ className }: { className?: string }) {
             } else {
                 toast.error(userFacingError(res.error, `Fabric Quality could not be ${archived ? 'restored' : 'archived'}. Try again.`))
             }
+        } catch (error) {
+            toast.error(userFacingError(error, `Fabric Quality could not be ${archived ? 'restored' : 'archived'}. Try again.`))
         } finally {
             setArchivingQualityId(null)
         }
@@ -102,6 +115,26 @@ export function TemplateManager({ className }: { className?: string }) {
         )
     }
 
+    if (loadError && qualities.length === 0) {
+        return (
+            <Card role="alert" className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+                <CardContent className="space-y-4 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-ink">Saved Fabric Qualities are unavailable</p>
+                            <p className="text-sm leading-relaxed text-muted-foreground">{loadError}</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void load()}>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Retry
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <>
         <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
@@ -115,6 +148,18 @@ export function TemplateManager({ className }: { className?: string }) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="pt-5">
+                {loadError && (
+                    <div role="alert" className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-warning/25 bg-warning-soft/60 p-3 text-sm text-warning-foreground">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>{loadError}</span>
+                        </div>
+                        <Button type="button" variant="ghost" size="sm" className="h-7 shrink-0 gap-1.5 px-2" onClick={() => void load()}>
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Retry
+                        </Button>
+                    </div>
+                )}
                 {qualities.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
                         <p className="text-sm italic text-muted-foreground">

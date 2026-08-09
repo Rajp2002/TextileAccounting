@@ -56,6 +56,12 @@ Sprint 10 makes Base reusable for repeat customers and recurring fabric qualitie
 
 The Sprint 10 database migration adds the tenant-scoped Saved Costings state index, an optimistic-concurrency archive/favourite RPC, and an atomic yarn-rate discovery RPC. It does not rewrite existing costing rows.
 
+## Sprint 20 — Saved-quality commercial reuse
+
+Base Saved Quality reuse follows a full-costing contract. The current Saved Quality recipe and current Rate Book yarn rows are applied, while the latest linked costing snapshot restores the overhead method and inputs, commission, transport, target margin, quantity, capacity inputs, and optional-section on/off state. This lets an owner explain a repeat estimate as the prior costing with an intentional rate change.
+
+The estimator’s save review lists the exact yarn-rate basis, overhead basis, commercial values, quantity, and enabled/disabled sections that will be included. If a legacy quality has no linked costing snapshot, the estimator says that current factory defaults are being used; it does not imply that historical commercial assumptions were restored. Existing costing snapshots remain immutable, and Full Suite quality-versus-quotation semantics are unchanged.
+
 ## Sprint 11 — Base documents, export, and billing trust
 
 Sprint 11 makes Base outputs reliable and commercially understandable without turning a customer quotation into a tax document:

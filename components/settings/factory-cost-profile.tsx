@@ -1,21 +1,22 @@
 'use client'
 
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect, useId, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from '@/lib/app-notifications'
-import { DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
+import { DEFAULT_FACTORY_SECTIONS, DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
 import { userFacingError } from '@/lib/app-notifications'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { nanoid } from 'nanoid'
 import { FACTORY_COST_PRESETS, getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
 
@@ -37,12 +38,13 @@ function RateInput({
     icon?:    React.ElementType
 }) {
     const inputId = useId()
+    const { tx } = useTranslation()
 
     return (
         <div className="space-y-1.5">
             <Label htmlFor={inputId} className="flex items-center gap-1.5 text-xs font-semibold text-body">
                 {Icon && <Icon className="h-3.5 w-3.5 text-subtle" />}
-                {label}
+                {tx(label)}
             </Label>
             <div className="relative">
                 <Input
@@ -56,11 +58,11 @@ function RateInput({
                 />
                 {unit && (
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
-                        {unit}
+                        {tx(unit)}
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+            {hint && <p className="text-[11px] text-muted-foreground">{tx(hint)}</p>}
         </div>
     )
 }
@@ -80,12 +82,13 @@ function SectionToggle({
 }) {
     const switchId = useId()
     const descriptionId = `${switchId}-description`
+    const { tx } = useTranslation()
 
     return (
         <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-lg border border-hairline bg-canvas/55 px-4 py-3">
             <div className="min-w-0">
-                <Label htmlFor={switchId} className="text-sm font-semibold text-ink">{label}</Label>
-                <p id={descriptionId} className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                <Label htmlFor={switchId} className="text-sm font-semibold text-ink">{tx(label)}</Label>
+                <p id={descriptionId} className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{tx(description)}</p>
             </div>
             <Switch
                 id={switchId}
@@ -100,7 +103,9 @@ function SectionToggle({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
+    const { tx } = useTranslation()
     const [loading, setLoading]   = useState(true)
+    const [loadError, setLoadError] = useState<string | null>(null)
     const [saving, setSaving]     = useState(false)
     const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
     const [presetToReplace, setPresetToReplace] = useState<(typeof FACTORY_COST_PRESETS)[number] | null>(null)
@@ -136,55 +141,68 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [monthlyWorkingDays, setMonthlyWorkingDays] = useState(26)
     const [avgOutputPerLoomPerDay, setAvgOutputPerLoomPerDay] = useState(50)
 
-    useEffect(() => {
-        async function load() {
-            setLoading(true)
+    const loadProfile = useCallback(async () => {
+        setLoading(true)
+        setLoadError(null)
+        try {
             const res = await getFactoryCostProfile()
-            if (res.data) {
-                const d = res.data
-                setLastSavedAt(d.updated_at ?? null)
-                setRates({
-                    warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
-                    sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
-                    winding_rate_per_kg:     Number(d.winding_rate_per_kg    ?? 0),
-                    default_commission_pct:  Number(d.default_commission_pct ?? 0),
-                    default_margin_pct:      Number(d.default_margin_pct     ?? 10.00),
-                    default_transport_per_m: Number(d.default_transport_per_m ?? 0),
-                    yarn_review_interval_days: Number(d.yarn_review_interval_days ?? 90),
-                    default_processing_rate_per_m: Number(d.default_processing_rate_per_m ?? 0),
-                    default_finishing_rate_per_m: Number(d.default_finishing_rate_per_m ?? 0),
-                })
-                const loadedMode: OverheadMode = d.overhead_mode === 'direct'
-                    || (d.overhead_mode == null && d.overhead_override_per_m != null)
-                    ? 'direct'
-                    : 'monthly_expenses'
-                setOverheadMode(loadedMode)
-                setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
-                setOverheadItems(ensureOverheadIntegrity(
-                    Array.isArray(d.overhead_items) && d.overhead_items.length > 0
-                        ? d.overhead_items
-                        : DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
-                ))
-                setMonthlyOutputM(d.is_configured ? Number(d.monthly_output_m ?? 0) : 0)
-                setLoomCount(Number(d.loom_count ?? 0))
-                setMonthlyWorkingDays(Number(d.monthly_working_days ?? 26))
-                setAvgOutputPerLoomPerDay(Number(d.avg_output_per_loom_per_day ?? 50))
-                setLastSavedAt(d.updated_at ?? null)
-                if (d.enabled_sections) {
-                    const loadedSections = d.enabled_sections as FactorySections
-                    setSections(loadedSections)
-                    const persistedProfile = d.factory_profile_key as FactoryProfileId | undefined
-                    setActivePreset(
-                        persistedProfile && persistedProfile !== 'unselected'
-                            ? persistedProfile
-                            : getMatchingFactoryProfileId(loadedSections) || 'custom',
-                    )
-                }
+            if (!res.data) {
+                setLoadError(userFacingError(res.error, 'Factory costing defaults could not be loaded. Refresh and try again.'))
+                return
             }
+
+            const d = res.data
+            setLastSavedAt(d.updated_at ?? null)
+            setRates({
+                warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
+                sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
+                winding_rate_per_kg:     Number(d.winding_rate_per_kg    ?? 0),
+                default_commission_pct:  Number(d.default_commission_pct ?? 0),
+                default_margin_pct:      Number(d.default_margin_pct     ?? 10.00),
+                default_transport_per_m: Number(d.default_transport_per_m ?? 0),
+                yarn_review_interval_days: Number(d.yarn_review_interval_days ?? 90),
+                default_processing_rate_per_m: Number(d.default_processing_rate_per_m ?? 0),
+                default_finishing_rate_per_m: Number(d.default_finishing_rate_per_m ?? 0),
+            })
+            const loadedMode: OverheadMode = d.overhead_mode === 'direct'
+                || (d.overhead_mode == null && d.overhead_override_per_m != null)
+                ? 'direct'
+                : 'monthly_expenses'
+            setOverheadMode(loadedMode)
+            setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
+            setOverheadItems(ensureOverheadIntegrity(
+                Array.isArray(d.overhead_items) && d.overhead_items.length > 0
+                    ? d.overhead_items
+                    : DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
+            ))
+            // Persisted values are authoritative even for profiles created by an
+            // older release that did not set is_configured after the first save.
+            setMonthlyOutputM(Number(d.monthly_output_m ?? 0))
+            setLoomCount(Number(d.loom_count ?? 0))
+            setMonthlyWorkingDays(Number(d.monthly_working_days ?? 26))
+            setAvgOutputPerLoomPerDay(Number(d.avg_output_per_loom_per_day ?? 50))
+
+            const loadedSections: FactorySections = {
+                ...DEFAULT_FACTORY_SECTIONS,
+                ...(d.enabled_sections as Partial<FactorySections> | null | undefined),
+            }
+            setSections(loadedSections)
+            const persistedProfile = d.factory_profile_key as FactoryProfileId | undefined
+            setActivePreset(
+                persistedProfile && persistedProfile !== 'unselected'
+                    ? persistedProfile
+                    : getMatchingFactoryProfileId(loadedSections) || 'custom',
+            )
+        } catch (error) {
+            setLoadError(userFacingError(error, 'Factory costing defaults could not be loaded. Refresh and try again.'))
+        } finally {
             setLoading(false)
         }
-        load()
     }, [])
+
+    useEffect(() => {
+        void loadProfile()
+    }, [loadProfile])
 
     const applyPresetImmediately = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
         setActivePreset(preset.id)
@@ -284,18 +302,38 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         )
     }
 
+    if (loadError) {
+        return (
+            <Card role="alert" className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+                <CardContent className="space-y-4 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-ink">{tx(standaloneEstimator ? 'Cost Estimate Defaults are unavailable' : 'Factory Cost Profile is unavailable')}</p>
+                            <p className="text-sm leading-relaxed text-muted-foreground">{loadError}</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void loadProfile()}>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        {tx('Retry')}
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <>
         <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
             <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-saffron" />
-                    <CardTitle className="text-base">{standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile'}</CardTitle>
+                    <CardTitle className="text-base">{tx(standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile')}</CardTitle>
                 </div>
                 <CardDescription>
-                    {standaloneEstimator
+                    {tx(standaloneEstimator
                         ? 'Defaults that pre-fill new Cost Estimates. Your current estimate stays separate.'
-                        : 'Defaults for new estimates only. Existing saved costings keep the numbers captured when they were saved.'}
+                        : 'Defaults for new estimates only. Existing saved costings keep the numbers captured when they were saved.')}
                 </CardDescription>
             </CardHeader>
 
@@ -304,8 +342,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Factory type' : 'Factory Type'}</Label>
-                        <p className="mt-1 text-xs text-muted-foreground">Choose a starting setup. It is a preview until you save it for new Cost Estimates.</p>
+                        <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'Factory type' : 'Factory Type')}</Label>
+                        <p className="mt-1 text-xs text-muted-foreground">{tx('Choose a starting setup. It is a preview until you save it for new Cost Estimates.')}</p>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
                         {FACTORY_COST_PRESETS.map(preset => (
@@ -321,20 +359,20 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             >
                                 <div className="text-xl mb-1">{preset.emoji}</div>
                                 <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                                    {preset.label}
-                                    {preset.recommended && <span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-dark">Recommended</span>}
+                                    {tx(preset.label)}
+                                    {preset.recommended && <span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-dark">{tx('Recommended')}</span>}
                                 </div>
-                                <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{preset.description}</div>
+                                <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{tx(preset.description)}</div>
                             </button>
                         ))}
                     </div>
                     {activePreset === 'grey_weaver' && (
                         <p className="rounded-lg border border-saffron/20 bg-saffron-soft/25 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                            Grey Weaver keeps the estimator focused on yarn, weaving, warping, sizing, and factory expenses. Processing, finishing, broker commission, and transport are off until you enable them.
+                            {tx('Grey Weaver keeps the estimator focused on yarn, weaving, warping, sizing, and factory expenses. Processing, finishing, broker commission, and transport are off until you enable them.')}
                         </p>
                     )}
                     <p className="rounded-lg border border-info/20 bg-info/5 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                        {dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.'}
+                        {tx(dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.')}
                     </p>
                 </div>
 
@@ -487,7 +525,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                                 {item.category === 'rent' ? <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <Calculator className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
                                                 <Input
                                                     aria-label={`${item.label} expense name`}
-                                                    value={item.label}
+                                                    value={item.isPreset ? tx(item.label) : item.label}
                                                     disabled={item.isPreset}
                                                     onChange={event => updateOverheadItem(item.id, 'label', event.target.value)}
                                                     className="h-8 min-w-0 border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:ring-0"
@@ -509,7 +547,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                             {!item.isPreset && (
                                                 <button
                                                     type="button"
-                                                    aria-label={`Remove ${item.label}`}
+                                                    aria-label={`${tx('Remove')} ${item.label}`}
                                                     onClick={() => { setDirty(true); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
                                                     className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
                                                 >
