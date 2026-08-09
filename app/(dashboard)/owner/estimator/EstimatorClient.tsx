@@ -22,6 +22,8 @@ import {
     Palette,
     ChevronDown,
     ChevronUp,
+    ChevronLeft,
+    ChevronRight,
     Scissors,
     Coins,
     Banknote,
@@ -2209,6 +2211,7 @@ export default function EstimatorClient({
 
     // Template search
     const [templateSearch,   setTemplateSearch]   = useState('')
+    const savedQualitiesRailRef = useRef<HTMLDivElement>(null)
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
@@ -2610,6 +2613,13 @@ export default function EstimatorClient({
             ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
             : templates,
     [templates, templateSearch])
+
+    const scrollSavedQualities = useCallback((direction: 'left' | 'right') => {
+        const rail = savedQualitiesRailRef.current
+        if (!rail) return
+        const distance = Math.max(240, Math.round(rail.clientWidth * 0.8))
+        rail.scrollBy({ left: direction === 'left' ? -distance : distance, behavior: 'smooth' })
+    }, [])
 
     const handleAutoSuggestOutput = async () => {
         setIsSuggestingOutput(true)
@@ -4096,135 +4106,201 @@ export default function EstimatorClient({
 
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`}>
-                {/* Saved Qualities Row */}
-                {templates.length > 0 && (
-                    <section className="overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_8px_24px_rgba(30,37,40,0.055)]">
-                        <div className="flex items-start gap-3 border-b border-[var(--color-hairline)] bg-gradient-to-r from-[var(--color-warning-amber-soft)]/65 to-white px-4 py-3.5 sm:px-5">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--color-yarn-orange)]/20 bg-white text-[var(--color-yarn-orange)] shadow-[0_2px_8px_rgba(217,107,28,0.10)]">
-                                <History className="h-4 w-4" />
+                {/* ── SAVED FABRIC QUALITIES ─────────────────────────────── */}
+                <section
+                    id="saved-qualities"
+                    aria-labelledby="saved-qualities-title"
+                    className="overflow-hidden rounded-[16px] border-2 border-[var(--color-yarn-orange)]/15 bg-white/95 shadow-[0_10px_28px_rgba(30,37,40,0.07)]"
+                >
+                    <div className="border-b border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-warning-amber-soft)]/75 via-white to-white px-4 py-4 sm:px-5 sm:py-5">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] border border-[var(--color-yarn-orange)]/25 bg-white text-[var(--color-yarn-orange)] shadow-[0_3px_10px_rgba(217,107,28,0.12)]">
+                                <BookmarkPlus className="h-5 w-5" aria-hidden="true" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-baseline gap-3">
-                                    <h2 className="text-[15px] font-semibold leading-5 text-[var(--color-ink)]">{t('estimator.quality.myQualities')}</h2>
-                                    <span className="ml-auto hidden text-[11px] font-medium text-[var(--color-muted)] sm:inline">{t('estimator.quality.hint')}</span>
+                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-yarn-orange-dark)]">{t('estimator.quality.savedQualitiesEyebrow')}</p>
+                                    <span className="inline-flex items-center rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-[10px] font-bold text-[var(--color-yarn-orange-dark)]">
+                                        {t('estimator.quality.savedQualityCount', { count: templates.length })}
+                                    </span>
                                 </div>
-                                <p className="mt-0.5 text-xs font-medium leading-5 text-[var(--color-body)]/75">{t('estimator.quality.myQualitiesHelper')}</p>
+                                <h2 id="saved-qualities-title" className="mt-1 text-[17px] font-bold leading-5 text-[var(--color-ink)] sm:text-[18px]">{t('estimator.quality.myQualities')}</h2>
+                                <p className="mt-1 max-w-2xl text-xs font-medium leading-5 text-[var(--color-body)]/80">{t('estimator.quality.myQualitiesHelper')}</p>
                             </div>
                         </div>
-                        <div className="space-y-3 px-4 py-4 sm:px-5">
-                        {/* Search — only shown when there are more than 5 qualities */}
-                        {templates.length > 5 && (
-                            <div className="relative">
-                                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
-                                <input
-                                    type="text"
-                                    value={templateSearch}
-                                    onChange={e => setTemplateSearch(e.target.value)}
-                                    placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
-                                    className="h-10 w-full rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-10 pr-9 text-[13px] font-medium text-[var(--color-ink)] placeholder:font-normal placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/15"
-                                />
-                                {templateSearch && (
-                                    <button
-                                        onClick={() => setTemplateSearch('')}
-                                        className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
-                                        aria-label={tx('Clear quality search')}
+                    </div>
+
+                    <div className="space-y-4 px-4 py-4 sm:px-5 sm:py-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            {/* Search — only shown when there are more than 5 qualities */}
+                            {templates.length > 5 ? (
+                                <div className="relative min-w-0 flex-1">
+                                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                                    <input
+                                        type="text"
+                                        value={templateSearch}
+                                        onChange={e => setTemplateSearch(e.target.value)}
+                                        placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
+                                        className="h-11 w-full rounded-[11px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-10 pr-9 text-[13px] font-medium text-[var(--color-ink)] placeholder:font-normal placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/15"
+                                    />
+                                    {templateSearch && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setTemplateSearch('')}
+                                            className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                            aria-label={tx('Clear quality search')}
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            ) : <div className="hidden sm:block" />}
+
+                            <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0">
+                                <Button
+                                    size="sm"
+                                    onClick={() => openSaveTemplateDialog()}
+                                    className="h-11 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)] sm:w-auto"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {t('estimator.quality.saveCurrentAsQuality')}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowConfirmNewQuality(true)}
+                                    className="h-11 w-full rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:w-auto"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    {t('estimator.quality.newQuality')}
+                                </Button>
+                            </div>
+                        </div>
+
+                        {templates.length > 5 && templateSearch && (
+                            <p className="-mt-2 text-[10px] font-medium text-[var(--color-muted)]">
+                                {t('estimator.quality.searchResults')
+                                    .replace('{shown}', String(filteredTemplates.length))
+                                    .replace('{total}', String(templates.length))}
+                            </p>
+                        )}
+
+                        {templates.length === 0 ? (
+                            <div className="flex items-start gap-3 rounded-[12px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)]/55 px-3.5 py-3.5 sm:items-center">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white text-[var(--color-yarn-orange)] shadow-sm">
+                                    <BookmarkPlus className="h-4 w-4" aria-hidden="true" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-[var(--color-ink)]">{t('estimator.quality.emptySavedTitle')}</p>
+                                    <p className="mt-0.5 text-xs leading-5 text-[var(--color-muted)]">{t('estimator.quality.emptySavedDescription')}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-muted)]">{t('estimator.quality.savedRecipesLabel')}</p>
+                                    <p className="text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.quality.hint')}</p>
+                                </div>
+                                <div className="relative">
+                                    {filteredTemplates.length > 1 && (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={() => scrollSavedQualities('left')}
+                                                className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_3px_10px_rgba(30,37,40,0.12)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)]"
+                                                aria-label={t('estimator.quality.previousSavedQualities')}
+                                                title={t('estimator.quality.previousSavedQualities')}
+                                            >
+                                                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => scrollSavedQualities('right')}
+                                                className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_3px_10px_rgba(30,37,40,0.12)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)]"
+                                                aria-label={t('estimator.quality.nextSavedQualities')}
+                                                title={t('estimator.quality.nextSavedQualities')}
+                                            >
+                                                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                                            </button>
+                                        </>
+                                    )}
+                                    <div
+                                        ref={savedQualitiesRailRef}
+                                        className="mobile-scroll-x flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-7 pb-2 pt-1 scroll-smooth no-scrollbar"
+                                        role="list"
+                                        aria-label={t('estimator.quality.savedRecipesLabel')}
                                     >
-                                        <X className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
-                                {templateSearch && (
-                                    <p className="text-[10px] text-slate-400 mt-1">
-                                        {t('estimator.quality.searchResults')
-                                            .replace('{shown}', String(filteredTemplates.length))
-                                            .replace('{total}', String(templates.length))}
-                                    </p>
+                                    {filteredTemplates.map(tpl => {
+                                        const isActive = appliedTemplate?.id === tpl.id || (!tpl.id && qualityLabel === tpl.name);
+                                        return (
+                                            <div
+                                                key={tpl.id}
+                                                role="listitem"
+                                                className={`group flex w-[78vw] max-w-[340px] shrink-0 snap-start items-stretch overflow-hidden rounded-[12px] border transition-colors ${
+                                                    isActive
+                                                        ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]/70 shadow-[0_3px_10px_rgba(217,107,28,0.10)]'
+                                                        : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)] hover:shadow-[0_3px_10px_rgba(30,37,40,0.05)]'
+                                                }`}
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() => applyTemplate(tpl)}
+                                                    onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
+                                                    aria-pressed={isActive}
+                                                    aria-label={`${t('estimator.quality.applyHint')}: ${tpl.name}`}
+                                                    className="flex min-h-[68px] min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-left"
+                                                >
+                                                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border ${isActive ? 'border-[var(--color-yarn-orange)]/30 bg-white text-[var(--color-yarn-orange-dark)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]'}`}>
+                                                        {isActive ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <BookmarkPlus className="h-4 w-4" aria-hidden="true" />}
+                                                    </span>
+                                                    <span className="min-w-0 flex-1">
+                                                        <span className={`block truncate text-[13px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>{tpl.name}</span>
+                                                        <span className="mt-0.5 block text-[10px] font-medium leading-4 text-[var(--color-muted)]">{isActive ? t('estimator.quality.selectedLabel') : t('estimator.quality.applyHint')}</span>
+                                                    </span>
+                                                </button>
+                                                <div className={`flex shrink-0 items-center gap-0.5 border-l px-1 ${isActive ? 'border-[var(--color-yarn-orange)]/25' : 'border-[var(--color-hairline)]'}`}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-yarn-orange-dark)]"
+                                                        title={t('estimator.quality.editRatesTitle')}
+                                                        aria-label={`${t('estimator.quality.editRatesTitle')}: ${tpl.name}`}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={e => { e.stopPropagation(); setRenameTpl(tpl); setRenameValue(tpl.name); setRenameError(null) }}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-yarn-orange-dark)]"
+                                                        title={tx('Rename quality')}
+                                                        aria-label={tx(`Rename quality: ${tpl.name}`)}
+                                                    >
+                                                        <Pencil className="h-3.5 w-3.5" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={e => { e.stopPropagation(); setTemplateToArchive(tpl) }}
+                                                        disabled={deletingTpl === tpl.id}
+                                                        aria-busy={deletingTpl === tpl.id}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                                                        title={tx('Archive quality')}
+                                                        aria-label={tx(`Archive quality: ${tpl.name}`)}
+                                                    >
+                                                        {deletingTpl === tpl.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    </div>
+                                </div>
+                                {filteredTemplates.length === 0 && templateSearch && (
+                                    <p className="rounded-[10px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)] px-3 py-2.5 text-xs italic text-[var(--color-muted)]">{t('estimator.quality.noMatch').replace('{query}', templateSearch)}</p>
                                 )}
                             </div>
                         )}
-                        <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1 snap-x">
-                             <Button
-                                size="sm"
-                                onClick={() => {
-                                    openSaveTemplateDialog()
-                                }}
-                                className="h-10 shrink-0 snap-start rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)]"
-                             >
-                                <Save className="h-4 w-4" />
-                                {t('estimator.quality.saveCurrentAsQuality')}
-                             </Button>
-
-                             <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    setShowConfirmNewQuality(true)
-                                }}
-                                className="h-10 shrink-0 snap-start rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)]"
-                             >
-                                <Plus className="h-4 w-4" />
-                                {t('estimator.quality.newQuality')}
-                             </Button>
-                            {filteredTemplates.map(tpl => {
-                                const isActive = appliedTemplate?.id === tpl.id || (!tpl.id && qualityLabel === tpl.name);
-                                return (
-                                    <div
-                                        key={tpl.id}
-                                        className={`group flex h-10 shrink-0 snap-start items-stretch overflow-hidden rounded-[10px] border shadow-[0_1px_3px_rgba(30,37,40,0.04)] transition-colors ${
-                                            isActive
-                                                ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]'
-                                                : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)]'
-                                        }`}
-                                    >
-                                        <button
-                                            onClick={() => applyTemplate(tpl)}
-                                            onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
-                                            className={`min-w-28 px-4 text-left text-[13px] font-semibold transition-colors ${
-                                                isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-body)] hover:text-[var(--color-ink)]'
-                                            }`}
-                                        >
-                                            {tpl.name}
-                                        </button>
-                                        <div className={`flex items-center gap-0.5 border-l px-1 ${isActive ? 'border-[var(--color-yarn-orange)]/25' : 'border-[var(--color-hairline)]'}`}>
-                                            <button
-                                                onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
-                                                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-yarn-orange-dark)]"
-                                                title={t('estimator.quality.editRatesTitle')}
-                                                aria-label={`${t('estimator.quality.editRatesTitle')}: ${tpl.name}`}
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                            </button>
-                                            <button
-                                                onClick={e => { e.stopPropagation(); setRenameTpl(tpl); setRenameValue(tpl.name); setRenameError(null) }}
-                                                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-yarn-orange-dark)]"
-                                                title={tx('Rename quality')}
-                                                aria-label={tx(`Rename quality: ${tpl.name}`)}
-                                            >
-                                                <Pencil className="h-3.5 w-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={e => {
-                                                    e.stopPropagation();
-                                                    setTemplateToArchive(tpl)
-                                                }}
-                                                disabled={deletingTpl === tpl.id}
-                                                aria-busy={deletingTpl === tpl.id}
-                                                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
-                                                title={tx('Archive quality')}
-                                                aria-label={tx(`Archive quality: ${tpl.name}`)}
-                                            >
-                                                {deletingTpl === tpl.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {filteredTemplates.length === 0 && templateSearch && (
-                                <p className="text-xs text-slate-400 italic py-2">{t('estimator.quality.noMatch').replace('{query}', templateSearch)}</p>
-                            )}
-                        </div>
-                        </div>
-                    </section>
-                )}
+                    </div>
+                </section>
 
                 {entryMode === 'quick' ? (
                     <QuickCostingView
