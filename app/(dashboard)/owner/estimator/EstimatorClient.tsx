@@ -123,6 +123,7 @@ import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
+import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -352,6 +353,8 @@ type EstimatorTemplate = {
     default_yarn_rate?: number | string | null
     is_active?: boolean
     content_text?: string
+    /** Base-only latest costing inputs used for full-costing Saved Quality reuse. */
+    latest_costing_reuse?: SavedQualityCostingReuse | null
 }
 
 function normalizeRecipeRows(rows: Array<Record<string, unknown>> | null | undefined) {
@@ -523,6 +526,11 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         }
         case 'APPLY_TEMPLATE': {
             const tpl = action.template
+            // Base Saved Quality reuse is deliberately full-costing reuse.
+            // The live template rows below carry the current Rate Book values;
+            // the linked costing snapshot restores the saved overhead,
+            // commercial, quantity, and enablement context.
+            const restoredAssumptions = restoreSavedQualityCostingAssumptions(state, tpl.latest_costing_reuse)
             // Explicit null fallbacks for pre-loom-type templates (Gap 4)
             // Ensures undefined template fields never corrupt existing session state.
             const loomFields = {
@@ -536,7 +544,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             }
             if (tpl.warp_rows && tpl.warp_rows.length > 0) {
                 return {
-                    ...state,
+                    ...restoredAssumptions,
                     ...loomFields,
                     warpRows: tpl.warp_rows.map((r: WarpRow) => ({ ...r, id: nanoid() })),
                     weftRows: tpl.weft_rows && tpl.weft_rows.length > 0
@@ -551,7 +559,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 }
             }
             return {
-                ...state,
+                ...restoredAssumptions,
                 ...loomFields,
                 warpRows: [{
                     id:          nanoid(),
@@ -1319,6 +1327,71 @@ function CostingAssumptionsSummary({
                     </div>
                 </div>
             </div>
+        </section>
+    )
+}
+
+function CostingSaveReview({
+    state,
+    result,
+    isStandaloneCostingSession,
+    fullReuse,
+    compact = false,
+}: {
+    state: EstimateState
+    result: CostingResultSnapshot
+    isStandaloneCostingSession: boolean
+    fullReuse?: boolean
+    compact?: boolean
+}) {
+    const formatPercent = (value: number) => Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`
+    const formatRate = (value: number) => `₹${value.toFixed(2)}`
+    const quantity = result.quantityM != null && result.quantityM > 0
+        ? `${result.quantityM.toLocaleString('en-IN')} m`
+        : 'Not set · per-metre costing only'
+    const yarnRates = [
+        ...state.warpRows.map(row => `Warp ${row.label?.trim() || 'layer'} ₹${Number(row.yarnRate || 0).toFixed(2)}/kg`),
+        ...state.weftRows.map(row => `Weft ${row.label?.trim() || 'layer'} ₹${Number(row.yarnRate || 0).toFixed(2)}/kg`),
+    ]
+    const optionalSections: Array<[keyof FactorySections, string]> = [
+        ['winding', 'Winding'],
+        ['processing', 'Processing'],
+        ['finishing', 'Finishing'],
+        ['commission', 'Commission'],
+        ['transport', 'Transport'],
+    ]
+    const enabledSections = optionalSections
+        .filter(([section]) => state.enabledSections[section])
+        .map(([, label]) => label)
+    const disabledSections = optionalSections
+        .filter(([section]) => !state.enabledSections[section])
+        .map(([, label]) => label)
+    const contentClass = compact ? 'px-3 py-2.5' : 'px-4 py-3.5'
+
+    return (
+        <section
+            data-testid="costing-save-review"
+            aria-label="Save review"
+            className={`rounded-lg border border-[var(--color-hairline)] bg-white ${contentClass}`}
+        >
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Save review</p>
+            <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--color-muted)]">
+                Included in this {isStandaloneCostingSession ? 'costing snapshot' : 'quotation'}:
+            </p>
+            <div className="mt-2 grid gap-x-4 gap-y-1.5 text-[11px] sm:grid-cols-2">
+                <p><span className="font-semibold text-[var(--color-ink)]">Yarn rate basis:</span> {yarnRates.join(' · ') || 'No yarn rows'}</p>
+                <p><span className="font-semibold text-[var(--color-ink)]">Overhead:</span> {result.overheadMode === 'monthly_expenses' ? 'Monthly expenses ÷ output' : 'Direct rate'} · {formatRate(result.overheadPerM)}/m</p>
+                <p><span className="font-semibold text-[var(--color-ink)]">Commission:</span> {result.commissionPct > 0 ? `Included · ${formatPercent(result.commissionPct)}` : '0% · no price impact'}</p>
+                <p><span className="font-semibold text-[var(--color-ink)]">Transport:</span> {result.transportPerM > 0 ? `Included · ${formatRate(result.transportPerM)}/m` : '₹0.00/m · no price impact'}</p>
+                <p><span className="font-semibold text-[var(--color-ink)]">Target margin:</span> {formatPercent(result.targetMarginPct)}</p>
+                <p><span className="font-semibold text-[var(--color-ink)]">Quantity:</span> {quantity}</p>
+                <p className="sm:col-span-2"><span className="font-semibold text-[var(--color-ink)]">Sections on:</span> {enabledSections.join(', ') || 'Core costing only'}{disabledSections.length > 0 ? ` · off: ${disabledSections.join(', ')}` : ''}</p>
+            </div>
+            {fullReuse && (
+                <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-2 text-[11px] font-medium leading-4 text-blue-900">
+                    Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn rates, overhead basis, commercial values, quantity, and section on/off states. Existing costing snapshots stay unchanged.
+                </p>
+            )}
         </section>
     )
 }
@@ -3881,6 +3954,16 @@ export default function EstimatorClient({
                                     <span className="max-w-full break-words text-[12px] font-semibold text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span>
                                     <span className="text-[11px] font-medium text-[var(--color-muted)]">· Warp yarn {state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · Weft yarn {state.weftRows.length} component{state.weftRows.length === 1 ? '' : 's'}</span>
                                 </div>
+                                {appliedTemplate && !canUseProduction && (
+                                    <p
+                                        data-testid="saved-quality-reuse-status"
+                                        className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-medium leading-4 text-blue-900"
+                                    >
+                                        {appliedTemplate.latest_costing_reuse
+                                            ? 'Full costing reuse is active: current yarn rates are combined with the latest saved costing assumptions.'
+                                            : 'This Saved Quality has no linked costing snapshot yet. Current factory defaults are being used for the costing assumptions.'}
+                                    </p>
+                                )}
                             </div>
 
                             <CostingAssumptionsSummary
@@ -5701,6 +5784,13 @@ export default function EstimatorClient({
                             {t('estimator.sprint1.future_quality_explanation')}
                         </p>
                     </div>
+                    <CostingSaveReview
+                        state={state}
+                        result={costingResult}
+                        isStandaloneCostingSession={isStandaloneCostingSession}
+                        fullReuse={Boolean(!canUseProduction && appliedTemplate?.latest_costing_reuse)}
+                        compact
+                    />
                     <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
                         <Button variant="ghost" onClick={() => setPendingQualityVersionSave(null)}>
                             {t('estimator.sprint1.cancel')}
@@ -5792,6 +5882,13 @@ export default function EstimatorClient({
                             </div>
                         ))}
                     </div>
+                    <CostingSaveReview
+                        state={state}
+                        result={costingResult}
+                        isStandaloneCostingSession={isStandaloneCostingSession}
+                        fullReuse={Boolean(!canUseProduction && appliedTemplate?.latest_costing_reuse)}
+                        compact
+                    />
                     <DialogFooter>
                         <Button
                             variant="ghost"
@@ -5867,8 +5964,14 @@ export default function EstimatorClient({
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed space-y-1">
                             <p>{t('estimator.quality.savesNotePrefix')} {state.warpRows.length} {t('estimator.quality.savesNoteWarp')} {state.weftRows.length} {t('estimator.quality.savesNoteWeft')}</p>
-                            <p className="text-slate-400">{t('estimator.quality.rateNote')}</p>
+                            <p className="text-slate-400">{t('estimator.quality.rateNote')} Current yarn rates are saved in the recipe; the first costing snapshot also records the full costing context.</p>
                         </div>
+                        <CostingSaveReview
+                            state={state}
+                            result={costingResult}
+                            isStandaloneCostingSession={isStandaloneCostingSession}
+                            fullReuse={!canUseProduction}
+                        />
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => {
