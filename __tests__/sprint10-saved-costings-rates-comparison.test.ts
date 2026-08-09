@@ -80,6 +80,38 @@ describe('Sprint 10 saved costing identity and comparison', () => {
     expect(comparison.price.changed).toBe(true)
   })
 
+  it('separates direct-overhead monthly context from monthly-expense cost drivers', () => {
+    const directOld = makeDefaultEstimateState()
+    directOld.overheadMode = 'direct'
+    directOld.overheadOverridePerM = 3
+    directOld.monthlyOutputM = 10_000
+    const directNew = { ...directOld, monthlyOutputM: 20_000 }
+    const directComparison = compareSavedCostingSnapshots(
+      savedSnapshot('left', directOld),
+      savedSnapshot('right', directNew),
+    )
+
+    expect(directComparison.overhead.monthlyOutputUsedForCosting).toEqual({ left: false, right: false })
+    expect(directComparison.overhead.costDrivingChanged).toBe(false)
+    expect(directComparison.overhead.referenceChanged).toBe(true)
+
+    const monthlyOld = {
+      ...directOld,
+      overheadMode: 'monthly_expenses' as const,
+      overheadOverridePerM: null,
+      overheadItems: directOld.overheadItems.map(item => ({ ...item, monthlyAmount: 10_000 })),
+    }
+    const monthlyNew = { ...monthlyOld, monthlyOutputM: 20_000 }
+    const monthlyComparison = compareSavedCostingSnapshots(
+      savedSnapshot('left', monthlyOld),
+      savedSnapshot('right', monthlyNew),
+    )
+
+    expect(monthlyComparison.overhead.monthlyOutputUsedForCosting).toEqual({ left: true, right: true })
+    expect(monthlyComparison.overhead.costDrivingChanged).toBe(true)
+    expect(monthlyComparison.overhead.referenceChanged).toBe(false)
+  })
+
   it('does not recalculate historical comparison values from current defaults', () => {
     const savedCostings = read('lib/saved-costings.ts')
     const comparisonBody = savedCostings.slice(savedCostings.indexOf('export function compareSavedCostingSnapshots'))
@@ -98,6 +130,9 @@ describe('Sprint 10 saved costing identity and comparison', () => {
     expect(quotes).toContain("title: 'Yarn'")
     expect(quotes).toContain("title: 'Waste'")
     expect(quotes).toContain("title: 'Overhead'")
+    expect(quotes).toContain('Cost-driving changes')
+    expect(quotes).toContain('Reference/context changes')
+    expect(quotes).toContain('Reference only; direct ₹/m overhead is used')
     expect(quotes).toContain("title: 'Margin'")
     expect(quotes).toContain("title: 'Price'")
     expect(costingActions).toContain("supabase.rpc('update_saved_costing_library_state_atomic'")

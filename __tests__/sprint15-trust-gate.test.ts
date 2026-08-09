@@ -157,4 +157,27 @@ describe('Sprint 15 Base estimator trust gates', () => {
     expect(source).toContain('Effective weft wastage used in formula:')
     expect(source).toContain('Open capacity inputs')
   })
+
+  it('explains the capacity warning and whether monthly output drives overhead', () => {
+    const directEstimate = makeCompleteDirectEstimate()
+    directEstimate.monthlyOutputM = 40_000
+    const directWarnings = validateEstimatorSnapshot(directEstimate, {
+      requireTapeLength: false,
+      requireCapacity: false,
+    }).warnings ?? []
+    const directCapacityWarning = directWarnings.find(warning => warning.field === 'monthlyOutputM')
+
+    expect(directCapacityWarning?.message).toContain('Monthly output is above the rated loom capacity.')
+    expect(directCapacityWarning?.message).toContain('Actual output is 40,000 m versus 31,200 m rated capacity')
+    expect(directCapacityWarning?.message).toContain('24 looms × 26 working days × 50 m/loom/day')
+    expect(directCapacityWarning?.message).toContain('Direct overhead uses the saved ₹/m rate')
+
+    const monthlyEstimate = { ...directEstimate, overheadMode: 'monthly_expenses' as const, overheadOverridePerM: null }
+    const monthlyWarnings = validateEstimatorSnapshot(monthlyEstimate, {
+      requireTapeLength: false,
+      requireCapacity: false,
+    }).warnings ?? []
+    expect(monthlyWarnings.find(warning => warning.field === 'monthlyOutputM')?.message)
+      .toContain('Monthly output is the denominator for monthly-expense overhead')
+  })
 })
