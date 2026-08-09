@@ -1,0 +1,8 @@
+{
+  "status": "pending_production_deployment",
+  "generatedAt": null,
+  "sampleCountPerRoute": 0,
+  "rawSamples": [],
+  "summary": {},
+  "note": "Populate only from comparable canonical-production cold samples using scripts/performance/sprint21-route-metrics.mjs. Do not infer release readiness from local timings or the directional baseline."
+}

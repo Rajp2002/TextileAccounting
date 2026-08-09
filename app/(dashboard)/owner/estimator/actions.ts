@@ -8,13 +8,14 @@ import { getFirstEstimatorValidationMessage, requiresFactoryCapacity, validateEs
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
-import { getOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getCachedOrgTier, getOrgTier, tierSatisfies } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
-import { buildSavedQualityRecipeState } from '@/lib/saved-costings'
+import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
+import { getRateReviewStatus } from '@/lib/cost-rates'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -260,7 +261,7 @@ function totalsMatchAuthoritative(
 
 // ─── Factory Cost Profile ─────────────────────────────────────────────────────
 
-export async function getFactoryCostProfile() {
+export async function getFactoryCostProfile(options?: { createIfMissing?: boolean }) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -272,8 +273,10 @@ export async function getFactoryCostProfile() {
 
     if (error) return { error: error.message }
 
-    // Auto-create with sensible defaults on first visit
-    if (!data) {
+    // Page reads may opt out of the legacy first-visit bootstrap write. This
+    // keeps a GET/read path read-only while settings' explicit profile editor
+    // can retain the compatibility behavior when it intentionally requests it.
+    if (!data && options?.createIfMissing !== false) {
         try {
             await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
         } catch {
@@ -311,7 +314,7 @@ export async function getFactoryCostProfile() {
 
             if (createError) return { error: createError.message }
             return { data: created }
-        }
+    }
 
     return { data }
 }
@@ -404,6 +407,10 @@ export async function upsertFactoryCostProfile(data: {
     const { expectedUpdatedAt, ...profileData } = data
     const normalizedProfileData = {
         ...profileData,
+        // A successful save from Settings or the Estimator completes the
+        // first-run baseline. Keep this explicit so monthly output and other
+        // persisted defaults are hydrated on the next cold load.
+        is_configured: data.is_configured ?? true,
         // Retain the legacy database column for older readers, but do not
         // calculate or expose an overhead percentage in the new workflow.
         overhead_pct: 0,
@@ -450,13 +457,16 @@ export async function upsertFactoryCostProfile(data: {
 
 // ─── Estimator Templates ──────────────────────────────────────────────────────
 
-export async function getEstimatorTemplates(options?: { includeArchived?: boolean }) {
+export async function getEstimatorTemplates(options?: { includeArchived?: boolean; summary?: boolean }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    const templateSelect = options?.summary ? 'id,name,updated_at,is_active' : '*'
     let query = supabase
         .from('estimator_templates')
-        .select('*')
+        // The Supabase select parser cannot represent this conditional string
+        // as one literal union; the runtime projection remains explicit.
+        .select(templateSelect as '*')
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false })
 
@@ -465,7 +475,98 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     const { data, error } = await query
 
     if (error) return { error: error.message }
-    return { data: data ?? [] }
+
+    const templates = data ?? []
+    if (options?.summary) return { data: templates }
+    // Base is a repeat-costing product: when a quality is reopened, its
+    // current recipe/rate rows should combine with the latest linked costing
+    // assumptions. Full Suite keeps its existing quality-vs-quotation
+    // separation and does not receive this Base-only enrichment.
+    const effectiveTier = await getCachedOrgTier(profile.org_id)
+    if (effectiveTier !== 'base' || templates.length === 0) return { data: templates }
+
+    const templateIds = templates.map(template => template.id).filter(Boolean)
+    const { data: costings, error: costingError } = await supabase
+        .from('estimator_quotes')
+        .select(`
+            template_id,
+            updated_at,
+            warping_rate_per_kg,
+            sizing_rate_per_kg,
+            winding_rate_per_kg,
+            processing_rate_per_m,
+            finishing_rate_per_m,
+            overhead_items,
+            monthly_output_m,
+            overhead_override_per_m,
+            commission_pct,
+            transport_per_m,
+            profit_margin_pct,
+            order_quantity_m,
+            enabled_sections,
+            loom_count,
+            monthly_working_days,
+            avg_output_per_loom_per_day
+        `)
+        .eq('org_id', profile.org_id)
+        .eq('record_kind', 'costing')
+        .in('template_id', templateIds)
+        .order('updated_at', { ascending: false })
+
+    if (costingError) return { error: costingError.message }
+
+    const latestByTemplate = new Map<string, SavedQualityCostingReuse>()
+    for (const costing of costings ?? []) {
+        if (!costing.template_id || latestByTemplate.has(costing.template_id)) continue
+        latestByTemplate.set(costing.template_id, costing)
+    }
+
+    return {
+        data: templates.map(template => ({
+            ...template,
+            latest_costing_reuse: latestByTemplate.get(template.id) ?? null,
+        })),
+    }
+}
+
+/**
+ * Secondary estimator data. The blank estimator only needs the factory
+ * profile/defaults to calculate its first summary; saved qualities, premium
+ * worker inputs, party suggestions, and review badges can hydrate after the
+ * primary editor is interactive.
+ */
+export async function getEstimatorSecondaryData() {
+    const { profile } = await requireRole(['owner'])
+    const effectiveTier = await getCachedOrgTier(profile.org_id)
+    const canUseProduction = tierSatisfies(effectiveTier, 'premium')
+    const supabase = await createServerClient()
+
+    const [templatesResult, workersResult, partiesResult, ratesResult] = await Promise.all([
+        getEstimatorTemplates(),
+        canUseProduction ? getFixedWorkersForOverhead() : Promise.resolve({ data: [] }),
+        canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
+        supabase
+            .from('cost_rate_book')
+            .select('name, last_reviewed_at, review_interval_days')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .eq('apply_as_default', true),
+    ])
+
+    const deferredErrors = [templatesResult, workersResult, partiesResult]
+        .map(result => (result as { error?: string }).error)
+        .filter((error): error is string => Boolean(error))
+    if (ratesResult.error) deferredErrors.push(ratesResult.error.message)
+    if (deferredErrors.length > 0) return { error: deferredErrors[0] }
+
+    return {
+        templates: templatesResult.data ?? [],
+        workers: workersResult.data ?? [],
+        partyNames: partiesResult.data ?? [],
+        staleDefaultRateNames: (ratesResult.data ?? [])
+            .filter(rate => getRateReviewStatus(rate) === 'overdue')
+            .map(rate => rate.name),
+    }
 }
 
 export async function saveAsFabricTemplate(data: {
@@ -1827,18 +1928,9 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
 
     let query = supabase
         .from('estimator_quotes')
-        .select(`
-            *,
-            orders!estimator_quotes_order_id_fkey (
-                id,
-                status,
-                party_name,
-                quality_label,
-                total_target_meters,
-                market_run_id,
-                production_logs ( meters )
-            )
-        `)
+        // Summary-first library read. Full recipes, result snapshots, and
+        // linked production records load only on open/compare/export intent.
+        .select('id, status, party_name, quality_label, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, created_at, updated_at, sent_at, quotation_reference, quotation_valid_until, customer_terms, meters, source_quote_id, costing_group_id, version_number, is_archived, is_favorite, record_kind, template_id, market_run_id, production_cost_per_meter, overhead_per_meter, commission_cost_per_meter, break_even_price_per_meter, expected_profit_per_meter, expected_profit_total, actual_margin_percent, calculation_version, rounding_policy, factory_profile_updated_at, reconciliation_status, reconciliation_note')
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false })
 
@@ -1848,6 +1940,35 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
 
     const { data, error } = await query
     if (error) return { error: error.message }
+    return { data }
+}
+
+/** Full immutable costing/detail read used only by explicit user intent. */
+export async function getEstimatorQuoteDetail(id: string) {
+    if (!UUID_PATTERN.test(id)) return { error: 'Costing identifier is invalid.' }
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .select(`
+            *,
+            orders!estimator_quotes_order_id_fkey (
+                id,
+                status,
+                party_name,
+                quality_label,
+                total_target_meters,
+                market_run_id,
+                production_logs ( meters ),
+                warp_instruction,
+                weft_instruction
+            )
+        `)
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+    if (error) return { error: error.message }
+    if (!data) return { error: 'This saved costing no longer exists.' }
     return { data }
 }
 

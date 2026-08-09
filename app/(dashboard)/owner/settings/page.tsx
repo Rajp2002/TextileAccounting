@@ -46,6 +46,7 @@ import Link from 'next/link'
 import { useOwnerPlanAccess } from '@/components/providers/owner-plan-provider'
 import { useSettingsBootstrap } from '@/components/providers/settings-bootstrap-provider'
 import { tierSatisfies } from '@/lib/subscription-access'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 
 const SettingsCardLoading = () => <div className="min-h-24 animate-pulse rounded-lg border border-hairline bg-surface-soft/55" />
 
@@ -332,6 +333,7 @@ export default function SettingsPage() {
 
     return (
         <div className="settings-page-frame">
+            <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
             <div id="overview" className="mb-5 flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
                     <h1 className="text-3xl font-bold tracking-tight text-ink">{t('settings.title')}</h1>

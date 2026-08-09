@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import LoadingModal from './loading-modal'
 import { useTranslation } from '@/lib/i18n/context'
 
-import { globalQueryClient } from '@/components/providers'
+import { globalQueryClient } from '@/lib/query-client-registry'
 import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 
 interface LogoutButtonProps {

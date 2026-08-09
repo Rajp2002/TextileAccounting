@@ -3,11 +3,14 @@ import { requireRole } from '@/lib/auth'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { SettingsBootstrapProvider } from '@/components/providers/settings-bootstrap-provider'
+import QueryProvider from '@/components/query-provider'
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     return (
         <AccessGate requiredTier="base">
-            <SettingsDataLoader>{children}</SettingsDataLoader>
+            <QueryProvider>
+                <SettingsDataLoader>{children}</SettingsDataLoader>
+            </QueryProvider>
         </AccessGate>
     )
 }

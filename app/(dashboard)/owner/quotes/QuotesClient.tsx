@@ -24,7 +24,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getEstimatorQuoteDetail, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
 import { formatDateOnly } from '@/lib/format'
@@ -74,6 +74,7 @@ import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -529,7 +530,14 @@ function SavedQualityLibraryView({
                                                     ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
                                                     : canUseProduction
                                                         ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
-                                                    : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.')}</p>
+                                                        : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.')}</p>
+                                            {latest && (
+                                                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                                                    {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open and save new version')}</Button>}
+                                                    <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
+                                                    <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className={`grid gap-4 ${canUseProduction ? 'xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
@@ -687,6 +695,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [quoteHistoryError, setQuoteHistoryError] = useState<string | null>(null)
     const [quoteToArchive, setQuoteToArchive] = useState<QuoteRow | null>(null)
     const [archiveAction, setArchiveAction] = useState<'archive' | 'restore'>('archive')
+    const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
     const [showArchived, setShowArchived] = useState(false)
     const [expandedQualityKey, setExpandedQualityKey] = useState<string | null>(null)
     const showQualityLibrary = !canUseQuotationWorkflow
@@ -906,7 +915,31 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         })).filter(group => group.sections.length > 0)
         : []
 
-    const toggleCostingSelection = (id: string) => {
+    const ensureQuoteDetail = async (quote: QuoteRow) => {
+        if (quote.costing_result_snapshot || quote.snapshot_data || quote.warp_rows || quote.weft_rows || quote.orders) return quote
+        setDetailLoadingId(quote.id)
+        try {
+            const result = await getEstimatorQuoteDetail(quote.id)
+            if (result.error || !result.data) {
+                toast.error(tx(userFacingError(result.error, 'The complete saved costing could not be loaded. Try again.')))
+                return null
+            }
+            const detailed = { ...quote, ...result.data } as QuoteRow
+            setQuotes(current => current.map(item => item.id === quote.id ? detailed : item))
+            return detailed
+        } catch (error) {
+            toast.error(tx(userFacingError(error, 'The complete saved costing could not be loaded. Try again.')))
+            return null
+        } finally {
+            setDetailLoadingId(null)
+        }
+    }
+
+    const toggleCostingSelection = async (id: string) => {
+        const target = quotes.find(quote => quote.id === id)
+        if (!target) return
+        const detailed = await ensureQuoteDetail(target)
+        if (!detailed) return
         setSelectedCostingIds(current => {
             if (current.includes(id)) return current.filter(currentId => currentId !== id)
             return current.length >= 2 ? [current[1], id] : [...current, id]
@@ -1044,22 +1077,29 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
     }
 
-    const handleRestore = (quote: QuoteRow, mode: 'edit' | 'duplicate') => {
+    const handleRestore = async (quote: QuoteRow, mode: 'edit' | 'duplicate') => {
+        const detailedQuote = await ensureQuoteDetail(quote)
+        if (!detailedQuote) return
         try {
             const draftKey = getEstimatorDraftStorageKey(orgId, userId)
             const existingDraft = parseEstimatorDraft<QuoteDraftState>(localStorage.getItem(draftKey))
-            const restoreIdentity = mode === 'duplicate' ? `duplicate:${quote.id}` : quote.id
+            const restoreIdentity = mode === 'duplicate' ? `duplicate:${detailedQuote.id}` : detailedQuote.id
             if (shouldWarnBeforeQuoteRestore(existingDraft, restoreIdentity)) {
                 setExistingDraftForRestore(existingDraft)
                 setRestoreMode(mode)
-                setQuoteToRestore(quote)
+                setQuoteToRestore(detailedQuote)
                 return
             }
-            restoreQuoteToEstimator(quote, mode)
+            restoreQuoteToEstimator(detailedQuote, mode)
         } catch (e) {
             toast.error(tx('Failed to restore snapshot'))
             console.error(e)
         }
+    }
+
+    const openQuoteExport = async (quote: QuoteRow) => {
+        const detailedQuote = await ensureQuoteDetail(quote)
+        if (detailedQuote) setQuoteToExport(detailedQuote)
     }
 
     const handleLibraryState = async (quote: QuoteRow, changes: { isArchived?: boolean; isFavorite?: boolean }) => {
@@ -1129,7 +1169,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <div className="max-w-6xl mx-auto space-y-6">
+            <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <ArchivePolicyNotice />
+            {detailLoadingId && <p role="status" aria-live="polite" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">{tx('Loading the complete saved snapshot…')}</p>}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -1281,9 +1323,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     updatingId={updatingId}
                     onToggleExpanded={key => setExpandedQualityKey(current => current === key ? null : key)}
                     onToggleComparison={toggleCostingSelection}
-                    onOpen={quote => handleRestore(quote, 'edit')}
-                    onStartFrom={quote => handleRestore(quote, 'duplicate')}
-                    onExport={setQuoteToExport}
+                    onOpen={quote => { void handleRestore(quote, 'edit') }}
+                    onStartFrom={quote => { void handleRestore(quote, 'duplicate') }}
+                    onExport={quote => { void openQuoteExport(quote) }}
                     onAudit={quote => { void auditQuote(quote) }}
                     auditingId={updatingId}
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
@@ -1352,7 +1394,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
                                                         <Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => setQuoteToExport(quote)} className="h-9 text-xs font-semibold">
+                                                    <Button variant="ghost" size="sm" onClick={() => { void openQuoteExport(quote) }} className="h-9 text-xs font-semibold">
                                                         <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
                                                     </Button>
                                                     {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" size="sm" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id} className="h-9 text-xs font-semibold text-amber-700">
@@ -1427,7 +1469,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Use as Starting Point" className="h-10 text-xs font-semibold">
                                                 <Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}
                                             </Button>
-                                            <Button variant="outline" size="sm" onClick={() => setQuoteToExport(quote)} className="h-10 text-xs font-semibold">
+                                            <Button variant="outline" size="sm" onClick={() => { void openQuoteExport(quote) }} className="h-10 text-xs font-semibold">
                                                 <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
                                             </Button>
                                         </div>
@@ -1547,7 +1589,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     <Copy className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
                                                     {isCosting ? (canUseQuotationWorkflow ? t('common.prepare_quotation') : t('common.use_as_starting_point')) : t('common.duplicate')}
                                                 </Button>
-                                                <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => setQuoteToExport(quote)}>
+                                                <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 lg:h-7 lg:px-2" onClick={() => { void openQuoteExport(quote) }}>
                                                     <Eye className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> {t('common.preview')}
                                                 </Button>
                                                 {hasQuotationLifecycle && <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:h-7 lg:px-2" onClick={() => { void openQuoteHistory(quote) }}>

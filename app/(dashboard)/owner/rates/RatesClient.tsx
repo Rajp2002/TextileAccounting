@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -29,6 +29,7 @@ import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import {
     archiveCostRate,
     confirmCostRateReview,
+    getCostRateUsage,
     getCostRateHistory,
     restoreCostRate,
     saveCostRate,
@@ -55,6 +56,7 @@ import { parseNonNegativeInput } from '@/lib/numeric-input'
 import { useTranslation } from '@/lib/i18n/context'
 import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime, formatToSurat } from '@/lib/time'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 
 type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
 type RateHistoryRow = {
@@ -155,8 +157,50 @@ export default function RatesClient({
     const [saveError, setSaveError] = useState<string | null>(null)
     const [conflicts, setConflicts] = useState(initialConflicts)
     const [showConflicts, setShowConflicts] = useState(initialConflicts.length > 0)
+    const [usageLoading, setUsageLoading] = useState(true)
+    const [usageError, setUsageError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
+
+    useEffect(() => {
+        let cancelled = false
+        setUsageLoading(true)
+        setUsageError(null)
+        void getCostRateUsage()
+            .then(result => {
+                if (cancelled) return
+                if (result.error) {
+                    setUsageError(result.error)
+                    return
+                }
+                const candidates = result.data ?? []
+                const candidateByKey = new Map(candidates.map(candidate => [
+                    `${candidate.category}:${candidate.normalizedName}`,
+                    candidate,
+                ]))
+                setRates(current => current.map(rate => {
+                    const candidate = candidateByKey.get(`${rate.category}:${normalizeYarnName(rate.name)}`)
+                    return {
+                        ...rate,
+                        // A usage candidate explains where a rate is used; it
+                        // must not replace an owner-reviewed source label.
+                        discovery_source: rate.discovery_source ?? null,
+                        fabric_names: candidate?.fabricNames ?? [],
+                        saved_quality_count: candidate?.savedQualityCount ?? 0,
+                    }
+                }))
+                setConflicts(result.conflicts ?? [])
+            })
+            .catch(error => {
+                if (!cancelled) setUsageError(userFacingError(error, 'Usage details could not be loaded.'))
+            })
+            .finally(() => {
+                if (!cancelled) setUsageLoading(false)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [])
 
     const yarnRates = useMemo(
         () => rates.filter(rate => YARN_CATEGORIES.includes(rate.category as YarnRateCategory)),
@@ -344,6 +388,12 @@ export default function RatesClient({
 
     return (
         <div className="mx-auto w-full max-w-7xl space-y-6">
+            <RouteMilestones
+                route="/owner/rates"
+                shellVisible
+                primaryUsable
+                secondaryReady={!usageLoading}
+            />
             <ArchivePolicyNotice />
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -356,6 +406,17 @@ export default function RatesClient({
             {pendingMessage && (
                 <p role="status" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
                     {pendingMessage} {tx('Please wait; other rate actions are temporarily unavailable.')}
+                </p>
+            )}
+
+            {usageLoading && (
+                <p role="status" aria-live="polite" className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+                    {tx('Loading saved-quality usage and conflict details…')}
+                </p>
+            )}
+            {usageError && (
+                <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                    {tx(usageError)} {tx('The primary Rate Book remains available; refresh to retry usage details.')}
                 </p>
             )}
 

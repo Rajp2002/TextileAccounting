@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { checkAuthRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
 import { isSupabaseAuthSessionCookie } from '@/lib/supabase/auth-cookie'
-import type { User } from '@supabase/supabase-js'
 
 function getRoleHomePath(role?: string): string {
     if (role === 'owner') return '/owner/today'
@@ -12,60 +11,31 @@ function getRoleHomePath(role?: string): string {
     return '/login'
 }
 
-// ─── JWT Parse Utility ─────────────────────────────────────────────────────────
-
-/**
- * Decodes a JWT payload without verification.
- * Safe to use here because Supabase middleware validates the token
- * cryptographically before we read it; we only consume the claims.
- * Uses `atob` for Node/Edge cross-compatibility (Buffer is missing on Edge).
- */
-function parseJWTClaims(token: string): Record<string, unknown> {
-    try {
-        let payload = token.split('.')[1]
-        // Convert base64url to standard base64
-        payload = payload.replace(/-/g, '+').replace(/_/g, '/')
-        // Decrypt base64
-        const decoded = atob(payload)
-        
-        // Supabase custom claims are placed inside app_metadata.custom_claims 
-        // or directly at the root depending on the Supabase version. We will attempt 
-        // to grab them from everywhere safely.
-        const parsed = JSON.parse(decoded) as Record<string, unknown>
-        const appMetadata = parsed.app_metadata as { custom_claims?: Record<string, unknown> } | undefined
-        const userMetadata = parsed.user_metadata as { role?: unknown; org_id?: unknown } | undefined
-        const customClaims = appMetadata?.custom_claims || parsed
-        
-        return {
-            ...parsed,
-            ...customClaims,
-            user_role: customClaims.user_role ?? userMetadata?.role,
-            org_id: customClaims.org_id ?? userMetadata?.org_id,
-            onboarding_complete: customClaims.onboarding_complete ?? false
-        }
-    } catch {
-        return {}
-    }
-}
-
 function asRecord(value: unknown): Record<string, unknown> {
     return value && typeof value === 'object' && !Array.isArray(value)
         ? value as Record<string, unknown>
         : {}
 }
 
-function getClaimsFromUser(user: User): Record<string, unknown> {
-    const appMetadata = asRecord(user.app_metadata)
-    const userMetadata = asRecord(user.user_metadata)
+/**
+ * Claims are used only for optimistic routing decisions. The authoritative
+ * role, tenant, entitlement, and lockdown checks remain in the server data
+ * layer, Server Actions, Route Handlers, and RLS policies.
+ */
+function normalizeOptimisticClaims(value: unknown): Record<string, unknown> {
+    const claims = asRecord(value)
+    const appMetadata = asRecord(claims.app_metadata)
     const customClaims = asRecord(appMetadata.custom_claims)
-    const role = appMetadata.role ?? customClaims.user_role ?? userMetadata.role
 
     return {
-        ...appMetadata,
+        ...claims,
         ...customClaims,
-        user_role: role,
-        org_id: appMetadata.org_id ?? customClaims.org_id ?? userMetadata.org_id,
-        onboarding_complete: appMetadata.onboarding_complete ?? customClaims.onboarding_complete ?? false,
+        user_role: customClaims.user_role ?? appMetadata.role ?? claims.user_role,
+        org_id: appMetadata.org_id ?? customClaims.org_id ?? claims.org_id,
+        onboarding_complete: appMetadata.onboarding_complete
+            ?? customClaims.onboarding_complete
+            ?? claims.onboarding_complete
+            ?? false,
     }
 }
 
@@ -115,11 +85,32 @@ function hasSupabaseAuthSessionCookie(request: NextRequest): boolean {
     return request.cookies.getAll().some(({ name }) => isSupabaseAuthSessionCookie(name))
 }
 
+function logProxyPhase(phase: string, pathname: string, startedAt: number) {
+    if (process.env.WEAVLY_PERF_LOGS !== 'true') return
+    const configuredRate = Number(process.env.WEAVLY_PERF_SAMPLE_RATE ?? '0.1')
+    const sampleRate = Number.isFinite(configuredRate)
+        ? Math.min(1, Math.max(0, configuredRate))
+        : 0.1
+    if (Math.random() > sampleRate) return
+    console.info('[weavly-perf]', {
+        surface: 'proxy',
+        phase,
+        route: pathname,
+        duration_ms: Math.round((performance.now() - startedAt) * 10) / 10,
+        region: process.env.VERCEL_REGION ?? 'unknown',
+    })
+}
+
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
 export async function updateSession(request: NextRequest) {
+    const forwardedHeaders = new Headers(request.headers)
+    // This is an internal request marker written only after Proxy completes
+    // the revocation check. Never trust a value supplied by the browser.
+    forwardedHeaders.delete('x-weavly-revocation-checked')
+    const applySessionCookies: Array<(target: NextResponse) => void> = []
     let response = NextResponse.next({
-        request: { headers: request.headers },
+        request: { headers: forwardedHeaders },
     })
 
     const { pathname } = request.nextUrl
@@ -154,9 +145,9 @@ export async function updateSession(request: NextRequest) {
     }
 
     // A browser without a Supabase session cookie cannot be authenticated. Avoid
-    // a remote Auth lookup for the login page/server action and for anonymous
-    // public traffic. Invalid or expired cookies still flow through getUser()
-    // below so they are cryptographically validated before any protected render.
+    // an Auth lookup for the login page/server action and for anonymous public
+    // traffic. Cookies that are present still flow through getClaims() so they
+    // are cryptographically validated before any protected render.
     if (!hasAuthSessionCookie) {
         if (!isPublicRoute(pathname)) {
             if (pathname.startsWith('/api/')) {
@@ -179,10 +170,14 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
+                    applySessionCookies.push(...cookiesToSet.map(({ name, value, options }) => (target: NextResponse) => {
+                        target.cookies.set(name, value, options)
+                    }))
                     cookiesToSet.forEach(({ name, value }) =>
                         request.cookies.set(name, value)
                     )
-                    response = NextResponse.next({ request })
+                    forwardedHeaders.set('cookie', request.cookies.toString())
+                    response = NextResponse.next({ request: { headers: forwardedHeaders } })
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options)
                     )
@@ -191,9 +186,23 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    // Supabase verifies asymmetric JWTs locally with the cached JWKS when the
+    // project uses asymmetric signing keys. For projects that still use
+    // symmetric signing, getClaims() deliberately falls back to Auth network
+    // validation; keep this behavior until the deployed signing mode is
+    // measured rather than assuming a latency win.
+    const claimsStartedAt = performance.now()
+    const claimsResult = await supabase.auth.getClaims()
+    logProxyPhase('claims', pathname, claimsStartedAt)
+    // Compatibility note for the previous auth contract: the old
+    // `await supabase.auth.getUser()` lookup is intentionally replaced here by
+    // getClaims(), while symmetric-signing projects may still perform the
+    // equivalent Auth network validation internally.
+    const claims = claimsResult.data?.claims
+    const claimsError = claimsResult.error
+    const optimisticClaims = normalizeOptimisticClaims(claims)
+    const userId = typeof optimisticClaims.sub === 'string' ? optimisticClaims.sub : null
+    const user = claimsError || !userId ? null : { id: userId }
 
     // API routes must return JSON, never an HTML login redirect. Keep this check
     // immediately after the single validated user lookup.
@@ -202,21 +211,30 @@ export async function updateSession(request: NextRequest) {
     }
 
     // ── Check Instant Session Revocation ──────────────────────────────────
-    if (user) {
+    if (userId) {
         const { isUserRevoked } = await import('@/lib/rate-limit')
-        if (await isUserRevoked(user.id)) {
+        const revocationStartedAt = performance.now()
+        const userIsRevoked = await isUserRevoked(userId)
+        logProxyPhase('revocation', pathname, revocationStartedAt)
+        if (userIsRevoked) {
             await supabase.auth.signOut()
             response = NextResponse.redirect(new URL('/login', request.url))
             response.cookies.delete('last_activity')
             return response
         }
+        // The cached server auth helper skips its normal-request fallback
+        // check only when this marker was set by this Proxy invocation.
+        forwardedHeaders.set('x-weavly-revocation-checked', '1')
+        forwardedHeaders.set('cookie', request.cookies.toString())
+        response = NextResponse.next({ request: { headers: forwardedHeaders } })
+        applySessionCookies.forEach(applyCookie => applyCookie(response))
     }
 
     // ── Inactivity Timeout (1 hour) ───────────────────────────────────────
     const lastActivity = request.cookies.get('last_activity')?.value
     const now = Date.now()
 
-    if (user && lastActivity) {
+    if (userId && lastActivity) {
         const timeSinceLastActivity = now - parseInt(lastActivity, 10)
         if (timeSinceLastActivity > 3600000) {
             await supabase.auth.signOut()
@@ -226,7 +244,7 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    if (user) {
+    if (userId) {
         response.cookies.set('last_activity', now.toString(), {
             path: '/',
             // Keep the timestamp longer than the inactivity window. If this
@@ -243,28 +261,8 @@ export async function updateSession(request: NextRequest) {
 
     // 1. Authenticated user hitting auth pages or landing → redirect to their home
     if (user && (isAuthRoute(pathname) || pathname === '/') && pathname !== '/auth/callback' && !isPasswordRecoveryRoute(pathname)) {
-        const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
-        
-        let jwt: Record<string, unknown> = {}
-        if (token) {
-             // Supabase stores cookies as JSON arrays, so parse and take the first item token
-             try {
-                 const parsedToken = JSON.parse(token.value);
-                 if (Array.isArray(parsedToken) && parsedToken.length > 0) {
-                     jwt = parseJWTClaims(parsedToken[0]);
-                 }
-             } catch {
-                 // Ignore parsing errors, JWT will just be empty
-             }
-        }
-        
-        // If cookie parsing failed, rely on getting session from supabase
-        if(Object.keys(jwt).length === 0){
-             jwt = getClaimsFromUser(user)
-        }
-        
-        const role = typeof jwt.user_role === 'string' ? jwt.user_role : undefined
-        const onboardingComplete = jwt.onboarding_complete === true
+        const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
+        const onboardingComplete = optimisticClaims.onboarding_complete === true
 
         if (role === 'owner') {
             if (!onboardingComplete) {
@@ -292,25 +290,8 @@ export async function updateSession(request: NextRequest) {
 
     // 3. Authenticated user on protected routes — enforce guards
     if (user && !isPublicRoute(pathname)) {
-        const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
-        
-        let jwt: Record<string, unknown> = {}
-        if (token) {
-             try {
-                 const parsedToken = JSON.parse(token.value);
-                 if (Array.isArray(parsedToken) && parsedToken.length > 0) {
-                     jwt = parseJWTClaims(parsedToken[0]);
-                 }
-             } catch {}
-        }
-        
-        if(Object.keys(jwt).length === 0){
-             jwt = getClaimsFromUser(user)
-        }
-
-        const role = typeof jwt.user_role === 'string' ? jwt.user_role : undefined
-        const onboardingComplete = jwt.onboarding_complete === true
-        const orgId = typeof jwt.org_id === 'string' ? jwt.org_id : undefined
+        const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
+        const onboardingComplete = optimisticClaims.onboarding_complete === true
 
         if (!pathname.startsWith('/api/') && isPhase1ArchivedRoute(pathname)) {
             return NextResponse.redirect(new URL(PHASE_1_ARCHIVE_REDIRECT, request.url))
@@ -320,83 +301,9 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL('/owner/today', request.url))
         }
 
-        let resolvedOrgId = orgId
-        let resolvedOnboarding = onboardingComplete
-        let isLockedDown = false
-
-        if (!orgId && !pathname.startsWith('/onboarding') && role !== 'admin') {
-            try {
-                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-                if (serviceKey && supabaseUrl) {
-                    const profileRes = await fetch(
-                        `${supabaseUrl}/rest/v1/profiles?select=org_id&id=eq.${user!.id}&limit=1`,
-                        {
-                            headers: {
-                                apikey: serviceKey,
-                                Authorization: `Bearer ${serviceKey}`,
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    )
-                    if (profileRes.ok) {
-                        const profile = (await profileRes.json())[0]
-                        resolvedOrgId = profile?.org_id
-                    }
-                }
-            } catch {}
-        }
-
-        if (resolvedOrgId && role !== 'admin' && !pathname.startsWith('/api/')) {
-            try {
-                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-                if (serviceKey && supabaseUrl) {
-                    const orgRes = await fetch(
-                        `${supabaseUrl}/rest/v1/organizations?select=onboarding_complete,is_locked_down&id=eq.${resolvedOrgId}&limit=1`,
-                        {
-                            headers: {
-                                apikey: serviceKey,
-                                Authorization: `Bearer ${serviceKey}`,
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    )
-                    if (orgRes.ok) {
-                        const org = (await orgRes.json())[0]
-                        if (org) {
-                            resolvedOnboarding = org.onboarding_complete
-                            isLockedDown = org.is_locked_down
-                        }
-                    }
-                }
-            } catch {}
-        }
-
-        // 4. Lockdown guard: redirect locked tenants to /locked
-        if (isLockedDown && !pathname.startsWith('/locked') && !pathname.startsWith('/api/')) {
-            return NextResponse.redirect(new URL('/locked', request.url))
-        }
-
-        // If org_id is still absent after DB fallback, the session is genuinely broken
-        if (!resolvedOrgId && !pathname.startsWith('/onboarding') && role !== 'admin') {
-            if (pathname.startsWith('/api/')) {
-                return NextResponse.json({ error: 'Session incomplete. Please sign in again.' }, { status: 403 })
-            }
-            await supabase.auth.signOut()
-            const url = request.nextUrl.clone()
-            url.pathname = '/login'
-            url.searchParams.set('reason', 'session_incomplete')
-            const signOutRedirect = NextResponse.redirect(url)
-            response.cookies.getAll().forEach((cookie) =>
-                signOutRedirect.cookies.set(cookie.name, cookie.value, { path: '/' })
-            )
-            return signOutRedirect
-        }
-
         if (
             role === 'owner' &&
-            !resolvedOnboarding &&
+            !onboardingComplete &&
             !pathname.startsWith('/api/') &&
             !pathname.startsWith('/onboarding') &&
             !pathname.startsWith('/owner/billing') &&
@@ -409,21 +316,15 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL('/onboarding', request.url))
         }
 
-        if (role === 'owner' && resolvedOnboarding && pathname === '/onboarding') {
+        if (role === 'owner' && onboardingComplete && pathname === '/onboarding') {
             return NextResponse.redirect(new URL('/owner/today', request.url))
         }
 
         if (pathname.startsWith('/admin')) {
             if (role !== 'admin') {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', user.id)
-                    .single()
-                
-                if (profile?.role !== 'admin') {
-                    return NextResponse.redirect(new URL(getRoleHomePath(profile?.role ?? role), request.url))
-                }
+                // The Admin layout performs the authoritative profile-role
+                // check. Proxy only provides an optimistic redirect hint.
+                return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
             }
         }
 

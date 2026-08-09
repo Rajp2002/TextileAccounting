@@ -1,0 +1,373 @@
+{
+  "generatedAt": "2026-08-09T20:13:40.002Z",
+  "nextDir": "/Users/rajpatel/Projects/textile Saas/.next",
+  "buildId": "QdpaIfr9jHr0AFAwnrt0t",
+  "method": "Next page_client-reference-manifest.js → deduplicated emitted JS chunks → exact filesystem and gzip byte totals",
+  "routes": {
+    "/owner/estimator": {
+      "label": "Cost Estimate",
+      "budgetGzipBytes": 200000,
+      "chunkCount": 17,
+      "rawBytes": 1222582,
+      "gzipBytes": 357201,
+      "budgetStatus": "over_budget",
+      "chunks": [
+        {
+          "path": "static/chunks/1195-6778cc6de3f201fc.js",
+          "rawBytes": 94031,
+          "gzipBytes": 27369
+        },
+        {
+          "path": "static/chunks/1309-671411d30682911c.js",
+          "rawBytes": 67523,
+          "gzipBytes": 19061
+        },
+        {
+          "path": "static/chunks/1798-3f6c576d8ce3cd21.js",
+          "rawBytes": 23025,
+          "gzipBytes": 8286
+        },
+        {
+          "path": "static/chunks/2234-977a602a9dcab460.js",
+          "rawBytes": 26609,
+          "gzipBytes": 7427
+        },
+        {
+          "path": "static/chunks/2347-492bb1ceab06f00a.js",
+          "rawBytes": 6736,
+          "gzipBytes": 2474
+        },
+        {
+          "path": "static/chunks/2497-cd93f0e31886964f.js",
+          "rawBytes": 26892,
+          "gzipBytes": 8808
+        },
+        {
+          "path": "static/chunks/2876-43d7b95ed2fcdc03.js",
+          "rawBytes": 20671,
+          "gzipBytes": 6193
+        },
+        {
+          "path": "static/chunks/3512-0cf18563d813b269.js",
+          "rawBytes": 32555,
+          "gzipBytes": 12933
+        },
+        {
+          "path": "static/chunks/3702-a5720552940c90ec.js",
+          "rawBytes": 23702,
+          "gzipBytes": 7589
+        },
+        {
+          "path": "static/chunks/4821-c5e85cc32886a231.js",
+          "rawBytes": 117157,
+          "gzipBytes": 38510
+        },
+        {
+          "path": "static/chunks/4946-eba0020b787b519f.js",
+          "rawBytes": 3355,
+          "gzipBytes": 1482
+        },
+        {
+          "path": "static/chunks/6609-e8d80ee9ea9b44d3.js",
+          "rawBytes": 33939,
+          "gzipBytes": 9441
+        },
+        {
+          "path": "static/chunks/7009-3f9a8ae19bee5d7d.js",
+          "rawBytes": 178536,
+          "gzipBytes": 51491
+        },
+        {
+          "path": "static/chunks/8400-c137786c018fd4b1.js",
+          "rawBytes": 8583,
+          "gzipBytes": 3329
+        },
+        {
+          "path": "static/chunks/8495-ece89311480f3e07.js",
+          "rawBytes": 7849,
+          "gzipBytes": 3059
+        },
+        {
+          "path": "static/chunks/aaea2bcf-33dd9d2eb6fdbb67.js",
+          "rawBytes": 325709,
+          "gzipBytes": 100428
+        },
+        {
+          "path": "static/chunks/app/(dashboard)/owner/estimator/page-9951368817fa8095.js",
+          "rawBytes": 225710,
+          "gzipBytes": 49321
+        }
+      ]
+    },
+    "/owner/rates": {
+      "label": "Yarn Rate Book",
+      "budgetGzipBytes": 180000,
+      "chunkCount": 9,
+      "rawBytes": 359661,
+      "gzipBytes": 107304,
+      "budgetStatus": "pass",
+      "chunks": [
+        {
+          "path": "static/chunks/1798-3f6c576d8ce3cd21.js",
+          "rawBytes": 23025,
+          "gzipBytes": 8286
+        },
+        {
+          "path": "static/chunks/2497-cd93f0e31886964f.js",
+          "rawBytes": 26892,
+          "gzipBytes": 8808
+        },
+        {
+          "path": "static/chunks/2876-43d7b95ed2fcdc03.js",
+          "rawBytes": 20671,
+          "gzipBytes": 6193
+        },
+        {
+          "path": "static/chunks/4946-eba0020b787b519f.js",
+          "rawBytes": 3355,
+          "gzipBytes": 1482
+        },
+        {
+          "path": "static/chunks/6609-e8d80ee9ea9b44d3.js",
+          "rawBytes": 33939,
+          "gzipBytes": 9441
+        },
+        {
+          "path": "static/chunks/7009-3f9a8ae19bee5d7d.js",
+          "rawBytes": 178536,
+          "gzipBytes": 51491
+        },
+        {
+          "path": "static/chunks/8400-c137786c018fd4b1.js",
+          "rawBytes": 8583,
+          "gzipBytes": 3329
+        },
+        {
+          "path": "static/chunks/8495-ece89311480f3e07.js",
+          "rawBytes": 7849,
+          "gzipBytes": 3059
+        },
+        {
+          "path": "static/chunks/app/(dashboard)/owner/rates/page-d2caae06fd8908fa.js",
+          "rawBytes": 56811,
+          "gzipBytes": 15215
+        }
+      ]
+    },
+    "/owner/quotes": {
+      "label": "Saved Costings",
+      "budgetGzipBytes": 180000,
+      "chunkCount": 13,
+      "rawBytes": 517205,
+      "gzipBytes": 154516,
+      "budgetStatus": "pass",
+      "chunks": [
+        {
+          "path": "static/chunks/1309-671411d30682911c.js",
+          "rawBytes": 67523,
+          "gzipBytes": 19061
+        },
+        {
+          "path": "static/chunks/1798-3f6c576d8ce3cd21.js",
+          "rawBytes": 23025,
+          "gzipBytes": 8286
+        },
+        {
+          "path": "static/chunks/2234-977a602a9dcab460.js",
+          "rawBytes": 26609,
+          "gzipBytes": 7427
+        },
+        {
+          "path": "static/chunks/2347-492bb1ceab06f00a.js",
+          "rawBytes": 6736,
+          "gzipBytes": 2474
+        },
+        {
+          "path": "static/chunks/2497-cd93f0e31886964f.js",
+          "rawBytes": 26892,
+          "gzipBytes": 8808
+        },
+        {
+          "path": "static/chunks/2876-43d7b95ed2fcdc03.js",
+          "rawBytes": 20671,
+          "gzipBytes": 6193
+        },
+        {
+          "path": "static/chunks/3512-0cf18563d813b269.js",
+          "rawBytes": 32555,
+          "gzipBytes": 12933
+        },
+        {
+          "path": "static/chunks/4946-eba0020b787b519f.js",
+          "rawBytes": 3355,
+          "gzipBytes": 1482
+        },
+        {
+          "path": "static/chunks/6609-e8d80ee9ea9b44d3.js",
+          "rawBytes": 33939,
+          "gzipBytes": 9441
+        },
+        {
+          "path": "static/chunks/7009-3f9a8ae19bee5d7d.js",
+          "rawBytes": 178536,
+          "gzipBytes": 51491
+        },
+        {
+          "path": "static/chunks/8400-c137786c018fd4b1.js",
+          "rawBytes": 8583,
+          "gzipBytes": 3329
+        },
+        {
+          "path": "static/chunks/8495-ece89311480f3e07.js",
+          "rawBytes": 7849,
+          "gzipBytes": 3059
+        },
+        {
+          "path": "static/chunks/app/(dashboard)/owner/quotes/page-ceefc21fbb6a8abb.js",
+          "rawBytes": 80932,
+          "gzipBytes": 20532
+        }
+      ]
+    },
+    "/owner/settings": {
+      "label": "Settings",
+      "budgetGzipBytes": 180000,
+      "chunkCount": 16,
+      "rawBytes": 612597,
+      "gzipBytes": 183924,
+      "budgetStatus": "over_budget",
+      "chunks": [
+        {
+          "path": "static/chunks/1798-3f6c576d8ce3cd21.js",
+          "rawBytes": 23025,
+          "gzipBytes": 8286
+        },
+        {
+          "path": "static/chunks/2117-5fb6b07d215ac337.js",
+          "rawBytes": 31318,
+          "gzipBytes": 12057
+        },
+        {
+          "path": "static/chunks/2385-7744236e40e75ca5.js",
+          "rawBytes": 14855,
+          "gzipBytes": 5195
+        },
+        {
+          "path": "static/chunks/2497-cd93f0e31886964f.js",
+          "rawBytes": 26892,
+          "gzipBytes": 8808
+        },
+        {
+          "path": "static/chunks/2569-277475b097e9bde0.js",
+          "rawBytes": 14396,
+          "gzipBytes": 4843
+        },
+        {
+          "path": "static/chunks/3702-a5720552940c90ec.js",
+          "rawBytes": 23702,
+          "gzipBytes": 7589
+        },
+        {
+          "path": "static/chunks/4946-eba0020b787b519f.js",
+          "rawBytes": 3355,
+          "gzipBytes": 1482
+        },
+        {
+          "path": "static/chunks/498-f660520c54419f08.js",
+          "rawBytes": 9115,
+          "gzipBytes": 3363
+        },
+        {
+          "path": "static/chunks/5990-d2c998f2f29bb8ad.js",
+          "rawBytes": 15133,
+          "gzipBytes": 4667
+        },
+        {
+          "path": "static/chunks/6609-e8d80ee9ea9b44d3.js",
+          "rawBytes": 33939,
+          "gzipBytes": 9441
+        },
+        {
+          "path": "static/chunks/7009-3f9a8ae19bee5d7d.js",
+          "rawBytes": 178536,
+          "gzipBytes": 51491
+        },
+        {
+          "path": "static/chunks/7514-702d0a64ec2f6f78.js",
+          "rawBytes": 19307,
+          "gzipBytes": 6804
+        },
+        {
+          "path": "static/chunks/7716-71b3225503370cd4.js",
+          "rawBytes": 180339,
+          "gzipBytes": 47319
+        },
+        {
+          "path": "static/chunks/8495-ece89311480f3e07.js",
+          "rawBytes": 7849,
+          "gzipBytes": 3059
+        },
+        {
+          "path": "static/chunks/8500-43795a8e34335c04.js",
+          "rawBytes": 4642,
+          "gzipBytes": 2025
+        },
+        {
+          "path": "static/chunks/app/(dashboard)/owner/settings/page-4db6190f7a783366.js",
+          "rawBytes": 26194,
+          "gzipBytes": 7495
+        }
+      ]
+    },
+    "/owner/billing": {
+      "label": "Subscription & Billing",
+      "budgetGzipBytes": null,
+      "chunkCount": 8,
+      "rawBytes": 302799,
+      "gzipBytes": 91990,
+      "budgetStatus": "informational",
+      "chunks": [
+        {
+          "path": "static/chunks/2497-cd93f0e31886964f.js",
+          "rawBytes": 26892,
+          "gzipBytes": 8808
+        },
+        {
+          "path": "static/chunks/2876-43d7b95ed2fcdc03.js",
+          "rawBytes": 20671,
+          "gzipBytes": 6193
+        },
+        {
+          "path": "static/chunks/6609-e8d80ee9ea9b44d3.js",
+          "rawBytes": 33939,
+          "gzipBytes": 9441
+        },
+        {
+          "path": "static/chunks/7009-3f9a8ae19bee5d7d.js",
+          "rawBytes": 178536,
+          "gzipBytes": 51491
+        },
+        {
+          "path": "static/chunks/7595-62d1763ed0b504d7.js",
+          "rawBytes": 10973,
+          "gzipBytes": 4285
+        },
+        {
+          "path": "static/chunks/8400-c137786c018fd4b1.js",
+          "rawBytes": 8583,
+          "gzipBytes": 3329
+        },
+        {
+          "path": "static/chunks/8500-43795a8e34335c04.js",
+          "rawBytes": 4642,
+          "gzipBytes": 2025
+        },
+        {
+          "path": "static/chunks/app/(dashboard)/owner/billing/page-3a7cd33ea2cbfb01.js",
+          "rawBytes": 18563,
+          "gzipBytes": 6418
+        }
+      ]
+    }
+  }
+}

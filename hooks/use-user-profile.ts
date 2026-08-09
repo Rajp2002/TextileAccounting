@@ -93,10 +93,17 @@ export function useUserProfile(perfRouteName?: string) {
         staleTime: 1000 * 60 * 30,
     })
 
+    // Settings now receives a tenant-scoped server bootstrap payload from its
+    // layout. Keep that payload visible during the first client render instead
+    // of replacing the whole page with a hydration-only skeleton. Other
+    // callers without bootstrap data retain the previous loading behavior.
+    const bootstrapProfile = settingsBootstrap?.profile
+    const profile = mounted ? (query.data ?? bootstrapProfile) : bootstrapProfile
+
     return {
         ...query,
-        data: mounted ? query.data : undefined,
-        isLoading: !mounted || userQuery.isLoading || query.isLoading,
-        isPending: !mounted || userQuery.isPending || query.isPending,
+        data: profile,
+        isLoading: !profile && (!mounted || userQuery.isLoading || query.isLoading),
+        isPending: !profile && (!mounted || userQuery.isPending || query.isPending),
     }
 }
