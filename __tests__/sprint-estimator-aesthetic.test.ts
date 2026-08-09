@@ -46,4 +46,12 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('aria-live="polite"')
     expect(client).toContain('shrink-0 items-center whitespace-nowrap rounded-full')
   })
+
+  it('does not restart deferred quality hydration during rerenders', () => {
+    expect(client).toContain('const secondaryDataRequestRef = useRef<ReturnType<typeof getEstimatorSecondaryData> | null>(null)')
+    expect(client).toContain('secondaryDataRequestRef.current = getEstimatorSecondaryData()')
+    expect(client).not.toContain('setTemplatesLoaded(false)')
+    expect(client).toContain('aria-busy={!templatesLoaded}')
+    expect(client).not.toContain('Saved qualities and optional estimator tools are loading…')
+  })
 })

@@ -2209,6 +2209,7 @@ export default function EstimatorClient({
     const [templates, setTemplates] = useState<EstimatorTemplate[]>(initialTemplates ?? [])
     const [templatesLoaded, setTemplatesLoaded] = useState(initialTemplates !== undefined)
     const [secondaryError, setSecondaryError] = useState<string | null>(null)
+    const secondaryDataRequestRef = useRef<ReturnType<typeof getEstimatorSecondaryData> | null>(null)
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
 
@@ -2534,10 +2535,15 @@ export default function EstimatorClient({
     useEffect(() => {
         if (initialTemplates !== undefined) return
         let cancelled = false
-        setTemplatesLoaded(false)
         setSecondaryError(null)
 
-        void getEstimatorSecondaryData()
+        // Keep one request per mounted estimator. React can replay effects and
+        // the profile object can change identity during a route refresh; a
+        // second request must not reset the already-ready quality library.
+        const secondaryDataRequest = secondaryDataRequestRef.current
+            ?? (secondaryDataRequestRef.current = getEstimatorSecondaryData())
+
+        void secondaryDataRequest
             .then(result => {
                 if (cancelled) return
                 if (result.error) {
@@ -4328,6 +4334,7 @@ export default function EstimatorClient({
                 <section
                     id="saved-qualities"
                     aria-labelledby="saved-qualities-title"
+                    aria-busy={!templatesLoaded}
                     className="overflow-hidden rounded-[16px] border-2 border-[var(--color-yarn-orange)]/15 bg-white/95 shadow-[0_10px_28px_rgba(30,37,40,0.07)]"
                 >
                     <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
@@ -4353,11 +4360,6 @@ export default function EstimatorClient({
                     </div>
 
                     <div className="space-y-4 px-4 py-4 sm:px-5 sm:py-5">
-                        {!templatesLoaded && (
-                            <div className="rounded-[12px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)]/55 px-3.5 py-3.5 text-xs font-medium text-[var(--color-muted)]" role="status">
-                                {tx('Saved qualities and optional estimator tools are loading…')}
-                            </div>
-                        )}
                         {secondaryError && (
                             <div className="rounded-[12px] border border-amber-300 bg-amber-50 px-3.5 py-3.5 text-xs font-medium text-amber-900" role="status">
                                 {tx('Saved quality details are temporarily unavailable. The Cost Estimate remains ready to use.')}
