@@ -79,6 +79,7 @@ describe('saved-quality yarn rate reconciliation', () => {
             discoverySource: 'saved_quality',
             fabricNames: ['Assam Silk', 'Assam Silk Fine'],
             usageNotes: 'Used in: Assam Silk, Assam Silk Fine',
+            savedQualityCount: 2,
         })
         expect(formatYarnRateUsageNotes(['Assam Silk', 'Assam Silk', '  Assam Silk Fine  '])).toBe('Used in: Assam Silk, Assam Silk Fine')
     })
@@ -87,13 +88,14 @@ describe('saved-quality yarn rate reconciliation', () => {
         const savedCosting = {
             id: 'costing:costing-a',
             name: 'Unsaved-quality costing',
+            discoverySource: 'saved_costing' as const,
             warp_rows: [warp('warp-costing', '40 POLY', 185)],
             weft_rows: [weft('weft-costing', '60 VISCOSE', 210)],
         }
 
         expect(getMissingYarnRateCandidates([savedCosting], [])).toMatchObject([
-            { yarnName: '40 POLY', category: 'yarn_warp', currentValue: 185 },
-            { yarnName: '60 VISCOSE', category: 'yarn_weft', currentValue: 210 },
+            { yarnName: '40 POLY', category: 'yarn_warp', currentValue: 185, savedQualityCount: 0 },
+            { yarnName: '60 VISCOSE', category: 'yarn_weft', currentValue: 210, savedQualityCount: 0 },
         ])
     })
 

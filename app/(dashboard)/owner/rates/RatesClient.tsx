@@ -114,6 +114,11 @@ function rowToDraft(rate: CostRateRow): CostRateInput {
     }
 }
 
+function getSavedQualityCount(rate: CostRateRow | null) {
+    const count = Number(rate?.saved_quality_count ?? 0)
+    return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0
+}
+
 function ReviewBadge({ rate }: { rate: CostRateRow }) {
     const status = getRateReviewStatus(rate)
     if (status === 'needs_review') return <div><span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700"><Info className="h-3 w-3" /> Owner review needed</span><p className="mt-1 text-[11px] text-blue-700">Discovered from a saved quality or costing</p></div>
@@ -324,6 +329,7 @@ export default function RatesClient({
     const draftRate = draft?.id ? rates.find(rate => rate.id === draft.id) ?? null : null
     const draftHasFabricUsage = Boolean(draftRate?.fabric_names?.length)
     const draftHasDiscoverySource = Boolean(draftRate?.discovery_source)
+    const draftSavedQualityCount = getSavedQualityCount(draftRate)
     const pendingMessage = pendingAction?.kind === 'save'
         ? tx('Saving this yarn rate…')
         : pendingAction?.kind === 'review'
@@ -503,7 +509,13 @@ export default function RatesClient({
                     <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
                     <SheetHeader className="border-b border-slate-200 px-6 py-5"><SheetTitle className="text-xl font-black">{tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')}</SheetTitle><SheetDescription>{tx('Set the current rate used by matching Saved Quality layers.')}</SheetDescription></SheetHeader>
                     {draft && <div className="space-y-5 px-6 py-2">
-                        <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">Future estimates use this rate.</p><p className="mt-1 text-xs leading-relaxed">Matching Saved Quality layers may be updated. Existing costing snapshots keep the rate and cost stack recorded when they were saved.</p></div></div>
+                        <div role="status" aria-live="polite" className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">{draft.id
+                            ? draftSavedQualityCount === 0
+                                ? t('common.rate_update_no_saved_quality_summary')
+                                : draftSavedQualityCount === 1
+                                    ? t('common.rate_update_saved_quality_summary_one')
+                                    : t('common.rate_update_saved_quality_summary_many', { count: draftSavedQualityCount })
+                            : t('common.rate_add_future_estimate_summary')}</p><p className="mt-1 text-xs leading-relaxed">{t('common.rate_update_snapshot_summary')}</p></div></div>
                         <div className="space-y-1.5"><Label htmlFor="cost-rate-name">Yarn name</Label><Input id="cost-rate-name" value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} aria-invalid={Boolean(saveError)} aria-describedby={saveError ? 'cost-rate-save-error' : undefined} />{Boolean(draft.id) && <p className="text-xs leading-relaxed text-slate-500"><span className="font-semibold text-slate-700">Linked-yarn rename policy:</span> this name is locked in place. To rename it, add a new rate with the replacement name and update saved qualities intentionally. Historical costing snapshots stay unchanged.</p>}{saveError && <p id="cost-rate-save-error" role="alert" className="text-xs font-medium text-destructive">{tx(saveError)}</p>}</div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Used in</Label><select value={draft.category} onChange={event => changeCategory(event.target.value as YarnRateCategory)} disabled={Boolean(draft.id)} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-100">{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select></div><div className="space-y-1.5"><Label>Unit</Label><Input value="₹ per kg" disabled className="bg-slate-100" /></div></div>
                         {draft.id && <p className="-mt-3 text-xs leading-relaxed text-slate-500">Category and unit stay fixed for a linked yarn so saved qualities and historical costings keep the same meaning.</p>}

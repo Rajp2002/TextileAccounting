@@ -41,6 +41,7 @@ export type YarnRateCandidate = {
     discoverySource: YarnRateDiscoverySource
     fabricNames: string[]
     usageNotes: string
+    savedQualityCount: number
 }
 
 export type ExistingYarnRate = {
@@ -54,6 +55,7 @@ type MutableYarnCandidate = {
     firstLayer: YarnLayerKind
     discoverySource: YarnRateDiscoverySource
     usages: YarnRateUsage[]
+    savedQualityIds: Set<string>
 }
 
 export function normalizeYarnName(value: unknown): string {
@@ -99,6 +101,7 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
     const byName = new Map<string, MutableYarnCandidate>()
 
     for (const template of templates) {
+        const templateDiscoverySource = template.discoverySource ?? 'saved_quality'
         const layers: Array<{ kind: YarnLayerKind; rows: Array<WarpRow | WeftRow> }> = [
             { kind: 'warp', rows: template.warp_rows ?? [] },
             { kind: 'weft', rows: template.weft_rows ?? [] },
@@ -114,8 +117,9 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
                     yarnName: row.label!.normalize('NFKC').trim().replace(/\s+/g, ' '),
                     normalizedName,
                     firstLayer: kind,
-                    discoverySource: template.discoverySource ?? 'saved_quality',
+                    discoverySource: templateDiscoverySource,
                     usages: [],
+                    savedQualityIds: new Set<string>(),
                 }
                 candidate.usages.push({
                     templateId: template.id,
@@ -124,6 +128,9 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
                     layerNumber: index + 1,
                     rate,
                 })
+                if (templateDiscoverySource === 'saved_quality') {
+                    candidate.savedQualityIds.add(template.id)
+                }
                 byName.set(normalizedName, candidate)
             })
         }
@@ -152,6 +159,7 @@ export function collectYarnRateCandidates(templates: YarnRateTemplate[]): YarnRa
                 discoverySource: candidate.discoverySource,
                 fabricNames,
                 usageNotes: formatYarnRateUsageNotes(fabricNames),
+                savedQualityCount: candidate.savedQualityIds.size,
             }
         })
         .sort((a, b) => a.yarnName.localeCompare(b.yarnName, 'en-IN'))

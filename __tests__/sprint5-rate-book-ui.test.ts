@@ -32,6 +32,21 @@ describe('Sprint 5 Rate Book UI boundary', () => {
     expect(client).toContain('Existing costing snapshots were not changed.')
   })
 
+  it('previews the saved-quality impact before changing a Rate Book value', () => {
+    const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const actions = read('app/(dashboard)/owner/rates/actions.ts')
+    const reconciliation = read('lib/yarn-rate-reconciliation.ts')
+    const english = read('lib/i18n/locales/en.ts')
+
+    expect(client).toContain('saved_quality_count')
+    expect(client).toContain("t('common.rate_update_saved_quality_summary_one')")
+    expect(client).toContain("t('common.rate_update_snapshot_summary')")
+    expect(actions).toContain('saved_quality_count: candidate?.savedQualityCount ?? 0')
+    expect(reconciliation).toContain('savedQualityCount: candidate.savedQualityIds.size')
+    expect(english).toContain('This will update the future-estimate rate for 1 saved quality.')
+    expect(english).toContain('Existing costing snapshots will remain unchanged.')
+  })
+
   it('uses separate, reversible Rate Book archive and activity language', () => {
     const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 

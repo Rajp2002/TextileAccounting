@@ -197,6 +197,7 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
                     ? getYarnRateDiscoverySource(rate.source) ?? candidate.discoverySource
                     : null,
                 fabric_names: candidate?.fabricNames ?? [],
+                saved_quality_count: candidate?.savedQualityCount ?? 0,
             }
         }),
         conflicts: getYarnRateConflicts(savedYarnSources),

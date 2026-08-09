@@ -26,6 +26,8 @@ export type CostRateRow = {
     discovery_source?: YarnRateDiscoverySource | null
     /** Current fabric names using this yarn, derived from saved quality/costing recipes. */
     fabric_names?: string[]
+    /** Number of active Saved Qualities whose yarn layer matches this rate. */
+    saved_quality_count?: number
 }
 
 export type RateReviewStatus = 'needs_review' | 'current' | 'due_soon' | 'overdue'
