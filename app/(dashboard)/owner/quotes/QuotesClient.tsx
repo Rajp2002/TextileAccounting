@@ -1629,7 +1629,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
                     setQuoteToExport(current => current ? { ...current, ...data } : current)
                 }}
-                onMarkAsSent={quoteToExport && quoteToExport.status === 'draft'
+                onMarkAsSent={quoteToExport
+                    && quoteToExport.record_kind === 'quotation'
+                    && canUseQuotationLifecycle(quoteToExport.record_kind, canUseQuotationWorkflow)
+                    && quoteToExport.status === 'draft'
                     ? () => handleStatusChange(quoteToExport.id, 'sent')
                     : undefined}
              />

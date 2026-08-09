@@ -151,7 +151,8 @@ export function CostingExportDialog({
   const validationErrors = useMemo(() => validateCostingExportInput(model, options), [model, options])
   const canGenerate = validationErrors.length === 0 && status !== 'saving' && status !== 'generating'
   const isBusy = status === 'saving' || status === 'generating' || sharing || markingSent
-  const canMarkSent = mode === 'customer'
+  const canMarkSent = savedQuotation
+    && mode === 'customer'
     && sourceQuoteId
     && sourceQuoteStatus === 'draft'
     && !markedSent
