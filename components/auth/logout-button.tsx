@@ -50,7 +50,10 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
 
         markLogoutTraceStage(nextTraceId, 'signout_navigation_started')
         readyForServerLogoutRef.current = true
-        formRef.current?.requestSubmit()
+        // The original submit event is already being handled and cancelled.
+        // Calling the submit-event helper here re-enters that event and can leave the
+        // UI in its loading state without starting the native navigation.
+        formRef.current?.submit()
         // The native POST response performs a full-page redirect to /login.
         // This deliberately avoids a deployment-sensitive Server Action transition.
     }

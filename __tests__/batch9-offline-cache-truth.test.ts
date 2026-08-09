@@ -83,7 +83,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         const preventDefaultIndex = logoutButton.indexOf('event.preventDefault()')
         const detachedIndex = logoutButton.indexOf('detachActiveQueryNamespace()')
         const guardFlipIndex = logoutButton.indexOf('readyForServerLogoutRef.current = true')
-        const resubmitIndex = logoutButton.indexOf('formRef.current?.requestSubmit()')
+        const nativeSubmitIndex = logoutButton.indexOf('formRef.current?.submit()')
 
         expect(logoutButton).toContain('const formRef = useRef<HTMLFormElement>(null)')
         expect(logoutButton).toContain('const readyForServerLogoutRef = useRef(false)')
@@ -91,13 +91,14 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(logoutButton).toContain('event.preventDefault()')
         expect(logoutButton).toContain('scheduleClientSessionCleanup({')
         expect(logoutButton).not.toContain('await clearClientSessionState()')
-        expect(logoutButton).toContain('formRef.current?.requestSubmit()')
+        expect(logoutButton).toContain('formRef.current?.submit()')
+        expect(logoutButton).not.toContain('requestSubmit()')
         expect(logoutButton).not.toContain("from '@/app/(auth)/actions'")
         expect(logoutButton.match(/<form ref=\{formRef\} action="\/auth\/signout" method="post" onSubmit=\{handleLogout\}>/g)).toHaveLength(2)
         expect(preventDefaultIndex).toBeGreaterThan(-1)
         expect(detachedIndex).toBeGreaterThan(preventDefaultIndex)
         expect(guardFlipIndex).toBeGreaterThan(detachedIndex)
-        expect(resubmitIndex).toBeGreaterThan(guardFlipIndex)
+        expect(nativeSubmitIndex).toBeGreaterThan(guardFlipIndex)
     })
 
     it('removes persisted user cache keys while preserving harmless local preferences', () => {

@@ -123,7 +123,8 @@ describe('Sprint 22 auth boundary', () => {
         expect(logout).toContain('setIsLoggingOut(true)')
         expect(logout).toContain('detachActiveQueryNamespace()')
         expect(logout).toContain('scheduleClientSessionCleanup({')
-        expect(logout).toContain('formRef.current?.requestSubmit()')
+        expect(logout).toContain('formRef.current?.submit()')
+        expect(logout).not.toContain('requestSubmit()')
         expect(logout).not.toContain('await clearClientSessionState()')
         for (const stage of [
             'logout_clicked',
