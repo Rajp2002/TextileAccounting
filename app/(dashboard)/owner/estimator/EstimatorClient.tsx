@@ -162,6 +162,15 @@ type FactoryCostProfile = Partial<{
     is_configured: boolean
 }>
 
+function profileHasSavedBaseline(profile?: FactoryCostProfile) {
+    if (!profile) return false
+    return Boolean(
+        profile.is_configured
+        || Number(profile.monthly_output_m ?? 0) > 0
+        || Number(profile.overhead_override_per_m ?? 0) > 0,
+    )
+}
+
 type SaveAsNewQualityRollback = {
     appliedTemplate: EstimatorTemplate | null
     templateName: string
@@ -221,7 +230,10 @@ function buildEstimatorBaseline(
         profitPct:         Number(initialProfile.default_margin_pct ?? base.profitPct),
         transportPerM: Number(profile.default_transport_per_m ?? base.transportPerM),
         enabledSections: { ...sections },
-        monthlyOutputM: profile.is_configured ? Number(profile.monthly_output_m ?? base.monthlyOutputM) : 0,
+        // The saved number is authoritative. Older profiles could retain
+        // monthly_output_m without flipping is_configured, and hiding it here
+        // made Settings saves disappear from a fresh estimator load.
+        monthlyOutputM: Number(profile.monthly_output_m ?? base.monthlyOutputM),
         overheadOverridePerM: profile.overhead_override_per_m != null
             ? Number(profile.overhead_override_per_m)
             : base.overheadOverridePerM,
@@ -235,7 +247,7 @@ function buildEstimatorBaseline(
         warpCrimpPct: profile.warp_crimp_pct != null
             ? Number(profile.warp_crimp_pct)
             : base.warpCrimpPct,
-        isConfigured: profile.is_configured ?? false,
+        isConfigured: profileHasSavedBaseline(profile),
     }
 
     if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
@@ -490,7 +502,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 processingRatePerM: Number(profile.default_processing_rate_per_m ?? state.processingRatePerM),
                 finishingRatePerM:  Number(profile.default_finishing_rate_per_m ?? state.finishingRatePerM),
                 overheadItems:      ensureOverheadIntegrity(savedItems ?? state.overheadItems),
-                monthlyOutputM:     profile.is_configured ? Number(profile.monthly_output_m ?? 0) : 0,
+                monthlyOutputM:     Number(profile.monthly_output_m ?? 0),
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadMode:        resolveOverheadMode(profile),
                 overheadPct:        0,
@@ -500,7 +512,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 profitPct:          Number(profile.default_margin_pct ?? state.profitPct),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
-                isConfigured:       profile.is_configured ?? false,
+                isConfigured:       profileHasSavedBaseline(profile),
             }
         }
         case 'MERGE_FIXED_WORKERS': {
