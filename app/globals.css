@@ -427,7 +427,15 @@
     margin-top: 1.25rem;
   }
 
+  .estimator-cost-summary-rail {
+    display: none;
+  }
+
   @media (min-width: 1660px) {
+    .estimator-primary-cockpit {
+      display: none;
+    }
+
     .estimator-reference-rail {
       position: fixed;
       top: 6rem;
@@ -439,6 +447,10 @@
       margin-top: 0;
       padding-bottom: 0.25rem;
       scrollbar-width: thin;
+    }
+
+    .estimator-cost-summary-rail {
+      display: block;
     }
   }
 

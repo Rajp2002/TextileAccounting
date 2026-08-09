@@ -1122,6 +1122,156 @@ function assumptionSourceLabel(source: string): string {
     }
 }
 
+function EstimatorCostSummaryRail({
+    activeName,
+    versionLabel,
+    validityLabel,
+    validityClassName,
+    hasValidCostResult,
+    quoteIsValid,
+    productionCostPerM,
+    suggestedSellingPricePerM,
+    actualMarginPct,
+    breakEvenPricePerM,
+    hasBreakEvenValue,
+    expectedProfitTotal,
+    orderQuantityM,
+    costSegments,
+    costStackTotal,
+    warpCount,
+    weftCount,
+}: {
+    activeName: string
+    versionLabel?: string
+    validityLabel: string
+    validityClassName: string
+    hasValidCostResult: boolean
+    quoteIsValid: boolean
+    productionCostPerM: number
+    suggestedSellingPricePerM: number
+    actualMarginPct: number | null
+    breakEvenPricePerM: number
+    hasBreakEvenValue: boolean
+    expectedProfitTotal: number | null
+    orderQuantityM: number | null
+    costSegments: Array<{ label: string; value: number; color: string; text: string }>
+    costStackTotal: number
+    warpCount: number
+    weftCount: number
+}) {
+    const marginTone = actualMarginPct === null
+        ? 'text-[var(--color-muted)]'
+        : actualMarginPct > 0
+            ? 'text-[var(--color-factory-green)]'
+            : actualMarginPct < 0
+                ? 'text-[var(--color-risk-red)]'
+                : 'text-[var(--color-warning-amber)]'
+    const marginSurface = actualMarginPct === null
+        ? 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'
+        : actualMarginPct > 0
+            ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)]'
+            : actualMarginPct < 0
+                ? 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)]'
+                : 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/55'
+
+    return (
+        <section
+            data-testid="costing-summary-rail"
+            aria-label="Live cost estimate"
+            className="estimator-cost-summary-rail overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur"
+        >
+            <div className="border-b border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-warning-amber-soft)]/80 via-white to-white px-3 py-3">
+                <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--color-yarn-orange-dark)]">Live cost estimate</p>
+                        <p className="mt-1 truncate text-[13px] font-bold text-[var(--color-ink)]" title={activeName}>{activeName}</p>
+                        {versionLabel && <p className="mt-0.5 truncate text-[10px] font-medium text-[var(--color-muted)]">{versionLabel}</p>}
+                    </div>
+                    <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--color-yarn-orange)]" aria-hidden="true" />
+                </div>
+                <div className={`mt-3 rounded-[9px] border px-2.5 py-2 text-[10px] font-semibold leading-4 ${validityClassName}`} role="status">
+                    {validityLabel}
+                </div>
+            </div>
+
+            <div className="space-y-3 px-3 py-3">
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-2.5 py-2">
+                        <p className="text-[9px] font-semibold leading-3 text-[var(--color-muted)]">Production cost / m</p>
+                        <p className="mt-1 break-words font-mono text-[1.2rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
+                            {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'}
+                        </p>
+                    </div>
+                    <div className="min-w-0 rounded-[10px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-2.5 py-2">
+                        <p className="text-[9px] font-semibold leading-3 text-[var(--color-muted)]">Suggested price / m</p>
+                        <p className="mt-1 break-words font-mono text-[1.2rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                            {hasValidCostResult && quoteIsValid ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className={`rounded-[10px] border px-2.5 py-2 ${marginSurface}`}>
+                    <div className="flex items-baseline justify-between gap-2">
+                        <p className={`text-[10px] font-semibold ${marginTone}`}>Actual margin</p>
+                        <p className={`font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
+                            {actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`}
+                        </p>
+                    </div>
+                    <p className="mt-1 text-[9px] font-medium leading-3 text-[var(--color-muted)]">
+                        {actualMarginPct === null ? 'Complete estimate' : actualMarginPct > 0 ? 'Above break-even' : actualMarginPct < 0 ? 'Below break-even' : 'At break-even'}
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 border-t border-[var(--color-hairline)]/80 pt-3">
+                    <div className="min-w-0">
+                        <p className="text-[9px] font-semibold leading-3 text-[var(--color-muted)]">Break-even / m</p>
+                        <p className="mt-1 break-words font-mono text-[13px] font-semibold tabular-nums text-[var(--color-ink)]">
+                            {hasValidCostResult && hasBreakEvenValue ? `₹${breakEvenPricePerM.toFixed(2)}` : '—'}
+                        </p>
+                    </div>
+                    {orderQuantityM && orderQuantityM > 0 && (
+                        <div className="min-w-0 text-right">
+                            <p className="text-[9px] font-semibold leading-3 text-[var(--color-muted)]">Expected profit</p>
+                            <p className={`mt-1 break-words font-mono text-[13px] font-semibold tabular-nums ${expectedProfitTotal != null && expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
+                                {hasValidCostResult && quoteIsValid && expectedProfitTotal != null
+                                    ? `₹${expectedProfitTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+                                    : '—'}
+                            </p>
+                            <p className="mt-0.5 text-[9px] font-medium text-[var(--color-muted)]">for {Number(orderQuantityM).toLocaleString('en-IN')} m</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-2 border-t border-[var(--color-hairline)]/80 pt-3">
+                    <div className="flex h-2 overflow-hidden rounded-full bg-[var(--color-surface-soft)]" aria-label="Cost composition">
+                        {costSegments.length > 0 ? costSegments.map(segment => (
+                            <div
+                                key={segment.label}
+                                className={`${segment.color} min-w-[3px] border-r border-white last:border-r-0`}
+                                style={{ width: `${Math.max(3, (segment.value / costStackTotal) * 100)}%` }}
+                            />
+                        )) : <div className="w-full bg-[var(--color-hairline)]" />}
+                    </div>
+                    <div className="flex flex-wrap gap-x-2.5 gap-y-1 text-[9px] font-semibold leading-3">
+                        {(costSegments.length > 0 ? costSegments : [{ label: 'Cost inputs', value: 0, color: 'bg-[var(--color-hairline)]', text: 'text-[var(--color-muted)]' }]).map(segment => (
+                            <span key={segment.label} className={`inline-flex items-center gap-1 ${segment.text}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${segment.color}`} aria-hidden="true" />
+                                {segment.label}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="border-t border-[var(--color-hairline)]/80 pt-3">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Material context</p>
+                    <p className="mt-1 text-[11px] font-semibold leading-4 text-[var(--color-ink)]">{warpCount} warp · {weftCount} weft components</p>
+                    <p className="mt-1 text-[9px] font-medium leading-3 text-[var(--color-muted)]">Updates live as you edit the estimate.</p>
+                </div>
+            </div>
+        </section>
+    )
+}
+
 function CostingAssumptionsSummary({
     result,
     isStandaloneCostingSession,
@@ -3536,12 +3686,12 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {/* Keep the costing workspace at its full width. The reference
-                rail is taken out of this flow on wide desktop viewports so it
-                can use the otherwise empty space at the far right. */}
+            {/* Keep the costing workspace at its full width. On wide desktop
+                viewports the live estimate moves into the spare right rail so
+                it stays visible while the owner edits lower sections. */}
             <div className="relative min-w-0">
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
-            <div className="relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
+            <div className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
                 <div className={hudShellClass}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -3989,6 +4139,27 @@ export default function EstimatorClient({
                 className="estimator-reference-rail space-y-3"
                 aria-label="Estimator reference information"
             >
+                <EstimatorCostSummaryRail
+                    activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                    versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
+                        ? `Costing v${sourceQuoteVersionNumber ?? 1}${sourceQuoteCreatedAt ? ` · ${formatDateOnly(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
+                        : 'New costing snapshot'}
+                    validityLabel={validityStatus.label}
+                    validityClassName={validityStatus.className}
+                    hasValidCostResult={hasValidCostResult}
+                    quoteIsValid={costingResult.quoteIsValid}
+                    productionCostPerM={costingResult.productionCostPerM}
+                    suggestedSellingPricePerM={costingResult.suggestedSellingPricePerM}
+                    actualMarginPct={displayMarginPct}
+                    breakEvenPricePerM={costingResult.breakEvenPricePerM}
+                    hasBreakEvenValue={breakEvenScenario?.quotePricePerM != null}
+                    expectedProfitTotal={costingResult.expectedProfitTotal}
+                    orderQuantityM={state.orderQuantityM}
+                    costSegments={costSegments}
+                    costStackTotal={costStackTotal}
+                    warpCount={state.warpRows.length}
+                    weftCount={state.weftRows.length}
+                />
                 <BasePlanFactoryGlossary />
                 <ArchivePolicyNotice />
             </aside>
