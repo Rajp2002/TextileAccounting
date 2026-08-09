@@ -16,6 +16,7 @@ import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { nanoid } from 'nanoid'
 import { FACTORY_COST_PRESETS, getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
 
@@ -37,12 +38,13 @@ function RateInput({
     icon?:    React.ElementType
 }) {
     const inputId = useId()
+    const { tx } = useTranslation()
 
     return (
         <div className="space-y-1.5">
             <Label htmlFor={inputId} className="flex items-center gap-1.5 text-xs font-semibold text-body">
                 {Icon && <Icon className="h-3.5 w-3.5 text-subtle" />}
-                {label}
+                {tx(label)}
             </Label>
             <div className="relative">
                 <Input
@@ -56,11 +58,11 @@ function RateInput({
                 />
                 {unit && (
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
-                        {unit}
+                        {tx(unit)}
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+            {hint && <p className="text-[11px] text-muted-foreground">{tx(hint)}</p>}
         </div>
     )
 }
@@ -80,12 +82,13 @@ function SectionToggle({
 }) {
     const switchId = useId()
     const descriptionId = `${switchId}-description`
+    const { tx } = useTranslation()
 
     return (
         <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-lg border border-hairline bg-canvas/55 px-4 py-3">
             <div className="min-w-0">
-                <Label htmlFor={switchId} className="text-sm font-semibold text-ink">{label}</Label>
-                <p id={descriptionId} className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                <Label htmlFor={switchId} className="text-sm font-semibold text-ink">{tx(label)}</Label>
+                <p id={descriptionId} className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{tx(description)}</p>
             </div>
             <Switch
                 id={switchId}
@@ -100,6 +103,7 @@ function SectionToggle({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
+    const { tx } = useTranslation()
     const [loading, setLoading]   = useState(true)
     const [loadError, setLoadError] = useState<string | null>(null)
     const [saving, setSaving]     = useState(false)
@@ -305,13 +309,13 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     <div className="flex items-start gap-3">
                         <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                         <div className="space-y-1">
-                            <p className="text-sm font-semibold text-ink">{standaloneEstimator ? 'Cost Estimate Defaults are unavailable' : 'Factory Cost Profile is unavailable'}</p>
+                            <p className="text-sm font-semibold text-ink">{tx(standaloneEstimator ? 'Cost Estimate Defaults are unavailable' : 'Factory Cost Profile is unavailable')}</p>
                             <p className="text-sm leading-relaxed text-muted-foreground">{loadError}</p>
                         </div>
                     </div>
                     <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void loadProfile()}>
                         <RefreshCw className="h-3.5 w-3.5" />
-                        Retry
+                        {tx('Retry')}
                     </Button>
                 </CardContent>
             </Card>
@@ -324,12 +328,12 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-saffron" />
-                    <CardTitle className="text-base">{standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile'}</CardTitle>
+                    <CardTitle className="text-base">{tx(standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile')}</CardTitle>
                 </div>
                 <CardDescription>
-                    {standaloneEstimator
+                    {tx(standaloneEstimator
                         ? 'Defaults that pre-fill new Cost Estimates. Your current estimate stays separate.'
-                        : 'Defaults for new estimates only. Existing saved costings keep the numbers captured when they were saved.'}
+                        : 'Defaults for new estimates only. Existing saved costings keep the numbers captured when they were saved.')}
                 </CardDescription>
             </CardHeader>
 
@@ -338,8 +342,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Factory type' : 'Factory Type'}</Label>
-                        <p className="mt-1 text-xs text-muted-foreground">Choose a starting setup. It is a preview until you save it for new Cost Estimates.</p>
+                        <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'Factory type' : 'Factory Type')}</Label>
+                        <p className="mt-1 text-xs text-muted-foreground">{tx('Choose a starting setup. It is a preview until you save it for new Cost Estimates.')}</p>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
                         {FACTORY_COST_PRESETS.map(preset => (
@@ -355,20 +359,20 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             >
                                 <div className="text-xl mb-1">{preset.emoji}</div>
                                 <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                                    {preset.label}
-                                    {preset.recommended && <span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-dark">Recommended</span>}
+                                    {tx(preset.label)}
+                                    {preset.recommended && <span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-dark">{tx('Recommended')}</span>}
                                 </div>
-                                <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{preset.description}</div>
+                                <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{tx(preset.description)}</div>
                             </button>
                         ))}
                     </div>
                     {activePreset === 'grey_weaver' && (
                         <p className="rounded-lg border border-saffron/20 bg-saffron-soft/25 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                            Grey Weaver keeps the estimator focused on yarn, weaving, warping, sizing, and factory expenses. Processing, finishing, broker commission, and transport are off until you enable them.
+                            {tx('Grey Weaver keeps the estimator focused on yarn, weaving, warping, sizing, and factory expenses. Processing, finishing, broker commission, and transport are off until you enable them.')}
                         </p>
                     )}
                     <p className="rounded-lg border border-info/20 bg-info/5 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                        {dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.'}
+                        {tx(dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.')}
                     </p>
                 </div>
 
@@ -521,7 +525,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                                 {item.category === 'rent' ? <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <Calculator className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
                                                 <Input
                                                     aria-label={`${item.label} expense name`}
-                                                    value={item.label}
+                                                    value={item.isPreset ? tx(item.label) : item.label}
                                                     disabled={item.isPreset}
                                                     onChange={event => updateOverheadItem(item.id, 'label', event.target.value)}
                                                     className="h-8 min-w-0 border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:ring-0"
@@ -543,7 +547,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                             {!item.isPreset && (
                                                 <button
                                                     type="button"
-                                                    aria-label={`Remove ${item.label}`}
+                                                    aria-label={`${tx('Remove')} ${item.label}`}
                                                     onClick={() => { setDirty(true); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
                                                     className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
                                                 >

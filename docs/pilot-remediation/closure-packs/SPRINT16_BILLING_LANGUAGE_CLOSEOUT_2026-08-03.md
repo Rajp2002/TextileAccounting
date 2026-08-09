@@ -1,14 +1,14 @@
 # Sprint 16 — Billing trust and usable local language closeout
 
-**Date:** 2026-08-03 IST  
+**Date:** 2026-08-04 IST
 **Scope:** Base Plan billing, language, dates, terminology, and archive policy
 
 ## Disposition
 
-The code-level Sprint 16 controls are implemented. The paid pilot must still
-complete a short owner/staff walkthrough with a Surat reviewer before this
-pack is treated as final runtime sign-off. No human reviewer evidence is
-claimed by this document.
+The code-level Sprint 16 controls are implemented and merged to `main`. The
+paid pilot still needs a short owner/staff walkthrough with a Surat reviewer
+before this pack is treated as final runtime sign-off. No human reviewer
+evidence is claimed by this document.
 
 ## 16.1 GST document decision
 
@@ -55,11 +55,43 @@ is understood by the intended owner and staff users.
 - The notices state that archived data remains stored under the organisation's
   retention/privacy controls and can be included in organization export.
 
+## QA iteration — 2026-08-04 IST
+
+**Run:** `BASEQA-20260804-1416-3QB6`
+**Environment:** `https://textile-accounting.vercel.app` (canonical production alias)
+**Scope:** paid Base owner QA; visible tenant `Base pilot testing`; visible plan `Estimator Plan`
+**Release proof:** production deployment for commit `8a678e3` reached `READY` on Vercel before the live checks.
+
+The refreshed production shell showed the expected Base surfaces: Cost Estimate,
+Yarn Rate Book, Saved Costings, Settings, and Billing. On the live Hindi pass,
+the estimator, Rate Book, Saved Costings, and Settings were opened without
+writing customer data. Navigation retained Hindi, and after Hindi was selected
+on the ready build, reloading the Rate Book retained Hindi. The estimator
+exposed the approved factory vocabulary and one-line PPI explanation; archive
+copy stated that archiving removes a record from active lists, preserves it for
+restore, and does not permanently delete it.
+
+The live Hindi snapshot also exposed remaining mixed fragments in some legacy
+Settings and Saved Costings copy (for example, fixed helper/action fragments
+around `costing`, `m/mo`, and preset expense labels). A follow-up source fix on
+`codex/sprint16-base-qa-closeout` tightens those phrases, the GST receipt-only
+locale copy, archive wording, and dynamic payment/renewal actions. That
+follow-up is not claimed as production-verified until the browser pass is
+repeated.
+
+The required in-app Browser connection then became unavailable while opening
+Billing. Per the QA scope, no alternate browser or preview deployment was
+used. Gujarati coverage, the post-follow-up Billing screen, payment receipt
+confirmation, and the Base `/owner/orders` upgrade boundary therefore remain
+runtime evidence pending. The earlier production check recorded the GST state
+as `Not-Supported` and the payment-receipt-only limitation; this iteration did
+not re-open Billing after the new deployment.
+
 ## Verification
 
-The implementation passed the repository verification gates on 2026-08-03:
+The implementation passed the repository verification gates on 2026-08-04:
 
-- `npm run test`: 137 test files passed; 875 tests passed and 1 test was skipped.
+- `npm run test`: 139 test files passed; 885 tests passed and 1 test was skipped.
 - `npm run lint`: passed.
 - `npx tsc --noEmit`: passed; the production build also completed its TypeScript check.
 - `npm run build`: passed, including the pre-build test run, production compilation,

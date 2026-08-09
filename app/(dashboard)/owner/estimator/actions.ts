@@ -8,7 +8,7 @@ import { getFirstEstimatorValidationMessage, requiresFactoryCapacity, validateEs
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
-import { getOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getCachedOrgTier, getOrgTier, tierSatisfies } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
 import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
@@ -475,7 +475,7 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     // current recipe/rate rows should combine with the latest linked costing
     // assumptions. Full Suite keeps its existing quality-vs-quotation
     // separation and does not receive this Base-only enrichment.
-    const effectiveTier = await getOrgTier(profile.org_id)
+    const effectiveTier = await getCachedOrgTier(profile.org_id)
     if (effectiveTier !== 'base' || templates.length === 0) return { data: templates }
 
     const templateIds = templates.map(template => template.id).filter(Boolean)

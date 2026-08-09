@@ -297,6 +297,16 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     privacy: "गोपनीयता",
     payment: "भुगतान",
     payments: "भुगतान",
+    pay: "भुगतान करें",
+    renew: "नवीनीकरण करें",
+    renewal: "रिन्यूअल",
+    business: "बिज़नेस",
+    role: "भूमिका",
+    audit: "ऑडिट",
+    focused: "केंद्रित",
+    keeps: "रखता है",
+    month: "महीना",
+    months: "महीने",
     part: "हिस्सा",
     parts: "हिस्से",
     permanent: "स्थायी",
@@ -331,7 +341,6 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     billing: "बिलिंग",
     period: "अवधि",
     annual: "वार्षिक",
-    renewal: "रिन्यूअल",
     included: "शामिल",
     every: "हर",
     year: "वर्ष",
@@ -663,6 +672,15 @@ const WORD_TRANSLATIONS: Record<LocalLanguage, WordTranslations> = {
     privacy: "ગોપનીયતા",
     payment: "ચૂકવણી",
     payments: "ચૂકવણીઓ",
+    pay: "ચૂકવો",
+    renew: "રિન્યુ કરો",
+    business: "બિઝનેસ",
+    role: "ભૂમિકા",
+    audit: "ઑડિટ",
+    focused: "કેન્દ્રિત",
+    keeps: "રાખે છે",
+    month: "મહિનો",
+    months: "મહિના",
     part: "ભાગ",
     parts: "ભાગો",
     permanent: "કાયમી",
@@ -1161,6 +1179,31 @@ export function translateStrictBasePlanText(source: string, language: RuntimeLan
 }
 
 function translateStrictBasePlanPattern(source: string, language: LocalLanguage) {
+  const paymentAction = source.match(/^Pay (₹\s*[\d,.]+) & (Activate|Renew)$/i)
+  if (paymentAction) {
+    const amount = paymentAction[1]
+    const action = paymentAction[2].toLowerCase() === "renew"
+      ? language === "hi" ? "नवीनीकरण करें" : "રિન્યુ કરો"
+      : language === "hi" ? "सक्रिय करें" : "સક્રિય કરો"
+    return language === "hi"
+      ? `${amount} भुगतान करें और ${action}`
+      : `${amount} ચૂકવો અને ${action}`
+  }
+
+  const renewFor = source.match(/^Renew for (₹\s*[\d,.]+)$/i)
+  if (renewFor) {
+    return language === "hi"
+      ? `${renewFor[1]} के लिए नवीनीकरण करें`
+      : `${renewFor[1]} માટે રિન્યુ કરો`
+  }
+
+  const renewalWindow = source.match(/^Renewal opens on (.+) \((\d+) days before expiry\)\. No automatic charge will be made\.$/i)
+  if (renewalWindow) {
+    return language === "hi"
+      ? `रिन्यूअल ${renewalWindow[1]} को खुलेगा (समाप्ति से ${renewalWindow[2]} दिन पहले)। कोई स्वचालित शुल्क नहीं लिया जाएगा।`
+      : `રિન્યુઅલ ${renewalWindow[1]}ના રોજ ખુલશે (સમાપ્તિથી ${renewalWindow[2]} દિવસ પહેલાં). કોઈ આપમેળે ચાર્જ લેવામાં આવશે નહીં.`
+  }
+
   const greaterThanZero = source.match(/^(.+?) must be greater than 0\.?$/i)
   if (greaterThanZero) {
     return language === "hi"
