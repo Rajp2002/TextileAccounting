@@ -56,8 +56,6 @@ import {
     DEFAULT_OVERHEAD_ITEMS,
     DEFAULT_FACTORY_SECTIONS,
     ensureOverheadIntegrity,
-    cottonCountNeToDenier,
-    denierToCottonCountNe,
     getEffectiveYarnDenier,
     getEffectiveCostingWidthCm,
     getWidthWarnings,
@@ -926,62 +924,29 @@ function YarnDensityFields({
     row: YarnDensityRow
     onChange: (field: YarnDensityField, value: YarnLinearDensityUnit | number | null) => void
 }) {
-    const unit = row.linearDensityUnit === 'cotton_count_ne' ? 'cotton_count_ne' : 'denier'
-    const countNe = Number(row.cottonCountNe ?? 0)
     const effectiveDenier = getEffectiveYarnDenier(row)
     const densityWarning = getYarnDensityWarning(effectiveDenier)
 
-    const changeUnit = (nextUnit: YarnLinearDensityUnit) => {
-        if (nextUnit === 'cotton_count_ne') {
-            const nextCount = countNe > 0 ? countNe : denierToCottonCountNe(Number(row.calcDenier ?? 0))
-            onChange('cottonCountNe', nextCount > 0 ? nextCount : null)
-            onChange('calcDenier', nextCount > 0 ? cottonCountNeToDenier(nextCount) : 0)
-        } else {
-            onChange('calcDenier', effectiveDenier)
-        }
-        onChange('linearDensityUnit', nextUnit)
-    }
-
     return (
-        <>
-            <div className="min-w-0 space-y-1.5">
-                <Label
-                    htmlFor={`yarn-density-unit-${row.id}`}
-                    className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]"
-                >
-                    Yarn numbering
-                </Label>
-                <select
-                    id={`yarn-density-unit-${row.id}`}
-                    value={unit}
-                    onChange={event => changeUnit(event.target.value as YarnLinearDensityUnit)}
-                    className="h-11 w-full rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-3 text-xs font-semibold text-[var(--color-ink)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all hover:border-[var(--color-hairline-strong)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 sm:text-sm"
-                >
-                    <option value="denier">Denier (D)</option>
-                    <option value="cotton_count_ne">English cotton count (Ne)</option>
-                </select>
-            </div>
-            <NumField
-                label={`${unit === 'cotton_count_ne' ? 'English cotton count' : 'Effective denier'} — REQUIRED`}
-                value={unit === 'cotton_count_ne' ? (countNe || null) : row.calcDenier}
-                onChange={value => {
-                    if (unit === 'cotton_count_ne') {
-                        onChange('cottonCountNe', value)
-                        onChange('calcDenier', value && value > 0 ? cottonCountNeToDenier(value) : 0)
-                    } else {
-                        onChange('calcDenier', value ?? 0)
-                    }
-                }}
-                unit={unit === 'cotton_count_ne' ? 'Ne' : 'D'}
-                step={0.1}
-                placeholder={unit === 'cotton_count_ne' ? 'e.g. 40' : 'e.g. 75'}
-                hint={unit === 'cotton_count_ne' && effectiveDenier > 0
-                    ? `Converted for costing: ${effectiveDenier.toFixed(3)} D (5315 ÷ Ne)`
-                    : 'Enter total linear density after any ply or doubling'}
-                warning={densityWarning}
-                attentionWhenEmpty
-            />
-        </>
+        <NumField
+            label="Denier — REQUIRED"
+            value={effectiveDenier}
+            onChange={value => {
+                // Keep previously saved cotton-count rows editable as denier
+                // rows now that the unit selector is no longer exposed.
+                if (row.linearDensityUnit === 'cotton_count_ne') {
+                    onChange('linearDensityUnit', 'denier')
+                    onChange('cottonCountNe', null)
+                }
+                onChange('calcDenier', value ?? 0)
+            }}
+            unit="D"
+            step={0.1}
+            placeholder="e.g. 75"
+            hint="Enter total linear density after any ply or doubling"
+            warning={densityWarning}
+            attentionWhenEmpty
+        />
     )
 }
 
