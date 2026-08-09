@@ -56,7 +56,7 @@ describe('sign-in critical-path performance', () => {
         expect(ownerBranch).toContain("return succeed('/owner/today')")
     })
 
-    it('defers the tier lookup for completed owners to the request-cached dashboard gate', () => {
+    it('routes Base Plan owners to the estimator and Full Suite owners to Factory Today', () => {
         const authActions = read('app/(auth)/actions/auth.ts')
         const signInBody = authActions.slice(
             authActions.indexOf('export async function signIn'),
@@ -65,11 +65,14 @@ describe('sign-in critical-path performance', () => {
         const ownerBranch = signInBody.slice(signInBody.indexOf("if (userRole === 'owner')"))
         const incompleteBranch = ownerBranch.indexOf('if (!onboardingComplete)')
         const tierLookup = ownerBranch.indexOf("telemetry.measure('tier_lookup'")
+        const baseDestination = ownerBranch.lastIndexOf("return succeed('/owner/estimator')")
         const completedDestination = ownerBranch.lastIndexOf("return succeed('/owner/today')")
 
         expect(incompleteBranch).toBeGreaterThan(-1)
-        expect(tierLookup).toBeGreaterThan(incompleteBranch)
+        expect(tierLookup).toBeGreaterThan(-1)
+        expect(baseDestination).toBeGreaterThan(incompleteBranch)
         expect(completedDestination).toBeGreaterThan(tierLookup)
+        expect(ownerBranch).toContain("if (tier === 'base') return succeed('/owner/estimator')")
 
         const todayLayout = read('app/(dashboard)/owner/today/layout.tsx')
         expect(todayLayout).toContain('requiredTier="premium"')

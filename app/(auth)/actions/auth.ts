@@ -493,15 +493,19 @@ export async function signIn(input: { email: string; password: string; traceId?:
             return fail('Account setup incomplete. Please contact support.', 'missing_organization')
         }
 
+        // Resolve the effective workspace tier before choosing the landing
+        // route. A Premium organization using the Base Plan experience has an
+        // effective tier of `base`, so sending it to Factory Today would land
+        // behind the Full Suite access wall.
+        const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
+
         if (!onboardingComplete) {
-            // Preserve the existing tier-first destination for partially set-up
-            // accounts. Completed owners defer this lookup to the owner layout,
-            // where it is already required and request-cached for AccessGate.
-            const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
             if (tier === 'base') return succeed('/owner/estimator')
             if (tier === 'none') return succeed('/owner/billing')
             return succeed('/onboarding')
         }
+
+        if (tier === 'base') return succeed('/owner/estimator')
         return succeed('/owner/today')
     } else if (userRole === 'supervisor') {
         return succeed('/supervisor/dashboard')
