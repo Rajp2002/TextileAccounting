@@ -20,4 +20,11 @@ Sentry.init({
     },
 })
 
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart
+export function onRouterTransitionStart(...args: Parameters<typeof Sentry.captureRouterTransitionStart>) {
+    try {
+        performance.mark('route_navigation_start')
+    } catch {
+        // Performance marks are diagnostic only.
+    }
+    return Sentry.captureRouterTransitionStart(...args)
+}

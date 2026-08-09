@@ -1,6 +1,7 @@
 import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isUserRevoked } from '@/lib/rate-limit'
@@ -123,10 +124,14 @@ export const getCachedSession = cache(async (): Promise<{
 
     if (!user) return null
 
-    // Explicit revocation must invalidate every still-live browser/device JWT.
-    // Supabase access tokens remain valid until expiry, so the server-owned
-    // revocation marker is checked on every new authenticated request.
-    if (await isUserRevoked(user.id)) return null
+    // Proxy is the normal-request revocation authority and forwards an
+    // internal marker after the check. Keep this fallback for direct/internal
+    // callers that do not pass through Proxy; it is not client-trustable
+    // because Proxy strips browser-supplied values before setting the marker.
+    const revocationCheckedByProxy = (await headers()).get('x-weavly-revocation-checked') === '1'
+    if (!revocationCheckedByProxy) {
+        if (await isUserRevoked(user.id)) return null
+    }
 
     // Always validate authorization-critical claims against the profile row.
     // JWT app_metadata is useful for routing, but server actions/data loaders must

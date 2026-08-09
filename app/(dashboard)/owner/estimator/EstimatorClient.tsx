@@ -78,10 +78,10 @@ import {
 } from '@/lib/estimator'
 import {
     getFactoryCostProfile,
+    getEstimatorSecondaryData,
     getEstimatorTemplates,
     saveAsFabricTemplate,
     saveEstimatorQuoteV3,
-    getFixedWorkersForOverhead,
     updateTemplateRates,
     updateFabricTemplate,
     getLastQuoteForParty,
@@ -98,7 +98,10 @@ import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
-import FactoryCostWizard from './FactoryCostWizard'
+const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
+    ssr: false,
+    loading: () => null,
+})
 import {
     getEstimatorWorkflowConfig,
     type EstimatorWorkflowMode,
@@ -117,6 +120,7 @@ import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
@@ -2202,6 +2206,8 @@ export default function EstimatorClient({
     const saveQuoteLockRef = useRef(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<EstimatorTemplate[]>(initialTemplates ?? [])
+    const [templatesLoaded, setTemplatesLoaded] = useState(initialTemplates !== undefined)
+    const [secondaryError, setSecondaryError] = useState<string | null>(null)
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
 
@@ -2212,6 +2218,7 @@ export default function EstimatorClient({
 
     const [partyName,       setPartyName]       = useState('')
     const [partyNames,      setPartyNames]      = useState(initialPartyNames)
+    const [staleRateNames,  setStaleRateNames]  = useState(staleDefaultRateNames)
     const [qualityLabel,    setQualityLabel]    = useState('')
     const [warpInstruction, setWarpInstruction] = useState('')
     const [weftInstruction, setWeftInstruction] = useState('')
@@ -2493,16 +2500,14 @@ export default function EstimatorClient({
         applyEstimatorDraft()
     }, [applyEstimatorDraft, draft, hasDraft])
 
-    // Fallback fetch: only runs if no initial data was server-provided
+    // Fallback fetch for an older caller that did not provide the critical
+    // factory profile. It remains read-only; first-visit profile creation is
+    // reserved for the explicit settings editor.
     useEffect(() => {
         if (initialProfile !== undefined) return
         async function load() {
             setLoading(true)
-            const [pRes, tRes, wRes] = await Promise.all([
-                getFactoryCostProfile(),
-                getEstimatorTemplates(),
-                getFixedWorkersForOverhead(),
-            ])
+            const pRes = await getFactoryCostProfile({ createIfMissing: false })
             if (pRes.data) {
                 setFactoryBaselineUpdatedAt(pRes.data.updated_at ?? null)
                 rawDispatch({
@@ -2515,18 +2520,52 @@ export default function EstimatorClient({
                     },
                 })
             }
-            if (tRes.data) setTemplates(tRes.data)
-            if (wRes.data && wRes.data.length > 0) {
-                const profileHasItems = Array.isArray(pRes.data?.overhead_items) && pRes.data.overhead_items.length > 0
-                if (!profileHasItems) {
-                    rawDispatch({ type: 'MERGE_FIXED_WORKERS', workers: wRes.data })
-                }
-            }
             setLoading(false)
         }
         load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    // Saved qualities, premium-only worker inputs, party suggestions, and
+    // review badges are independent of the blank editor. Hydrate them after
+    // the primary task is interactive and never replace values entered by the
+    // owner while the secondary request is in flight.
+    useEffect(() => {
+        if (initialTemplates !== undefined) return
+        let cancelled = false
+        setTemplatesLoaded(false)
+        setSecondaryError(null)
+
+        void getEstimatorSecondaryData()
+            .then(result => {
+                if (cancelled) return
+                if (result.error) {
+                    setSecondaryError(result.error)
+                    setTemplatesLoaded(true)
+                    return
+                }
+
+                setTemplates(result.templates ?? [])
+                setPartyNames(result.partyNames ?? [])
+                setStaleRateNames(result.staleDefaultRateNames ?? [])
+
+                const profileHasItems = Array.isArray(initialProfile?.overhead_items)
+                    && initialProfile.overhead_items.length > 0
+                if (!profileHasItems && (result.workers ?? []).length > 0) {
+                    rawDispatch({ type: 'MERGE_FIXED_WORKERS', workers: result.workers ?? [] })
+                }
+                setTemplatesLoaded(true)
+            })
+            .catch(error => {
+                if (cancelled) return
+                setSecondaryError(error instanceof Error ? error.message : 'Estimator secondary data could not be loaded.')
+                setTemplatesLoaded(true)
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [initialProfile, initialTemplates])
 
     // Autosave: persist on every state change (debounced)
     useEffect(() => {
@@ -3304,7 +3343,7 @@ export default function EstimatorClient({
         if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0)) {
             return toast.error(tx('Set a quantity before saving'))
         }
-        if (staleDefaultRateNames.length > 0 && !staleRatesAcknowledged) {
+        if (staleRateNames.length > 0 && !staleRatesAcknowledged) {
             setPendingStaleRateSave({ targetMode, status, recordKindOverride })
             return
         }
@@ -3626,6 +3665,12 @@ export default function EstimatorClient({
     ].filter(line => line.value > 0)
     return (
         <div className="estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
+            <RouteMilestones
+                route="/owner/estimator"
+                shellVisible
+                primaryUsable
+                secondaryReady={templatesLoaded}
+            />
             {!state.isConfigured && (
                 <FactoryCostWizard 
                     initialState={state}
@@ -4283,7 +4328,7 @@ export default function EstimatorClient({
                                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                                     <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-yarn-orange-dark)]">{t('estimator.quality.savedQualitiesEyebrow')}</p>
                                     <span className="inline-flex items-center rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-[10px] font-bold text-[var(--color-yarn-orange-dark)]">
-                                        {t('estimator.quality.savedQualityCount', { count: templates.length })}
+                                        {templatesLoaded ? t('estimator.quality.savedQualityCount', { count: templates.length }) : tx('Loading saved qualities…')}
                                     </span>
                                 </div>
                                 <h2 id="saved-qualities-title" className="mt-1 text-[17px] font-bold leading-5 text-[var(--color-ink)] sm:text-[18px]">{t('estimator.quality.myQualities')}</h2>
@@ -4293,6 +4338,16 @@ export default function EstimatorClient({
                     </div>
 
                     <div className="space-y-4 px-4 py-4 sm:px-5 sm:py-5">
+                        {!templatesLoaded && (
+                            <div className="rounded-[12px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)]/55 px-3.5 py-3.5 text-xs font-medium text-[var(--color-muted)]" role="status">
+                                {tx('Saved qualities and optional estimator tools are loading…')}
+                            </div>
+                        )}
+                        {secondaryError && (
+                            <div className="rounded-[12px] border border-amber-300 bg-amber-50 px-3.5 py-3.5 text-xs font-medium text-amber-900" role="status">
+                                {tx('Saved quality details are temporarily unavailable. The Cost Estimate remains ready to use.')}
+                            </div>
+                        )}
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             {/* Search — only shown when there are more than 5 qualities */}
                             {templates.length > 5 ? (
@@ -4392,7 +4447,7 @@ export default function EstimatorClient({
                             </p>
                         )}
 
-                        {templates.length === 0 ? (
+                        {!templatesLoaded ? null : templates.length === 0 ? (
                             <div className="flex items-start gap-3 rounded-[12px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)]/55 px-3.5 py-3.5 sm:items-center">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white text-[var(--color-yarn-orange)] shadow-sm">
                                     <BookmarkPlus className="h-4 w-4" aria-hidden="true" />
@@ -5761,7 +5816,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                         <p className="text-xs font-bold uppercase tracking-wide text-amber-800">Overdue defaults</p>
-                        <p className="mt-1 text-sm font-medium text-amber-950">{staleDefaultRateNames.join(', ')}</p>
+                        <p className="mt-1 text-sm font-medium text-amber-950">{staleRateNames.join(', ')}</p>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => { setPendingStaleRateSave(null); router.push('/owner/rates') }}>

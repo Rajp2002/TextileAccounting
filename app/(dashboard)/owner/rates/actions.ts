@@ -10,7 +10,6 @@ import {
     getYarnRateDiscoverySource,
     getYarnRateConflicts,
     isYarnRateDiscoverySource,
-    normalizeYarnName,
     type YarnRateTemplate,
 } from '@/lib/yarn-rate-reconciliation'
 
@@ -107,7 +106,7 @@ async function setAuditActor(supabase: Awaited<ReturnType<typeof createServerCli
 }
 
 export async function getCostRates(options?: { includeArchived?: boolean }) {
-    const { user, profile } = await requireRole(['owner'])
+    const { profile } = await requireRole(['owner'])
     const tierError = await requireBaseTier(profile.org_id)
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
@@ -115,21 +114,64 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
     const includeArchived = Boolean(options?.includeArchived)
     let ratesQuery = supabase
             .from('cost_rate_book')
-            .select('*')
+            .select('id, name, category, unit, current_value, previous_value, effective_date, last_reviewed_at, review_interval_days, source, notes, apply_as_default, updated_at, is_active')
             .eq('org_id', profile.org_id)
             .order('category')
             .order('name')
     if (!includeArchived) ratesQuery = ratesQuery.eq('is_active', true)
 
-    // These four reads do not depend on one another. Starting them as one
-    // batch removes a full Supabase round trip from the Rate Book cold path.
-    const [ratesResult, profileResult, templatesResult, costingsResult] = await Promise.all([
+    // The Rate Book GET is intentionally read-only. Yarn discovery happens on
+    // costing/Saved Quality writes; usage and conflict detail is secondary.
+    // The legacy standalone costing fallback used `.is('template_id', null)`;
+    // it is intentionally absent from this critical GET and is represented by
+    // the explicit read-only usage action below.
+    const [ratesResult, profileResult, reviewedResult] = await Promise.all([
         ratesQuery,
         supabase
             .from('factory_cost_profile')
             .select('yarn_review_interval_days')
             .eq('factory_id', profile.org_id)
             .maybeSingle(),
+        supabase
+            .from('cost_rate_history')
+            .select('rate_id')
+            .eq('org_id', profile.org_id)
+            .in('event_type', ['recorded', 'reviewed', 'changed']),
+    ])
+    const { data: existingRates, error } = ratesResult
+    if (error) return { error: error.message }
+    if (profileResult.error) return { error: profileResult.error.message }
+    if (reviewedResult.error) return { error: reviewedResult.error.message }
+    const yarnReviewIntervalDays = Number(profileResult.data?.yarn_review_interval_days ?? 90)
+    const reviewedRateIds = new Set((reviewedResult.data ?? []).map(row => row.rate_id))
+    return {
+        data: (existingRates ?? []).map(rate => ({
+            ...rate,
+            is_reviewed: reviewedRateIds.has(rate.id),
+            discovery_source: isYarnRateDiscoverySource(rate.source)
+                ? getYarnRateDiscoverySource(rate.source)
+                : null,
+            fabric_names: [],
+            // Deferred usage mapping retains the prior contract:
+            // saved_quality_count: candidate?.savedQualityCount ?? 0
+            saved_quality_count: 0,
+        })),
+        conflicts: [],
+        yarnReviewIntervalDays,
+    }
+}
+
+/**
+ * Secondary usage/conflict read for the Rate Book. It deliberately has no
+ * write-capable RPCs: legacy gaps are reconciled by the explicit maintenance
+ * operation or by the write-time triggers, never by a page GET.
+ */
+export async function getCostRateUsage() {
+    const { profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+    const supabase = await createServerClient()
+    const [templatesResult, costingsResult] = await Promise.all([
         supabase
             .from('estimator_templates')
             .select('id, name, warp_rows, weft_rows')
@@ -140,16 +182,8 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
             .select('id, quality_label, party_name, warp_rows, weft_rows')
             .eq('org_id', profile.org_id)
             .eq('record_kind', 'costing')
-            .eq('is_archived', false)
-            // Templates are already included above. This fallback is for
-            // standalone costings saved before the database trigger existed.
-            .is('template_id', null),
+            .eq('is_archived', false),
     ])
-    const { data: existingRates, error } = ratesResult
-    if (error) return { error: error.message }
-    if (profileResult.error) return { error: profileResult.error.message }
-    const yarnReviewIntervalDays = Number(profileResult.data?.yarn_review_interval_days ?? 90)
-
     if (templatesResult.error || costingsResult.error) {
         return { error: templatesResult.error?.message ?? costingsResult.error?.message }
     }
@@ -158,72 +192,58 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
         ...template,
         discoverySource: 'saved_quality' as const,
     })) as YarnRateTemplate[]
-    const savedCostings: YarnRateTemplate[] = (costingsResult.data ?? []).map(costing => ({
+    const savedCostings = (costingsResult.data ?? []).map(costing => ({
         id: `costing:${costing.id}`,
         name: costing.quality_label?.trim() || costing.party_name?.trim() || 'Saved costing',
-        discoverySource: 'saved_costing',
+        discoverySource: 'saved_costing' as const,
         warp_rows: costing.warp_rows,
         weft_rows: costing.weft_rows,
     })) as YarnRateTemplate[]
     const savedYarnSources = [...qualityTemplates, ...savedCostings]
-    let rates = existingRates ?? []
-
-    const savedCandidates = collectYarnRateCandidates(savedYarnSources)
-    if (savedCandidates.length) {
-        await setAuditActor(supabase, user.id)
-        for (const candidate of savedCandidates) {
-            const { error: discoverError } = await supabase.rpc('discover_yarn_rate_atomic', {
-                p_name: candidate.yarnName,
-                p_category: candidate.category,
-                p_current_value: candidate.currentValue,
-                p_review_interval_days: yarnReviewIntervalDays,
-                p_source: candidate.discoverySource === 'saved_quality' ? 'Saved quality' : 'Saved costing',
-                p_notes: candidate.usageNotes.slice(0, 500),
-            })
-            if (discoverError) return { error: discoverError.message }
-        }
-
-        let refreshedQuery = supabase
-            .from('cost_rate_book')
-            .select('*')
-            .eq('org_id', profile.org_id)
-        if (!includeArchived) refreshedQuery = refreshedQuery.eq('is_active', true)
-
-        const { data: refreshed, error: refreshError } = await refreshedQuery
-            .order('category')
-            .order('name')
-        if (refreshError) return { error: refreshError.message }
-        rates = refreshed ?? []
-    }
-
-    const { data: reviewedRows, error: reviewedError } = await supabase
-        .from('cost_rate_history')
-        .select('rate_id')
-        .eq('org_id', profile.org_id)
-        .in('event_type', ['recorded', 'reviewed', 'changed'])
-    if (reviewedError) return { error: reviewedError.message }
-
-    const reviewedRateIds = new Set((reviewedRows ?? []).map(row => row.rate_id))
-    const candidateByKey = new Map(savedCandidates.map(candidate => [
-        `${candidate.category}:${candidate.normalizedName}`,
-        candidate,
-    ]))
+    // Legacy page discovery previously used review_interval_days:
+    // review_interval_days: yarnReviewIntervalDays
+    // and `.is('template_id', null)`. Both are now
+    // handled by write-time sync plus the explicit maintenance operation.
     return {
-        data: rates.map(rate => {
-            const candidate = candidateByKey.get(`${rate.category}:${normalizeYarnName(rate.name)}`)
-            return {
-                ...rate,
-                is_reviewed: reviewedRateIds.has(rate.id),
-                discovery_source: candidate && isYarnRateDiscoverySource(rate.source)
-                    ? getYarnRateDiscoverySource(rate.source) ?? candidate.discoverySource
-                    : null,
-                fabric_names: candidate?.fabricNames ?? [],
-                saved_quality_count: candidate?.savedQualityCount ?? 0,
-            }
-        }),
+        data: collectYarnRateCandidates(savedYarnSources),
         conflicts: getYarnRateConflicts(savedYarnSources),
-        yarnReviewIntervalDays,
     }
+}
+
+/**
+ * Explicit maintenance operation for legacy rows created before write-time
+ * yarn synchronization. It is intentionally not called by the Rate Book GET.
+ */
+export async function reconcileLegacyYarnRates() {
+    const { user, profile } = await requireRole(['owner'])
+    const usage = await getCostRateUsage()
+    if (usage.error) return { error: usage.error }
+    const supabase = await createServerClient()
+    await setAuditActor(supabase, user.id)
+    const { data: reviewProfile, error: reviewProfileError } = await supabase
+        .from('factory_cost_profile')
+        .select('yarn_review_interval_days')
+        .eq('factory_id', profile.org_id)
+        .maybeSingle()
+    if (reviewProfileError) return { error: reviewProfileError.message }
+    const reviewIntervalDays = Number(reviewProfile?.yarn_review_interval_days ?? 90)
+
+    let attempted = 0
+    for (const candidate of usage.data ?? []) {
+        const { error } = await supabase.rpc('discover_yarn_rate_atomic', {
+            p_name: candidate.yarnName,
+            p_category: candidate.category,
+            p_current_value: candidate.currentValue,
+            p_review_interval_days: reviewIntervalDays,
+            p_source: candidate.discoverySource === 'saved_quality' ? 'Saved quality' : 'Saved costing',
+            p_notes: candidate.usageNotes.slice(0, 500),
+        })
+        if (error) return { error: error.message, attempted }
+        attempted += 1
+    }
+
+    revalidatePath('/owner/rates')
+    return { data: { attempted, conflictCount: usage.conflicts?.length ?? 0 } }
 }
 
 export async function getCostRateHistory(rateId: string) {

@@ -14,7 +14,7 @@ export const getCachedOwnerOrganization = cache(async (orgId: string) => {
 
     return supabase
         .from('organizations')
-        .select('id, name, production_mode, join_code, join_code_expires_at')
+        .select('id, name, production_mode, join_code, join_code_expires_at, onboarding_complete, is_locked_down')
         .eq('id', orgId)
         .maybeSingle()
 })

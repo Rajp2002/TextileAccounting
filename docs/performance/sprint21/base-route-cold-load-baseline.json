@@ -1,0 +1,14 @@
+{
+  "status": "directional_pre_change_baseline",
+  "capturedAt": "2026-08-10",
+  "sampleCountPerRoute": 3,
+  "rawSamplesAvailable": false,
+  "note": "Preserved from the Sprint 21 proposal. The supplied baseline contains medians and ranges, not raw sample timestamps; no raw values are fabricated here.",
+  "routes": {
+    "/owner/estimator": { "label": "Cost Estimate", "medianMs": 7240, "observedRangeMs": [2860, 7350] },
+    "/owner/rates": { "label": "Yarn Rate Book", "medianMs": 4440, "observedRangeMs": [4100, 4730] },
+    "/owner/quotes": { "label": "Saved Costings", "medianMs": 5270, "observedRangeMs": [2960, 5530] },
+    "/owner/settings": { "label": "Settings", "medianMs": 2880, "observedRangeMs": [2020, 3560] },
+    "/owner/billing": { "label": "Subscription & Billing", "medianMs": 2270, "observedRangeMs": [2120, 2310] }
+  }
+}

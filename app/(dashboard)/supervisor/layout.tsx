@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { SupervisorSidebar } from '@/components/navigation/supervisor-nav'
 import { requireRole } from '@/lib/auth'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { BrandBackground } from '@/components/brand-background'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
+import QueryProvider from '@/components/query-provider'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
@@ -25,10 +27,11 @@ export default async function SupervisorLayout({ children }: { children: React.R
         'organization_query',
         () => supabase
             .from('organizations')
-            .select('name')
+            .select('name, is_locked_down')
             .eq('id', userOrgId)
             .single()
     )
+    if (org?.is_locked_down) redirect('/locked')
     if (org?.name) factoryName = org.name
     signInTelemetry.log('success', { route: '/supervisor/*' })
 
@@ -56,9 +59,11 @@ export default async function SupervisorLayout({ children }: { children: React.R
              */}
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
                 <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 py-4 xs:px-3 md:px-6 md:py-6 lg:px-8">
-                    <OfflineSyncProvider>
-                        {children}
-                    </OfflineSyncProvider>
+                    <QueryProvider>
+                        <OfflineSyncProvider>
+                            {children}
+                        </OfflineSyncProvider>
+                    </QueryProvider>
                 </main>
             </div>
         </div>

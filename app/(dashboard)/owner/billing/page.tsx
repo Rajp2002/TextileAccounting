@@ -30,6 +30,8 @@ import {
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
 import { type BillingAttemptRow } from '@/lib/billing-attempts'
+import { RouteMilestones } from '@/components/performance/route-milestones'
+import { Suspense } from 'react'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -115,6 +117,43 @@ function StatusBadge({ status }: { status: string }) {
             <Icon className="h-3.5 w-3.5" />
             {cfg.label}
         </span>
+    )
+}
+
+function ReferralLoading() {
+    return (
+        <Card className="min-h-[220px] rounded-2xl border-emerald-200 bg-emerald-950 p-5 shadow-none">
+            <div className="h-5 w-32 animate-pulse rounded bg-white/10" />
+            <div className="mt-5 h-20 animate-pulse rounded-xl bg-white/10" />
+            <p className="mt-4 text-xs font-medium text-emerald-200/70">Loading referral details…</p>
+        </Card>
+    )
+}
+
+function ReferralUnavailable() {
+    return (
+        <Card className="rounded-2xl border-slate-200 bg-white p-5 shadow-none">
+            <p className="text-sm font-semibold text-slate-800">Referral details are temporarily unavailable.</p>
+            <Link href="/owner/billing" className="mt-2 inline-flex text-xs font-semibold text-blue-700 underline-offset-4 hover:underline">
+                Refresh to retry
+            </Link>
+        </Card>
+    )
+}
+
+async function DeferredReferralSection() {
+    let stats: Awaited<ReturnType<typeof getReferralStatsAction>> | null = null
+    let failed = false
+    try {
+        stats = await getReferralStatsAction()
+    } catch {
+        failed = true
+    }
+    return (
+        <>
+            {failed ? <ReferralUnavailable /> : <ReferralCard stats={stats} />}
+            <RouteMilestones route="/owner/billing" shellVisible={false} primaryUsable={false} secondaryReady />
+        </>
     )
 }
 
@@ -227,15 +266,14 @@ export default async function BillingPage({
         : Promise.resolve({})
 
     const supabase = await createClient()
-    // These reads are independent after the role check. Starting them
-    // together avoids waiting on subscription details and referral data before
-    // the payment-history queries can begin.
-    const [query, subscriptionDetail, paymentsResult, subscriptionsResult, attemptsResult, referralStats] = await Promise.all([
+    // Critical billing state stays authoritative and server-owned. Referral
+    // statistics are an independent secondary panel and stream below.
+    const [query, subscriptionDetail, paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         queryPromise,
         getSubscriptionDetail(profile.org_id),
         supabase
             .from('subscription_payments')
-            .select('*')
+            .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at')
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
             .limit(10),
@@ -249,7 +287,6 @@ export default async function BillingPage({
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
             .limit(1),
-        getReferralStatsAction(),
     ])
     const { tier, subscription } = subscriptionDetail
     const requestedRoute = typeof query.from === 'string' ? query.from : null
@@ -297,6 +334,7 @@ export default async function BillingPage({
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
         <div className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
+            <RouteMilestones route="/owner/billing" shellVisible primaryUsable />
             {/* Header Area */}
             <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end">
                 <div>
@@ -588,7 +626,9 @@ export default async function BillingPage({
                 <div className="space-y-6 lg:col-span-4">
                     
                     {/* REFERRAL CARD */}
-                    <ReferralCard stats={referralStats} />
+                    <Suspense fallback={<ReferralLoading />}>
+                        <DeferredReferralSection />
+                    </Suspense>
 
                     {/* QUICK LINKS / HELP */}
                     <Card className="space-y-5 rounded-2xl border-slate-200 bg-white p-5 shadow-none">

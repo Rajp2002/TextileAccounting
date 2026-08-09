@@ -66,7 +66,7 @@ export default function RootLayout({
             user input. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.body.classList.add('app-ready');`,
+            __html: `document.body.classList.add('app-ready'); if (window.performance && typeof window.performance.mark === 'function') window.performance.mark('route_navigation_start');`,
           }}
         />
         <Providers>

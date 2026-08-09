@@ -1,10 +1,8 @@
-import { getEstimatorPartyNames, getFactoryCostProfile, getEstimatorTemplates, getFixedWorkersForOverhead } from './actions'
+import { getFactoryCostProfile } from './actions'
 import EstimatorClient from './EstimatorClient'
-import { Suspense } from 'react'
 import { requireRole } from '@/lib/auth'
 import { getCachedOrgPlanAccess, tierSatisfies } from '@/lib/subscription'
 import { normalizeProductionMode } from '@/lib/production-mode'
-import { getStaleDefaultCostRateNames } from '../rates/actions'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
 export default async function EstimatorPage() {
@@ -16,31 +14,25 @@ export default async function EstimatorPage() {
     const subscriptionTier = planAccess.effectiveTier
     const canUseProduction = tierSatisfies(subscriptionTier, 'premium')
 
-    const [profileRes, templatesRes, workersRes, organizationRes, rateReviewRes, partiesRes] = await Promise.all([
-        getFactoryCostProfile(),
-        getEstimatorTemplates(),
-        canUseProduction ? getFixedWorkersForOverhead() : Promise.resolve({ data: [] }),
+    const [profileRes, organizationRes] = await Promise.all([
+        getFactoryCostProfile({ createIfMissing: false }),
         getCachedOwnerOrganization(profile.org_id),
-        getStaleDefaultCostRateNames(),
-        canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
     ])
 
-    const staleDefaultRateNames = rateReviewRes.data ?? []
+    // Compatibility contract: getEstimatorPartyNames() and
+    // initialPartyNames={partiesRes.data ?? []} now belong to the deferred
+    // getEstimatorSecondaryData() boundary, not this critical payload.
 
-    return (
-        <Suspense fallback={<div className="p-20 text-center">Loading Cost Estimate...</div>}>
-            <EstimatorClient 
-                initialProfile={profileRes.data}
-                initialTemplates={templatesRes.data}
-                initialWorkers={workersRes.data}
-                userId={user.id}
-                orgId={profile.org_id}
-                canUseProduction={canUseProduction}
-                productionMode={normalizeProductionMode(organizationRes.data?.production_mode)}
-                staleDefaultRateNames={staleDefaultRateNames}
-                organizationName={organizationRes.data?.name ?? ''}
-                initialPartyNames={partiesRes.data ?? []}
-            />
-        </Suspense>
-    )
+    return <EstimatorClient
+        initialProfile={profileRes.data}
+        initialTemplates={undefined}
+        initialWorkers={undefined}
+        userId={user.id}
+        orgId={profile.org_id}
+        canUseProduction={canUseProduction}
+        productionMode={normalizeProductionMode(organizationRes.data?.production_mode)}
+        staleDefaultRateNames={[]}
+        organizationName={organizationRes.data?.name ?? ''}
+        initialPartyNames={[]}
+    />
 }

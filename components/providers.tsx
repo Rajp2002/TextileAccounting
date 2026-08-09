@@ -1,51 +1,13 @@
 'use client'
 
-import { QueryClient } from '@tanstack/react-query'
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { useState } from 'react'
 import { I18nProvider } from '@/lib/i18n/context'
 import { PwaUpdateNotice } from '@/components/pwa-update-notice'
 
-export let globalQueryClient: QueryClient | null = null
-
 export default function Providers({ children }: { children: React.ReactNode }) {
-    const [queryClient] = useState(
-        () => {
-            const client = new QueryClient({
-                defaultOptions: {
-                    queries: {
-                        gcTime: 1000 * 60 * 60 * 24, // 24 hours
-                        staleTime: 1000 * 60 * 5, // 5 minutes
-                        networkMode: 'offlineFirst',
-                    },
-                    mutations: {
-                        networkMode: 'offlineFirst',
-                    },
-                },
-            })
-            globalQueryClient = client
-            return client
-        }
-    )
-
-    // Synchronous init — localStorage is always available in the browser,
-    // so there's no need for a useEffect cycle that causes a flash.
-    const [persister] = useState(() =>
-        typeof window !== 'undefined'
-            ? createSyncStoragePersister({ storage: window.localStorage })
-            : null
-    )
-
     return (
         <I18nProvider>
-            <PersistQueryClientProvider
-                client={queryClient}
-                persistOptions={{ persister: persister! }}
-            >
-                <PwaUpdateNotice />
-                {children}
-            </PersistQueryClientProvider>
+            <PwaUpdateNotice />
+            {children}
         </I18nProvider>
     )
 }
