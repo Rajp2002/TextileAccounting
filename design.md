@@ -271,6 +271,25 @@ All-clear states can be more spacious and reassuring:
 
 Do not overuse empty states on screens that should remain workflow-oriented.
 
+### Shared Route Primitives And Copy
+
+Base Plan routes use the shared `PageHeader`, `Toolbar`, `SectionHeader`,
+`StatusBadge`, and `EmptyState` patterns from `components/ui/page-header.tsx`.
+Keep route headers compact, action areas right-aligned on desktop, and wrapped
+on narrow screens. Use `Card` for a complete surface and `Toolbar` for search,
+filters, and view controls; do not use a card as a toolbar.
+
+Use one status vocabulary across routes:
+
+- `Draft`, `Pending`, `In progress`, `Needs review`, `Active`, `Complete`,
+  `Sent`, `Accepted`, `Archived`, `Rejected`, and `Failed`.
+- Prefer sentence case and describe the next action when a status needs help.
+- Use “Save” for a user-created record, “Update” for an existing record,
+  “Archive” for reversible removal, and “Delete” only for permanent removal.
+- Lead with the task and result: “Save cost estimate”, “Review unusual values”,
+  or “No saved costings yet”. Avoid internal terms, blame, and unexplained
+  technical errors in user-facing copy.
+
 ## Mobile And PWA Rules
 
 The app is designed for installed mobile use:

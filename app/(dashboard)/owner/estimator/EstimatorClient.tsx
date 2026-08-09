@@ -121,6 +121,7 @@ import { createClientRequestUuid } from '@/lib/client-request-id'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { RouteMilestones } from '@/components/performance/route-milestones'
+import { PageHeader } from '@/components/ui/page-header'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
@@ -781,7 +782,7 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
 }) {
     const colorClass = getAccentStyles(accent)
     return (
-        <div className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-gradient-to-r from-white to-[var(--color-canvas)]/70 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
                 {step != null && (
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border text-[12px] font-semibold ${colorClass.marker}`}>
@@ -1164,9 +1165,9 @@ function EstimatorCostSummaryRail({
         <section
             data-testid="costing-summary-rail"
             aria-label="Live cost estimate"
-            className="estimator-cost-summary-rail overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur"
+            className="estimator-cost-summary-rail overflow-hidden rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]"
         >
-            <div className="border-b border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-warning-amber-soft)]/80 via-white to-white px-4 py-4">
+            <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                         <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-yarn-orange-dark)]">Live cost estimate</p>
@@ -1393,7 +1394,7 @@ function CostingSaveReview({
         <section
             data-testid="costing-save-review"
             aria-label="Save review"
-            className={`rounded-lg border border-[var(--color-hairline)] bg-white ${contentClass}`}
+            className={`rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] ${contentClass}`}
         >
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Save review</p>
             <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--color-muted)]">
@@ -1409,7 +1410,7 @@ function CostingSaveReview({
                 <p className="sm:col-span-2"><span className="font-semibold text-[var(--color-ink)]">Sections on:</span> {enabledSections.join(', ') || 'Core costing only'}{disabledSections.length > 0 ? ` · off: ${disabledSections.join(', ')}` : ''}</p>
             </div>
             {fullReuse && (
-                <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-2 text-[11px] font-medium leading-4 text-blue-900">
+                <p className="mt-2 rounded-md border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)] px-2.5 py-2 text-[11px] font-medium leading-4 text-[var(--color-info-blue)]">
                     Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn rates, overhead basis, commercial values, quantity, and section on/off states. Existing costing snapshots stay unchanged.
                 </p>
             )}
@@ -1430,7 +1431,7 @@ function CapacityMetricField({
 }) {
     const isGhostValue = ghostValue !== undefined && value === ghostValue
     return (
-        <div className="rounded-[10px] border border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-canvas)] to-[var(--color-surface-soft)] px-3 py-2.5">
+        <div className="rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
             <Label className="text-[10px] font-medium uppercase tracking-[0.05em] text-[var(--color-muted)]">{label}</Label>
             <div className="mt-1 flex items-end gap-1">
                 <Input
@@ -1857,13 +1858,13 @@ function QuickCostingView({
 
     return (
         <div className="space-y-3">
-            <section className="rounded-[14px] border border-[var(--color-yarn-orange)]/25 bg-gradient-to-r from-[var(--color-warning-amber-soft)]/70 to-white px-4 py-4 shadow-[0_6px_20px_rgba(30,37,40,0.04)] sm:px-5">
+            <section className="rounded-xl border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 shadow-[var(--shadow-card)] sm:px-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
                             <Zap className="h-4 w-4 text-[var(--color-yarn-orange)]" />
                             <h2 className="text-[15px] font-semibold text-[var(--color-ink)]">Quick Costing</h2>
-                            <span className="rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-[10px] font-semibold text-[var(--color-yarn-orange-dark)]">same calculation engine</span>
+                            <span className="rounded-full border border-[var(--color-yarn-orange)]/25 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-yarn-orange-dark)]">same calculation engine</span>
                         </div>
                         <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]/75">Enter the numbers you use for a quality. Capacity and monthly expense details stay out of the way until you need them.</p>
                     </div>
@@ -1874,23 +1875,23 @@ function QuickCostingView({
             </section>
 
             {showStarterRecipe && (
-                <section className="rounded-[14px] border border-blue-200 bg-blue-50/70 px-4 py-4 shadow-[0_4px_16px_rgba(30,37,40,0.03)] sm:px-5" aria-labelledby="grey-fabric-starter-title">
+                <section className="rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 px-4 py-4 shadow-[var(--shadow-card)] sm:px-5" aria-labelledby="grey-fabric-starter-title">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                                <Sparkles className="h-4 w-4 shrink-0 text-blue-600" />
-                                <h3 id="grey-fabric-starter-title" className="text-sm font-bold text-slate-900">Try a grey-fabric example</h3>
-                                <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-blue-700">example only</span>
+                                <Sparkles className="h-4 w-4 shrink-0 text-[var(--color-info-blue)]" />
+                                <h3 id="grey-fabric-starter-title" className="text-sm font-bold text-[var(--color-ink)]">Try a grey-fabric example</h3>
+                                <span className="rounded-full border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-info-blue)]">example only</span>
                             </div>
-                            <p className="mt-1 text-xs leading-relaxed text-slate-600">See where PPI, finished width, crimp, waste, rates, capacity, commission, transport, and margin enter the calculation. Replace every value with your rate book before saving.</p>
-                            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium text-slate-700 sm:grid-cols-4">
-                                <span className="rounded-lg bg-white/80 px-2.5 py-2">150D · 3,500 warp ends</span>
-                                <span className="rounded-lg bg-white/80 px-2.5 py-2">52 PPI · 63 inch width</span>
-                                <span className="rounded-lg bg-white/80 px-2.5 py-2">5% crimp · 3% waste</span>
-                                <span className="rounded-lg bg-white/80 px-2.5 py-2">4 looms · 10,000 m/month</span>
+                            <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]">See where PPI, finished width, crimp, waste, rates, capacity, commission, transport, and margin enter the calculation. Replace every value with your rate book before saving.</p>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium text-[var(--color-body)] sm:grid-cols-4">
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">150D · 3,500 warp ends</span>
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">52 PPI · 63 inch width</span>
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">5% crimp · 3% waste</span>
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">4 looms · 10,000 m/month</span>
                             </div>
                         </div>
-                        <Button type="button" size="sm" className="min-h-11 shrink-0 bg-blue-700 text-white hover:bg-blue-800" onClick={onUseStarterRecipe}>
+                        <Button type="button" size="sm" className="min-h-11 shrink-0 bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]" onClick={onUseStarterRecipe}>
                             Use example values
                         </Button>
                     </div>
@@ -3582,7 +3583,7 @@ export default function EstimatorClient({
     const isZeroConfig = state.overheadMode === 'monthly_expenses'
         && state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
     const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
-    const hudShellClass = "w-full rounded-[16px] border border-[var(--color-hairline)] bg-white/95 px-3 py-3 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:rounded-[18px] sm:px-5 sm:py-4"
+    const hudShellClass = "w-full rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] px-3 py-3 shadow-[var(--shadow-card)] sm:px-5 sm:py-4"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
     const displayMarginPct = hasValidCostResult
         && costingResult.quoteIsValid
@@ -3595,7 +3596,7 @@ export default function EstimatorClient({
         && costingResult.breakEvenPricePerM.toFixed(2) === costingResult.productionCostPerM.toFixed(2)
     const costSegments = hasValidCostResult ? [
         { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
-        { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
+        { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
         { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
         { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
         { label: 'Overhead', value: costingResult.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
@@ -3671,6 +3672,16 @@ export default function EstimatorClient({
                 primaryUsable
                 secondaryReady={templatesLoaded}
             />
+            <PageHeader
+                icon={Calculator}
+                title={mode === 'market' ? tx('Market estimate') : tx('Cost estimate')}
+                description={tx('Build a reusable fabric cost estimate from yarn, loom, factory, and pricing inputs. Save the result when it is ready.')}
+                actions={(
+                    <Button variant="outline" onClick={() => router.push('/owner/quotes')}>
+                        <History className="h-4 w-4" /> {tx('Saved costings')}
+                    </Button>
+                )}
+            />
             {!state.isConfigured && (
                 <FactoryCostWizard 
                     initialState={state}
@@ -3732,19 +3743,19 @@ export default function EstimatorClient({
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && !draftBannerHidden && (
                 <div className={pageShellClass}>
-                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                        <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
-                        <p className="text-sm text-amber-800 flex-1">
+                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-warning-amber)]/25 bg-[var(--color-warning-amber-soft)] px-4 py-3">
+                        <RotateCcw className="h-4 w-4 text-[var(--color-warning-amber)] shrink-0" />
+                        <p className="text-sm text-[var(--color-warning-amber)] flex-1">
                             {draft.sourceQuoteId ? (
                                 <>
                                     {draft.sourceRecordKind === 'costing' ? 'Updating saved Cost Estimate ' : canUseProduction ? 'Recalculating Cost Estimate from Quotation for ' : 'Updating saved Cost Estimate '}
                                     <span className="font-bold">{draft.sourceRecordKind === 'costing' || !canUseProduction ? (draft.qualityLabel || 'Untitled') : (draft.partyName || 'Unknown Party')}</span>
-                                    {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
+                                    {draft.qualityLabel && <span className="text-[var(--color-warning-amber)]"> ({draft.qualityLabel})</span>}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteVersionNumber && (
-                                        <span className="ml-1 text-amber-700">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
                                     )}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
-                                        <span className="ml-1 text-amber-600">· saved {formatDateOnly(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">· saved {formatDateOnly(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                     )}
                                     {canUseProduction && draft.sourceRecordKind !== 'costing' && ' — editable Quotations update in place; accepted Quotations create a linked version'}
                                     {draft.sourceRecordKind === 'costing' && ' — saving creates a new costing version without changing the original'}
@@ -3753,25 +3764,25 @@ export default function EstimatorClient({
                                 <>
                                     <span className="font-bold">Unsaved Cost Estimate</span> from{' '}
                                     {formatSuratDateTime(draft.savedAt)}
-                                    {canUseProduction && draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
+                                    {canUseProduction && draft.partyName && <span className="text-[var(--color-warning-amber)]"> · {draft.partyName}</span>}
                                 </>
                             )}
                         </p>
                         <button
                             onClick={applyEstimatorDraft}
-                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-amber-700 underline underline-offset-2 hover:bg-amber-100 hover:text-amber-900"
+                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] underline underline-offset-2 hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
                             Restore
                         </button>
                         <button
                             onClick={() => { setDraftRenameValue(draft.qualityLabel || ''); setShowRenameDraft(true) }}
-                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
                             <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Rename
                         </button>
                         <button
                             onClick={() => setShowDiscardDraft(true)}
-                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                             aria-label="Dismiss unsaved Cost Estimate draft"
                         ><X className="h-3.5 w-3.5" aria-hidden="true" /> <span>Discard</span></button>
                         <button
@@ -3782,7 +3793,7 @@ export default function EstimatorClient({
                                     description: tx('It stays on this device until you restore or discard it.'),
                                 })
                             }}
-                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
                             Keep for later
                         </button>
@@ -3904,8 +3915,8 @@ export default function EstimatorClient({
                                 )}
                             </div>
                             <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
-                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-white text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                             </div>
                         </div>
                     </div>
@@ -4319,7 +4330,7 @@ export default function EstimatorClient({
                     aria-labelledby="saved-qualities-title"
                     className="overflow-hidden rounded-[16px] border-2 border-[var(--color-yarn-orange)]/15 bg-white/95 shadow-[0_10px_28px_rgba(30,37,40,0.07)]"
                 >
-                    <div className="border-b border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-warning-amber-soft)]/75 via-white to-white px-4 py-4 sm:px-5 sm:py-5">
+                    <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
                         <div className="flex items-start gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] border border-[var(--color-yarn-orange)]/25 bg-white text-[var(--color-yarn-orange)] shadow-[0_3px_10px_rgba(217,107,28,0.12)]">
                                 <BookmarkPlus className="h-5 w-5" aria-hidden="true" />
@@ -4471,7 +4482,7 @@ export default function EstimatorClient({
                                                 onClick={() => scrollSavedQualities('left')}
                                                 disabled={!savedQualitiesScrollState.canScrollLeft}
                                                 aria-disabled={!savedQualitiesScrollState.canScrollLeft}
-                                                className="estimator-touch-target absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-[13px] border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_4px_14px_rgba(30,37,40,0.13)] backdrop-blur transition-[border-color,box-shadow,color,transform,opacity] hover:scale-[1.03] hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] hover:shadow-[0_6px_16px_rgba(217,107,28,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35 disabled:shadow-none"
+                                                className="estimator-touch-target absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] text-[var(--color-body)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35"
                                                 aria-label={t('estimator.quality.previousSavedQualities')}
                                                 title={t('estimator.quality.previousSavedQualities')}
                                             >
@@ -4482,7 +4493,7 @@ export default function EstimatorClient({
                                                 onClick={() => scrollSavedQualities('right')}
                                                 disabled={!savedQualitiesScrollState.canScrollRight}
                                                 aria-disabled={!savedQualitiesScrollState.canScrollRight}
-                                                className="estimator-touch-target absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-[13px] border border-[var(--color-hairline)] bg-white/95 text-[var(--color-body)] shadow-[0_4px_14px_rgba(30,37,40,0.13)] backdrop-blur transition-[border-color,box-shadow,color,transform,opacity] hover:scale-[1.03] hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] hover:shadow-[0_6px_16px_rgba(217,107,28,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35 disabled:shadow-none"
+                                                className="estimator-touch-target absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] text-[var(--color-body)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35"
                                                 aria-label={t('estimator.quality.nextSavedQualities')}
                                                 title={t('estimator.quality.nextSavedQualities')}
                                             >
@@ -5507,27 +5518,27 @@ export default function EstimatorClient({
                                                                 <motion.div 
                                                                     initial={{ opacity: 0, y: -10 }} 
                                                                     animate={{ opacity: 1, y: 0 }}
-                                                                    className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 space-y-2"
+                                                                    className="space-y-2 rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 p-3"
                                                                 >
-                                                                    <p className="text-[9.5px] font-bold text-indigo-700 flex items-center gap-1.5">
+                                                                    <p className="flex items-center gap-1.5 text-[9.5px] font-bold text-[var(--color-info-blue)]">
                                                                         <History className="h-3 w-3" /> Historical Output Scaling (to 26 days)
                                                                     </p>
                                                                     <div className="grid grid-cols-2 gap-2">
                                                                         <button 
                                                                             type="button"
                                                                             onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg30Days }); setOutputSuggestion(null); }}
-                                                                            className="bg-white border border-indigo-100 rounded-lg p-2 text-left hover:border-indigo-300 transition-all group"
+                                                                            className="group rounded-lg border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] p-2 text-left transition-colors hover:border-[var(--color-info-blue)]"
                                                                         >
-                                                                            <p className="text-[8px] uppercase font-semibold text-slate-400">Last 30 Days</p>
-                                                                            <p className="text-xs font-mono font-bold text-indigo-600 group-hover:text-indigo-700">{outputSuggestion.avg30Days.toLocaleString()}m</p>
+                                                                            <p className="text-[8px] font-semibold uppercase text-[var(--color-muted)]">Last 30 Days</p>
+                                                                            <p className="font-mono text-xs font-bold text-[var(--color-info-blue)]">{outputSuggestion.avg30Days.toLocaleString()}m</p>
                                                                         </button>
                                                                         <button 
                                                                             type="button"
                                                                             onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg90Days }); setOutputSuggestion(null); }}
-                                                                            className="bg-white border border-indigo-100 rounded-lg p-2 text-left hover:border-indigo-300 transition-all group"
+                                                                            className="group rounded-lg border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] p-2 text-left transition-colors hover:border-[var(--color-info-blue)]"
                                                                         >
-                                                                            <p className="text-[8px] uppercase font-semibold text-slate-400">Last 90 Days</p>
-                                                                            <p className="text-xs font-mono font-bold text-indigo-600 group-hover:text-indigo-700">{outputSuggestion.avg90Days.toLocaleString()}m</p>
+                                                                            <p className="text-[8px] font-semibold uppercase text-[var(--color-muted)]">Last 90 Days</p>
+                                                                            <p className="font-mono text-xs font-bold text-[var(--color-info-blue)]">{outputSuggestion.avg90Days.toLocaleString()}m</p>
                                                                         </button>
                                                                     </div>
                                                                 </motion.div>
@@ -5807,16 +5818,16 @@ export default function EstimatorClient({
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                            <AlertTriangle className="h-5 w-5 text-[var(--color-warning-amber)]" />
                             Review overdue costing rates
                         </DialogTitle>
                         <DialogDescription>
                             This estimate uses defaults whose review date has passed. You can still save deliberately, or review them first.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                        <p className="text-xs font-bold uppercase tracking-wide text-amber-800">Overdue defaults</p>
-                        <p className="mt-1 text-sm font-medium text-amber-950">{staleRateNames.join(', ')}</p>
+                    <div className="rounded-lg border border-[var(--color-warning-amber)]/25 bg-[var(--color-warning-amber-soft)] px-4 py-3">
+                        <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-warning-amber)]">Overdue defaults</p>
+                        <p className="mt-1 text-sm font-medium text-[var(--color-ink)]">{staleRateNames.join(', ')}</p>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => { setPendingStaleRateSave(null); router.push('/owner/rates') }}>
@@ -5895,26 +5906,26 @@ export default function EstimatorClient({
 
             {/* Start New Quality Dialog */}
             <Dialog open={showConfirmNewQuality} onOpenChange={setShowConfirmNewQuality}>
-                <DialogContent className="sm:max-w-[400px] bg-white border border-slate-100 shadow-xl rounded-2xl p-6">
+                <DialogContent className="rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-panel)] sm:max-w-[400px]">
                     <DialogHeader className="space-y-3">
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]">
                             <Sparkles className="h-6 w-6" />
                         </div>
-                        <DialogTitle className="text-center text-lg font-bold text-slate-900">
+                        <DialogTitle className="text-center text-lg font-bold text-[var(--color-ink)]">
                             Start new quality / Reset?
                         </DialogTitle>
                         <DialogDescription className="text-center">
                             Clear the current estimator inputs while keeping saved qualities.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="text-center text-sm text-slate-500 py-2 leading-relaxed">
+                    <div className="py-2 text-center text-sm leading-relaxed text-[var(--color-muted)]">
                         This will clear the current estimator inputs. Saved qualities will not be affected.
                     </div>
                     <DialogFooter className="flex sm:justify-center gap-2 mt-4">
                         <Button
                             variant="outline"
                             onClick={() => setShowConfirmNewQuality(false)}
-                            className="w-full sm:w-auto border-slate-200 text-slate-600 hover:bg-slate-50"
+                            className="w-full border-[var(--color-hairline)] text-[var(--color-body)] hover:bg-[var(--color-surface-soft)] sm:w-auto"
                         >
                             Cancel
                         </Button>
@@ -5941,17 +5952,17 @@ export default function EstimatorClient({
             >
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-amber-800">
+                        <DialogTitle className="flex items-center gap-2 text-[var(--color-warning-amber)]">
                             <AlertTriangle className="h-5 w-5" /> {tx('Review unusual values')}
                         </DialogTitle>
                         <DialogDescription>
                             {tx('These values may be valid for a special fabric, but they are outside the usual costing range. Confirm them before saving a costing or quotation.')}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-[var(--color-warning-amber)]/25 bg-[var(--color-warning-amber-soft)] p-3">
                         {estimatorWarnings.map(warning => (
-                            <div key={`${warning.field}:${warning.message}`} className="flex gap-2 text-sm text-amber-900">
-                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600" />
+                            <div key={`${warning.field}:${warning.message}`} className="flex gap-2 text-sm text-[var(--color-ink)]">
+                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-warning-amber)]" />
                                 <span>{warning.message}</span>
                             </div>
                         ))}
@@ -5975,7 +5986,7 @@ export default function EstimatorClient({
                             {tx('Go back')}
                         </Button>
                         <Button
-                            className="bg-amber-600 text-white hover:bg-amber-700"
+                            className="bg-[var(--color-warning-amber)] text-white hover:bg-[var(--color-yarn-orange-dark)]"
                             onClick={() => {
                                 const continuation = warningContinuationRef.current
                                 warningContinuationRef.current = null
@@ -6016,7 +6027,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="save-quality-name" className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
+                            <Label htmlFor="save-quality-name" className="text-[10px] font-semibold uppercase text-[var(--color-muted)]">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 id="save-quality-name"
                                 placeholder={tx('Japan Satin, Canvas Shine')}
@@ -6036,9 +6047,9 @@ export default function EstimatorClient({
                                 </p>
                             )}
                         </div>
-                        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed space-y-1">
+                        <div className="space-y-1 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-3.5 text-xs font-medium leading-relaxed text-[var(--color-body)]">
                             <p>{t('estimator.quality.savesNotePrefix')} {state.warpRows.length} {t('estimator.quality.savesNoteWarp')} {state.weftRows.length} {t('estimator.quality.savesNoteWeft')}</p>
-                            <p className="text-slate-400">{t('estimator.quality.rateNote')} Current yarn rates are saved in the recipe; the first costing snapshot also records the full costing context.</p>
+                            <p className="text-[var(--color-muted)]">{t('estimator.quality.rateNote')} Current yarn rates are saved in the recipe; the first costing snapshot also records the full costing context.</p>
                         </div>
                         <CostingSaveReview
                             state={state}
@@ -6176,31 +6187,31 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <div className="py-3 space-y-5">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
+                            <Label className="text-[10px] font-semibold uppercase text-[var(--color-muted)]">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 value={editingTplName}
                                 readOnly
                                 aria-readonly="true"
                                 title={t('estimator.sprint1.saved_quality_name_stable')}
-                                className="font-bold border-slate-200 focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 rounded-xl h-11 transition-all"
+                                className="h-11 rounded-xl border-[var(--color-hairline)] font-bold transition-all focus:border-[var(--color-yarn-orange)] focus:ring-4 focus:ring-[var(--color-yarn-orange)]/5"
                             />
                         </div>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                            {t('estimator.quality.structureNotePrefix')} <span className="font-bold text-slate-700">{t('estimator.quality.structureNoteAnd')}</span> {t('estimator.quality.structureNoteSuffix')}
+                        <p className="text-xs leading-relaxed text-[var(--color-muted)]">
+                            {t('estimator.quality.structureNotePrefix')} <span className="font-bold text-[var(--color-body)]">{t('estimator.quality.structureNoteAnd')}</span> {t('estimator.quality.structureNoteSuffix')}
                         </p>
 
                         {/* Warp rates */}
                         {editingWarpRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-semibold text-indigo-600">{t('estimator.quality.warpRates')}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-yarn-orange-dark)]">{t('estimator.quality.warpRates')}</p>
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
-                                    <div key={row.id} className="flex items-center gap-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50">
+                                    <div key={row.id} className="flex items-center gap-4 rounded-xl border border-[var(--color-yarn-orange)]/20 bg-[var(--color-warning-amber-soft)]/45 px-4 py-3 shadow-sm transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label?.trim() || `Warp ${i + 1}`}</p>
-                                            <p className="text-[10px] text-slate-500 font-medium font-mono">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
+                                            <p className="text-[12px] font-bold tracking-tight text-[var(--color-body)]">{row.label?.trim() || `Warp ${i + 1}`}</p>
+                                            <p className="font-mono text-[10px] font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
                                         </div>
                                         <div className="relative shrink-0 w-36">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
                                             <Input
                                                 type="number"
                                                 min={0}
@@ -6209,9 +6220,9 @@ export default function EstimatorClient({
                                                 onChange={e => setEditingWarpRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: parseNonNegativeInput(e.target.value) ?? 0 } : x)
                                                 )}
-                                                className="h-10 text-sm font-mono font-semibold text-right pr-12 pl-8 border-indigo-100 focus:border-indigo-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="h-10 rounded-xl border-[var(--color-hairline)] bg-[var(--color-surface)] pl-8 pr-12 text-right font-mono text-sm font-semibold shadow-inner focus:border-[var(--color-yarn-orange)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/kg</span>
+                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--color-muted)]">/kg</span>
                                         </div>
                                     </div>
                                 ))}
@@ -6221,15 +6232,15 @@ export default function EstimatorClient({
                         {/* Weft rates */}
                         {editingWeftRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-semibold text-emerald-600">{t('estimator.quality.weftRates')}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-factory-green)]">{t('estimator.quality.weftRates')}</p>
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
-                                    <div key={row.id} className="flex items-center gap-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50">
+                                    <div key={row.id} className="flex items-center gap-4 rounded-xl border border-[var(--color-factory-green)]/20 bg-[var(--color-factory-green-soft)]/70 px-4 py-3 shadow-sm transition-colors hover:border-[var(--color-factory-green)]/45 hover:bg-[var(--color-factory-green-soft)]">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label?.trim() || `Weft ${i + 1}`}</p>
-                                            <p className="text-[10px] text-slate-500 font-medium font-mono">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
+                                            <p className="text-[12px] font-bold tracking-tight text-[var(--color-body)]">{row.label?.trim() || `Weft ${i + 1}`}</p>
+                                            <p className="font-mono text-[10px] font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
                                         </div>
                                         <div className="relative shrink-0 w-36">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
                                             <Input
                                                 type="number"
                                                 min={0}
@@ -6238,9 +6249,9 @@ export default function EstimatorClient({
                                                 onChange={e => setEditingWeftRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: parseNonNegativeInput(e.target.value) ?? 0 } : x)
                                                 )}
-                                                className="h-10 text-sm font-mono font-semibold text-right pr-12 pl-8 border-emerald-100 focus:border-emerald-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="h-10 rounded-xl border-[var(--color-hairline)] bg-[var(--color-surface)] pl-8 pr-12 text-right font-mono text-sm font-semibold shadow-inner focus:border-[var(--color-factory-green)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/kg</span>
+                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--color-muted)]">/kg</span>
                                         </div>
                                     </div>
                                 ))}
@@ -6248,18 +6259,18 @@ export default function EstimatorClient({
                         )}
 
                         {/* Delete zone */}
-                        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
+                        <div className="flex flex-col items-center justify-between gap-2 border-t border-[var(--color-hairline)] pt-3 sm:flex-row">
                             <button
                                 onClick={() => {
                                     if (editRatesTpl) setTemplateToArchive(editRatesTpl)
                                 }}
                                 disabled={deletingTpl === editRatesTpl?.id}
-                                className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50"
+                                className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-bold text-[var(--color-risk-red)] transition-colors hover:bg-[var(--color-risk-red-soft)] hover:text-[var(--color-ink)]"
                             >
                                 <Trash2 className="h-3.5 w-3.5" />
                                 {tx('Archive quality')}
                             </button>
-                            <p className="text-[10px] text-slate-400 font-medium">{tx('Archived qualities remain in History and can be restored.')}</p>
+                            <p className="text-[10px] font-medium text-[var(--color-muted)]">{tx('Archived qualities remain in History and can be restored.')}</p>
                         </div>
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
@@ -6267,7 +6278,7 @@ export default function EstimatorClient({
                             variant="ghost" 
                             size="sm" 
                             onClick={handleApplyCurrentRates} 
-                            className="text-slate-500 font-bold hover:bg-slate-50 rounded-xl"
+                            className="rounded-xl font-bold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                         >
                             {t('estimator.quality.applyAsIs')}
                         </Button>
