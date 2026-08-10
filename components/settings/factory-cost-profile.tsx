@@ -339,7 +339,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
 
             <CardContent className="space-y-6 pt-5">
 
-                {/* ── Factory Type Presets ── */}
+                {!standaloneEstimator && (
                 <div className="space-y-3">
                     <div>
                         <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'How should Weavly start your setup?' : 'How does your factory work?')}</Label>
@@ -378,6 +378,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         {tx(dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.')}
                     </p>
                 </div>
+                )}
 
                 {/* ── Pre-Weaving Rates ── */}
                 <div className="space-y-3">

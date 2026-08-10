@@ -3692,6 +3692,7 @@ export default function EstimatorClient({
                 <FactoryCostWizard 
                     initialState={state}
                     initialYarnReviewIntervalDays={Number(initialProfile?.yarn_review_interval_days ?? 90)}
+                    canUseFactoryProfiles={canUseProduction}
                     saving={saving}
                     onComplete={async (data) => {
                         setSaving(true)

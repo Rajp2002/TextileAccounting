@@ -30,6 +30,7 @@ type FactoryCostWizardData = Partial<EstimateState> & {
 interface FactoryCostWizardProps {
     initialState: EstimateState
     initialYarnReviewIntervalDays: number
+    canUseFactoryProfiles: boolean
     onComplete: (data: FactoryCostWizardData) => Promise<void>
     saving: boolean
 }
@@ -50,14 +51,23 @@ function getFactoryDefaultValue(label: string, initialState: EstimateState): num
     }
 }
 
-export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, saving }: FactoryCostWizardProps) {
+export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, canUseFactoryProfiles, onComplete, saving }: FactoryCostWizardProps) {
     const [step, setStep] = useState<'intro' | 'profile' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
     const [validationError, setValidationError] = useState<string | null>(null)
     const [pendingCompletion, setPendingCompletion] = useState<FactoryCostWizardData | null>(null)
     const [pendingWarnings, setPendingWarnings] = useState<EstimatorValidationIssue[]>([])
-    const [selectedProfileId, setSelectedProfileId] = useState<FactoryProfileId | null>(null)
-    const [selectedSections, setSelectedSections] = useState({ ...initialState.enabledSections })
+    const greyWeaverSections = FACTORY_COST_PRESETS.find(profile => profile.id === 'grey_weaver')?.sections ?? {
+        winding: false,
+        processing: false,
+        finishing: false,
+        commission: false,
+        transport: false,
+    }
+    const [selectedProfileId, setSelectedProfileId] = useState<FactoryProfileId | null>(canUseFactoryProfiles ? null : 'grey_weaver')
+    const [selectedSections, setSelectedSections] = useState({
+        ...(canUseFactoryProfiles ? initialState.enabledSections : greyWeaverSections),
+    })
 
     const initialRent = initialState.overheadItems.find(item => item.category === 'rent')?.monthlyAmount ?? 0
     const initialElectricity = initialState.overheadItems.find(item => item.category === 'electricity')?.monthlyAmount ?? 0
@@ -205,7 +215,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     })
 
     const handleFinish = async () => {
-        if (!selectedProfileId) {
+        if (!selectedProfileId && canUseFactoryProfiles) {
             setValidationError('Choose your factory type before finishing setup.')
             setStep('profile')
             return
@@ -297,13 +307,17 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         <Building2 className="h-8 w-8 text-indigo-600" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Set up your factory costing</h2>
+                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                                            {canUseFactoryProfiles ? 'Set up your factory costing' : 'Set up your grey-fabric costing'}
+                                        </h2>
                                         <p className="text-slate-500 text-sm leading-relaxed">
-                                            Choose the type of work you do. We&apos;ll show only the charges relevant to your unit, then use your actual factory expenses to calculate a trustworthy ₹/m cost.
+                                            {canUseFactoryProfiles
+                                                ? 'Choose the type of work you do. We\'ll show only the charges relevant to your unit, then use your actual factory expenses to calculate a trustworthy ₹/m cost.'
+                                                : 'Weavly is set up for grey fabric weaving. Enter your actual factory expenses and rates to calculate a trustworthy ₹/m cost.'}
                                         </p>
                                     </div>
                                     <Button 
-                                        onClick={() => setStep('profile')}
+                                        onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')}
                                         className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all shadow-lg shadow-indigo-200"
                                     >
                                         Get Started
@@ -400,7 +414,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'fast' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('profile')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                                        <button onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <h2 className="text-lg font-black text-slate-900">Enter your factory cost per metre</h2>
