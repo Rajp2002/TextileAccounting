@@ -10,6 +10,10 @@ import {
     clearUserCacheFromStorage,
     REACT_QUERY_PERSISTENCE_KEY,
 } from '../lib/client-storage-cleanup'
+import {
+    isRecentPwaLoginRedirect,
+    PWA_LOGIN_RECOVERY_WINDOW_MS,
+} from '../lib/pwa-auth-recovery'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -120,6 +124,29 @@ describe('Sprint 22 auth boundary', () => {
 
         expect(providers).not.toContain('PwaSessionGuard')
         expect(login).toContain('window.location.replace(result.redirectTo)')
+    })
+
+    it('breaks a stale PWA login redirect loop and upgrades at the auth boundary', () => {
+        const proxy = read('proxy.ts')
+        const loginPage = read('app/(auth)/login/page.tsx')
+        const loginForm = read('app/(auth)/login/login-form.tsx')
+        const updateNotice = read('components/pwa-update-notice.tsx')
+        const now = 1_000_000
+
+        expect(isRecentPwaLoginRedirect(String(now), now)).toBe(true)
+        expect(isRecentPwaLoginRedirect(String(now - PWA_LOGIN_RECOVERY_WINDOW_MS), now)).toBe(true)
+        expect(isRecentPwaLoginRedirect(String(now - PWA_LOGIN_RECOVERY_WINDOW_MS - 1), now)).toBe(false)
+        expect(isRecentPwaLoginRedirect(String(now + 1), now)).toBe(false)
+        expect(isRecentPwaLoginRedirect('not-a-timestamp', now)).toBe(false)
+
+        expect(proxy).toContain('isRecentPwaLoginRedirect(previousRedirect, now)')
+        expect(proxy).toContain('forwardedHeaders.delete(PWA_LOGIN_RECOVERY_HEADER)')
+        expect(proxy).toContain('forwardedHeaders.set(PWA_LOGIN_RECOVERY_HEADER, roleDestination)')
+        expect(loginPage).toContain('requestHeaders.get(PWA_LOGIN_RECOVERY_HEADER)')
+        expect(loginForm).toContain('activateWaitingPwaWorker()')
+        expect(loginForm).toContain('window.location.replace(recoveryDestination)')
+        expect(updateNotice).toContain("window.location.pathname === '/login'")
+        expect(updateNotice).not.toContain("querySelectorAll('input, textarea, select')")
     })
 
     it('starts native sign-out after synchronous detachment and records transition phases', () => {

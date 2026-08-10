@@ -43,17 +43,10 @@ export function PwaUpdateNotice() {
         let disposed = false
         let updateActivationStarted = false
 
-        const isSafeLoginRefresh = () => {
-            if (window.location.pathname !== '/login') return false
-
-            const form = document.querySelector('form')
-            if (!form) return true
-
-            return Array.from(form.querySelectorAll('input, textarea, select')).every((field) => {
-                const control = field as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-                return control.value.length === 0
-            })
-        }
+        // Password AutoFill populates the login controls before the worker is
+        // ready. Login is still a safe update boundary: credentials remain in
+        // the password manager and no authenticated business draft is open.
+        const isLoginRefreshBoundary = () => window.location.pathname === '/login'
 
         const activateWaitingWorker = (registration: ServiceWorkerRegistration) => {
             const waitingWorker = registration.waiting
@@ -81,7 +74,7 @@ export function PwaUpdateNotice() {
             // worker before credentials cross the auth boundary; otherwise an
             // old login bundle can navigate into a newer RSC/loading boundary
             // and leave a PWA stuck on its spinner.
-            if (isSafeLoginRefresh() && activateWaitingWorker(registration)) return
+            if (isLoginRefreshBoundary() && activateWaitingWorker(registration)) return
 
             const versionKey = `${UPDATE_TOAST_SHOWN_FLAG}${encodeURIComponent(getUpdateVersionKey(registration))}`
             if (readSessionFlag(versionKey)) return
@@ -130,7 +123,7 @@ export function PwaUpdateNotice() {
         navigator.serviceWorker.ready.then((registration) => {
             if (disposed) return
 
-            if (registration.waiting && isSafeLoginRefresh()) {
+            if (registration.waiting && isLoginRefreshBoundary()) {
                 activateWaitingWorker(registration)
             }
 

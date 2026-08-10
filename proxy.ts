@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { checkAuthRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
+import {
+    isRecentPwaLoginRedirect,
+    PWA_LOGIN_RECOVERY_COOKIE,
+    PWA_LOGIN_RECOVERY_HEADER,
+    PWA_LOGIN_RECOVERY_WINDOW_MS,
+} from '@/lib/pwa-auth-recovery'
 import { isSupabaseAuthSessionCookie } from '@/lib/supabase/auth-cookie'
 
 function getRoleHomePath(role?: string): string {
@@ -105,9 +111,10 @@ function logProxyPhase(phase: string, pathname: string, startedAt: number) {
 
 export async function updateSession(request: NextRequest) {
     const forwardedHeaders = new Headers(request.headers)
-    // This is an internal request marker written only after Proxy completes
-    // the revocation check. Never trust a value supplied by the browser.
+    // These internal request markers are written only by Proxy. Never trust
+    // values supplied by the browser.
     forwardedHeaders.delete('x-weavly-revocation-checked')
+    forwardedHeaders.delete(PWA_LOGIN_RECOVERY_HEADER)
     const applySessionCookies: Array<(target: NextResponse) => void> = []
     let response = NextResponse.next({
         request: { headers: forwardedHeaders },
@@ -259,11 +266,53 @@ export async function updateSession(request: NextRequest) {
 
     // ── Route Guards ───────────────────────────────────────────────────────
 
+    const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
+    const onboardingComplete = optimisticClaims.onboarding_complete === true
+    const roleDestination = role === 'owner' && !onboardingComplete
+        ? '/onboarding'
+        : getRoleHomePath(role)
+
+    const applyAuthenticatedResponseCookies = (target: NextResponse) => {
+        applySessionCookies.forEach(applyCookie => applyCookie(target))
+        target.cookies.set('last_activity', now.toString(), {
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+        })
+    }
+
+    // A stale installed PWA can repeatedly request /login from an obsolete
+    // client-side auth guard while the current server redirects it home. On
+    // the second request, render the current login boundary once instead of
+    // continuing the 307 loop. That boundary activates a waiting worker and
+    // performs a full-document navigation to the verified role destination.
+    if (user && pathname === '/login' && roleDestination !== '/login') {
+        const previousRedirect = request.cookies.get(PWA_LOGIN_RECOVERY_COOKIE)?.value
+
+        if (isRecentPwaLoginRedirect(previousRedirect, now)) {
+            forwardedHeaders.set(PWA_LOGIN_RECOVERY_HEADER, roleDestination)
+            forwardedHeaders.set('cookie', request.cookies.toString())
+            const recoveryResponse = NextResponse.next({ request: { headers: forwardedHeaders } })
+            applyAuthenticatedResponseCookies(recoveryResponse)
+            return recoveryResponse
+        }
+
+        const redirectResponse = NextResponse.redirect(new URL(roleDestination, request.url))
+        applyAuthenticatedResponseCookies(redirectResponse)
+        redirectResponse.cookies.set(PWA_LOGIN_RECOVERY_COOKIE, now.toString(), {
+            path: '/',
+            maxAge: Math.ceil(PWA_LOGIN_RECOVERY_WINDOW_MS / 1000),
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+        })
+        return redirectResponse
+    }
+
     // 1. Authenticated user hitting auth pages or landing → redirect to their home
     if (user && (isAuthRoute(pathname) || pathname === '/') && pathname !== '/auth/callback' && !isPasswordRecoveryRoute(pathname)) {
-        const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
-        const onboardingComplete = optimisticClaims.onboarding_complete === true
-
         if (role === 'owner') {
             if (!onboardingComplete) {
                 return NextResponse.redirect(new URL('/onboarding', request.url))
@@ -290,9 +339,6 @@ export async function updateSession(request: NextRequest) {
 
     // 3. Authenticated user on protected routes — enforce guards
     if (user && !isPublicRoute(pathname)) {
-        const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
-        const onboardingComplete = optimisticClaims.onboarding_complete === true
-
         if (!pathname.startsWith('/api/') && isPhase1ArchivedRoute(pathname)) {
             return NextResponse.redirect(new URL(PHASE_1_ARCHIVE_REDIRECT, request.url))
         }
