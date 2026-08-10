@@ -60,22 +60,23 @@ export async function queueMutation<T = unknown>(
 export async function getPendingMutations(scope: string) {
     requireScope(scope)
     return db.mutations
-        .where('scope')
-        .equals(scope)
-        .and((mutation) => mutation.synced === 0)
+        .toCollection()
+        .filter((mutation) => mutation.scope === scope && mutation.synced === 0)
         .toArray()
 }
 
 export async function discardPendingMutations(scope: string) {
     requireScope(scope)
     return db.mutations
-        .where('scope')
-        .equals(scope)
-        .and((mutation) => mutation.synced === 0)
+        .toCollection()
+        .filter((mutation) => mutation.scope === scope && mutation.synced === 0)
         .delete()
 }
 
 export async function deleteMutationsForScope(scope: string) {
     if (scope !== LEGACY_MUTATION_SCOPE) requireScope(scope)
-    return db.mutations.where('scope').equals(scope).delete()
+    return db.mutations
+        .toCollection()
+        .filter((mutation) => mutation.scope === scope)
+        .delete()
 }

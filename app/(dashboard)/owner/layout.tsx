@@ -132,19 +132,33 @@ async function OwnerSidebarBoundary() {
 
 function OwnerSidebarLoading() {
     return (
-        <aside
-            aria-hidden="true"
-            className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111]"
-        >
-            <div className="border-b border-white/10 px-4 py-5">
-                <div className="mx-auto h-20 w-44 rounded-lg bg-white/[0.06]" />
-                <div className="mt-4 h-11 rounded-lg bg-white/[0.06]" />
-            </div>
-            <div className="space-y-2 px-3 py-5">
-                {Array.from({ length: 8 }, (_, index) => (
-                    <div key={index} className="h-11 rounded-lg bg-white/[0.05]" />
+        <>
+            <aside
+                aria-hidden="true"
+                className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111]"
+            >
+                <div className="border-b border-white/10 px-4 py-5">
+                    <div className="mx-auto h-20 w-44 rounded-lg bg-white/[0.06]" />
+                    <div className="mt-4 h-11 rounded-lg bg-white/[0.06]" />
+                </div>
+                <div className="space-y-2 px-3 py-5">
+                    {Array.from({ length: 8 }, (_, index) => (
+                        <div key={index} className="h-11 rounded-lg bg-white/[0.05]" />
+                    ))}
+                </div>
+            </aside>
+
+            <nav
+                aria-hidden="true"
+                className="fixed inset-x-0 bottom-0 z-50 grid min-h-[64px] grid-cols-6 items-center gap-1 border-t border-border/70 bg-canvas/92 px-safe pt-2 pb-safe shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur-xl md:hidden"
+            >
+                {Array.from({ length: 6 }, (_, index) => (
+                    <div key={index} className="flex flex-col items-center gap-1 px-1">
+                        <div className="h-5 w-5 rounded-md bg-muted/70" />
+                        <div className="h-2.5 w-12 max-w-full rounded bg-muted/70" />
+                    </div>
                 ))}
-            </div>
-        </aside>
+            </nav>
+        </>
     )
 }

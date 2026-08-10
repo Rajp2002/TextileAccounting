@@ -68,7 +68,9 @@ describe('Batch 9 offline/cache truth cleanup', () => {
 
         expect(cleanup).toContain('clearOfflineMutationQueue')
         expect(cleanup).toContain('clearLegacyOfflineMutationQueue')
-        expect(cleanup).toContain('deleteMutationsForScope')
+        expect(cleanup).toContain("const { db } = await import('./db')")
+        expect(cleanup).toContain('db.mutations')
+        expect(cleanup).toContain('.filter((mutation) => mutation.scope === scope)')
         expect(cleanup).not.toContain('window.sessionStorage.clear()')
         expect(logoutButton).toContain('scheduleClientSessionCleanup')
         expect(logoutButton).toContain('detachActiveQueryNamespace')

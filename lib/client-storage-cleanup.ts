@@ -40,6 +40,8 @@ export type ClientSessionCleanupOptions = {
     clearScope?: boolean
     /** Legacy data is quarantined and can be removed during idle cleanup. */
     includeLegacy?: boolean
+    /** Keep the current standalone-PWA session marker during auth-boundary cleanup. */
+    preservePwaSession?: boolean
 }
 
 export function isLegacyUserCacheKey(key: string) {
@@ -86,8 +88,11 @@ export async function clearOfflineMutationQueue(scope?: string | null) {
     if (typeof window === 'undefined' || !isPrincipalCacheScope(scope)) return false
 
     try {
-        const { deleteMutationsForScope } = await import('./db')
-        await deleteMutationsForScope(scope)
+        const { db } = await import('./db')
+        await db.mutations
+            .toCollection()
+            .filter((mutation) => mutation.scope === scope)
+            .delete()
         return true
     } catch (error) {
         console.warn('Unable to clear retired offline mutation scope', error)
@@ -99,8 +104,15 @@ export async function clearLegacyOfflineMutationQueue() {
     if (typeof window === 'undefined' || !('indexedDB' in window)) return false
 
     try {
-        const { deleteMutationsForScope } = await import('./db')
-        await deleteMutationsForScope(LEGACY_MUTATION_SCOPE)
+        // Import the database object instead of the helper function. The
+        // helper can be missing from the Turbopack dynamic module shape in
+        // development, which made every auth boundary emit a warning during
+        // login and logout.
+        const { db } = await import('./db')
+        await db.mutations
+            .toCollection()
+            .filter((mutation) => mutation.scope === LEGACY_MUTATION_SCOPE)
+            .delete()
         return true
     } catch (error) {
         console.warn('Unable to clear legacy offline mutation scope', error)
@@ -108,9 +120,9 @@ export async function clearLegacyOfflineMutationQueue() {
     }
 }
 
-function clearLegacySessionStorage(storage: Storage) {
+function clearLegacySessionStorage(storage: Storage, preservePwaSession: boolean) {
     const keysToRemove = [
-        'weavly_pwa_session_alive',
+        ...(preservePwaSession ? [] : ['weavly_pwa_session_alive']),
     ].filter((key) => !TRANSITION_STORAGE_KEYS.has(key))
 
     for (const key of keysToRemove) storage.removeItem(key)
@@ -135,6 +147,7 @@ export async function clearClientSessionState(
         : getActiveQueryScope()
     const clearScope = options.clearScope ?? Boolean(scope)
     const includeLegacy = options.includeLegacy ?? true
+    const preservePwaSession = options.preservePwaSession ?? false
 
     try {
         result.localStorageKeys = clearUserCacheFromStorage(window.localStorage, {
@@ -148,7 +161,7 @@ export async function clearClientSessionState(
     }
 
     try {
-        result.sessionStorageKeys = clearLegacySessionStorage(window.sessionStorage)
+        result.sessionStorageKeys = clearLegacySessionStorage(window.sessionStorage, preservePwaSession)
     } catch (error) {
         result.errors.push('sessionStorage')
         console.warn('Unable to clear session flags during session cleanup', error)
