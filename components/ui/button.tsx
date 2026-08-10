@@ -5,21 +5,22 @@ import { Slot } from "@radix-ui/react-slot"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold leading-[1.3] transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/25 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold leading-[1.3] transition-all duration-150 motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.02] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/25 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[0.98]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-active)]",
+        default:
+          "bg-primary text-primary-foreground shadow-[var(--shadow-button)] hover:bg-saffron-deep hover:text-white",
         saffron:
           "bg-saffron text-white shadow-[var(--shadow-button)] hover:bg-saffron-deep",
         destructive:
           "bg-risk text-white shadow-[var(--shadow-button)] hover:bg-risk/90 focus-visible:ring-risk/20 dark:focus-visible:ring-risk/40",
         outline:
-          "border border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink",
+          "border border-hairline bg-surface text-ink shadow-xs hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep",
         secondary:
-          "border border-hairline bg-surface text-ink shadow-xs hover:bg-surface-soft",
+          "border border-hairline bg-surface text-ink shadow-xs hover:border-saffron-soft hover:bg-saffron-soft hover:text-saffron-deep",
         ghost:
-          "text-body hover:bg-saffron-soft/60 hover:text-ink",
+          "text-body hover:bg-saffron-soft/60 hover:text-saffron-deep",
         link: "text-saffron-deep underline-offset-4 hover:underline",
       },
       size: {
