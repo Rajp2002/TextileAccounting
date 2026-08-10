@@ -16,7 +16,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
 async function SettingsDataLoader({ children }: { children: React.ReactNode }) {
     const { user, profile } = await requireRole(['owner'])
-    const { data: organization } = await getCachedOwnerOrganization(profile.org_id)
+    const { data: organization } = await getCachedOwnerOrganization(user.id, profile.org_id)
     const cacheScope = createPrincipalCacheScope({
         userId: user.id,
         organizationId: profile.org_id,

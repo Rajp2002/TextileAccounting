@@ -1,4 +1,7 @@
+import 'server-only'
+
 import { cache } from 'react'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
     resolveEffectiveSubscription,
@@ -31,13 +34,18 @@ export {
  * attempt cannot hide an older paid entitlement that has not expired.
  */
 export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
-    const supabase = await createClient()
+    // Every caller derives orgId from a verified profile or freshly validated
+    // sign-in claims. Use the server-only client so a transient RLS auth-context
+    // miss cannot turn a paid owner into tier "none" during route selection.
+    const admin = createAdminClient()
 
-    const { data } = await supabase
+    const { data, error } = await admin
         .from('organizations')
         .select('product_experience, org_subscriptions(status, plan_tier, current_start, current_end, created_at)')
         .eq('id', orgId)
         .maybeSingle()
+
+    if (error) throw new Error(`Unable to resolve organization plan access: ${error.code}`)
 
     const subscriptionTier = resolveEffectiveSubscription(data?.org_subscriptions ?? []).tier
     return resolveOrgPlanAccess(subscriptionTier, data?.product_experience)

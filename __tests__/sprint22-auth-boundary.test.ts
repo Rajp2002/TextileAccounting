@@ -149,6 +149,21 @@ describe('Sprint 22 auth boundary', () => {
         expect(updateNotice).not.toContain("querySelectorAll('input, textarea, select')")
     })
 
+    it('never routes a verified owner back to login when the tenant read is unavailable', () => {
+        const ownerLayout = read('app/(dashboard)/owner/layout.tsx')
+        const ownerOrganization = read('lib/owner-organization.ts')
+        const subscription = read('lib/subscription.ts')
+
+        expect(ownerLayout).not.toContain("redirect('/login?reason=session_incomplete')")
+        expect(ownerLayout).toContain("throw new Error('Verified owner organization is unavailable.')")
+        expect(ownerLayout).toContain('getCachedOwnerOrganization(user.id, profile.org_id)')
+        expect(ownerOrganization).toContain('createAdminClient()')
+        expect(ownerOrganization).toContain(".eq('id', organizationId)")
+        expect(ownerOrganization).toContain(".eq('owner_id', ownerId)")
+        expect(subscription).toContain('const admin = createAdminClient()')
+        expect(subscription).toContain('Unable to resolve organization plan access')
+    })
+
     it('starts native sign-out after synchronous detachment and records transition phases', () => {
         const logout = read('components/auth/logout-button.tsx')
         const trace = read('lib/logout-trace.ts')

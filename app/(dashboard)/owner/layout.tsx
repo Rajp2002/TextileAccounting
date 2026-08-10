@@ -53,21 +53,37 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
         organizationId: profile.org_id,
     })
 
-    const [{ data: organization }, planAccess] = await Promise.all([
+    const [organizationResult, planAccess] = await Promise.all([
         signInTelemetry.measure(
             'organization_query',
-            () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(profile.org_id), 1),
+            () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(user.id, profile.org_id), 1),
         ),
         signInTelemetry.measure(
             'tier_lookup',
             () => perf.measure('businessData', () => getCachedOrgPlanAccess(profile.org_id), 1),
         ),
     ])
+    const { data: organization, error: organizationError } = organizationResult
 
     // Lockdown is an authoritative tenant check, not a Proxy-only redirect.
-    // Missing organization state is treated as a broken session rather than
-    // rendering a route with an unresolved tenant.
-    if (!organization) redirect('/login?reason=session_incomplete')
+    // The session has already been verified, so a missing tenant must never
+    // redirect to /login: middleware would correctly send the valid owner home
+    // and create an infinite route loop. Fail closed at this boundary instead.
+    if (organizationError) {
+        console.error(JSON.stringify({
+            level: 'error',
+            event: 'owner_organization_lookup_failed',
+            code: organizationError.code,
+        }))
+        throw new Error('Unable to verify the owner organization.')
+    }
+    if (!organization) {
+        console.error(JSON.stringify({
+            level: 'error',
+            event: 'verified_owner_organization_missing',
+        }))
+        throw new Error('Verified owner organization is unavailable.')
+    }
     if (organization.is_locked_down) redirect('/locked')
 
     perf.log({ organization_state: 'verified' })
@@ -84,7 +100,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
 async function OwnerSidebarBoundary() {
     const perf = createPerfTimer('/owner/* sidebar')
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_sidebar')
-    const { profile } = await signInTelemetry.measure(
+    const { profile, user } = await signInTelemetry.measure(
         'auth_profile',
         () => perf.measure('authSession', () => requireRole(['owner']), 2),
     )
@@ -92,7 +108,7 @@ async function OwnerSidebarBoundary() {
 
     const organizationPromise = signInTelemetry.measure(
         'organization_query',
-        () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(userOrgId), 1),
+        () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(user.id, userOrgId), 1),
     )
     const reviewRatesPromise = (async () => {
         const supabase = await createClient()

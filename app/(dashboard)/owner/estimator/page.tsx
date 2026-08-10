@@ -16,7 +16,7 @@ export default async function EstimatorPage() {
 
     const [profileRes, organizationRes] = await Promise.all([
         getFactoryCostProfile({ createIfMissing: false }),
-        getCachedOwnerOrganization(profile.org_id),
+        getCachedOwnerOrganization(user.id, profile.org_id),
     ])
 
     // Compatibility contract: getEstimatorPartyNames() and

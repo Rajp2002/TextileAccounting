@@ -9,7 +9,9 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const searchParamsPromise = props.searchParams
     const authPromise = getAuthenticatedUser()
     const planAccessPromise = authPromise.then(({ profile }) => getCachedOrgPlanAccess(profile.org_id))
-    const organizationPromise = authPromise.then(({ profile }) => getCachedOwnerOrganization(profile.org_id))
+    const organizationPromise = authPromise.then(({ user, profile }) => (
+        getCachedOwnerOrganization(user.id, profile.org_id)
+    ))
 
     const [searchParams, { data: quotes }, { data: templates }, auth, planAccess, organizationRes] = await Promise.all([
         searchParamsPromise,
