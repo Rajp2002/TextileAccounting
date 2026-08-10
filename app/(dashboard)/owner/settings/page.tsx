@@ -14,6 +14,7 @@ import {
     AlertTriangle,
     CheckCircle2,
     Calculator,
+    ChevronDown,
     Copy,
     CreditCard,
     Download,
@@ -114,17 +115,37 @@ function SettingsSection({
     title,
     icon: Icon,
     children,
+    collapsible = false,
 }: {
     id: string
     title: string
     icon: LucideIcon
     children: ReactNode
+    collapsible?: boolean
 }) {
+    const heading = (
+        <>
+            <Icon className="h-4 w-4 text-subtle" />
+            <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</h2>
+        </>
+    )
+
+    if (collapsible) {
+        return (
+            <details id={id} className="group scroll-mt-6 space-y-3">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-hairline/80 pb-2 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
+                    {heading}
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                {children}
+            </details>
+        )
+    }
+
     return (
         <section id={id} className="scroll-mt-6 space-y-3">
             <div className="flex items-center gap-2 border-b border-hairline/80 pb-2">
-                <Icon className="h-4 w-4 text-subtle" />
-                <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</h2>
+                {heading}
             </div>
             {children}
         </section>
@@ -385,7 +406,7 @@ export default function SettingsPage() {
                         <SettingsSection id="cost-profile" title={hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'} icon={Factory}>
                             <FactoryCostProfile standaloneEstimator={!hasPremium} />
                         </SettingsSection>
-                        <SettingsSection id="qualities" title="Saved Fabric Qualities" icon={ShieldCheck}>
+                        <SettingsSection id="qualities" title="Saved Fabric Qualities" icon={ShieldCheck} collapsible>
                             <TemplateManager />
                         </SettingsSection>
                     </SettingsCategory>
