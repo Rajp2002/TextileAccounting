@@ -40,10 +40,10 @@ export default function LandingPricing() {
                         </h2>
                     </div>
                     <div className="max-w-2xl lg:ml-auto">
-                        <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-300">
+                        <p className="text-lg leading-8 text-zinc-700 dark:text-zinc-300">
                             The current rollout is intentionally focused on the Base Plan: one reliable costing desk for fabric qualities, saved costings, and margin-aware pricing.
                         </p>
-                        <p className="mt-3 text-sm text-zinc-400 dark:text-zinc-500">
+                        <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
                             Prices below show the GST-inclusive total and its 18% breakdown. Renewal is manual and opens 30 days before expiry. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
                         </p>
                     </div>
@@ -69,24 +69,24 @@ export default function LandingPricing() {
                                         {plan.badge}
                                     </span>
                                 </div>
-                                <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">{plan.description}</p>
+                                <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-700">{plan.description}</p>
 
                                 <div className="mt-7 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
                                     <div className="border border-orange-200 bg-white/70 p-5">
                                         <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">First year</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
                                             <span className="text-5xl font-black tracking-tight text-zinc-950">{firstYearTotal}</span>
-                                            <span className="text-sm font-semibold text-zinc-500">total</span>
+                                            <span className="text-sm font-semibold text-zinc-600">total</span>
                                         </p>
-                                        <p className="mt-2 text-xs text-zinc-500">{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
+                                        <p className="mt-2 text-xs text-zinc-600">{firstYearBase} + {firstYearGst} GST = {firstYearTotal}</p>
                                     </div>
                                     <div className="border border-orange-300 bg-orange-100/60 p-5">
                                         <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-700">Renewal from year 2</p>
                                         <p className="mt-3 flex flex-wrap items-baseline gap-x-1">
                                             <span className="text-3xl font-black tracking-tight text-zinc-950">{renewalTotal}</span>
-                                            <span className="text-sm font-semibold text-zinc-500">total / year</span>
+                                            <span className="text-sm font-semibold text-zinc-600">total / year</span>
                                         </p>
-                                        <p className="mt-2 text-xs text-zinc-500">{renewalBase} + {renewalGst} GST</p>
+                                        <p className="mt-2 text-xs text-zinc-600">{renewalBase} + {renewalGst} GST</p>
                                     </div>
                                 </div>
 
@@ -94,7 +94,7 @@ export default function LandingPricing() {
                                     <a href="/signup">Request Base Plan access</a>
                                 </Button>
 
-                                <div className="mt-7 grid gap-3 text-sm leading-6 text-zinc-600 sm:grid-cols-2">
+                                <div className="mt-7 grid gap-3 text-sm leading-6 text-zinc-700 sm:grid-cols-2">
                                     {plan.features.map((feature) => (
                                         <div key={feature} className="flex gap-3">
                                             <Check className="mt-0.5 h-5 w-5 flex-none text-orange-600" aria-hidden="true" />

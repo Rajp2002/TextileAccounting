@@ -43,7 +43,7 @@ export default function Home() {
                 <br />
                 <span className="text-orange-600">Make the next price conversation clearer.</span>
               </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-600 sm:text-lg">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-700 sm:text-lg">
                 A focused pilot is enough: one owner creates a reliable costing, saves the factory baseline, and exports a clear Cost Sheet. Full Suite factory operations are in development.
               </p>
               <div className="mt-9 flex items-center justify-center gap-x-6">

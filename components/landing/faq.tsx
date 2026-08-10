@@ -34,7 +34,7 @@ export default function LandingFAQ() {
                     <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
                         Questions a factory owner should ask before switching.
                     </h2>
-                    <p className="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
+                    <p className="mt-6 text-lg leading-8 text-zinc-700 dark:text-zinc-300">
                         Practical answers about adoption, floor usage, data, and what Weavly replaces.
                     </p>
                 </div>
@@ -42,9 +42,9 @@ export default function LandingFAQ() {
                 <div className="mx-auto mt-12 max-w-5xl border-y border-zinc-200 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-zinc-950/60">
                     {faqs.map((faq, index) => (
                         <div key={faq.question} className="grid gap-3 border-b border-zinc-200 px-4 py-6 last:border-b-0 dark:border-white/10 md:grid-cols-[4rem_0.8fr_1.2fr] md:gap-6 md:px-6">
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-zinc-400">0{index + 1}</p>
+                            <p className="text-xs font-black uppercase tracking-[0.22em] text-zinc-600">0{index + 1}</p>
                             <h3 className="text-lg font-black leading-7 text-zinc-950 dark:text-white">{faq.question}</h3>
-                            <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">{faq.answer}</p>
+                            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{faq.answer}</p>
                         </div>
                     ))}
                 </div>

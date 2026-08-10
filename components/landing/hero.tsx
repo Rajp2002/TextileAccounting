@@ -26,7 +26,7 @@ export default function LandingHero() {
                             Know your cost before you commit to the next order.
                         </h1>
 
-                        <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-600 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
+                        <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-700 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
                             Weavly gives factory owners a focused costing desk for fabric qualities, yarn assumptions, landed cost, margin, saved costings, and cost-sheet exports.
                         </p>
 
@@ -54,7 +54,7 @@ export default function LandingHero() {
                             </Link>
                         </div>
 
-                        <div className="mx-auto mt-6 grid max-w-3xl gap-2 text-left text-sm font-semibold text-zinc-600 dark:text-zinc-400 xs:grid-cols-3 xs:text-center">
+                        <div className="mx-auto mt-6 grid max-w-3xl gap-2 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-400 xs:grid-cols-3 xs:text-center">
                             {proofItems.map((item) => (
                                 <p key={item} className="flex min-w-0 items-center gap-2 xs:justify-center">
                                     <CheckCircle2 className="h-4 w-4 flex-none text-emerald-600" />
@@ -63,7 +63,7 @@ export default function LandingHero() {
                             ))}
                         </div>
 
-                        <p className="mt-5 text-sm text-zinc-500 dark:text-zinc-400">
+                        <p className="mt-5 text-sm text-zinc-700 dark:text-zinc-400">
                             Already have an account?{' '}
                             <Link href="/login" className="font-semibold text-orange-700 hover:underline dark:text-orange-500">
                                 Log in
@@ -80,7 +80,7 @@ export default function LandingHero() {
                         <h2 className="mt-4 text-4xl font-black leading-[1.05] text-zinc-950 sm:text-6xl dark:text-white">
                             Open the app. See the numbers before you quote.
                         </h2>
-                        <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
+                        <p className="mt-5 text-lg leading-8 text-zinc-700 dark:text-zinc-300">
                             The Base Plan keeps the first release focused: build a reliable cost estimate, understand the margin, reuse a fabric quality, and export the costing when you are ready.
                         </p>
                         <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
@@ -91,7 +91,7 @@ export default function LandingHero() {
                                 </li>
                             ))}
                         </ul>
-                        <p className="mt-7 border-l-2 border-orange-500 pl-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                        <p className="mt-7 border-l-2 border-orange-500 pl-4 text-xs leading-5 text-zinc-700 dark:text-zinc-400">
                             Authentic Weavly Estimator owner-screen capture from the current QA build. Demo costing data shown.
                         </p>
                     </div>
@@ -103,7 +103,7 @@ export default function LandingHero() {
                                 <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
                                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
                                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                                <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Cost Estimate · Owner view</span>
+                                <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-600">Cost Estimate · Owner view</span>
                             </div>
                             <div className="relative aspect-[16/10] overflow-hidden bg-[#fff8ea]">
                                 <Image

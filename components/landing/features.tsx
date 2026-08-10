@@ -66,21 +66,21 @@ export default function LandingFeatures() {
                             <h2 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
                                 Stop running the factory from registers, memory, and missed calls.
                             </h2>
-                            <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
+                            <p className="mt-5 text-lg leading-8 text-zinc-700 dark:text-zinc-300">
                                 Weavly is built for owners who need yarn inputs, factory costs, and margin to agree before a price becomes a promise.
                             </p>
                         </div>
 
                         <div className="grid gap-4">
                             <div className="border border-zinc-200 bg-white/92 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/70">
-                                <div className="grid border-b border-zinc-200 px-5 py-4 text-xs font-black uppercase tracking-[0.22em] text-zinc-400 dark:border-white/10 sm:grid-cols-[5rem_1fr_8rem]">
+                                <div className="grid border-b border-zinc-200 px-5 py-4 text-xs font-black uppercase tracking-[0.22em] text-zinc-600 dark:border-white/10 sm:grid-cols-[5rem_1fr_8rem]">
                                     <span>Item</span>
                                     <span>Operational leak</span>
                                     <span className="hidden sm:block">Status</span>
                                 </div>
                                 {painPoints.map((point, index) => (
                                     <div key={point} className="grid gap-3 border-b border-zinc-200 px-5 py-5 last:border-b-0 dark:border-white/10 sm:grid-cols-[5rem_1fr_8rem] sm:items-center">
-                                        <span className="text-xs font-black uppercase tracking-[0.22em] text-zinc-400">0{index + 1}</span>
+                                        <span className="text-xs font-black uppercase tracking-[0.22em] text-zinc-600">0{index + 1}</span>
                                         <p className="text-lg font-black leading-7 text-zinc-900 dark:text-zinc-50">{point}</p>
                                         <span className="w-fit border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300">
                                             Recurring
@@ -113,7 +113,7 @@ export default function LandingFeatures() {
                                 One clear loop from inputs to Cost Sheet.
                             </h2>
                         </div>
-                        <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
+                        <p className="max-w-2xl text-lg leading-8 text-zinc-700 dark:text-zinc-300 lg:ml-auto">
                             Weavly follows the costing decision a weaving unit makes before work begins: define the fabric quality, capture yarn rates, apply factory costs, review margin, save the costing, and export the Cost Sheet.
                         </p>
                     </div>
@@ -132,7 +132,7 @@ export default function LandingFeatures() {
                                         </div>
                                     </div>
                                     <h3 className="mt-8 text-xl font-black text-zinc-950 dark:text-white">{step.title}</h3>
-                                    <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{step.description}</p>
+                                    <p className="mt-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">{step.description}</p>
                                     <p className="mt-6 border-t border-zinc-200 pt-5 text-sm font-bold leading-6 text-zinc-900 dark:border-white/10 dark:text-zinc-100">
                                         <span className="mb-2 block text-[11px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-400">Outcome</span>
                                         {step.outcome}
@@ -154,7 +154,7 @@ export default function LandingFeatures() {
                                     Every number in the estimator should make sense on your factory floor.
                                 </h2>
                             </div>
-                            <p className="text-lg leading-8 text-zinc-600 lg:pt-12">
+                            <p className="text-lg leading-8 text-zinc-700 lg:pt-12">
                                 The first release stays deliberately focused on the costing work that happens before production: capture the right assumptions, trust the math, and carry the costing into the next conversation.
                             </p>
                         </div>
@@ -164,7 +164,7 @@ export default function LandingFeatures() {
                                 <div key={item.title} className="p-6 sm:p-8">
                                     <item.icon className="h-7 w-7 text-orange-600" aria-hidden="true" />
                                     <h3 className="mt-6 text-xl font-black text-zinc-950">{item.title}</h3>
-                                    <p className="mt-4 text-sm leading-6 text-zinc-600">{item.copy}</p>
+                                    <p className="mt-4 text-sm leading-6 text-zinc-700">{item.copy}</p>
                                 </div>
                             ))}
                         </div>
