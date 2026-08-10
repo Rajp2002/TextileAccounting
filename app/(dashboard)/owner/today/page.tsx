@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
-import { Loader2 } from 'lucide-react'
 import { getFactoryToday } from './actions'
 import { FactoryTodayClient } from './FactoryTodayClient'
+import { FactoryTodayLoading } from '@/components/factory-today/factory-today-loading'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,14 +18,7 @@ async function FactoryTodayContent() {
 export default function FactoryTodayPage() {
     return (
         <Suspense
-            fallback={
-                <div className="flex min-h-[60vh] items-center justify-center">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-saffron/60" />
-                        <p className="text-sm text-zinc-500">Loading your factory today…</p>
-                    </div>
-                </div>
-            }
+            fallback={<FactoryTodayLoading />}
         >
             <FactoryTodayContent />
         </Suspense>
