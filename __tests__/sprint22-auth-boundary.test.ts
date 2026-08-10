@@ -114,6 +114,14 @@ describe('Sprint 22 auth boundary', () => {
         expect(offline).toContain('protected account pages are not available offline')
     })
 
+    it('never signs out a valid session from a standalone PWA storage heuristic', () => {
+        const providers = read('components/providers.tsx')
+        const login = read('app/(auth)/login/login-form.tsx')
+
+        expect(providers).not.toContain('PwaSessionGuard')
+        expect(login).toContain('window.location.replace(result.redirectTo)')
+    })
+
     it('starts native sign-out after synchronous detachment and records transition phases', () => {
         const logout = read('components/auth/logout-button.tsx')
         const trace = read('lib/logout-trace.ts')

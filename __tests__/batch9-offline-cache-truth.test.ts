@@ -55,7 +55,7 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         const cleanup = readProjectFile('lib/client-storage-cleanup.ts')
         const logoutButton = readProjectFile('components/auth/logout-button.tsx')
         const loginForm = readProjectFile('app/(auth)/login/login-form.tsx')
-        const pwaSessionGuard = readProjectFile('hooks/use-pwa-session-guard.ts')
+        const providers = readProjectFile('components/providers.tsx')
 
         expect(REACT_QUERY_PERSISTENCE_KEY).toBe('REACT_QUERY_OFFLINE_CACHE')
         expect(isUserCacheKey('REACT_QUERY_OFFLINE_CACHE')).toBe(true)
@@ -77,7 +77,8 @@ describe('Batch 9 offline/cache truth cleanup', () => {
         expect(loginForm).not.toContain('clearClientSessionState()')
         expect(loginForm).not.toContain('await Promise.all([')
         expect(loginForm).toContain('signIn({ email: email.trim(), password, traceId })')
-        expect(pwaSessionGuard).toContain('await clearClientSessionState()')
+        expect(cleanup).toContain("'weavly_pwa_session_alive'")
+        expect(providers).not.toContain('PwaSessionGuard')
     })
 
     it('detaches the active namespace before a non-blocking native logout POST', () => {
