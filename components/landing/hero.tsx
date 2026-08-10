@@ -97,7 +97,7 @@ export default function LandingHero() {
                     </div>
 
                     <div className="relative min-w-0">
-                        <div className="absolute -inset-6 -z-10 bg-gradient-to-tr from-orange-500/20 via-orange-200/20 to-transparent blur-3xl" aria-hidden="true" />
+                        <div className="absolute -inset-6 -z-10 bg-gradient-to-tr from-orange-500/20 via-orange-200/20 to-transparent blur-2xl" aria-hidden="true" />
                         <div className="overflow-hidden rounded-xl border border-zinc-900/10 bg-white shadow-[0_34px_110px_rgba(154,52,18,0.18)] dark:border-white/10">
                             <div className="flex items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-white/10 dark:bg-zinc-900">
                                 <span className="h-2.5 w-2.5 rounded-full bg-red-400" />

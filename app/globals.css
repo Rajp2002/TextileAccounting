@@ -368,9 +368,9 @@
   .weavly-app-bg {
     background-color: var(--color-app-bg);
     background-image:
-      radial-gradient(ellipse 38% 32% at 12% 8%, rgba(226, 112, 37, 0.24), rgba(226, 112, 37, 0.08) 30%, transparent 62%),
-      radial-gradient(ellipse 34% 30% at 88% 18%, rgba(245, 158, 11, 0.20), rgba(245, 158, 11, 0.07) 28%, transparent 58%),
-      radial-gradient(ellipse 36% 34% at 72% 82%, rgba(226, 112, 37, 0.18), rgba(226, 112, 37, 0.06) 32%, transparent 64%),
+      radial-gradient(ellipse 38% 32% at 12% 8%, rgba(194, 65, 12, 0.24), rgba(194, 65, 12, 0.08) 30%, transparent 62%),
+      radial-gradient(ellipse 34% 30% at 88% 18%, rgba(234, 88, 12, 0.20), rgba(234, 88, 12, 0.07) 28%, transparent 58%),
+      radial-gradient(ellipse 36% 34% at 72% 82%, rgba(194, 65, 12, 0.18), rgba(194, 65, 12, 0.06) 32%, transparent 64%),
       linear-gradient(rgba(126, 91, 47, 0.045) 1px, transparent 1px),
       linear-gradient(90deg, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
     background-size:

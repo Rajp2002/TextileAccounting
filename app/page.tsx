@@ -32,7 +32,7 @@ export default function Home() {
  
         {/* Pre-footer CTA */}
         <section className="landing-section relative isolate overflow-hidden border-y border-orange-200 bg-orange-50/70">
-          <div className="absolute left-1/2 top-0 h-80 w-[52rem] -translate-x-1/2 rounded-full bg-orange-400/15 blur-3xl" aria-hidden="true" />
+          <div className="absolute left-1/2 top-0 h-80 w-[52rem] -translate-x-1/2 rounded-full bg-orange-400/15 blur-2xl" aria-hidden="true" />
           <div className="px-6 py-20 sm:px-6 sm:py-28 lg:px-8">
             <div className="relative mx-auto max-w-5xl text-center">
               <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-700">
