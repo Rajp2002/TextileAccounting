@@ -132,12 +132,12 @@ function SettingsSection({
 
     if (collapsible) {
         return (
-            <details id={id} className="group scroll-mt-6 space-y-3">
+            <details id={id} className="premium-disclosure-card group scroll-mt-6 space-y-3 rounded-lg">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-hairline/80 pb-2 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
                     {heading}
                     <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
                 </summary>
-                {children}
+                <div className="premium-disclosure-content">{children}</div>
             </details>
         )
     }
@@ -183,7 +183,7 @@ function SettingsPanel({ className, children }: { className?: string; children: 
     return (
         <div
             className={cn(
-                'rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]',
+                'premium-disclosure-card rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]',
                 className
             )}
         >
@@ -380,8 +380,235 @@ export default function SettingsPage() {
         toast.success(tx('Settings refreshed'))
     }
 
+    // Base is a costing desk, not a factory-operations console. Keep its
+    // settings path focused on the inputs that change a new estimate, and put
+    // infrequent account/data actions behind one low-frequency disclosure.
+    if (!hasPremium) {
+        return (
+            <div className="premium-route-enter settings-page-frame">
+                <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
+                <PageHeader
+                    id="overview"
+                    eyebrow="Estimator Plan"
+                    icon={SlidersHorizontal}
+                    title={t('settings.title')}
+                    description="Set the defaults used when you create a new Cost Estimate. Saved Costings keep the values captured when they were saved."
+                    actions={(
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button asChild variant="saffron" className="w-fit gap-2">
+                                <Link href="/owner/estimator">
+                                    <Calculator className="h-4 w-4" />
+                                    Open Cost Estimate
+                                </Link>
+                            </Button>
+                            <Button variant="outline" className="w-fit gap-2" onClick={refreshSettings}>
+                                <RefreshCw className="h-4 w-4" />
+                                {tx('Refresh')}
+                            </Button>
+                        </div>
+                    )}
+                />
+
+                <div className="mt-6 max-w-5xl space-y-8">
+                    <SettingsCategory
+                        title="Cost Estimate Setup"
+                        description="Set this up once, then return only when yarn rates, monthly expenses, or your pricing approach changes."
+                        icon={Calculator}
+                    >
+                        <SettingsSection id="cost-profile" title="Default costing inputs" icon={Calculator}>
+                            <FactoryCostProfile standaloneEstimator />
+                        </SettingsSection>
+                        <SettingsSection id="qualities" title="Saved fabric qualities" icon={ShieldCheck} collapsible>
+                            <TemplateManager />
+                        </SettingsSection>
+                    </SettingsCategory>
+
+                    <SettingsCategory
+                        title="Business identity"
+                        description="Use the name your customers and team recognise. It appears on saved costings and exported documents."
+                        icon={Factory}
+                    >
+                        <SettingsSection id="factory-identity" title="Business name" icon={Factory}>
+                            <SettingsPanel className="p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={Factory}
+                                    title="Business name"
+                                    description="This name is used to identify your costing desk and brand exported documents."
+                                />
+                                <div className="mt-5 space-y-2">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <Label>Business name</Label>
+                                        {currentFactoryName !== org?.name && !isEditingName && (
+                                            <Button
+                                                variant="link"
+                                                size="sm"
+                                                className="h-auto p-0 font-semibold"
+                                                onClick={() => updateNameMutation.mutate(currentFactoryName)}
+                                                disabled={updateNameMutation.isPending}
+                                            >
+                                                {updateNameMutation.isPending ? 'Saving...' : 'Save changes'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            value={currentFactoryName}
+                                            onChange={(event) => {
+                                                setIsEditingName(true)
+                                                setFactoryName(event.target.value)
+                                            }}
+                                            className="flex-1 border-hairline bg-canvas/80"
+                                            placeholder="Enter business name"
+                                            disabled={updateNameMutation.isPending}
+                                        />
+                                        {currentFactoryName !== org?.name && (
+                                            <Button
+                                                variant="saffron"
+                                                size="sm"
+                                                onClick={() => updateNameMutation.mutate(currentFactoryName)}
+                                                disabled={updateNameMutation.isPending}
+                                            >
+                                                {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </SettingsPanel>
+                        </SettingsSection>
+                    </SettingsCategory>
+
+                    {planAccess.canSwitchExperience && (
+                        <SettingsSection id="workspace-experience" title="Workspace experience" icon={SlidersHorizontal}>
+                            <SettingsPanel className="p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={SlidersHorizontal}
+                                    title="Choose the workspace for this rollout"
+                                    description="Your paid Full Suite plan stays active. This setting only changes which product experience the organization uses."
+                                />
+                                <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                                    {([
+                                        {
+                                            value: 'base' as const,
+                                            title: 'Base Plan',
+                                            description: 'Cost Estimates, Saved Costings, Yarn Rate Book, settings, and billing.',
+                                        },
+                                        {
+                                            value: 'full_suite' as const,
+                                            title: 'Full Suite',
+                                            description: 'All factory, production, workforce, stock, dispatch, and costing workflows.',
+                                        },
+                                    ]).map((option) => {
+                                        const selected = planAccess.productExperience === option.value
+                                        return (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                disabled={updateProductExperienceMutation.isPending}
+                                                onClick={() => {
+                                                    if (!selected) updateProductExperienceMutation.mutate(option.value)
+                                                }}
+                                                className={cn(
+                                                    'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 disabled:cursor-wait disabled:opacity-70',
+                                                    selected
+                                                        ? 'border-saffron bg-saffron-soft/60'
+                                                        : 'border-hairline bg-canvas/70 hover:border-saffron/50 hover:bg-saffron-soft/25'
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <span className="font-semibold text-ink">{tx(option.title)}</span>
+                                                    {selected ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            {tx('Active')}
+                                                        </span>
+                                                    ) : updateProductExperienceMutation.isPending ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                                    ) : null}
+                                                </div>
+                                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx(option.description)}</p>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
+                                    {tx('Existing production and factory records are never deleted. Switch back to Full Suite at any time to use them again.')}
+                                </p>
+                            </SettingsPanel>
+                        </SettingsSection>
+                    )}
+
+                    <details className="premium-disclosure-card group overflow-hidden rounded-xl border border-hairline bg-surface/80">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden sm:px-5">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-subtle" />
+                                    <h2 className="text-base font-bold text-ink">Account & data</h2>
+                                </div>
+                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Owner profile, password reset, data export, and permanent deletion. These are occasional actions, not costing setup.</p>
+                            </div>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                        </summary>
+
+                        <div className="premium-disclosure-content space-y-5 border-t border-hairline/70 px-4 pb-5 pt-5 sm:px-5">
+                            <SettingsPanel className="p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={User}
+                                    title="Owner account"
+                                    description="Your registered profile is read-only here and is used for account ownership and support context."
+                                />
+                                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div className="space-y-2">
+                                        <Label>Full name</Label>
+                                        <Input value={userProfile.full_name || ''} readOnly className="border-hairline bg-surface-soft/55" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Phone number</Label>
+                                        <Input value={userProfile.phone || ''} readOnly className="border-hairline bg-surface-soft/55" />
+                                    </div>
+                                    <div className="flex items-end">
+                                        <div className="flex w-full items-center gap-2 rounded-lg border border-success/20 bg-success-soft px-3 py-2.5 text-success">
+                                            <ShieldCheck className="h-4 w-4" />
+                                            <span className="text-xs font-bold uppercase tracking-wide">Role: {userProfile.role}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button asChild variant="outline" size="sm" className="mt-4 gap-2">
+                                    <Link href="/forgot-password">
+                                        <KeyRound className="h-4 w-4" />
+                                        Password & Security
+                                    </Link>
+                                </Button>
+                            </SettingsPanel>
+
+                            <SettingsSection id="privacy-data" title="Export & privacy" icon={Download}>
+                                <SettingsPanel className="p-5 sm:p-6">
+                                    <PanelHeading
+                                        icon={Download}
+                                        title="Download your organization data"
+                                        description="Create a structured export of the factory records your account is allowed to access. Sensitive authentication fields are excluded or redacted."
+                                    />
+                                    <div className="mt-5">
+                                        <OrganizationDataExportButton />
+                                        <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:text-saffron">
+                                            View export history
+                                        </Link>
+                                    </div>
+                                </SettingsPanel>
+                            </SettingsSection>
+
+                            <SettingsSection id="account-deletion" title="Delete workspace" icon={AlertTriangle}>
+                                <DeleteAccountCard organizationName={org?.name || ''} />
+                            </SettingsSection>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div className="settings-page-frame">
+        <div className="premium-route-enter settings-page-frame">
             <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
             <PageHeader
                 id="overview"

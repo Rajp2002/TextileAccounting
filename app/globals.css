@@ -714,6 +714,124 @@
   .modern-slider::-moz-range-thumb:active {
     transform: scale(0.95);
   }
+
+  /* ── Premium product interaction system ────────────────────────────────
+   * Short, interruptible transitions keep the Base workspace responsive.
+   * Motion is limited to compositor-friendly opacity and transform changes;
+   * state is always communicated by colour, text, or ARIA as well.
+   */
+  @keyframes premium-route-enter {
+    from { opacity: 0; transform: translate3d(0, 8px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @keyframes premium-content-swap {
+    from { opacity: 0.58; transform: translate3d(0, 5px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @keyframes premium-success-pop {
+    0% { opacity: 0.2; transform: scale(0.72); }
+    62% { opacity: 1; transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes premium-selection-confirm {
+    from { box-shadow: inset 3px 0 0 transparent; }
+    to { box-shadow: inset 3px 0 0 var(--color-info-blue); }
+  }
+
+  .premium-route-enter {
+    animation: premium-route-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .premium-content-swap,
+  .premium-disclosure-content,
+  .premium-status-enter {
+    animation: premium-content-swap 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .premium-success-pop {
+    animation: premium-success-pop 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .premium-surface,
+  .premium-disclosure-card,
+  .premium-focus-surface {
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      background-color 180ms ease;
+  }
+
+  .premium-focus-surface:focus-within,
+  .premium-disclosure-card:focus-within {
+    border-color: color-mix(in srgb, var(--color-saffron) 42%, var(--color-hairline));
+    box-shadow: var(--shadow-panel);
+  }
+
+  .premium-segment {
+    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .premium-segment[aria-selected="true"],
+  .premium-segment[aria-pressed="true"] {
+    transform: scale(1.025);
+  }
+
+  .premium-selected-row {
+    animation: premium-selection-confirm 220ms ease-out both;
+  }
+
+  .premium-progress-fill {
+    transform-origin: left center;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .premium-nav-indicator {
+    animation: premium-success-pop 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: center;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .premium-surface:hover {
+      transform: translate3d(0, -2px, 0);
+      border-color: color-mix(in srgb, var(--color-saffron) 30%, var(--color-hairline));
+      box-shadow: var(--shadow-panel);
+    }
+
+    .premium-disclosure-card:hover {
+      border-color: color-mix(in srgb, var(--color-saffron) 24%, var(--color-hairline));
+      box-shadow: var(--shadow-panel);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .premium-route-enter,
+    .premium-content-swap,
+    .premium-disclosure-content,
+    .premium-status-enter,
+    .premium-success-pop,
+    .premium-selected-row,
+    .premium-nav-indicator {
+      animation: none !important;
+    }
+
+    .premium-surface,
+    .premium-disclosure-card,
+    .premium-focus-surface,
+    .premium-segment,
+    .premium-progress-fill {
+      transition-duration: 0.01ms !important;
+    }
+
+    .premium-surface:hover,
+    .premium-segment[aria-selected="true"],
+    .premium-segment[aria-pressed="true"] {
+      transform: none;
+    }
+  }
 }
 
 /**

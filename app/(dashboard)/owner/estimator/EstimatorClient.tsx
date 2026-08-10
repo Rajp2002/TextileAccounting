@@ -44,7 +44,7 @@ import {
     FileDown,
     Pencil,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
@@ -2171,6 +2171,7 @@ export default function EstimatorClient({
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
+    const prefersReducedMotion = useReducedMotion()
 
     const estimatorWorkflow = getEstimatorWorkflowConfig(productionMode, searchParams.get('mode'))
     const [mode, setMode] = useState<EstimatorWorkflowMode>(
@@ -3671,7 +3672,7 @@ export default function EstimatorClient({
         { label: 'Factory expenses / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
     return (
-        <div className="estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
+        <div className="premium-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <RouteMilestones
                 route="/owner/estimator"
                 shellVisible
@@ -3888,7 +3889,7 @@ export default function EstimatorClient({
             <div className="relative min-w-0">
             {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
             <div className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
-                <div className={hudShellClass}>
+                <div className={`${hudShellClass} premium-focus-surface`}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
@@ -3922,8 +3923,8 @@ export default function EstimatorClient({
                                 )}
                             </div>
                             <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
-                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`estimator-touch-target rounded-lg px-3 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                             </div>
                         </div>
                     </div>
@@ -4336,7 +4337,7 @@ export default function EstimatorClient({
                     id="saved-qualities"
                     aria-labelledby="saved-qualities-title"
                     aria-busy={!templatesLoaded}
-                    className="overflow-hidden rounded-[16px] border-2 border-[var(--color-yarn-orange)]/15 bg-white/95 shadow-[0_10px_28px_rgba(30,37,40,0.07)]"
+                    className="premium-focus-surface overflow-hidden rounded-[16px] border-2 border-[var(--color-yarn-orange)]/15 bg-white/95 shadow-[0_10px_28px_rgba(30,37,40,0.07)]"
                 >
                     <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
                         <div className="flex items-start gap-3">
@@ -4588,6 +4589,7 @@ export default function EstimatorClient({
                 </section>
 
                 {entryMode === 'quick' ? (
+                    <div key="quick" className="premium-content-swap">
                     <QuickCostingView
                         state={state}
                         dispatch={dispatch}
@@ -4618,8 +4620,9 @@ export default function EstimatorClient({
                         directWeavingRateInput={directWeavingRateInput}
                         onDirectWeavingRateInputChange={setDirectWeavingRateInput}
                     />
+                    </div>
                 ) : (
-                <>
+                <div key="detailed" className="premium-content-swap space-y-7">
                 {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
                     <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
@@ -5257,6 +5260,8 @@ export default function EstimatorClient({
                                             <button
                                                 type="button"
                                                 onClick={() => setShowAdvancedOverhead(!showAdvancedOverhead)}
+                                                aria-expanded={showAdvancedOverhead}
+                                                aria-controls="estimator-monthly-expenses"
                                                 className="flex items-center justify-between w-full rounded-lg bg-[var(--color-surface-soft)] px-3 py-2 text-xs font-bold text-[var(--color-body)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] transition-all"
                                             >
                                                 <span className="flex items-center gap-2">
@@ -5281,7 +5286,8 @@ export default function EstimatorClient({
                                         {/* Advanced Capacity & Fixed Cost Section (Collapsible) */}
                                         {showAdvancedOverhead && (
                                             <motion.div
-                                                initial={{ opacity: 0, y: -10 }}
+                                                id="estimator-monthly-expenses"
+                                                initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 className="space-y-6 pt-2"
                                             >
@@ -5523,7 +5529,7 @@ export default function EstimatorClient({
                                                             {/* Output Suggestion Panel */}
                                                             {outputSuggestion && (
                                                                 <motion.div 
-                                                                    initial={{ opacity: 0, y: -10 }} 
+                                                                    initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
                                                                     animate={{ opacity: 1, y: 0 }}
                                                                     className="space-y-2 rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 p-3"
                                                                 >
@@ -5803,7 +5809,7 @@ export default function EstimatorClient({
                         </div>
                     </CardContent>
                 </EstimatorCard>
-                </>
+                </div>
                 )}
             </div>
             </div>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle, RefreshCw, ChevronDown } from 'lucide-react'
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from '@/lib/app-notifications'
 import { DEFAULT_FACTORY_SECTIONS, DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
@@ -111,6 +111,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [presetToReplace, setPresetToReplace] = useState<(typeof FACTORY_COST_PRESETS)[number] | null>(null)
     const [dirty, setDirty] = useState(false)
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+    const [coreOpen, setCoreOpen] = useState(true)
+    const [advancedOpen, setAdvancedOpen] = useState(false)
+    const [capacityOpen, setCapacityOpen] = useState(true)
 
     const [rates, setRates] = useState({
         warping_rate_per_kg:     2.00,
@@ -153,6 +156,11 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
 
             const d = res.data
             setLastSavedAt(d.updated_at ?? null)
+            // Returning owners usually visit Settings to confirm one value, not
+            // to reread the entire setup. Keep a saved profile compact while
+            // leaving the first-run setup open.
+            setCoreOpen(d.is_configured !== true)
+            setCapacityOpen(Number(d.loom_count ?? 0) <= 0)
             setRates({
                 warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
                 sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
@@ -292,6 +300,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         }])
     }
 
+    const selectedPreset = FACTORY_COST_PRESETS.find(preset => preset.id === activePreset)
+        ?? FACTORY_COST_PRESETS.find(preset => preset.id === 'custom')
+    const monthlyExpenseTotal = overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
+    const enabledOptionalSections = (Object.values(sections) as boolean[]).filter(Boolean).length
+    const overheadSummary = overheadMode === 'direct'
+        ? `Direct factory cost · ₹${directOverheadPerM.toFixed(2)}/m`
+        : `Monthly expenses ÷ output · ${monthlyOutputM.toLocaleString('en-IN')} m/mo`
+
     if (loading) {
         return (
             <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
@@ -337,382 +353,428 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-6 pt-5">
+            <CardContent className="space-y-4 pt-5">
 
                 {!standaloneEstimator && (
-                <div className="space-y-3">
-                    <div>
-                        <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'How should Weavly start your setup?' : 'How does your factory work?')}</Label>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{tx('Pick the closest starting point. It only turns optional cost sections on or off; you can fine-tune the amounts below.')}</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
-                        {FACTORY_COST_PRESETS.map(preset => (
-                            <button
-                                key={preset.id}
-                                type="button"
-                                onClick={() => applyPreset(preset)}
-                                aria-label={`${tx('Use')} ${tx(preset.label)} factory setup`}
-                                className={`min-h-[112px] rounded-lg border p-3.5 text-left transition-all duration-150 ${
-                                    activePreset === preset.id
-                                        ? 'border-saffron bg-saffron-soft/65 shadow-sm ring-2 ring-saffron/15'
-                                        : preset.recommended
-                                            ? 'border-saffron/45 bg-saffron-soft/20 hover:border-saffron hover:bg-saffron-soft/40'
-                                            : 'border-hairline bg-canvas/55 hover:border-hairline-strong hover:bg-surface'
-                                }`}
-                            >
-                                <div className="text-xl mb-1">{preset.emoji}</div>
-                                <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                                    {tx(preset.label)}
-                                    {preset.recommended && <span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-dark">{tx('Recommended')}</span>}
-                                </div>
-                                <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{tx(preset.description)}</div>
-                            </button>
-                        ))}
-                    </div>
-                    {activePreset === 'grey_weaver' && (
-                        <p className="rounded-lg border border-saffron/20 bg-saffron-soft/25 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                            {tx('Grey Weaver keeps the estimator focused on yarn, weaving, warping, sizing, and factory expenses. Processing, finishing, broker commission, and transport are off until you enable them.')}
+                    <div className="rounded-lg border border-hairline bg-canvas/45 p-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-end">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="factory-setup" className="text-sm font-semibold text-body">Factory setup</Label>
+                                <select
+                                    id="factory-setup"
+                                    value={activePreset ?? 'custom'}
+                                    onChange={event => {
+                                        const preset = FACTORY_COST_PRESETS.find(candidate => candidate.id === event.target.value)
+                                        if (preset) applyPreset(preset)
+                                    }}
+                                    className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
+                                >
+                                    {FACTORY_COST_PRESETS.map(preset => (
+                                        <option key={preset.id} value={preset.id}>
+                                            {tx(preset.label)}{preset.recommended ? ` — ${tx('Recommended')}` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Starting point only</p>
+                                <p className="mt-1 text-sm leading-relaxed text-body">{tx(selectedPreset?.description ?? 'Choose the optional charges your factory uses. You can change the amounts below.')}</p>
+                            </div>
+                        </div>
+                        <p className="mt-3 rounded-lg border border-info/20 bg-info-soft/55 px-3 py-2 text-xs leading-relaxed text-info">
+                            {tx(dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.')}
                         </p>
-                    )}
-                    <p className="rounded-lg border border-info/20 bg-info/5 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                        {tx(dirty ? 'Changes are staged here and are not saved yet.' : 'Only an explicit save changes defaults for future Cost Estimates.')}
-                    </p>
-                </div>
+                    </div>
                 )}
 
-                {/* ── Pre-Weaving Rates ── */}
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                        <Zap className="h-4 w-4 text-warning" />
-                        <Label className="text-sm font-semibold text-body">Pre-Weaving Rates</Label>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.</p>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <RateInput
-                            label="Warping Rate"
-                            value={rates.warping_rate_per_kg}
-                            onChange={updateRate('warping_rate_per_kg')}
-                            unit="₹/kg"
-                            step={0.25}
-                            icon={Zap}
-                        />
-                        <RateInput
-                            label="Sizing Rate"
-                            value={rates.sizing_rate_per_kg}
-                            onChange={updateRate('sizing_rate_per_kg')}
-                            unit="₹/kg"
-                            step={0.25}
-                        />
-                        {sections.winding && (
-                            <RateInput
-                                label="Winding Rate"
-                                value={rates.winding_rate_per_kg}
-                                onChange={updateRate('winding_rate_per_kg')}
-                                unit="₹/kg"
-                                step={0.25}
-                                hint="Applies to total yarn (warp + weft)"
-                                icon={Wind}
-                            />
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Overhead ── */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                        <Calculator className="h-4 w-4 text-info" />
-                        <Label className="text-sm font-semibold text-body">Factory Expenses</Label>
-                    </div>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                        Choose once how your unit recovers fixed costs. This method and the values below pre-fill every new costing; a single costing can still be edited without changing these defaults.
-                    </p>
-
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                        <button
-                            type="button"
-                            aria-pressed={overheadMode === 'direct'}
-                            onClick={() => { setDirty(true); setOverheadMode('direct') }}
-                            className={cn(
-                                'rounded-lg border px-4 py-3 text-left transition-colors',
-                                overheadMode === 'direct'
-                                    ? 'border-saffron bg-saffron-soft/55 ring-2 ring-saffron/15'
-                                    : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
-                            )}
-                        >
-                            <div className="text-sm font-semibold text-ink">I already know my factory cost per metre</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Use a ₹/m rate you already trust; no monthly expense breakdown is needed.</div>
-                        </button>
-                        <button
-                            type="button"
-                            aria-pressed={overheadMode === 'monthly_expenses'}
-                            onClick={() => { setDirty(true); setOverheadMode('monthly_expenses') }}
-                            className={cn(
-                                'rounded-lg border px-4 py-3 text-left transition-colors',
-                                overheadMode === 'monthly_expenses'
-                                    ? 'border-saffron bg-saffron-soft/55 ring-2 ring-saffron/15'
-                                    : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
-                            )}
-                        >
-                            <div className="flex items-center gap-2 text-sm font-semibold text-ink"><span>Calculate from monthly expenses</span><span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-deep">Recommended</span></div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Weavly divides rent, power, salaries, and other monthly costs by your actual output.</div>
-                        </button>
-                    </div>
-                    <p className="rounded-lg border border-info/20 bg-info-soft/55 px-3 py-2 text-xs leading-relaxed text-info">
-                        {overheadMode === 'monthly_expenses'
-                            ? 'Recommended for most factories: enter real monthly expenses and output so the per-metre cost is easy to explain.'
-                            : 'Use direct ₹/m when your factory already maintains a trusted per-metre overhead rate.'}
-                    </p>
-
-                    {overheadMode === 'direct' ? (
-                        <div className="rounded-lg border border-saffron/30 bg-saffron-soft/30 p-4">
-                            <RateInput
-                                label="Direct factory cost per metre"
-                                value={directOverheadPerM}
-                                onChange={value => { setDirty(true); setDirectOverheadPerM(value) }}
-                                unit="₹/m"
-                                step={0.1}
-                                hint="Required when direct factory cost per metre is selected."
-                                icon={Calculator}
-                            />
+                <details
+                    open={coreOpen}
+                    onToggle={event => setCoreOpen(event.currentTarget.open)}
+                    className="premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-surface/95"
+                >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                                <Calculator className="h-4 w-4 text-saffron" />
+                                <h3 className="text-sm font-semibold text-ink">Core costing defaults</h3>
+                            </div>
+                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">The few inputs that make a new estimate trustworthy: yarn preparation, factory expenses, and target margin.</p>
                         </div>
-                    ) : (
-                        <div className="space-y-4 rounded-lg border border-hairline bg-canvas/45 p-4">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <RateInput
-                                    label="Actual monthly output"
-                                    value={monthlyOutputM}
-                                    onChange={value => { setDirty(true); setMonthlyOutputM(value) }}
-                                    unit="m/mo"
-                                    step={100}
-                                    hint="Used to divide monthly expenses."
-                                />
-                                <RateInput
-                                    label="Active looms"
-                                    value={loomCount}
-                                    onChange={value => { setDirty(true); setLoomCount(value) }}
-                                    unit="looms"
-                                    step={1}
-                                />
-                                <RateInput
-                                    label="Working days"
-                                    value={monthlyWorkingDays}
-                                    onChange={value => { setDirty(true); setMonthlyWorkingDays(value) }}
-                                    unit="days/mo"
-                                    step={1}
-                                />
+                        <div className="flex shrink-0 items-center gap-2 text-right">
+                            <span className="hidden text-xs font-medium text-muted-foreground sm:inline">{overheadSummary}</span>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+                        </div>
+                    </summary>
+
+                    <div className="premium-disclosure-content space-y-6 border-t border-hairline/70 px-4 pb-5 pt-5 sm:px-5">
+                        {/* ── Pre-Weaving Rates ── */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                                <Zap className="h-4 w-4 text-warning" />
+                                <Label className="text-sm font-semibold text-body">Pre-Weaving Rates</Label>
                             </div>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <p className="text-xs text-muted-foreground">Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.</p>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                 <RateInput
-                                    label="Average output per loom"
-                                    value={avgOutputPerLoomPerDay}
-                                    onChange={value => { setDirty(true); setAvgOutputPerLoomPerDay(value) }}
-                                    unit="m/day"
-                                    step={1}
-                                    hint="Capacity reference only; actual monthly output above is used for costing."
+                                    label="Warping Rate"
+                                    value={rates.warping_rate_per_kg}
+                                    onChange={updateRate('warping_rate_per_kg')}
+                                    unit="₹/kg"
+                                    step={0.25}
+                                    icon={Zap}
                                 />
-                                <div className="flex items-end rounded-lg border border-hairline bg-surface px-3 py-2.5 text-xs text-muted-foreground">
-                                    <span>Monthly expenses are persistent and can be updated whenever electricity, salary, rent, or output changes.</span>
-                                </div>
-                                <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                    Preset expense names stay fixed so costings use the same categories. Locked amounts are maintained by the linked factory record.
-                                </p>
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between gap-3">
-                                    <div>
-                                        <p className="text-sm font-semibold text-ink">Monthly expenses</p>
-                                        <p className="text-xs text-muted-foreground">Enter the unit&apos;s recurring factory costs.</p>
-                                    </div>
-                                    <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addOverheadItem}>
-                                        <Plus className="h-3.5 w-3.5" /> Add expense
-                                    </Button>
-                                </div>
-                                <div className="divide-y divide-hairline rounded-lg border border-hairline bg-surface">
-                                    {overheadItems.map(item => (
-                                        <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_96px_auto] items-center gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_120px_auto] sm:gap-3">
-                                            <div className="flex min-w-0 items-center gap-2">
-                                                {item.category === 'rent' ? <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <Calculator className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-                                                <Input
-                                                    aria-label={`${item.label} expense name`}
-                                                    value={item.isPreset ? tx(item.label) : item.label}
-                                                    disabled={item.isPreset}
-                                                    onChange={event => updateOverheadItem(item.id, 'label', event.target.value)}
-                                                    className="h-8 min-w-0 border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                            <div className="relative">
-                                                <Input
-                                                    aria-label={`${item.label} monthly amount`}
-                                                    type="number"
-                                                    min={0}
-                                                    step={100}
-                                                    value={item.monthlyAmount}
-                                                    disabled={item.isLocked}
-                                                    onChange={event => updateOverheadItem(item.id, 'monthlyAmount', parseNonNegativeInput(event.target.value) ?? 0)}
-                                                    className="h-8 pr-12 text-right font-mono text-xs"
-                                                />
-                                                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">₹/mo</span>
-                                            </div>
-                                            {!item.isPreset && (
-                                                <button
-                                                    type="button"
-                                                    aria-label={`${tx('Remove')} ${item.label}`}
-                                                    onClick={() => { setDirty(true); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
-                                                    className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                                <RateInput
+                                    label="Sizing Rate"
+                                    value={rates.sizing_rate_per_kg}
+                                    onChange={updateRate('sizing_rate_per_kg')}
+                                    unit="₹/kg"
+                                    step={0.25}
+                                />
+                                {sections.winding && (
+                                    <RateInput
+                                        label="Winding Rate"
+                                        value={rates.winding_rate_per_kg}
+                                        onChange={updateRate('winding_rate_per_kg')}
+                                        unit="₹/kg"
+                                        step={0.25}
+                                        hint="Applies to total yarn (warp + weft)"
+                                        icon={Wind}
+                                    />
+                                )}
                             </div>
                         </div>
-                    )}
-                </div>
 
-                {/* ── Post-Weaving Defaults ── */}
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                        <Sparkles className="h-4 w-4 text-saffron" />
-                        <Label className="text-sm font-semibold text-body">Post-Weaving Rates</Label>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {sections.processing && (
-                            <RateInput
-                                label="Processing / Dyeing"
-                                value={rates.default_processing_rate_per_m}
-                                onChange={updateRate('default_processing_rate_per_m')}
-                                unit="₹/m"
-                                step={0.1}
-                            />
-                        )}
-                        {sections.finishing && (
-                            <RateInput
-                                label="Finishing"
-                                value={rates.default_finishing_rate_per_m}
-                                onChange={updateRate('default_finishing_rate_per_m')}
-                                unit="₹/m"
-                                step={0.1}
-                            />
-                        )}
-                        {!sections.processing && !sections.finishing && (
-                            <p className="text-xs italic text-muted-foreground">Enable processing or finishing below to configure its default rate.</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Selling Defaults ── */}
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                        <TrendingUp className="h-4 w-4 text-success" />
-                        <Label className="text-sm font-semibold text-body">Selling Defaults</Label>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <RateInput
-                            label="Target Margin"
-                            value={rates.default_margin_pct}
-                            onChange={updateRate('default_margin_pct')}
-                            unit="%"
-                            step={0.5}
-                            hint="Pre-fills the suggested selling price. You can adjust it in each cost estimate."
-                            icon={TrendingUp}
-                        />
-                        {sections.commission && (
-                            <RateInput
-                                label="Broker commission"
-                                value={rates.default_commission_pct}
-                                onChange={updateRate('default_commission_pct')}
-                                unit="%"
-                                step={0.5}
-                                hint="Broker/agent commission %"
-                                icon={Users2}
-                            />
-                        )}
-                        {sections.transport && (
-                            <RateInput
-                                label="Transport charge"
-                                value={rates.default_transport_per_m}
-                                onChange={updateRate('default_transport_per_m')}
-                                unit="₹/m"
-                                step={0.1}
-                                hint="Delivery cost per metre"
-                                icon={Truck}
-                            />
-                        )}
-                        {!sections.commission && !sections.transport && (
-                            <p className="col-span-2 text-xs italic text-muted-foreground">
-                                Enable commission or transport sections below to configure selling defaults.
+                        {/* ── Overhead ── */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                                <Calculator className="h-4 w-4 text-info" />
+                                <Label className="text-sm font-semibold text-body">Factory Expenses</Label>
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                                Choose how your unit recovers fixed costs. This default applies to new estimates; a single estimate can still be edited without changing this setup.
                             </p>
-                        )}
-                    </div>
-                </div>
 
-                {/* ── Yarn Rate Reviews ── */}
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                        <Sparkles className="h-4 w-4 text-saffron" />
-                        <Label className="text-sm font-semibold text-body">Yarn Rate Reviews</Label>
-                    </div>
-                    <div className="max-w-md space-y-1.5">
-                        <Label htmlFor="yarn-review-period" className="text-xs font-semibold text-body">Review yarn rates every</Label>
-                        <select
-                            id="yarn-review-period"
-                            value={rates.yarn_review_interval_days}
-                            onChange={event => updateRate('yarn_review_interval_days')(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
-                            className="h-10 w-full rounded-md border border-hairline bg-canvas/80 px-3 text-sm font-medium text-ink"
-                        >
-                            <option value={30}>30 days</option>
-                            <option value={60}>60 days</option>
-                            <option value={90}>3 months</option>
-                            <option value={180}>6 months</option>
-                            <option value={365}>12 months</option>
-                        </select>
-                        <p className="text-[11px] text-muted-foreground">This cadence applies to all active yarns. The Yarn Rate Book will flag rates as they approach review.</p>
-                    </div>
-                </div>
+                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                                <button
+                                    type="button"
+                                    aria-pressed={overheadMode === 'direct'}
+                                    onClick={() => { setDirty(true); setOverheadMode('direct') }}
+                                    className={cn(
+                                        'rounded-lg border px-4 py-3 text-left transition-colors',
+                                        overheadMode === 'direct'
+                                            ? 'border-saffron bg-saffron-soft/55 ring-2 ring-saffron/15'
+                                            : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
+                                    )}
+                                >
+                                    <div className="text-sm font-semibold text-ink">I already know my factory cost per metre</div>
+                                    <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Use a ₹/m rate you already trust; no monthly expense breakdown is needed.</div>
+                                </button>
+                                <button
+                                    type="button"
+                                    aria-pressed={overheadMode === 'monthly_expenses'}
+                                    onClick={() => { setDirty(true); setOverheadMode('monthly_expenses') }}
+                                    className={cn(
+                                        'rounded-lg border px-4 py-3 text-left transition-colors',
+                                        overheadMode === 'monthly_expenses'
+                                            ? 'border-saffron bg-saffron-soft/55 ring-2 ring-saffron/15'
+                                            : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
+                                    )}
+                                >
+                                    <div className="flex items-center gap-2 text-sm font-semibold text-ink"><span>Calculate from monthly expenses</span><span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-deep">Recommended</span></div>
+                                    <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Weavly divides rent, power, salaries, and other monthly costs by your actual output.</div>
+                                </button>
+                            </div>
+                            <p className="rounded-lg border border-info/20 bg-info-soft/55 px-3 py-2 text-xs leading-relaxed text-info">
+                                {overheadMode === 'monthly_expenses'
+                                    ? 'Recommended for most factories: enter real monthly expenses and output so the per-metre cost is easy to explain.'
+                                    : 'Use direct ₹/m when your factory already maintains a trusted per-metre overhead rate.'}
+                            </p>
 
-                {/* ── Optional Section Toggles ── */}
-                <div className="space-y-3">
-                    <div className="mb-2 border-b border-hairline/70 pb-2">
-                        <Label className="text-sm font-semibold text-body">Optional Cost Sections</Label>
+                            {overheadMode === 'direct' ? (
+                                <div className="rounded-lg border border-saffron/30 bg-saffron-soft/30 p-4">
+                                    <RateInput
+                                        label="Direct factory cost per metre"
+                                        value={directOverheadPerM}
+                                        onChange={value => { setDirty(true); setDirectOverheadPerM(value) }}
+                                        unit="₹/m"
+                                        step={0.1}
+                                        hint="Required when direct factory cost per metre is selected."
+                                        icon={Calculator}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="space-y-4 rounded-lg border border-hairline bg-canvas/45 p-4">
+                                    <RateInput
+                                        label="Actual monthly output"
+                                        value={monthlyOutputM}
+                                        onChange={value => { setDirty(true); setMonthlyOutputM(value) }}
+                                        unit="m/mo"
+                                        step={100}
+                                        hint="Used to divide monthly expenses."
+                                    />
+                                    <div className="space-y-2">
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-ink">Monthly expenses</p>
+                                                <p className="text-xs text-muted-foreground">Enter the unit&apos;s recurring factory costs. Current total: ₹{monthlyExpenseTotal.toLocaleString('en-IN')}/mo.</p>
+                                            </div>
+                                            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addOverheadItem}>
+                                                <Plus className="h-3.5 w-3.5" /> Add expense
+                                            </Button>
+                                        </div>
+                                        <div className="divide-y divide-hairline rounded-lg border border-hairline bg-surface">
+                                            {overheadItems.map(item => (
+                                                <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_96px_auto] items-center gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_120px_auto] sm:gap-3">
+                                                    <div className="flex min-w-0 items-center gap-2">
+                                                        {item.category === 'rent' ? <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <Calculator className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                                                        <Input
+                                                            aria-label={`${item.label} expense name`}
+                                                            value={item.isPreset ? tx(item.label) : item.label}
+                                                            disabled={item.isPreset}
+                                                            onChange={event => updateOverheadItem(item.id, 'label', event.target.value)}
+                                                            className="h-8 min-w-0 border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:ring-0"
+                                                        />
+                                                    </div>
+                                                    <div className="relative">
+                                                        <Input
+                                                            aria-label={`${item.label} monthly amount`}
+                                                            type="number"
+                                                            min={0}
+                                                            step={100}
+                                                            value={item.monthlyAmount}
+                                                            disabled={item.isLocked}
+                                                            onChange={event => updateOverheadItem(item.id, 'monthlyAmount', parseNonNegativeInput(event.target.value) ?? 0)}
+                                                            className="h-8 pr-12 text-right font-mono text-xs"
+                                                        />
+                                                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">₹/mo</span>
+                                                    </div>
+                                                    {!item.isPreset && (
+                                                        <button
+                                                            type="button"
+                                                            aria-label={`${tx('Remove')} ${item.label}`}
+                                                            onClick={() => { setDirty(true); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
+                                                            className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <details
+                                        open={capacityOpen}
+                                        onToggle={event => setCapacityOpen(event.currentTarget.open)}
+                                        className="premium-disclosure-card group rounded-lg border border-hairline bg-surface px-3 py-2.5"
+                                    >
+                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-body outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
+                                            Capacity reference <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
+                                        </summary>
+                                        <div className="premium-disclosure-content mt-3 grid grid-cols-1 gap-4 border-t border-hairline/70 pt-3 sm:grid-cols-3">
+                                            <RateInput
+                                                label="Active looms"
+                                                value={loomCount}
+                                                onChange={value => { setDirty(true); setLoomCount(value) }}
+                                                unit="looms"
+                                                step={1}
+                                            />
+                                            <RateInput
+                                                label="Working days"
+                                                value={monthlyWorkingDays}
+                                                onChange={value => { setDirty(true); setMonthlyWorkingDays(value) }}
+                                                unit="days/mo"
+                                                step={1}
+                                            />
+                                            <RateInput
+                                                label="Average output per loom"
+                                                value={avgOutputPerLoomPerDay}
+                                                onChange={value => { setDirty(true); setAvgOutputPerLoomPerDay(value) }}
+                                                unit="m/day"
+                                                step={1}
+                                                hint="Reference for capacity warnings; actual monthly output above is used for costing."
+                                            />
+                                        </div>
+                                    </details>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Selling Defaults ── */}
+                        <div className="space-y-3 rounded-lg border border-hairline bg-canvas/45 p-4">
+                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                                <TrendingUp className="h-4 w-4 text-success" />
+                                <Label className="text-sm font-semibold text-body">Pricing default</Label>
+                            </div>
+                            <div className="max-w-xs">
+                                <RateInput
+                                    label="Target Margin"
+                                    value={rates.default_margin_pct}
+                                    onChange={updateRate('default_margin_pct')}
+                                    unit="%"
+                                    step={0.5}
+                                    hint="Pre-fills the suggested selling price. You can adjust it in each cost estimate."
+                                    icon={TrendingUp}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                        {standaloneEstimator ? 'Enabled sections appear in every new costing. Disabled sections stay out of the form.' : 'Enabled sections appear in the estimator for every new quote. Disabled sections are hidden, keeping the form clean for factories that do not use them.'}
-                    </p>
-                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-                        <SectionToggle
-                            label="Winding"
-                            description="Yarn arrives on hanks and needs rewinding onto cones before warping."
-                            checked={sections.winding}
-                            onChange={updateSection('winding')}
-                        />
-                        <SectionToggle
-                            label="Processing / Dyeing"
-                            description="Fabric is sent for dyeing or printing after weaving."
-                            checked={sections.processing}
-                            onChange={updateSection('processing')}
-                        />
-                        <SectionToggle
-                            label="Finishing"
-                            description="Calendering, heat-setting, or other post-processing."
-                            checked={sections.finishing}
-                            onChange={updateSection('finishing')}
-                        />
-                        <SectionToggle
-                            label="Broker commission"
-                            description={standaloneEstimator ? 'Broker or agent commission included in the final price.' : 'Broker or agent commission included in the buyer quote.'}
-                            checked={sections.commission}
-                            onChange={updateSection('commission')}
-                        />
-                        <SectionToggle
-                            label="Transport charge"
-                            description={standaloneEstimator ? 'Include delivery cost in the costing when transport applies.' : 'Factory delivers fabric directly rather than buyer collecting.'}
-                            checked={sections.transport}
-                            onChange={updateSection('transport')}
-                        />
+                </details>
+
+                <details
+                    open={advancedOpen}
+                    onToggle={event => setAdvancedOpen(event.currentTarget.open)}
+                    className="premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-surface/95"
+                >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="h-4 w-4 text-saffron" />
+                                <h3 className="text-sm font-semibold text-ink">Optional charges and reminders</h3>
+                            </div>
+                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Only open this when your unit uses winding, processing, finishing, commission, transport, or custom rate reminders.</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2 text-right">
+                            <span className="hidden text-xs font-medium text-muted-foreground sm:inline">{enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}</span>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+                        </div>
+                    </summary>
+
+                    <div className="premium-disclosure-content space-y-6 border-t border-hairline/70 px-4 pb-5 pt-5 sm:px-5">
+                        {/* ── Post-Weaving Defaults ── */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                                <Sparkles className="h-4 w-4 text-saffron" />
+                                <Label className="text-sm font-semibold text-body">Post-Weaving Rates</Label>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {sections.processing && (
+                                    <RateInput
+                                        label="Processing / Dyeing"
+                                        value={rates.default_processing_rate_per_m}
+                                        onChange={updateRate('default_processing_rate_per_m')}
+                                        unit="₹/m"
+                                        step={0.1}
+                                    />
+                                )}
+                                {sections.finishing && (
+                                    <RateInput
+                                        label="Finishing"
+                                        value={rates.default_finishing_rate_per_m}
+                                        onChange={updateRate('default_finishing_rate_per_m')}
+                                        unit="₹/m"
+                                        step={0.1}
+                                    />
+                                )}
+                                {!sections.processing && !sections.finishing && (
+                                    <p className="text-xs italic text-muted-foreground">Enable processing or finishing below to configure its default rate.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ── Selling Defaults ── */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                                <TrendingUp className="h-4 w-4 text-success" />
+                                <Label className="text-sm font-semibold text-body">Selling Defaults</Label>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {sections.commission && (
+                                    <RateInput
+                                        label="Broker commission"
+                                        value={rates.default_commission_pct}
+                                        onChange={updateRate('default_commission_pct')}
+                                        unit="%"
+                                        step={0.5}
+                                        hint="Broker/agent commission %"
+                                        icon={Users2}
+                                    />
+                                )}
+                                {sections.transport && (
+                                    <RateInput
+                                        label="Transport charge"
+                                        value={rates.default_transport_per_m}
+                                        onChange={updateRate('default_transport_per_m')}
+                                        unit="₹/m"
+                                        step={0.1}
+                                        hint="Delivery cost per metre"
+                                        icon={Truck}
+                                    />
+                                )}
+                                {!sections.commission && !sections.transport && (
+                                    <p className="col-span-2 text-xs italic text-muted-foreground">
+                                        Enable commission or transport below to configure these selling defaults.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ── Yarn Rate Reviews ── */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                                <Sparkles className="h-4 w-4 text-saffron" />
+                                <Label className="text-sm font-semibold text-body">Yarn Rate Reviews</Label>
+                            </div>
+                            <div className="max-w-md space-y-1.5">
+                                <Label htmlFor="yarn-review-period" className="text-xs font-semibold text-body">Review yarn rates every</Label>
+                                <select
+                                    id="yarn-review-period"
+                                    value={rates.yarn_review_interval_days}
+                                    onChange={event => updateRate('yarn_review_interval_days')(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
+                                    className="h-10 w-full rounded-md border border-hairline bg-canvas/80 px-3 text-sm font-medium text-ink"
+                                >
+                                    <option value={30}>30 days</option>
+                                    <option value={60}>60 days</option>
+                                    <option value={90}>3 months</option>
+                                    <option value={180}>6 months</option>
+                                    <option value={365}>12 months</option>
+                                </select>
+                                <p className="text-[11px] text-muted-foreground">This cadence applies to all active yarns. The Yarn Rate Book will flag rates as they approach review.</p>
+                            </div>
+                        </div>
+
+                        {/* ── Optional Section Toggles ── */}
+                        <div className="space-y-3">
+                            <div className="mb-2 border-b border-hairline/70 pb-2">
+                                <Label className="text-sm font-semibold text-body">Optional Cost Sections</Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {standaloneEstimator ? 'Enabled sections appear in every new costing. Disabled sections stay out of the form.' : 'Enabled sections appear in the estimator for every new quote. Disabled sections are hidden, keeping the form clean for factories that do not use them.'}
+                            </p>
+                            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+                                <SectionToggle
+                                    label="Winding"
+                                    description="Yarn arrives on hanks and needs rewinding onto cones before warping."
+                                    checked={sections.winding}
+                                    onChange={updateSection('winding')}
+                                />
+                                <SectionToggle
+                                    label="Processing / Dyeing"
+                                    description="Fabric is sent for dyeing or printing after weaving."
+                                    checked={sections.processing}
+                                    onChange={updateSection('processing')}
+                                />
+                                <SectionToggle
+                                    label="Finishing"
+                                    description="Calendering, heat-setting, or other post-processing."
+                                    checked={sections.finishing}
+                                    onChange={updateSection('finishing')}
+                                />
+                                <SectionToggle
+                                    label="Broker commission"
+                                    description={standaloneEstimator ? 'Broker or agent commission included in the final price.' : 'Broker or agent commission included in the buyer quote.'}
+                                    checked={sections.commission}
+                                    onChange={updateSection('commission')}
+                                />
+                                <SectionToggle
+                                    label="Transport charge"
+                                    description={standaloneEstimator ? 'Include delivery cost in the costing when transport applies.' : 'Factory delivers fabric directly rather than buyer collecting.'}
+                                    checked={sections.transport}
+                                    onChange={updateSection('transport')}
+                                />
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </details>
 
                 <div className="flex flex-col gap-3 border-t border-hairline/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-h-5 items-center gap-2 text-xs" aria-live="polite">

@@ -185,7 +185,7 @@ function PlanCards({
                     const breakdown = `${formatAmount(price.basePaise)} + ${formatAmount(price.gstPaise)} GST (18%)`
                     const isRenewal = decision.purchaseType === 'renewal'
                     return (
-                    <div key={plan.tier} className="group relative rounded-xl border border-hairline bg-surface p-6 shadow-[var(--shadow-card)] transition-colors hover:border-saffron/50">
+                    <div key={plan.tier} className="premium-surface group relative rounded-xl border border-hairline bg-surface p-6 shadow-[var(--shadow-card)]">
                         <span className="absolute right-5 top-5 rounded-full bg-saffron-soft px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-saffron-deep">
                             {plan.badge}
                         </span>
@@ -310,7 +310,7 @@ export default async function BillingPage({
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
-        <div className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
+        <div className="premium-route-enter mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
             <RouteMilestones route="/owner/billing" shellVisible primaryUsable />
             <PageHeader
                 icon={CreditCard}
@@ -403,7 +403,7 @@ export default async function BillingPage({
                             </div>
                         </div>
                     ) : tier === 'trial' ? (
-                        <Card className="overflow-hidden border-warning/30 bg-surface">
+                        <Card className="premium-disclosure-card overflow-hidden border-warning/30 bg-surface">
                             <div className="h-2 w-full bg-warning" />
                             <CardContent className="p-8 md:p-10 space-y-8">
                                 <div className="flex flex-col md:flex-row justify-between gap-6">
@@ -429,8 +429,8 @@ export default async function BillingPage({
                                         <span>Trial started</span>
                                         <span>{trialProgressPct(subscription?.current_end ?? null)}% elapsed</span>
                                     </div>
-                                    <div className="h-3 rounded-full border border-hairline bg-surface-soft p-0.5">
-                                        <div className="h-full rounded-full bg-warning transition-all duration-1000" style={{ width: `${trialProgressPct(subscription?.current_end ?? null)}%` }}>
+                                    <div className="h-3 rounded-full border border-hairline bg-surface-soft p-0.5" role="progressbar" aria-label="Trial elapsed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trialProgressPct(subscription?.current_end ?? null)}>
+                                        <div className="premium-progress-fill h-full w-full rounded-full bg-warning" style={{ transform: `scaleX(${trialProgressPct(subscription?.current_end ?? null) / 100})` }}>
                                             <div className="h-full w-full rounded-full bg-white/20" />
                                         </div>
                                     </div>
@@ -449,7 +449,7 @@ export default async function BillingPage({
                         </Card>
                     ) : (
                         /* PREMIUM/BASE ACTIVE STATE INFO */
-                        <Card className="gap-0 overflow-hidden p-0">
+                        <Card className="premium-disclosure-card gap-0 overflow-hidden p-0">
                             <div className="h-1 w-full bg-saffron" />
                             <CardContent className="p-6 md:p-8">
                                 <div className="flex flex-col gap-8 md:flex-row md:justify-between">
@@ -607,7 +607,7 @@ export default async function BillingPage({
                     </Suspense>
 
                     {/* QUICK LINKS / HELP */}
-                    <Card className="space-y-5 p-5">
+                    <Card className="premium-disclosure-card space-y-5 p-5">
                         <div className="flex items-center gap-2">
                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-soft">
                                 <ShieldCheck className="h-4 w-4 text-subtle" />

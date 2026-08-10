@@ -208,6 +208,7 @@ export default function RatesClient({
     )
     const activeYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active !== false), [yarnRates])
     const visibleRates = useMemo(() => filterCostRates(yarnRates.filter(rate => Boolean(rate.is_active) === !showArchived), { query, category, status: reviewStatus }), [category, query, reviewStatus, showArchived, yarnRates])
+    const resultMotionKey = `${query.trim().toLocaleLowerCase('en-IN')}|${category}|${reviewStatus}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
     const hasActiveFilters = Boolean(query.trim()) || category !== 'all' || reviewStatus !== 'all' || showArchived
     const dueCount = activeYarnRates.filter(rate => getRateReviewStatus(rate) !== 'current').length
     const mostRecentReview = activeYarnRates.length
@@ -414,7 +415,7 @@ export default function RatesClient({
                         : null
 
     return (
-        <div className="mx-auto w-full max-w-7xl space-y-6">
+        <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
             {/* Yarn Rate Book is the single-purpose Base Plan source of truth for yarn prices. */}
             <RouteMilestones
                 route="/owner/rates"
@@ -452,7 +453,7 @@ export default function RatesClient({
             )}
 
             {conflicts.length > 0 && (
-                <div className="flex flex-col gap-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-ink sm:flex-row sm:items-center sm:justify-between">
+                <div className="premium-status-enter flex flex-col gap-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-ink sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex gap-3">
                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                         <div>
@@ -464,7 +465,7 @@ export default function RatesClient({
                 </div>
             )}
 
-            <Card>
+            <Card className="premium-surface">
                 <CardContent className="grid gap-4 p-5 sm:grid-cols-3 sm:divide-x sm:divide-hairline">
                     <div className="flex items-center gap-3 sm:px-3"><span className="rounded-full bg-info-soft p-3 text-info"><CircleDollarSign className="h-5 w-5" /></span><div><p className="text-2xl font-bold text-info">{activeYarnRates.length}</p><p className="text-sm text-body">{tx('active yarn rates')}</p></div></div>
                     <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-warning-soft p-3 text-warning"><CalendarClock className="h-5 w-5" /></span><div><p className="text-2xl font-bold text-saffron-deep">{dueCount}</p><p className="text-sm text-body">{tx('due for review')}</p></div></div>
@@ -485,11 +486,15 @@ export default function RatesClient({
                     <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => setShowArchived(current => !current)} className="h-10">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}</Button>
                 </Toolbar>
                 <p id="yarn-rate-search-help" className="px-4 pb-3 text-[11px] leading-relaxed text-body sm:px-5">Searches yarn rate names, sources, notes, and fabric usage in this Rate Book. Saved qualities and costing snapshots are searched in the Costings library.</p>
+                <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+                    {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} shown.
+                </p>
 
                 {visibleRates.length === 0 ? (
                     <EmptyState
+                        key={`empty-${resultMotionKey}`}
                         icon={Tags}
-                        className="rounded-none border-0 bg-transparent shadow-none"
+                        className="premium-content-swap rounded-none border-0 bg-transparent shadow-none"
                         title={showArchived ? 'No archived yarn rates' : yarnRates.filter(rate => rate.is_active !== false).length === 0 ? 'No yarn rates yet' : 'No matching yarn rates'}
                         description={showArchived ? 'Archived rates stay available here for audit and can be restored when needed.' : yarnRates.length === 0 ? 'Save a quality or costing and its yarn rates will appear here automatically.' : hasActiveFilters ? 'Clear or adjust the filters to see more yarn rates.' : 'Add a yarn rate to continue.'}
                     />
@@ -497,7 +502,7 @@ export default function RatesClient({
                     <>
                         {/* Review-state branches remain explicit for source-level regression checks; their rendered surfaces use Weavly semantic tokens. */}
                         {/* reviewState === 'overdue' ? 'bg-red-50/70' : reviewState === 'due_soon' ? 'bg-amber-50/70' */}
-                        <div className="hidden lg:block">
+                        <div key={`table-${resultMotionKey}`} className="premium-content-swap hidden lg:block">
                             <table className="w-full table-fixed text-left text-[12px]">
                                 <colgroup>
                                     <col className="w-[13%]" />
@@ -516,7 +521,7 @@ export default function RatesClient({
                                         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
                                         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
                                         return (
-                                            <tr key={rate.id} className={archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}>
+                                            <tr key={rate.id} className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}>
                                                 <td className="px-3 py-3 align-top"><p className="font-semibold text-ink">{rate.name}</p><p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td>
                                                 <td className="px-3 py-3 align-top"><p className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}</td>
                                                 <td className="px-3 py-3 align-top font-mono text-[11px] text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
@@ -541,14 +546,14 @@ export default function RatesClient({
                                 </tbody>
                             </table>
                         </div>
-                        <div className="space-y-3 p-3 lg:hidden">
+                        <div key={`cards-${resultMotionKey}`} className="premium-content-swap space-y-3 p-3 lg:hidden">
                             {visibleRates.map(rate => {
                                 const reviewState = getRateReviewStatus(rate)
                                 const archived = rate.is_active === false
                                 const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
                                 const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
                                 return (
-                                        <Card key={rate.id} className={archived ? 'border-hairline bg-surface-soft' : reviewState === 'overdue' ? 'border-risk/30 bg-risk-soft/70' : reviewState === 'due_soon' ? 'border-warning/30 bg-warning-soft/70' : reviewState === 'needs_review' ? 'border-info/30 bg-info-soft/60' : 'border-hairline bg-surface'}>
+                                        <Card key={rate.id} className={`premium-surface ${archived ? 'border-hairline bg-surface-soft' : reviewState === 'overdue' ? 'border-risk/30 bg-risk-soft/70' : reviewState === 'due_soon' ? 'border-warning/30 bg-warning-soft/70' : reviewState === 'needs_review' ? 'border-info/30 bg-info-soft/60' : 'border-hairline bg-surface'}`}>
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-ink">{rate.name}</p><p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
                                             <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface p-3"><div><p className="text-[10px] font-bold uppercase text-subtle">{t('common.current_yarn_rate')}</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-subtle">Previous rate</p><p className="mt-1 font-mono font-semibold text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>

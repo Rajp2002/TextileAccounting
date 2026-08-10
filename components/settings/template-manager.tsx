@@ -34,6 +34,7 @@ export function TemplateManager({ className }: { className?: string }) {
     const [qualities, setQualities] = useState<TemplateV3[]>([])
     const [qualityToArchive, setQualityToArchive] = useState<TemplateV3 | null>(null)
     const [archivingQualityId, setArchivingQualityId] = useState<string | null>(null)
+    const [showArchived, setShowArchived] = useState(false)
 
     const load = useCallback(async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
         if (showLoading) setLoading(true)
@@ -86,6 +87,10 @@ export function TemplateManager({ className }: { className?: string }) {
         setQualityToArchive(null)
     }
 
+    const activeQualities = qualities.filter(quality => quality.is_active !== false)
+    const archivedQualities = qualities.filter(quality => quality.is_active === false)
+    const visibleQualities = showArchived ? qualities : activeQualities
+
     // Derive display summary from V3 or V1 quality
     function qualitySummary(quality: TemplateV3): { totalEnds: number; firstPicks: number; warpLayers: number; weftLayers: number } {
         if (quality.warp_rows && quality.warp_rows.length > 0) {
@@ -137,14 +142,30 @@ export function TemplateManager({ className }: { className?: string }) {
 
     return (
         <>
-        <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
-            <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
-                <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-info" />
-                    <CardTitle className="text-base">{t('estimator.quality.settingsTitle')}</CardTitle>
+        <Card className={cn("premium-disclosure-card rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+            <CardHeader className="gap-3 border-b border-hairline/70 pb-4">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-info" />
+                        <CardTitle className="text-base">{t('estimator.quality.settingsTitle')}</CardTitle>
+                    </div>
+                    {archivedQualities.length > 0 && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 shrink-0 text-xs"
+                            aria-expanded={showArchived}
+                            aria-controls="quality-library-list"
+                            onClick={() => setShowArchived(current => !current)}
+                        >
+                            <Archive className="h-3.5 w-3.5" />
+                            {showArchived ? 'Hide archived' : `Show archived (${archivedQualities.length})`}
+                        </Button>
+                    )}
                 </div>
                 <CardDescription>
-                    {t('estimator.quality.settingsDescription')}
+                    {t('estimator.quality.settingsDescription')} {activeQualities.length > 0 && `${activeQualities.length} active`}
                 </CardDescription>
             </CardHeader>
             <CardContent className="pt-5">
@@ -160,21 +181,29 @@ export function TemplateManager({ className }: { className?: string }) {
                         </Button>
                     </div>
                 )}
-                {qualities.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
+                {visibleQualities.length === 0 ? (
+                    <div key={`qualities-empty-${showArchived}`} id="quality-library-list" className="premium-content-swap rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
                         <p className="text-sm italic text-muted-foreground">
-                            {t('estimator.quality.settingsEmpty')}
+                            {qualities.length === 0
+                                ? t('estimator.quality.settingsEmpty')
+                                : 'No active fabric qualities. Show archived to restore one.'}
                         </p>
+                        {qualities.length > 0 && archivedQualities.length > 0 && (
+                            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => setShowArchived(true)}>
+                                <Archive className="h-3.5 w-3.5" />
+                                Show archived
+                            </Button>
+                        )}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                        {qualities.map(quality => {
+                    <div key={`qualities-${showArchived}`} id="quality-library-list" className="premium-content-swap grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        {visibleQualities.map(quality => {
                             const summary = qualitySummary(quality)
                             const isV3 = !!(quality.warp_rows && quality.warp_rows.length > 0)
                             return (
                                 <div
                                     key={quality.id}
-                                    className={cn("group rounded-lg border border-hairline bg-canvas/55 p-3 transition-all duration-200 hover:border-hairline-strong hover:bg-surface hover:shadow-sm", quality.is_active === false && 'opacity-75')}
+                                    className={cn("premium-surface group rounded-lg border border-hairline bg-canvas/55 p-3", quality.is_active === false && 'opacity-75')}
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div>

@@ -229,6 +229,9 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
             ? isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey)
             : item.href === '/owner/estimator')
         .slice(0, 5)
+    const moreIsActive = !visibleBottomNavItems.some((item) => (
+        pathname === item.href || pathname.startsWith(item.href + "/")
+    ))
 
     return (
         <>
@@ -298,7 +301,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
                                 {mobileNavLabel}
                             </span>
                             {isActive && (
-                                <span className="absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
+                                <span className="premium-nav-indicator absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
                             )}
                         </Link>
                     )
@@ -309,17 +312,25 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
                     type="button"
                     onClick={() => setIsOpen(true)}
                     aria-label={t('common.navigation')}
+                    aria-pressed={moreIsActive}
                     className={cn(
                         "mobile-nav-item flex min-w-0 flex-col items-center justify-center relative",
-                        "py-1 px-0.5 text-body"
+                        "py-1 px-0.5 transition-colors duration-200 motion-reduce:transition-none",
+                        moreIsActive ? "text-saffron-deep" : "text-body"
                     )}
                 >
-                    <div className="mobile-nav-icon-pill mb-0.5 rounded-xl px-2 py-1 transition-all hover:bg-surface-soft xs:px-3 landscape:px-2 landscape:py-0.5">
+                    <div className={cn(
+                        "mobile-nav-icon-pill mb-0.5 rounded-xl px-2 py-1 transition-all duration-200 motion-reduce:transition-none xs:px-3 landscape:px-2 landscape:py-0.5",
+                        moreIsActive ? "scale-105 bg-saffron-soft" : "hover:bg-surface-soft"
+                    )}>
                         <Menu className="h-5 w-5 landscape:h-4 landscape:w-4" />
                     </div>
-                    <span className="mobile-nav-label text-[10px] font-semibold leading-none opacity-80 landscape:text-[9px]">
+                    <span className={cn("mobile-nav-label text-[10px] font-semibold leading-none landscape:text-[9px]", moreIsActive ? "opacity-100" : "opacity-80")}>
                         {t('common.menu')}
                     </span>
+                    {moreIsActive && (
+                        <span className="premium-nav-indicator absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
+                    )}
                 </button>
             </div>
         </>
