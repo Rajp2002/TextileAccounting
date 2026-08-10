@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import * as Sentry from '@sentry/nextjs'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { processReferralConversion, issueReferralRefund } from '@/lib/referral-webhook'
+import { processReferralConversion } from '@/lib/referral-webhook'
 import { checkPublicPostRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { getRazorpay } from '@/lib/razorpay'
 import { readBillingOrderContext } from '@/lib/billing-lifecycle'
@@ -307,6 +307,7 @@ export async function POST(req: NextRequest) {
 
                         if (existingPayment?.status === 'captured') {
                             Sentry.captureMessage(`Payment ${payment.id} already processed`, 'info')
+                            await processReferralConversion(orgSub.org_id)
                             break
                         }
                         if (
@@ -341,14 +342,14 @@ export async function POST(req: NextRequest) {
                         const { error: paymentWriteError } = await paymentWrite
                         if (paymentWriteError) {
                             if (paymentWriteError.code === '23505') {
-                                Sentry.captureMessage(`Concurrent payment insert for ${payment.id}; skipping refund`, 'warning')
+                                Sentry.captureMessage(`Concurrent payment insert for ${payment.id}; referral conversion will be retried by the winning event`, 'warning')
                                 break
                             }
                             Sentry.captureException(paymentWriteError, { tags: { route: 'razorpay_webhook', phase: 'payment_insert' } })
                             throw paymentWriteError
                         }
 
-                        await issueReferralRefund(orgSub.org_id, payment.id, Number(payment.amount))
+                        await processReferralConversion(orgSub.org_id)
                     }
                 }
                 break

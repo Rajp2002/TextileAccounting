@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { processReferralConversion, issueReferralRefund } from '@/lib/referral-webhook'
+import { processReferralConversion } from '@/lib/referral-webhook'
 import { ensureBillingInvoice } from '@/lib/billing-invoice'
 import * as Sentry from '@sentry/nextjs'
 import {
@@ -97,24 +97,15 @@ export async function activateInitialPurchase({
         })
     }
 
-    // Side effects run only for the transaction that inserted the payment.
-    // Duplicate verification/webhook deliveries return the committed result.
-    if (!result.alreadyProcessed) {
-        try {
-            await processReferralConversion(orgId)
-        } catch (err) {
-            Sentry.captureException(err, {
-                tags: { component: 'billing-activation', phase: 'process_referral' },
-            })
-        }
-
-        try {
-            await issueReferralRefund(orgId, razorpayPaymentId, amountPaise)
-        } catch (err) {
-            Sentry.captureException(err, {
-                tags: { component: 'billing-activation', phase: 'issue_refund' },
-            })
-        }
+    // Referral conversion is safe to retry after a duplicate callback. If a
+    // transient database error interrupted the first attempt, a later
+    // webhook/status reconciliation can still grant the one idempotent credit.
+    try {
+        await processReferralConversion(orgId)
+    } catch (err) {
+        Sentry.captureException(err, {
+            tags: { component: 'billing-activation', phase: 'process_referral' },
+        })
     }
 
     return result
