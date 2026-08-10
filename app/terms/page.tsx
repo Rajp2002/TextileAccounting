@@ -27,7 +27,7 @@ const sections = [
 
 const plans = [
     {
-        name: 'Weavly Cost Estimate (Base Plan)',
+        name: 'Weavly Estimator (Base Plan)',
         price: '₹8,260 total first year, then ₹2,360 total/year renewal',
         details: 'Warp and weft yarn cost estimates, fabric templates, saved costing history, Cost Sheet export, and margin and landed-cost visibility',
     },
@@ -39,7 +39,7 @@ export default function TermsOfServicePage() {
             activePath="/terms"
             title="Terms of Service"
             description="The operating agreement for using the Weavly Base Plan: what the costing workspace provides, what factory owners remain responsible for, and how billing, data, and disputes are handled."
-            lastUpdated="July 13, 2026"
+            lastUpdated="August 10, 2026"
             sections={sections}
             facts={[
                 { label: 'Renewal window', value: 'Manual renewal from 30 days before expiry', icon: CalendarDays },
@@ -64,8 +64,8 @@ export default function TermsOfServicePage() {
                     <li>Production cost, landed cost, break-even price, and margin visibility</li>
                     <li>Cost Sheet export</li>
                 </ul>
-                <PolicyCallout tone="neutral" title="Current rollout boundary">
-                    <p>The Base Plan is the only plan currently available for new subscriptions. Production logging, worker and machine operations, stock, dispatch, payroll, and connected factory analytics are planned for a later Full Suite release and are not available for purchase under these Terms.</p>
+                <PolicyCallout tone="neutral" title="Initial rollout boundary">
+                    <p>The Base Plan is the only plan available for the initial rollout. Production logging, worker and machine operations, orders, stock, dispatch, payroll, and connected factory analytics belong to a later Full Suite release and are not available for purchase or included as an entitlement under these Terms.</p>
                 </PolicyCallout>
             </PolicySection>
 
@@ -116,7 +116,7 @@ export default function TermsOfServicePage() {
                     Listed prices are GST-inclusive totals at the displayed 18% rate. The taxable amount and GST component are shown separately for clarity. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
                 </p>
                 <p>
-                    At this rollout, only the Weavly Cost Estimate (Base Plan) may be selected by a new subscriber. The Full Suite is in development, is not currently available for purchase, and does not create any present entitlement under these Terms.
+                    At this initial rollout, only the Weavly Estimator (Base Plan) may be selected by a new subscriber. The Full Suite is not currently available for purchase and does not create any present entitlement under these Terms.
                 </p>
 
                 <h3>3.2 Subscription and Billing</h3>
@@ -182,7 +182,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="termination" title="9. Termination">
                 <ul>
-                    <li><strong>By you</strong> — You may cancel annual maintenance before the next renewal. Your access continues until the end of the paid annual service period.</li>
+                    <li><strong>By you</strong> — You may cancel the next annual Base Plan renewal before it is due. Your access continues until the end of the paid annual service period.</li>
                     <li><strong>By us</strong> — We may suspend or terminate your account for violation of these Terms, non-payment, or any activity that threatens the security or integrity of the platform. We will provide reasonable notice except in cases of severe violations.</li>
                     <li><strong>Post-termination</strong> — You will have 30 days to export your data. After 30 days, data will be deleted per our retention policy. Account information is retained for 180 days per IT Intermediary Guidelines 2021.</li>
                 </ul>

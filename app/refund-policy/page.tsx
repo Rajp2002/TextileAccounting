@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { CalendarDays, Clock3, Mail, RefreshCw } from 'lucide-react'
-import { PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
+import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
@@ -22,24 +22,30 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="Clear rules for Base Plan setup, annual renewal, cancellations, refunds, payment receipts, and costing-data export when service ends."
-            lastUpdated="July 13, 2026"
+            description="Clear rules for the initial Base Plan rollout: setup assistance, annual renewal, cancellations, refunds, payment receipts, and costing-data export when service ends."
+            lastUpdated="August 10, 2026"
             sections={sections}
             facts={[
                 { label: 'Renewal window', value: 'Manual renewal from 30 days before expiry', icon: CalendarDays },
-                { label: 'Before work starts', value: 'Setup fee fully refundable', icon: RefreshCw },
+                { label: 'Before onboarding starts', value: 'First-year payment refundable', icon: RefreshCw },
                 { label: 'Refund timing', value: '5-7 business days to original method', icon: Clock3 },
                 { label: 'Support', value: 'support@weavly.app', icon: Mail },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                This Refund &amp; Cancellation Policy applies to Weavly&apos;s setup and implementation services and annual platform maintenance. It explains how refund eligibility changes as onboarding work is delivered and the platform enters active use.
+                This Refund &amp; Cancellation Policy applies only to the Weavly Estimator (Base Plan) during the initial rollout. It explains how refund eligibility changes as Base Plan onboarding assistance is delivered and the costing workspace enters active use. It does not cover the future Full Suite or any production, orders, stock, dispatch, payroll, or factory-analytics modules.
             </p>
+
+            <PolicyCallout tone="blue" title="Initial rollout boundary">
+                <p>
+                    The Base Plan is the only plan available for purchase at this stage. Any future Full Suite offering will have its own commercial terms and refund rules; no Full Suite access or refund entitlement is created by a Base Plan payment.
+                </p>
+            </PolicyCallout>
 
             <PolicySection id="cancellation" title="2. Subscription Cancellation">
                 <h3>2.1 How to Cancel</h3>
                 <p>
-                    You may cancel your next annual renewal at any time through:
+                    You may cancel your next annual Base Plan renewal at any time through:
                 </p>
                 <ul>
                     <li>The account settings page within the Weavly dashboard, or</li>
@@ -62,7 +68,7 @@ export default function RefundPolicyPage() {
             <PolicySection id="refunds" title="3. Refund Policy">
                 <h3>3.1 First-Year Plan Subscriptions</h3>
                 <p>
-                    First-year Base Plan payments include platform access and setup assistance at ₹8,260 total, including the displayed GST component.
+                    The first-year Base Plan payment covers platform access and setup assistance at ₹8,260 total, including the displayed GST component.
                 </p>
                 <ul>
                     <li><strong>Before setup or onboarding work starts</strong> — The fee is fully refundable if requested within 7 days of payment and before workspace activation.</li>

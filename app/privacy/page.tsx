@@ -34,18 +34,24 @@ export default async function PrivacyPolicyPage() {
             activePath="/privacy"
             title="Privacy Policy"
             description="A plain-language view of what Weavly collects for the current Base Plan, why it is needed for costing work, and how account and business data is protected under Indian privacy law."
-            lastUpdated="July 13, 2026"
+            lastUpdated="August 10, 2026"
             sections={sections}
             facts={[
                 { label: 'Primary law', value: 'DPDP Act 2023', icon: ShieldCheck },
-                { label: 'Data role', value: 'Weavly acts as processor for factory owners', icon: Database },
+                { label: 'Data role', value: 'Weavly processes Base Plan data for factory owners', icon: Database },
                 { label: 'Security model', value: 'Tenant isolation, RLS, encryption, and authenticated access', icon: LockKeyhole },
                 { label: 'Grievance contact', value: groEmail, icon: Mail },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use the current Base Plan. This policy is drafted in compliance with India&apos;s <strong>Digital Personal Data Protection Act (DPDP Act) 2023</strong>, the <strong>Information Technology Act 2000</strong>, and the <strong>IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>. Production, payroll, stock, dispatch, and connected factory workflows are not part of the Base Plan rollout; any future Full Suite release will be covered by the applicable terms and notices at that time.
+                Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use the current Base Plan. This policy is drafted in compliance with India&apos;s <strong>Digital Personal Data Protection Act (DPDP Act) 2023</strong>, the <strong>Information Technology Act 2000</strong>, and the <strong>IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>. The initial rollout is limited to the Base Plan costing workspace; any future Full Suite release will be covered by separate applicable terms and notices.
             </p>
+
+            <PolicyCallout tone="neutral" title="Initial rollout boundary">
+                <p>
+                    This policy covers only the Weavly Estimator (Base Plan), which is the only plan available for the initial rollout. Production logging, orders, stock or inventory, dispatch, payroll, and connected factory analytics are not available under this rollout, so Weavly is not collecting those operational records as part of the Base Plan service.
+                </p>
+            </PolicyCallout>
 
             <PolicySection id="data-we-collect" title="1. Data We Collect">
                 <p>For the current Base Plan, we collect the following categories of account and costing data:</p>
@@ -75,7 +81,7 @@ export default async function PrivacyPolicyPage() {
                     <li>Limited browser storage for cached screens, local drafts, and Progressive Web App assets</li>
                 </ul>
 
-                <p>Production logs, worker records, payroll, inventory, dispatch, and factory-floor activity are not part of the current Base Plan data model.</p>
+                <p>Production logs, worker records, payroll, inventory, dispatch, orders, and factory-floor activity are not part of the current Base Plan data model.</p>
             </PolicySection>
 
             <PolicySection id="purpose" title="2. Purpose of Data Collection">
@@ -108,7 +114,7 @@ export default async function PrivacyPolicyPage() {
 
             <PolicySection id="storage-security" title="4. How We Store and Protect Your Data">
                 <ul>
-                    <li><strong>Cloud infrastructure</strong> — All data is stored on Supabase (hosted on AWS), with servers in secure, SOC 2-compliant data centres.</li>
+                    <li><strong>Cloud infrastructure</strong> — Base Plan account and costing-workspace data is stored on Supabase (hosted on AWS), with servers in secure, SOC 2-compliant data centres. Payment details are handled by Razorpay; Weavly receives payment references and billing status.</li>
                     <li><strong>Encryption</strong> — Data is encrypted at rest (AES-256) and in transit (TLS 1.2+).</li>
                     <li><strong>Row Level Security (RLS)</strong> — PostgreSQL-level policies ensure every database query is automatically scoped to the user&apos;s organization. Cross-organization data access is architecturally impossible.</li>
                     <li><strong>JWT-based authentication</strong> — Organization ID and user role are embedded in session tokens and verified on every request.</li>
@@ -145,6 +151,7 @@ export default async function PrivacyPolicyPage() {
                 <ul>
                     <li><strong>Supabase</strong> (database hosting, authentication) — <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Supabase Privacy Policy</a></li>
                     <li><strong>Vercel</strong> (application hosting) — <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel Privacy Policy</a></li>
+                    <li><strong>Razorpay</strong> (Base Plan payment processing and billing records)</li>
                 </ul>
                 <p>We maintain Data Processing Agreements (DPAs) with our third-party processors to ensure equivalent data protection standards.</p>
             </PolicySection>
