@@ -243,6 +243,7 @@ export async function exportOrganizationData() {
         { key: 'referral_uses_as_referrer', query: queryReferralUsesAsReferrer },
         { key: 'referral_discount_windows', query: scoped('referral_discount_windows', 'referrer_org_id') },
         { key: 'referral_refunds', query: scoped('referral_refunds', 'referrer_org_id') },
+        { key: 'referral_year_credits', query: scoped('referral_year_credits', 'referrer_org_id') },
         { key: 'audit_log', query: scoped('audit_log') },
         { key: 'organization_billing_profiles', query: scoped('organization_billing_profiles') },
         { key: 'org_subscriptions', query: scoped('org_subscriptions') },

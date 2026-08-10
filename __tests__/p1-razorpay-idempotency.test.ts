@@ -46,22 +46,23 @@ describe('P1 Razorpay Webhook Idempotency Guard', () => {
     })
 
     it('handles unique-violation (23505) from subscription_payments insert in subscription.charged', () => {
-        // Database-level race safety
+        // Database-level race safety. The winning event owns referral
+        // conversion; the losing event exits and the idempotent path retries.
         expect(routeContent).toContain("paymentWriteError.code === '23505'")
-        // Referral refund must NOT be issued when insert fails
-        expect(routeContent).toContain('skipping refund')
+        expect(routeContent).toContain('referral conversion will be retried by the winning event')
     })
 
-    it('referral refund only fires after a successful insert', () => {
-        // issueReferralRefund must come after the error-check block, not unconditionally
+    it('referral conversion only fires after a successful insert', () => {
+        // Conversion must come after the payment write error-check block.
         const chargedBlock = routeContent.slice(
             routeContent.indexOf("case 'subscription.charged'"),
             routeContent.indexOf("case 'subscription.halted'")
         )
         const insertErrorIdx = chargedBlock.indexOf("paymentWriteError.code === '23505'")
-        const refundIdx      = chargedBlock.indexOf('issueReferralRefund')
+        const conversionIdx = chargedBlock.lastIndexOf('processReferralConversion')
         expect(insertErrorIdx).toBeGreaterThan(0)
-        expect(refundIdx).toBeGreaterThan(insertErrorIdx)
+        expect(conversionIdx).toBeGreaterThan(insertErrorIdx)
+        expect(chargedBlock).not.toContain('issueReferralRefund')
     })
 
     it('app-level pre-check for existing failed payment in payment.failed', () => {
@@ -73,17 +74,19 @@ describe('P1 Razorpay Webhook Idempotency Guard', () => {
     })
 })
 
-// ── 3. Referral refund helper ─────────────────────────────────────────────────
+// ── 3. Annual referral credit helper ──────────────────────────────────────────
 
-describe('P1 Referral Refund Idempotency Guard', () => {
+describe('P1 Annual Referral Credit Guard', () => {
     const helperContent = readProjectFile('lib/referral-webhook.ts')
-    const migration = readProjectFile('supabase/migrations/20260714090000_b17_harden_razorpay_lifecycle.sql')
+    const migration = readProjectFile('supabase/migrations/20260810182342_referral_year_credits.sql')
 
-    it('claims the refund before the provider request and uses a stable idempotency key', () => {
-        const issueBlock = helperContent.slice(helperContent.indexOf('export async function issueReferralRefund'))
-        expect(issueBlock).toContain("rpc('claim_referral_refund'")
-        expect(issueBlock.indexOf("rpc('claim_referral_refund'")).toBeLessThan(issueBlock.indexOf('createIdempotentRazorpayRefund'))
-        expect(migration).toContain('idx_referral_refunds_idempotency_key_unique')
+    it('uses one atomic database credit claim and never calls a provider refund', () => {
+        expect(helperContent).toContain("rpc('claim_referral_conversion'")
+        expect(helperContent).not.toContain('createIdempotentRazorpayRefund')
+        expect(helperContent).not.toContain('issueReferralRefund')
+        expect(migration).toContain('referral_year_credits')
+        expect(migration).toContain('referral_free_annual_renewal')
+        expect(migration).toContain("'annual_credit_policy'")
     })
 
     it('does not contain live-mode onboarding, KYC, or bank-setup logic', () => {
@@ -96,18 +99,20 @@ describe('P1 Referral Refund Idempotency Guard', () => {
 
 describe('P1 Referral Conversion Idempotency Guard', () => {
     const helperContent = readProjectFile('lib/referral-webhook.ts')
-    const hardeningMigration = readProjectFile('supabase/migrations/20260714090000_b17_harden_razorpay_lifecycle.sql')
+    const creditMigration = readProjectFile('supabase/migrations/20260810182342_referral_year_credits.sql')
 
     it('delegates conversion to one atomic database claim', () => {
         expect(helperContent).toContain("rpc('claim_referral_conversion'")
-        expect(hardeningMigration).toContain('FOR UPDATE')
-        expect(hardeningMigration).toContain("SET status = 'converted'")
+        expect(creditMigration).toContain('FOR UPDATE')
+        expect(creditMigration).toContain("SET status = 'converted'")
     })
 
-    it('serializes conversion and reuses the unique referral window', () => {
-        expect(hardeningMigration).toContain('pg_advisory_xact_lock')
-        expect(hardeningMigration).toContain('v_existing_window')
-        expect(hardeningMigration).toContain("'alreadyProcessed', true")
+    it('serializes conversion, enforces the five-credit cap, and supports redemption', () => {
+        expect(creditMigration).toContain('pg_advisory_xact_lock')
+        expect(creditMigration).toContain("'alreadyProcessed', true")
+        expect(creditMigration).toContain('referral_year_credits')
+        expect(creditMigration).toContain('referral_cap_reached')
+        expect(creditMigration).toContain('redeem_referral_year_credit')
     })
 
     it('confirms existing UNIQUE constraint on referral_use_id in migration', () => {

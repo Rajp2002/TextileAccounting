@@ -99,6 +99,19 @@ export async function createOrganization(input: {
 
     const adminClient = createAdminClient()
 
+    const applySignupReferral = async (orgId: string) => {
+        if (!parsed.data.referralCode) return
+        try {
+            const { applyReferralCode } = await import('@/lib/referral')
+            await applyReferralCode(parsed.data.referralCode, orgId)
+        } catch (error) {
+            // Referral is optional; a bad or retired code must not leave the
+            // newly-created account unusable. The reward is still gated by the
+            // paid Base Plan activation path.
+            console.error('Failed to apply referral code during signup:', error)
+        }
+    }
+
     // ── Step 1: Create Supabase auth user ────────────────────────────────────
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email: parsed.data.email,
@@ -155,8 +168,10 @@ export async function createOrganization(input: {
                 return { error: 'Failed to create organization. Please try again.' }
             }
 
-            // Continue with org2
-            return await _createOwnerProfile(adminClient, userId, org2!.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
+            // Continue with org2 and preserve the referral application path.
+            const result = await _createOwnerProfile(adminClient, userId, org2!.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
+            if (result.success) await applySignupReferral(org2!.id)
+            return result
         }
 
         await adminClient.auth.admin.deleteUser(userId)
@@ -165,15 +180,7 @@ export async function createOrganization(input: {
 
     const result = await _createOwnerProfile(adminClient, userId, org.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
     
-    if (result.success && parsed.data.referralCode) {
-        try {
-            const { applyReferralCode } = await import('@/lib/referral')
-            await applyReferralCode(parsed.data.referralCode, org.id)
-        } catch (e) {
-            console.error('Failed to apply referral code during signup:', e)
-            // we don't block signup if referral fails
-        }
-    }
+    if (result.success) await applySignupReferral(org.id)
     
     return result
 }

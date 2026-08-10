@@ -115,7 +115,9 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain("rpc('activate_order_billing_purchase'")
         expect(content).toContain('p_purchase_type: purchaseType')
         expect(content).toContain("p_currency: 'INR'")
-        expect(content).toContain('result.alreadyProcessed')
+        expect(content).toContain('alreadyProcessed: boolean')
+        expect(content).toContain('processReferralConversion')
+        expect(content).not.toContain('issueReferralRefund')
     })
 
     it('verifies the atomic activation migration locks, binds, validates, and extends billing periods', () => {

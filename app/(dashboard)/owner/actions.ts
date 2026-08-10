@@ -1781,7 +1781,23 @@ export async function retryWhatsAppMessage(logId: string) {
 export async function getReferralStatsAction() {
     const { profile } = await requireRole(['owner']);
     const { getReferralStats } = await import('@/lib/referral');
-    if (!profile.org_id) return { code: null, total: 0, converted: 0, activeWindows: [], currentDiscountPct: 0 };
+    if (!profile.org_id) {
+        return {
+            eligible: false,
+            reason: 'active_base_required' as const,
+            code: null,
+            total: 0,
+            converted: 0,
+            availableCredits: 0,
+            redeemedCredits: 0,
+            cap: 5,
+            canRedeemNextYear: false,
+            renewalEligibleAt: null,
+            activeWindows: [],
+            currentDiscountPct: 0 as const,
+            history: [],
+        };
+    }
     return await getReferralStats(profile.org_id);
 }
 

@@ -86,7 +86,12 @@ export default function RefundPolicyPage() {
                     <li><strong>Service outage</strong> — For any material outage attributable to Weavly, we may provide a proportionate service credit or other remedy under the applicable order terms.</li>
                 </ul>
 
-                <h3>3.3 How Refunds Are Processed</h3>
+                <h3>3.3 Referral Credits</h3>
+                <p>
+                    Referral credits are annual service entitlements, not payment refunds. An active Base Plan member who has paid the initial year can earn one free Base Plan renewal year for each referred organization that pays its own initial Base Plan year, up to five credits. A credit can be redeemed only for a future annual renewal during the normal renewal window; it has no cash value and cannot be transferred.
+                </p>
+
+                <h3>3.4 How Refunds Are Processed</h3>
                 <ul>
                     <li>Refunds are processed to the original payment method within <strong>5-7 business days</strong>.</li>
                     <li>Payment receipts are available from Billing after successful payment. GST invoices are issued only when approved billing details and supplier tax configuration are complete.</li>

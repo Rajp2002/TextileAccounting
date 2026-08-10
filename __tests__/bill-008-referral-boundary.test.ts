@@ -31,6 +31,9 @@ describe('BILL-008 referral application boundary', () => {
     it('derives the referee organization at both server call sites', () => {
         expect(applyRouteSource).toContain("const { profile } = await requireRole(['owner'])")
         expect(applyRouteSource).toContain('await applyReferralCode(referralCode, profile.org_id)')
-        expect(signupSource).toContain('await applyReferralCode(parsed.data.referralCode, org.id)')
+        expect(signupSource).toContain('const applySignupReferral = async (orgId: string) =>')
+        expect(signupSource).toContain('await applyReferralCode(parsed.data.referralCode, orgId)')
+        expect(signupSource).toContain('await applySignupReferral(org.id)')
+        expect(signupSource).toContain('await applySignupReferral(org2!.id)')
     })
 })

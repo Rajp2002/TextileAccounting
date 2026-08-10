@@ -76,15 +76,15 @@ describe('B17 Razorpay lifecycle boundaries', () => {
         expect(migration).toContain('Failed payment context does not match captured checkout.')
     })
 
-    it('claims referral conversion and refund before external side effects', () => {
+    it('claims annual referral credits without a provider refund side effect', () => {
         const helper = read('lib/referral-webhook.ts')
-        const migration = read('supabase/migrations/20260714090000_b17_harden_razorpay_lifecycle.sql')
-        const issueBlock = helper.slice(helper.indexOf('export async function issueReferralRefund'))
+        const migration = read('supabase/migrations/20260810182342_referral_year_credits.sql')
         expect(helper).toContain("rpc('claim_referral_conversion'")
-        expect(helper).toContain("rpc('claim_referral_refund'")
-        expect(issueBlock.indexOf("rpc('claim_referral_refund'")).toBeLessThan(issueBlock.indexOf('createIdempotentRazorpayRefund'))
-        expect(migration).toContain('idx_referral_refunds_idempotency_key_unique')
-        expect(migration).toContain("v_existing.status = 'pending' AND v_existing.updated_at > v_now - interval '5 minutes'")
+        expect(helper).not.toContain('issueReferralRefund')
+        expect(helper).not.toContain('createIdempotentRazorpayRefund')
+        expect(migration).toContain('referral_year_credits')
+        expect(migration).toContain('referral_free_annual_renewal')
+        expect(migration).toContain('redeem_referral_year_credit')
     })
 
     it('fetches canonical payment state before captured or failed mutations', () => {
