@@ -41,9 +41,48 @@ export function PwaUpdateNotice() {
         if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
         let disposed = false
+        let updateActivationStarted = false
+
+        const isSafeLoginRefresh = () => {
+            if (window.location.pathname !== '/login') return false
+
+            const form = document.querySelector('form')
+            if (!form) return true
+
+            return Array.from(form.querySelectorAll('input, textarea, select')).every((field) => {
+                const control = field as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+                return control.value.length === 0
+            })
+        }
+
+        const activateWaitingWorker = (registration: ServiceWorkerRegistration) => {
+            const waitingWorker = registration.waiting
+            if (!waitingWorker || !navigator.serviceWorker.controller) return false
+            if (updateActivationStarted) return true
+
+            updateActivationStarted = true
+            let reloading = false
+            const reloadWithNewController = () => {
+                if (reloading) return
+                reloading = true
+                window.location.reload()
+            }
+
+            navigator.serviceWorker.addEventListener('controllerchange', reloadWithNewController, { once: true })
+            waitingWorker.postMessage({ type: 'SKIP_WAITING' })
+            window.setTimeout(reloadWithNewController, 3000)
+            return true
+        }
 
         const showUpdateToast = (registration: ServiceWorkerRegistration) => {
             if (disposed) return
+
+            // The login page has no draft state to protect. Activate a waiting
+            // worker before credentials cross the auth boundary; otherwise an
+            // old login bundle can navigate into a newer RSC/loading boundary
+            // and leave a PWA stuck on its spinner.
+            if (isSafeLoginRefresh() && activateWaitingWorker(registration)) return
+
             const versionKey = `${UPDATE_TOAST_SHOWN_FLAG}${encodeURIComponent(getUpdateVersionKey(registration))}`
             if (readSessionFlag(versionKey)) return
             writeSessionFlag(versionKey, '1')
@@ -64,21 +103,9 @@ export function PwaUpdateNotice() {
                 action: {
                     label: t('common.pwa_update_refresh'),
                     onClick: () => {
-                        const waitingWorker = registration.waiting
-                        if (!waitingWorker) {
-                            window.location.reload()
-                            return
-                        }
-
-                        let reloading = false
-                        const reloadWithNewController = () => {
-                            if (reloading) return
-                            reloading = true
+                        if (!activateWaitingWorker(registration)) {
                             window.location.reload()
                         }
-                        navigator.serviceWorker.addEventListener('controllerchange', reloadWithNewController, { once: true })
-                        waitingWorker.postMessage({ type: 'SKIP_WAITING' })
-                        window.setTimeout(reloadWithNewController, 3000)
                     },
                 },
             })
@@ -102,6 +129,10 @@ export function PwaUpdateNotice() {
 
         navigator.serviceWorker.ready.then((registration) => {
             if (disposed) return
+
+            if (registration.waiting && isSafeLoginRefresh()) {
+                activateWaitingWorker(registration)
+            }
 
             // A waiting worker can be left behind by another tab. Do not turn
             // a fresh navigation into an interruption; only announce workers
