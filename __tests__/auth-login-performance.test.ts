@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { isSupabaseAuthSessionCookie } from '../lib/supabase/auth-cookie'
+import {
+    getTerminalAuthSessionErrorCode,
+    isSupabaseAuthSessionCookie,
+} from '../lib/supabase/auth-cookie'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -17,6 +20,21 @@ describe('sign-in critical-path performance', () => {
         expect(isSupabaseAuthSessionCookie('unrelated-cookie', projectId)).toBe(false)
     })
 
+    it('recognizes only terminal Auth session errors as cookie-reset conditions', () => {
+        for (const code of [
+            'refresh_token_not_found',
+            'refresh_token_already_used',
+            'session_not_found',
+            'session_expired',
+        ]) {
+            expect(getTerminalAuthSessionErrorCode({ code })).toBe(code)
+        }
+
+        expect(getTerminalAuthSessionErrorCode({ code: 'request_timeout' })).toBeNull()
+        expect(getTerminalAuthSessionErrorCode({ code: 'invalid_credentials' })).toBeNull()
+        expect(getTerminalAuthSessionErrorCode(new Error('network unavailable'))).toBeNull()
+    })
+
     it('short-circuits requests with no session before the remote Auth lookup', () => {
         const proxy = read('proxy.ts')
         const loginActionFastPath = proxy.indexOf('if (isLoginActionRequest || isSignOutRequest)')
@@ -28,6 +46,19 @@ describe('sign-in critical-path performance', () => {
         expect(remoteLookup).toBeGreaterThan(loginActionFastPath)
         expect(remoteLookup).toBeGreaterThan(fastPath)
         expect(proxy).toContain("return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })")
+    })
+
+    it('expires stale session cookies when refresh or session validation is terminal', () => {
+        const proxy = read('proxy.ts')
+
+        expect(proxy).toContain('catch (error)')
+        expect(proxy).toContain('getTerminalAuthSessionErrorCode(error)')
+        expect(proxy).toContain('getTerminalAuthSessionErrorCode(claimsError)')
+        expect(proxy).toContain('return recoverTerminalAuthSession(terminalCode)')
+        expect(proxy).toContain('return recoverTerminalAuthSession(terminalClaimsCode)')
+        expect(proxy).toContain('request.cookies.delete(name)')
+        expect(proxy).toContain("event: 'terminal_auth_session_recovered'")
+        expect(proxy).toContain("NextResponse.redirect(new URL('/login', request.url))")
     })
 
     it('keeps browser cleanup outside the authentication critical path', () => {

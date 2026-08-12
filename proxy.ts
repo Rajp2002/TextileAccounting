@@ -8,7 +8,10 @@ import {
     PWA_LOGIN_RECOVERY_HEADER,
     PWA_LOGIN_RECOVERY_WINDOW_MS,
 } from '@/lib/pwa-auth-recovery'
-import { isSupabaseAuthSessionCookie } from '@/lib/supabase/auth-cookie'
+import {
+    getTerminalAuthSessionErrorCode,
+    isSupabaseAuthSessionCookie,
+} from '@/lib/supabase/auth-cookie'
 
 function getRoleHomePath(role?: string): string {
     if (role === 'owner') return '/owner/today'
@@ -87,10 +90,6 @@ function isPublicRoute(pathname: string): boolean {
     )
 }
 
-function hasSupabaseAuthSessionCookie(request: NextRequest): boolean {
-    return request.cookies.getAll().some(({ name }) => isSupabaseAuthSessionCookie(name))
-}
-
 function logProxyPhase(phase: string, pathname: string, startedAt: number) {
     if (process.env.WEAVLY_PERF_LOGS !== 'true') return
     const configuredRate = Number(process.env.WEAVLY_PERF_SAMPLE_RATE ?? '0.1')
@@ -121,7 +120,11 @@ export async function updateSession(request: NextRequest) {
     })
 
     const { pathname } = request.nextUrl
-    const hasAuthSessionCookie = hasSupabaseAuthSessionCookie(request)
+    const authSessionCookieNames = request.cookies
+        .getAll()
+        .filter(({ name }) => isSupabaseAuthSessionCookie(name))
+        .map(({ name }) => name)
+    const hasAuthSessionCookie = authSessionCookieNames.length > 0
     const isSignOutRequest = request.method === 'POST' && pathname === '/auth/signout'
 
     // ── IP-based rate limiting for auth routes ─────────────────────────────
@@ -193,13 +196,52 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
+    const recoverTerminalAuthSession = (code: string) => {
+        authSessionCookieNames.forEach(name => request.cookies.delete(name))
+        request.cookies.delete('last_activity')
+        request.cookies.delete(PWA_LOGIN_RECOVERY_COOKIE)
+        forwardedHeaders.set('cookie', request.cookies.toString())
+
+        const target = pathname.startsWith('/api/') && !isPublicRoute(pathname)
+            ? NextResponse.json({ error: 'Session expired. Please sign in again.' }, { status: 401 })
+            : isPublicRoute(pathname)
+                ? NextResponse.next({ request: { headers: forwardedHeaders } })
+                : NextResponse.redirect(new URL('/login', request.url))
+
+        const expireCookie = (name: string) => target.cookies.set(name, '', {
+            path: '/',
+            expires: new Date(0),
+            maxAge: 0,
+        })
+
+        authSessionCookieNames.forEach(expireCookie)
+        expireCookie('last_activity')
+        expireCookie(PWA_LOGIN_RECOVERY_COOKIE)
+
+        console.warn(JSON.stringify({
+            level: 'warning',
+            event: 'terminal_auth_session_recovered',
+            code,
+            route: pathname,
+        }))
+
+        return target
+    }
+
     // Supabase verifies asymmetric JWTs locally with the cached JWKS when the
     // project uses asymmetric signing keys. For projects that still use
     // symmetric signing, getClaims() deliberately falls back to Auth network
     // validation; keep this behavior until the deployed signing mode is
     // measured rather than assuming a latency win.
     const claimsStartedAt = performance.now()
-    const claimsResult = await supabase.auth.getClaims()
+    let claimsResult: Awaited<ReturnType<typeof supabase.auth.getClaims>>
+    try {
+        claimsResult = await supabase.auth.getClaims()
+    } catch (error) {
+        const terminalCode = getTerminalAuthSessionErrorCode(error)
+        if (terminalCode) return recoverTerminalAuthSession(terminalCode)
+        throw error
+    }
     logProxyPhase('claims', pathname, claimsStartedAt)
     // Compatibility note for the previous auth contract: the old
     // `await supabase.auth.getUser()` lookup is intentionally replaced here by
@@ -207,6 +249,8 @@ export async function updateSession(request: NextRequest) {
     // equivalent Auth network validation internally.
     const claims = claimsResult.data?.claims
     const claimsError = claimsResult.error
+    const terminalClaimsCode = getTerminalAuthSessionErrorCode(claimsError)
+    if (terminalClaimsCode) return recoverTerminalAuthSession(terminalClaimsCode)
     const optimisticClaims = normalizeOptimisticClaims(claims)
     const userId = typeof optimisticClaims.sub === 'string' ? optimisticClaims.sub : null
     const user = claimsError || !userId ? null : { id: userId }
