@@ -1223,7 +1223,12 @@ export async function saveEstimatorQuoteV3(params: {
         if (templateError) return { error: templateError.message }
         if (!template) return { error: 'The selected saved quality is no longer available.' }
     }
-    if (!params.templateId && newRecordKind === 'costing') {
+    // A legacy costing can be missing template_id while still carrying a
+    // source quote identity. It is an edit of an existing immutable lineage,
+    // not a request to create another Saved Quality with the same name. Let
+    // the revision RPC resolve the source template and perform the atomic
+    // version save instead of surfacing a misleading duplicate-quality error.
+    if (!params.templateId && !params.sourceQuoteId && newRecordKind === 'costing') {
         const [{ data: archivedTemplates, error: archivedTemplateError }, { data: activeTemplates, error: activeTemplateError }] = await Promise.all([
             supabase
             .from('estimator_templates')

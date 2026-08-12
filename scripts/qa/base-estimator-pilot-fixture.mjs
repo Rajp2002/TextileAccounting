@@ -58,6 +58,7 @@ async function setup() {
     const organization = await requireData(await admin.from('organizations').insert({
         name: `${runId} MILL`,
         owner_id: user.user.id,
+        product_experience: 'base',
         onboarding_complete: true,
         production_mode: 'both',
         join_code: crypto.randomBytes(4).toString('hex').toUpperCase(),
