@@ -8,7 +8,7 @@ const legacyMigration = readFileSync(
     'utf8',
 ).toLowerCase()
 const hardeningMigration = readFileSync(
-    join(root, 'supabase/migrations/20260812132243_harden_security_advisor_boundaries.sql'),
+    join(root, 'supabase/migrations/20260812133643_harden_security_advisor_boundaries.sql'),
     'utf8',
 )
 const dashboardActions = readFileSync(

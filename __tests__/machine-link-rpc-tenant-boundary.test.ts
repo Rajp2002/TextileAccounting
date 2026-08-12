@@ -3,11 +3,11 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync(
-    join(process.cwd(), 'supabase/migrations/20260812132243_harden_security_advisor_boundaries.sql'),
+    join(process.cwd(), 'supabase/migrations/20260812133643_harden_security_advisor_boundaries.sql'),
     'utf8',
 )
 const overloadMigration = readFileSync(
-    join(process.cwd(), 'supabase/migrations/20260812134426_clarify_machine_link_overloads.sql'),
+    join(process.cwd(), 'supabase/migrations/20260812134540_clarify_machine_link_overloads.sql'),
     'utf8',
 )
 const normalizedMigration = migration.replace(/\s+/g, ' ')
