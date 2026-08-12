@@ -432,12 +432,13 @@ export async function signDpa(dpaId: string) {
  */
 
 export async function lockdownTenant(orgId: string, reason: string, severity: string) {
-    await requireRole(['admin'])
-    const supabase = await createClient()
+    const { user } = await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase.rpc('lockdown_tenant', {
         p_org_id: orgId,
         p_reason: reason,
-        p_severity: severity
+        p_severity: severity,
+        p_actor_id: user.id,
     })
 
     if (error) throw new Error(error.message)
@@ -466,10 +467,11 @@ export async function lockdownTenant(orgId: string, reason: string, severity: st
 }
 
 export async function unlockTenant(orgId: string) {
-    await requireRole(['admin'])
-    const supabase = await createClient()
+    const { user } = await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase.rpc('unlock_tenant', {
-        p_org_id: orgId
+        p_org_id: orgId,
+        p_actor_id: user.id,
     })
 
     if (error) throw new Error(error.message)
