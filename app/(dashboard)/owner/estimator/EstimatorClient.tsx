@@ -3883,12 +3883,14 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {/* Keep the costing workspace at its full width. On wide desktop
-                viewports the live estimate moves into the spare right rail so
-                it stays visible while the owner edits lower sections. */}
-            <div className="relative min-w-0">
-            {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
-            <div className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
+            {/* The wide desktop layout keeps the editing surface and its live
+                reference rail in separate columns so the rail never covers
+                saved qualities or form controls. */}
+            <div className="estimator-workspace-grid items-start">
+                <div className="estimator-workspace-main min-w-0">
+                    <div className="relative min-w-0">
+                    {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
+                    <div className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
                 <div className={`${hudShellClass} premium-focus-surface`}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -4307,31 +4309,12 @@ export default function EstimatorClient({
                         </div>
                     )}
                 </div>
-            </div>
+                    </div>
+                    </div>
 
-            <aside
-                className="estimator-reference-rail space-y-3"
-                aria-label="Estimator reference information"
-            >
-                <EstimatorCostSummaryRail
-                    activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
-                    versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
-                        ? `Costing v${sourceQuoteVersionNumber ?? 1}${sourceQuoteCreatedAt ? ` · ${formatDateOnly(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
-                        : 'New costing snapshot'}
-                    validityLabel={validityStatus.label}
-                    validityClassName={validityStatus.className}
-                    hasValidCostResult={hasValidCostResult}
-                    quoteIsValid={costingResult.quoteIsValid}
-                    productionCostPerM={costingResult.productionCostPerM}
-                    suggestedSellingPricePerM={costingResult.suggestedSellingPricePerM}
-                    actualMarginPct={displayMarginPct}
-                />
-                <BasePlanFactoryGlossary />
-                <ArchivePolicyNotice />
-            </aside>
+                    {/* ── MAIN FORM ────────────────────────────────────────────── */}
+                    <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`}>
 
-            {/* ── MAIN FORM ────────────────────────────────────────────── */}
-            <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`}>
                 {/* ── SAVED FABRIC QUALITIES ─────────────────────────────── */}
                 <section
                     id="saved-qualities"
@@ -5812,6 +5795,28 @@ export default function EstimatorClient({
                 </div>
                 )}
             </div>
+            </div>
+
+                <aside
+                    className="estimator-reference-rail space-y-3"
+                    aria-label="Estimator reference information"
+                >
+                    <EstimatorCostSummaryRail
+                        activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                        versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
+                            ? `Costing v${sourceQuoteVersionNumber ?? 1}${sourceQuoteCreatedAt ? ` · ${formatDateOnly(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
+                            : 'New costing snapshot'}
+                        validityLabel={validityStatus.label}
+                        validityClassName={validityStatus.className}
+                        hasValidCostResult={hasValidCostResult}
+                        quoteIsValid={costingResult.quoteIsValid}
+                        productionCostPerM={costingResult.productionCostPerM}
+                        suggestedSellingPricePerM={costingResult.suggestedSellingPricePerM}
+                        actualMarginPct={displayMarginPct}
+                    />
+                    <BasePlanFactoryGlossary />
+                    <ArchivePolicyNotice />
+                </aside>
             </div>
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}

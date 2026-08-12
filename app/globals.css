@@ -419,9 +419,20 @@
     display: none;
   }
 
-  /* The estimator's decision surface should keep its full width. On a wide
-     desktop viewport the glossary/archive references use the spare viewport
-     margin instead of becoming a second grid column that compresses it. */
+  /* The estimator owns a real content column and a reference column on wide
+     desktop. Keeping the rail in the grid prevents it from covering inputs
+     while preserving the single-column flow on smaller screens. */
+  .estimator-workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+  }
+
+  .estimator-workspace-main {
+    min-width: 0;
+  }
+
   .estimator-reference-rail {
     width: 100%;
     margin-top: 1.25rem;
@@ -432,19 +443,20 @@
   }
 
   @media (min-width: 1660px) {
+    .estimator-workspace-grid {
+      grid-template-columns: minmax(0, 1fr) 14rem;
+    }
+
     .estimator-primary-cockpit {
       display: none;
     }
 
     .estimator-reference-rail {
-      position: fixed;
+      position: sticky;
       top: 6rem;
-      right: 0.75rem;
       z-index: 30;
-      width: 14rem;
       max-height: calc(100vh - 7rem);
       overflow-y: auto;
-      margin-top: 0;
       padding-bottom: 0.25rem;
       scrollbar-width: thin;
     }
