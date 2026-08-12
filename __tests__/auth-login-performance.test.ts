@@ -86,6 +86,20 @@ describe('sign-in critical-path performance', () => {
         expect(ownerBranch).toContain("return succeed('/owner/today')")
     })
 
+    it('refreshes inactivity state in the successful login response', () => {
+        const authActions = read('app/(auth)/actions/auth.ts')
+        const signInBody = authActions.slice(
+            authActions.indexOf('export async function signIn'),
+            authActions.indexOf('// ─── regenerateJoinCode')
+        )
+
+        expect(authActions).toContain("import { cookies, headers } from 'next/headers'")
+        expect(signInBody).toContain("cookieStore.set('last_activity', Date.now().toString()")
+        expect(signInBody.indexOf("cookieStore.set('last_activity'")).toBeLessThan(
+            signInBody.indexOf('return { redirectTo }')
+        )
+    })
+
     it('routes Base Plan owners to the estimator and Full Suite owners to Factory Today', () => {
         const authActions = read('app/(auth)/actions/auth.ts')
         const signInBody = authActions.slice(

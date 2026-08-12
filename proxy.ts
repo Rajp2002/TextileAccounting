@@ -127,8 +127,11 @@ export async function updateSession(request: NextRequest) {
     const hasAuthSessionCookie = authSessionCookieNames.length > 0
     const isSignOutRequest = request.method === 'POST' && pathname === '/auth/signout'
 
-    // ── IP-based rate limiting for auth routes ─────────────────────────────
-    if (isAuthRoute(pathname) && !isSignOutRequest) {
+    // ── IP-based rate limiting for auth mutations ──────────────────────────
+    // GET/HEAD requests include page loads and Next.js prefetches. Counting
+    // those as password attempts lets a routing loop lock the login page with
+    // a 429, which hides the real session error and amplifies the flicker.
+    if (request.method === 'POST' && isAuthRoute(pathname) && !isSignOutRequest) {
         const ip = getClientIpFromHeaders(request.headers)
 
         const isSignup = pathname.startsWith('/signup') || pathname.startsWith('/join')
@@ -286,9 +289,20 @@ export async function updateSession(request: NextRequest) {
     const now = Date.now()
 
     if (userId && lastActivity) {
-        const timeSinceLastActivity = now - parseInt(lastActivity, 10)
-        if (timeSinceLastActivity > 3600000) {
-            await supabase.auth.signOut()
+        const lastActivityAt = Number(lastActivity)
+        const timeSinceLastActivity = now - lastActivityAt
+
+        if (
+            Number.isFinite(timeSinceLastActivity)
+            && timeSinceLastActivity > 3600000
+        ) {
+            console.warn(JSON.stringify({
+                level: 'warning',
+                event: 'auth_session_inactivity_expired',
+                route: pathname,
+                idle_ms: timeSinceLastActivity,
+            }))
+            await supabase.auth.signOut({ scope: 'local' })
             response = NextResponse.redirect(new URL('/login', request.url))
             response.cookies.delete('last_activity')
             return response

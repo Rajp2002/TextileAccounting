@@ -21,7 +21,8 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
     const pwaUpdate = source('components/pwa-update-notice.tsx')
 
     it('keeps the inactivity timestamp past one hour so an idle session is rejected', () => {
-        expect(proxy).toContain('if (timeSinceLastActivity > 3600000)')
+        expect(proxy).toContain('timeSinceLastActivity > 3600000')
+        expect(proxy).toContain("supabase.auth.signOut({ scope: 'local' })")
         expect(proxy).toContain('maxAge: 7 * 24 * 60 * 60')
         expect(proxy).toContain("response.cookies.delete('last_activity')")
         expect(proxy).toContain('getClientIpFromHeaders(request.headers)')

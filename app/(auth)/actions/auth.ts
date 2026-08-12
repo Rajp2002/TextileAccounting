@@ -12,7 +12,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { parseJWT, requireRole } from '@/lib/auth'
@@ -423,6 +423,18 @@ export async function signIn(input: { email: string; password: string; traceId?:
         return { error }
     }
     const succeed = async (redirectTo: string) => {
+        // A previous session can leave an old inactivity timestamp behind. The
+        // newly-created Supabase session and this cookie are committed in the
+        // same Server Action response so Proxy never mistakes a fresh login for
+        // an hour-old idle session on the first dashboard request.
+        const cookieStore = await cookies()
+        cookieStore.set('last_activity', Date.now().toString(), {
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+        })
         await persistSignInTraceCookie(input.traceId)
         telemetry.log('success', { destination: redirectTo })
         return { redirectTo }

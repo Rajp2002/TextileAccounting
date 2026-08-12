@@ -36,5 +36,9 @@ export async function POST(request: NextRequest) {
 
     // A 303 converts the form POST into a fresh GET and avoids a client-side
     // React/Server Action transition after the session cookies are removed.
-    return NextResponse.redirect(new URL('/login', request.url), { status: 303 })
+    const response = NextResponse.redirect(new URL('/login', request.url), { status: 303 })
+    // Do not carry inactivity state into the next session if Supabase cleanup
+    // is unavailable or an older browser retained this app-owned cookie.
+    response.cookies.delete('last_activity')
+    return response
 }

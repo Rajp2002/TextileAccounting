@@ -19,8 +19,9 @@ describe('logout route', () => {
         expect(route).toContain('supabase.auth.signOut()')
         expect(route).toContain("createSignInServerTimer('auth_logout', traceId)")
         expect(route).toContain("new URL('/login', request.url), { status: 303 }")
+        expect(route).toContain("response.cookies.delete('last_activity')")
         expect(proxy).toContain("request.method === 'POST' && pathname === '/auth/signout'")
-        expect(proxy).toContain('if (isAuthRoute(pathname) && !isSignOutRequest)')
+        expect(proxy).toContain("if (request.method === 'POST' && isAuthRoute(pathname) && !isSignOutRequest)")
     })
 
     it('rejects cross-origin form posts when the browser supplies an Origin header', () => {
