@@ -228,7 +228,24 @@ export async function savePastAttendance(
         return { error: 'A server error occurred. Please try again later.' }
     }
 
-    // 3. Upsert records — org_id is server-derived
+    // 3. Validate every worker belongs to the authenticated organization
+    const fixedWorkerIds = [...new Set(parsed.data.records.map(record => record.fixed_worker_id))]
+    const { data: ownedFixedWorkers, error: fixedWorkersError } = await serviceClient
+        .from('fixed_workers')
+        .select('id')
+        .eq('org_id', orgId)
+        .in('id', fixedWorkerIds)
+
+    if (fixedWorkersError) {
+        console.error('Error validating attendance workers:', fixedWorkersError)
+        return { error: 'Failed to validate attendance workers. Please try again.' }
+    }
+
+    if ((ownedFixedWorkers?.length ?? 0) !== fixedWorkerIds.length) {
+        return { error: 'One or more selected workers are not available for this organization.' }
+    }
+
+    // 4. Upsert records — org_id is server-derived
     const headerList = await headers()
     const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
 
@@ -246,7 +263,7 @@ export async function savePastAttendance(
 
     const { error } = await serviceClient
         .from('attendance')
-        .upsert(upsertData, { onConflict: 'fixed_worker_id,date' })
+        .upsert(upsertData, { onConflict: 'org_id,fixed_worker_id,date' })
 
     if (error) {
         console.error('Error saving past attendance:', error)
