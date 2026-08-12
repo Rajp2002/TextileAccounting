@@ -11,9 +11,9 @@ source tests or a QA rehearsal into production approval.
 
 | Item | Observed state | Evidence / disposition |
 | --- | --- | --- |
-| Repository | `main`, HEAD `8ad945da25a1a76159878bd5a87bf2821761330b` | Working tree contains local R0 changes; no R0 release commit has been created. |
+| Repository | `main`, HEAD `d0acdad2d2a0ca0bde0691934c8463a184940c05` | R0 release commit `d0acdad` is pushed to `origin/main`; the working tree still has unrelated untracked user artifacts. |
 | Vercel project | `textile-accounting` / `prj_Eg9Cmax0d3yooB1iJmbDorUBF6Q4` | Team `team_IdyTSnqYdDMy01w7YrgIK9P9`. |
-| Current production deployment | READY, deployment `dpl_6seeWedMM7znuLMjWnKvNVhDWeYS` | Production still reports commit `77376b38…`. A newer `8ad945da…` main deployment was observed queued/building, not yet READY. The R0 changes are not deployed. |
+| Current production deployment | READY, deployment `dpl_6seeWedMM7znuLMjWnKvNVhDWeYS` | Production still reports commit `77376b38…`. R0 deployment `dpl_9HTi1bmr7s7BnBZTwPPpn1sD3kCV` for `d0acdad2…` is queued, not yet READY; the R0 changes are not deployed. |
 | Production Supabase | `vzhwahudircrpgtitwzd` | PostgreSQL 17.6; current migration head `20260808121531_harden_quotation_sent_stamp_search_path`. |
 | QA Supabase | `eutycrtzzxmlkcpipgod` | PostgreSQL 17.6; no named tenant ID was supplied in this run. |
 | Self-serve billing flag | `BILLING_SELF_SERVE_PLAN_TIERS=['base']`; default `base` | Server guard now rejects Premium/unknown tiers before pricing, lifecycle, claim, or provider calls. |
@@ -107,8 +107,9 @@ and golden-journey smoke.
 
 ## Release-owner completion checklist
 
-1. Create a release commit containing the reviewed R0 changes and record its
-   full SHA.
+1. **Completed:** commit `d0acdad2d2a0ca0bde0691934c8463a184940c05` is on
+   `origin/main`; wait for Vercel deployment `dpl_9HTi1bmr7s7BnBZTwPPpn1sD3kCV`
+   to become READY and verify its exact SHA.
 2. Verify the backup artifact and restore/reconciliation evidence; record the
    owner, expiry/retention, and rollback/forward-fix contacts.
 3. Deploy the three exact migrations in order during the approved low-traffic
