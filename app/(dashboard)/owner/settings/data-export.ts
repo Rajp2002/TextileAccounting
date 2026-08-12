@@ -27,6 +27,18 @@ const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
     'whatsapp_number',
 ])
 
+const EXPORT_SCHEMA_MIGRATION_BY_DATASET: Record<string, string> = {
+    referral_year_credits: '20260810182342_referral_year_credits.sql',
+    organization_export_runs: '20260801162646_20260801143840_sprint4_billing_trust_boundaries.sql',
+}
+
+const POSTGREST_SCHEMA_COMPATIBILITY_ERROR_CODES = new Set([
+    '42P01', // undefined_table
+    '42703', // undefined_column
+    'PGRST204', // column not found in schema cache
+    'PGRST205', // table not found in schema cache
+])
+
 type ExportRecord = Record<string, unknown>
 
 export type OrganizationExportHistoryItem = {
@@ -124,6 +136,26 @@ function redactSensitiveFields(row: ExportRecord): ExportRecord {
 
 function redactRows(rows: unknown[] | null | undefined) {
     return (rows ?? []).map(row => redactSensitiveFields(row as ExportRecord))
+}
+
+function exportSchemaReadinessError(datasetKey: string, error: unknown): string | null {
+    const candidate = (error && typeof error === 'object')
+        ? error as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown }
+        : {}
+    const code = typeof candidate.code === 'string' ? candidate.code : ''
+    const description = [candidate.message, candidate.details, candidate.hint]
+        .filter((value): value is string => typeof value === 'string')
+        .join(' ')
+        .toLowerCase()
+    const looksLikeSchemaMismatch = POSTGREST_SCHEMA_COMPATIBILITY_ERROR_CODES.has(code)
+        || /schema cache|relation .* does not exist|column .* does not exist|could not find the (table|column)/i.test(description)
+    if (!looksLikeSchemaMismatch) return null
+
+    const migration = EXPORT_SCHEMA_MIGRATION_BY_DATASET[datasetKey]
+    const migrationInstruction = migration
+        ? `Apply ${migration}`
+        : 'Apply the reviewed production migrations'
+    return `Organization export is not ready because the database schema for ${datasetKey} is unavailable. ${migrationInstruction}, refresh the PostgREST schema cache with NOTIFY pgrst, 'reload schema', and retry.`
 }
 
 /**
@@ -262,7 +294,8 @@ export async function exportOrganizationData() {
     )
     const failedQuery = queryResults.find(({ result }) => result.error)
     if (failedQuery?.result.error) {
-        const reason = 'The organization export is incomplete. No export was generated; please try again.'
+        const reason = exportSchemaReadinessError(failedQuery.key, failedQuery.result.error)
+            ?? 'The organization export is incomplete. No export was generated; please try again.'
         console.error('Organization export query failed', {
             dataset: failedQuery.key,
             code: failedQuery.result.error.code,
@@ -397,7 +430,14 @@ export async function getOrganizationExportHistory(limit = 10) {
         .order('created_at', { ascending: false })
         .limit(boundedLimit)
 
-    if (!runsError && runs && runs.length > 0) {
+    if (runsError) {
+        return {
+            error: exportSchemaReadinessError('organization_export_runs', runsError)
+                ?? 'Export history could not be loaded. Try again.',
+        }
+    }
+
+    if (runs && runs.length > 0) {
         const actorIds = [...new Set(runs.map(run => run.actor_id).filter((actorId): actorId is string => Boolean(actorId)))]
         const { data: actors } = actorIds.length > 0
             ? await supabase

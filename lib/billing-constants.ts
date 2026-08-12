@@ -41,6 +41,15 @@ export function isPurchasablePlanTier(value: unknown): value is PurchasablePlanT
   return value === 'base' || value === 'premium'
 }
 
+/**
+ * Server-side rollout boundary.  The catalog may retain Premium for existing
+ * entitlement/read-only behavior, but self-serve checkout must use this
+ * explicit allowlist.
+ */
+export function isSelfServePlanTier(value: unknown): value is PurchasablePlanTier {
+  return isPurchasablePlanTier(value) && BILLING_SELF_SERVE_PLAN_TIERS.includes(value)
+}
+
 export function getBillingPlan(tier: PurchasablePlanTier) {
   return BILLING_PLANS[tier]
 }

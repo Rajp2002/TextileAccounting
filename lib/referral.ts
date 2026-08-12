@@ -3,6 +3,10 @@ import 'server-only'
 import crypto from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getRenewalEligibilityDate, isRenewalEligible } from '@/lib/billing-lifecycle'
+import {
+    isReferralCampaignEnabledForOrg,
+    REFERRAL_CAMPAIGN_DISABLED_MESSAGE,
+} from '@/lib/referral-campaign'
 
 export const REFERRAL_MAX_CREDITS = 5
 
@@ -56,7 +60,7 @@ type ReferralHistoryRow = {
 
 export type ReferralEligibility = {
     eligible: boolean
-    reason: 'active_base_required' | 'initial_payment_required' | null
+    reason: 'active_base_required' | 'initial_payment_required' | 'campaign_disabled' | null
     currentEnd: string | null
     renewalEligibleAt: string | null
 }
@@ -191,6 +195,9 @@ async function loadReferralEligibility(orgId: string): Promise<ReferralEligibili
 
 /** Returns the stable referral code, creating it only for an eligible Base member. */
 export async function getOrCreateReferralCode(orgId: string): Promise<string> {
+    if (!isReferralCampaignEnabledForOrg(orgId)) {
+        throw new Error(REFERRAL_CAMPAIGN_DISABLED_MESSAGE)
+    }
     const eligibility = await loadReferralEligibility(orgId)
     if (!eligibility.eligible) {
         throw new Error('Referral rewards require an active Base Plan with the initial year paid.')
@@ -232,6 +239,14 @@ export async function getOrCreateReferralCode(orgId: string): Promise<string> {
 }
 
 export async function getReferralStats(orgId: string): Promise<ReferralStats> {
+    if (!isReferralCampaignEnabledForOrg(orgId)) {
+        return emptyReferralStats({
+            eligible: false,
+            reason: 'campaign_disabled',
+            currentEnd: null,
+            renewalEligibleAt: null,
+        })
+    }
     const eligibility = await loadReferralEligibility(orgId)
     if (!eligibility.eligible) return emptyReferralStats(eligibility)
 
@@ -323,6 +338,10 @@ export async function applyReferralCode(code: string, refereeOrgId: string) {
     // Prevent self-referral before any write.
     if (codeRow.org_id === refereeOrgId) {
         throw new Error('Cannot use your own referral code')
+    }
+
+    if (!isReferralCampaignEnabledForOrg(codeRow.org_id)) {
+        throw new Error(REFERRAL_CAMPAIGN_DISABLED_MESSAGE)
     }
 
     const eligibility = await loadReferralEligibility(codeRow.org_id)

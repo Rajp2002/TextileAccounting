@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { applyReferralCode } from '@/lib/referral';
+import { REFERRAL_CAMPAIGN_DISABLED_MESSAGE } from '@/lib/referral-campaign';
 import { requireRole } from '@/lib/auth';
 import * as Sentry from '@sentry/nextjs';
 
@@ -29,13 +30,14 @@ export async function POST(req: Request) {
             'Referral code already applied for this organization',
             'This referral code has reached its five-referral limit.',
             'Referral rewards require an active Base Plan with the initial year paid.',
+            REFERRAL_CAMPAIGN_DISABLED_MESSAGE,
         ]
         if (!safeMessages.includes(message)) {
             Sentry.captureException(error, { tags: { route: 'referrals_apply' } });
         }
         return NextResponse.json(
             { error: safeMessages.includes(message) ? message : 'Failed to apply referral code' },
-            { status: 400 }
+            { status: message === REFERRAL_CAMPAIGN_DISABLED_MESSAGE ? 403 : 400 }
         );
     }
 }

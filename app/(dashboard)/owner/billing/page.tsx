@@ -285,6 +285,9 @@ export default async function BillingPage({
     const activePaidTier = tier === 'base' || tier === 'premium' ? tier : null
     const activePlan = activePaidTier ? getBillingPlan(activePaidTier) : null
     const activeRenewalPrice = activePaidTier ? getBillingPrice(activePaidTier, 'renewal') : null
+    const selfServeActiveTier = activePaidTier && BILLING_SELF_SERVE_PLAN_TIERS.includes(activePaidTier)
+        ? activePaidTier
+        : null
 
     const checkoutPresentation = resolveBillingCheckoutPresentation(
         billingSubscriptions,
@@ -294,11 +297,8 @@ export default async function BillingPage({
     const isActivating = checkoutPresentation.state === 'activating'
     const isPending = checkoutPresentation.state === 'pending'
     const isRetryable = checkoutPresentation.state === 'retryable'
-    const activeRenewalDecision = activePaidTier ? purchaseDecisions[activePaidTier] : null
-    const hasPaidPremiumHistory = purchaseDecisions.premium.purchaseType === 'renewal'
-    const visiblePlanTiers: readonly PurchasablePlanTier[] = tier === 'trial' || hasPaidPremiumHistory
-        ? ['base', 'premium']
-        : BILLING_SELF_SERVE_PLAN_TIERS
+    const activeRenewalDecision = selfServeActiveTier ? purchaseDecisions[selfServeActiveTier] : null
+    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS
     const renewalAvailable = Boolean(
         activeRenewalDecision?.allowed
         && activeRenewalDecision.purchaseType === 'renewal'
@@ -499,9 +499,9 @@ export default async function BillingPage({
                                         <p className="mt-2 text-[10px] text-subtle">
                                             {activeRenewalPrice ? `${formatAmount(activeRenewalPrice.basePaise)} + ${formatAmount(activeRenewalPrice.gstPaise)} GST` : ''}
                                         </p>
-                                        {renewalAvailable && activePaidTier && activeRenewalPrice ? (
+                                        {renewalAvailable && selfServeActiveTier && activeRenewalPrice ? (
                                             <SubscribeButton
-                                                planTier={activePaidTier}
+                                                planTier={selfServeActiveTier}
                                                 tierName={activePlan?.name}
                                                 displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
                                                 buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
@@ -509,6 +509,10 @@ export default async function BillingPage({
                                                 successLabel="View payment history"
                                                 className="mt-5 shadow-none"
                                             />
+                                        ) : activePaidTier === 'premium' ? (
+                                            <p className="mt-5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-surface-muted">
+                                                Premium self-serve checkout is paused for the Base pilot. Contact support for an approved account action.
+                                            </p>
                                         ) : renewalEligibleAt && subscription?.current_end ? (
                                             <p className="mt-5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-surface-muted">
                                                 Renewal opens on {formatShortDate(renewalEligibleAt)} ({RENEWAL_ELIGIBILITY_DAYS} days before expiry). No automatic charge will be made.

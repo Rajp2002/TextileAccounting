@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard, RefreshCw, ShieldCheck } from 'lucide-react'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { cn } from '@/lib/utils'
-import type { BillingPurchaseType, PurchasablePlanTier } from '@/lib/billing-constants'
+import { BILLING_SELF_SERVE_DEFAULT_TIER, type BillingPurchaseType, type PurchasablePlanTier } from '@/lib/billing-constants'
 import { useTranslation } from '@/lib/i18n/context'
 
 type RazorpayCheckoutOptions = {
@@ -84,7 +84,7 @@ interface SubscribeButtonProps {
     className?: string
 }
 
-export function SubscribeButton({ planTier = 'premium', tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className }: SubscribeButtonProps) {
+export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
     const [outcome, setOutcome] = useState<PaymentOutcome | null>(null)
     const router = useRouter()

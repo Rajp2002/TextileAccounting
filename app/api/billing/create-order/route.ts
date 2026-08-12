@@ -5,9 +5,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import * as Sentry from '@sentry/nextjs'
 import {
+    BILLING_SELF_SERVE_DEFAULT_TIER,
+    isSelfServePlanTier,
     getBillingPlan,
     getBillingPrice,
-    isPurchasablePlanTier,
     BILLING_MODEL,
     ACCESS_DAYS,
     RENEWAL_ELIGIBILITY_DAYS,
@@ -57,9 +58,17 @@ export async function POST(req: NextRequest) {
     const orgId = profile.org_id
 
     const requested = await req.json().catch(() => ({})) as { planTier?: unknown; clientRequestId?: unknown }
-    const planTier = requested.planTier ?? 'premium'
-    if (!isPurchasablePlanTier(planTier)) {
-        return NextResponse.json({ error: 'Select a valid Weavly plan.' }, { status: 400 })
+    // Missing tier is an intentional Base rollout default. Any supplied tier
+    // must pass the explicit self-serve allowlist before pricing, lifecycle
+    // resolution, checkout-claim creation, or provider order creation.
+    const planTier = requested.planTier === undefined
+        ? BILLING_SELF_SERVE_DEFAULT_TIER
+        : requested.planTier
+    if (!isSelfServePlanTier(planTier)) {
+        return NextResponse.json(
+            { error: 'Only the Weavly Estimator Base Plan is available for self-serve checkout right now.' },
+            { status: 403 },
+        )
     }
     const plan = getBillingPlan(planTier)
 

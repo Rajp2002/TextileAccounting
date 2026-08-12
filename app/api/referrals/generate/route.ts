@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getOrCreateReferralCode, getReferralStats } from '@/lib/referral';
+import { REFERRAL_CAMPAIGN_DISABLED_MESSAGE } from '@/lib/referral-campaign';
 import { requireRole } from '@/lib/auth';
 import * as Sentry from '@sentry/nextjs';
 
@@ -43,11 +44,11 @@ export async function POST() {
 
         return NextResponse.json({ code });
     } catch (error) {
-        Sentry.captureException(error, { tags: { route: 'referrals_generate', method: 'POST' } });
         const message = error instanceof Error ? error.message : ''
-        if (message.includes('active Base Plan')) {
+        if (message.includes('active Base Plan') || message === REFERRAL_CAMPAIGN_DISABLED_MESSAGE) {
             return NextResponse.json({ error: message }, { status: 403 });
         }
+        Sentry.captureException(error, { tags: { route: 'referrals_generate', method: 'POST' } });
         return NextResponse.json({ error: 'Failed to generate referral code' }, { status: 500 });
     }
 }
