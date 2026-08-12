@@ -2,16 +2,17 @@
  * lib/rate-limit.ts — Rate Limiter Factory
  *
  * Uses @upstash/ratelimit (Redis-backed sliding window) when UPSTASH_REDIS_REST_URL
- * is set. Generic public/auth routes fall back gracefully in environments without
- * Redis. Access-code checks are stricter and fail closed when Redis is unavailable.
+ * is set. Generic public routes fall back gracefully in environments without
+ * Redis. Authentication and access-code checks use stricter bounded/fail-closed
+ * behavior when Redis is unavailable.
  *
  * Two usage patterns:
  *   1. Middleware tier: IP-based, for auth routes (/login, /signup)
  *   2. Server action tier: User-based, for destructive operations
  *
  * Usage in middleware:
- *   const result = await checkRateLimit(authLimiter, ip)
- *   if (!result.success) return rateLimitResponse(result.reset)
+ *   const resetAt = await checkAuthRateLimit(ip)
+ *   if (resetAt !== null) return rateLimitResponse(resetAt)
  *
  * Usage in server actions:
  *   const rl = await checkRateLimit(accessCodeLimiter, userId)
@@ -38,6 +39,10 @@ export function getRateLimitRetrySeconds(resetAtMs: number, nowMs = Date.now()):
 
 let redis: Redis | null = null
 let redisWarned = false
+let authFallbackAlerted = false
+const AUTH_LIMIT = 200
+const AUTH_WINDOW_SECONDS = 15 * 60
+const LOCAL_AUTH_BUCKET_CAPACITY = 10_000
 const ACCESS_CODE_LIMIT = 5
 const ACCESS_CODE_WINDOW_SECONDS = 10 * 60
 const ACCESS_CODE_LOCKOUT_SECONDS = 10 * 60
@@ -45,6 +50,13 @@ const ACCESS_CODE_UNAVAILABLE_MESSAGE = 'Access-code protection is temporarily u
 const JOIN_CODE_LIMIT = 10
 const JOIN_CODE_WINDOW_SECONDS = 10 * 60
 const JOIN_CODE_UNAVAILABLE_MESSAGE = 'Join-code protection is temporarily unavailable. Try again later.'
+
+type LocalAuthBucket = {
+    count: number
+    reset: number
+}
+
+const localAuthBuckets = new Map<string, LocalAuthBucket>()
 
 function getRedis(): Redis | null {
     if (redis) return redis
@@ -56,7 +68,7 @@ function getRedis(): Redis | null {
         if (!redisWarned) {
             console.warn(
                 '[RateLimit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set. ' +
-                'Rate limiting is DISABLED. Set up Upstash Redis to enable it: https://upstash.com'
+                'Redis-backed rate limiting is unavailable. Configure Upstash Redis for distributed limits: https://upstash.com'
             )
             redisWarned = true
         }
@@ -80,22 +92,22 @@ function createLimiter(requests: number, windowSeconds: number): Ratelimit | nul
 }
 
 /**
- * Auth limiter — 10 requests per 15 minutes, IP-based.
+ * Auth limiter — 200 requests per 15 minutes, IP-based.
  * Applied in middleware for /login and /auth/* routes.
  */
 let _authLimiter: Ratelimit | null | undefined = undefined
 export function getAuthLimiter() {
-    if (_authLimiter === undefined) _authLimiter = createLimiter(200, 15 * 60)
+    if (_authLimiter === undefined) _authLimiter = createLimiter(AUTH_LIMIT, AUTH_WINDOW_SECONDS)
     return _authLimiter
 }
 
 /**
- * Signup limiter — 50 requests per 15 minutes, IP-based.
+ * Signup limiter — 200 requests per 15 minutes, IP-based.
  * Higher limit to facilitate testing and legitimate high-traffic onboarding.
  */
 let _signupLimiter: Ratelimit | null | undefined = undefined
 export function getSignupLimiter() {
-    if (_signupLimiter === undefined) _signupLimiter = createLimiter(200, 15 * 60)
+    if (_signupLimiter === undefined) _signupLimiter = createLimiter(AUTH_LIMIT, AUTH_WINDOW_SECONDS)
     return _signupLimiter
 }
 
@@ -156,7 +168,8 @@ export function getPublicPostLimiter() {
 /**
  * Check a rate limit for the given identifier.
  * Returns { success: true } if not rate-limited, or { success: false, reset } if limited.
- * Returns { success: true } when Redis is not configured (graceful no-op).
+ * This generic helper is intentionally fail-open for non-auth callers; auth routes
+ * must use checkAuthRateLimit so they retain a bounded fallback.
  */
 export async function checkRateLimit(
     getLimiter: () => Ratelimit | null,
@@ -183,16 +196,84 @@ export async function checkRateLimit(
     }
 }
 
+function alertAuthFallback(reason: string, error?: unknown) {
+    if (authFallbackAlerted) return
+    authFallbackAlerted = true
+
+    if (error) {
+        console.error(`[RateLimit] ${reason} — using bounded local auth fallback:`, error)
+    } else {
+        console.error(`[RateLimit] ${reason} — using bounded local auth fallback.`)
+    }
+}
+
+function evictLocalAuthBucket(nowMs: number) {
+    for (const [key, bucket] of localAuthBuckets) {
+        if (bucket.reset <= nowMs) {
+            localAuthBuckets.delete(key)
+            return
+        }
+    }
+
+    const oldestKey = localAuthBuckets.keys().next().value
+    if (typeof oldestKey === 'string') localAuthBuckets.delete(oldestKey)
+}
+
+function checkLocalAuthRateLimit(
+    identifier: string,
+    reason: string,
+    error?: unknown,
+    nowMs = Date.now()
+): number | null {
+    alertAuthFallback(reason, error)
+
+    let bucket = localAuthBuckets.get(identifier)
+    if (!bucket || bucket.reset <= nowMs) {
+        if (bucket) localAuthBuckets.delete(identifier)
+        if (localAuthBuckets.size >= LOCAL_AUTH_BUCKET_CAPACITY) {
+            evictLocalAuthBucket(nowMs)
+        }
+
+        bucket = {
+            count: 0,
+            reset: nowMs + AUTH_WINDOW_SECONDS * 1000,
+        }
+        localAuthBuckets.set(identifier, bucket)
+    }
+
+    bucket.count = Math.min(bucket.count + 1, AUTH_LIMIT + 1)
+    return bucket.count > AUTH_LIMIT ? bucket.reset : null
+}
+
 /**
  * Pre-built helper: check the auth limiter by IP.
  * Returns null if allowed, or the reset timestamp (ms) if rate-limited.
+ * Missing or failing Redis uses a bounded per-runtime fallback instead of
+ * allowing authentication traffic through without any throttling.
  */
 export async function checkAuthRateLimit(ip: string, isSignup: boolean = false): Promise<number | null> {
     const limiterFn = isSignup ? getSignupLimiter : getAuthLimiter
     // Use separate key prefixes so login and signup/join don't share the same bucket
     const keyPrefix = isSignup ? 'signup' : 'login'
-    const result = await checkRateLimit(limiterFn, `${keyPrefix}:${ip}`)
-    return result.success ? null : result.reset
+    const identifier = `${keyPrefix}:${ip}`
+    let limiter: Ratelimit | null
+
+    try {
+        limiter = limiterFn()
+    } catch (err) {
+        return checkLocalAuthRateLimit(identifier, 'Auth rate limiter initialization failed', err)
+    }
+
+    if (!limiter) {
+        return checkLocalAuthRateLimit(identifier, 'Auth rate limiter unavailable')
+    }
+
+    try {
+        const result = await limiter.limit(identifier)
+        return result.success ? null : result.reset
+    } catch (err) {
+        return checkLocalAuthRateLimit(identifier, 'Auth Redis error', err)
+    }
 }
 
 /**

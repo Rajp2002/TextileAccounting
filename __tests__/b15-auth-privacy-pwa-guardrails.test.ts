@@ -29,7 +29,8 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
 
     it('isolates auth rate-limit keys by the Vercel-normalized client IP', () => {
         expect(rateLimit).toContain("headerList.get('x-forwarded-for')?.split(',')[0]?.trim()")
-        expect(rateLimit).toContain("const result = await checkRateLimit(limiterFn, `${keyPrefix}:${ip}`)")
+        expect(rateLimit).toContain('const identifier = `${keyPrefix}:${ip}`')
+        expect(rateLimit).toContain('const result = await limiter.limit(identifier)')
         expect(proxy).toContain('getClientIpFromHeaders(request.headers)')
     })
 

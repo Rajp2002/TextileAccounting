@@ -166,7 +166,7 @@ export default function AttendancePage() {
                             present: record.present,
                             marked_by: userProfile.userId,
                         }, {
-                            onConflict: 'fixed_worker_id,date'
+                            onConflict: 'org_id,fixed_worker_id,date'
                         })
                     if (error) throw error
                 }
