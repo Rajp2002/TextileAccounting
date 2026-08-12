@@ -5,13 +5,13 @@ import { describe, expect, it } from 'vitest'
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
 
 const hardeningMigration = read(
-    'supabase/migrations/20260812132243_harden_security_advisor_boundaries.sql',
+    'supabase/migrations/20260812133643_harden_security_advisor_boundaries.sql',
 )
 const overloadMigration = read(
-    'supabase/migrations/20260812134426_clarify_machine_link_overloads.sql',
+    'supabase/migrations/20260812134540_clarify_machine_link_overloads.sql',
 )
 const adminAuditMigration = read(
-    'supabase/migrations/20260812141259_allow_admin_global_security_audit.sql',
+    'supabase/migrations/20260812141330_allow_admin_global_security_audit.sql',
 )
 
 describe('security advisor hardening', () => {
