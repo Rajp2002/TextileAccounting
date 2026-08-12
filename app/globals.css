@@ -547,10 +547,11 @@
     100%  { transform: translate(0, 0)           scale(1)    rotate(0deg); }
   }
 
-  .animate-blob-drift-1 { animation: blob-drift-1 30s linear infinite; }
-  .animate-blob-drift-2 { animation: blob-drift-2 34s linear infinite; }
-  .animate-blob-drift-3 { animation: blob-drift-3 38s linear infinite; }
-  .animate-blob-drift-4 { animation: blob-drift-4 32s linear infinite; }
+  /* Longer cycles reduce the blob movement to roughly 60% of its former speed. */
+  .animate-blob-drift-1 { animation: blob-drift-1 50s linear infinite; }
+  .animate-blob-drift-2 { animation: blob-drift-2 56.6667s linear infinite; }
+  .animate-blob-drift-3 { animation: blob-drift-3 63.3333s linear infinite; }
+  .animate-blob-drift-4 { animation: blob-drift-4 53.3333s linear infinite; }
 
   /* Respect reduced-motion preference */
   @media (prefers-reduced-motion: reduce) {
