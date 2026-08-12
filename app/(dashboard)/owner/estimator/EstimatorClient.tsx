@@ -3883,10 +3883,10 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {/* The wide desktop layout keeps the editing surface and its live
-                reference rail in separate columns so the rail never covers
-                saved qualities or form controls. */}
-            <div className="estimator-workspace-grid items-start">
+            {/* Keep the editing surface full width. On wide desktop the live
+                estimate and reference links move into the spare viewport rail
+                instead of taking space from the estimator canvas. */}
+            <div className="estimator-workspace-shell">
                 <div className="estimator-workspace-main min-w-0">
                     <div className="relative min-w-0">
                     {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}

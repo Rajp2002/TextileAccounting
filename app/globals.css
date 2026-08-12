@@ -419,18 +419,15 @@
     display: none;
   }
 
-  /* The estimator owns a real content column and a reference column on wide
-     desktop. Keeping the rail in the grid prevents it from covering inputs
-     while preserving the single-column flow on smaller screens. */
-  .estimator-workspace-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: 1.25rem;
+  /* The estimator keeps its full canvas width. On wide desktop the reference
+     rail uses the spare viewport margin instead of becoming a second column. */
+  .estimator-workspace-shell {
+    width: 100%;
   }
 
   .estimator-workspace-main {
     min-width: 0;
+    width: 100%;
   }
 
   .estimator-reference-rail {
@@ -443,8 +440,10 @@
   }
 
   @media (min-width: 1660px) {
-    .estimator-workspace-grid {
-      grid-template-columns: minmax(0, 1fr) 14rem;
+    /* The route entrance animation applies a transform to the root, which
+       would make fixed descendants relative to the narrow content shell. */
+    .premium-route-enter.estimator-mobile-form {
+      animation: none;
     }
 
     .estimator-primary-cockpit {
@@ -452,11 +451,14 @@
     }
 
     .estimator-reference-rail {
-      position: sticky;
+      position: fixed;
       top: 6rem;
+      right: 1rem;
       z-index: 30;
+      width: 14rem;
       max-height: calc(100vh - 7rem);
       overflow-y: auto;
+      margin-top: 0;
       padding-bottom: 0.25rem;
       scrollbar-width: thin;
     }
