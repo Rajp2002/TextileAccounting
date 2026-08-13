@@ -92,7 +92,7 @@ export default function LandingHero() {
                             ))}
                         </ul>
                         <p className="mt-7 border-l-2 border-orange-500 pl-4 text-xs leading-5 text-zinc-700 dark:text-zinc-400">
-                            Authentic Weavly Estimator owner-screen capture from the current QA build. Demo costing data shown.
+                            Authentic Weavly Base Plan owner-screen capture from the current QA build. Demo costing data shown.
                         </p>
                     </div>
 
@@ -107,8 +107,8 @@ export default function LandingHero() {
                             </div>
                             <div className="relative aspect-[16/10] overflow-hidden bg-[#fff8ea]">
                                 <Image
-                                    src="/images/estimator-owner.png"
-                                    alt="Current Weavly Estimator owner workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
+                                    src="/images/estimator-base-owner.png"
+                                    alt="Current Weavly Base Plan estimator workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
                                     fill
                                     priority
                                     sizes="(max-width: 1024px) 100vw, 62vw"
