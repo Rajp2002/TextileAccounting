@@ -16,7 +16,6 @@ import {
     Loader2,
     Pencil,
     Plus,
-    Search,
     Tags,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -39,7 +38,6 @@ import {
 } from './actions'
 import {
     COST_RATE_CATEGORY_LABELS,
-    filterCostRates,
     formatRateValue,
     getCostRateDisplayNotes,
     getCostRateDisplaySource,
@@ -47,7 +45,6 @@ import {
     getRateHistoryEventLabel,
     getRateReviewStatus,
     type CostRateRow,
-    type RateReviewStatus,
 } from '@/lib/cost-rates'
 import {
     normalizeYarnName,
@@ -291,9 +288,7 @@ export default function RatesClient({
 }) {
     const { t, tx } = useTranslation()
     const [rates, setRates] = useState(initialRates)
-    const [query, setQuery] = useState('')
-    const [category, setCategory] = useState<YarnRateCategory | 'all'>('all')
-    const [reviewStatus, setReviewStatus] = useState<RateReviewStatus | 'all'>('all')
+    const [category, setCategory] = useState<YarnRateCategory>('yarn_warp')
     const [showArchived, setShowArchived] = useState(false)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [usageRate, setUsageRate] = useState<CostRateRow | null>(null)
@@ -358,9 +353,12 @@ export default function RatesClient({
         [rates],
     )
     const activeYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active !== false), [yarnRates])
-    const visibleRates = useMemo(() => filterCostRates(yarnRates.filter(rate => Boolean(rate.is_active) === !showArchived), { query, category, status: reviewStatus }), [category, query, reviewStatus, showArchived, yarnRates])
-    const resultMotionKey = `${query.trim().toLocaleLowerCase('en-IN')}|${category}|${reviewStatus}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
-    const hasActiveFilters = Boolean(query.trim()) || category !== 'all' || reviewStatus !== 'all' || showArchived
+    const visibleRates = useMemo(
+        () => yarnRates.filter(rate => rate.category === category && (showArchived ? rate.is_active === false : rate.is_active !== false)),
+        [category, showArchived, yarnRates],
+    )
+    const resultMotionKey = `${category}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
+    const selectedCategoryLabel = category === 'yarn_warp' ? 'Warp' : 'Weft'
     const dueCount = activeYarnRates.filter(rate => getRateReviewStatus(rate) !== 'current').length
     const mostRecentReview = activeYarnRates.length
         ? activeYarnRates.reduce((latest, rate) => rate.last_reviewed_at > latest ? rate.last_reviewed_at : latest, activeYarnRates[0].last_reviewed_at)
@@ -625,18 +623,36 @@ export default function RatesClient({
             </Card>
 
             <Card className="gap-0 overflow-hidden p-0">
-                <div className="border-b border-hairline px-4 py-4 sm:px-5">
-                    <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
-                    <p className="mt-1 text-xs text-body">{tx('Rates appear automatically after you save a quality or costing. A discovered rate stays marked for owner review until you confirm that the displayed value is correct.')}</p>
+                <div className="flex flex-col gap-3 border-b border-hairline px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+                    <div>
+                        <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
+                        <p className="mt-1 text-xs text-body">{tx('Rates appear automatically after you save a quality or costing. A discovered rate stays marked for owner review until you confirm that the displayed value is correct.')}</p>
+                    </div>
+                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-subtle hover:text-ink">
+                        {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}
+                    </Button>
                 </div>
 
-                <Toolbar className="grid gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none lg:grid-cols-[minmax(0,1fr)_220px_180px_auto]">
-                    <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" /><Label htmlFor="yarn-rate-search" className="sr-only">Search yarn rates, sources, notes, and fabrics</Label><Input id="yarn-rate-search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search yarn rates…" aria-describedby="yarn-rate-search-help" className="h-10 pl-9" /></div>
-                    <select aria-label="Filter yarn rates by direction" value={category} onChange={event => setCategory(event.target.value as YarnRateCategory | 'all')} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"><option value="all">Warp + Weft</option><option value="yarn_warp">Warp</option><option value="yarn_weft">Weft</option></select>
-                    <select aria-label="Filter rates by review status" value={reviewStatus} onChange={event => setReviewStatus(event.target.value as RateReviewStatus | 'all')} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"><option value="all">All statuses</option><option value="needs_review">Needs Review</option><option value="current">Current</option><option value="due_soon">Due soon</option><option value="overdue">Overdue</option></select>
-                    <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => setShowArchived(current => !current)} className="h-10">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}</Button>
+                <Toolbar className="flex rounded-none border-0 border-b border-hairline p-4 shadow-none">
+                    <div role="group" aria-label="Show yarn rates by direction" className="inline-flex w-full max-w-xs rounded-lg border border-hairline bg-surface-soft/70 p-1">
+                        {YARN_CATEGORIES.map(value => {
+                            const isSelected = category === value
+                            const label = value === 'yarn_warp' ? 'Warp' : 'Weft'
+                            return (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    aria-pressed={isSelected}
+                                    onClick={() => setCategory(value)}
+                                    className={`premium-segment min-h-9 flex-1 rounded-md px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${isSelected ? 'bg-surface text-saffron-deep shadow-sm' : 'text-subtle hover:text-ink'}`}
+                                >
+                                    {label}
+                                </button>
+                            )
+                        })}
+                    </div>
                 </Toolbar>
-                <p id="yarn-rate-search-help" className="px-4 pb-3 text-[11px] leading-relaxed text-body sm:px-5">Searches yarn rate names, sources, notes, and fabric usage in this Rate Book. Saved qualities and costing snapshots are searched in the Costings library.</p>
+                <p className="px-4 pb-3 text-[11px] leading-relaxed text-body sm:px-5">{tx(`Showing ${selectedCategoryLabel.toLowerCase()} yarn rates. Switch direction above to see the other yarns.`)}</p>
                 <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
                     {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} shown.
                 </p>
@@ -646,8 +662,8 @@ export default function RatesClient({
                         key={`empty-${resultMotionKey}`}
                         icon={Tags}
                         className="premium-content-swap rounded-none border-0 bg-transparent shadow-none"
-                        title={showArchived ? 'No archived yarn rates' : yarnRates.filter(rate => rate.is_active !== false).length === 0 ? 'No yarn rates yet' : 'No matching yarn rates'}
-                        description={showArchived ? 'Archived rates stay available here for audit and can be restored when needed.' : yarnRates.length === 0 ? 'Save a quality or costing and its yarn rates will appear here automatically.' : hasActiveFilters ? 'Clear or adjust the filters to see more yarn rates.' : 'Add a yarn rate to continue.'}
+                        title={showArchived ? `No archived ${selectedCategoryLabel.toLowerCase()} yarn rates` : yarnRates.length === 0 ? 'No yarn rates yet' : `No ${selectedCategoryLabel.toLowerCase()} yarn rates yet`}
+                        description={showArchived ? 'Archived rates stay available here for audit and can be restored when needed.' : yarnRates.length === 0 ? 'Save a quality or costing and its yarn rates will appear here automatically.' : `Add a ${selectedCategoryLabel.toLowerCase()} yarn rate to continue.`}
                     />
                 ) : (
                     <>
