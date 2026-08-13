@@ -9,6 +9,8 @@ import {
     CalendarClock,
     CheckCircle2,
     CircleDollarSign,
+    ChevronRight,
+    Calculator,
     History,
     Info,
     Loader2,
@@ -121,6 +123,154 @@ function getSavedQualityCount(rate: CostRateRow | null) {
     return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0
 }
 
+function getRateUsageNames(rate: Pick<CostRateRow, 'fabric_names'> | null) {
+    return Array.from(new Set(
+        (rate?.fabric_names ?? [])
+            .map(name => name.normalize('NFKC').trim().replace(/\s+/g, ' '))
+            .filter(Boolean),
+    ))
+}
+
+function getUsageLabel(rate: Pick<CostRateRow, 'discovery_source'>) {
+    return rate.discovery_source === 'saved_costing' ? 'Saved costing' : 'Saved qualities'
+}
+
+function RateSourceNotes({
+    rate,
+    onOpenUsage,
+}: {
+    rate: CostRateRow
+    onOpenUsage: (rate: CostRateRow) => void
+}) {
+    const usageNames = getRateUsageNames(rate)
+    if (usageNames.length) {
+        return (
+            <button
+                type="button"
+                onClick={() => onOpenUsage(rate)}
+                className="group flex w-full items-start gap-2 rounded-lg text-left outline-none transition-colors hover:text-saffron-deep focus-visible:ring-2 focus-visible:ring-saffron/50 focus-visible:ring-offset-2"
+                aria-haspopup="dialog"
+                aria-label={`Open ${getUsageLabel(rate).toLocaleLowerCase('en-IN')} used by ${rate.name}`}
+            >
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70 text-saffron-deep transition-colors group-hover:bg-saffron-soft">
+                    <Tags className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-semibold text-ink">{getUsageLabel(rate)}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-body group-hover:text-saffron-deep">Open {usageNames.length} linked {usageNames.length === 1 ? 'record' : 'records'}</span>
+                </span>
+                <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-saffron-deep" aria-hidden="true" />
+            </button>
+        )
+    }
+
+    return (
+        <div>
+            <p className="break-words text-[11px] font-medium text-ink">{getCostRateDisplaySource(rate) || 'No source'}</p>
+            <p className="mt-1 whitespace-normal break-words text-[11px] leading-snug text-subtle">{getCostRateDisplayNotes(rate) || 'No notes'}</p>
+        </div>
+    )
+}
+
+function SavedQualityUsageDialog({
+    rate,
+    onClose,
+}: {
+    rate: CostRateRow
+    onClose: () => void
+}) {
+    const usageNames = getRateUsageNames(rate)
+    const reviewState = getRateReviewStatus(rate)
+    const reviewLabel = reviewState === 'needs_review'
+        ? 'Owner review needed'
+        : reviewState === 'overdue'
+            ? 'Review overdue'
+            : reviewState === 'due_soon'
+                ? 'Review due soon'
+                : 'Current'
+
+    return (
+        <Dialog open={Boolean(rate)} onOpenChange={open => { if (!open) onClose() }}>
+            <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-[440px]">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{getUsageLabel(rate)} used by {rate.name}</DialogTitle>
+                    <DialogDescription>Review the linked records and current Rate Book details for {rate.name}.</DialogDescription>
+                </DialogHeader>
+                <div className="relative overflow-hidden rounded-[1.75rem] border border-ink/10 bg-surface p-5 shadow-[0_24px_80px_rgba(154,52,18,0.16)] sm:p-6">
+                    <div className="flex items-start justify-between gap-4 border-b border-hairline pb-5 pr-8">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+                                <Calculator className="h-5 w-5" aria-hidden="true" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">{getUsageLabel(rate)}</p>
+                                <p className="mt-1 truncate text-sm font-bold text-ink">{rate.name}</p>
+                            </div>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-success-soft px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-success">Saved</span>
+                    </div>
+
+                    <div className="flex items-end justify-between gap-4 border-b border-hairline py-6">
+                        <div>
+                            <p className="text-xs font-semibold text-subtle">Current yarn rate</p>
+                            <p className="mt-1 font-mono text-4xl font-black tracking-tight text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs font-semibold text-subtle">Linked records</p>
+                            <p className="mt-1 text-xl font-black text-saffron-deep">{usageNames.length}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 pt-5 text-sm">
+                        <div className="flex items-center justify-between gap-4">
+                            <span className="text-body">Effective from</span>
+                            <span className="font-semibold text-ink">{formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                            <span className="text-body">Last reviewed</span>
+                            <span className="font-semibold text-ink">{formatDateOnly(rate.last_reviewed_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                            <span className="text-body">Review status</span>
+                            <StatusBadge status={reviewState} label={reviewLabel} className="text-[10px]" />
+                        </div>
+                    </div>
+
+                    <div className="mt-5 rounded-xl bg-[#fff8ea] px-4 py-3">
+                        <div className="flex items-center justify-between gap-4">
+                            <span className="text-xs font-bold uppercase tracking-[0.12em] text-body">Used in {getUsageLabel(rate).toLocaleLowerCase('en-IN')}</span>
+                            <span className="text-base font-black text-ink">{usageNames.length}</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 border-t border-hairline pt-5">
+                        <div className="flex items-center justify-between gap-4">
+                            <p className="text-xs font-black uppercase tracking-[0.14em] text-ink">Linked records</p>
+                            <p className="text-[11px] text-subtle">Read only</p>
+                        </div>
+                        <div className="mt-3 max-h-44 space-y-2 overflow-y-auto pr-1">
+                            {usageNames.map((name, index) => (
+                                <div key={`${name}-${index}`} className="flex items-start gap-2 rounded-lg border border-hairline bg-surface-soft/45 px-3 py-2.5">
+                                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface text-[10px] font-bold text-subtle">{index + 1}</span>
+                                    <p className="min-w-0 text-xs font-medium leading-relaxed text-body">{name}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-5 flex items-start gap-3 border-t border-hairline pt-5">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-success" aria-hidden="true" />
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-[0.14em] text-ink">Rate book context, simplified</p>
+                            <p className="mt-1 text-xs leading-5 text-subtle">The full usage list stays available without making every row carry it.</p>
+                        </div>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 function ReviewBadge({ rate }: { rate: CostRateRow }) {
     const status = getRateReviewStatus(rate)
     if (status === 'needs_review') return <div><StatusBadge status="needs_review" label="Owner review needed" icon={Info} /><p className="mt-1 text-[11px] text-info">Discovered from a saved quality or costing</p></div>
@@ -146,6 +296,7 @@ export default function RatesClient({
     const [reviewStatus, setReviewStatus] = useState<RateReviewStatus | 'all'>('all')
     const [showArchived, setShowArchived] = useState(false)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
+    const [usageRate, setUsageRate] = useState<CostRateRow | null>(null)
     const [historyRate, setHistoryRate] = useState<CostRateRow | null>(null)
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
@@ -527,7 +678,7 @@ export default function RatesClient({
                                                 <td className="px-3 py-3 align-top font-mono text-[11px] text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
                                                 <td className="px-3 py-3 align-top text-[11px] text-body">{formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                                                 <td className="px-3 py-3 align-top"><ReviewBadge rate={rate} /></td>
-                                                <td className="px-3 py-3 align-top"><p className="break-words text-[11px] font-medium text-ink">{getCostRateDisplaySource(rate) || 'No source'}</p><p className="mt-1 whitespace-normal break-words text-[11px] leading-snug text-subtle">{getCostRateDisplayNotes(rate) || 'No notes'}</p></td>
+                                                <td className="px-3 py-3 align-top"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></td>
                                                 <td className="px-3 py-3 align-top">
                                                     <div className="flex flex-wrap justify-end gap-1">
                                                         {!archived && reviewState !== 'current' && <Button variant="outline" size="xs" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>
@@ -557,7 +708,7 @@ export default function RatesClient({
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-ink">{rate.name}</p><p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
                                             <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface p-3"><div><p className="text-[10px] font-bold uppercase text-subtle">{t('common.current_yarn_rate')}</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-subtle">Previous rate</p><p className="mt-1 font-mono font-semibold text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
-                                            <div className="mt-3 rounded-lg border border-hairline bg-surface p-3"><p className="text-[10px] font-bold uppercase text-subtle">Source</p><p className="mt-1 text-sm font-medium text-ink">{getCostRateDisplaySource(rate) || 'No source'}</p><p className="mt-3 text-[10px] font-bold uppercase text-subtle">Notes</p><p className="mt-1 whitespace-normal break-words text-xs text-body">{getCostRateDisplayNotes(rate) || 'No notes'}</p></div>
+                                            <div className="mt-3 rounded-lg border border-hairline bg-surface p-3"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></div>
                                             <div className="mt-3 grid grid-cols-2 gap-2">
                                                 {!archived && reviewState !== 'current' && <Button variant="outline" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={tx(`${reviewLabel} for ${rate.name}`)}>{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</Button>}
                                                 {!archived && <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-4 w-4" /> {tx('Change rate')}</Button>}
@@ -574,6 +725,8 @@ export default function RatesClient({
                     </>
                 )}
             </Card>
+
+            {usageRate && <SavedQualityUsageDialog rate={usageRate} onClose={() => setUsageRate(null)} />}
 
             <Dialog open={showConflicts && conflicts.length > 0} onOpenChange={setShowConflicts}>
                 <DialogContent className="sm:max-w-2xl">
