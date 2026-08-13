@@ -191,12 +191,12 @@ function SavedQualityUsageDialog({
 
     return (
         <Dialog open={Boolean(rate)} onOpenChange={open => { if (!open) onClose() }}>
-            <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-[440px]">
+            <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-[640px]">
                 <DialogHeader className="sr-only">
                     <DialogTitle>{getUsageLabel(rate)} used by {rate.name}</DialogTitle>
                     <DialogDescription>Review the linked records and current Rate Book details for {rate.name}.</DialogDescription>
                 </DialogHeader>
-                <div className="relative overflow-hidden rounded-[1.75rem] border border-ink/10 bg-surface p-5 shadow-[0_24px_80px_rgba(154,52,18,0.16)] sm:p-6">
+                <div className="relative overflow-hidden rounded-[1.75rem] border border-ink/10 bg-surface p-5 shadow-[0_24px_80px_rgba(154,52,18,0.16)] sm:p-7">
                     <div className="flex items-start justify-between gap-4 border-b border-hairline pb-5 pr-8">
                         <div className="flex min-w-0 items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
@@ -248,7 +248,7 @@ function SavedQualityUsageDialog({
                             <p className="text-xs font-black uppercase tracking-[0.14em] text-ink">Linked records</p>
                             <p className="text-[11px] text-subtle">Read only</p>
                         </div>
-                        <div className="mt-3 max-h-44 space-y-2 overflow-y-auto pr-1">
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
                             {usageNames.map((name, index) => (
                                 <div key={`${name}-${index}`} className="flex items-start gap-2 rounded-lg border border-hairline bg-surface-soft/45 px-3 py-2.5">
                                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface text-[10px] font-bold text-subtle">{index + 1}</span>
