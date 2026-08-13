@@ -680,15 +680,21 @@ export default function RatesClient({
                                                 <td className="px-3 py-3 align-top"><ReviewBadge rate={rate} /></td>
                                                 <td className="px-3 py-3 align-top"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></td>
                                                 <td className="px-3 py-3 align-top">
-                                                    <div className="flex flex-wrap justify-end gap-1">
-                                                        {!archived && reviewState !== 'current' && <Button variant="outline" size="xs" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`}>
-                                                            {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
-                                                        </Button>}
-                                                        {!archived && <Button variant="outline" size="xs" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>}
-                                                        <Button variant="ghost" size="xs" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-3.5 w-3.5" /> {tx('Activity')}</Button>
-                                                        <Button variant="ghost" size="xs" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="text-subtle">
-                                                            {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
-                                                        </Button>
+                                                    <div className="ml-auto flex w-full max-w-[200px] flex-col gap-1.5">
+                                                        {!archived && (
+                                                            <div className="grid gap-1.5">
+                                                                {reviewState !== 'current' && <Button variant="default" size="xs" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`} className="w-full justify-start bg-success text-white hover:bg-success/90 hover:text-white">
+                                                                    {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
+                                                                </Button>}
+                                                                <Button variant="outline" size="xs" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending} className="w-full justify-start border-saffron/35 bg-saffron-soft/55 text-saffron-deep hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>
+                                                            </div>
+                                                        )}
+                                                        <div className="grid grid-cols-2 gap-1 border-t border-hairline/80 pt-1.5">
+                                                            <Button variant="ghost" size="xs" onClick={() => openHistory(rate)} disabled={isPending} className="w-full justify-start border border-hairline/60 bg-surface-soft/55 text-body hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"><History className="h-3.5 w-3.5" /> {tx('Activity')}</Button>
+                                                            <Button variant="ghost" size="xs" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="w-full justify-start border border-hairline/60 bg-surface-soft/55 text-subtle hover:border-risk/30 hover:bg-risk-soft/60 hover:text-risk">
+                                                                {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -709,13 +715,23 @@ export default function RatesClient({
                                             <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-ink">{rate.name}</p><p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
                                             <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface p-3"><div><p className="text-[10px] font-bold uppercase text-subtle">{t('common.current_yarn_rate')}</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-subtle">Previous rate</p><p className="mt-1 font-mono font-semibold text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
                                             <div className="mt-3 rounded-lg border border-hairline bg-surface p-3"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></div>
-                                            <div className="mt-3 grid grid-cols-2 gap-2">
-                                                {!archived && reviewState !== 'current' && <Button variant="outline" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={tx(`${reviewLabel} for ${rate.name}`)}>{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</Button>}
-                                                {!archived && <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending}><Pencil className="h-4 w-4" /> {tx('Change rate')}</Button>}
-                                                <Button variant="outline" onClick={() => openHistory(rate)} disabled={isPending}><History className="h-4 w-4" /> {tx('Activity')}</Button>
-                                                <Button variant="outline" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`}>
-                                                    {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
-                                                </Button>
+                                            <div className="mt-4 rounded-xl border border-hairline/70 bg-surface-soft/45 p-2.5">
+                                                <div className="mb-2 flex items-center gap-2 px-1">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-saffron" aria-hidden="true" />
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-subtle">{tx('Actions')}</p>
+                                                </div>
+                                                {!archived && (
+                                                    <div className="grid gap-2">
+                                                        {reviewState !== 'current' && <Button variant="default" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={tx(`${reviewLabel} for ${rate.name}`)} className="w-full justify-start bg-success text-white shadow-[var(--shadow-button)] hover:bg-success/90 hover:text-white">{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</Button>}
+                                                        <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending} className="w-full justify-start border-saffron/35 bg-saffron-soft/55 text-saffron-deep hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"><Pencil className="h-4 w-4" /> {tx('Change rate')}</Button>
+                                                    </div>
+                                                )}
+                                                <div className={`grid grid-cols-2 gap-2 ${!archived ? 'mt-2 border-t border-hairline/80 pt-2' : ''}`}>
+                                                    <Button variant="ghost" onClick={() => openHistory(rate)} disabled={isPending} className="w-full justify-start border border-hairline/60 bg-surface/75 text-body hover:border-hairline-strong hover:bg-surface hover:text-ink"><History className="h-4 w-4" /> {tx('Activity')}</Button>
+                                                    <Button variant="ghost" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`} className="w-full justify-start border border-hairline/60 bg-surface/75 text-subtle hover:border-risk/30 hover:bg-risk-soft/60 hover:text-risk">
+                                                        {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>
