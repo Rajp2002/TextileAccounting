@@ -268,6 +268,133 @@ function SavedQualityUsageDialog({
     )
 }
 
+function DueForReviewDialog({
+    open,
+    rates,
+    onClose,
+    onReview,
+    onEdit,
+}: {
+    open: boolean
+    rates: CostRateRow[]
+    onClose: () => void
+    onReview: (rate: CostRateRow) => void
+    onEdit: (rate: CostRateRow) => void
+}) {
+    return (
+        <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) onClose() }}>
+            <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-[680px]">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>Rates due for review</DialogTitle>
+                    <DialogDescription>Review or edit the current yarn rates used by your saved qualities.</DialogDescription>
+                </DialogHeader>
+                <div className="relative overflow-hidden rounded-[1.75rem] border border-ink/10 bg-surface p-5 shadow-[0_24px_80px_rgba(154,52,18,0.16)] sm:p-7">
+                    <div className="flex items-start justify-between gap-4 border-b border-hairline pb-5 pr-8">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning">
+                                <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">Rate book</p>
+                                <p className="mt-1 truncate text-sm font-bold text-ink">Rates due for review</p>
+                            </div>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-warning-soft px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-warning">
+                            {rates.length} {rates.length === 1 ? 'rate' : 'rates'}
+                        </span>
+                    </div>
+
+                    <div className="border-b border-hairline py-5">
+                        <p className="text-lg font-black text-ink">{rates.length} {rates.length === 1 ? 'rate needs' : 'rates need'} your review</p>
+                        <p className="mt-1 text-sm leading-relaxed text-body">Confirm the displayed value if it is still correct, or edit it when a supplier rate has changed. Existing costing snapshots are not changed.</p>
+                    </div>
+
+                    <div className="mt-5 max-h-[min(56vh,560px)] space-y-3 overflow-y-auto pr-1">
+                        {rates.map(rate => {
+                            const reviewState = getRateReviewStatus(rate)
+                            const usageNames = getRateUsageNames(rate)
+                            const usageLabel = getUsageLabel(rate)
+                            const dueDate = reviewState === 'needs_review'
+                                ? null
+                                : formatToSurat(getRateReviewDueDate(rate), 'd MMM yyyy')
+
+                            return (
+                                <div
+                                    key={rate.id}
+                                    className={`rounded-xl border p-4 ${reviewState === 'overdue' ? 'border-risk/30 bg-risk-soft/70' : reviewState === 'due_soon' ? 'border-warning/30 bg-warning-soft/70' : 'border-info/30 bg-info-soft/60'}`}
+                                >
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div className="min-w-0">
+                                            <p className="truncate font-bold text-ink">{rate.name}</p>
+                                            <p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]}</p>
+                                        </div>
+                                        <ReviewBadge rate={rate} />
+                                    </div>
+
+                                    <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface/80 p-3">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">Current rate</p>
+                                            <p className="mt-1 font-mono text-base font-black text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{reviewState === 'needs_review' ? 'Review status' : 'Review due'}</p>
+                                            <p className="mt-1 text-sm font-bold text-ink">{reviewState === 'needs_review' ? 'Not confirmed' : dueDate}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-hairline/70 bg-surface/55 px-3 py-2.5">
+                                        <Tags className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-bold text-ink">
+                                                {usageNames.length ? `Used in ${usageNames.length} linked ${usageLabel.toLocaleLowerCase('en-IN')}` : 'Linked quality context'}
+                                            </p>
+                                            <p className="mt-0.5 truncate text-[11px] leading-snug text-subtle">
+                                                {usageNames.length
+                                                    ? `${usageNames.slice(0, 2).join(' · ')}${usageNames.length > 2 ? ` · +${usageNames.length - 2} more` : ''}`
+                                                    : getCostRateDisplaySource(rate) || 'No linked saved quality details yet'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-hairline/70 pt-3">
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={() => onReview(rate)}
+                                            aria-label={`Review ${rate.name}`}
+                                            className="h-9 rounded-full border-0 bg-success px-4 text-white shadow-none hover:bg-success/90 hover:text-white"
+                                        >
+                                            <CheckCircle2 className="h-4 w-4" /> Review
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => onEdit(rate)}
+                                            aria-label={`Edit ${rate.name}`}
+                                            className="h-9 rounded-full border-saffron/35 bg-saffron-soft/55 px-4 text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"
+                                        >
+                                            <Pencil className="h-4 w-4" /> Edit
+                                        </Button>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    <div className="mt-5 flex items-start gap-3 border-t border-hairline pt-5">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-success" aria-hidden="true" />
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-[0.14em] text-ink">Keep the Rate Book current</p>
+                            <p className="mt-1 text-xs leading-5 text-subtle">Reviewing a rate records your confirmation. Editing it updates future estimates that use the rate.</p>
+                        </div>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 function ReviewBadge({ rate }: { rate: CostRateRow }) {
     const status = getRateReviewStatus(rate)
     if (status === 'needs_review') return <div><StatusBadge status="needs_review" label="Owner review needed" icon={Info} /><p className="mt-1 text-[11px] text-info">Discovered from a saved quality or costing</p></div>
@@ -291,6 +418,7 @@ export default function RatesClient({
     const [category, setCategory] = useState<YarnRateCategory>('yarn_warp')
     const [showArchived, setShowArchived] = useState(false)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
+    const [showDueReviews, setShowDueReviews] = useState(false)
     const [usageRate, setUsageRate] = useState<CostRateRow | null>(null)
     const [historyRate, setHistoryRate] = useState<CostRateRow | null>(null)
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
@@ -359,7 +487,17 @@ export default function RatesClient({
     )
     const resultMotionKey = `${category}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
     const selectedCategoryLabel = category === 'yarn_warp' ? 'Warp' : 'Weft'
-    const dueCount = activeYarnRates.filter(rate => getRateReviewStatus(rate) !== 'current').length
+    const dueReviewRates = useMemo(
+        () => activeYarnRates
+            .filter(rate => getRateReviewStatus(rate) !== 'current')
+            .sort((left, right) => {
+                const priority = { needs_review: 0, overdue: 1, due_soon: 2, current: 3 }
+                const statusDifference = priority[getRateReviewStatus(left)] - priority[getRateReviewStatus(right)]
+                return statusDifference || left.name.localeCompare(right.name, 'en-IN')
+            }),
+        [activeYarnRates],
+    )
+    const dueCount = dueReviewRates.length
     const mostRecentReview = activeYarnRates.length
         ? activeYarnRates.reduce((latest, rate) => rate.last_reviewed_at > latest ? rate.last_reviewed_at : latest, activeYarnRates[0].last_reviewed_at)
         : null
@@ -617,7 +755,18 @@ export default function RatesClient({
             <Card className="premium-surface">
                 <CardContent className="grid gap-4 p-5 sm:grid-cols-3 sm:divide-x sm:divide-hairline">
                     <div className="flex items-center gap-3 sm:px-3"><span className="rounded-full bg-info-soft p-3 text-info"><CircleDollarSign className="h-5 w-5" /></span><div><p className="text-2xl font-bold text-info">{activeYarnRates.length}</p><p className="text-sm text-body">{tx('active yarn rates')}</p></div></div>
-                    <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-warning-soft p-3 text-warning"><CalendarClock className="h-5 w-5" /></span><div><p className="text-2xl font-bold text-saffron-deep">{dueCount}</p><p className="text-sm text-body">{tx('due for review')}</p></div></div>
+                    <button
+                        type="button"
+                        onClick={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                        disabled={dueReviewRates.length === 0}
+                        aria-haspopup="dialog"
+                        aria-label={dueReviewRates.length > 0 ? `Open ${dueReviewRates.length} rates due for review` : 'No rates due for review'}
+                        className="group flex items-center gap-3 rounded-lg text-left outline-none transition-colors hover:bg-warning-soft/45 focus-visible:ring-2 focus-visible:ring-saffron/50 focus-visible:ring-offset-2 disabled:cursor-default disabled:hover:bg-transparent sm:px-6"
+                    >
+                        <span className="rounded-full bg-warning-soft p-3 text-warning"><CalendarClock className="h-5 w-5" /></span>
+                        <span><span className="block text-2xl font-bold text-saffron-deep">{dueCount}</span><span className="block text-sm text-body">{tx('due for review')}</span></span>
+                        {dueReviewRates.length > 0 && <ChevronRight className="ml-auto h-4 w-4 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-saffron-deep" aria-hidden="true" />}
+                    </button>
                     <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-success-soft p-3 text-success"><CheckCircle2 className="h-5 w-5" /></span><div><p className="text-xs font-semibold uppercase tracking-wide text-subtle">{tx('Last reviewed')}</p><p className="mt-1 text-base font-semibold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</p></div></div>
                 </CardContent>
             </Card>
@@ -753,6 +902,22 @@ export default function RatesClient({
                     </>
                 )}
             </Card>
+
+            <DueForReviewDialog
+                open={showDueReviews}
+                rates={dueReviewRates}
+                onClose={() => setShowDueReviews(false)}
+                onReview={rate => {
+                    setShowDueReviews(false)
+                    setReviewError(null)
+                    setReviewRate(rate)
+                }}
+                onEdit={rate => {
+                    setShowDueReviews(false)
+                    setSaveError(null)
+                    setDraft(rowToDraft(rate))
+                }}
+            />
 
             {usageRate && <SavedQualityUsageDialog rate={usageRate} onClose={() => setUsageRate(null)} />}
 
