@@ -97,6 +97,9 @@ import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import {
+    Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
@@ -1212,6 +1215,187 @@ function EstimatorCostSummaryRail({
     )
 }
 
+function MobileLiveEstimateShortcut({
+    visible,
+    keyboardVisible,
+    expanded,
+    activeName,
+    versionLabel,
+    validityLabel,
+    validityDescription,
+    validityClassName,
+    validityIcon: ValidityIcon,
+    hasValidCostResult,
+    quoteIsValid,
+    productionCostPerM,
+    suggestedSellingPricePerM,
+    actualMarginPct,
+    breakEvenPricePerM,
+    missingIssueCount,
+    needsReview,
+    readinessMessage,
+    onJumpToInput,
+}: {
+    visible: boolean
+    keyboardVisible: boolean
+    expanded: boolean
+    activeName: string
+    versionLabel?: string
+    validityLabel: string
+    validityDescription: string
+    validityClassName: string
+    validityIcon: React.ElementType
+    hasValidCostResult: boolean
+    quoteIsValid: boolean
+    productionCostPerM: number
+    suggestedSellingPricePerM: number
+    actualMarginPct: number | null
+    breakEvenPricePerM: number | null
+    missingIssueCount: number
+    needsReview: boolean
+    readinessMessage: string | null
+    onJumpToInput: () => void
+}) {
+    const [open, setOpen] = useState(false)
+    const hasValidPrice = hasValidCostResult && quoteIsValid
+    const hasReviewState = needsReview || missingIssueCount > 0 || !hasValidCostResult || !quoteIsValid
+    const marginTone = actualMarginPct === null
+        ? 'text-[var(--color-muted)]'
+        : actualMarginPct > 0
+            ? 'text-[var(--color-factory-green)]'
+            : actualMarginPct < 0
+                ? 'text-[var(--color-risk-red)]'
+                : 'text-[var(--color-warning-amber)]'
+    const marginSurface = actualMarginPct === null
+        ? 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'
+        : actualMarginPct > 0
+            ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)]'
+            : actualMarginPct < 0
+                ? 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)]'
+                : 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/55'
+    const shortcutLabel = hasValidCostResult
+        ? `Production cost ₹${productionCostPerM.toFixed(2)} per metre`
+        : missingIssueCount > 0
+            ? `${missingIssueCount} costing input${missingIssueCount === 1 ? '' : 's'} need review`
+            : 'Review the costing inputs'
+    const shortcutBadge = hasValidCostResult && hasValidPrice
+        ? 'Live'
+        : missingIssueCount > 0
+            ? String(Math.min(missingIssueCount, 9))
+            : '!'
+
+    return (
+        <>
+            {visible && !keyboardVisible && !open && (
+                <div
+                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:hidden"
+                    data-testid="mobile-live-estimate-shortcut"
+                >
+                    <button
+                        type="button"
+                        aria-label={`View live cost estimate. ${shortcutLabel}`}
+                        aria-expanded={open}
+                        aria-controls="mobile-live-estimate-panel"
+                        onClick={() => setOpen(true)}
+                        className={`group flex items-center justify-end gap-2 rounded-full border border-[var(--color-yarn-orange)]/20 bg-[var(--color-canvas-white)]/95 p-1.5 text-left shadow-[0_8px_24px_rgba(30,37,40,0.16)] backdrop-blur-xl transition-[width,transform,box-shadow] duration-200 motion-reduce:transition-none hover:shadow-[0_10px_28px_rgba(30,37,40,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2 ${expanded ? 'pl-3' : ''}`}
+                    >
+                        {expanded && (
+                            <span className="min-w-0 max-w-[10.5rem] pr-1">
+                                <span className="block text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Live cost</span>
+                                <span className="mt-0.5 block truncate text-[12px] font-semibold text-[var(--color-ink)]">
+                                    {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}/m` : 'Complete inputs'}
+                                </span>
+                            </span>
+                        )}
+                        <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
+                            <Calculator className="h-5 w-5" aria-hidden="true" />
+                            <span
+                                aria-hidden="true"
+                                className={`absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[var(--color-canvas-white)] px-0.5 text-[8px] font-bold leading-none text-white ${hasValidCostResult && hasValidPrice ? 'bg-[var(--color-factory-green)]' : 'bg-[var(--color-warning-amber)]'}`}
+                            >
+                                {shortcutBadge === 'Live' ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : shortcutBadge}
+                            </span>
+                        </span>
+                    </button>
+                </div>
+            )}
+
+            <Sheet open={open} onOpenChange={setOpen}>
+                <SheetContent
+                    id="mobile-live-estimate-panel"
+                    side="bottom"
+                    className="max-h-[min(72dvh,34rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:hidden"
+                >
+                    <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
+                        <SheetTitle className="text-[17px]">Live cost estimate</SheetTitle>
+                        <SheetDescription className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
+                            {activeName}{versionLabel ? ` · ${versionLabel}` : ''}
+                        </SheetDescription>
+                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">Updates live as you edit the estimate.</p>
+                    </SheetHeader>
+
+                    <div className={`mx-5 mt-4 flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityClassName}`} role="status" aria-live="polite">
+                        <ValidityIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                        <div className="min-w-0">
+                            <span className="font-semibold">{validityLabel}</span>
+                            <span className="ml-1.5 font-medium opacity-85">{validityDescription}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 px-5 pt-4" aria-label="Live cost metrics">
+                        <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
+                            <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Production cost / m</p>
+                            <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
+                                {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'}
+                            </p>
+                        </div>
+                        <div className="min-w-0 rounded-[12px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-3 py-3">
+                            <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Suggested price / m</p>
+                            <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                                {hasValidPrice ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 px-5 pt-2.5">
+                        <div className={`min-w-0 rounded-[12px] border px-3 py-3 ${marginSurface}`}>
+                            <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Actual margin</p>
+                            <p className={`mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
+                                {actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`}
+                            </p>
+                        </div>
+                        <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
+                            <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Break-even price / m</p>
+                            <p className="mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
+                                {hasValidCostResult && breakEvenPricePerM != null ? `₹${breakEvenPricePerM.toFixed(2)}` : '—'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {hasReviewState ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setOpen(false)
+                                onJumpToInput()
+                            }}
+                            className="mx-5 mt-4 flex min-h-12 w-[calc(100%-2.5rem)] items-center justify-between gap-3 rounded-[11px] border border-[var(--color-warning-amber)]/35 bg-[var(--color-warning-amber-soft)] px-3.5 py-2.5 text-left text-[11px] text-[var(--color-warning-amber)] transition-colors hover:bg-[var(--color-warning-amber-soft)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]"
+                        >
+                            <span className="min-w-0">
+                                <span className="block font-semibold">Review highlighted inputs</span>
+                                <span className="mt-0.5 block truncate font-medium opacity-85">{readinessMessage ?? 'Complete the required inputs to use this price.'}</span>
+                            </span>
+                            <ChevronUp className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        </button>
+                    ) : (
+                        <p className="px-5 pt-4 text-[10px] font-medium leading-4 text-[var(--color-muted)]">Use the estimate above while reviewing the form, then save when the costing is ready.</p>
+                    )}
+                </SheetContent>
+            </Sheet>
+        </>
+    )
+}
+
 function CostingAssumptionsSummary({
     result,
     isStandaloneCostingSession,
@@ -2140,6 +2324,91 @@ function QuickCostingView({
     )
 }
 
+const DETAILED_ESTIMATOR_ISSUE_FIELDS = new Set([
+    'loomType',
+    'loomRpm',
+    'loomPowerKw',
+    'hoursPerShift',
+    'loomCount',
+    'monthlyWorkingDays',
+    'avgOutputPerLoomPerDay',
+])
+
+const ESTIMATOR_ISSUE_LABEL_MATCHERS: Array<{ matches: (field: string) => boolean; labels: string[] }> = [
+    { matches: field => field.endsWith('.calcDenier') || field.endsWith('.effectiveDenier'), labels: ['denier'] },
+    { matches: field => field.endsWith('.beamEnds'), labels: ['beam ends'] },
+    { matches: field => field.endsWith('.picks'), labels: ['picks'] },
+    { matches: field => field.endsWith('.effectiveCostingWidthCm'), labels: ['effective costing width'] },
+    { matches: field => field.endsWith('.yarnRate'), labels: ['current yarn rate', 'yarn rate'] },
+    { matches: field => field.endsWith('.gstPct'), labels: ['gst'] },
+    { matches: field => field.endsWith('.manualKgPer100m'), labels: ['consumption'] },
+    { matches: field => field === 'tapeLengthM', labels: ['tape length'] },
+    { matches: field => field === 'perPickCostPaisa', labels: ['weaving rate', 'weave rate'] },
+    { matches: field => field === 'warpingRatePerKg', labels: ['warping rate'] },
+    { matches: field => field === 'sizingRatePerKg', labels: ['sizing rate'] },
+    { matches: field => field === 'windingRatePerKg', labels: ['winding rate'] },
+    { matches: field => field === 'processingRatePerM', labels: ['processing rate', 'processing'] },
+    { matches: field => field === 'finishingRatePerM', labels: ['finishing rate', 'finishing'] },
+    { matches: field => field === 'overheadOverridePerM', labels: ['direct factory overhead', 'direct overhead rate'] },
+    { matches: field => field === 'monthlyOutputM', labels: ['actual monthly output', 'monthly output'] },
+    { matches: field => field === 'commissionPct', labels: ['broker commission', 'commission %'] },
+    { matches: field => field === 'profitPct', labels: ['target margin', 'profit margin'] },
+    { matches: field => field === 'transportPerM', labels: ['transport charge', 'transport per meter'] },
+    { matches: field => field === 'orderQuantityM', labels: ['costing quantity', 'order quantity'] },
+    { matches: field => field === 'warpCrimpPct', labels: ['warp crimp'] },
+    { matches: field => field === 'yarnShortagePct', labels: ['default yarn waste'] },
+]
+
+function findEstimatorIssueTarget(field: string): { element: HTMLElement; isYarnRow: boolean } | null {
+    if (typeof document === 'undefined') return null
+
+    const normalizedField = field.toLowerCase()
+    if (normalizedField.startsWith('warprows')) {
+        const element = document.querySelector<HTMLElement>('[data-testid^="yarn-component-indigo-"]')
+        return element ? { element, isYarnRow: true } : null
+    }
+    if (normalizedField.startsWith('weftrows')) {
+        const element = document.querySelector<HTMLElement>('[data-testid^="yarn-component-emerald-"]')
+        return element ? { element, isYarnRow: true } : null
+    }
+
+    const matcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(field))
+    if (!matcher) return null
+
+    const label = Array.from(document.querySelectorAll('label')).find(candidate => {
+        const text = candidate.textContent?.trim().toLowerCase() ?? ''
+        return matcher.labels.some(term => text.includes(term))
+    })
+    if (label?.parentElement) return { element: label.parentElement, isYarnRow: false }
+
+    const textElement = Array.from(document.querySelectorAll<HTMLElement>('p, h3, h4')).find(candidate => {
+        const text = candidate.textContent?.trim().toLowerCase() ?? ''
+        return matcher.labels.some(term => text.includes(term))
+    })
+    return textElement?.parentElement ? { element: textElement.parentElement, isYarnRow: false } : null
+}
+
+function focusEstimatorIssueTarget(field: string) {
+    const target = findEstimatorIssueTarget(field)
+    const fallback = typeof document === 'undefined'
+        ? null
+        : document.querySelector<HTMLElement>('[id="estimator-save-validation-summary"]')
+    const element = target?.element ?? fallback
+    if (!element) return
+
+    if (target?.isYarnRow) {
+        const collapsedToggle = element.querySelector<HTMLButtonElement>('button[aria-expanded="false"]')
+        collapsedToggle?.click()
+    }
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (!target?.isYarnRow) {
+        window.setTimeout(() => {
+            element.querySelector<HTMLElement>('input, select, textarea, button')?.focus({ preventScroll: true })
+        }, 250)
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2299,6 +2568,12 @@ export default function EstimatorClient({
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const assumptionsManuallyToggledRef = useRef(false)
+    const mobileCostingVisibilityRef = useRef<HTMLDivElement>(null)
+    const mobileShortcutSeenRef = useRef(false)
+    const mobileShortcutLabelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [mobileCostingShortcutVisible, setMobileCostingShortcutVisible] = useState(false)
+    const [mobileCostingShortcutExpanded, setMobileCostingShortcutExpanded] = useState(false)
+    const [mobileKeyboardVisible, setMobileKeyboardVisible] = useState(false)
 
     const handleEntryModeChange = useCallback((nextMode: 'quick' | 'detailed') => {
         setEntryMode(nextMode)
@@ -2316,6 +2591,70 @@ export default function EstimatorClient({
     const toggleAssumptions = useCallback(() => {
         assumptionsManuallyToggledRef.current = true
         setAssumptionsExpanded(current => !current)
+    }, [])
+
+    useEffect(() => {
+        if (loading) return
+        const cockpit = mobileCostingVisibilityRef.current
+        if (!cockpit || typeof window === 'undefined') return
+
+        const mediaQuery = window.matchMedia('(min-width: 768px)')
+        const syncViewport = () => setMobileCostingShortcutVisible(!mediaQuery.matches)
+        const observer = 'IntersectionObserver' in window
+            ? new IntersectionObserver(([entry]) => {
+                setMobileCostingShortcutVisible(!mediaQuery.matches && !entry.isIntersecting)
+            }, { threshold: 0.05 })
+            : null
+
+        syncViewport()
+        observer?.observe(cockpit)
+        mediaQuery.addEventListener?.('change', syncViewport)
+
+        return () => {
+            observer?.disconnect()
+            mediaQuery.removeEventListener?.('change', syncViewport)
+        }
+    }, [loading])
+
+    useEffect(() => {
+        if (mobileKeyboardVisible) {
+            setMobileCostingShortcutExpanded(false)
+            return
+        }
+        if (!mobileCostingShortcutVisible || mobileShortcutSeenRef.current) return
+
+        mobileShortcutSeenRef.current = true
+        setMobileCostingShortcutExpanded(true)
+        if (mobileShortcutLabelTimerRef.current) clearTimeout(mobileShortcutLabelTimerRef.current)
+        mobileShortcutLabelTimerRef.current = setTimeout(() => {
+            setMobileCostingShortcutExpanded(false)
+            mobileShortcutLabelTimerRef.current = null
+        }, 3200)
+
+        return () => {
+            if (mobileShortcutLabelTimerRef.current) {
+                clearTimeout(mobileShortcutLabelTimerRef.current)
+                mobileShortcutLabelTimerRef.current = null
+            }
+        }
+    }, [mobileCostingShortcutVisible, mobileKeyboardVisible])
+
+    useEffect(() => {
+        const viewport = window.visualViewport
+        if (!viewport) return
+
+        const initialHeight = viewport.height
+        const syncKeyboard = () => {
+            setMobileKeyboardVisible(initialHeight - viewport.height > 150)
+        }
+
+        syncKeyboard()
+        viewport.addEventListener('resize', syncKeyboard)
+        viewport.addEventListener('scroll', syncKeyboard)
+        return () => {
+            viewport.removeEventListener('resize', syncKeyboard)
+            viewport.removeEventListener('scroll', syncKeyboard)
+        }
     }, [])
 
     // Party rate memory — debounced with 800ms + 3-char min
@@ -3639,11 +3978,27 @@ export default function EstimatorClient({
                 className: 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/70 text-[var(--color-warning-amber)]',
             }
             : {
-                label: 'Costing not ready',
-                description: 'Complete the highlighted inputs before using this price.',
-                icon: AlertCircle,
-                className: 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]',
-            }
+            label: 'Costing not ready',
+            description: 'Complete the highlighted inputs before using this price.',
+            icon: AlertCircle,
+            className: 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]',
+        }
+    const firstEstimatorIssueField = estimatorValidation.issues[0]?.field
+        ?? costingReadiness.issues[0]?.field
+        ?? null
+    const jumpToFirstEstimatorIssue = () => {
+        const field = firstEstimatorIssueField
+        const needsDetailedView = field != null && DETAILED_ESTIMATOR_ISSUE_FIELDS.has(field)
+        if (needsDetailedView && entryMode !== 'detailed') {
+            handleEntryModeChange('detailed')
+        }
+        if (needsDetailedView) setShowAdvancedOverhead(true)
+        setShowValidation(true)
+
+        window.setTimeout(() => {
+            focusEstimatorIssueTarget(field ?? 'costingResult')
+        }, needsDetailedView ? 240 : 80)
+    }
     const auditLayerRows = [
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
         ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
@@ -3889,7 +4244,11 @@ export default function EstimatorClient({
                 <div className="estimator-workspace-main min-w-0">
                     <div className="relative min-w-0">
                     {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
-                    <div className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3">
+                    <div
+                        ref={mobileCostingVisibilityRef}
+                        data-testid="estimator-primary-cockpit"
+                        className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3"
+                    >
                 <div className={`${hudShellClass} premium-focus-surface`}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -5817,6 +6176,30 @@ export default function EstimatorClient({
                     <ArchivePolicyNotice />
                 </aside>
             </div>
+
+            <MobileLiveEstimateShortcut
+                visible={mobileCostingShortcutVisible}
+                keyboardVisible={mobileKeyboardVisible}
+                expanded={mobileCostingShortcutExpanded}
+                activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
+                    ? `Costing v${sourceQuoteVersionNumber ?? 1}`
+                    : undefined}
+                validityLabel={validityStatus.label}
+                validityDescription={validityStatus.description}
+                validityClassName={validityStatus.className}
+                validityIcon={validityStatus.icon}
+                hasValidCostResult={hasValidCostResult}
+                quoteIsValid={costingResult.quoteIsValid}
+                productionCostPerM={costingResult.productionCostPerM}
+                suggestedSellingPricePerM={costingResult.suggestedSellingPricePerM}
+                actualMarginPct={displayMarginPct}
+                breakEvenPricePerM={hasValidCostResult && breakEvenScenario?.quotePricePerM != null ? costingResult.breakEvenPricePerM : null}
+                missingIssueCount={estimatorValidation.issues.length}
+                needsReview={costingReadiness.status !== 'ready'}
+                readinessMessage={firstCostingReadinessMessage}
+                onJumpToInput={jumpToFirstEstimatorIssue}
+            />
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
 
