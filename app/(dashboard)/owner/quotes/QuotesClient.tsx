@@ -550,9 +550,9 @@ function SavedQualityLibraryView({
                                     onPointerDownOutside={() => onCloseDetails()}
                                     onEscapeKeyDown={() => onCloseDetails()}
                                     style={{ left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), 124px))' }}
-                                    className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
+                                    className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
                                 >
-                                    <div className="max-h-[calc(100dvh-1rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
+                                    <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
                                         <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-14 sm:px-6">
                                             <div className="flex min-w-0 items-center gap-2">
                                                 <DialogTitle className="min-w-0 flex-1 truncate text-xl font-black" title={group.name}>{group.name}</DialogTitle>
