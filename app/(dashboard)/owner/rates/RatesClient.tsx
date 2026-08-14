@@ -14,6 +14,7 @@ import {
     History,
     Info,
     Loader2,
+    MoreHorizontal,
     Pencil,
     Plus,
     Tags,
@@ -21,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -78,6 +80,12 @@ type PendingRateAction = {
 }
 
 const YARN_CATEGORIES: YarnRateCategory[] = ['yarn_warp', 'yarn_weft']
+const REVIEW_STATUS_PRIORITY = {
+    needs_review: 0,
+    overdue: 1,
+    due_soon: 2,
+    current: 3,
+} as const
 
 function today() {
     return formatToSurat(new Date(), 'yyyy-MM-dd')
@@ -395,13 +403,13 @@ function DueForReviewDialog({
     )
 }
 
-function ReviewBadge({ rate }: { rate: CostRateRow }) {
+function ReviewBadge({ rate, compact = false }: { rate: CostRateRow; compact?: boolean }) {
     const status = getRateReviewStatus(rate)
-    if (status === 'needs_review') return <div><StatusBadge status="needs_review" label="Owner review needed" icon={Info} /><p className="mt-1 text-[11px] text-info">Discovered from a saved quality or costing</p></div>
+    if (status === 'needs_review') return <div className={compact ? 'text-right' : undefined}><StatusBadge status="needs_review" label="Owner review needed" icon={Info} className={compact ? 'text-[10px]' : undefined} />{!compact && <p className="mt-1 text-[11px] text-info">Discovered from a saved quality or costing</p>}</div>
     const due = formatToSurat(getRateReviewDueDate(rate), 'd MMM yyyy')
-    if (status === 'overdue') return <div><StatusBadge status="overdue" /><p className="mt-1 text-[11px] text-risk">Due {due}</p></div>
-    if (status === 'due_soon') return <div><StatusBadge status="due_soon" /><p className="mt-1 text-[11px] text-warning">Due {due}</p></div>
-    return <div><StatusBadge status="current" /><p className="mt-1 text-[11px] text-subtle">Next review {due}</p></div>
+    if (status === 'overdue') return <div className={compact ? 'text-right' : undefined}><StatusBadge status="overdue" className={compact ? 'text-[10px]' : undefined} /><p className="mt-1 text-[11px] text-risk">Due {due}</p></div>
+    if (status === 'due_soon') return <div className={compact ? 'text-right' : undefined}><StatusBadge status="due_soon" className={compact ? 'text-[10px]' : undefined} /><p className="mt-1 text-[11px] text-warning">Due {due}</p></div>
+    return <div className={compact ? 'text-right' : undefined}><StatusBadge status="current" className={compact ? 'text-[10px]' : undefined} /><p className="mt-1 text-[11px] text-subtle">Next review {due}</p></div>
 }
 
 export default function RatesClient({
@@ -482,7 +490,13 @@ export default function RatesClient({
     )
     const activeYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active !== false), [yarnRates])
     const visibleRates = useMemo(
-        () => yarnRates.filter(rate => rate.category === category && (showArchived ? rate.is_active === false : rate.is_active !== false)),
+        () => yarnRates
+            .filter(rate => rate.category === category && (showArchived ? rate.is_active === false : rate.is_active !== false))
+            .sort((left, right) => {
+                if (showArchived) return left.name.localeCompare(right.name, 'en-IN')
+                return REVIEW_STATUS_PRIORITY[getRateReviewStatus(left)] - REVIEW_STATUS_PRIORITY[getRateReviewStatus(right)]
+                    || left.name.localeCompare(right.name, 'en-IN')
+            }),
         [category, showArchived, yarnRates],
     )
     const resultMotionKey = `${category}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
@@ -714,9 +728,9 @@ export default function RatesClient({
             <PageHeader
                 icon={Tags}
                 title={t('common.yarn_rate_book')}
-                description={tx('Keep one current rate for every yarn used across your Saved Qualities. Confirm discovered rates here, or change a rate when your supplier price changes. Existing costing snapshots stay unchanged.')}
+                description={tx('Keep current yarn rates for future estimates. Saved costing snapshots stay unchanged.')}
                 actions={(
-                    <Button variant="saffron" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}>
+                    <Button variant="saffron" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className="w-full sm:w-auto">
                         <Plus className="h-4 w-4" /> {tx('Add Yarn Rate')}
                     </Button>
                 )}
@@ -753,36 +767,31 @@ export default function RatesClient({
             )}
 
             <Card className="premium-surface">
-                <CardContent className="grid gap-4 p-5 sm:grid-cols-3 sm:divide-x sm:divide-hairline">
-                    <div className="flex items-center gap-3 sm:px-3"><span className="rounded-full bg-info-soft p-3 text-info"><CircleDollarSign className="h-5 w-5" /></span><div><p className="text-2xl font-bold text-info">{activeYarnRates.length}</p><p className="text-sm text-body">{tx('active yarn rates')}</p></div></div>
+                <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-5">
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
                     <button
                         type="button"
                         onClick={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
                         disabled={dueReviewRates.length === 0}
                         aria-haspopup="dialog"
                         aria-label={dueReviewRates.length > 0 ? `Open ${dueReviewRates.length} rates due for review` : 'No rates due for review'}
-                        className="group flex cursor-pointer items-center gap-3 rounded-xl border border-warning/35 bg-surface/75 px-3 py-2.5 text-left outline-none transition-all hover:border-warning hover:bg-warning-soft/90 hover:ring-2 hover:ring-warning/20 active:border-warning active:bg-warning-soft focus-visible:ring-2 focus-visible:ring-saffron/50 focus-visible:ring-offset-2 disabled:cursor-default disabled:border-transparent disabled:bg-transparent disabled:ring-0 sm:mx-1 sm:px-4"
+                        className="group inline-flex cursor-pointer items-center gap-2 rounded-lg px-0.5 py-1 text-left text-xs font-semibold text-body outline-none transition-colors hover:text-warning focus-visible:ring-2 focus-visible:ring-saffron/50 focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-70"
                     >
-                        <span className="rounded-full bg-warning-soft p-3 text-warning transition-colors group-hover:bg-surface/90"><CalendarClock className="h-5 w-5" /></span>
-                        <span><span className="block text-2xl font-bold text-saffron-deep">{dueCount}</span><span className="block text-sm text-body">{tx('due for review')}</span></span>
-                        {dueReviewRates.length > 0 && (
-                            <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-warning transition-colors group-hover:text-saffron-deep">
-                                Review rates
-                                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                            </span>
-                        )}
+                        <CalendarClock className="h-4 w-4 text-warning" aria-hidden="true" />
+                        <span><span className="font-bold text-saffron-deep">{dueCount}</span> {tx(dueCount === 1 ? 'rate needs review' : 'rates need review')}</span>
+                        {dueReviewRates.length > 0 && <ChevronRight className="h-3.5 w-3.5 text-warning transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
                     </button>
-                    <div className="flex items-center gap-3 sm:px-6"><span className="rounded-full bg-success-soft p-3 text-success"><CheckCircle2 className="h-5 w-5" /></span><div><p className="text-xs font-semibold uppercase tracking-wide text-subtle">{tx('Last reviewed')}</p><p className="mt-1 text-base font-semibold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</p></div></div>
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
                 </CardContent>
             </Card>
 
             <Card className="gap-0 overflow-hidden p-0">
-                <div className="flex flex-col gap-3 border-b border-hairline px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+                <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
                     <div>
                         <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
-                        <p className="mt-1 text-xs text-body">{tx('Rates appear automatically after you save a quality or costing. A discovered rate stays marked for owner review until you confirm that the displayed value is correct.')}</p>
+                        <p className="mt-1 hidden text-xs leading-relaxed text-body sm:block">{tx('Discovered rates stay marked for review until you confirm the displayed value.')}</p>
                     </div>
-                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-subtle hover:text-ink">
+                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-xs text-subtle hover:text-ink">
                         {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}
                     </Button>
                 </div>
@@ -791,11 +800,11 @@ export default function RatesClient({
                     <div
                         role="group"
                         aria-label="Show yarn rates by direction"
-                        className="relative grid min-h-[3.25rem] w-full max-w-xs grid-cols-2 overflow-hidden rounded-[15px] border border-hairline-strong/70 bg-surface-soft/75 p-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.82),0_1px_2px_rgba(30,37,40,0.04)]"
+                        className="relative grid min-h-11 w-full grid-cols-2 overflow-hidden rounded-xl border border-hairline-strong/70 bg-surface-soft/75 p-1 sm:max-w-xs"
                     >
                         <span
                             aria-hidden="true"
-                            className={`pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc(50%_-_0.375rem)] rounded-[10px] border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${category === 'yarn_weft' ? 'translate-x-full' : 'translate-x-0'}`}
+                            className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%_-_0.25rem)] rounded-lg border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${category === 'yarn_weft' ? 'translate-x-full' : 'translate-x-0'}`}
                         />
                         {YARN_CATEGORIES.map(value => {
                             const isSelected = category === value
@@ -806,7 +815,7 @@ export default function RatesClient({
                                     type="button"
                                     aria-pressed={isSelected}
                                     onClick={() => setCategory(value)}
-                                    className={`relative z-10 flex min-h-11 items-center justify-center rounded-[10px] px-4 text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'font-semibold text-subtle hover:text-ink'}`}
+                                    className={`relative z-10 flex min-h-10 items-center justify-center rounded-lg px-4 text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'font-semibold text-subtle hover:text-ink'}`}
                                 >
                                     {label}
                                 </button>
@@ -814,7 +823,7 @@ export default function RatesClient({
                         })}
                     </div>
                 </Toolbar>
-                <p className="px-4 pb-3 text-[11px] leading-relaxed text-body sm:px-5">{tx(`Showing ${selectedCategoryLabel.toLowerCase()} yarn rates. Switch direction above to see the other yarns.`)}</p>
+                <p className="sr-only">{tx(`Showing ${selectedCategoryLabel.toLowerCase()} yarn rates. Switch direction above to see the other yarns.`)}</p>
                 <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
                     {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} shown.
                 </p>
@@ -886,26 +895,101 @@ export default function RatesClient({
                                 const reviewState = getRateReviewStatus(rate)
                                 const archived = rate.is_active === false
                                 const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
-                                const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
+                                const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Review rate'
+                                const usageNames = getRateUsageNames(rate)
+                                const cardAccent = archived
+                                    ? 'border-l-hairline-strong'
+                                    : reviewState === 'overdue'
+                                        ? 'border-l-risk'
+                                        : reviewState === 'due_soon'
+                                            ? 'border-l-warning'
+                                            : reviewState === 'needs_review'
+                                                ? 'border-l-info'
+                                                : 'border-l-hairline-strong'
                                 return (
-                                        <Card key={rate.id} className={`premium-surface ${archived ? 'border-hairline bg-surface-soft' : reviewState === 'overdue' ? 'border-risk/30 bg-risk-soft/70' : reviewState === 'due_soon' ? 'border-warning/30 bg-warning-soft/70' : reviewState === 'needs_review' ? 'border-info/30 bg-info-soft/60' : 'border-hairline bg-surface'}`}>
+                                    <Card key={rate.id} className={`premium-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}>
                                         <CardContent className="p-4">
-                                            <div className="flex items-start justify-between gap-3"><div><p className="font-bold text-ink">{rate.name}</p><p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></div><ReviewBadge rate={rate} /></div>
-                                            <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface p-3"><div><p className="text-[10px] font-bold uppercase text-subtle">{t('common.current_yarn_rate')}</p><p className="mt-1 font-mono font-bold">{formatRateValue(rate.current_value, rate.unit)}</p></div><div><p className="text-[10px] font-bold uppercase text-subtle">Previous rate</p><p className="mt-1 font-mono font-semibold text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p></div></div>
-                                            <div className="mt-3 rounded-lg border border-hairline bg-surface p-3"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></div>
-                                            <div className="mt-4 space-y-2" role="group" aria-label={tx('Actions')}>
-                                                {!archived && (
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        {reviewState !== 'current' && <Button variant="default" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={tx(`${reviewLabel} for ${rate.name}`)} className="h-10 w-fit max-w-full justify-center rounded-full border-0 !px-5 text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white">{actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</Button>}
-                                                        <Button variant="outline" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending} className="h-10 w-fit max-w-full justify-center rounded-full border-saffron/35 bg-saffron-soft/55 !px-5 text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"><Pencil className="h-4 w-4" /> {tx('Change rate')}</Button>
-                                                    </div>
-                                                )}
-                                                <div className={`flex flex-wrap items-center justify-center gap-2 ${!archived ? 'border-t border-hairline/50 pt-2' : ''}`}>
-                                                    <Button variant="ghost" onClick={() => openHistory(rate)} disabled={isPending} className="h-9 w-fit justify-center rounded-full border border-hairline/60 bg-surface-soft/35 !px-4 text-body shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"><History className="h-4 w-4" /> {tx('Activity')}</Button>
-                                                    <Button variant="ghost" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`} className="h-9 w-fit justify-center rounded-full border border-hairline/60 bg-surface-soft/35 !px-4 text-subtle shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-risk/30 hover:bg-risk-soft/60 hover:text-risk">
-                                                        {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
-                                                    </Button>
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-bold text-ink">{rate.name}</p>
+                                                    <p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
                                                 </div>
+                                                {archived ? <StatusBadge status="archived" className="text-[10px]" /> : <ReviewBadge rate={rate} compact />}
+                                            </div>
+
+                                            <div className="mt-4 flex items-end justify-between gap-4 border-y border-hairline/70 py-3">
+                                                <div>
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{t('common.current_yarn_rate')}</p>
+                                                    <p className="mt-1 font-mono text-xl font-black tracking-tight text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">Previous rate</p>
+                                                    <p className="mt-1 font-mono text-base font-semibold text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-subtle">
+                                                <span>Effective {formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                <span aria-hidden="true">·</span>
+                                                {usageNames.length ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUsageRate(rate)}
+                                                        className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-saffron-deep underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2"
+                                                        aria-haspopup="dialog"
+                                                        aria-label={`Open ${getUsageLabel(rate).toLocaleLowerCase('en-IN')} used by ${rate.name}`}
+                                                    >
+                                                        <Tags className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                                        <span className="truncate">Used in {usageNames.length} {getUsageLabel(rate).toLocaleLowerCase('en-IN')}</span>
+                                                        <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                                    </button>
+                                                ) : <span className="truncate">{getCostRateDisplaySource(rate) || 'No source recorded'}</span>}
+                                            </div>
+
+                                            <div className="mt-4 flex items-center gap-2 border-t border-hairline/70 pt-3" role="group" aria-label={tx('Actions')}>
+                                                {!archived && reviewState !== 'current' && (
+                                                    <Button
+                                                        variant="default"
+                                                        onClick={() => { setReviewError(null); setReviewRate(rate) }}
+                                                        disabled={isPending}
+                                                        aria-label={tx(`${reviewLabel} for ${rate.name}`)}
+                                                        className="h-10 min-w-0 flex-1 rounded-xl border-0 bg-success px-3 text-sm text-white shadow-none hover:bg-success/90 hover:text-white"
+                                                    >
+                                                        {actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                                                        <span className="truncate">{tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</span>
+                                                    </Button>
+                                                )}
+                                                {!archived && (
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}
+                                                        disabled={isPending}
+                                                        className="h-10 min-w-0 flex-1 rounded-xl border-saffron/35 bg-saffron-soft/55 px-3 text-sm text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"
+                                                    >
+                                                        <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Change rate')}</span>
+                                                    </Button>
+                                                )}
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline" size="icon-sm" disabled={isPending} aria-label={`More actions for ${rate.name}`} className="h-10 w-10 rounded-xl border-hairline bg-surface px-0 text-subtle shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
+                                                            <MoreHorizontal className="h-5 w-5" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48">
+                                                        <DropdownMenuItem onSelect={() => openHistory(rate)}>
+                                                            <History /> {tx('Activity')}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            onSelect={() => { setArchiveError(null); setArchiveRate(rate) }}
+                                                            aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`}
+                                                            className={!archived ? 'text-risk focus:text-risk' : undefined}
+                                                        >
+                                                            {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="animate-spin" /> : archived ? <ArchiveRestore /> : <Archive />}
+                                                            {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
                                         </CardContent>
                                     </Card>
