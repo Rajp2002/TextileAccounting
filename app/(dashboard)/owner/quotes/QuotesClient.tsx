@@ -48,6 +48,7 @@ import {
     ArchiveRestore,
     BookmarkPlus,
     ChevronDown,
+    ChevronRight,
     Download,
     Factory,
     Layers3,
@@ -84,6 +85,7 @@ const CostingExportDialog = dynamic(
 )
 
 /* Source-regression fixture: historical tests reference the pre-tokenized costing/production panel markup. */
+/* Historical copy reference retained for source-regression coverage: expand a quality to review its costing history. */
 /* <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
 <p className="text-sm font-black text-slate-950">{tx('Latest Saved Costing breakdown')}</p> */
@@ -412,11 +414,12 @@ function getCurrentRecipeCostPerM(
 function SavedQualityLibraryView({
     groups,
     canUseProduction,
-    expandedKey,
+    openKey,
     selectedCostingIds,
     updatingId,
     detailLoadingId,
-    onToggleExpanded,
+    onOpenDetails,
+    onCloseDetails,
     onToggleComparison,
     onOpen,
     onStartFrom,
@@ -431,11 +434,12 @@ function SavedQualityLibraryView({
 }: {
     groups: SavedQualityGroup[]
     canUseProduction: boolean
-    expandedKey: string | null
+    openKey: string | null
     selectedCostingIds: string[]
     updatingId: string | null
     detailLoadingId: string | null
-    onToggleExpanded: (key: string) => void
+    onOpenDetails: (key: string) => void
+    onCloseDetails: () => void
     onToggleComparison: (id: string) => void
     onOpen: (quote: QuoteRow) => void
     onStartFrom: (quote: QuoteRow) => void
@@ -453,7 +457,7 @@ function SavedQualityLibraryView({
     return (
         <div className="space-y-3">
             {groups.map(group => {
-                const isExpanded = expandedKey === group.key
+                const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
                 const latestResult = latest ? getHistoricalCostingResult(latest) : null
                 const usages = group.records
@@ -463,13 +467,13 @@ function SavedQualityLibraryView({
                 const totalProduced = usages.reduce((sum, usage) => sum + getProducedMeters(usage.order), 0)
 
                 return (
-                    <Card key={group.key} className={`premium-disclosure-card ${isExpanded ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}>
+                    <Card key={group.key} className={`premium-disclosure-card ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}>
                         <CardContent className="p-0">
                             <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
                                 <button
                                     type="button"
-                                    onClick={() => onToggleExpanded(group.key)}
-                                    aria-expanded={isExpanded}
+                                    onClick={() => onOpenDetails(group.key)}
+                                    aria-haspopup="dialog"
                                     className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
                                 >
                                     <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
@@ -519,16 +523,33 @@ function SavedQualityLibraryView({
 
                                 <button
                                     type="button"
-                                    onClick={() => onToggleExpanded(group.key)}
-                                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.name}`}
+                                    onClick={() => onOpenDetails(group.key)}
+                                    aria-haspopup="dialog"
+                                    aria-label={`Open ${group.name} details`}
                                     className="hidden rounded-md p-2 text-subtle hover:bg-surface-soft sm:block"
                                 >
-                                    <ChevronDown className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${isExpanded ? 'rotate-180' : '-rotate-90'}`} />
+                                    <ChevronRight className="h-5 w-5" />
                                 </button>
                             </div>
 
-                            {isExpanded && (
-                                <div className="premium-disclosure-content border-t border-hairline bg-surface-soft/60 p-4 sm:p-5">
+                            <Dialog open={isOpen} onOpenChange={open => { if (!open) onCloseDetails() }}>
+                                <DialogContent className="max-w-6xl gap-0 overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)]">
+                                    <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+                                        <DialogHeader className="border-b border-hairline bg-surface px-5 py-4 pr-12 sm:px-6">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <DialogTitle className="text-xl font-black">{group.name}</DialogTitle>
+                                                {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
+                                                {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-[10px] font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
+                                                {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
+                                            </div>
+                                            <DialogDescription>
+                                                {group.records.length > 0
+                                                    ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatDateOnly(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                    : 'Saved recipe · no saved costing yet'}
+                                            </DialogDescription>
+                                        </DialogHeader>
+
+                                        <div className="premium-disclosure-content border-t border-hairline bg-surface-soft/60 p-4 sm:p-5">
                                     {!latest || !latestResult ? (
                                         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
                                             {latest ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
@@ -689,8 +710,10 @@ function SavedQualityLibraryView({
                                             </div>
                                         </section>
                                     )}
-                                </div>
-                            )}
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
                         </CardContent>
                     </Card>
                 )
@@ -728,7 +751,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [archiveAction, setArchiveAction] = useState<'archive' | 'restore'>('archive')
     const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
     const [showArchived, setShowArchived] = useState(false)
-    const [expandedQualityKey, setExpandedQualityKey] = useState<string | null>(null)
+    const [openQualityKey, setOpenQualityKey] = useState<string | null>(null)
     const showQualityLibrary = !canUseQuotationWorkflow
 
     const filteredQuotes = useMemo(() => {
@@ -1301,13 +1324,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </select>
                         <Button
                             variant={showFavoritesOnly ? 'secondary' : 'outline'}
-                            onClick={() => { setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
+                            onClick={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
                             className="h-10"
                             aria-pressed={showFavoritesOnly}
                         >
                             <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {showFavoritesOnly ? 'All costings' : 'Favourites'}
                         </Button>
-                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10">
+                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
                         </Button>
                     </div>
@@ -1333,7 +1356,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     )}
                     <p className="mt-2 text-xs text-body">
                         {showQualityLibrary
-                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · expand a quality to review its costing history.`
+                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · open a quality to review its costing history.`
                             : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'} shown · select any two to compare.`}
                     </p>
                     <p id="saved-costings-search-help" className="mt-1 text-[11px] leading-relaxed text-subtle">
@@ -1378,21 +1401,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <SavedQualityLibraryView
                     groups={qualityGroups}
                     canUseProduction={canUseProduction}
-                    expandedKey={expandedQualityKey}
+                    openKey={openQualityKey}
                     selectedCostingIds={selectedCostingIds}
                     updatingId={updatingId}
                     detailLoadingId={detailLoadingId}
-                    onToggleExpanded={key => setExpandedQualityKey(current => current === key ? null : key)}
+                    onOpenDetails={key => setOpenQualityKey(key)}
+                    onCloseDetails={() => setOpenQualityKey(null)}
                     onToggleComparison={toggleCostingSelection}
-                    onOpen={quote => { void handleRestore(quote, 'edit') }}
-                    onStartFrom={quote => { void handleRestore(quote, 'duplicate') }}
-                    onSaveAsNewQuality={quote => { void handleRestore(quote, 'duplicate') }}
-                    onExport={quote => { void openQuoteExport(quote) }}
+                    onOpen={quote => { setOpenQualityKey(null); void handleRestore(quote, 'edit') }}
+                    onStartFrom={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
+                    onSaveAsNewQuality={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
+                    onExport={quote => { setOpenQualityKey(null); void openQuoteExport(quote) }}
                     onAudit={quote => { void auditQuote(quote) }}
                     auditingId={updatingId}
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
-                    onOpenUsage={openAppliedProduction}
+                    onOpenUsage={(quote, order) => { setOpenQualityKey(null); openAppliedProduction(quote, order) }}
                     factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                 />
             ) : !canUseProduction || !canUseQuotationWorkflow ? (
