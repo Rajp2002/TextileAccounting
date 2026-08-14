@@ -238,7 +238,7 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
     return (
         <div className="space-y-3">
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950" role="note">
-                <span className="font-bold">{t('base_plan.billing.status')}</span> {t('base_plan.billing.checkout')}
+                <span className="font-bold">Payment document:</span> {t('base_plan.billing.checkout')}
             </p>
             {outcome ? (
                 <div className={cn('rounded-xl border p-4 text-sm', outcomeTone)} role="status" aria-live="polite">
