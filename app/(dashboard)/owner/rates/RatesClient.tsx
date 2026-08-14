@@ -788,7 +788,15 @@ export default function RatesClient({
                 </div>
 
                 <Toolbar className="flex rounded-none border-0 border-b border-hairline p-4 shadow-none">
-                    <div role="group" aria-label="Show yarn rates by direction" className="inline-flex w-full max-w-xs rounded-lg border border-hairline bg-surface-soft/70 p-1">
+                    <div
+                        role="group"
+                        aria-label="Show yarn rates by direction"
+                        className="relative grid min-h-[3.25rem] w-full max-w-xs grid-cols-2 overflow-hidden rounded-[15px] border border-hairline-strong/70 bg-surface-soft/75 p-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.82),0_1px_2px_rgba(30,37,40,0.04)]"
+                    >
+                        <span
+                            aria-hidden="true"
+                            className={`pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc(50%_-_0.375rem)] rounded-[10px] border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${category === 'yarn_weft' ? 'translate-x-full' : 'translate-x-0'}`}
+                        />
                         {YARN_CATEGORIES.map(value => {
                             const isSelected = category === value
                             const label = value === 'yarn_warp' ? 'Warp' : 'Weft'
@@ -798,7 +806,7 @@ export default function RatesClient({
                                     type="button"
                                     aria-pressed={isSelected}
                                     onClick={() => setCategory(value)}
-                                    className={`premium-segment min-h-9 flex-1 rounded-md px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${isSelected ? 'bg-surface text-saffron-deep shadow-sm' : 'text-subtle hover:text-ink'}`}
+                                    className={`relative z-10 flex min-h-11 items-center justify-center rounded-[10px] px-4 text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'font-semibold text-subtle hover:text-ink'}`}
                                 >
                                     {label}
                                 </button>
