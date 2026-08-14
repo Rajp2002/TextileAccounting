@@ -38,9 +38,10 @@ describe('Sprint 7 Base UX polish contracts', () => {
         }
     })
 
-    it('keeps high-risk Base quality archiving inside the shared confirmation flow', () => {
+    it('keeps high-risk archive lifecycle controls in the owning surfaces', () => {
         expect(read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')).toContain('<ConfirmActionDialog')
-        expect(read('components/settings/template-manager.tsx')).toContain('<ConfirmActionDialog')
+        expect(read('components/settings/template-manager.tsx')).toContain('Manage saved qualities in Saved Costings')
+        expect(read('components/settings/template-manager.tsx')).not.toContain('<ConfirmActionDialog')
         expect(read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')).not.toContain('window.confirm')
         expect(read('components/settings/template-manager.tsx')).not.toContain('confirm(`Archive quality')
         expect(read('components/settings/factory-cost-profile.tsx')).toContain('<ConfirmActionDialog')

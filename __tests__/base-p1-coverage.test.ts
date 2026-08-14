@@ -28,8 +28,8 @@ describe('Base P1 production coverage contracts', () => {
         expect(estimator).toContain("t('estimator.warp.add_blend')")
         expect(estimator).toContain("t('estimator.weft.add_weft')")
         expect(estimator).toContain("type: 'ENABLE_SECTION'")
-        expect(settings).toContain('function SectionToggle')
-        expect(settings).toContain('onCheckedChange={onChange}')
+        expect(settings).toContain('function OptionalAssumptionDisclosure')
+        expect(settings).toContain('onCheckedChange={onEnabledChange}')
         expect(settings).toContain('enabled_sections: sections')
     })
 

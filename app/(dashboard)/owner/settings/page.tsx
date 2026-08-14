@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -116,12 +116,18 @@ function SettingsSection({
     icon: Icon,
     children,
     collapsible = false,
+    summary,
+    open,
+    onToggle,
 }: {
     id: string
     title: string
     icon: LucideIcon
     children: ReactNode
     collapsible?: boolean
+    summary?: string
+    open?: boolean
+    onToggle?: (open: boolean) => void
 }) {
     const heading = (
         <>
@@ -132,9 +138,17 @@ function SettingsSection({
 
     if (collapsible) {
         return (
-            <details id={id} className="premium-disclosure-card group scroll-mt-6 space-y-3 rounded-lg">
+            <details
+                id={id}
+                open={open}
+                onToggle={event => onToggle?.(event.currentTarget.open)}
+                className="premium-disclosure-card group scroll-mt-6 space-y-3 rounded-lg"
+            >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-hairline/80 pb-2 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
-                    {heading}
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">{heading}</div>
+                        {summary && <p className="mt-1 text-sm font-normal leading-relaxed text-muted-foreground">{summary}</p>}
+                    </div>
                     <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
                 </summary>
                 <div className="premium-disclosure-content">{children}</div>
@@ -224,10 +238,12 @@ export default function SettingsPage() {
     const planAccess = useOwnerPlanAccess()
     const subscriptionTier = planAccess.effectiveTier
     const hasPremium = tierSatisfies(subscriptionTier, 'premium')
+    const isBaseExperience = subscriptionTier === 'base'
 
     const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
     const [factoryName, setFactoryName] = useState('')
     const [isEditingName, setIsEditingName] = useState(false)
+    const [workspaceOpen, setWorkspaceOpen] = useState(false)
 
     // Fetch organization details on the client
     const { data: org, isLoading: orgLoading } = useQuery({
@@ -334,6 +350,27 @@ export default function SettingsPage() {
     const isLoading = profileLoading || orgLoading
     const currentFactoryName = isEditingName ? factoryName : (factoryName || org?.name || '')
 
+    useEffect(() => {
+        if (!planAccess.canSwitchExperience || isLoading) return
+
+        const openWorkspaceFromHash = () => {
+            if (window.location.hash !== '#workspace-experience') return
+
+            setWorkspaceOpen(true)
+            window.setTimeout(() => {
+                const section = document.getElementById('workspace-experience')
+                if (!section) return
+                section.scrollIntoView({ block: 'start', behavior: 'smooth' })
+                const summary = section.querySelector('summary')
+                if (summary instanceof HTMLElement) summary.focus({ preventScroll: true })
+            }, 0)
+        }
+
+        openWorkspaceFromHash()
+        window.addEventListener('hashchange', openWorkspaceFromHash)
+        return () => window.removeEventListener('hashchange', openWorkspaceFromHash)
+    }, [isLoading, planAccess.canSwitchExperience])
+
     if (isLoading) {
         return (
             <div className="settings-page-frame settings-readable space-y-5">
@@ -383,7 +420,7 @@ export default function SettingsPage() {
     // Base is a costing desk, not a factory-operations console. Keep its
     // settings path focused on the inputs that change a new estimate, and put
     // infrequent account/data actions behind one low-frequency disclosure.
-    if (!hasPremium) {
+    if (isBaseExperience) {
         return (
             <div className="premium-route-enter settings-page-frame settings-readable">
                 <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
@@ -425,7 +462,7 @@ export default function SettingsPage() {
 
                     <SettingsCategory
                         title="Business identity"
-                        description="Use the name your customers and team recognise. It appears on saved costings and exported documents."
+                        description="Used on documents generated after this change. Saved costing values, versions, and history are unchanged."
                         icon={Factory}
                     >
                         <SettingsSection id="factory-identity" title="Business name" icon={Factory}>
@@ -433,7 +470,7 @@ export default function SettingsPage() {
                                 <PanelHeading
                                     icon={Factory}
                                     title="Business name"
-                                    description="This name is used to identify your costing desk and brand exported documents."
+                                    description="Used on documents generated after this change. Saved costing values, versions, and history are unchanged."
                                 />
                                 <div className="mt-5 space-y-2">
                                     <div className="flex items-center justify-between gap-3">
@@ -477,75 +514,14 @@ export default function SettingsPage() {
                         </SettingsSection>
                     </SettingsCategory>
 
-                    {planAccess.canSwitchExperience && (
-                        <SettingsSection id="workspace-experience" title="Workspace experience" icon={SlidersHorizontal}>
-                            <SettingsPanel className="p-5 sm:p-6">
-                                <PanelHeading
-                                    icon={SlidersHorizontal}
-                                    title="Choose the workspace for this rollout"
-                                    description="Your paid Full Suite plan stays active. This setting only changes which product experience the organization uses."
-                                />
-                                <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-                                    {([
-                                        {
-                                            value: 'base' as const,
-                                            title: 'Base Plan',
-                                            description: 'Cost Estimates, Saved Costings, Yarn Rate Book, settings, and billing.',
-                                        },
-                                        {
-                                            value: 'full_suite' as const,
-                                            title: 'Full Suite',
-                                            description: 'All factory, production, workforce, stock, dispatch, and costing workflows.',
-                                        },
-                                    ]).map((option) => {
-                                        const selected = planAccess.productExperience === option.value
-                                        return (
-                                            <button
-                                                key={option.value}
-                                                type="button"
-                                                aria-pressed={selected}
-                                                disabled={updateProductExperienceMutation.isPending}
-                                                onClick={() => {
-                                                    if (!selected) updateProductExperienceMutation.mutate(option.value)
-                                                }}
-                                                className={cn(
-                                                    'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 disabled:cursor-wait disabled:opacity-70',
-                                                    selected
-                                                        ? 'border-saffron bg-saffron-soft/60'
-                                                        : 'border-hairline bg-canvas/70 hover:border-saffron/50 hover:bg-saffron-soft/25'
-                                                )}
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="font-semibold text-ink">{tx(option.title)}</span>
-                                                    {selected ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
-                                                            <CheckCircle2 className="h-3 w-3" />
-                                                            {tx('Active')}
-                                                        </span>
-                                                    ) : updateProductExperienceMutation.isPending ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                                    ) : null}
-                                                </div>
-                                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx(option.description)}</p>
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                                <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
-                                    {tx('Existing production and factory records are never deleted. Switch back to Full Suite at any time to use them again.')}
-                                </p>
-                            </SettingsPanel>
-                        </SettingsSection>
-                    )}
-
-                    <details className="premium-disclosure-card group overflow-hidden rounded-xl border border-hairline bg-surface/80">
+                    <details id="account-data" className="premium-disclosure-card group overflow-hidden rounded-xl border border-hairline bg-surface/80">
                         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden sm:px-5">
-                            <div>
+                            <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                     <User className="h-4 w-4 text-subtle" />
                                     <h2 className="text-base font-bold text-ink">Account & data</h2>
                                 </div>
-                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Owner profile, password reset, data export, and permanent deletion. These are occasional actions, not costing setup.</p>
+                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Owner profile, password, organization export, export history, and account deletion.</p>
                             </div>
                             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                         </summary>
@@ -602,6 +578,75 @@ export default function SettingsPage() {
                             </SettingsSection>
                         </div>
                     </details>
+
+                    {planAccess.canSwitchExperience && (
+                        <SettingsSection
+                            id="workspace-experience"
+                            title="Advanced workspace"
+                            icon={SlidersHorizontal}
+                            collapsible
+                            summary="Choose which workspace experience to use. This does not change your subscription."
+                            open={workspaceOpen}
+                            onToggle={setWorkspaceOpen}
+                        >
+                            <SettingsPanel className="p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={SlidersHorizontal}
+                                    title="Workspace experience"
+                                    description="Choose which workspace experience to use. This changes the working experience, not billing or subscription entitlement."
+                                />
+                                <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                                    {([
+                                        {
+                                            value: 'base' as const,
+                                            title: 'Base experience',
+                                            description: 'Cost Estimates, Saved Costings, Yarn Rate Book, settings, and billing.',
+                                        },
+                                        {
+                                            value: 'full_suite' as const,
+                                            title: 'Full Suite experience',
+                                            description: 'All factory, production, workforce, stock, dispatch, and costing workflows.',
+                                        },
+                                    ]).map((option) => {
+                                        const selected = planAccess.productExperience === option.value
+                                        return (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                disabled={updateProductExperienceMutation.isPending}
+                                                onClick={() => {
+                                                    if (!selected) updateProductExperienceMutation.mutate(option.value)
+                                                }}
+                                                className={cn(
+                                                    'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 disabled:cursor-wait disabled:opacity-70',
+                                                    selected
+                                                        ? 'border-saffron bg-saffron-soft/60'
+                                                        : 'border-hairline bg-canvas/70 hover:border-saffron/50 hover:bg-saffron-soft/25'
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <span className="font-semibold text-ink">{tx(option.title)}</span>
+                                                    {selected ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            {tx('Active')}
+                                                        </span>
+                                                    ) : updateProductExperienceMutation.isPending ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                                    ) : null}
+                                                </div>
+                                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx(option.description)}</p>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
+                                    {tx('Existing production and factory records are never deleted. Switch back to Full Suite at any time to use them again.')}
+                                </p>
+                            </SettingsPanel>
+                        </SettingsSection>
+                    )}
                 </div>
             </div>
         )

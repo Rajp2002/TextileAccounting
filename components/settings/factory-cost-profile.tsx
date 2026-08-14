@@ -14,13 +14,21 @@ import { cn } from '@/lib/utils'
 import { userFacingError } from '@/lib/app-notifications'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { nanoid } from 'nanoid'
-import { FACTORY_COST_PRESETS, getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
+import {
+    FACTORY_COST_PRESETS,
+    getMatchingFactoryProfileId,
+    hasMeaningfulFactoryCostBaseline,
+    type FactoryProfileId,
+} from '@/lib/factory-cost-profiles'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { useTranslation } from '@/lib/i18n/context'
+import { validateFactoryCostProfile, type EstimatorValidationIssue } from '@/lib/estimator-validation'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
 
 function RateInput({
+    id,
+    field,
     label,
     value,
     onChange,
@@ -29,6 +37,8 @@ function RateInput({
     step = 0.5,
     icon: Icon,
 }: {
+    id?:       string
+    field?:    string
     label:    string
     value:    number
     onChange: (v: number) => void
@@ -38,17 +48,19 @@ function RateInput({
     icon?:    React.ElementType
 }) {
     const inputId = useId()
+    const resolvedInputId = id ?? inputId
     const { tx } = useTranslation()
 
     return (
         <div className="space-y-1.5">
-            <Label htmlFor={inputId} className="flex items-center gap-1.5 text-xs font-semibold text-body">
+            <Label htmlFor={resolvedInputId} className="flex items-center gap-1.5 text-xs font-semibold text-body">
                 {Icon && <Icon className="h-3.5 w-3.5 text-subtle" />}
                 {tx(label)}
             </Label>
             <div className="relative">
                 <Input
-                    id={inputId}
+                    id={resolvedInputId}
+                    data-factory-field={field}
                     type="number"
                     step={step}
                     min={0}
@@ -67,40 +79,88 @@ function RateInput({
     )
 }
 
-// ─── SectionToggle helper ─────────────────────────────────────────────────────
-
-function SectionToggle({
-    label,
+function OptionalAssumptionDisclosure({
+    title,
+    summary,
     description,
-    checked,
-    onChange,
+    enabled,
+    open,
+    onOpenChange,
+    onEnabledChange,
+    children,
 }: {
-    label:       string
+    title: string
+    summary: string
     description: string
-    checked:     boolean
-    onChange:    (v: boolean) => void
+    enabled: boolean
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onEnabledChange: (enabled: boolean) => void
+    children?: React.ReactNode
 }) {
-    const switchId = useId()
-    const descriptionId = `${switchId}-description`
     const { tx } = useTranslation()
+    const switchId = useId()
 
     return (
-        <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-lg border border-hairline bg-canvas/55 px-4 py-3">
-            <div className="min-w-0">
-                <Label htmlFor={switchId} className="text-sm font-semibold text-ink">{tx(label)}</Label>
-                <p id={descriptionId} className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{tx(description)}</p>
-            </div>
-            <Switch
-                id={switchId}
-                aria-describedby={descriptionId}
-                checked={checked}
-                onCheckedChange={onChange}
-            />
-        </div>
+        <details
+            open={open}
+            onToggle={event => onOpenChange(event.currentTarget.open)}
+            className="premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-surface/95"
+        >
+            <summary
+                className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden"
+                onClick={event => {
+                    // The switch is an interactive child of summary. Let
+                    // Radix handle the switch click without also toggling the
+                    // native details element.
+                    if (event.target instanceof Element && event.target.closest('[data-slot="switch"]')) {
+                        event.preventDefault()
+                    }
+                }}
+            >
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-ink">{tx(title)}</span>
+                        <span className={cn(
+                            'rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                            enabled ? 'bg-success-soft text-success' : 'bg-canvas text-muted-foreground',
+                        )}>
+                            {enabled ? tx('Enabled') : tx('Off')}
+                        </span>
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{tx(enabled ? summary : description)}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                    <Switch
+                        id={switchId}
+                        checked={enabled}
+                        aria-label={`${tx(title)} ${tx('enabled')}`}
+                        onCheckedChange={onEnabledChange}
+                    />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+                </div>
+            </summary>
+            {enabled && (
+                <div className="premium-disclosure-content space-y-4 border-t border-hairline/70 px-4 pb-4 pt-4">
+                    {children}
+                </div>
+            )}
+        </details>
     )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+
+type OptionalSectionKey = 'winding' | 'processing' | 'finishing' | 'commission' | 'transport' | 'review'
+
+const DEFAULT_OPTIONAL_OPEN: Record<OptionalSectionKey, boolean> = {
+    winding: false,
+    processing: false,
+    finishing: false,
+    commission: false,
+    transport: false,
+    review: false,
+}
 
 export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
     const { tx } = useTranslation()
@@ -110,10 +170,12 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
     const [presetToReplace, setPresetToReplace] = useState<(typeof FACTORY_COST_PRESETS)[number] | null>(null)
     const [dirty, setDirty] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+    const [hasMeaningfulBaseline, setHasMeaningfulBaseline] = useState(false)
     const [coreOpen, setCoreOpen] = useState(true)
-    const [advancedOpen, setAdvancedOpen] = useState(false)
     const [capacityOpen, setCapacityOpen] = useState(true)
+    const [optionalOpen, setOptionalOpen] = useState<Record<OptionalSectionKey, boolean>>(DEFAULT_OPTIONAL_OPEN)
 
     const [rates, setRates] = useState({
         warping_rate_per_kg:     2.00,
@@ -156,11 +218,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
 
             const d = res.data
             setLastSavedAt(d.updated_at ?? null)
+            const meaningfulBaseline = hasMeaningfulFactoryCostBaseline(d)
+            setHasMeaningfulBaseline(meaningfulBaseline)
             // Returning owners usually visit Settings to confirm one value, not
-            // to reread the entire setup. Keep a saved profile compact while
-            // leaving the first-run setup open.
-            setCoreOpen(d.is_configured !== true)
-            setCapacityOpen(Number(d.loom_count ?? 0) <= 0)
+            // to reread the entire setup. Keep a meaningful saved profile
+            // compact while leaving first-run setup open. This intentionally
+            // uses the shared baseline logic rather than only is_configured so
+            // older valid profiles remain returning-owner profiles.
+            setCoreOpen(!meaningfulBaseline)
             setRates({
                 warping_rate_per_kg:     Number(d.warping_rate_per_kg    ?? 2.00),
                 sizing_rate_per_kg:      Number(d.sizing_rate_per_kg     ?? 1.50),
@@ -177,6 +242,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 ? 'direct'
                 : 'monthly_expenses'
             setOverheadMode(loadedMode)
+            setCapacityOpen(
+                loadedMode === 'monthly_expenses'
+                && (
+                    Number(d.loom_count ?? 0) <= 0
+                    || Number(d.monthly_working_days ?? 0) <= 0
+                    || Number(d.avg_output_per_loom_per_day ?? 0) <= 0
+                ),
+            )
             setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
             setOverheadItems(ensureOverheadIntegrity(
                 Array.isArray(d.overhead_items) && d.overhead_items.length > 0
@@ -195,6 +268,16 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 ...(d.enabled_sections as Partial<FactorySections> | null | undefined),
             }
             setSections(loadedSections)
+            setOptionalOpen({
+                winding: loadedSections.winding && Number(d.winding_rate_per_kg ?? 0) <= 0,
+                processing: loadedSections.processing && Number(d.default_processing_rate_per_m ?? 0) <= 0,
+                finishing: loadedSections.finishing && Number(d.default_finishing_rate_per_m ?? 0) <= 0,
+                commission: loadedSections.commission && Number(d.default_commission_pct ?? 0) <= 0,
+                transport: loadedSections.transport && Number(d.default_transport_per_m ?? 0) <= 0,
+                review: Number(d.yarn_review_interval_days ?? 90) < 1
+                    || Number(d.yarn_review_interval_days ?? 90) > 1095
+                    || !Number.isInteger(Number(d.yarn_review_interval_days ?? 90)),
+            })
             const persistedProfile = d.factory_profile_key as FactoryProfileId | undefined
             setActivePreset(
                 persistedProfile && persistedProfile !== 'unselected'
@@ -212,10 +295,15 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         void loadProfile()
     }, [loadProfile])
 
+    const markDirty = () => {
+        setDirty(true)
+        setSaveError(null)
+    }
+
     const applyPresetImmediately = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
         setActivePreset(preset.id)
         setSections({ ...preset.sections })
-        setDirty(true)
+        markDirty()
     }
 
     const applyPreset = (preset: (typeof FACTORY_COST_PRESETS)[number]) => {
@@ -226,69 +314,184 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         applyPresetImmediately(preset)
     }
 
+    const buildSavePayload = () => ({
+        ...rates,
+        overhead_mode: overheadMode,
+        factory_profile_key: activePreset === 'custom'
+            ? 'custom' as const
+            : getMatchingFactoryProfileId(sections) ?? activePreset ?? 'custom' as const,
+        enabled_sections: sections,
+        overhead_items: overheadItems,
+        monthly_output_m: monthlyOutputM,
+        overhead_override_per_m: overheadMode === 'direct' ? directOverheadPerM : null,
+        loom_count: loomCount,
+        monthly_working_days: monthlyWorkingDays,
+        avg_output_per_loom_per_day: avgOutputPerLoomPerDay,
+        // Disabled assumptions are intentionally neutral in the save payload.
+        // Their draft values remain available if the owner enables them again
+        // before saving, but an inactive option cannot block this save.
+        winding_rate_per_kg: sections.winding ? rates.winding_rate_per_kg : 0,
+        default_processing_rate_per_m: sections.processing ? rates.default_processing_rate_per_m : 0,
+        default_finishing_rate_per_m: sections.finishing ? rates.default_finishing_rate_per_m : 0,
+        default_commission_pct: sections.commission ? rates.default_commission_pct : 0,
+        default_transport_per_m: sections.transport ? rates.default_transport_per_m : 0,
+    })
+
+    const getSaveValidation = () => {
+        const payload = buildSavePayload()
+        const capacityIssues: EstimatorValidationIssue[] = overheadMode === 'monthly_expenses'
+            ? [
+                loomCount <= 0 ? { field: 'loom_count', message: 'Enter at least one loom before saving the monthly factory baseline.' } : null,
+                monthlyWorkingDays <= 0 ? { field: 'monthly_working_days', message: 'Enter positive working days before saving the monthly factory baseline.' } : null,
+                avgOutputPerLoomPerDay <= 0 ? { field: 'avg_output_per_loom_per_day', message: 'Enter positive daily output per loom before saving the monthly factory baseline.' } : null,
+            ].filter((issue): issue is EstimatorValidationIssue => issue !== null)
+            : []
+        const expenseIssues: EstimatorValidationIssue[] = overheadMode === 'monthly_expenses'
+            && overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0) <= 0
+            ? [{ field: 'overhead_items', message: 'Enter at least one monthly factory expense before saving these defaults.' }]
+            : []
+        const validation = validateFactoryCostProfile(payload)
+        const validationIssues = validation.valid ? [] : validation.issues
+        return {
+            payload,
+            validation,
+            issues: [...capacityIssues, ...validationIssues, ...expenseIssues],
+        }
+    }
+
+    const disclosureForField = (field: string) => {
+        if (field === 'loom_count' || field === 'monthly_working_days' || field === 'avg_output_per_loom_per_day') return 'capacity' as const
+        if (field === 'winding_rate_per_kg') return 'winding' as const
+        if (field === 'default_processing_rate_per_m') return 'processing' as const
+        if (field === 'default_finishing_rate_per_m') return 'finishing' as const
+        if (field === 'default_commission_pct') return 'commission' as const
+        if (field === 'default_transport_per_m') return 'transport' as const
+        if (field === 'yarn_review_interval_days') return 'review' as const
+        return 'core' as const
+    }
+
+    const fieldElementId = (field: string) => {
+        if (field.startsWith('overhead_items.')) {
+            const index = Number(field.split('.')[1])
+            const item = Number.isInteger(index) ? overheadItems[index] : undefined
+            return item ? `factory-overhead-${item.id}-monthly-amount` : 'factory-monthly-output'
+        }
+        const ids: Record<string, string> = {
+            warping_rate_per_kg: 'factory-warping-rate',
+            sizing_rate_per_kg: 'factory-sizing-rate',
+            winding_rate_per_kg: 'factory-winding-rate',
+            default_processing_rate_per_m: 'factory-processing-rate',
+            default_finishing_rate_per_m: 'factory-finishing-rate',
+            default_commission_pct: 'factory-commission-rate',
+            default_transport_per_m: 'factory-transport-rate',
+            default_margin_pct: 'factory-target-margin',
+            yarn_review_interval_days: 'factory-yarn-review-period',
+            overhead_override_per_m: 'factory-direct-overhead',
+            monthly_output_m: 'factory-monthly-output',
+            overhead_items: overheadItems[0] ? `factory-overhead-${overheadItems[0].id}-monthly-amount` : 'factory-monthly-output',
+            loom_count: 'factory-loom-count',
+            monthly_working_days: 'factory-working-days',
+            avg_output_per_loom_per_day: 'factory-output-per-loom',
+        }
+        return ids[field]
+    }
+
+    const openDisclosureForField = (field: string) => {
+        const disclosure = disclosureForField(field)
+        if (disclosure === 'core' || disclosure === 'capacity') setCoreOpen(true)
+        if (disclosure === 'capacity') setCapacityOpen(true)
+        if (disclosure !== 'core' && disclosure !== 'capacity') {
+            setOptionalOpen(current => ({ ...current, [disclosure]: true }))
+        }
+    }
+
+    const focusInvalidField = (field: string) => {
+        const id = fieldElementId(field)
+        if (!id || typeof window === 'undefined') return
+        window.setTimeout(() => {
+            const element = document.getElementById(id)
+            if (!(element instanceof HTMLElement)) return
+            element.focus()
+            element.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        }, 0)
+    }
+
+    const inferServerValidationField = (message: string) => {
+        const normalized = message.toLowerCase()
+        if (normalized.includes('loom')) return 'loom_count'
+        if (normalized.includes('working days')) return 'monthly_working_days'
+        if (normalized.includes('daily output') || normalized.includes('per loom')) return 'avg_output_per_loom_per_day'
+        if (normalized.includes('monthly output')) return 'monthly_output_m'
+        if (normalized.includes('monthly factory expense')) return 'overhead_items'
+        if (normalized.includes('direct overhead')) return 'overhead_override_per_m'
+        if (normalized.includes('winding')) return 'winding_rate_per_kg'
+        if (normalized.includes('processing')) return 'default_processing_rate_per_m'
+        if (normalized.includes('finishing')) return 'default_finishing_rate_per_m'
+        if (normalized.includes('commission')) return 'default_commission_pct'
+        if (normalized.includes('transport')) return 'default_transport_per_m'
+        if (normalized.includes('review')) return 'yarn_review_interval_days'
+        return null
+    }
+
+    const handleSaveFailure = (message: string, field?: string | null) => {
+        setSaveError(message)
+        setDirty(true)
+        if (field) {
+            openDisclosureForField(field)
+            focusInvalidField(field)
+        }
+        toast.error(message)
+    }
+
     const handleSave = async () => {
-        if (overheadMode === 'direct' && directOverheadPerM <= 0) {
-            toast.error('Enter a direct overhead rate greater than ₹0/m.')
+        const { payload, validation, issues } = getSaveValidation()
+        const firstIssue = issues[0]
+        if (firstIssue) {
+            handleSaveFailure(firstIssue.message, firstIssue.field)
             return
         }
-        if (overheadMode === 'monthly_expenses' && monthlyOutputM <= 0) {
-            toast.error('Enter the actual monthly output used to divide expenses.')
-            return
-        }
-        if (overheadMode === 'monthly_expenses' && overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0) <= 0) {
-            toast.error('Enter at least one monthly factory expense before saving these defaults.')
-            return
-        }
+        if (validation.warnings?.[0]) openDisclosureForField(validation.warnings[0].field)
+
+        setSaveError(null)
         setSaving(true)
         try {
-            const res = await upsertFactoryCostProfile({
-                ...rates,
-                overhead_mode: overheadMode,
-            factory_profile_key: activePreset === 'custom'
-                ? 'custom'
-                : getMatchingFactoryProfileId(sections) ?? activePreset ?? 'custom',
-                enabled_sections: sections,
-                overhead_items: overheadItems,
-                monthly_output_m: monthlyOutputM,
-                overhead_override_per_m: overheadMode === 'direct' ? directOverheadPerM : null,
-                loom_count: loomCount,
-                monthly_working_days: monthlyWorkingDays,
-                avg_output_per_loom_per_day: avgOutputPerLoomPerDay,
-                expectedUpdatedAt: lastSavedAt ?? undefined,
-            })
+            const res = await upsertFactoryCostProfile({ ...payload, expectedUpdatedAt: lastSavedAt ?? undefined })
             if (res.success) {
                 setLastSavedAt(res.updatedAt ?? lastSavedAt)
                 setDirty(false)
-                toast.success('Saved for new Cost Estimates')
+                setHasMeaningfulBaseline(true)
+                toast.success('Saved for new cost estimates')
             } else {
-                toast.error(userFacingError(res.error, 'Factory costing defaults could not be saved. Try again.'))
+                const message = userFacingError(res.error, 'Factory costing defaults could not be saved. Try again.')
+                handleSaveFailure(message, inferServerValidationField(message))
             }
-        } catch {
-            toast.error('The defaults could not be saved. Your changes are still here — try again.')
+        } catch (error) {
+            handleSaveFailure(userFacingError(error, 'The defaults could not be saved. Your changes are still here — try again.'))
         } finally {
             setSaving(false)
         }
     }
 
     const updateRate = (field: keyof typeof rates) => (v: number) => {
-        setDirty(true)
+        markDirty()
         setRates(prev => ({ ...prev, [field]: v }))
     }
 
     const updateSection = (field: keyof FactorySections) => (v: boolean) => {
-        setDirty(true)
+        markDirty()
         const next = { ...sections, [field]: v }
         setSections(next)
         setActivePreset(current => current === 'custom' ? 'custom' : getMatchingFactoryProfileId(next) ?? 'custom')
+        if (v) setOptionalOpen(current => ({ ...current, [field]: true }))
     }
 
     const updateOverheadItem = (id: string, field: 'label' | 'monthlyAmount', value: string | number) => {
-        setDirty(true)
+        markDirty()
         setOverheadItems(items => items.map(item => item.id === id ? { ...item, [field]: value } : item))
     }
 
     const addOverheadItem = () => {
-        setDirty(true)
+        markDirty()
         setOverheadItems(items => [...items, {
             id: nanoid(),
             label: 'New monthly expense',
@@ -307,6 +510,19 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const overheadSummary = overheadMode === 'direct'
         ? `Direct factory cost · ₹${directOverheadPerM.toFixed(2)}/m`
         : `Monthly expenses ÷ output · ${monthlyOutputM.toLocaleString('en-IN')} m/mo`
+    const outputBasisSummary = overheadMode === 'monthly_expenses'
+        ? `${monthlyOutputM.toLocaleString('en-IN')} m/mo`
+        : 'Not used with direct overhead'
+    const expenseBasisSummary = overheadMode === 'monthly_expenses'
+        ? `₹${monthlyExpenseTotal.toLocaleString('en-IN')}/mo`
+        : 'Direct ₹/m rate'
+    const activeOptionalSummary = [
+        sections.winding ? `Winding ₹${rates.winding_rate_per_kg.toFixed(2)}/kg` : null,
+        sections.processing ? `Processing ₹${rates.default_processing_rate_per_m.toFixed(2)}/m` : null,
+        sections.finishing ? `Finishing ₹${rates.default_finishing_rate_per_m.toFixed(2)}/m` : null,
+        sections.commission ? `Commission ${rates.default_commission_pct.toFixed(2)}%` : null,
+        sections.transport ? `Transport ₹${rates.default_transport_per_m.toFixed(2)}/m` : null,
+    ].filter((value): value is string => Boolean(value))
 
     if (loading) {
         return (
@@ -347,9 +563,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     <CardTitle className="text-base">{tx(standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile')}</CardTitle>
                 </div>
                 <CardDescription>
-                    {tx(standaloneEstimator
-                        ? 'Defaults that pre-fill new Cost Estimates. Your current estimate stays separate.'
-                        : 'Defaults for new estimates only. Existing saved costings keep the numbers captured when they were saved.')}
+                    {tx('Set the defaults used when you create a new cost estimate. Changing these defaults does not update saved costings or previous versions. Existing saved costings keep the numbers captured when they were saved.')}
                 </CardDescription>
             </CardHeader>
 
@@ -399,8 +613,27 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <h3 className="text-sm font-semibold text-ink">Core costing defaults</h3>
                             </div>
                             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">The few inputs that make a new estimate trustworthy: yarn preparation, factory expenses, and target margin.</p>
+                            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-hairline/60 pt-3 text-left sm:grid-cols-4">
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Output basis</p>
+                                    <p className="mt-0.5 truncate text-xs font-semibold text-ink">{outputBasisSummary}</p>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Expense basis</p>
+                                    <p className="mt-0.5 truncate text-xs font-semibold text-ink">{expenseBasisSummary}</p>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Overhead</p>
+                                    <p className="mt-0.5 truncate text-xs font-semibold text-ink">{overheadMode === 'direct' ? `₹${directOverheadPerM.toFixed(2)}/m` : 'Monthly expenses'}</p>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Target margin</p>
+                                    <p className="mt-0.5 truncate text-xs font-semibold text-ink">{rates.default_margin_pct.toFixed(2)}%</p>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-2 text-right">
+                            <span className="text-xs font-semibold text-saffron-deep">{hasMeaningfulBaseline ? 'Edit defaults' : 'Set up defaults'}</span>
                             <span className="hidden text-xs font-medium text-muted-foreground sm:inline">{overheadSummary}</span>
                             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
                         </div>
@@ -416,6 +649,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             <p className="text-xs text-muted-foreground">Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.</p>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                 <RateInput
+                                    id="factory-warping-rate"
+                                    field="warping_rate_per_kg"
                                     label="Warping Rate"
                                     value={rates.warping_rate_per_kg}
                                     onChange={updateRate('warping_rate_per_kg')}
@@ -424,23 +659,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                     icon={Zap}
                                 />
                                 <RateInput
+                                    id="factory-sizing-rate"
+                                    field="sizing_rate_per_kg"
                                     label="Sizing Rate"
                                     value={rates.sizing_rate_per_kg}
                                     onChange={updateRate('sizing_rate_per_kg')}
                                     unit="₹/kg"
                                     step={0.25}
                                 />
-                                {sections.winding && (
-                                    <RateInput
-                                        label="Winding Rate"
-                                        value={rates.winding_rate_per_kg}
-                                        onChange={updateRate('winding_rate_per_kg')}
-                                        unit="₹/kg"
-                                        step={0.25}
-                                        hint="Applies to total yarn (warp + weft)"
-                                        icon={Wind}
-                                    />
-                                )}
                             </div>
                         </div>
 
@@ -458,7 +684,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <button
                                     type="button"
                                     aria-pressed={overheadMode === 'direct'}
-                                    onClick={() => { setDirty(true); setOverheadMode('direct') }}
+                                    onClick={() => { markDirty(); setOverheadMode('direct') }}
                                     className={cn(
                                         'rounded-lg border px-4 py-3 text-left transition-colors',
                                         overheadMode === 'direct'
@@ -472,7 +698,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <button
                                     type="button"
                                     aria-pressed={overheadMode === 'monthly_expenses'}
-                                    onClick={() => { setDirty(true); setOverheadMode('monthly_expenses') }}
+                                    onClick={() => { markDirty(); setOverheadMode('monthly_expenses') }}
                                     className={cn(
                                         'rounded-lg border px-4 py-3 text-left transition-colors',
                                         overheadMode === 'monthly_expenses'
@@ -493,9 +719,11 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             {overheadMode === 'direct' ? (
                                 <div className="rounded-lg border border-saffron/30 bg-saffron-soft/30 p-4">
                                     <RateInput
+                                        id="factory-direct-overhead"
+                                        field="overhead_override_per_m"
                                         label="Direct factory cost per metre"
                                         value={directOverheadPerM}
-                                        onChange={value => { setDirty(true); setDirectOverheadPerM(value) }}
+                                        onChange={value => { markDirty(); setDirectOverheadPerM(value) }}
                                         unit="₹/m"
                                         step={0.1}
                                         hint="Required when direct factory cost per metre is selected."
@@ -505,9 +733,11 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             ) : (
                                 <div className="space-y-4 rounded-lg border border-hairline bg-canvas/45 p-4">
                                     <RateInput
+                                        id="factory-monthly-output"
+                                        field="monthly_output_m"
                                         label="Actual monthly output"
                                         value={monthlyOutputM}
-                                        onChange={value => { setDirty(true); setMonthlyOutputM(value) }}
+                                        onChange={value => { markDirty(); setMonthlyOutputM(value) }}
                                         unit="m/mo"
                                         step={100}
                                         hint="Used to divide monthly expenses."
@@ -538,6 +768,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                                     <div className="relative">
                                                         <Input
                                                             aria-label={`${item.label} monthly amount`}
+                                                            id={`factory-overhead-${item.id}-monthly-amount`}
+                                                            data-factory-field={`overhead_items.${overheadItems.indexOf(item)}.monthlyAmount`}
                                                             type="number"
                                                             min={0}
                                                             step={100}
@@ -552,7 +784,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                                         <button
                                                             type="button"
                                                             aria-label={`${tx('Remove')} ${item.label}`}
-                                                            onClick={() => { setDirty(true); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
+                                                            onClick={() => { markDirty(); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
                                                             className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
@@ -572,23 +804,29 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                         </summary>
                                         <div className="premium-disclosure-content mt-3 grid grid-cols-1 gap-4 border-t border-hairline/70 pt-3 sm:grid-cols-3">
                                             <RateInput
+                                                id="factory-loom-count"
+                                                field="loom_count"
                                                 label="Active looms"
                                                 value={loomCount}
-                                                onChange={value => { setDirty(true); setLoomCount(value) }}
+                                                onChange={value => { markDirty(); setLoomCount(value) }}
                                                 unit="looms"
                                                 step={1}
                                             />
                                             <RateInput
+                                                id="factory-working-days"
+                                                field="monthly_working_days"
                                                 label="Working days"
                                                 value={monthlyWorkingDays}
-                                                onChange={value => { setDirty(true); setMonthlyWorkingDays(value) }}
+                                                onChange={value => { markDirty(); setMonthlyWorkingDays(value) }}
                                                 unit="days/mo"
                                                 step={1}
                                             />
                                             <RateInput
+                                                id="factory-output-per-loom"
+                                                field="avg_output_per_loom_per_day"
                                                 label="Average output per loom"
                                                 value={avgOutputPerLoomPerDay}
-                                                onChange={value => { setDirty(true); setAvgOutputPerLoomPerDay(value) }}
+                                                onChange={value => { markDirty(); setAvgOutputPerLoomPerDay(value) }}
                                                 unit="m/day"
                                                 step={1}
                                                 hint="Reference for capacity warnings; actual monthly output above is used for costing."
@@ -607,6 +845,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             </div>
                             <div className="max-w-xs">
                                 <RateInput
+                                    id="factory-target-margin"
+                                    field="default_margin_pct"
                                     label="Target Margin"
                                     value={rates.default_margin_pct}
                                     onChange={updateRate('default_margin_pct')}
@@ -620,165 +860,170 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     </div>
                 </details>
 
+                <div className="space-y-2 rounded-lg border border-hairline bg-canvas/35 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-sm font-semibold text-ink">Optional costing assumptions</p>
+                            <p className="text-xs leading-relaxed text-muted-foreground">Enable only the charges your factory uses. Each assumption opens its own focused disclosure.</p>
+                        </div>
+                        <span className="shrink-0 text-xs font-semibold text-muted-foreground">{enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}</span>
+                    </div>
+                    {activeOptionalSummary.length > 0 && (
+                        <p className="text-xs leading-relaxed text-body">Active: {activeOptionalSummary.join(' · ')}</p>
+                    )}
+                </div>
+
+                <OptionalAssumptionDisclosure
+                    title="Winding"
+                    summary={`₹${rates.winding_rate_per_kg.toFixed(2)}/kg · applies to total yarn`}
+                    description="Yarn arrives on hanks and needs rewinding onto cones before warping."
+                    enabled={sections.winding}
+                    open={optionalOpen.winding}
+                    onOpenChange={open => setOptionalOpen(current => ({ ...current, winding: open }))}
+                    onEnabledChange={updateSection('winding')}
+                >
+                    <RateInput
+                        id="factory-winding-rate"
+                        field="winding_rate_per_kg"
+                        label="Winding Rate"
+                        value={rates.winding_rate_per_kg}
+                        onChange={updateRate('winding_rate_per_kg')}
+                        unit="₹/kg"
+                        step={0.25}
+                        hint="Applies to total yarn (warp + weft)."
+                        icon={Wind}
+                    />
+                </OptionalAssumptionDisclosure>
+
+                <OptionalAssumptionDisclosure
+                    title="Processing / Dyeing"
+                    summary={`₹${rates.default_processing_rate_per_m.toFixed(2)}/m`}
+                    description="Fabric is sent for dyeing or printing after weaving."
+                    enabled={sections.processing}
+                    open={optionalOpen.processing}
+                    onOpenChange={open => setOptionalOpen(current => ({ ...current, processing: open }))}
+                    onEnabledChange={updateSection('processing')}
+                >
+                    <RateInput
+                        id="factory-processing-rate"
+                        field="default_processing_rate_per_m"
+                        label="Processing / Dyeing"
+                        value={rates.default_processing_rate_per_m}
+                        onChange={updateRate('default_processing_rate_per_m')}
+                        unit="₹/m"
+                        step={0.1}
+                    />
+                </OptionalAssumptionDisclosure>
+
+                <OptionalAssumptionDisclosure
+                    title="Finishing"
+                    summary={`₹${rates.default_finishing_rate_per_m.toFixed(2)}/m`}
+                    description="Calendering, heat-setting, or other post-processing."
+                    enabled={sections.finishing}
+                    open={optionalOpen.finishing}
+                    onOpenChange={open => setOptionalOpen(current => ({ ...current, finishing: open }))}
+                    onEnabledChange={updateSection('finishing')}
+                >
+                    <RateInput
+                        id="factory-finishing-rate"
+                        field="default_finishing_rate_per_m"
+                        label="Finishing"
+                        value={rates.default_finishing_rate_per_m}
+                        onChange={updateRate('default_finishing_rate_per_m')}
+                        unit="₹/m"
+                        step={0.1}
+                    />
+                </OptionalAssumptionDisclosure>
+
+                <OptionalAssumptionDisclosure
+                    title="Broker commission"
+                    summary={`${rates.default_commission_pct.toFixed(2)}%`}
+                    description={standaloneEstimator ? 'Broker or agent commission included in the final price.' : 'Broker or agent commission included in the buyer quote.'}
+                    enabled={sections.commission}
+                    open={optionalOpen.commission}
+                    onOpenChange={open => setOptionalOpen(current => ({ ...current, commission: open }))}
+                    onEnabledChange={updateSection('commission')}
+                >
+                    <RateInput
+                        id="factory-commission-rate"
+                        field="default_commission_pct"
+                        label="Broker commission"
+                        value={rates.default_commission_pct}
+                        onChange={updateRate('default_commission_pct')}
+                        unit="%"
+                        step={0.5}
+                        hint="Broker/agent commission %."
+                        icon={Users2}
+                    />
+                </OptionalAssumptionDisclosure>
+
+                <OptionalAssumptionDisclosure
+                    title="Transport charge"
+                    summary={`₹${rates.default_transport_per_m.toFixed(2)}/m`}
+                    description={standaloneEstimator ? 'Include delivery cost in the costing when transport applies.' : 'Factory delivers fabric directly rather than buyer collecting.'}
+                    enabled={sections.transport}
+                    open={optionalOpen.transport}
+                    onOpenChange={open => setOptionalOpen(current => ({ ...current, transport: open }))}
+                    onEnabledChange={updateSection('transport')}
+                >
+                    <RateInput
+                        id="factory-transport-rate"
+                        field="default_transport_per_m"
+                        label="Transport charge"
+                        value={rates.default_transport_per_m}
+                        onChange={updateRate('default_transport_per_m')}
+                        unit="₹/m"
+                        step={0.1}
+                        hint="Delivery cost per metre."
+                        icon={Truck}
+                    />
+                </OptionalAssumptionDisclosure>
+
                 <details
-                    open={advancedOpen}
-                    onToggle={event => setAdvancedOpen(event.currentTarget.open)}
+                    open={optionalOpen.review}
+                    onToggle={event => setOptionalOpen(current => ({ ...current, review: event.currentTarget.open }))}
                     className="premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-surface/95"
                 >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
                         <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="h-4 w-4 text-saffron" />
-                                <h3 className="text-sm font-semibold text-ink">Optional charges and reminders</h3>
-                            </div>
-                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Only open this when your unit uses winding, processing, finishing, commission, transport, or custom rate reminders.</p>
+                            <span className="text-sm font-semibold text-ink">Review cadence</span>
+                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Review yarn rates every {rates.yarn_review_interval_days} days.</p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2 text-right">
-                            <span className="hidden text-xs font-medium text-muted-foreground sm:inline">{enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}</span>
-                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
-                        </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
                     </summary>
-
-                    <div className="premium-disclosure-content space-y-6 border-t border-hairline/70 px-4 pb-5 pt-5 sm:px-5">
-                        {/* ── Post-Weaving Defaults ── */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                                <Sparkles className="h-4 w-4 text-saffron" />
-                                <Label className="text-sm font-semibold text-body">Post-Weaving Rates</Label>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {sections.processing && (
-                                    <RateInput
-                                        label="Processing / Dyeing"
-                                        value={rates.default_processing_rate_per_m}
-                                        onChange={updateRate('default_processing_rate_per_m')}
-                                        unit="₹/m"
-                                        step={0.1}
-                                    />
-                                )}
-                                {sections.finishing && (
-                                    <RateInput
-                                        label="Finishing"
-                                        value={rates.default_finishing_rate_per_m}
-                                        onChange={updateRate('default_finishing_rate_per_m')}
-                                        unit="₹/m"
-                                        step={0.1}
-                                    />
-                                )}
-                                {!sections.processing && !sections.finishing && (
-                                    <p className="text-xs italic text-muted-foreground">Enable processing or finishing below to configure its default rate.</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* ── Selling Defaults ── */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                                <TrendingUp className="h-4 w-4 text-success" />
-                                <Label className="text-sm font-semibold text-body">Selling Defaults</Label>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {sections.commission && (
-                                    <RateInput
-                                        label="Broker commission"
-                                        value={rates.default_commission_pct}
-                                        onChange={updateRate('default_commission_pct')}
-                                        unit="%"
-                                        step={0.5}
-                                        hint="Broker/agent commission %"
-                                        icon={Users2}
-                                    />
-                                )}
-                                {sections.transport && (
-                                    <RateInput
-                                        label="Transport charge"
-                                        value={rates.default_transport_per_m}
-                                        onChange={updateRate('default_transport_per_m')}
-                                        unit="₹/m"
-                                        step={0.1}
-                                        hint="Delivery cost per metre"
-                                        icon={Truck}
-                                    />
-                                )}
-                                {!sections.commission && !sections.transport && (
-                                    <p className="col-span-2 text-xs italic text-muted-foreground">
-                                        Enable commission or transport below to configure these selling defaults.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* ── Yarn Rate Reviews ── */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
-                                <Sparkles className="h-4 w-4 text-saffron" />
-                                <Label className="text-sm font-semibold text-body">Yarn Rate Reviews</Label>
-                            </div>
-                            <div className="max-w-md space-y-1.5">
-                                <Label htmlFor="yarn-review-period" className="text-xs font-semibold text-body">Review yarn rates every</Label>
-                                <select
-                                    id="yarn-review-period"
-                                    value={rates.yarn_review_interval_days}
-                                    onChange={event => updateRate('yarn_review_interval_days')(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
-                                    className="h-10 w-full rounded-md border border-hairline bg-canvas/80 px-3 text-sm font-medium text-ink"
-                                >
-                                    <option value={30}>30 days</option>
-                                    <option value={60}>60 days</option>
-                                    <option value={90}>3 months</option>
-                                    <option value={180}>6 months</option>
-                                    <option value={365}>12 months</option>
-                                </select>
-                                <p className="text-[11px] text-muted-foreground">This cadence applies to all active yarns. The Yarn Rate Book will flag rates as they approach review.</p>
-                            </div>
-                        </div>
-
-                        {/* ── Optional Section Toggles ── */}
-                        <div className="space-y-3">
-                            <div className="mb-2 border-b border-hairline/70 pb-2">
-                                <Label className="text-sm font-semibold text-body">Optional Cost Sections</Label>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                {standaloneEstimator ? 'Enabled sections appear in every new costing. Disabled sections stay out of the form.' : 'Enabled sections appear in the estimator for every new quote. Disabled sections are hidden, keeping the form clean for factories that do not use them.'}
-                            </p>
-                            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-                                <SectionToggle
-                                    label="Winding"
-                                    description="Yarn arrives on hanks and needs rewinding onto cones before warping."
-                                    checked={sections.winding}
-                                    onChange={updateSection('winding')}
-                                />
-                                <SectionToggle
-                                    label="Processing / Dyeing"
-                                    description="Fabric is sent for dyeing or printing after weaving."
-                                    checked={sections.processing}
-                                    onChange={updateSection('processing')}
-                                />
-                                <SectionToggle
-                                    label="Finishing"
-                                    description="Calendering, heat-setting, or other post-processing."
-                                    checked={sections.finishing}
-                                    onChange={updateSection('finishing')}
-                                />
-                                <SectionToggle
-                                    label="Broker commission"
-                                    description={standaloneEstimator ? 'Broker or agent commission included in the final price.' : 'Broker or agent commission included in the buyer quote.'}
-                                    checked={sections.commission}
-                                    onChange={updateSection('commission')}
-                                />
-                                <SectionToggle
-                                    label="Transport charge"
-                                    description={standaloneEstimator ? 'Include delivery cost in the costing when transport applies.' : 'Factory delivers fabric directly rather than buyer collecting.'}
-                                    checked={sections.transport}
-                                    onChange={updateSection('transport')}
-                                />
-                            </div>
+                    <div className="premium-disclosure-content border-t border-hairline/70 px-4 pb-4 pt-4">
+                        <div className="max-w-md space-y-1.5">
+                            <Label htmlFor="factory-yarn-review-period" className="text-xs font-semibold text-body">Review yarn rates every</Label>
+                            <select
+                                id="factory-yarn-review-period"
+                                data-factory-field="yarn_review_interval_days"
+                                value={rates.yarn_review_interval_days}
+                                onChange={event => updateRate('yarn_review_interval_days')(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
+                                className="h-10 w-full rounded-md border border-hairline bg-canvas/80 px-3 text-sm font-medium text-ink"
+                            >
+                                <option value={30}>30 days</option>
+                                <option value={60}>60 days</option>
+                                <option value={90}>3 months</option>
+                                <option value={180}>6 months</option>
+                                <option value={365}>12 months</option>
+                            </select>
+                            <p className="text-[11px] text-muted-foreground">This cadence applies to all active yarns. The Yarn Rate Book will flag rates as they approach review.</p>
                         </div>
                     </div>
                 </details>
 
+                {saveError && (
+                    <div role="alert" className="rounded-lg border border-risk/25 bg-risk/5 px-3 py-2.5 text-sm leading-relaxed text-risk">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>{saveError}</span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex flex-col gap-3 border-t border-hairline/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-h-5 items-center gap-2 text-xs" aria-live="polite">
-                        {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin text-saffron" /> <span className="text-muted-foreground">Saving for new Cost Estimates…</span></> : dirty ? <><AlertCircle className="h-3.5 w-3.5 text-warning" /> <span className="text-warning-foreground">Not saved yet</span></> : lastSavedAt ? <><CheckCircle2 className="h-3.5 w-3.5 text-success" /> <span className="text-success">Saved for new Cost Estimates</span></> : <span className="text-muted-foreground">Preview only until saved</span>}
+                        {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin text-saffron" /> <span className="text-muted-foreground">Saving…</span></> : dirty || saveError ? <><AlertCircle className="h-3.5 w-3.5 text-warning" /> <span className="text-warning-foreground">Changes not saved</span></> : lastSavedAt && hasMeaningfulBaseline ? <><CheckCircle2 className="h-3.5 w-3.5 text-success" /> <span className="text-success">Saved for new cost estimates</span></> : <span className="text-muted-foreground">Not saved yet</span>}
                     </div>
                     <Button
                         variant="saffron"

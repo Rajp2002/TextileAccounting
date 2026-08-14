@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Archive, ArchiveRestore, FileText, Layers, Hash, AlertCircle, RefreshCw } from 'lucide-react'
-import { getEstimatorTemplates, archiveTemplate, restoreTemplate } from '@/app/(dashboard)/owner/estimator/actions'
-import { toast, userFacingError } from '@/lib/app-notifications'
+import { Loader2, FileText, Layers, Hash, AlertCircle, RefreshCw } from 'lucide-react'
+import { getEstimatorTemplates } from '@/app/(dashboard)/owner/estimator/actions'
+import { userFacingError } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
-import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import type { WarpRow, WeftRow } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface TemplateV3 {
     id:         string
@@ -32,14 +32,15 @@ export function TemplateManager({ className }: { className?: string }) {
     const [loading,   setLoading]   = useState(true)
     const [loadError, setLoadError] = useState<string | null>(null)
     const [qualities, setQualities] = useState<TemplateV3[]>([])
-    const [qualityToArchive, setQualityToArchive] = useState<TemplateV3 | null>(null)
-    const [archivingQualityId, setArchivingQualityId] = useState<string | null>(null)
-    const [showArchived, setShowArchived] = useState(false)
 
     const load = useCallback(async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
         if (showLoading) setLoading(true)
         setLoadError(null)
         try {
+            // The action returns both states so the same read path remains
+            // compatible with Saved Costings. Settings deliberately filters
+            // the normal view to active qualities and offers no lifecycle
+            // controls here.
             const res = await getEstimatorTemplates({ includeArchived: true })
             if (!res.data) {
                 setLoadError(userFacingError(res.error, 'Saved fabric qualities could not be loaded. Refresh and try again.'))
@@ -60,36 +61,7 @@ export function TemplateManager({ className }: { className?: string }) {
         return () => clearTimeout(timer)
     }, [load])
 
-    const handleArchive = async (quality: TemplateV3) => {
-        const archived = quality.is_active === false
-        setArchivingQualityId(quality.id)
-        try {
-            const res = archived
-                ? await restoreTemplate(quality.id, quality.updated_at)
-                : await archiveTemplate(quality.id, quality.updated_at)
-            if (res.success) {
-                toast.success(archived ? 'Quality restored' : 'Quality archived')
-                await load()
-            } else {
-                toast.error(userFacingError(res.error, `Fabric Quality could not be ${archived ? 'restored' : 'archived'}. Try again.`))
-            }
-        } catch (error) {
-            toast.error(userFacingError(error, `Fabric Quality could not be ${archived ? 'restored' : 'archived'}. Try again.`))
-        } finally {
-            setArchivingQualityId(null)
-        }
-    }
-
-    const confirmArchive = async () => {
-        if (!qualityToArchive) return
-        const target = qualityToArchive
-        await handleArchive(target)
-        setQualityToArchive(null)
-    }
-
     const activeQualities = qualities.filter(quality => quality.is_active !== false)
-    const archivedQualities = qualities.filter(quality => quality.is_active === false)
-    const visibleQualities = showArchived ? qualities : activeQualities
 
     // Derive display summary from V3 or V1 quality
     function qualitySummary(quality: TemplateV3): { totalEnds: number; firstPicks: number; warpLayers: number; weftLayers: number } {
@@ -144,25 +116,9 @@ export function TemplateManager({ className }: { className?: string }) {
         <>
         <Card className={cn("premium-disclosure-card rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
             <CardHeader className="gap-3 border-b border-hairline/70 pb-4">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-info" />
-                        <CardTitle className="text-base">{t('estimator.quality.settingsTitle')}</CardTitle>
-                    </div>
-                    {archivedQualities.length > 0 && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 shrink-0 text-xs"
-                            aria-expanded={showArchived}
-                            aria-controls="quality-library-list"
-                            onClick={() => setShowArchived(current => !current)}
-                        >
-                            <Archive className="h-3.5 w-3.5" />
-                            {showArchived ? 'Hide archived' : `Show archived (${archivedQualities.length})`}
-                        </Button>
-                    )}
+                <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-info" />
+                    <CardTitle className="text-base">{t('estimator.quality.settingsTitle')}</CardTitle>
                 </div>
                 <CardDescription>
                     {t('estimator.quality.settingsDescription')} {activeQualities.length > 0 && `${activeQualities.length} active`}
@@ -181,50 +137,31 @@ export function TemplateManager({ className }: { className?: string }) {
                         </Button>
                     </div>
                 )}
-                {visibleQualities.length === 0 ? (
-                    <div key={`qualities-empty-${showArchived}`} id="quality-library-list" className="premium-content-swap rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
+                {activeQualities.length === 0 ? (
+                    <div id="quality-library-list" className="premium-content-swap rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
                         <p className="text-sm italic text-muted-foreground">
-                            {qualities.length === 0
-                                ? t('estimator.quality.settingsEmpty')
-                                : 'No active fabric qualities. Show archived to restore one.'}
+                            {t('estimator.quality.settingsEmpty')}
                         </p>
-                        {qualities.length > 0 && archivedQualities.length > 0 && (
-                            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => setShowArchived(true)}>
-                                <Archive className="h-3.5 w-3.5" />
-                                Show archived
-                            </Button>
-                        )}
                     </div>
                 ) : (
-                    <div key={`qualities-${showArchived}`} id="quality-library-list" className="premium-content-swap grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                        {visibleQualities.map(quality => {
+                    <div id="quality-library-list" className="premium-content-swap grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        {activeQualities.map(quality => {
                             const summary = qualitySummary(quality)
                             const isV3 = !!(quality.warp_rows && quality.warp_rows.length > 0)
                             return (
                                 <div
                                     key={quality.id}
-                                    className={cn("premium-surface group rounded-lg border border-hairline bg-canvas/55 p-3", quality.is_active === false && 'opacity-75')}
+                                    className="premium-surface group rounded-lg border border-hairline bg-canvas/55 p-3"
                                 >
-                                    <div className="flex items-start justify-between mb-2">
+                                    <div className="mb-2 flex items-start justify-between">
                                         <div>
                                             <h5 className="text-sm font-bold text-ink group-hover:text-saffron-deep">{quality.name}</h5>
-                                            {quality.is_active === false && <span className="text-[10px] font-semibold text-muted-foreground">Archived · read-only</span>}
                                             {isV3 && (
                                                 <span className="rounded-full bg-info-soft px-1.5 py-0.5 text-[10px] font-semibold text-info">
                                                     V3 · {summary.warpLayers}W + {summary.weftLayers}F
                                                 </span>
                                             )}
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 text-subtle transition-colors hover:bg-surface-soft"
-                                            onClick={() => quality.is_active === false ? void handleArchive(quality) : setQualityToArchive(quality)}
-                                            disabled={Boolean(archivingQualityId)}
-                                            aria-label={quality.is_active === false ? `Restore ${quality.name}` : `Archive ${quality.name}`}
-                                        >
-                                            {quality.is_active === false ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                        </Button>
                                     </div>
                                     <div className="grid grid-cols-2 gap-y-1 text-[11px] font-medium text-muted-foreground">
                                         <span className="flex items-center gap-1">
@@ -246,18 +183,19 @@ export function TemplateManager({ className }: { className?: string }) {
                         })}
                     </div>
                 )}
+
+                <div className="mt-5 rounded-lg border border-info/20 bg-info-soft/45 p-3 text-sm leading-relaxed text-body">
+                    <p>
+                        Active qualities are shown here for reference.{' '}
+                        <Link href="/owner/quotes" className="font-semibold text-saffron-deep underline-offset-2 hover:underline">Manage saved qualities in Saved Costings</Link>, including costing versions, archive, and restore.
+                        {' '}Update quality names and recipes from a{' '}
+                        <Link href="/owner/estimator" className="font-semibold text-saffron-deep underline-offset-2 hover:underline">Cost Estimate</Link>{' '}
+                        and yarn prices in the{' '}
+                        <Link href="/owner/rates" className="font-semibold text-saffron-deep underline-offset-2 hover:underline">Yarn Rate Book</Link>.
+                    </p>
+                </div>
             </CardContent>
         </Card>
-        <ConfirmActionDialog
-            open={Boolean(qualityToArchive)}
-            onOpenChange={open => { if (!open) setQualityToArchive(null) }}
-            title={t('estimator.quality.archiveTitle')}
-            description={qualityToArchive ? t('estimator.quality.archiveDescription', { name: qualityToArchive.name }) : ''}
-            confirmLabel={t('estimator.quality.archiveConfirm')}
-            isDestructive
-            isLoading={Boolean(qualityToArchive && archivingQualityId === qualityToArchive.id)}
-            onConfirm={confirmArchive}
-        />
         </>
     )
 }

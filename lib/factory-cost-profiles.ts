@@ -8,6 +8,28 @@ export type FactoryProfileId =
   | 'custom'
   | 'unselected'
 
+export type FactoryCostProfileBaseline = {
+  is_configured?: boolean | null
+  monthly_output_m?: number | string | null
+  overhead_override_per_m?: number | string | null
+}
+
+/**
+ * A profile can predate the explicit is_configured flag. Treat persisted
+ * costing values as a meaningful baseline as well so those owners do not get
+ * sent through first-run setup again.
+ */
+export function hasMeaningfulFactoryCostBaseline(
+  profile?: FactoryCostProfileBaseline | null,
+): boolean {
+  if (!profile) return false
+  return Boolean(
+    profile.is_configured
+    || Number(profile.monthly_output_m ?? 0) > 0
+    || Number(profile.overhead_override_per_m ?? 0) > 0,
+  )
+}
+
 export interface FactoryCostPreset {
   id: FactoryProfileId
   label: string

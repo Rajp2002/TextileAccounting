@@ -10,15 +10,16 @@ const component = fs.readFileSync(
 describe('UX-007 Factory Cost Profile accessible names', () => {
     it('associates each rate label with its number input', () => {
         expect(component).toContain('const inputId = useId()')
-        expect(component).toContain('<Label htmlFor={inputId}')
-        expect(component).toContain('id={inputId}')
+        expect(component).toContain('<Label htmlFor={resolvedInputId}')
+        expect(component).toContain('id={resolvedInputId}')
         expect(component).toContain('type="number"')
     })
 
-    it('associates each optional-section label and description with its switch', () => {
+    it('gives each optional-section switch an accessible name and a stable disclosure behavior', () => {
+        expect(component).toContain('function OptionalAssumptionDisclosure')
         expect(component).toContain('const switchId = useId()')
-        expect(component).toContain('<Label htmlFor={switchId}')
         expect(component).toContain('id={switchId}')
-        expect(component).toContain('aria-describedby={descriptionId}')
+        expect(component).toContain('aria-label={`${tx(title)} ${tx(\'enabled\')}`}')
+        expect(component).toContain('onCheckedChange={onEnabledChange}')
     })
 })

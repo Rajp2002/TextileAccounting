@@ -125,7 +125,11 @@ import { PageHeader } from '@/components/ui/page-header'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
-import { getMatchingFactoryProfileId, type FactoryProfileId } from '@/lib/factory-cost-profiles'
+import {
+    getMatchingFactoryProfileId,
+    hasMeaningfulFactoryCostBaseline,
+    type FactoryProfileId,
+} from '@/lib/factory-cost-profiles'
 import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
@@ -173,12 +177,7 @@ type FactoryCostProfile = Partial<{
 }>
 
 function profileHasSavedBaseline(profile?: FactoryCostProfile) {
-    if (!profile) return false
-    return Boolean(
-        profile.is_configured
-        || Number(profile.monthly_output_m ?? 0) > 0
-        || Number(profile.overhead_override_per_m ?? 0) > 0,
-    )
+    return hasMeaningfulFactoryCostBaseline(profile)
 }
 
 type SaveAsNewQualityRollback = {
