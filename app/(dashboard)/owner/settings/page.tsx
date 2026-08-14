@@ -336,7 +336,7 @@ export default function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="settings-page-frame space-y-5">
+            <div className="settings-page-frame settings-readable space-y-5">
                 <div className="flex items-end justify-between border-b border-hairline/80 pb-5">
                     <div className="space-y-2">
                         <Skeleton className="h-8 w-48" />
@@ -385,7 +385,7 @@ export default function SettingsPage() {
     // infrequent account/data actions behind one low-frequency disclosure.
     if (!hasPremium) {
         return (
-            <div className="premium-route-enter settings-page-frame">
+            <div className="premium-route-enter settings-page-frame settings-readable">
                 <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
                 <PageHeader
                     id="overview"
@@ -608,7 +608,7 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="premium-route-enter settings-page-frame">
+        <div className="premium-route-enter settings-page-frame settings-readable">
             <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
             <PageHeader
                 id="overview"

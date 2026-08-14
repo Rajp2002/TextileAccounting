@@ -408,6 +408,40 @@
     padding-bottom: 2.5rem;
   }
 
+  /* Settings contains high-density operational copy. Keep the route's
+     typography comfortable without changing the scale of the rest of the
+     dashboard, and make small helper text hold up against the warm canvas. */
+  .settings-readable {
+    color: var(--color-body);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: auto;
+    text-rendering: optimizeLegibility;
+  }
+
+  .settings-readable :where(.text-sm) {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  .settings-readable :where(.text-xs, [class~="text-[11px]"]) {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .settings-readable :where([class~="text-[10px]"], [class~="text-[9px]"]) {
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .settings-readable :where(.text-muted-foreground) {
+    color: #4f5650;
+  }
+
+  .settings-readable :where(.text-subtle) {
+    color: #565d56;
+  }
+
   .settings-layout-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
