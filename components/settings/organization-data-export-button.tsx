@@ -105,27 +105,34 @@ export function OrganizationDataExportButton({
     return (
         <div className="space-y-4">
             <p className="text-xs text-slate-500">{t('base_plan.export.timezone')}</p>
-            <div className="flex flex-wrap items-center gap-3">
-                <Button data-testid={testId} onClick={download} disabled={isPending} className="gap-2">
+            <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <Button
+                    data-testid={testId}
+                    onClick={download}
+                    disabled={isPending}
+                    className="h-auto min-h-10 w-full max-w-full min-w-0 gap-2 whitespace-normal break-words text-center leading-snug sm:h-10 sm:w-auto sm:whitespace-nowrap"
+                >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : status === 'failed' || status === 'download-failed' ? <RefreshCw className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-                    {isPending ? tx('Preparing export') : status === 'failed' || status === 'download-failed' ? tx('Retry export') : tx('Download organization data (complete export)')}
+                    <span className="min-w-0 break-words">
+                        {isPending ? tx('Preparing export') : status === 'failed' || status === 'download-failed' ? tx('Retry export') : tx('Download organization data (complete export)')}
+                    </span>
                 </Button>
                 {status === 'download-started' && (
-                    <span role="status" className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> {tx('Export generated; download requested (complete organization export)')}
+                    <span role="status" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-emerald-700">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0 break-words">{tx('Export generated; download requested (complete organization export)')}</span>
                     </span>
                 )}
                 {status === 'download-failed' && (
-                    <span role="alert" className="flex items-center gap-1 text-xs font-semibold text-red-700">
-                        <AlertTriangle className="h-3.5 w-3.5" /> {tx('Export generated; browser download failed')}
+                    <span role="alert" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-red-700">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0 break-words">{tx('Export generated; browser download failed')}</span>
                     </span>
                 )}
                 {status === 'failed' && (
-                    <span role="alert" className="flex items-center gap-1 text-xs font-semibold text-red-700">
-                        <AlertTriangle className="h-3.5 w-3.5" /> {tx('No export was generated')}
+                    <span role="alert" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-red-700">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0 break-words">{tx('No export was generated')}</span>
                     </span>
                 )}
-                {downloadError && <p role="alert" className="text-xs font-semibold text-amber-800">{downloadError}</p>}
+                {downloadError && <p role="alert" className="min-w-0 max-w-full break-words text-xs font-semibold text-amber-800">{downloadError}</p>}
             </div>
 
             {filename && (

@@ -45,6 +45,9 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
     it('keeps data export available outside premium presentation and fail-closed on audit', () => {
         expect(settings).toContain('<OrganizationDataExportButton />')
         expect(exportButton).toContain('Download organization data')
+        expect(exportButton).toContain('w-full max-w-full min-w-0')
+        expect(exportButton).toContain('sm:w-auto sm:whitespace-nowrap')
+        expect(exportButton).toContain('flex min-w-0 flex-col')
         expect(settings).toContain('<SettingsSection id="privacy-data"')
         expect(settings.indexOf('<SettingsSection id="privacy-data"')).toBeLessThan(settings.indexOf('{hasPremium ? <aside'))
         expect(exportAction).toContain("const { user, profile } = await requireRole(['owner'])")
