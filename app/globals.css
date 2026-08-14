@@ -101,9 +101,9 @@
   --color-hairline: #DED2BD;
   --color-hairline-strong: #CBB894;
   --color-ink: #1E2528;
-  --color-body: #3F4542;
-  --color-muted: #5F625A;
-  --color-subtle: #6B6D64;
+  --color-body: #1E2528;
+  --color-muted: #1E2528;
+  --color-subtle: #35413B;
   --color-yarn-orange: #D96B1C;
   --color-yarn-orange-dark: #9E4212;
   --color-factory-green: #285C3B;
@@ -133,9 +133,9 @@
   --weavly-loom-navy-elevated: #22313A;
 
   --weavly-ink: #1E2528;
-  --weavly-body: #3F4542;
-  --weavly-muted: #5F625A;
-  --weavly-subtle: #6B6D64;
+  --weavly-body: #1E2528;
+  --weavly-muted: #1E2528;
+  --weavly-subtle: #35413B;
 
   --weavly-hairline: #DED2BD;
   --weavly-hairline-strong: #CBB894;
@@ -193,6 +193,12 @@
 }
 
 .dark {
+  --color-body: oklch(0.92 0.005 85);
+  --color-muted: oklch(0.82 0.01 85);
+  --color-subtle: oklch(0.76 0.01 85);
+  --weavly-body: oklch(0.92 0.005 85);
+  --weavly-muted: oklch(0.82 0.01 85);
+  --weavly-subtle: oklch(0.76 0.01 85);
   --background: oklch(0.2 0.02 45);
   --foreground: oklch(0.985 0.005 85);
   --card: oklch(0.24 0.02 45);
@@ -277,61 +283,49 @@
 }
 
 @layer utilities {
-  /* Dashboard copy often uses 10–12px labels and helper text. The default
-     Tailwind gray/slate 400–500 colors are too faint at that size on the
-     warm, light operational surfaces. Keep the correction scoped to the
-     dashboard content so marketing pages and the dark navigation retain
-     their separate contrast treatment. */
-  :root:not(.dark) .dashboard-main .text-slate-500 {
-    color: #475569;
+  /* Keep light-theme helper text readable everywhere, including pages that
+     use raw Tailwind grey/slate/zinc utilities instead of semantic tokens. */
+  :root:not(.dark) :where(
+    [class*="text-slate-300"],
+    [class*="text-slate-400"],
+    [class*="text-slate-500"],
+    [class*="text-gray-300"],
+    [class*="text-gray-400"],
+    [class*="text-gray-500"],
+    [class*="text-zinc-300"],
+    [class*="text-zinc-400"],
+    [class*="text-zinc-500"]
+  ) {
+    color: var(--color-ink);
   }
 
-  :root:not(.dark) .dashboard-main .text-muted {
-    color: var(--weavly-muted);
-  }
-
-  :root:not(.dark) .dashboard-main .text-slate-400 {
-    color: #64748B;
-  }
-
-  :root:not(.dark) .dashboard-main .text-gray-500 {
-    color: #4B5563;
-  }
-
-  :root:not(.dark) .dashboard-main .text-gray-400 {
-    color: #6B7280;
-  }
-
-  :root:not(.dark) .dashboard-main .text-zinc-500 {
-    color: #52525B;
-  }
-
-  :root:not(.dark) .dashboard-main .text-zinc-400 {
-    color: #71717A;
-  }
-
-  /* Preserve light text when one of the dashboard's dark summary panels is
-     the reading surface. */
-  :root:not(.dark) .dashboard-main :is(
-    [class~="bg-slate-950"],
-    [class~="bg-slate-900"],
-    [class~="bg-slate-900/70"],
-    [class~="bg-zinc-950"],
-    [class~="bg-zinc-900"],
-    [class~="bg-zinc-900/60"],
+  /* Preserve light text when a dark navigation, modal, or summary panel is
+     the reading surface. The attribute selectors also cover opacity variants
+     such as text-muted-foreground/70. */
+  :root:not(.dark) :is(
+    [class*="bg-[#111111]"],
+    [class*="bg-black"],
+    [class*="bg-slate-900"],
+    [class*="bg-slate-950"],
+    [class*="bg-zinc-900"],
+    [class*="bg-zinc-950"],
     [class~="bg-loom"],
-    [class~="bg-black"]
-  ) :is(.text-slate-500, .text-slate-400, .text-gray-500, .text-gray-400, .text-zinc-500, .text-zinc-400),
-  :root:not(.dark) .dashboard-main :is(
-    [class~="bg-slate-950"],
-    [class~="bg-slate-900"],
-    [class~="bg-slate-900/70"],
-    [class~="bg-zinc-950"],
-    [class~="bg-zinc-900"],
-    [class~="bg-zinc-900/60"],
-    [class~="bg-loom"],
-    [class~="bg-black"]
-  ):is(.text-slate-500, .text-slate-400, .text-gray-500, .text-gray-400, .text-zinc-500, .text-zinc-400) {
+    [class~="bg-loom-elevated"]
+  ) :is(
+    [class*="text-muted-foreground"],
+    [class*="text-body"],
+    [class*="text-subtle"],
+    [class~="text-muted"],
+    [class*="text-slate-300"],
+    [class*="text-slate-400"],
+    [class*="text-slate-500"],
+    [class*="text-gray-300"],
+    [class*="text-gray-400"],
+    [class*="text-gray-500"],
+    [class*="text-zinc-300"],
+    [class*="text-zinc-400"],
+    [class*="text-zinc-500"]
+  ) {
     color: #CBD5E1;
   }
 
@@ -434,12 +428,22 @@
     line-height: 1.35;
   }
 
-  .settings-readable :where(.text-muted-foreground) {
-    color: #4f5650;
+  /* The Settings route uses muted tokens for explanatory copy, but that copy
+     is still primary reading material. Keep it at the same near-black ink
+     color as the controls, with a medium weight for paragraphs and helper
+     blocks so it does not disappear into the warm background. */
+  .settings-readable :where(.text-muted-foreground, .text-body, .text-subtle) {
+    color: var(--color-ink);
   }
 
-  .settings-readable :where(.text-subtle) {
-    color: #565d56;
+  .settings-readable :where(
+    p.text-muted-foreground,
+    p.text-body,
+    p.text-subtle,
+    div.text-body,
+    [data-slot="card-description"]
+  ) {
+    font-weight: 500;
   }
 
   .settings-layout-grid {
