@@ -533,9 +533,9 @@ function SavedQualityLibraryView({
                             </div>
 
                             <Dialog open={isOpen} onOpenChange={open => { if (!open) onCloseDetails() }}>
-                                <DialogContent className="max-w-6xl gap-0 overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)]">
-                                    <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
-                                        <DialogHeader className="border-b border-hairline bg-surface px-5 py-4 pr-12 sm:px-6">
+                                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]">
+                                    <div className="max-h-[calc(100dvh-1rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
+                                        <DialogHeader className="sticky top-0 z-10 border-b border-hairline bg-surface px-5 py-4 pr-12 sm:px-6">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <DialogTitle className="text-xl font-black">{group.name}</DialogTitle>
                                                 {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
@@ -549,9 +549,9 @@ function SavedQualityLibraryView({
                                             </DialogDescription>
                                         </DialogHeader>
 
-                                        <div className="premium-disclosure-content border-t border-hairline bg-surface-soft/60 p-4 sm:p-5">
+                                        <div className="premium-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
                                     {!latest || !latestResult ? (
-                                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
+                                        <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
                                             {latest ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
                                             <p className="mt-3 text-sm font-bold text-body">{tx(latest
                                                 ? 'Detailed breakdown unavailable for this older Saved Costing'
@@ -581,7 +581,7 @@ function SavedQualityLibraryView({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className={`grid gap-4 ${canUseProduction ? 'xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
+                                        <div className={`grid gap-4 ${canUseProduction ? 'lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
                                             <section className="rounded-xl border border-hairline bg-surface p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
@@ -677,9 +677,9 @@ function SavedQualityLibraryView({
                                         <section className="mt-4 rounded-xl border border-hairline bg-surface p-4">
                                             <p className="text-sm font-black text-ink">Saved Costing history</p>
                                             <p className="mt-1 text-xs text-subtle">Select any two snapshots to compare their commercial assumptions.</p>
-                                            <div className="mt-3 overflow-x-auto">
-                                                <table className="w-full min-w-[720px] text-left text-xs">
-                                                    <thead className="border-b border-hairline text-[10px] font-bold uppercase tracking-wide text-subtle"><tr><th className="w-10 py-2"><span className="sr-only">Compare</span></th><th className="py-2">Snapshot</th><th className="py-2">Context</th><th className="py-2">Cost</th><th className="py-2">Selling price</th><th className="py-2">Margin</th><th className="py-2">Costing qty.</th><th className="py-2 text-right">Actions</th></tr></thead>
+                                            <div className="mt-3 min-w-0 overflow-x-auto">
+                                                <table className="w-full min-w-[980px] text-left text-xs">
+                                                    <thead className="border-b border-hairline text-[10px] font-bold uppercase tracking-wide text-subtle"><tr><th className="w-10 whitespace-nowrap py-2"><span className="sr-only">Compare</span></th><th className="whitespace-nowrap py-2">Snapshot</th><th className="whitespace-nowrap py-2">Context</th><th className="whitespace-nowrap py-2">Cost</th><th className="whitespace-nowrap py-2">Selling price</th><th className="whitespace-nowrap py-2">Margin</th><th className="whitespace-nowrap py-2">Costing qty.</th><th className="whitespace-nowrap py-2 text-right">Actions</th></tr></thead>
                                                     <tbody className="divide-y divide-hairline">
                                                         {group.records.map(record => {
                                                             const selected = selectedCostingIds.includes(record.id)
@@ -697,11 +697,11 @@ function SavedQualityLibraryView({
                                                                         {getCostingStatus(record) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(record))} />}
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-3 font-mono text-body">{formatCostingMoneyPerM(getProductionCostPerM(record))}</td>
-                                                                <td className="py-3 font-mono font-bold text-saffron-deep">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</td>
-                                                                <td className="py-3 font-mono font-bold text-success">{formatCostingPercent(getActualMarginPct(record))}</td>
-                                                                <td className="py-3 text-body">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
-                                    <td className="py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`}><Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} /></Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? `Restoring ${group.name}…` : `Archiving ${group.name}…` : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
+                                                                <td className="whitespace-nowrap py-3 font-mono text-body">{formatCostingMoneyPerM(getProductionCostPerM(record))}</td>
+                                                                <td className="whitespace-nowrap py-3 font-mono font-bold text-saffron-deep">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</td>
+                                                                <td className="whitespace-nowrap py-3 font-mono font-bold text-success">{formatCostingPercent(getActualMarginPct(record))}</td>
+                                                                <td className="whitespace-nowrap py-3 text-body">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</td>
+                                    <td className="whitespace-nowrap py-3 text-right"><div className="flex justify-end gap-1">{!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id}>Open</Button>}<Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`}><Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} /></Button><Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${group.name}`}>{updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {updatingId === record.id ? record.is_archived ? `Restoring ${group.name}…` : `Archiving ${group.name}…` : record.is_archived ? 'Restore snapshot' : 'Archive snapshot'}</Button></div></td>
                                                             </tr>
                                                             )
                                                         })}
