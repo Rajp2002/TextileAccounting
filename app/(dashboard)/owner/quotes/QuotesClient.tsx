@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -53,6 +54,7 @@ import {
     Factory,
     Layers3,
     ExternalLink,
+    X,
 } from 'lucide-react'
 import {
   compareSavedCostingSnapshots,
@@ -467,7 +469,15 @@ function SavedQualityLibraryView({
                 const totalProduced = usages.reduce((sum, usage) => sum + getProducedMeters(usage.order), 0)
 
                 return (
-                    <Card key={group.key} className={`premium-disclosure-card ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}>
+                    <Card
+                        key={group.key}
+                        onClick={event => {
+                            const target = event.target
+                            if (target instanceof Element && target.closest('[data-slot="dialog-content"], [data-slot="dialog-overlay"]')) return
+                            onOpenDetails(group.key)
+                        }}
+                        className={`premium-disclosure-card cursor-pointer ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}
+                    >
                         <CardContent className="p-0">
                             <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
                                 <button
@@ -533,9 +543,15 @@ function SavedQualityLibraryView({
                             </div>
 
                             <Dialog open={isOpen} onOpenChange={open => { if (!open) onCloseDetails() }}>
-                                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]">
+                                <DialogContent
+                                    showCloseButton={false}
+                                    onPointerDownOutside={() => onCloseDetails()}
+                                    onEscapeKeyDown={() => onCloseDetails()}
+                                    style={{ left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), 124px))' }}
+                                    className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
+                                >
                                     <div className="max-h-[calc(100dvh-1rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
-                                        <DialogHeader className="sticky top-0 z-10 border-b border-hairline bg-surface px-5 py-4 pr-12 sm:px-6">
+                                        <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-14 sm:px-6">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <DialogTitle className="text-xl font-black">{group.name}</DialogTitle>
                                                 {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
@@ -547,6 +563,15 @@ function SavedQualityLibraryView({
                                                     ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatDateOnly(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
                                                     : 'Saved recipe · no saved costing yet'}
                                             </DialogDescription>
+                                            <DialogClose asChild>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Close ${group.name} details`}
+                                                    className="absolute right-3 top-3 z-30 inline-flex h-10 w-10 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
+                                                >
+                                                    <X className="h-5 w-5" aria-hidden="true" />
+                                                </button>
+                                            </DialogClose>
                                         </DialogHeader>
 
                                         <div className="premium-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
