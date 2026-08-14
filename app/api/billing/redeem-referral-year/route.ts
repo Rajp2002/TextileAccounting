@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
-/** Consume one earned referral credit as the next free annual Base period. */
+/** Reserve every active referral credit as consecutive free annual Base periods. */
 export async function POST() {
     try {
         const { profile } = await requireRole(['owner'])
@@ -28,6 +28,7 @@ export async function POST() {
 
         const result = data as {
             redeemed?: boolean
+            redeemedCount?: number
             reason?: string
             message?: string
             renewalEligibleAt?: string | null
@@ -45,6 +46,7 @@ export async function POST() {
 
         return NextResponse.json({
             success: true,
+            redeemedCount: result.redeemedCount ?? 0,
             activeUntil: result.activeUntil ?? null,
             remainingCredits: result.remainingCredits ?? 0,
         })

@@ -2,13 +2,15 @@ import 'server-only'
 
 import crypto from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getRenewalEligibilityDate, isRenewalEligible } from '@/lib/billing-lifecycle'
+import { getRenewalEligibilityDate } from '@/lib/billing-lifecycle'
+import { getBillingPrice } from '@/lib/billing-constants'
 import {
     isReferralCampaignEnabledForOrg,
     REFERRAL_CAMPAIGN_DISABLED_MESSAGE,
 } from '@/lib/referral-campaign'
 
 export const REFERRAL_MAX_CREDITS = 5
+export const REFERRAL_REWARD_AMOUNT_PAISE = getBillingPrice('base', 'renewal').totalPaise
 
 const ACTIVE_BASE_STATUSES = new Set([
     'active',
@@ -49,13 +51,19 @@ type ReferralYearCreditRow = {
     referral_use_id: string
     status: 'available' | 'redeemed' | 'revoked' | string
     granted_at: string
+    credit_year?: number | null
     redeemed_at: string | null
 }
 
-type ReferralHistoryRow = {
+export type ReferralHistoryStatus = 'used' | 'active' | 'redeemed' | 'capped' | 'revoked'
+
+export type ReferralHistoryRow = {
+    id: string
     factoryName: string
-    status: string
+    status: ReferralHistoryStatus
     date: string | null
+    amountPaise: number
+    year: number | null
 }
 
 export type ReferralEligibility = {
@@ -71,9 +79,15 @@ export type ReferralStats = {
     code: string | null
     total: number
     converted: number
+    usedReferrals: number
+    activeReferrals: number
     availableCredits: number
     redeemedCredits: number
     cap: number
+    currentYear: number
+    currentYearCredits: number
+    rewardAmountPaise: number
+    canRedeem: boolean
     canRedeemNextYear: boolean
     renewalEligibleAt: string | null
     // Kept as compatibility fields for older consumers. The active policy
@@ -86,17 +100,25 @@ export type ReferralStats = {
 function emptyReferralStats(
     eligibility: ReferralEligibility,
 ): ReferralStats {
+    const currentYear = indiaCalendarYear(new Date())
     return {
         eligible: eligibility.eligible,
         reason: eligibility.reason,
         code: null,
         total: 0,
         converted: 0,
+        usedReferrals: 0,
+        activeReferrals: 0,
         availableCredits: 0,
         redeemedCredits: 0,
         cap: REFERRAL_MAX_CREDITS,
+        currentYear,
+        currentYearCredits: 0,
+        rewardAmountPaise: REFERRAL_REWARD_AMOUNT_PAISE,
+        canRedeem: false,
         canRedeemNextYear: false,
-        renewalEligibleAt: eligibility.renewalEligibleAt,
+        // Kept for older API consumers; staged rewards have no wait window.
+        renewalEligibleAt: null,
         currentDiscountPct: 0,
         activeWindows: [],
         history: [],
@@ -109,6 +131,20 @@ function normalizedReferralCode(value: unknown): string {
 
 function isValidReferralCode(value: string): boolean {
     return /^WEAVLY-[A-Z0-9]{4,12}$/.test(value)
+}
+
+function indiaCalendarYear(value: Date | string): number {
+    const date = value instanceof Date ? value : new Date(value)
+    return Number(new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+    }).format(date))
+}
+
+function indiaCalendarYearBounds(year: number): { start: string; end: string } {
+    const start = new Date(`${year}-01-01T00:00:00.000+05:30`)
+    const end = new Date(`${year + 1}-01-01T00:00:00.000+05:30`)
+    return { start: start.toISOString(), end: end.toISOString() }
 }
 
 function organizationName(value: ReferralUseRow['organizations']): string {
@@ -280,24 +316,33 @@ export async function getReferralStats(orgId: string): Promise<ReferralStats> {
     const uses = (usesResult.data ?? []) as ReferralUseRow[]
     const credits = (creditsResult.data ?? []) as ReferralYearCreditRow[]
     const creditsByUse = new Map(credits.map((credit) => [credit.referral_use_id, credit]))
-    const availableCredits = credits.filter((credit) => credit.status === 'available').length
+    const currentYear = indiaCalendarYear(new Date())
+    const availableCreditRows = credits.filter((credit) => credit.status === 'available')
+    const availableCredits = availableCreditRows.length
     const redeemedCredits = credits.filter((credit) => credit.status === 'redeemed').length
-    const canRedeemNextYear = availableCredits > 0
-        && eligibility.currentEnd !== null
-        && isRenewalEligible(eligibility.currentEnd)
+    const currentYearCredits = credits.filter((credit) => (
+        credit.status !== 'revoked' && indiaCalendarYear(credit.granted_at) === currentYear
+    )).length
+    const canRedeem = availableCredits > 0
 
     const history = uses.map((use): ReferralHistoryRow => {
         const credit = creditsByUse.get(use.id)
-        return {
-            factoryName: organizationName(use.organizations),
-            status: credit?.status === 'redeemed'
-                ? 'redeemed'
-                : credit?.status === 'available'
-                    ? 'earned'
+        const status: ReferralHistoryStatus = credit?.status === 'redeemed'
+            ? 'redeemed'
+            : credit?.status === 'available'
+                ? 'active'
+                : credit?.status === 'revoked'
+                    ? 'revoked'
                     : use.status === 'expired'
                         ? 'capped'
-                        : use.status,
+                        : 'used'
+        return {
+            id: use.id,
+            factoryName: organizationName(use.organizations),
+            status,
             date: credit?.redeemed_at ?? credit?.granted_at ?? (use.status === 'converted' ? use.converted_at : use.signed_up_at),
+            amountPaise: REFERRAL_REWARD_AMOUNT_PAISE,
+            year: credit ? indiaCalendarYear(credit.granted_at) : null,
         }
     })
 
@@ -307,11 +352,19 @@ export async function getReferralStats(orgId: string): Promise<ReferralStats> {
         code: codeData.code,
         total: uses.length,
         converted: credits.length,
+        usedReferrals: uses.filter((use) => use.status === 'pending').length,
+        activeReferrals: availableCredits,
         availableCredits,
         redeemedCredits,
         cap: REFERRAL_MAX_CREDITS,
-        canRedeemNextYear,
-        renewalEligibleAt: eligibility.renewalEligibleAt,
+        currentYear,
+        currentYearCredits,
+        rewardAmountPaise: REFERRAL_REWARD_AMOUNT_PAISE,
+        canRedeem,
+        // Kept for older clients; redemption is now available immediately.
+        canRedeemNextYear: canRedeem,
+        // Kept for older API consumers; staged rewards have no wait window.
+        renewalEligibleAt: null,
         currentDiscountPct: 0,
         activeWindows: [],
         history,
@@ -349,13 +402,16 @@ export async function applyReferralCode(code: string, refereeOrgId: string) {
         throw new Error('Referral rewards require an active Base Plan with the initial year paid.')
     }
 
+    const { start, end } = indiaCalendarYearBounds(indiaCalendarYear(new Date()))
     const { count, error: countError } = await supabase
         .from('referral_year_credits')
         .select('id', { count: 'exact', head: true })
         .eq('referrer_org_id', codeRow.org_id)
+        .gte('granted_at', start)
+        .lt('granted_at', end)
     if (countError) throw countError
     if ((count ?? 0) >= REFERRAL_MAX_CREDITS) {
-        throw new Error('This referral code has reached its five-referral limit.')
+        throw new Error('This referral code has reached its five-referral limit for this year.')
     }
 
     const { error: useError } = await supabase

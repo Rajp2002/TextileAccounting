@@ -17,10 +17,15 @@ export function ReferralRewardButton() {
                 method: 'POST',
                 headers: { Accept: 'application/json' },
             })
-            const data = await response.json().catch(() => ({})) as { error?: string }
+            const data = await response.json().catch(() => ({})) as { error?: string; redeemedCount?: number }
             if (!response.ok) throw new Error(data.error ?? 'The referral reward could not be redeemed.')
 
-            toast.success('Your free Base Plan year is now reserved for the next annual period.')
+            const redeemedCount = data.redeemedCount ?? 1
+            toast.success(
+                redeemedCount === 1
+                    ? 'Your free Base Plan renewal is reserved.'
+                    : `${redeemedCount} free Base Plan renewals are reserved.`,
+            )
             router.refresh()
         } catch (error) {
             toast.error(userFacingError(error, 'The referral reward could not be redeemed.'))
@@ -37,7 +42,7 @@ export function ReferralRewardButton() {
             className="w-full gap-2 bg-saffron text-ink shadow-none hover:bg-saffron-deep hover:text-white"
         >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {loading ? 'Redeeming free year…' : 'Redeem free annual year'}
+            {loading ? 'Reserving free renewals…' : 'Redeem all active referrals'}
         </Button>
     )
 }

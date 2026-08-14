@@ -88,7 +88,7 @@ export default function RefundPolicyPage() {
 
                 <h3>3.3 Referral Credits</h3>
                 <p>
-                    Referral credits are annual service entitlements, not payment refunds. An active Base Plan member who has paid the initial year can earn one free Base Plan renewal year for each referred organization that pays its own initial Base Plan year, up to five credits. A credit can be redeemed only for a future annual renewal during the normal renewal window; it has no cash value and cannot be transferred.
+                    Referral credits are annual service entitlements, not payment refunds. An active Base Plan member who has paid the initial year can earn one free Base Plan renewal year for each referred organization that pays its own initial Base Plan year, up to five credits per India calendar year. Active credits can be redeemed at any time for future annual renewals; they have no cash value and cannot be transferred.
                 </p>
 
                 <h3>3.4 How Refunds Are Processed</h3>

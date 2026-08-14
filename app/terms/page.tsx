@@ -130,8 +130,8 @@ export default function TermsOfServicePage() {
                 <h3>3.3 Referral Credits</h3>
                 <ul>
                     <li>Referral rewards are available only to an active Base Plan member whose initial Base Plan year has been paid in full.</li>
-                    <li>When a referred organization pays its initial Base Plan year, the referrer earns one free Base Plan renewal year. Rewards are capped at five successful referrals per organization.</li>
-                    <li>Credits are applied only to a future Base Plan annual renewal during the normal renewal window. They are not cash, refunds, transferable balances, or discounts on the initial year.</li>
+                    <li>When a referred organization pays its initial Base Plan year, the referrer earns one free Base Plan renewal year. Rewards are capped at five qualifying paid referrals per organization in each India calendar year.</li>
+                    <li>Active credits can be redeemed at any time. Redeeming multiple credits together reserves the next corresponding annual Base renewal periods free of charge. They are not cash, refunds, transferable balances, or discounts on the initial year.</li>
                     <li>Trial accounts, unpaid accounts, Full Suite accounts, and referrals that do not complete the initial paid Base Plan year do not earn a credit.</li>
                 </ul>
                 <p>

@@ -1,9 +1,9 @@
 import 'server-only'
 
 /**
- * Referral is a pilot capability, not a public campaign. Keep the switch
- * closed by default and require an explicit organization allowlist before a
- * referral code can be displayed or applied.
+ * Referral is opt-in by environment. A comma-separated organization allowlist
+ * can be used for a pilot; `*` explicitly enables the campaign for every
+ * organization, including organizations created after deployment.
  */
 export const REFERRAL_CAMPAIGN_DISABLED_MESSAGE = 'Referral campaign is currently paused.'
 
@@ -19,5 +19,6 @@ function configuredPilotOrganizations(): Set<string> {
 export function isReferralCampaignEnabledForOrg(orgId: string | null | undefined): boolean {
     if (process.env.REFERRAL_CAMPAIGN_ENABLED?.trim().toLowerCase() !== 'true') return false
     if (!orgId) return false
-    return configuredPilotOrganizations().has(orgId)
+    const configuredOrganizations = configuredPilotOrganizations()
+    return configuredOrganizations.has('*') || configuredOrganizations.has(orgId)
 }

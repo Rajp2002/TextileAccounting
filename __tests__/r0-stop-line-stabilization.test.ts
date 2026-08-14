@@ -44,12 +44,13 @@ describe('R0 stop-the-line contracts', () => {
         expect(migrations).toContain('referral_year_credits')
     })
 
-    it('keeps the referral campaign closed unless a named pilot allowlist enables it', () => {
+    it('keeps the referral campaign closed unless an explicit allowlist or wildcard enables it', () => {
         const campaign = read('lib/referral-campaign.ts')
         const referral = read('lib/referral.ts')
 
         expect(campaign).toContain("process.env.REFERRAL_CAMPAIGN_ENABLED?.trim().toLowerCase() !== 'true'")
         expect(campaign).toContain('REFERRAL_PILOT_ORG_IDS')
+        expect(campaign).toContain("configuredOrganizations.has('*')")
         expect(referral).toContain('REFERRAL_CAMPAIGN_DISABLED_MESSAGE')
         expect(referral).toContain("reason: 'campaign_disabled'")
     })
