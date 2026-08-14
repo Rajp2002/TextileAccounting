@@ -27,7 +27,7 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
                 <>
                     <div className="animate-blob-drift-1 absolute inset-x-0 -top-40 transform-gpu blur-xl will-change-transform sm:-top-80">
                         <div
-                            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-25 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] dark:opacity-35"
+                            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f97316] to-[#c2410c] opacity-40 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] dark:opacity-35"
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
@@ -37,7 +37,7 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
                         style={{ animationDelay: '-5s' }}
                     >
                         <div
-                            className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f59e0b] to-[#c2410c] opacity-25 sm:left-[calc(50%+20rem)] sm:w-[72.1875rem] dark:opacity-35"
+                            className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f97316] to-[#c2410c] opacity-40 sm:left-[calc(50%+20rem)] sm:w-[72.1875rem] dark:opacity-35"
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
@@ -47,7 +47,7 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
                         style={{ animationDelay: '-11s' }}
                     >
                         <div
-                            className="relative left-[calc(50%-15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f59e0b] opacity-25 sm:left-[calc(50%-25rem)] sm:w-[72.1875rem] dark:opacity-35"
+                            className="relative left-[calc(50%-15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f97316] opacity-40 sm:left-[calc(50%-25rem)] sm:w-[72.1875rem] dark:opacity-35"
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
@@ -57,7 +57,7 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
                         style={{ animationDelay: '-17s' }}
                     >
                         <div
-                            className="relative left-[calc(50%+15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f59e0b] to-[#ea580c] opacity-25 sm:left-[calc(50%+25rem)] sm:w-[72.1875rem] dark:opacity-35"
+                            className="relative left-[calc(50%+15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f97316] to-[#ea580c] opacity-40 sm:left-[calc(50%+25rem)] sm:w-[72.1875rem] dark:opacity-35"
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
