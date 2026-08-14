@@ -1,14 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
-import { getSubscriptionDetail } from '@/lib/subscription'
+import { getCachedOrgPlanAccess, getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
-    CheckCircle2, AlertCircle, Clock, XCircle,
-    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, ArrowRight, CreditCard,
+    CheckCircle2, AlertCircle, ChevronDown, Clock, Download, XCircle,
+    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, CreditCard,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
@@ -17,7 +17,6 @@ import {
     BILLING_SELF_SERVE_PLAN_TIERS,
     getBillingPlan,
     getBillingPrice,
-    RENEWAL_ELIGIBILITY_DAYS,
     type PurchasablePlanTier,
 } from '@/lib/billing-constants'
 import {
@@ -45,6 +44,27 @@ type SubscriptionPaymentRow = {
     subscription_id: string | null
     razorpay_order_id?: string | null
     captured_at?: string | null
+    billing_attempt_id?: string | null
+}
+
+type BillingAttemptHistoryRow = BillingAttemptRow & {
+    total_amount_paise?: number | null
+}
+
+type BillingHistoryStatus = 'captured' | 'failed' | 'incomplete' | 'refunded'
+
+type BillingHistoryEntry = {
+    id: string
+    kind: 'payment' | 'attempt'
+    date: string | null
+    planTier: string | null
+    purchaseType: string | null
+    amountPaise: number | null
+    method: string | null
+    paymentId: string | null
+    orderId: string | null
+    receiptPaymentId: string | null
+    status: BillingHistoryStatus
 }
 
 function formatDate(iso: string | null): string {
@@ -67,6 +87,455 @@ function formatAmount(paise: number): string {
     return `₹${(paise / 100).toLocaleString('en-IN')}`
 }
 
+function getBillingPlanName(planTier: string | null | undefined): string {
+    if (planTier === 'base') return 'Weavly Estimator'
+    if (planTier === 'premium') return 'Weavly Full Suite'
+    return 'Weavly payment'
+}
+
+function getPurchaseTypeLabel(purchaseType: string | null | undefined): string {
+    if (purchaseType === 'renewal') return 'Annual renewal'
+    if (purchaseType === 'initial_purchase') return 'First-year payment'
+    return 'Subscription payment'
+}
+
+function normalizePaymentHistoryStatus(status: string): BillingHistoryStatus {
+    if (status === 'captured') return 'captured'
+    if (status === 'failed') return 'failed'
+    if (status === 'refunded') return 'refunded'
+    return 'incomplete'
+}
+
+function normalizeAttemptHistoryStatus(status: string): BillingHistoryStatus {
+    if (status === 'activated' || status === 'captured') return 'captured'
+    if (status === 'refunded') return 'refunded'
+    if (status === 'failed' || status === 'cancelled') return 'failed'
+    return 'incomplete'
+}
+
+function buildBillingHistoryEntries(
+    payments: SubscriptionPaymentRow[],
+    attempts: BillingAttemptHistoryRow[],
+    subscriptionById: Map<string, BillingSubscriptionRow>,
+): BillingHistoryEntry[] {
+    const paymentOrderIds = new Set(
+        payments.map((payment) => payment.razorpay_order_id).filter((value): value is string => Boolean(value))
+    )
+    const paymentIds = new Set(
+        payments.map((payment) => payment.razorpay_payment_id).filter((value): value is string => Boolean(value))
+    )
+    const attemptIds = new Set(
+        payments.map((payment) => payment.billing_attempt_id).filter((value): value is string => Boolean(value))
+    )
+
+    const paymentEntries: BillingHistoryEntry[] = payments.map((payment) => {
+        const subscription = subscriptionById.get(payment.subscription_id ?? '')
+        return {
+            id: `payment-${payment.id}`,
+            kind: 'payment',
+            date: payment.captured_at || payment.created_at,
+            planTier: subscription?.plan_tier ?? null,
+            purchaseType: subscription?.checkout_purchase_type ?? null,
+            amountPaise: payment.amount_paise,
+            method: payment.method ?? null,
+            paymentId: payment.razorpay_payment_id ?? null,
+            orderId: payment.razorpay_order_id ?? null,
+            receiptPaymentId: payment.status === 'captured' ? payment.id : null,
+            status: normalizePaymentHistoryStatus(payment.status),
+        }
+    })
+
+    // Captured and failed provider records are already represented by
+    // subscription_payments. Keep only attempts without a matching payment so
+    // dismissed or still-unresolved checkouts remain recoverable without
+    // duplicating the same transaction in the default view.
+    const attemptEntries: BillingHistoryEntry[] = attempts
+        .filter((attempt) => (
+            !attemptIds.has(attempt.id)
+            && !(attempt.provider_order_id && paymentOrderIds.has(attempt.provider_order_id))
+            && !(attempt.provider_payment_id && paymentIds.has(attempt.provider_payment_id))
+        ))
+        .map((attempt) => ({
+            id: `attempt-${attempt.id}`,
+            kind: 'attempt',
+            date: attempt.created_at ?? null,
+            planTier: attempt.plan_tier,
+            purchaseType: attempt.purchase_type,
+            amountPaise: attempt.total_amount_paise ?? null,
+            method: null,
+            paymentId: attempt.provider_payment_id ?? null,
+            orderId: attempt.provider_order_id ?? null,
+            receiptPaymentId: null,
+            status: normalizeAttemptHistoryStatus(attempt.status),
+        }))
+
+    return [...paymentEntries, ...attemptEntries].sort((left, right) => (
+        new Date(right.date ?? 0).getTime() - new Date(left.date ?? 0).getTime()
+    ))
+}
+
+function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
+    const statusPresentation = {
+        captured: {
+            label: 'Captured',
+            status: 'success',
+            icon: CheckCircle2,
+            className: 'border-success/25 bg-success-soft text-success',
+        },
+        failed: {
+            label: 'Failed',
+            status: 'failed',
+            icon: XCircle,
+            className: 'border-risk/25 bg-risk-soft text-risk',
+        },
+        incomplete: {
+            label: 'Incomplete',
+            status: 'pending',
+            icon: Clock,
+            className: 'border-warning/25 bg-warning-soft text-warning',
+        },
+        refunded: {
+            label: 'Refunded',
+            status: 'cancelled',
+            icon: XCircle,
+            className: 'border-hairline bg-surface-soft text-subtle',
+        },
+    }[entry.status]
+    const Icon = statusPresentation.icon
+
+    return (
+        <div className="flex flex-col gap-3 p-4 transition-colors hover:bg-surface-soft sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${statusPresentation.className}`}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold tracking-tight text-ink">{getBillingPlanName(entry.planTier)}</p>
+                        <StatusBadge status={statusPresentation.status} label={statusPresentation.label} />
+                        {entry.receiptPaymentId && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">
+                                <ReceiptText className="h-3 w-3" aria-hidden="true" /> Receipt available
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-subtle">
+                        <span>{formatShortDate(entry.date)}</span>
+                        <span aria-hidden="true">·</span>
+                        <span>{getPurchaseTypeLabel(entry.purchaseType)}</span>
+                        {entry.method && (
+                            <>
+                                <span aria-hidden="true">·</span>
+                                <span className="capitalize">{entry.method.replaceAll('_', ' ')}</span>
+                            </>
+                        )}
+                        {entry.paymentId && (
+                            <>
+                                <span aria-hidden="true">·</span>
+                                <span>Ref. {entry.paymentId.slice(-8)}</span>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <div className="flex items-center justify-between gap-4 pl-14 sm:block sm:pl-0 sm:text-right">
+                <p className={`text-lg font-bold tracking-tight ${entry.status === 'captured' ? 'text-ink' : 'text-body'}`}>
+                    {entry.amountPaise !== null ? formatAmount(entry.amountPaise) : '—'}
+                </p>
+                {entry.receiptPaymentId ? (
+                    <Link
+                        href={`/api/billing/receipt/${entry.receiptPaymentId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-saffron-deep hover:underline"
+                    >
+                        Download receipt <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                ) : (
+                    <p className="text-[11px] text-subtle">
+                        {entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
+                    </p>
+                )}
+            </div>
+        </div>
+    )
+}
+
+function PaymentHistory({ entries }: { entries: BillingHistoryEntry[] }) {
+    const latest = entries[0] ?? null
+    const older = entries.slice(1)
+
+    return (
+        <section className="space-y-4">
+            <SectionHeader
+                icon={ReceiptText}
+                title="Latest payment"
+                description="Your latest billing activity is shown first. Older attempts remain available under Payment history."
+            />
+            {latest ? (
+                <Card className="gap-0 overflow-hidden p-0">
+                    <BillingHistoryRow entry={latest} />
+                </Card>
+            ) : (
+                <Card className="border-dashed p-5">
+                    <p className="text-sm font-semibold text-ink">No payment history yet.</p>
+                    <p className="mt-1 text-sm leading-relaxed text-subtle">Successful payments and downloadable receipts will appear here.</p>
+                </Card>
+            )}
+            {older.length > 0 && (
+                <details className="group overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 outline-none transition-colors hover:bg-surface-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 sm:px-5 [&::-webkit-details-marker]:hidden">
+                        <span>
+                            <span className="block text-sm font-semibold text-ink">Payment history</span>
+                            <span className="mt-0.5 block text-xs text-subtle">{older.length} older {older.length === 1 ? 'record' : 'records'}</span>
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-subtle transition-transform group-open:rotate-180" aria-hidden="true" />
+                    </summary>
+                    <div className="divide-y divide-hairline border-t border-hairline">
+                        {older.map((entry) => <BillingHistoryRow key={entry.id} entry={entry} />)}
+                    </div>
+                </details>
+            )}
+        </section>
+    )
+}
+
+function WorkspaceCard({
+    workspaceTier,
+    paidSubscriptionTier,
+    productExperience,
+}: {
+    workspaceTier: string
+    paidSubscriptionTier: string
+    productExperience: 'base' | 'full_suite'
+}) {
+    const isBaseWorkspace = productExperience === 'base' || workspaceTier === 'base'
+    const hasFullSuiteFunding = isBaseWorkspace && paidSubscriptionTier === 'premium'
+    const isActive = workspaceTier !== 'none'
+
+    return (
+        <Card className="min-w-0 gap-4 p-5 shadow-[var(--shadow-card)]">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Workspace</p>
+                    <p className="mt-1 text-xs text-body">The product experience currently enabled for your team.</p>
+                </div>
+                <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Enabled' : 'Not active'} />
+            </div>
+            <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron">
+                    {isBaseWorkspace ? <Zap className="h-5 w-5" aria-hidden="true" /> : <Star className="h-5 w-5" aria-hidden="true" />}
+                </span>
+                <div className="min-w-0">
+                    <h2 className="text-lg font-bold tracking-tight text-ink">
+                        {isBaseWorkspace ? 'Base Plan / Estimator workspace' : paidSubscriptionTier === 'premium' ? 'Full Suite workspace' : 'Workspace not active'}
+                    </h2>
+                    <p className="mt-1 text-sm leading-relaxed text-body">
+                        {!isActive
+                            ? 'Choose an available subscription below to activate a workspace.'
+                            : hasFullSuiteFunding
+                                ? 'Your Full Suite subscription funds this Base workspace. Factory operations stay outside the current workspace.'
+                                : isBaseWorkspace
+                                    ? 'Costing, saved qualities, and customer quotations are enabled here.'
+                                    : 'Estimator and connected factory operations are enabled here.'}
+                    </p>
+                </div>
+            </div>
+        </Card>
+    )
+}
+
+function SubscriptionCard({
+    subscriptionTier,
+    displayPlanTier,
+    subscription,
+    activeRenewalPrice,
+    renewalPlanTier,
+    renewalAvailable,
+    renewalEligibleAt,
+    renewalIsUpcoming,
+}: {
+    subscriptionTier: string
+    displayPlanTier: PurchasablePlanTier | null
+    subscription: { plan_tier: string; current_end: string | null } | null
+    activeRenewalPrice: ReturnType<typeof getBillingPrice> | null
+    renewalPlanTier: PurchasablePlanTier | null
+    renewalAvailable: boolean
+    renewalEligibleAt: string | null
+    renewalIsUpcoming: boolean
+}) {
+    const isActive = ['base', 'premium', 'trial'].includes(subscriptionTier)
+    const isTrial = subscriptionTier === 'trial'
+    const hasExpiredPlan = !isActive && Boolean(displayPlanTier)
+    const planName = displayPlanTier
+        ? getBillingPlan(displayPlanTier).name
+        : isTrial
+            ? 'Legacy Full Suite trial'
+            : 'No active subscription'
+    const subscriptionDescription = isTrial
+        ? 'Legacy trial access is temporary and does not create a paid subscription.'
+        : hasExpiredPlan
+            ? 'This paid period has ended. A new payment is required to restore access.'
+            : displayPlanTier === 'premium'
+                ? 'This subscription includes Full Suite entitlement, even when the selected workspace is Base Plan / Estimator.'
+                : displayPlanTier === 'base'
+                    ? 'This subscription provides the Base Plan / Estimator costing workspace.'
+                    : 'A paid subscription has not been activated yet.'
+    const canRenew = Boolean(renewalAvailable && renewalPlanTier && activeRenewalPrice)
+
+    return (
+        <Card className="min-w-0 gap-4 p-5 shadow-[var(--shadow-card)]">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Paid subscription</p>
+                    <p className="mt-1 text-xs text-body">The commercial plan that funds access and receipts.</p>
+                </div>
+                <StatusBadge
+                    status={isActive ? (isTrial ? 'pending' : 'active') : hasExpiredPlan ? 'expired' : 'info'}
+                    label={isActive ? (isTrial ? 'Trial' : 'Active') : hasExpiredPlan ? 'Expired' : 'Not active'}
+                />
+            </div>
+            <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+                    <CreditCard className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                    <h2 className="text-lg font-bold tracking-tight text-ink">{planName}</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-body">{subscriptionDescription}</p>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 border-t border-hairline pt-4">
+                <div className="rounded-lg bg-surface-soft px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-subtle">Billing period</p>
+                    <p className="mt-1 text-sm font-semibold text-ink">{isTrial ? 'Trial' : 'Annual'}</p>
+                </div>
+                <div className="rounded-lg bg-saffron-soft px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-saffron-deep">Renewal / expiry</p>
+                    <p className="mt-1 text-sm font-semibold text-ink">{subscription?.current_end ? formatShortDate(subscription.current_end) : '—'}</p>
+                </div>
+            </div>
+            <div className="rounded-lg border border-hairline bg-surface-soft p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-subtle">Next action</p>
+                {canRenew && renewalPlanTier && activeRenewalPrice ? (
+                    <>
+                        <p className="mt-1 text-sm font-semibold text-ink">Renew {getBillingPlan(renewalPlanTier).name} for {formatAmount(activeRenewalPrice.totalPaise)}.</p>
+                        <p className="mt-1 text-xs leading-relaxed text-body">Renewal is manual; no automatic charge will be made.</p>
+                        <SubscribeButton
+                            planTier={renewalPlanTier}
+                            tierName={getBillingPlan(renewalPlanTier).name}
+                            displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
+                            buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
+                            successHref="/owner/billing"
+                            successLabel="View billing details"
+                            className="mt-3 w-full shadow-none"
+                        />
+                    </>
+                ) : displayPlanTier === 'premium' ? (
+                    <p className="mt-1 text-xs leading-relaxed text-body">Premium self-serve checkout is paused for the Base pilot. No Full Suite checkout action is available here.</p>
+                ) : renewalIsUpcoming && subscription?.current_end ? (
+                    <p className="mt-1 text-xs leading-relaxed text-body">Renewal opens on {formatShortDate(renewalEligibleAt)}. No automatic charge will be made.</p>
+                ) : isActive ? (
+                    <p className="mt-1 text-xs leading-relaxed text-body">Renewal is manual. Return to Billing when you are ready to renew.</p>
+                ) : hasExpiredPlan ? (
+                    <p className="mt-1 text-xs leading-relaxed text-body">Choose the available renewal option below to restore access.</p>
+                ) : (
+                    <p className="mt-1 text-xs leading-relaxed text-body">Choose an available subscription below to activate access.</p>
+                )}
+            </div>
+        </Card>
+    )
+}
+
+function LatestBillingDocumentsCard({ latestCapturedPayment }: { latestCapturedPayment: SubscriptionPaymentRow | null }) {
+    return (
+        <Card className="min-w-0 gap-4 p-5 shadow-[var(--shadow-card)]">
+            <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Billing documents</p>
+                <p className="mt-1 text-xs text-body">Your latest successful payment and receipt.</p>
+            </div>
+            {latestCapturedPayment ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className="text-sm font-semibold text-emerald-950">Latest payment receipt</p>
+                            <p className="mt-1 text-xs text-emerald-900/75">{formatShortDate(latestCapturedPayment.captured_at || latestCapturedPayment.created_at)} · {formatAmount(latestCapturedPayment.amount_paise)}</p>
+                        </div>
+                        <StatusBadge status="success" label="Receipt available" />
+                    </div>
+                    <Link
+                        href={`/api/billing/receipt/${latestCapturedPayment.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
+                    >
+                        <Download className="h-4 w-4" aria-hidden="true" /> Download receipt
+                    </Link>
+                </div>
+            ) : (
+                <p className="rounded-xl border border-dashed border-hairline bg-surface-soft p-4 text-sm leading-relaxed text-subtle">A payment receipt will appear here after a successful payment.</p>
+            )}
+            <BillingDocumentNotice compact />
+        </Card>
+    )
+}
+
+function AccessStateCallout({
+    subscriptionTier,
+    subscription,
+    isActivating,
+    isPending,
+    isRetryable,
+}: {
+    subscriptionTier: string
+    subscription: { plan_tier: string; current_end: string | null } | null
+    isActivating: boolean
+    isPending: boolean
+    isRetryable: boolean
+}) {
+    if (subscriptionTier === 'base' || subscriptionTier === 'premium') return null
+
+    const expiredPlan = subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
+        ? getBillingPlan(subscription.plan_tier)
+        : null
+
+    if (subscriptionTier === 'trial') {
+        return (
+            <Card className="overflow-hidden border-warning/30 bg-surface">
+                <div className="h-1.5 w-full bg-warning" />
+                <CardContent className="space-y-3 p-5">
+                    <div className="flex items-center gap-2 text-warning"><Timer className="h-4 w-4" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-wider">Legacy trial access</p></div>
+                    <h2 className="text-xl font-bold tracking-tight text-ink">Temporary Full Suite access</h2>
+                    <p className="text-sm leading-relaxed text-body">Access is available until {formatDate(subscription?.current_end ?? null)}. New Full Suite self-serve checkout is paused; the available Estimator subscription is shown below.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    const state = isActivating
+        ? { icon: Clock, label: 'Payment received', title: 'Access is being activated.', text: 'We received a verified payment and are confirming access. Refresh in a few seconds; do not pay again.' }
+        : isPending
+            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: <>The checkout is not a paid subscription yet; Weavly has <strong>not received a verified payment yet</strong>. Check the payment status before trying again.</> }
+            : isRetryable
+                ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
+                : expiredPlan
+                    ? { icon: Lock, label: 'Subscription expired', title: `${expiredPlan.name} access has ended.`, text: 'Choose the available renewal option below to restore access. Your previous payment records remain available.' }
+                    : { icon: Star, label: 'No active subscription', title: 'Choose an available subscription.', text: 'Start with the standalone Estimator for costing, saved qualities, and customer quotations.' }
+    const Icon = state.icon
+
+    return (
+        <Card className="border-loom-elevated bg-loom p-5 text-white shadow-[var(--shadow-panel)]">
+            <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-saffron"><Icon className="h-4 w-4" aria-hidden="true" /></span>
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-surface-muted">{state.label}</p>
+                    <h2 className="mt-1 text-xl font-bold tracking-tight">{state.title}</h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-surface-muted">{state.text}</p>
+                </div>
+            </div>
+        </Card>
+    )
+}
+
 function getFeatureLabel(route: string | null): string | null {
     if (!route || !route.startsWith('/owner/')) return null
     const labels: Record<string, string> = {
@@ -85,20 +554,6 @@ function getFeatureLabel(route: string | null): string | null {
         '/owner/system-health': 'System Health',
     }
     return labels[route] ?? 'this connected factory feature'
-}
-
-function trialDaysLeft(currentEnd: string | null): number {
-    if (!currentEnd) return 0
-    const ms = new Date(currentEnd).getTime() - Date.now()
-    return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)))
-}
-
-function trialProgressPct(currentEnd: string | null): number {
-    if (!currentEnd) return 100
-    const total = 7 * 24 * 60 * 60 * 1000
-    const remaining = new Date(currentEnd).getTime() - Date.now()
-    const used = total - Math.max(0, remaining)
-    return Math.min(100, Math.round((used / total) * 100))
 }
 
 function ReferralLoading() {
@@ -206,7 +661,6 @@ function PlanCards({
                             <ul className="flex-1 space-y-3">
                                 {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm leading-tight text-body"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />{feature}</li>)}
                             </ul>
-                            <BillingDocumentNotice compact />
                             <SubscribeButton
                                 planTier={plan.tier}
                                 tierName={plan.name}
@@ -245,33 +699,38 @@ export default async function BillingPage({
     const supabase = await createClient()
     // Critical billing state stays authoritative and server-owned. Referral
     // statistics are an independent secondary panel and stream below.
-    const [query, subscriptionDetail, paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
+    const [query, subscriptionDetail, planAccess, paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         queryPromise,
         getSubscriptionDetail(profile.org_id),
+        getCachedOrgPlanAccess(profile.org_id),
         supabase
             .from('subscription_payments')
-            .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at')
+            .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at, billing_attempt_id')
             .eq('org_id', profile.org_id)
-            .order('created_at', { ascending: false })
-            .limit(10),
+            .order('created_at', { ascending: false }),
         supabase
             .from('org_subscriptions')
             .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at')
             .eq('org_id', profile.org_id),
         supabase
             .from('billing_checkout_attempts')
-            .select('id, org_id, client_request_id, plan_tier, purchase_type, status, provider_order_id, provider_payment_id, provider_order_status, provider_status, failure_code, failure_reason, created_at, updated_at, last_checked_at')
+            .select('id, org_id, client_request_id, plan_tier, purchase_type, status, provider_order_id, provider_payment_id, provider_order_status, provider_status, failure_code, failure_reason, total_amount_paise, created_at, updated_at, last_checked_at')
             .eq('org_id', profile.org_id)
-            .order('created_at', { ascending: false })
-            .limit(1),
+            .order('created_at', { ascending: false }),
     ])
-    const { tier, subscription } = subscriptionDetail
+    const { subscription } = subscriptionDetail
+    // `tier` is the workspace experience enforced by the owner shell. The
+    // paid subscription tier stays separate so a Full Suite payment can be
+    // shown as funding a selected Base workspace without relabeling it.
+    const tier = planAccess.effectiveTier
+    const subscriptionTier = planAccess.subscriptionTier
     const requestedRoute = typeof query.from === 'string' ? query.from : null
     const requestedFeature = getFeatureLabel(requestedRoute)
-    const payments = paymentsResult.data ?? []
+    const payments = (paymentsResult.data ?? []) as SubscriptionPaymentRow[]
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
-    const latestAttempt = (attemptsResult.data?.[0] ?? null) as BillingAttemptRow | null
+    const attempts = (attemptsResult.data ?? []) as BillingAttemptHistoryRow[]
+    const latestAttempt = attempts[0] ?? null
     // Billing lifecycle is evaluated on the server so expired paid customers
     // see renewal pricing while trials still see first-year pricing.
     const billingNow = new Date()
@@ -282,11 +741,17 @@ export default async function BillingPage({
     const subscriptionById = new Map(
         billingSubscriptions.map((row) => [row.id, row])
     )
-    const activePaidTier = tier === 'base' || tier === 'premium' ? tier : null
-    const activePlan = activePaidTier ? getBillingPlan(activePaidTier) : null
-    const activeRenewalPrice = activePaidTier ? getBillingPrice(activePaidTier, 'renewal') : null
-    const selfServeActiveTier = activePaidTier && BILLING_SELF_SERVE_PLAN_TIERS.includes(activePaidTier)
-        ? activePaidTier
+    const activePaidTier = subscriptionTier === 'base' || subscriptionTier === 'premium' ? subscriptionTier : null
+    const latestSubscriptionTier = subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
+        ? subscription.plan_tier
+        : null
+    const historicalPaidTier = latestSubscriptionTier && purchaseDecisions[latestSubscriptionTier].purchaseType === 'renewal'
+        ? latestSubscriptionTier
+        : null
+    const billingPlanTier = activePaidTier ?? historicalPaidTier
+    const activeRenewalPrice = billingPlanTier ? getBillingPrice(billingPlanTier, 'renewal') : null
+    const selfServeActiveTier = billingPlanTier && BILLING_SELF_SERVE_PLAN_TIERS.includes(billingPlanTier)
+        ? billingPlanTier
         : null
 
     const checkoutPresentation = resolveBillingCheckoutPresentation(
@@ -306,7 +771,21 @@ export default async function BillingPage({
     const renewalEligibleAt = subscription?.current_end
         ? getRenewalEligibilityDate(subscription.current_end)
         : null
-    const latestCapturedPayment = (payments as SubscriptionPaymentRow[]).find((payment) => payment.status === 'captured') ?? null
+    const renewalIsUpcoming = Boolean(
+        renewalEligibleAt && new Date(renewalEligibleAt).getTime() > billingNow.getTime()
+    )
+    const latestCapturedPayment = payments.find((payment) => payment.status === 'captured') ?? null
+    const billingHistoryEntries = buildBillingHistoryEntries(payments, attempts, subscriptionById)
+    const latestAttemptNeedsAttention = Boolean(
+        latestAttempt
+        && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
+    )
+    const canShowPlanCards = subscriptionTier !== 'premium' && !isActivating && !isPending && !renewalAvailable
+    const planSectionLabel = billingPlanTier && subscriptionTier === 'none'
+        ? `Renew ${getBillingPlan(billingPlanTier).name}`
+        : tier === 'base'
+            ? 'Available subscriptions'
+            : 'Choose Weavly Estimator'
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
@@ -318,7 +797,7 @@ export default async function BillingPage({
                 title="Billing & Plan"
                 description={(
                     <>
-                        <span>See your current plan, renewal date, payment history, and billing documents.</span>
+                        <span>See which workspace is enabled, what subscription funds it, when it renews, and where to get the latest receipt.</span>
                         {requestedFeature && tier === 'none' && (
                             <span className="mt-2 block font-semibold text-saffron-deep">
                                 You arrived here from {requestedFeature}. Choose a plan to unlock it.
@@ -326,7 +805,7 @@ export default async function BillingPage({
                         )}
                     </>
                 )}
-                meta={tier !== 'none' && !latestAttempt?.status?.match(/processing|unknown|authorized|activation_pending|reconciliation_required|duplicate/) ? <StatusBadge status="active" /> : null}
+                meta={subscriptionTier === 'base' || subscriptionTier === 'premium' ? <StatusBadge status="active" /> : subscriptionTier === 'trial' ? <StatusBadge status="pending" label="Trial" /> : null}
                 actions={(
                     <Link href="/owner/data-export" className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-saffron-deep underline-offset-4 hover:bg-saffron-soft hover:underline">
                         Export organization data
@@ -334,323 +813,65 @@ export default async function BillingPage({
                 )}
             />
 
-            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+                <WorkspaceCard
+                    workspaceTier={tier}
+                    paidSubscriptionTier={subscriptionTier}
+                    productExperience={planAccess.productExperience}
+                />
+                <SubscriptionCard
+                    subscriptionTier={subscriptionTier}
+                    displayPlanTier={billingPlanTier}
+                    subscription={subscription}
+                    activeRenewalPrice={activeRenewalPrice}
+                    renewalPlanTier={selfServeActiveTier}
+                    renewalAvailable={renewalAvailable}
+                    renewalEligibleAt={renewalEligibleAt}
+                    renewalIsUpcoming={renewalIsUpcoming}
+                />
+                <LatestBillingDocumentsCard latestCapturedPayment={latestCapturedPayment} />
+            </div>
+
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-                
-                {/* Left/Main Column - Context Sensitive */}
                 <div className="space-y-6 lg:col-span-8">
-                    {latestAttempt && latestAttempt.status !== 'activated' && latestAttempt.status !== 'failed' && latestAttempt.status !== 'cancelled' && latestAttempt.status !== 'refunded' && (
-                        <BillingAttemptStatus attempt={latestAttempt} />
-                    )}
-                    
-                    {/* 1. STATE-SPECIFIC HERO CARD */}
-                    {tier === 'none' ? (
-                        <div className="relative overflow-hidden rounded-xl border border-loom-elevated bg-loom p-6 text-white shadow-[var(--shadow-panel)] sm:p-8 md:p-10">
-                            <div className="relative z-10 max-w-lg space-y-6">
-                                {isActivating ? (
-                                    <>
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-                                            <Clock className="h-3 w-3 animate-spin" /> Activating access
-                                        </div>
-                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Your factory is coming online.</h2>
-                                        <p className="text-surface-muted text-base font-medium">
-                                            We&apos;ve received your payment. Your selected <strong>Weavly plan</strong> is being configured. Refresh in a few seconds.
-                                        </p>
-                                    </>
-                                ) : isPending ? (
-                                    <>
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-                                            <Clock className="h-3 w-3 animate-spin" /> Checkout pending
-                                        </div>
-                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Complete payment in Razorpay.</h2>
-                                        <p className="text-surface-muted text-base font-medium">
-                                            Your order is ready, but Weavly has <strong>not received a verified payment yet</strong>. Complete or close the checkout to continue.
-                                        </p>
-                                    </>
-                                ) : isRetryable ? (
-                                    <>
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-                                            <XCircle className="h-3 w-3" /> Payment not completed
-                                        </div>
-                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">No payment was captured.</h2>
-                                        <p className="text-surface-muted text-base font-medium">
-                                            Your access was not activated. Choose a plan below to retry the checkout safely.
-                                        </p>
-                                    </>
-                                ) : subscription ? (
-                                    <>
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-                                            <Lock className="h-3 w-3" /> Access suspended
-                                        </div>
-                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">
-                                            {subscription?.plan_tier === 'base' ? 'Estimator access expired.' : 'Factory access expired.'}
-                                        </h2>
-                                        <p className="text-surface-muted text-base font-medium">
-                                            {subscription?.plan_tier === 'base'
-                                                ? 'Your Estimator workspace period has ended. Renew it to continue creating and exporting costings and customer quotations.'
-                                                : 'Your connected factory period has ended. Renew it or choose the plan that matches how you work.'}
-                                        </p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <StatusBadge status="info" label="Limited access" icon={Star} className="border-white/20 bg-white/10 text-white" />
-                                        <h2 className="text-2xl font-black tracking-tight leading-[1.1] sm:text-3xl md:text-5xl">Choose your Weavly workspace.</h2>
-                                        <p className="text-surface-muted text-base font-medium">
-                                            Start with the standalone Estimator for costing, saved qualities, and customer quotations.
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ) : tier === 'trial' ? (
-                        <Card className="premium-disclosure-card overflow-hidden border-warning/30 bg-surface">
-                            <div className="h-2 w-full bg-warning" />
-                            <CardContent className="p-8 md:p-10 space-y-8">
-                                <div className="flex flex-col md:flex-row justify-between gap-6">
-                                    <div className="space-y-2">
-                                        <div className="inline-flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-warning">
-                                            <Timer className="w-3.5 h-3.5" />
-                                            Legacy trial access
-                                        </div>
-                                        <h2 className="text-2xl font-bold tracking-tight text-ink">Temporary Full Suite access</h2>
-                                        <p className="text-base font-medium text-body">Full access until {formatDate(subscription?.current_end ?? null)}</p>
-                                    </div>
-                                    <div className="flex min-w-[200px] flex-col items-center rounded-xl border border-hairline bg-surface-soft p-4 md:items-end">
-                                        <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-warning">Time remaining</p>
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-5xl font-bold leading-none text-saffron-deep">{trialDaysLeft(subscription?.current_end ?? null)}</span>
-                                            <span className="text-xl font-bold text-warning">days</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-xs font-semibold uppercase tracking-widest text-subtle">
-                                        <span>Trial started</span>
-                                        <span>{trialProgressPct(subscription?.current_end ?? null)}% elapsed</span>
-                                    </div>
-                                    <div className="h-3 rounded-full border border-hairline bg-surface-soft p-0.5" role="progressbar" aria-label="Trial elapsed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trialProgressPct(subscription?.current_end ?? null)}>
-                                        <div className="premium-progress-fill h-full w-full rounded-full bg-warning" style={{ transform: `scaleX(${trialProgressPct(subscription?.current_end ?? null) / 100})` }}>
-                                            <div className="h-full w-full rounded-full bg-white/20" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-4 rounded-xl border border-warning/30 bg-warning-soft/45 p-4">
-                                    <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-warning" />
-                                    <div>
-                                        <p className="text-sm font-semibold text-ink">Full access unlocked</p>
-                                        <p className="text-sm leading-relaxed text-body">
-                                            This access was created under an earlier trial policy. To continue after it ends, choose Weavly Full Suite below. New trials are not currently available.
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        /* PREMIUM/BASE ACTIVE STATE INFO */
-                        <Card className="premium-disclosure-card gap-0 overflow-hidden p-0">
-                            <div className="h-1 w-full bg-saffron" />
-                            <CardContent className="p-6 md:p-8">
-                                <div className="flex flex-col gap-8 md:flex-row md:justify-between">
-                                    <div className="space-y-5">
-                                        <div>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Current plan</p>
-                                                <StatusBadge status="active" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <h2 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-ink">
-                                                {tier === 'base'
-                                                    ? <Zap className="h-7 w-7 fill-saffron-soft text-saffron" />
-                                                    : <Star className="h-7 w-7 fill-warning-soft text-warning" />}
-                                                {activePlan?.name ?? 'Weavly Plan'}
-                                            </h2>
-                                        <p className="mt-2 max-w-lg text-base leading-6 text-body">
-                                                {tier === 'base'
-                                                    ? 'Your Estimator workspace is active and in good standing. Costing, saved qualities, and customer quotation documents are included.'
-                                                    : 'Your Full Suite plan is active and in good standing.'}
-                                            </p>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3 border-t border-hairline pt-5">
-                                            <div className="flex flex-col justify-center rounded-lg bg-surface-soft px-4 py-3">
-                                                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-subtle">Billing period</p>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-lg font-semibold text-ink">Annual</span>
-                                                </div>
-                                            </div>
-                                            {subscription?.current_end && (
-                                                <div className="flex flex-col justify-center rounded-lg bg-saffron-soft px-4 py-3">
-                                                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-saffron-deep">Active until</p>
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className="text-lg font-semibold text-ink">{formatShortDate(subscription.current_end)}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex min-w-[220px] flex-col justify-center rounded-xl bg-loom p-6 text-white">
-                                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-surface-muted">Manual renewal</p>
-                                        <div className="mb-1 text-3xl font-bold tracking-tight">
-                                            {activeRenewalPrice ? formatAmount(activeRenewalPrice.totalPaise) : '—'}
-                                        </div>
-                                        <p className="text-xs text-surface-muted">total per year from year 2</p>
-                                        <p className="mt-2 text-[10px] text-subtle">
-                                            {activeRenewalPrice ? `${formatAmount(activeRenewalPrice.basePaise)} + ${formatAmount(activeRenewalPrice.gstPaise)} GST` : ''}
-                                        </p>
-                                        {renewalAvailable && selfServeActiveTier && activeRenewalPrice ? (
-                                            <SubscribeButton
-                                                planTier={selfServeActiveTier}
-                                                tierName={activePlan?.name}
-                                                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
-                                                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
-                                                successHref="/owner/billing"
-                                                successLabel="View payment history"
-                                                className="mt-5 shadow-none"
-                                            />
-                                        ) : activePaidTier === 'premium' ? (
-                                            <p className="mt-5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-surface-muted">
-                                                Premium self-serve checkout is paused for the Base pilot. Contact support for an approved account action.
-                                            </p>
-                                        ) : renewalEligibleAt && subscription?.current_end ? (
-                                            <p className="mt-5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-surface-muted">
-                                                Renewal opens on {formatShortDate(renewalEligibleAt)} ({RENEWAL_ELIGIBILITY_DAYS} days before expiry). No automatic charge will be made.
-                                            </p>
-                                        ) : (
-                                            <p className="mt-5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-surface-muted">
-                                                Renewal is manual. Open Billing again when you are ready to renew.
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* 2. PLAN CARDS SECTION (If not premium or if base) */}
-                    {(tier !== 'premium' && !isActivating && !isPending) && (
+                    {latestAttemptNeedsAttention && latestAttempt && <BillingAttemptStatus attempt={latestAttempt} />}
+                    <AccessStateCallout
+                        subscriptionTier={subscriptionTier}
+                        subscription={subscription}
+                        isActivating={isActivating}
+                        isPending={isPending}
+                        isRetryable={isRetryable}
+                    />
+                    {canShowPlanCards && (
                         <PlanCards
-                            label={tier === 'base' ? 'Upgrade to Weavly Full Suite' : 'Select Weavly Estimator'}
-                            currentTier={tier}
+                            label={planSectionLabel}
+                            currentTier={subscriptionTier}
                             decisions={purchaseDecisions}
                             visibleTiers={visiblePlanTiers}
                         />
                     )}
-
-                    {/* 3. PAYMENT HISTORY - CLEAN & COMPACT */}
-                    <div className="space-y-4 pt-2">
-                        <SectionHeader icon={ReceiptText} title="Payment history" />
-                        {payments && payments.length > 0 ? <Card className="gap-0 overflow-hidden p-0">
-                            <div className="divide-y divide-hairline">
-                                {(payments as SubscriptionPaymentRow[]).map((p) => (
-                                        <div key={p.id} className="group flex flex-col gap-3 p-5 transition-colors hover:bg-surface-soft sm:flex-row sm:items-center sm:justify-between">
-                                            <div className="flex items-center gap-5">
-                                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border ${
-                                                    p.status === 'captured'
-                                                        ? 'border-success/25 bg-success-soft text-success'
-                                                        : 'border-risk/25 bg-risk-soft text-risk'
-                                                }`}>
-                                                    {p.status === 'captured' ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-                                                </div>
-                                                <div className="space-y-0.5">
-                                                    <p className="text-sm font-semibold uppercase tracking-tight text-ink">
-                                                        {subscriptionById.get(p.subscription_id ?? '')?.plan_tier === 'base'
-                                                            ? 'Weavly Estimator'
-                                                            : subscriptionById.get(p.subscription_id ?? '')?.plan_tier === 'premium'
-                                                                ? 'Weavly Full Suite'
-                                                                : 'Weavly payment'} {p.status !== 'captured' && '— Not completed'}
-                                                    </p>
-                                                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-subtle">
-                                                        <span>{formatShortDate(p.captured_at || p.created_at)}</span>
-                                                        <span className="text-hairline-strong">/</span>
-                                                        <span>{subscriptionById.get(p.subscription_id ?? '')?.checkout_purchase_type === 'renewal' ? 'Annual renewal' : subscriptionById.get(p.subscription_id ?? '')?.checkout_purchase_type === 'initial_purchase' ? 'First-year payment' : 'Subscription payment'}</span>
-                                                        <span className="text-hairline-strong">/</span>
-                                                        <span className="flex items-center gap-1">
-                                                            <ReceiptText className="h-3 w-3" />
-                                                            {p.razorpay_payment_id?.slice(-8) || p.id.slice(-8)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-left sm:text-right">
-                                                <p className={`text-lg font-bold tracking-tight ${p.status === 'captured' ? 'text-ink' : 'text-risk'}`}>
-                                                    {formatAmount(p.amount_paise)}
-                                                </p>
-                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-subtle">{p.method || 'UNSPECIFIED'}</p>
-                                                {p.status === 'captured' && (
-                                                    <>
-                                                        <Link
-                                                            href={`/api/billing/receipt/${p.id}`}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-saffron-deep hover:underline"
-                                                        >
-                                                            Download receipt <ArrowRight className="h-3 w-3" />
-                                                        </Link>
-                                                        <p className="mt-1 text-[10px] text-subtle">Payment receipt only · not a GST tax invoice</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                ))}
-                            </div>
-                        </Card> : <Card className="border-dashed p-5">
-                            <p className="text-sm font-semibold text-ink">No payment history yet.</p>
-                            <p className="mt-1 text-sm leading-relaxed text-subtle">Successful payments and downloadable receipts will appear here.</p>
-                        </Card>}
-                    </div>
+                    <PaymentHistory entries={billingHistoryEntries} />
                 </div>
 
-                {/* Right/Side Column */}
-                <div className="space-y-6 lg:col-span-4">
-                    
-                    {/* REFERRAL CARD */}
+                <aside className="space-y-6 lg:col-span-4">
                     <Suspense fallback={<ReferralLoading />}>
                         <DeferredReferralSection />
                     </Suspense>
-
-                    {/* QUICK LINKS / HELP */}
-                    <Card className="premium-disclosure-card space-y-5 p-5">
-                        <div className="flex items-center gap-2">
-                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-soft">
-                                <ShieldCheck className="h-4 w-4 text-subtle" />
-                             </div>
-                             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-body">Billing documents</p>
-                        </div>
-                        <div className="space-y-4">
-                            {latestCapturedPayment ? (
-                                <Link
-                                    href={`/api/billing/receipt/${latestCapturedPayment.id}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="group flex items-center justify-between rounded-lg border border-hairline bg-surface-soft p-3.5 text-sm font-medium text-body transition-colors hover:border-saffron/50 hover:bg-saffron-soft"
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <ReceiptText className="h-4 w-4 text-subtle" />
-                                        Download latest payment receipt
-                                    </span>
-                                    <ArrowRight className="h-4 w-4 text-hairline-strong transition-all group-hover:translate-x-0.5 group-hover:text-saffron" />
-                                </Link>
-                            ) : (
-                                <p className="rounded-lg border border-hairline bg-surface-soft p-3.5 text-sm leading-relaxed text-subtle">
-                                    Payment receipts appear here after a successful payment.
-                                </p>
-                            )}
-                            <BillingDocumentNotice compact />
-                        </div>
-
-                        {/* Test mode notice */}
-                        {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (
+                    {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (
+                        <Card className="space-y-3 p-5">
                             <div className="flex items-start gap-3 rounded-xl border border-dashed border-warning/40 bg-warning-soft px-4 py-3">
-                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
                                 <p className="text-[10px] font-semibold uppercase leading-relaxed tracking-wider text-warning">
                                     Test checkout environment: use test payment details only. No real payment will be captured.
                                 </p>
                             </div>
-                        )}
-                    </Card>
-                </div>
+                            <div className="flex items-start gap-2 text-xs leading-relaxed text-subtle">
+                                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                                <p>Billing status and access decisions remain server-authoritative.</p>
+                            </div>
+                        </Card>
+                    )}
+                </aside>
             </div>
         </div>
     )
