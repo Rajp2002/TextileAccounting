@@ -113,7 +113,7 @@ export default function LandingFeatures() {
                                 One clear loop from inputs to Cost Sheet.
                             </h2>
                         </div>
-                        <p className="max-w-2xl text-lg leading-8 text-zinc-700 dark:text-zinc-300 lg:ml-auto">
+                        <p className="max-w-2xl text-lg leading-8 text-[var(--color-body)] lg:ml-auto">
                             Weavly follows the costing decision a weaving unit makes before work begins: define the fabric quality, capture yarn rates, apply factory costs, review margin, save the costing, and export the Cost Sheet.
                         </p>
                     </div>
@@ -132,7 +132,7 @@ export default function LandingFeatures() {
                                         </div>
                                     </div>
                                     <h3 className="mt-8 text-xl font-black text-zinc-950 dark:text-white">{step.title}</h3>
-                                    <p className="mt-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">{step.description}</p>
+                                    <p className="mt-3 text-sm leading-6 text-[var(--color-body)]">{step.description}</p>
                                     <p className="mt-6 border-t border-zinc-200 pt-5 text-sm font-bold leading-6 text-zinc-900 dark:border-white/10 dark:text-zinc-100">
                                         <span className="mb-2 block text-[11px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-400">Outcome</span>
                                         {step.outcome}
