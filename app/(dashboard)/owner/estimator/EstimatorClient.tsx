@@ -118,7 +118,7 @@ import {
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
 import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
-import type { EstimatorAutosaveData, EstimatorQuoteStatus } from '@/lib/estimator-drafts'
+import type { EstimatorDraftInput, EstimatorQuoteStatus } from '@/lib/estimator-drafts'
 import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
@@ -2522,7 +2522,6 @@ export default function EstimatorClient({
     const [showDiscardDraft, setShowDiscardDraft] = useState(false)
     const [showRenameDraft, setShowRenameDraft] = useState(false)
     const [draftRenameValue, setDraftRenameValue] = useState('')
-    const [draftBannerHidden, setDraftBannerHidden] = useState(false)
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
         targetMode: 'quote' | 'market'
@@ -2664,7 +2663,15 @@ export default function EstimatorClient({
     const partyLookupTimerRef = useState<ReturnType<typeof setTimeout> | null>(null)
 
     // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
-    const shouldPersistEstimatorDraft = useCallback((data: Omit<EstimatorAutosaveData<EstimateState>, 'savedAt'>) => {
+    const validateEstimatorDraftState = useCallback((candidate: unknown): candidate is EstimateState => {
+        if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false
+        const value = candidate as Partial<EstimateState>
+        return Array.isArray(value.warpRows)
+            && Array.isArray(value.weftRows)
+            && Boolean(value.enabledSections && typeof value.enabledSections === 'object')
+    }, [])
+
+    const shouldPersistEstimatorDraft = useCallback((data: EstimatorDraftInput<EstimateState>) => {
         const hasWarpInput = data.state.warpRows.some(row => Number(row.calcDenier) > 0 || Number(row.beamEnds) > 0 || Number(row.yarnRate) > 0 || Number(row.manualKgPer100m) > 0)
         const hasWeftInput = data.state.weftRows.some(row => Number(row.calcDenier) > 0 || Number(row.picks) > 0 || Number(row.yarnRate) > 0 || Number(row.manualKgPer100m) > 0)
         return Boolean(
@@ -2679,11 +2686,26 @@ export default function EstimatorClient({
         )
     }, [])
 
-    const { hasDraft, draft, restoreDraft, dismissDraft, renameDraft, clearDraft, saveDraft, saveDraftNow, suppressAutosaveUntilChanged, markUserEdit } = useAutosave<EstimateState>({
+    const {
+        hasDraft,
+        draft,
+        restoreDraft,
+        dismissDraft,
+        renameDraft,
+        clearDraft,
+        saveDraft,
+        saveDraftNow,
+        suppressAutosaveUntilChanged,
+        markUserEdit,
+        storageStatus,
+        draftConflict,
+        acknowledgeDraftConflict,
+    } = useAutosave<EstimateState>({
         orgId,
         userId,
         debounceMs: 2000,
-        shouldPersist: data => shouldPersistEstimatorDraft(data as Omit<EstimatorAutosaveData<EstimateState>, 'savedAt'>),
+        shouldPersist: data => shouldPersistEstimatorDraft(data as EstimatorDraftInput<EstimateState>),
+        validateState: validateEstimatorDraftState,
     })
 
     // Reducer updates from visible controls are user edits. Keeping this
@@ -4103,9 +4125,13 @@ export default function EstimatorClient({
             )}
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
-            {hasDraft && draft && !draftBannerHidden && (
+            {hasDraft && draft && (
                 <div className={pageShellClass}>
-                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-warning-amber)]/25 bg-[var(--color-warning-amber-soft)] px-4 py-3">
+                    <div
+                        className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-warning-amber)]/25 bg-[var(--color-warning-amber-soft)] px-4 py-3"
+                        role="region"
+                        aria-label="Unsaved Cost Estimate recovery"
+                    >
                         <RotateCcw className="h-4 w-4 text-[var(--color-warning-amber)] shrink-0" />
                         <p className="text-sm text-[var(--color-warning-amber)] flex-1">
                             {draft.sourceQuoteId ? (
@@ -4125,40 +4151,79 @@ export default function EstimatorClient({
                             ) : (
                                 <>
                                     <span className="font-bold">Unsaved Cost Estimate</span> from{' '}
-                                    {formatSuratDateTime(draft.savedAt)}
+                                    {formatSuratDateTime(draft.createdAt)}
                                     {canUseProduction && draft.partyName && <span className="text-[var(--color-warning-amber)]"> · {draft.partyName}</span>}
                                 </>
                             )}
+                            {draft.sourceQuoteId && (
+                                <span className="ml-1 text-[var(--color-warning-amber)]">· draft created {formatSuratDateTime(draft.createdAt)}</span>
+                            )}
                         </p>
                         <button
+                            type="button"
                             onClick={applyEstimatorDraft}
+                            aria-label="Restore draft"
                             className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] underline underline-offset-2 hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
-                            Restore
+                            Restore draft
                         </button>
                         <button
+                            type="button"
                             onClick={() => { setDraftRenameValue(draft.qualityLabel || ''); setShowRenameDraft(true) }}
                             className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
                             <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Rename
                         </button>
                         <button
+                            type="button"
                             onClick={() => setShowDiscardDraft(true)}
                             className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
-                            aria-label="Dismiss unsaved Cost Estimate draft"
+                            aria-label="Discard draft"
                         ><X className="h-3.5 w-3.5" aria-hidden="true" /> <span>Discard</span></button>
                         <button
                             type="button"
-                            onClick={() => {
-                                setDraftBannerHidden(true)
-                                toast.info(tx('Draft kept for later'), {
-                                    description: tx('It stays on this device until you restore or discard it.'),
-                                })
-                            }}
+                            onClick={() => setShowConfirmNewQuality(true)}
+                            aria-label="Start fresh"
                             className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
-                            Keep for later
+                            Start fresh
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {storageStatus === 'unavailable' && (
+                <div className={`${pageShellClass} mb-2`}>
+                    <p role="status" aria-live="polite" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-900">
+                        Draft recovery is unavailable on this device right now. Keep this page open until the Cost Estimate is explicitly saved.
+                    </p>
+                </div>
+            )}
+
+            {draftConflict && (
+                <div className={`${pageShellClass} mb-2`}>
+                    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-xs font-semibold text-sky-950">
+                        <span className="min-w-0 flex-1">
+                            {draftConflict.kind === 'cleared'
+                                ? 'This draft was cleared in another tab. Your current tab has not been changed.'
+                                : 'A newer draft was written in another tab. Your current tab has not been replaced.'}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={acknowledgeDraftConflict}
+                            className="min-h-10 rounded-lg px-3 underline underline-offset-2"
+                        >
+                            Keep this tab
+                        </button>
+                        {draftConflict.kind === 'updated' && (
+                            <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className="min-h-10 rounded-lg bg-sky-700 px-3 text-white"
+                            >
+                                Reload newer draft
+                            </button>
+                        )}
                     </div>
                 </div>
             )}

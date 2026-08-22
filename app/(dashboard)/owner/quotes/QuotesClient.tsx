@@ -5,6 +5,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
 import {
+    createEstimatorDraft,
     getEstimatorDraftStorageKey,
     parseEstimatorDraft,
     shouldWarnBeforeQuoteRestore,
@@ -29,7 +30,7 @@ import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getEstimat
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
 import { formatDateOnly } from '@/lib/format'
-import { formatSuratDateTime, getCurrentTimestampMs } from '@/lib/time'
+import { formatSuratDateTime } from '@/lib/time'
 import {
     History,
     CheckCircle2,
@@ -1180,7 +1181,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             const createsQuotationFromCosting = canUseQuotationWorkflow && isDuplicate && isCosting
             const startsNewBaseQuality = isDuplicate && isCosting && !canUseQuotationWorkflow
             const restoredState = buildDraftStateFromQuote(quote)
-            const newDraft: EstimatorAutosaveData<QuoteDraftState> = {
+            const newDraft = createEstimatorDraft<QuoteDraftState>({
                 state: restoredState,
                 partyName: createsQuotationFromCosting ? '' : quote.party_name || '',
                 // A Base starting point is intentionally detached from both
@@ -1194,7 +1195,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         : quote.quality_label || '',
                 warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
                 weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
-                savedAt: getCurrentTimestampMs(),
                 sourceQuoteId: isDuplicate ? undefined : quote.id,
                 sourceQuoteUpdatedAt: isDuplicate ? undefined : quote.updated_at,
                 sourceQuoteVersionNumber: isDuplicate ? undefined : Number(quote.version_number ?? 1),
@@ -1207,7 +1207,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     : quote.record_kind ?? (canUseQuotationWorkflow ? 'quotation' : 'costing'),
                 templateId: startsNewBaseQuality ? undefined : quote.template_id ?? undefined,
                 restoreOnEstimatorEntry: true,
-            }
+            }, {
+                writerId: 'quotes-history',
+            })
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
             setQuoteToRestore(null)
             setExistingDraftForRestore(null)

@@ -13,7 +13,10 @@ import {
     recordLogoutCleanupCompleted,
     startLogoutTrace,
 } from '@/lib/logout-trace'
-import { scheduleClientSessionCleanup } from '@/lib/client-storage-cleanup'
+import {
+    clearUserCacheFromStorage,
+    scheduleClientSessionCleanup,
+} from '@/lib/client-storage-cleanup'
 
 interface LogoutButtonProps {
     variant?: 'sidebar' | 'header'
@@ -39,10 +42,20 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
         setIsLoggingOut(true)
 
         // Namespace detachment is the synchronous security boundary. Physical
-        // browser storage deletion is housekeeping and must not delay the
-        // native sign-out POST or its server-side redirect.
+        // browser storage deletion is normally housekeeping, but estimator
+        // drafts are cleared synchronously so a full-page sign-out cannot
+        // expose the previous principal's recoverable work to the next login.
         const retiredScope = detachActiveQueryNamespace()
         markLogoutTraceStage(nextTraceId, 'cache_namespace_rotated')
+        try {
+            clearUserCacheFromStorage(window.localStorage, {
+                scope: retiredScope,
+                clearScope: true,
+                includeLegacy: true,
+            })
+        } catch {
+            // Deferred cleanup below retries if storage is temporarily blocked.
+        }
         scheduleClientSessionCleanup({
             scope: retiredScope,
             onComplete: (result) => recordLogoutCleanupCompleted(nextTraceId, result),
