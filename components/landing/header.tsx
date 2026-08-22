@@ -77,7 +77,7 @@ export default function LandingHeader() {
                     <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 md:px-6 lg:px-8">
                         <Link href="/" className="group flex items-center">
                             <div className="relative h-12 w-32 transition-opacity duration-200 group-hover:opacity-80 xs:h-16 xs:w-40 md:h-20 md:w-56">
-                                <Image src="/images/WeavlyLogoBlack.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="object-contain object-left" priority />
+                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="origin-left scale-110 object-contain object-left" priority />
                             </div>
                         </Link>
 
