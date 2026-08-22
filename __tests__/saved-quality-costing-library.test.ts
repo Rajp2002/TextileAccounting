@@ -17,6 +17,8 @@ describe('saved quality costing library', () => {
     expect(client).toContain('Latest Saved Costing breakdown')
     expect(client).toContain('Applied production')
     expect(client).toContain('Saved Costing history')
+    expect(client).toContain('Choose a costing version to view its breakdown')
+    expect(client).toContain('View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}')
     expect(client).toContain('No costing saved for this quality yet')
     expect(client).toContain('Current recipe')
     expect(client).toContain('live estimate from the saved yarn recipe and current factory costs')

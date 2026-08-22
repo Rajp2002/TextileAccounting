@@ -583,14 +583,18 @@ function SavedQualityLibraryView({
                                             <p className="mt-3 text-sm font-bold text-body">{tx(latestDetailLoading
                                                 ? 'Loading saved costing details…'
                                                 : latest
-                                                    ? 'Detailed breakdown unavailable for this older Saved Costing'
+                                                    ? group.records.length > 1
+                                                        ? 'Choose a costing version to view its breakdown'
+                                                        : 'This saved costing does not have a detailed breakdown yet'
                                                     : group.currentRecipeCostPerM != null
                                                         ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                         : 'No costing saved for this quality yet')}</p>
                                             <p className="mt-1 max-w-md text-xs text-subtle">{tx(latestDetailLoading
                                                 ? 'Loading the saved assumptions and financial breakdown for this snapshot.'
                                                 : latest
-                                                    ? 'The saved commercial totals remain available in Saved Costing history. Open and save this snapshot once to refresh its detailed analysis.'
+                                                    ? group.records.length > 1
+                                                        ? 'This quality has multiple saved versions. Select View breakdown on the version you want to inspect; saved commercial totals remain unchanged.'
+                                                        : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.'
                                                     : group.currentRecipeCostPerM != null
                                                         ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
                                                         : canUseProduction
@@ -707,7 +711,7 @@ function SavedQualityLibraryView({
                                     {group.records.length > 0 && (
                                         <section className="mt-4 rounded-xl border border-hairline bg-surface p-4">
                                             <p className="text-sm font-black text-ink">Saved Costing history</p>
-                                            <p className="mt-1 text-xs text-subtle">{group.records.length === 1 ? 'This snapshot is shown above. Select it only when comparing with another costing.' : 'Select any two snapshots to compare their commercial assumptions.'}</p>
+                                            <p className="mt-1 text-xs text-subtle">{group.records.length === 1 ? 'This snapshot is shown above. Use View breakdown to load it into Cost Estimate, or select it when comparing with another costing.' : 'Choose View breakdown on a version to inspect its saved assumptions. Select two snapshots only when comparing their commercial assumptions.'}</p>
                                             <div className="mt-3 space-y-2">
                                                 {group.records.map(record => {
                                                     const selected = selectedCostingIds.includes(record.id)
@@ -752,7 +756,7 @@ function SavedQualityLibraryView({
                                                                         </div>
                                                                     </dl>
                                                                     <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-hairline pt-2">
-                                                                        {!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id} className="h-8 px-2 text-xs">Open</Button>}
+                                                                        {!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id} aria-label={`View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}`} className="h-8 px-2 text-xs"><Eye className="h-3.5 w-3.5" /> <span>View breakdown</span></Button>}
                                                                         <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`} className="h-8 w-8">
                                                                             <Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} />
                                                                         </Button>
