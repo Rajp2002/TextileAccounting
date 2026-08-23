@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -41,16 +42,23 @@ import {
     recordDpaSignature,
     lockdownTenant,
     unlockTenant,
-    generateBreachReportTemplate
+    generateBreachReportTemplate,
+    createSecurityIncident,
+    updateSecurityIncidentStatus,
+    updateSecurityIncidentCertInAssessment,
+    type SecurityIncidentStatus,
+    type SecurityIncidentCertInAssessment,
+    type SecurityIncidentDataCategory,
 } from '@/lib/actions/compliance'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 type OfflineTarget = 'WEAVLY' | 'FACTORY_OWNER'
 type OfflineType = 'DATA_PRIVACY' | 'OPERATIONAL' | 'UNLOCK_REQUEST' | 'OTHER'
 
 type AdminGrievance = {
     id: string
-    target_resolution_date: string
+    target_resolution_date: string | null
     target_entity: OfflineTarget | string
     subject: string
     sla_applies?: boolean
@@ -109,6 +117,34 @@ type BreachReport = {
     organizations: { name: string }
 }
 
+type SecurityIncident = {
+    id: string
+    title: string
+    source: string
+    incident_type: string
+    status: SecurityIncidentStatus
+    severity: string
+    aware_at: string
+    cert_in_assessment_due_at: string
+    cert_in_assessment: string
+    affected_data_categories: string[]
+    created_at: string
+}
+
+type SecurityIncidentDraft = {
+    title: string
+    source: 'customer' | 'provider' | 'monitoring' | 'internal' | 'other'
+    incident_type: 'account_compromise' | 'unauthorized_access' | 'billing_security' | 'suspicious_message' | 'service_vulnerability' | 'availability' | 'other'
+    aware_at: string
+    summary: string
+    affected_data_categories: SecurityIncidentDataCategory[]
+}
+
+function currentDateTimeLocal() {
+    const now = new Date()
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
+
 type AttendanceExportRow = {
     date: string
     worker_id: number | string
@@ -123,6 +159,7 @@ interface Props {
     initialDpaTemplates: DpaTemplate[]
     initialFactoryDpaStatus: FactoryDpaStatus[]
     initialBreachReports: BreachReport[]
+    initialSecurityIncidents: SecurityIncident[]
 }
 
 export function AdminDashboardUI({ 
@@ -132,18 +169,29 @@ export function AdminDashboardUI({
     initialSettings,
     initialDpaTemplates,
     initialFactoryDpaStatus,
-    initialBreachReports
+    initialBreachReports,
+    initialSecurityIncidents,
 }: Props) {
+    const router = useRouter()
     const [workerIdSearch, setWorkerIdSearch] = useState('')
     const [exportDateRange, setExportDateRange] = useState({ start: '', end: '' })
     const [groDetails, setGroDetails] = useState<AdminSettings>(initialSettings)
+    const [incidentDraft, setIncidentDraft] = useState<SecurityIncidentDraft>({
+        title: '',
+        source: 'internal',
+        incident_type: 'other',
+        aware_at: currentDateTimeLocal(),
+        summary: '',
+        affected_data_categories: ['account_authentication'],
+    })
     
     // Offline form state
     const [offlineTarget, setOfflineTarget] = useState<OfflineTarget>('FACTORY_OWNER')
     const [offlineType, setOfflineType] = useState<OfflineType>('OPERATIONAL')
 
     // Helper: Calculate days left for grievance
-    const getDaysLeft = (targetDate: string) => {
+    const getDaysLeft = (targetDate: string | null) => {
+        if (!targetDate) return null
         const target = new Date(targetDate)
         const now = new Date()
         const diff = target.getTime() - now.getTime()
@@ -204,23 +252,80 @@ export function AdminDashboardUI({
 
     const handleDownloadReport = async (reportId: string) => {
         toast.promise(generateBreachReportTemplate(reportId), {
-            loading: 'Generating DPDP filing template...',
+            loading: 'Generating internal assessment draft...',
             success: (data) => {
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
                 const url = URL.createObjectURL(blob)
                 const a = document.createElement('a')
                 a.href = url
-                a.download = `DPDP_Breach_Report_${reportId}.json`
+                a.download = `security_incident_assessment_${reportId}.json`
                 a.click()
-                return 'Report generated and downloaded.'
+                return 'Internal draft generated and downloaded.'
             },
             error: 'Failed to generate report.'
         })
     }
 
+    const handleCreateSecurityIncident = () => {
+        toast.promise(createSecurityIncident(incidentDraft), {
+            loading: 'Opening incident record...',
+            success: () => {
+                setIncidentDraft({
+                    title: '',
+                    source: 'internal',
+                    incident_type: 'other',
+                    aware_at: currentDateTimeLocal(),
+                    summary: '',
+                    affected_data_categories: ['account_authentication'],
+                })
+                router.refresh()
+                return 'Incident recorded. Begin CERT-In reportability assessment now.'
+            },
+            error: (error) => error instanceof Error ? error.message : 'Failed to create incident.',
+        })
+    }
+
+    const handleIncidentStatus = (id: string, status: SecurityIncidentStatus) => {
+        toast.promise(updateSecurityIncidentStatus(id, status), {
+            loading: 'Updating incident...',
+            success: () => {
+                router.refresh()
+                return 'Incident status updated.'
+            },
+            error: 'Failed to update incident.',
+        })
+    }
+
+    const handleCertInAssessment = (id: string, assessment: SecurityIncidentCertInAssessment) => {
+        let rationale = ''
+        let reference: string | undefined
+        if (assessment !== 'pending') {
+            rationale = window.prompt('Record the facts supporting this CERT-In reportability decision:')?.trim() ?? ''
+            if (rationale.length < 10) {
+                toast.error('A decision rationale of at least 10 characters is required.')
+                return
+            }
+        }
+        if (assessment === 'reported') {
+            reference = window.prompt('Enter the CERT-In submission reference:')?.trim()
+            if (!reference) {
+                toast.error('A submission reference is required for a reported incident.')
+                return
+            }
+        }
+        toast.promise(updateSecurityIncidentCertInAssessment(id, assessment, rationale, reference), {
+            loading: 'Saving CERT-In assessment...',
+            success: () => {
+                router.refresh()
+                return 'CERT-In assessment recorded.'
+            },
+            error: (error) => error instanceof Error ? error.message : 'Failed to update assessment.',
+        })
+    }
+
     return (
         <Tabs defaultValue="grievances" className="w-full">
-            <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2 bg-transparent h-auto mb-8">
+            <TabsList className="grid grid-cols-2 md:grid-cols-7 gap-2 bg-transparent h-auto mb-8">
                 <TabsTrigger value="grievances" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
                     <AlertCircle className="h-4 w-4" /> Grievances
                 </TabsTrigger>
@@ -237,7 +342,7 @@ export function AdminDashboardUI({
                     <Globe className="h-4 w-4" /> Gujarat Subsidy
                 </TabsTrigger>
                 <TabsTrigger value="breach" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
-                    <ShieldAlert className="h-4 w-4" /> Breach/Audit
+                    <ShieldAlert className="h-4 w-4" /> Security Incidents
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
                     <Settings className="h-4 w-4" /> Settings
@@ -250,7 +355,7 @@ export function AdminDashboardUI({
                     <Card className="md:col-span-2">
                         <CardHeader>
                             <CardTitle>Grievance Command Center</CardTitle>
-                            <CardDescription>DPDP Act Requirement: Resolve all grievances within 7 days.</CardDescription>
+                            <CardDescription>Weavly internal target: respond to privacy grievances within 30 calendar days of receipt.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -298,12 +403,12 @@ export function AdminDashboardUI({
                                                 <TableCell>
                                                     {g.status !== 'resolved' ? (
                                                         g.sla_applies ? (
-                                                            <div className={`flex items-center gap-2 text-sm font-bold ${daysLeft <= 2 ? 'text-red-500' : 'text-zinc-600'}`}>
+                                                            <div className={`flex items-center gap-2 text-sm font-bold ${daysLeft !== null && daysLeft <= 5 ? 'text-red-500' : 'text-zinc-600'}`}>
                                                                 <Clock className="h-4 w-4" />
-                                                                {daysLeft} days left
+                                                                {daysLeft === null ? 'Target unavailable' : `${daysLeft} days left`}
                                                             </div>
                                                         ) : (
-                                                            <span className="text-zinc-400 text-xs italic">No strict SLA</span>
+                                                            <span className="text-zinc-400 text-xs italic">No privacy-response target</span>
                                                         )
                                                     ) : (
                                                         <span className="text-emerald-600 text-sm font-medium">Resolved on {new Date(g.resolved_at).toLocaleDateString()}</span>
@@ -317,12 +422,18 @@ export function AdminDashboardUI({
                                                                 className="text-xs h-7" 
                                                                 id={`proof-${g.id}`} 
                                                             />
+                                                            <Input
+                                                                placeholder="Closure summary"
+                                                                className="text-xs h-7"
+                                                                id={`summary-${g.id}`}
+                                                            />
                                                             <Button 
                                                                 variant="outline" 
                                                                 size="sm" 
                                                                 onClick={async () => {
                                                                     const proofUrl = (document.getElementById(`proof-${g.id}`) as HTMLInputElement).value
-                                                                    toast.promise(updateGrievanceStatus(g.id, 'resolved', proofUrl), {
+                                                                    const responseSummary = (document.getElementById(`summary-${g.id}`) as HTMLInputElement).value
+                                                                    toast.promise(updateGrievanceStatus(g.id, 'resolved', proofUrl, responseSummary), {
                                                                         loading: 'Resolving grievance...',
                                                                         success: 'Grievance resolved with proof.',
                                                                         error: 'Failed to resolve.'
@@ -390,16 +501,19 @@ export function AdminDashboardUI({
                                 </div>
                             </div>
                             <Input placeholder="Subject" id="g_subject" />
+                            <Input placeholder="Requester email" type="email" id="g_requester_email" />
                             <Input placeholder="Worker ID (Optional)" type="number" id="g_worker_id" />
                             <textarea className="w-full min-h-[100px] p-3 rounded-md border text-sm" placeholder="Description" id="g_description" />
                             <Button className="w-full" onClick={async () => {
                                 const subject = (document.getElementById('g_subject') as HTMLInputElement).value
                                 const worker_id = (document.getElementById('g_worker_id') as HTMLInputElement).value
+                                const requester_email = (document.getElementById('g_requester_email') as HTMLInputElement).value
                                 const description = (document.getElementById('g_description') as HTMLTextAreaElement).value
                                 await logOfflineGrievance({ 
-                                    org_id: 'GLOBAL', 
+                                    org_id: null,
                                     subject, 
                                     description, 
+                                    requester_email: requester_email || undefined,
                                     worker_id: worker_id ? parseInt(worker_id) : undefined,
                                     target_entity: offlineTarget,
                                     grievance_type: offlineType,
@@ -646,11 +760,101 @@ export function AdminDashboardUI({
 
             {/* E. Breach Detection & Tenant Isolation */}
             <TabsContent value="breach" className="space-y-6">
+                <Card className="border-red-200 dark:border-red-400/20">
+                    <CardHeader>
+                        <CardTitle>Base Plan Security Incident Register</CardTitle>
+                        <CardDescription>Operator-only triage for account, costing, billing-reference, support, and technical-log incidents. The six-hour time shown is the internal deadline to assess CERT-In reportability, not a claim that every event is reportable.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid gap-3 lg:grid-cols-[1fr_12rem_13rem_14rem_13rem_auto]">
+                            <Input value={incidentDraft.title} onChange={(event) => setIncidentDraft({ ...incidentDraft, title: event.target.value })} placeholder="Short incident title" />
+                            <Select value={incidentDraft.source} onValueChange={(value) => setIncidentDraft({ ...incidentDraft, source: value as typeof incidentDraft.source })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="internal">Internal</SelectItem>
+                                    <SelectItem value="customer">Customer</SelectItem>
+                                    <SelectItem value="provider">Provider</SelectItem>
+                                    <SelectItem value="monitoring">Monitoring</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={incidentDraft.incident_type} onValueChange={(value) => setIncidentDraft({ ...incidentDraft, incident_type: value as typeof incidentDraft.incident_type })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="account_compromise">Account compromise</SelectItem>
+                                    <SelectItem value="unauthorized_access">Unauthorized access</SelectItem>
+                                    <SelectItem value="billing_security">Billing security</SelectItem>
+                                    <SelectItem value="suspicious_message">Suspicious message</SelectItem>
+                                    <SelectItem value="service_vulnerability">Vulnerability</SelectItem>
+                                    <SelectItem value="availability">Availability</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={incidentDraft.affected_data_categories[0]} onValueChange={(value) => setIncidentDraft({ ...incidentDraft, affected_data_categories: [value as SecurityIncidentDataCategory] })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="account_authentication">Account/authentication</SelectItem>
+                                    <SelectItem value="costings_business_contacts">Costings/contacts</SelectItem>
+                                    <SelectItem value="billing_subscription_references">Billing references</SelectItem>
+                                    <SelectItem value="support_privacy_communications">Support communications</SelectItem>
+                                    <SelectItem value="technical_diagnostic_security_logs">Technical logs</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Input type="datetime-local" value={incidentDraft.aware_at} onChange={(event) => setIncidentDraft({ ...incidentDraft, aware_at: event.target.value })} aria-label="Incident awareness time" />
+                            <Button variant="destructive" onClick={handleCreateSecurityIncident} disabled={incidentDraft.title.trim().length < 3 || incidentDraft.summary.trim().length < 10}>Open incident</Button>
+                        </div>
+                        <Textarea value={incidentDraft.summary} onChange={(event) => setIncidentDraft({ ...incidentDraft, summary: event.target.value })} placeholder="Known facts only: what was observed, affected surface, and immediate action. Do not store passwords, tokens, credentials, or active exploit material here." rows={3} />
+
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Incident</TableHead>
+                                    <TableHead>Aware</TableHead>
+                                    <TableHead>CERT-In assessment due</TableHead>
+                                    <TableHead>Assessment</TableHead>
+                                    <TableHead>Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {initialSecurityIncidents.map((incident) => (
+                                    <TableRow key={incident.id}>
+                                        <TableCell>
+                                            <p className="font-semibold">{incident.title}</p>
+                                            <p className="text-xs text-zinc-500">{incident.incident_type.replaceAll('_', ' ')} · {incident.source}</p>
+                                        </TableCell>
+                                        <TableCell className="text-xs">{new Date(incident.aware_at).toLocaleString('en-IN')}</TableCell>
+                                        <TableCell className="text-xs">{new Date(incident.cert_in_assessment_due_at).toLocaleString('en-IN')}</TableCell>
+                                        <TableCell>
+                                            <Select value={incident.cert_in_assessment} onValueChange={(value) => handleCertInAssessment(incident.id, value as SecurityIncidentCertInAssessment)}>
+                                                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="pending">pending</SelectItem>
+                                                    <SelectItem value="not_reportable">not reportable</SelectItem>
+                                                    <SelectItem value="reportable">reportable</SelectItem>
+                                                    <SelectItem value="reported">reported</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Select value={incident.status} onValueChange={(value) => handleIncidentStatus(incident.id, value as SecurityIncidentStatus)}>
+                                                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    {(['reported', 'triaging', 'contained', 'investigating', 'monitoring', 'closed'] as const).map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                {initialSecurityIncidents.length === 0 && <TableRow><TableCell colSpan={5} className="py-8 text-center text-zinc-500">No Base Plan security incidents recorded.</TableCell></TableRow>}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Tenant Isolation Manager</CardTitle>
-                            <CardDescription>DPDP 2026: Isolate specific factory data during a suspected breach.</CardDescription>
+                            <CardDescription>Full Suite control: isolate a factory workspace during a suspected security incident.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -724,8 +928,8 @@ export function AdminDashboardUI({
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>DPDP 2026 Breach Reports</CardTitle>
-                            <CardDescription>Auto-generated filings for the Data Protection Board.</CardDescription>
+                            <CardTitle>Legacy Full Suite Lockdown Reports</CardTitle>
+                            <CardDescription>Internal assessment drafts created by tenant isolation. These are not prescribed government forms.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>

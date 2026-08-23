@@ -2,6 +2,7 @@ import 'server-only'
 
 import { jsPDF } from 'jspdf'
 import { getBillingPrice, getBillingPlan, type BillingPurchaseType, type PurchasablePlanTier } from './billing-constants'
+import { LEGAL_OPERATOR } from './legal-operator'
 
 export type PaymentReceiptInput = {
   organizationName: string
@@ -121,7 +122,7 @@ export function generatePaymentReceiptPdf(input: PaymentReceiptInput): Buffer {
 
   doc.setTextColor(100, 116, 139)
   doc.setFontSize(8)
-  doc.text('Keep this receipt for your records. Contact support@weavly.app if the payment details look incorrect.', 18, 282)
+  doc.text(`Keep this receipt for your records. Contact ${LEGAL_OPERATOR.contactEmail} if the payment details look incorrect.`, 18, 282)
 
   return Buffer.from(doc.output('arraybuffer'))
 }

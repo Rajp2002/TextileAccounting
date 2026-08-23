@@ -28,6 +28,7 @@ const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
 ])
 
 const EXPORT_SCHEMA_MIGRATION_BY_DATASET: Record<string, string> = {
+    legal_document_acceptances: '20260823203156_record_signup_legal_acceptance.sql',
     referral_year_credits: '20260810182342_referral_year_credits.sql',
     organization_export_runs: '20260801162646_20260801143840_sprint4_billing_trust_boundaries.sql',
 }
@@ -80,7 +81,7 @@ async function persistFailedExportRun(
                 actor_id: actorId,
                 status: 'failed',
                 filename,
-                schema_version: 'sprint11-v1',
+                schema_version: 'base-legal-v1',
                 exported_at: exportedAt,
                 dataset_counts: {},
                 failure_reason: reason.slice(0, 500),
@@ -264,6 +265,7 @@ export async function exportOrganizationData() {
         { key: 'notification_consents', query: scoped('notification_consents') },
         { key: 'stock_discrepancies', query: scoped('stock_discrepancies') },
         { key: 'worker_consent_artifacts', query: scoped('worker_consent_artifacts') },
+        { key: 'legal_document_acceptances', query: scoped('legal_document_acceptances') },
         { key: 'language_requests', query: scoped('language_requests') },
         { key: 'grievances', query: scoped('grievances') },
         { key: 'organization_dpas', query: scoped('organization_dpas') },
@@ -334,7 +336,7 @@ export async function exportOrganizationData() {
     const exportPayload = {
         exported_at: exportedAt,
         filename,
-        schema_version: 'sprint11-v1',
+        schema_version: 'base-legal-v1',
         export_scope: 'current_owner_org',
         dataset_counts: datasetCounts,
         dataset_catalog: datasetDefinitions.map(({ key }) => key),
@@ -379,7 +381,7 @@ export async function exportOrganizationData() {
             actor_id: user.id,
             status: 'generated',
             filename,
-            schema_version: 'sprint11-v1',
+            schema_version: 'base-legal-v1',
             exported_at: exportedAt,
             dataset_counts: datasetCounts,
             payload_hash: payloadHash,

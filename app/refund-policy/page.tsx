@@ -1,18 +1,20 @@
 import type { Metadata } from 'next'
 import { CalendarDays, Clock3, Mail, RefreshCw } from 'lucide-react'
 import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
+import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
-    description: 'Learn about Weavly Base Plan refund, cancellation, renewal, and costing-data export policies.',
+    description: 'Base Plan initial-rollout rules for manual renewal, refunds, billing errors, and data export.',
 }
 
 const sections = [
-    { href: '#cancellation', title: 'Cancellation' },
-    { href: '#refunds', title: 'Refund Policy' },
-    { href: '#renewals', title: 'Annual Renewals' },
+    { href: '#scope', title: 'Scope' },
+    { href: '#non-renewal', title: 'Non-Renewal & Deletion' },
+    { href: '#initial-payment', title: 'Initial Payment Refunds' },
+    { href: '#renewal-payment', title: 'Renewal Refunds' },
+    { href: '#processing', title: 'Refund Processing' },
     { href: '#data-export', title: 'Data Export' },
-    { href: '#exceptions', title: 'Exceptional Circumstances' },
     { href: '#changes', title: 'Changes' },
     { href: '#contact', title: 'Contact' },
 ]
@@ -22,124 +24,95 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="Clear rules for the initial Base Plan rollout: setup assistance, annual renewal, cancellations, refunds, payment receipts, and costing-data export when service ends."
-            lastUpdated="August 10, 2026"
+            description="The payment, non-renewal, refund, and export rules for the Base Plan initial rollout."
+            lastUpdated="August 24, 2026"
             sections={sections}
             facts={[
-                { label: 'Renewal window', value: 'Manual renewal from 30 days before expiry', icon: CalendarDays },
-                { label: 'Before onboarding starts', value: 'First-year payment refundable', icon: RefreshCw },
-                { label: 'Refund timing', value: '5-7 business days to original method', icon: Clock3 },
-                { label: 'Support', value: 'support@weavly.app', icon: Mail },
+                { label: 'Billing model', value: 'Manual annual renewal; no automatic charge', icon: CalendarDays },
+                { label: 'Before substantive delivery', value: 'Seven-day initial-payment review window', icon: RefreshCw },
+                { label: 'Provider processing', value: 'Usually initiated within 5–7 business days', icon: Clock3 },
+                { label: 'Contact', value: LEGAL_OPERATOR.contactEmail, icon: Mail },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                This Refund &amp; Cancellation Policy applies only to the Weavly Estimator (Base Plan) during the initial rollout. It explains how refund eligibility changes as Base Plan onboarding assistance is delivered and the costing workspace enters active use. It does not cover the future Full Suite or any production, orders, stock, dispatch, payroll, or factory-analytics modules.
+                This policy applies only to the Weavly Estimator (Base Plan) initial rollout offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. It does not apply to any future Full Suite offering.
             </p>
 
-            <PolicyCallout tone="blue" title="Initial rollout boundary">
+            <PolicySection id="scope" title="1. Scope and Base Plan Boundary">
                 <p>
-                    The Base Plan is the only plan available for purchase at this stage. Any future Full Suite offering will have its own commercial terms and refund rules; no Full Suite access or refund entitlement is created by a Base Plan payment.
+                    The current Base Plan purchase covers the single-factory costing workspace described in the Terms. Production, orders, worker or machine management, stock, dispatch, payroll, advances, analytics, WhatsApp operations, and other Full Suite modules are future scope. A Base payment does not purchase those modules, and their absence is not grounds for a refund.
                 </p>
-            </PolicyCallout>
+                <PolicyCallout tone="blue" title="Current catalog">
+                    <p>
+                        The current catalog displays ₹8,260 total for the first 365-day Base period and ₹2,360 total for a later 365-day renewal, including the indicated 18% GST component. The final lawful price and tax treatment displayed at live checkout control. GST tax invoices are issued only after the required supplier registration and tax configuration are complete.
+                    </p>
+                </PolicyCallout>
+            </PolicySection>
 
-            <PolicySection id="cancellation" title="2. Subscription Cancellation">
-                <h3>2.1 How to Cancel</h3>
-                <p>
-                    You may cancel your next annual Base Plan renewal at any time through:
-                </p>
+            <PolicySection id="non-renewal" title="2. Non-Renewal, Expiry, and Account Deletion">
                 <ul>
-                    <li>The account settings page within the Weavly dashboard, or</li>
-                    <li>By emailing <a href="mailto:support@weavly.app">support@weavly.app</a> with your registered email address</li>
-                </ul>
-                <p>
-                    We will provide a clear and accessible cancellation process and confirm when your renewal has been cancelled.
-                </p>
-
-                <h3>2.2 What Happens After Cancellation</h3>
-                <ul>
-                    <li>Your access will continue until the end of the paid annual service period.</li>
-                    <li>No further annual renewal charge will be made after cancellation is confirmed.</li>
-                    <li>Your data will remain accessible for <strong>30 days</strong> after the paid service period ends, during which you may export your data.</li>
-                    <li>After the 30-day export window, your saved costings, fabric qualities, drafts, and other Base Plan data will be permanently deleted.</li>
-                    <li>Account information (name, email) is retained for 180 days per regulatory requirements, then deleted.</li>
+                    <li><strong>No automatic renewal</strong> — The Base Plan initial rollout uses manual renewal. We do not automatically charge the next annual period.</li>
+                    <li><strong>Choosing not to renew</strong> — No cancellation switch or cancellation request is required. Do not complete a renewal payment.</li>
+                    <li><strong>Paid access</strong> — Base features remain available until the current paid period expires, unless access is suspended or terminated under the Terms.</li>
+                    <li><strong>After expiry</strong> — Paid Base features may be restricted, but the owner-only organization export remains available while the account is retained.</li>
+                    <li><strong>Permanent deletion</strong> — The owner may delete the workspace through Settings. Deletion follows the Privacy Policy and is different from allowing paid access to expire.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="refunds" title="3. Refund Policy">
-                <h3>3.1 First-Year Plan Subscriptions</h3>
-                <p>
-                    The first-year Base Plan payment covers platform access and setup assistance at ₹8,260 total, including the displayed GST component.
-                </p>
+            <PolicySection id="initial-payment" title="3. Initial Base Plan Payment Refunds">
+                <p>We review initial-payment requests according to the following rules:</p>
                 <ul>
-                    <li><strong>Before setup or onboarding work starts</strong> — The fee is fully refundable if requested within 7 days of payment and before workspace activation.</li>
-                    <li><strong>After setup or configuration starts, but before substantive delivery</strong> — A partial refund may be issued after deducting the reasonable value of configuration work completed and any non-recoverable third-party costs.</li>
-                    <li><strong>After training, data setup, workflow configuration, or active use begins</strong> — The fee is non-refundable because the setup and onboarding services have been substantially delivered.</li>
+                    <li><strong>Duplicate charge, verified unauthorized payment, or billing error</strong> — Eligible for correction or refund after verification.</li>
+                    <li><strong>Request within seven days and before substantive delivery or use</strong> — Eligible for a full refund when no material onboarding assistance has been delivered and the workspace has not been substantively used to save, export, or rely on costing work.</li>
+                    <li><strong>Configuration started but not substantially delivered</strong> — We may offer a partial refund after explaining and deducting the reasonable value of completed work and non-recoverable provider costs, where legally permitted.</li>
+                    <li><strong>After substantive delivery or use</strong> — The payment is ordinarily non-refundable after material onboarding, configuration, training, saved costing use, or export has occurred, except for verified billing errors, material service deficiency, misdescription, or another remedy required by law.</li>
                 </ul>
+                <p>Submitting a request does not itself terminate or delete the account. If a refund is approved for the entire initial payment, paid Base access may be withdrawn when the refund is processed.</p>
+            </PolicySection>
 
-                <h3>3.2 Annual Renewals</h3>
-                <p>
-                    The subsequent Base Plan annual renewal fee is ₹2,360 total/year, including the displayed GST component.
-                </p>
+            <PolicySection id="renewal-payment" title="4. Manual Renewal Payment Refunds">
                 <ul>
-                    <li><strong>Cancellation before renewal</strong> — Renewals are manual. They become available during the final 30 days of the current paid period, and no automatic charge will be made.</li>
-                    <li><strong>Renewal payments</strong> — Renewal charges are refundable only if charged after a confirmed cancellation or in case of a billing error. Once the new annual period starts, no pro-rata refunds are provided.</li>
-                    <li><strong>Service outage</strong> — For any material outage attributable to Weavly, we may provide a proportionate service credit or other remedy under the applicable order terms.</li>
-                </ul>
-
-                <h3>3.3 Referral Credits</h3>
-                <p>
-                    Referral credits are annual service entitlements, not payment refunds. An active Base Plan member who has paid the initial year can earn one free Base Plan renewal year for each referred organization that pays its own initial Base Plan year, up to five credits per India calendar year. Active credits can be redeemed at any time for future annual renewals; they have no cash value and cannot be transferred.
-                </p>
-
-                <h3>3.4 How Refunds Are Processed</h3>
-                <ul>
-                    <li>Refunds are processed to the original payment method within <strong>5-7 business days</strong>.</li>
-                    <li>Payment receipts are available from Billing after successful payment. GST invoices are issued only when approved billing details and supplier tax configuration are complete.</li>
-                    <li>To request a refund, email <a href="mailto:support@weavly.app">support@weavly.app</a> with your account details and reason for the request.</li>
+                    <li><strong>Before payment</strong> — Simply do not purchase the renewal; no charge will occur.</li>
+                    <li><strong>Paid before the next period starts</strong> — A renewal may be refunded if requested before the renewed period begins and the renewal has not been used or applied to extend access.</li>
+                    <li><strong>After the renewed period starts</strong> — Renewal payments are ordinarily non-refundable and are not refunded pro rata, except for duplicate or unauthorized charges, billing error, material service deficiency, discontinuation by Weavly, or a remedy required by law.</li>
+                    <li><strong>Referral renewal credits</strong> — Credits are service entitlements, not cash. They are not refundable or transferable and may be reversed for a refunded, duplicate, fraudulent, or chargeback referral transaction.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="renewals" title="4. Annual Renewal Cancellation">
-                <p>
-                    You may cancel annual renewal at any time before the next billing date. Cancellation prevents the next renewal charge and does not create a pro-rata refund for the current paid period. Access continues until that period ends unless the account is suspended or terminated under the Terms of Service.
-                </p>
-            </PolicySection>
-
-            <PolicySection id="data-export" title="5. Data Export">
-                <p>
-                    Upon cancellation, you have a 30-day window to export your data. We provide data export functionality within the application. Exported data includes:
-                </p>
+            <PolicySection id="processing" title="5. Request and Refund Processing">
                 <ul>
-                    <li>Saved costings and costing drafts</li>
-                    <li>Fabric qualities and costing assumptions</li>
-                    <li>Customer or party details entered into a costing</li>
-                    <li>Cost Sheet exports and related business data</li>
+                    <li>Send the request from the registered email to <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`}>{LEGAL_OPERATOR.contactEmail}</a> with the organization name, payment reference, payment date, amount, and reason.</li>
+                    <li>Do not email complete card, bank-account, UPI PIN, password, or other payment credentials.</li>
+                    <li>We may request limited additional information needed to verify the account, transaction, or claimed error.</li>
+                    <li>Approved refunds are submitted to the original payment method, where supported. We generally initiate an approved refund within 5–7 business days; the payment provider or bank may take additional time to display it.</li>
+                    <li>The refunded tax component, credit note, or invoice adjustment will be handled as required by the supplier&apos;s applicable tax status and law.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="exceptions" title="6. Exceptional Circumstances">
+            <PolicySection id="data-export" title="6. Data Export">
                 <p>
-                    In cases of billing errors, unauthorized charges, or other exceptional circumstances, please contact us immediately at <a href="mailto:support@weavly.app">support@weavly.app</a>. We will investigate and resolve such issues promptly.
+                    The owner-only structured organization export remains available while the account is retained, including after paid Base access expires. Download important records before requesting permanent account deletion. Deletion is designed to remove the active workspace and cannot be undone through the product.
                 </p>
             </PolicySection>
 
             <PolicySection id="changes" title="7. Changes to This Policy">
                 <p>
-                    We may update this policy from time to time. Material changes will be communicated via the platform or email at least 30 days before they take effect.
+                    We may update this policy for future purchases or renewals by changing the displayed date and providing reasonable notice of materially adverse changes. A later policy will not retroactively remove a refund already required for a completed transaction under the policy and law applicable to that transaction.
                 </p>
             </PolicySection>
 
-            <PolicySection id="contact" title="8. Contact">
+            <PolicySection id="contact" title="8. Billing and Refund Contact">
                 <PolicyContactPanel
-                    title="Weavly Support"
+                    title="Current Weavly Operator"
                     rows={[
+                        { label: 'Operator', value: LEGAL_OPERATOR.displayName },
                         {
                             label: 'Email',
-                            value: <a href="mailto:support@weavly.app" className="text-orange-700 hover:underline dark:text-orange-300">support@weavly.app</a>,
+                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{LEGAL_OPERATOR.contactEmail}</a>,
                         },
-                        { label: 'Response time', value: 'Within 2 business days' },
+                        { label: 'Postal address', value: LEGAL_OPERATOR.postalAddress },
                     ]}
-                    note="Please include your account details and the reason for the request so the billing team can trace the payment quickly."
+                    note="A custom-domain billing address may replace this interim email after incorporation; the policy will be updated when that happens."
                 />
             </PolicySection>
         </PolicyPage>

@@ -13,6 +13,7 @@ import { createOrganizationAndRedirect } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
 import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
 import { PasswordSchema } from '@/lib/schemas'
+import { SIGNUP_LEGAL_ACCEPTANCE } from '@/lib/legal-documents'
 
 type RedirectError = {
     message?: string
@@ -108,6 +109,10 @@ function SignupForm() {
                 confirmPassword,
                 factoryName: factoryName.trim(),
                 referralCode: referralCode.trim() || undefined,
+                legalAcceptance: {
+                    accepted: consentGiven,
+                    ...SIGNUP_LEGAL_ACCEPTANCE,
+                },
             })
             // If result comes back (not a redirect), it's an error
             if (result && 'error' in result) {
@@ -341,7 +346,7 @@ function SignupForm() {
                     />
                 </div>
 
-                {/* Consent Checkbox (DPDP Act requirement) */}
+                {/* Versioned legal acceptance */}
                 <div className="flex items-start gap-3 py-1">
                     <input
                         type="checkbox"

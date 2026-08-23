@@ -4,6 +4,7 @@ import { requestUnlock } from '@/lib/actions/compliance'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShieldAlert, MessageSquare, LogOut } from 'lucide-react'
+import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 
 export default async function LockedPage() {
     const supabase = await createClient()
@@ -57,7 +58,10 @@ export default async function LockedPage() {
 
                     <div className="space-y-3">
                         <p className="text-sm text-slate-400">
-                            State changes (production logs, attendance, payments) are blocked. You may still request a review from the Grievance Officer.
+                            State changes (production logs, attendance, payments) are blocked. You may request a review below or email the Grievance Officer at{' '}
+                            <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="font-medium text-slate-200 underline underline-offset-4">
+                                {LEGAL_OPERATOR.contactEmail}
+                            </a>.
                         </p>
                     </div>
 

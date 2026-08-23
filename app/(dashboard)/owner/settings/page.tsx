@@ -569,6 +569,9 @@ export default function SettingsPage() {
                                         <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:text-saffron">
                                             View export history
                                         </Link>
+                                        <Link href="/privacy-request" className="mt-3 block text-xs font-semibold text-saffron-deep hover:text-saffron">
+                                            Make a privacy or grievance request
+                                        </Link>
                                     </div>
                                 </SettingsPanel>
                             </SettingsSection>
@@ -974,6 +977,12 @@ export default function SettingsPage() {
                                     <OrganizationDataExportButton />
                                     <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:text-saffron">
                                         View export history
+                                    </Link>
+                                    <Link href="/privacy-request" className="mt-3 block text-xs font-semibold text-saffron-deep hover:text-saffron">
+                                        Make a privacy or grievance request
+                                    </Link>
+                                    <Link href="/security-incident" className="mt-3 block text-xs font-semibold text-red-700 hover:text-red-600 dark:text-red-300">
+                                        Report a suspected security incident
                                     </Link>
                                 </div>
                             </SettingsPanel>

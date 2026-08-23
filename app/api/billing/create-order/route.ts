@@ -18,6 +18,7 @@ import {
     type BillingPaymentRow,
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
+import { getBillingReadiness } from '@/lib/billing-readiness'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,6 +69,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
             { error: 'Only the Weavly Estimator Base Plan is available for self-serve checkout right now.' },
             { status: 403 },
+        )
+    }
+
+    const billingReadiness = getBillingReadiness()
+    if (!billingReadiness.canCreateOrder) {
+        return NextResponse.json(
+            { error: billingReadiness.publicMessage, code: billingReadiness.code },
+            { status: 503 },
         )
     }
     const plan = getBillingPlan(planTier)

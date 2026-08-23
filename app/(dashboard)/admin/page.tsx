@@ -6,14 +6,15 @@ import {
     getComplianceSettings,
     getDpaTemplates,
     getFactoryDpaStatus,
-    getBreachReports
+    getBreachReports,
+    getSecurityIncidents
 } from '@/lib/actions/compliance'
 import { AdminDashboardUI } from './admin-ui'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 
 export const metadata: Metadata = {
     title: 'Compliance Dashboard — Admin',
-    description: 'Central command center for DPDP 2026 and Gujarat IT Policy compliance.',
+    description: 'Internal compliance, grievance, and security-incident operations dashboard.',
 }
 
 type FactoryDpaStatusSummary = {
@@ -29,7 +30,8 @@ export default async function AdminDashboardPage() {
         settings,
         dpaTemplates,
         factoryDpaStatus,
-        breachReports
+        breachReports,
+        securityIncidents
     ] = await signInTelemetry.measure('dashboard_queries', () => Promise.all([
         getGrievances(),
         getNoticeRegistry(),
@@ -37,7 +39,8 @@ export default async function AdminDashboardPage() {
         getComplianceSettings(),
         getDpaTemplates(),
         getFactoryDpaStatus(),
-        getBreachReports()
+        getBreachReports(),
+        getSecurityIncidents()
     ]))
     const hasLockedFactory = (factoryDpaStatus as FactoryDpaStatusSummary[]).some((f) => f.is_locked_down)
     signInTelemetry.log('success', { route: '/admin' })
@@ -51,7 +54,7 @@ export default async function AdminDashboardPage() {
                         Compliance Dashboard
                     </h1>
                     <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-                        Data Fiduciary Command Center (DPDP 2026)
+                        Compliance and security operations
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -73,6 +76,7 @@ export default async function AdminDashboardPage() {
                 initialDpaTemplates={dpaTemplates}
                 initialFactoryDpaStatus={factoryDpaStatus}
                 initialBreachReports={breachReports}
+                initialSecurityIncidents={securityIncidents}
             />
         </div>
     )

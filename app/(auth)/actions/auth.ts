@@ -22,6 +22,8 @@ import { getOrgTier } from '@/lib/subscription'
 import { checkJoinCodeRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
 import { createSignInServerTimer, persistSignInTraceCookie } from '@/lib/sign-in-telemetry.server'
 import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
+import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
+import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -73,13 +75,7 @@ export async function requestPasswordReset(input: { email: string }) {
 
 // ─── createOrganization ────────────────────────────────────────────────────────
 
-/**
- * Owner signup: atomically creates auth user → organization → profile.
- * Uses service_role throughout. Rolls back on any step failure.
- *
- * On success: signs the owner in and redirects to /onboarding.
- */
-export async function createOrganization(input: {
+type CreateOrganizationInput = {
     ownerName: string
     email: string
     password: string
@@ -87,7 +83,54 @@ export async function createOrganization(input: {
     factoryName: string
     phone: string
     referralCode?: string
-}) {
+    legalAcceptance: {
+        accepted: boolean
+        termsVersion: string
+        privacyVersion: string
+    }
+}
+
+async function recordSignupLegalAcceptances(
+    adminClient: ReturnType<typeof createAdminClient>,
+    userId: string,
+    orgId: string,
+    userAgent: string | null,
+) {
+    return adminClient
+        .from('legal_document_acceptances')
+        .insert([
+            {
+                org_id: orgId,
+                actor_user_id: userId,
+                document_type: LEGAL_DOCUMENTS.terms.type,
+                document_version: LEGAL_DOCUMENTS.terms.version,
+                document_identifier: LEGAL_DOCUMENTS.terms.identifier,
+                document_path: LEGAL_DOCUMENTS.terms.path,
+                acceptance_method: 'signup_checkbox',
+                language_code: 'en',
+                user_agent: userAgent,
+            },
+            {
+                org_id: orgId,
+                actor_user_id: userId,
+                document_type: LEGAL_DOCUMENTS.privacy.type,
+                document_version: LEGAL_DOCUMENTS.privacy.version,
+                document_identifier: LEGAL_DOCUMENTS.privacy.identifier,
+                document_path: LEGAL_DOCUMENTS.privacy.path,
+                acceptance_method: 'signup_checkbox',
+                language_code: 'en',
+                user_agent: userAgent,
+            },
+        ])
+}
+
+/**
+ * Owner signup: atomically creates auth user → organization → profile.
+ * Uses service_role throughout. Rolls back on any step failure.
+ *
+ * On success: signs the owner in and redirects to /onboarding.
+ */
+export async function createOrganization(input: CreateOrganizationInput) {
     if (!isValidIndianPhone(input.phone)) {
         return { error: 'Enter a valid 10-digit Indian mobile number, for example 9876543210.' }
     }
@@ -96,6 +139,9 @@ export async function createOrganization(input: {
         phone: normalizeIndianPhone(input.phone),
     })
     if ('error' in parsed) return { error: parsed.error }
+
+    const requestHeaders = await headers()
+    const userAgent = requestHeaders.get('user-agent')?.trim().slice(0, 512) || null
 
     const adminClient = createAdminClient()
 
@@ -131,6 +177,33 @@ export async function createOrganization(input: {
     }
 
     const userId = authData.user.id
+
+    const finishOrganizationCreation = async (orgId: string) => {
+        const { error: acceptanceError } = await recordSignupLegalAcceptances(
+            adminClient,
+            userId,
+            orgId,
+            userAgent,
+        )
+
+        if (acceptanceError) {
+            await adminClient.from('organizations').delete().eq('id', orgId)
+            await adminClient.auth.admin.deleteUser(userId)
+            return { error: 'Unable to record legal acceptance. Your account was not created.' }
+        }
+
+        const result = await _createOwnerProfile(
+            adminClient,
+            userId,
+            orgId,
+            parsed.data.ownerName,
+            parsed.data.email,
+            parsed.data.password,
+            parsed.data.phone,
+        )
+        if (result.success) await applySignupReferral(orgId)
+        return result
+    }
 
     // ── Step 2: Generate join code + create organization ─────────────────────
     let joinCode = generateJoinCode()
@@ -168,21 +241,14 @@ export async function createOrganization(input: {
                 return { error: 'Failed to create organization. Please try again.' }
             }
 
-            // Continue with org2 and preserve the referral application path.
-            const result = await _createOwnerProfile(adminClient, userId, org2!.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
-            if (result.success) await applySignupReferral(org2!.id)
-            return result
+            return finishOrganizationCreation(org2!.id)
         }
 
         await adminClient.auth.admin.deleteUser(userId)
         return { error: 'Failed to create organization. Please try again.' }
     }
 
-    const result = await _createOwnerProfile(adminClient, userId, org.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
-    
-    if (result.success) await applySignupReferral(org.id)
-    
-    return result
+    return finishOrganizationCreation(org.id)
 }
 
 async function _createOwnerProfile(
@@ -242,15 +308,7 @@ async function _createOwnerProfile(
     return { success: true }
 }
 
-export async function createOrganizationAndRedirect(input: {
-    ownerName: string
-    email: string
-    password: string
-    confirmPassword: string
-    factoryName: string
-    phone: string
-    referralCode?: string
-}) {
+export async function createOrganizationAndRedirect(input: CreateOrganizationInput) {
     const result = await createOrganization(input)
     if (result && 'error' in result) return result
     // Plan selection comes before factory onboarding. Estimator-only owners do
@@ -509,7 +567,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
 
     if (userRole === 'owner') {
         if (!orgId) {
-            return fail('Account setup incomplete. Please contact support.', 'missing_organization')
+            return fail(`Account setup incomplete. Contact ${LEGAL_OPERATOR.contactEmail}.`, 'missing_organization')
         }
 
         // Resolve the effective workspace tier before choosing the landing
@@ -532,7 +590,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
         return succeed('/admin')
     } else {
         // Role still absent after DB fallback — profile genuinely missing
-        return fail('Account setup incomplete. Please contact support.', 'missing_role')
+        return fail(`Account setup incomplete. Contact ${LEGAL_OPERATOR.contactEmail}.`, 'missing_role')
     }
 }
 

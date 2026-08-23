@@ -12,6 +12,7 @@ import {
 import { ShieldAlert, Lock, AlertOctagon, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 
 export function EmergencyLockdown() {
     const supabase = createClient()
@@ -79,13 +80,19 @@ export function EmergencyLockdown() {
                         <p className="font-bold flex items-center gap-2">
                             <AlertOctagon className="h-4 w-4" /> Platform is in Restricted Mode
                         </p>
-                        <p>All workers, supervisors, and external APIs are currently blocked from reading or writing data per RLS lockdown policies. Contact support to initiate the recovery protocol.</p>
+                        <p>
+                            All workers, supervisors, and external APIs are currently blocked from reading or writing data per RLS lockdown policies. Contact{' '}
+                            <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="font-medium underline underline-offset-4">
+                                {LEGAL_OPERATOR.contactEmail}
+                            </a>{' '}
+                            to initiate the recovery protocol.
+                        </p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4">
                         <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 text-xs text-orange-800">
-                            <p className="font-bold mb-1 uppercase tracking-wider">Breach Response Protocol (DPDP 2026):</p>
-                            <p>Triggering a lockdown provides &quot;Immediate Containment&quot; proof for the Data Protection Board. This action is irreversible via the UI for safety.</p>
+                            <p className="font-bold mb-1 uppercase tracking-wider">Full Suite emergency containment:</p>
+                            <p>Triggering a lockdown records an immediate containment action for later investigation. It does not by itself satisfy or determine any regulatory notification duty. This action is irreversible via the UI for safety.</p>
                         </div>
                         
                         <Dialog open={lockdownDialogOpen} onOpenChange={(val) => { setLockdownDialogOpen(val); if (!val) setConfirmText('') }}>

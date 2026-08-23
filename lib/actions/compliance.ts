@@ -22,8 +22,9 @@ export async function getGrievances() {
 }
 
 export async function logOfflineGrievance(formData: {
-    org_id: string
+    org_id?: string | null
     worker_id?: number
+    requester_email?: string
     subject: string
     description: string
     target_entity?: 'WEAVLY' | 'FACTORY_OWNER'
@@ -44,7 +45,7 @@ export async function logOfflineGrievance(formData: {
     revalidatePath('/admin')
 }
 
-export async function updateGrievanceStatus(id: string, status: string, proofUrl?: string) {
+export async function updateGrievanceStatus(id: string, status: string, proofUrl?: string, responseSummary?: string) {
     await requireRole(['admin'])
     const supabase = createAdminClient()
     const updateData: {
@@ -52,12 +53,16 @@ export async function updateGrievanceStatus(id: string, status: string, proofUrl
         updated_at: string
         resolved_at?: string
         resolution_proof_url?: string
+        response_summary?: string
     } = { status, updated_at: new Date().toISOString() }
     
     if (status === 'resolved') {
         updateData.resolved_at = new Date().toISOString()
         if (proofUrl) {
             updateData.resolution_proof_url = proofUrl
+        }
+        if (responseSummary) {
+            updateData.response_summary = responseSummary
         }
     }
 
@@ -521,6 +526,112 @@ export async function getBreachReports(orgId?: string) {
     return data
 }
 
+export type SecurityIncidentStatus = 'reported' | 'triaging' | 'contained' | 'investigating' | 'monitoring' | 'closed'
+export type SecurityIncidentCertInAssessment = 'pending' | 'not_reportable' | 'reportable' | 'reported'
+export type SecurityIncidentDataCategory = 'account_authentication' | 'costings_business_contacts' | 'billing_subscription_references' | 'support_privacy_communications' | 'technical_diagnostic_security_logs'
+
+export async function getSecurityIncidents() {
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+        .from('security_incidents')
+        .select('id, title, source, incident_type, status, severity, aware_at, cert_in_assessment_due_at, cert_in_assessment, affected_data_categories, created_at')
+        .order('aware_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    return data
+}
+
+export async function createSecurityIncident(input: {
+    title: string
+    source: 'customer' | 'provider' | 'monitoring' | 'internal' | 'other'
+    incident_type: 'account_compromise' | 'unauthorized_access' | 'billing_security' | 'suspicious_message' | 'service_vulnerability' | 'availability' | 'other'
+    aware_at: string
+    summary: string
+    affected_data_categories: SecurityIncidentDataCategory[]
+}) {
+    const { user } = await requireRole(['admin'])
+    const title = input.title.trim()
+    const summary = input.summary.trim()
+    const awareAt = new Date(input.aware_at)
+
+    if (title.length < 3 || title.length > 160) throw new Error('Title must be between 3 and 160 characters.')
+    if (summary.length < 10 || summary.length > 5000) throw new Error('Summary must be between 10 and 5,000 characters.')
+    if (Number.isNaN(awareAt.getTime())) throw new Error('Enter a valid awareness date and time.')
+    if (awareAt.getTime() > Date.now() + 5 * 60 * 1000) throw new Error('Awareness time cannot be in the future.')
+    const allowedCategories: SecurityIncidentDataCategory[] = ['account_authentication', 'costings_business_contacts', 'billing_subscription_references', 'support_privacy_communications', 'technical_diagnostic_security_logs']
+    if (input.affected_data_categories.length === 0 || input.affected_data_categories.some((category) => !allowedCategories.includes(category))) {
+        throw new Error('Select at least one valid Base Plan data category.')
+    }
+
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+        .from('security_incidents')
+        .insert({
+            title,
+            source: input.source,
+            incident_type: input.incident_type,
+            aware_at: awareAt.toISOString(),
+            summary,
+            affected_data_categories: input.affected_data_categories,
+            created_by: user.id,
+            updated_by: user.id,
+        })
+        .select('id')
+        .single()
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+    return data
+}
+
+export async function updateSecurityIncidentStatus(id: string, status: SecurityIncidentStatus) {
+    const { user } = await requireRole(['admin'])
+    const allowedStatuses: SecurityIncidentStatus[] = ['reported', 'triaging', 'contained', 'investigating', 'monitoring', 'closed']
+    if (!allowedStatuses.includes(status)) throw new Error('Invalid incident status.')
+
+    const supabase = createAdminClient()
+    const { error } = await supabase
+        .from('security_incidents')
+        .update({
+            status,
+            updated_by: user.id,
+            closed_at: status === 'closed' ? new Date().toISOString() : null,
+        })
+        .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+}
+
+export async function updateSecurityIncidentCertInAssessment(
+    id: string,
+    assessment: SecurityIncidentCertInAssessment,
+    rationale: string,
+    reference?: string,
+) {
+    const { user } = await requireRole(['admin'])
+    const allowed: SecurityIncidentCertInAssessment[] = ['pending', 'not_reportable', 'reportable', 'reported']
+    if (!allowed.includes(assessment)) throw new Error('Invalid CERT-In assessment.')
+    if (assessment !== 'pending' && rationale.trim().length < 10) throw new Error('Record a brief decision rationale.')
+    if (assessment === 'reported' && !reference?.trim()) throw new Error('Enter the CERT-In submission reference.')
+
+    const supabase = createAdminClient()
+    const { error } = await supabase
+        .from('security_incidents')
+        .update({
+            cert_in_assessment: assessment,
+            cert_in_decision_rationale: rationale.trim() || null,
+            cert_in_reported_at: assessment === 'reported' ? new Date().toISOString() : null,
+            cert_in_reference: assessment === 'reported' ? reference?.trim() : null,
+            updated_by: user.id,
+        })
+        .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+}
+
 export async function generateBreachReportTemplate(reportId: string) {
     await requireRole(['admin'])
     const supabase = createAdminClient()
@@ -545,12 +656,13 @@ export async function generateBreachReportTemplate(reportId: string) {
     // Fetch GRO details
     const { data: settings } = await supabase.from('compliance_settings').select('*').single()
 
-    // Generate DPDP 2026 Compliant Template
+    // Internal assessment draft. This is not a prescribed government form and
+    // must be reviewed against the law in force before it is sent externally.
     const template = {
-        title: "DATA BREACH NOTIFICATION (FORM DPDP-BN1)",
+        title: "INTERNAL PERSONAL DATA BREACH ASSESSMENT / DRAFT NOTIFICATION",
+        legal_status: "DRAFT_FOR_REVIEW_NOT_A_PRESCRIBED_FORM",
         fiduciary_details: {
             name: report.organizations.name,
-            registration_number: "PENDING_REGISTRATION", // Placeholder for actual reg number
             contact_person: settings?.gro_name,
             contact_email: settings?.gro_email
         },
@@ -561,7 +673,7 @@ export async function generateBreachReportTemplate(reportId: string) {
             estimated_principals_affected: report.affected_users_count
         },
         remedial_measures: report.measures_taken || "Platform-level isolation triggered immediately upon detection to prevent further unauthorized access or data exfiltration.",
-        declaration: "I hereby declare that the information provided above is true and correct to the best of my knowledge and belief.",
+        timing_note: "Assess current CERT-In reporting duties immediately. DPDP Board and affected-person notification fields apply only according to the notified commencement schedule and the law then in force.",
         timestamp: new Date().toISOString()
     }
 

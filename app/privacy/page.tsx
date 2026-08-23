@@ -1,231 +1,223 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Database, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
-import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
+import { PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
+import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
+import { LEGAL_OPERATOR } from '@/lib/legal-operator'
+import { PRIVACY_REQUEST_SERVICE_LEVEL } from '@/lib/privacy-request'
 
 export const metadata: Metadata = {
     title: 'Privacy Policy — Weavly',
-    description: 'Learn how Weavly collects, uses, and protects the account and costing data used by the Base Plan in compliance with India\'s Digital Personal Data Protection Act (DPDP Act) 2023.',
+    description: 'How Weavly collects, uses, shares, retains, and protects personal information used by the Base Plan.',
 }
 
 const sections = [
+    { href: '#scope', title: 'Scope & Roles' },
     { href: '#data-we-collect', title: 'Data We Collect' },
-    { href: '#purpose', title: 'Purpose' },
-    { href: '#consent', title: 'Consent' },
+    { href: '#purpose', title: 'How We Use Data' },
+    { href: '#choice', title: 'Consent & Choice' },
+    { href: '#sharing', title: 'Sharing & Providers' },
     { href: '#storage-security', title: 'Storage & Security' },
-    { href: '#retention', title: 'Retention' },
-    { href: '#rights', title: 'Your Rights' },
-    { href: '#processors', title: 'Processors' },
-    { href: '#breach-notification', title: 'Breach Notification' },
-    { href: '#children', title: 'Children\'s Data' },
-    { href: '#offline-data', title: 'Offline Data' },
+    { href: '#retention', title: 'Retention & Deletion' },
+    { href: '#rights', title: 'Your Choices & Rights' },
+    { href: '#breach-notification', title: 'Security Incidents' },
+    { href: '#children', title: 'Children' },
+    { href: '#browser-data', title: 'Cookies & Browser Data' },
     { href: '#grievance', title: 'Grievance Redressal' },
     { href: '#changes', title: 'Changes' },
     { href: '#governing-law', title: 'Governing Law' },
 ]
 
-export default async function PrivacyPolicyPage() {
-    const groName = 'Raj Patel'
-    const groEmail = 'privacy@weavly.app'
-    const groPhone: string | null = null
-
+export default function PrivacyPolicyPage() {
     return (
         <PolicyPage
             activePath="/privacy"
             title="Privacy Policy"
-            description="A plain-language view of what Weavly collects for the current Base Plan, why it is needed for costing work, and how account and business data is protected under Indian privacy law."
-            lastUpdated="August 10, 2026"
+            description="What the Weavly Base Plan collects, why it is needed, who receives it, and the controls available to account owners."
+            lastUpdated={LEGAL_DOCUMENTS.privacy.displayDate}
             sections={sections}
             facts={[
-                { label: 'Primary law', value: 'DPDP Act 2023', icon: ShieldCheck },
-                { label: 'Data role', value: 'Weavly processes Base Plan data for factory owners', icon: Database },
-                { label: 'Security model', value: 'Tenant isolation, RLS, encryption, and authenticated access', icon: LockKeyhole },
-                { label: 'Grievance contact', value: groEmail, icon: Mail },
+                { label: 'Current framework', value: 'IT Act 2000 and SPDI Rules 2011', icon: ShieldCheck },
+                { label: 'DPDP readiness', value: 'Prepared for the phased DPDP framework', icon: Database },
+                { label: 'Account controls', value: 'Owner export and permanent deletion', icon: LockKeyhole },
+                { label: 'Privacy contact', value: LEGAL_OPERATOR.contactEmail, icon: Mail },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use the current Base Plan. This policy is drafted in compliance with India&apos;s <strong>Digital Personal Data Protection Act (DPDP Act) 2023</strong>, the <strong>Information Technology Act 2000</strong>, and the <strong>IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>. The initial rollout is limited to the Base Plan costing workspace; any future Full Suite release will be covered by separate applicable terms and notices.
+                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing service. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with the current Weavly Estimator (Base Plan). It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
             </p>
 
-            <PolicyCallout tone="neutral" title="Initial rollout boundary">
+            <PolicySection id="scope" title="1. Scope and Our Data Roles">
                 <p>
-                    This policy covers only the Weavly Estimator (Base Plan), which is the only plan available for the initial rollout. Production logging, orders, stock or inventory, dispatch, payroll, and connected factory analytics are not available under this rollout, so Weavly is not collecting those operational records as part of the Base Plan service.
+                    For account registration, authentication, billing, product security, support, and our own service administration, Weavly determines why and how personal information is processed. For those activities, Weavly is responsible for the processing it controls.
                 </p>
-            </PolicyCallout>
-
-            <PolicySection id="data-we-collect" title="1. Data We Collect">
-                <p>For the current Base Plan, we collect the following categories of account and costing data:</p>
-
-                <h3>1.1 Account Data (Owner)</h3>
-                <ul>
-                    <li>Full name</li>
-                    <li>Email address</li>
-                    <li>Phone number</li>
-                    <li>Role within the organization</li>
-                    <li>Organization/factory name</li>
-                </ul>
-
-                <h3>1.2 Costing and Business Data</h3>
-                <ul>
-                    <li>Fabric quality names and construction details</li>
-                    <li>Warp and weft yarn details, rates, weights, consumption, and related costing assumptions</li>
-                    <li>Factory cost assumptions, GST, shortage, commission, transport, target margin, and quantity inputs</li>
-                    <li>Saved costings, drafts, and any customer or party details you choose to enter alongside a costing</li>
-                    <li>Cost Sheet exports generated from the estimator</li>
-                </ul>
-
-                <h3>1.3 Technical Data</h3>
-                <ul>
-                    <li>Browser type and version</li>
-                    <li>Device information</li>
-                    <li>Limited browser storage for cached screens, local drafts, and Progressive Web App assets</li>
-                </ul>
-
-                <p>Production logs, worker records, payroll, inventory, dispatch, orders, and factory-floor activity are not part of the current Base Plan data model.</p>
-            </PolicySection>
-
-            <PolicySection id="purpose" title="2. Purpose of Data Collection">
-                <p>For the current Base Plan, we collect and process data strictly for the following purposes:</p>
-                <ul>
-                    <li><strong>Cost estimation</strong> — calculating material, factory, landed, break-even, and margin figures from the inputs you provide</li>
-                    <li><strong>Saved costing work</strong> — storing fabric qualities, costing assumptions, drafts, and saved costings so you can reuse them</li>
-                    <li><strong>Cost Sheet export</strong> — generating the export you request from a saved or active costing</li>
-                    <li><strong>Account management</strong> — authentication, authorization, organization setup</li>
-                    <li><strong>Billing and support</strong> — processing payments, maintaining receipts, handling renewals, and responding to requests</li>
-                </ul>
-                <p>We do <strong>not</strong> use your data for advertising, behavioural profiling, or selling to third parties.</p>
-
-                <PolicyCallout tone="blue" title="Role Under the DPDP Act 2023">
-                    <p>
-                        For the purposes of the Digital Personal Data Protection Act 2023, the <strong>Factory Owner (Subscriber) acts as the Data Fiduciary</strong>, determining the purpose and means of processing the personal data entered into the Base Plan. <strong>Weavly acts solely as a Data Processor</strong>, processing data on behalf of the Factory Owner.
-                    </p>
-                    <p>
-                        It is the responsibility of the Factory Owner to ensure that any personal data, including customer or party details, is entered lawfully and accurately.
-                    </p>
-                </PolicyCallout>
-            </PolicySection>
-
-            <PolicySection id="consent" title="3. Consent">
                 <p>
-                    By creating an account on Weavly, you provide explicit consent for the collection and processing of your data for the purposes described above. You may withdraw consent at any time by contacting us (see Section 11). Withdrawal of consent may result in the inability to use certain features of the platform.
+                    An account owner may also enter personal information about customers, suppliers, brokers, employees, or other business contacts into a costing workspace. For that customer-provided information, the account owner decides what to enter and why, and Weavly processes it to provide the subscribed service. The account owner is responsible for having an appropriate basis to provide that information to Weavly.
                 </p>
-                <p>Any optional communication or future feature that requires additional personal data will request separate consent within the application where applicable.</p>
-            </PolicySection>
-
-            <PolicySection id="storage-security" title="4. How We Store and Protect Your Data">
-                <ul>
-                    <li><strong>Cloud infrastructure</strong> — Base Plan account and costing-workspace data is stored on Supabase (hosted on AWS), with servers in secure, SOC 2-compliant data centres. Payment details are handled by Razorpay; Weavly receives payment references and billing status.</li>
-                    <li><strong>Encryption</strong> — Data is encrypted at rest (AES-256) and in transit (TLS 1.2+).</li>
-                    <li><strong>Row Level Security (RLS)</strong> — PostgreSQL-level policies ensure every database query is automatically scoped to the user&apos;s organization. Cross-organization data access is architecturally impossible.</li>
-                    <li><strong>JWT-based authentication</strong> — Organization ID and user role are embedded in session tokens and verified on every request.</li>
-                    <li><strong>Authenticated access</strong> — Account sessions and role checks restrict access to the organization and costing workspace associated with the signed-in user.</li>
-                    <li><strong>Local storage</strong> — The app may keep temporary browser data such as cached screens, local drafts, and app assets. Logging out clears user-specific local cache and offline queues on that browser profile.</li>
-                </ul>
-            </PolicySection>
-
-            <PolicySection id="retention" title="5. Data Retention">
-                <p>We retain your data for the following periods:</p>
-                <ul>
-                    <li><strong>Saved costings and fabric qualities</strong> — Retained while your account and paid service remain active, with a 30-day export window after termination.</li>
-                    <li><strong>Billing and payment records</strong> — Retained for the period required for accounting, tax, fraud prevention, dispute handling, and other legal obligations.</li>
-                    <li><strong>Account data</strong> — Retained for 180 days after account deletion or deactivation, as per IT Intermediary Guidelines 2021, then permanently deleted.</li>
-                    <li><strong>Browser drafts and cached assets</strong> — Retained on the signed-in browser until cleared by logout, browser storage controls, or normal cache expiry.</li>
-                </ul>
-                <p>After the retention period, data is permanently and irreversibly deleted from our systems.</p>
-            </PolicySection>
-
-            <PolicySection id="rights" title="6. Your Rights (Data Principal Rights)">
-                <p>Under the DPDP Act 2023, you have the following rights:</p>
-                <ul>
-                    <li><strong>Right to Access</strong> — You may request a copy of all personal data we hold about you or your organization.</li>
-                    <li><strong>Right to Correction</strong> — You may request correction of inaccurate data.</li>
-                    <li><strong>Right to Erasure</strong> — You may request deletion of your personal data, subject to our legal retention obligations.</li>
-                    <li><strong>Right to Withdraw Consent</strong> — You may withdraw your consent for data processing at any time.</li>
-                    <li><strong>Right to Grievance Redressal</strong> — You may raise concerns with our Grievance Officer (see Section 11).</li>
-                </ul>
-                <p>To exercise these rights, email us at the address listed in Section 11. We will respond within 30 days.</p>
-            </PolicySection>
-
-            <PolicySection id="processors" title="7. Third-Party Data Processors">
-                <p>We use the following third-party services to operate the platform:</p>
-                <ul>
-                    <li><strong>Supabase</strong> (database hosting, authentication) — <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Supabase Privacy Policy</a></li>
-                    <li><strong>Vercel</strong> (application hosting) — <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel Privacy Policy</a></li>
-                    <li><strong>Razorpay</strong> (Base Plan payment processing and billing records)</li>
-                </ul>
-                <p>We maintain Data Processing Agreements (DPAs) with our third-party processors to ensure equivalent data protection standards.</p>
-            </PolicySection>
-
-            <PolicySection id="breach-notification" title="8. Data Breach Notification">
                 <p>
-                    In the event of a data breach that may compromise the security of your personal data, we will notify the <strong>Data Protection Board of India</strong> and all affected users within <strong>72 hours</strong> of becoming aware of the breach, as required by the DPDP Act 2023.
+                    This notice covers the Base Plan offered in the initial rollout. Production logging, worker management, payroll, inventory, dispatch, order tracking, and related Full Suite features are not included. If those features are offered later, we will update the applicable notice before collecting the additional operational or worker data they require.
                 </p>
             </PolicySection>
 
-            <PolicySection id="children" title="9. Children&apos;s Data">
+            <PolicySection id="data-we-collect" title="2. Information We Collect">
+                <h3>2.1 Account and identity information</h3>
+                <ul>
+                    <li>Owner name, email address, mobile number, role, and organization or factory name</li>
+                    <li>Authentication credentials processed through Supabase Auth; Weavly does not display or retrieve your plaintext password</li>
+                    <li>The versions of the Terms and Privacy Policy accepted at signup, acceptance time, and limited browser information used as acceptance evidence</li>
+                </ul>
+
+                <h3>2.2 Costing and business information</h3>
+                <ul>
+                    <li>Fabric qualities, construction details, yarn descriptions, rates, weights, consumption, and costing assumptions</li>
+                    <li>Factory costs, GST assumptions, shortage, commission, transport, target margin, quantity, notes, drafts, and saved costings</li>
+                    <li>Customer, party, broker, supplier, or other contact details you choose to associate with a costing</li>
+                    <li>Cost Sheet and organization-export activity, including export-history metadata; downloaded files are saved wherever you choose on your device</li>
+                </ul>
+
+                <h3>2.3 Billing and support information</h3>
+                <ul>
+                    <li>Billing name and address, GSTIN if supplied, plan and subscription status, payment references, receipts, and refund or dispute records</li>
+                    <li>Messages, attachments, and account references you send in support, privacy, or grievance communications</li>
+                    <li>Razorpay processes payment-instrument information. Weavly receives transaction references and status information, not complete card, bank-account, or UPI credentials</li>
+                </ul>
+
+                <h3>2.4 Technical, security, and browser information</h3>
+                <ul>
+                    <li>IP address, request time, browser and device information, session identifiers, authentication events, and security or rate-limit events</li>
+                    <li>Error reports, performance traces, route information, and diagnostic context sent to our monitoring provider after application-level redaction</li>
+                    <li>Essential cookies and limited browser storage used for login sessions, security, cached application assets, and temporary or locally persisted drafts</li>
+                </ul>
+            </PolicySection>
+
+            <PolicySection id="purpose" title="3. How We Use Information">
+                <p>We use the information described above to:</p>
+                <ul>
+                    <li>Create and secure accounts, authenticate users, and isolate each organization&apos;s workspace</li>
+                    <li>Calculate, save, restore, and export costing work requested by the account owner</li>
+                    <li>Process subscriptions, payments, renewals, receipts, refunds, and billing support</li>
+                    <li>Provide support, respond to privacy requests and grievances, and maintain request and resolution records</li>
+                    <li>Detect abuse, enforce rate limits, investigate errors, maintain availability, and respond to security incidents</li>
+                    <li>Comply with accounting, tax, cybersecurity, court, regulatory, and other legal obligations</li>
+                </ul>
+                <p>We do not sell personal information or use Base Plan workspace data for third-party or behavioural advertising.</p>
+            </PolicySection>
+
+            <PolicySection id="choice" title="4. Consent and Choice">
                 <p>
-                    Weavly does not knowingly collect or process data from individuals under the age of 18. Account holders must be at least 18 years old. If we become aware that data from a minor has been collected, we will promptly delete such data.
+                    At signup, the owner must affirmatively accept the displayed versions of the Terms of Service and this Privacy Policy. We keep a server-side record of that acceptance. Where applicable law requires consent for a particular collection, disclosure, or communication, we will request it through the relevant product flow or another written or electronic method.
+                </p>
+                <p>
+                    You may decline optional information. If information is necessary to create an account, secure the service, process payment, or perform a requested feature, we may be unable to provide that part of the service without it. You may withdraw consent for consent-based processing by contacting the privacy address in Section 12 or by using an available in-product control. Withdrawal does not affect processing already lawfully completed and may require account or feature termination.
                 </p>
             </PolicySection>
 
-            <PolicySection id="offline-data" title="10. Local Storage &amp; Offline Data">
+            <PolicySection id="sharing" title="5. Disclosures and Service Providers">
+                <p>We disclose information only as needed to operate the service, follow your instructions, protect the service, complete a transaction, or comply with law. Current provider categories include:</p>
+                <ul>
+                    <li><strong>Supabase</strong> — database, authentication, and related backend infrastructure</li>
+                    <li><strong>Vercel</strong> — application hosting, content delivery, and server execution</li>
+                    <li><strong>Razorpay</strong> — payment, subscription, refund, and transaction processing</li>
+                    <li><strong>Sentry</strong> — redacted error monitoring, performance diagnostics, and masked error-session replay</li>
+                    <li><strong>Upstash</strong> — rate limiting and abuse-prevention infrastructure when configured</li>
+                </ul>
                 <p>
-                    The Weavly Progressive Web App (PWA) uses a <strong>Service Worker</strong> to cache application assets and may keep temporary browser drafts for costings you are editing. Saving costings and generating Cost Sheet exports require an internet connection. Logging out clears user-specific cached data and local drafts on that browser profile. No cookies are used for tracking purposes.
+                    These providers process information under their own service terms and data-protection commitments. Their infrastructure may process or store information in India or other locations based on our project configuration and their service architecture. We may also disclose information to professional advisers, courts, regulators, law-enforcement bodies, or government agencies when authorized or required by applicable law, and in connection with a merger, financing, reorganization, or sale subject to appropriate confidentiality and notice requirements.
                 </p>
             </PolicySection>
 
-            <PolicySection id="grievance" title="11. Grievance Redressal Policy (Effective April 2026)">
-                <p>We take your privacy concerns seriously. If you have any grievances regarding your data processing, you may reach out to our designated officer.</p>
+            <PolicySection id="storage-security" title="6. Storage and Security">
+                <p>We use safeguards proportionate to the service and the information handled, including:</p>
+                <ul>
+                    <li>Encrypted network connections and provider-managed encryption for hosted data</li>
+                    <li>Authenticated sessions, role checks, tenant-scoped database access, and PostgreSQL Row Level Security policies</li>
+                    <li>Restricted service credentials, input validation, rate limiting, audit records, and redaction of diagnostic events</li>
+                    <li>Account-owner controls for structured data export and permanent deletion from the active product database</li>
+                </ul>
+                <p>
+                    No online service can guarantee absolute security. Access controls reduce cross-organization risk but do not make unauthorized access impossible. Please protect your password and device, and notify us promptly if you suspect unauthorized account use.
+                </p>
+            </PolicySection>
 
+            <PolicySection id="retention" title="7. Retention and Deletion">
+                <ul>
+                    <li><strong>Active account and costing data</strong> — kept while the account remains active and as needed to provide the requested service. An owner may permanently delete the workspace through Settings.</li>
+                    <li><strong>After owner-initiated deletion</strong> — organization and account records are removed from the active product database. Residual encrypted backup copies, provider logs, or cached copies may remain temporarily until the applicable provider&apos;s normal protection and deletion cycle completes.</li>
+                    <li><strong>Billing and legal records</strong> — retained for the period needed to satisfy tax, accounting, fraud-prevention, chargeback, dispute, and legal requirements.</li>
+                    <li><strong>Security logs</strong> — ICT system logs covered by applicable CERT-In directions are maintained securely for a rolling period of 180 days in India. Other diagnostic records are kept only as long as needed for security, reliability, or legal purposes.</li>
+                    <li><strong>Support and grievance records</strong> — kept while a request is open and afterwards for the period reasonably needed to document the response, handle disputes, and meet legal obligations.</li>
+                    <li><strong>Browser data</strong> — remains until removed by logout cleanup, application expiry, browser settings, or manual clearing, depending on the storage mechanism.</li>
+                </ul>
+                <p>We may retain a limited record instead of deleting it when retention is required by applicable law or necessary for an unresolved legal claim, payment dispute, fraud investigation, or security incident.</p>
+            </PolicySection>
+
+            <PolicySection id="rights" title="8. Your Choices and Rights">
+                <p>Depending on the information and the law in force, you may:</p>
+                <ul>
+                    <li>Review and correct owner and billing information, or request correction of inaccurate information</li>
+                    <li>Download a structured owner-only organization export from Settings</li>
+                    <li>Withdraw consent for processing that relies on consent</li>
+                    <li>Request deletion, subject to records that must be retained by law or for a permitted unresolved purpose</li>
+                    <li>Raise a grievance about our processing or response to a privacy request</li>
+                </ul>
+                <p>
+                    The DPDP Act&apos;s access, correction, erasure, grievance, and nomination provisions have a phased statutory commencement. We are building these controls in advance, but this policy does not represent that every DPDP provision is already in force. We may need to verify your identity and authority before acting on a request.
+                </p>
+            </PolicySection>
+
+            <PolicySection id="breach-notification" title="9. Security Incidents and Notifications">
+                <p>
+                    We investigate suspected security incidents and notify CERT-In, affected individuals, the Data Protection Board of India, or other authorities when and within the time required by the law then in force. Certain reportable cyber incidents are currently subject to CERT-In&apos;s six-hour reporting direction. The DPDP framework&apos;s separate personal-data-breach notification requirements will apply according to their notified commencement schedule.
+                </p>
+                <p>
+                    If you notice suspicious account activity or a possible exposure, use our <Link href="/security-incident">security incident reporting channel</Link>. Do not send passwords, OTPs, payment credentials, or other secrets in the report.
+                </p>
+            </PolicySection>
+
+            <PolicySection id="children" title="10. Children">
+                <p>
+                    The Base Plan is a business service and is not directed to children. Account owners must be at least 18 years old. We do not knowingly request children&apos;s personal information for the Base Plan. If you believe a child&apos;s information has been entered, contact us so we can review and take appropriate action.
+                </p>
+            </PolicySection>
+
+            <PolicySection id="browser-data" title="11. Cookies, Local Storage, and Offline Data">
+                <p>
+                    We use essential authentication cookies and may use a short-lived diagnostic cookie to understand whether sign-in completed successfully. The Progressive Web App service worker caches application assets, and the app may keep temporary or locally persisted costing drafts in browser storage. Saving costings and generating Cost Sheet exports require an internet connection. Logging out clears user-specific cached data and local drafts on that browser profile. These technologies support login, security, reliability, and draft recovery; they are not used for third-party advertising.
+                </p>
+            </PolicySection>
+
+            <PolicySection id="grievance" title="12. Privacy Requests and Grievance Redressal">
+                <p>
+                    Use our <Link href="/privacy-request">privacy and grievance request page</Link> or contact the designated Grievance Officer for access, correction, withdrawal, deletion, security, or other privacy concerns.
+                </p>
                 <PolicyContactPanel
-                    title="Grievance Redressal Officer"
+                    title="Grievance Officer"
                     rows={[
+                        { label: 'Officer', value: LEGAL_OPERATOR.grievanceOfficer },
                         {
-                            label: 'Officer',
-                            value: (
-                                <>
-                                    {groName}
-                                    <span className="block text-sm font-medium text-zinc-500 dark:text-zinc-400">Weavly Compliance Dept.</span>
-                                </>
-                            ),
+                            label: 'Email',
+                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{LEGAL_OPERATOR.contactEmail}</a>,
                         },
-                        {
-                            label: 'Primary Contact',
-                            value: (
-                                <>
-                                    <a href={`mailto:${groEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{groEmail}</a>
-                                    {groPhone && (
-                                        <span className="block text-sm font-medium text-zinc-500 dark:text-zinc-400">Phone: {groPhone}</span>
-                                    )}
-                                </>
-                            ),
-                        },
-                        { label: 'Acknowledgment', value: '12 hours via email' },
-                        { label: 'Resolution', value: '7 working days' },
+                        { label: 'Postal address', value: LEGAL_OPERATOR.postalAddress },
+                        { label: 'Internal response target', value: `${PRIVACY_REQUEST_SERVICE_LEVEL.responseCalendarDays} calendar days from receipt` },
                     ]}
                     note={
                         <>
-                             Any Data Principal or authorized representative may file a grievance regarding data inaccuracy, unauthorized processing, or consent withdrawal. Please include the relevant account or costing reference and the nature of your concern.
+                            We aim to acknowledge a request within {PRIVACY_REQUEST_SERVICE_LEVEL.acknowledgementBusinessDays} business days. Send it from your registered email where possible and include the organization name, relevant account or costing reference, the nature of the request, and the outcome sought. Do not email passwords, payment credentials, or unnecessary identity documents. These are Weavly service targets; where the SPDI Rules apply, a grievance will be addressed expeditiously and within one month of receipt, and any other applicable legal period will also control.
                         </>
                     }
                 />
-
-                <PolicyCallout tone="amber" title="Resolution Proof">
-                    <p>
-                        Upon resolution, Weavly will provide a Resolution Summary. A digital copy of this communication is archived in our secure Compliance Registry for the period required by applicable legal and accounting obligations.
-                    </p>
-                </PolicyCallout>
             </PolicySection>
 
-            <PolicySection id="changes" title="12. Changes to This Policy">
+            <PolicySection id="changes" title="13. Changes to This Policy">
                 <p>
-                    We may update this Privacy Policy from time to time. Material changes will be communicated via the platform or email. Continued use of the service after changes constitutes acceptance of the updated policy.
+                    We may update this policy when the service, providers, or legal requirements change. We will change the displayed version and date, and will provide additional notice or obtain fresh consent where required by applicable law or where a change materially expands consent-based processing.
                 </p>
             </PolicySection>
 
-            <PolicySection id="governing-law" title="13. Governing Law">
+            <PolicySection id="governing-law" title="14. Governing Law">
                 <p>
-                    This Privacy Policy is governed by the laws of the Republic of India. Any disputes arising from this policy will be subject to the exclusive jurisdiction of the courts in Surat, Gujarat, India.
+                    This policy is governed by the laws of India. Subject to applicable statutory remedies, disputes arising from this policy are subject to the dispute provisions in the <Link href="/terms">Terms of Service</Link>.
                 </p>
                 <p>
                     For service-specific obligations, review the <Link href="/terms">Terms of Service</Link> and the <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link>.

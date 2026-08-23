@@ -13,6 +13,7 @@
  */
 
 import { z } from 'zod'
+import { SIGNUP_LEGAL_ACCEPTANCE } from './legal-documents'
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -64,6 +65,31 @@ export const PasswordSchema = z
     .regex(/[0-9]/, 'Must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character')
 
+export const SignupLegalAcceptanceSchema = z.object({
+    accepted: z.boolean(),
+    termsVersion: z.string().trim().max(40),
+    privacyVersion: z.string().trim().max(40),
+}).strict().superRefine((data, ctx) => {
+    if (!data.accepted) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['accepted'],
+            message: 'You must accept the Terms of Service and Privacy Policy',
+        })
+    }
+
+    if (
+        data.termsVersion !== SIGNUP_LEGAL_ACCEPTANCE.termsVersion
+        || data.privacyVersion !== SIGNUP_LEGAL_ACCEPTANCE.privacyVersion
+    ) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['termsVersion'],
+            message: 'The legal documents changed. Refresh the page and review them again.',
+        })
+    }
+})
+
 /**
  * CreateOrgSchema — owner signup form (F1 spec §4)
  * Used by createOrganization() server action.
@@ -76,6 +102,7 @@ export const CreateOrgSchema = z.object({
     factoryName: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
     phone:       z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
     referralCode: z.string().trim().optional(),
+    legalAcceptance: SignupLegalAcceptanceSchema,
 }).superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match' })

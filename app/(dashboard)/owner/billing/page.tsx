@@ -28,6 +28,7 @@ import {
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
 import { type BillingAttemptRow } from '@/lib/billing-attempts'
+import { getBillingReadiness } from '@/lib/billing-readiness'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { Suspense } from 'react'
 import { PageHeader, SectionHeader, StatusBadge } from '@/components/ui/page-header'
@@ -354,6 +355,8 @@ function SubscriptionCard({
     renewalAvailable,
     renewalEligibleAt,
     renewalIsUpcoming,
+    billingReady,
+    billingReadinessMessage,
 }: {
     subscriptionTier: string
     displayPlanTier: PurchasablePlanTier | null
@@ -363,6 +366,8 @@ function SubscriptionCard({
     renewalAvailable: boolean
     renewalEligibleAt: string | null
     renewalIsUpcoming: boolean
+    billingReady: boolean
+    billingReadinessMessage: string
 }) {
     const isActive = ['base', 'premium', 'trial'].includes(subscriptionTier)
     const isTrial = subscriptionTier === 'trial'
@@ -420,15 +425,21 @@ function SubscriptionCard({
                     <>
                         <p className="mt-1 text-sm font-semibold text-ink">Renew {getBillingPlan(renewalPlanTier).name} for {formatAmount(activeRenewalPrice.totalPaise)}.</p>
                         <p className="mt-1 text-xs leading-relaxed text-body">Renewal is manual; no automatic charge will be made.</p>
-                        <SubscribeButton
-                            planTier={renewalPlanTier}
-                            tierName={getBillingPlan(renewalPlanTier).name}
-                            displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
-                            buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
-                            successHref="/owner/billing"
-                            successLabel="View billing details"
-                            className="mt-3 w-full shadow-none"
-                        />
+                        {billingReady ? (
+                            <SubscribeButton
+                                planTier={renewalPlanTier}
+                                tierName={getBillingPlan(renewalPlanTier).name}
+                                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
+                                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
+                                successHref="/owner/billing"
+                                successLabel="View billing details"
+                                className="mt-3 w-full shadow-none"
+                            />
+                        ) : (
+                            <p className="mt-3 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-xs font-semibold leading-relaxed text-warning">
+                                {billingReadinessMessage}
+                            </p>
+                        )}
                     </>
                 ) : displayPlanTier === 'premium' ? (
                     <p className="mt-1 text-xs leading-relaxed text-body">Premium self-serve checkout is paused for the Base pilot. No Full Suite checkout action is available here.</p>
@@ -781,6 +792,7 @@ export default async function BillingPage({
         && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
     )
     const canShowPlanCards = subscriptionTier !== 'premium' && !isActivating && !isPending && !renewalAvailable
+    const billingReadiness = getBillingReadiness()
     const planSectionLabel = billingPlanTier && subscriptionTier === 'none'
         ? `Renew ${getBillingPlan(billingPlanTier).name}`
         : tier === 'base'
@@ -828,6 +840,8 @@ export default async function BillingPage({
                     renewalAvailable={renewalAvailable}
                     renewalEligibleAt={renewalEligibleAt}
                     renewalIsUpcoming={renewalIsUpcoming}
+                    billingReady={billingReadiness.canCreateOrder}
+                    billingReadinessMessage={billingReadiness.publicMessage}
                 />
                 <LatestBillingDocumentsCard latestCapturedPayment={latestCapturedPayment} />
             </div>
@@ -842,7 +856,19 @@ export default async function BillingPage({
                         isPending={isPending}
                         isRetryable={isRetryable}
                     />
-                    {canShowPlanCards && (
+                    {canShowPlanCards && !billingReadiness.canCreateOrder && (
+                        <Card className="border-warning/30 bg-warning-soft p-5 shadow-none">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
+                                <div>
+                                    <h2 className="text-sm font-bold text-ink">Base Plan payments are not open yet</h2>
+                                    <p className="mt-1 text-sm leading-relaxed text-body">{billingReadiness.publicMessage}</p>
+                                    <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. No Razorpay order can be created until the server configuration passes the launch gate.</p>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
+                    {canShowPlanCards && billingReadiness.canCreateOrder && (
                         <PlanCards
                             label={planSectionLabel}
                             currentTier={subscriptionTier}

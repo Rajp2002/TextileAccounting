@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { Plus, Minus } from 'lucide-react'
 import { getCurrentSuratYear } from '@/lib/time'
+import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 
 const footerSections = [
     {
@@ -28,6 +29,8 @@ const footerSections = [
         title: 'Legal',
         links: [
             { name: 'Privacy Policy', href: '/privacy' },
+            { name: 'Privacy Request', href: '/privacy-request' },
+            { name: 'Report Security Incident', href: '/security-incident' },
             { name: 'Terms of Service', href: '/terms' },
             { name: 'Refund Policy', href: '/refund-policy' },
         ]
@@ -55,6 +58,12 @@ export default function LandingFooter() {
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
                                 Built for grey fabric weaving factories that want reliable Cost Estimates, saved costings, and margin visibility in one focused workspace.
                             </p>
+                            <a
+                                href={`mailto:${LEGAL_OPERATOR.contactEmail}`}
+                                className="text-sm text-gray-400 transition-colors hover:text-white"
+                            >
+                                Contact: {LEGAL_OPERATOR.contactEmail}
+                            </a>
                         </div>
 
                         {/* Column 2-4: Sections */}
