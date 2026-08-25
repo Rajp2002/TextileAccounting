@@ -525,7 +525,7 @@ function AccessStateCallout({
     const state = isActivating
         ? { icon: Clock, label: 'Payment received', title: 'Access is being activated.', text: 'We received a verified payment and are confirming access. Refresh in a few seconds; do not pay again.' }
         : isPending
-            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: <>The checkout is not a paid subscription yet; Weavly has <strong>not received a verified payment yet</strong>. Check the payment status before trying again.</> }
+            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: <>The checkout is not a paid subscription yet; Weavly has <strong>not received a verified payment yet</strong>. If the Razorpay window closed, use <strong>Resume secure payment</strong> below. Weavly will reuse the existing payment order.</> }
             : isRetryable
                 ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
                 : expiredPlan
@@ -609,11 +609,13 @@ function PlanCards({
     currentTier,
     decisions,
     visibleTiers,
+    resumePendingCheckout = false,
 }: {
     label: string
     currentTier: string
     decisions: Record<PurchasablePlanTier, BillingPurchaseDecision>
     visibleTiers: readonly PurchasablePlanTier[]
+    resumePendingCheckout?: boolean
 }) {
     const plans = [
         {
@@ -676,7 +678,9 @@ function PlanCards({
                                 planTier={plan.tier}
                                 tierName={plan.name}
                                 displayAmount={total}
-                                buttonLabel={`Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
+                                buttonLabel={resumePendingCheckout
+                                    ? `Resume secure payment · ${total}`
+                                    : `Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
                                 successHref={isRenewal ? '/owner/billing' : plan.tier === 'premium' ? '/onboarding' : '/owner/estimator'}
                                 successLabel={isRenewal ? 'View payment history' : plan.tier === 'premium' ? 'Set up your factory' : 'Start your first Cost Estimate'}
                             />
@@ -791,7 +795,10 @@ export default async function BillingPage({
         latestAttempt
         && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
     )
-    const canShowPlanCards = subscriptionTier !== 'premium' && !isActivating && !isPending && !renewalAvailable
+    // A created Razorpay order is not a payment. Keep a recovery action visible
+    // after a tab, browser, or checkout crash; create-order safely reuses the
+    // tenant's existing provider order instead of creating a second intent.
+    const canShowPlanCards = subscriptionTier !== 'premium' && !isActivating && !renewalAvailable
     const billingReadiness = getBillingReadiness()
     const planSectionLabel = billingPlanTier && subscriptionTier === 'none'
         ? `Renew ${getBillingPlan(billingPlanTier).name}`
@@ -874,6 +881,7 @@ export default async function BillingPage({
                             currentTier={subscriptionTier}
                             decisions={purchaseDecisions}
                             visibleTiers={visiblePlanTiers}
+                            resumePendingCheckout={isPending}
                         />
                     )}
                     <PaymentHistory entries={billingHistoryEntries} />
