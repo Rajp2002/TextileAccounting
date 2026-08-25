@@ -142,6 +142,12 @@ const CostingExportDialog = dynamic(
     { ssr: false, loading: () => null },
 )
 
+const COSTING_SAVE_GUIDANCE_STORAGE_KEY = 'weavly-estimator-costing-save-guidance-dismissed'
+
+function getCostingSaveGuidanceStorageKey(orgId: string, userId: string) {
+    return `${COSTING_SAVE_GUIDANCE_STORAGE_KEY}:${orgId}:${userId}`
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2566,6 +2572,7 @@ export default function EstimatorClient({
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
+    const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
     const mobileCostingVisibilityRef = useRef<HTMLDivElement>(null)
     const mobileShortcutSeenRef = useRef(false)
@@ -2573,6 +2580,26 @@ export default function EstimatorClient({
     const [mobileCostingShortcutVisible, setMobileCostingShortcutVisible] = useState(false)
     const [mobileCostingShortcutExpanded, setMobileCostingShortcutExpanded] = useState(false)
     const [mobileKeyboardVisible, setMobileKeyboardVisible] = useState(false)
+
+    useEffect(() => {
+        try {
+            setShowCostingSaveGuidance(
+                localStorage.getItem(getCostingSaveGuidanceStorageKey(orgId, userId)) !== 'dismissed',
+            )
+        } catch {
+            // If browser storage is unavailable, keep the guidance available for this session.
+            setShowCostingSaveGuidance(true)
+        }
+    }, [orgId, userId])
+
+    const dismissCostingSaveGuidance = useCallback(() => {
+        setShowCostingSaveGuidance(false)
+        try {
+            localStorage.setItem(getCostingSaveGuidanceStorageKey(orgId, userId), 'dismissed')
+        } catch {
+            // Dismissal still applies for the current session when storage is unavailable.
+        }
+    }, [orgId, userId])
 
     const handleEntryModeChange = useCallback((nextMode: 'quick' | 'detailed') => {
         setEntryMode(nextMode)
@@ -4480,11 +4507,29 @@ export default function EstimatorClient({
                             />
                         </div>
 
-                        <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)] 2xl:col-span-2">
-                            <p><span className="font-semibold text-[var(--color-ink)]">Save quality/recipe:</span> reusable construction and assumptions.</p>
-                            <p><span className="font-semibold text-[var(--color-ink)]">Save costing snapshot:</span> frozen result for this rate/date/quantity.</p>
-                            <p><span className="font-semibold text-[var(--color-ink)]">Create new version:</span> deliberate action with the changed-input summary above; an ordinary repeat save does not create a duplicate.</p>
-                        </div>
+                        {showCostingSaveGuidance && (
+                            <div
+                                data-testid="costing-save-guidance"
+                                role="note"
+                                aria-label="Costing save guidance"
+                                className="flex items-start gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)] 2xl:col-span-2"
+                            >
+                                <div className="min-w-0 flex-1">
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Save quality/recipe:</span> reusable construction and assumptions.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Save costing snapshot:</span> frozen result for this rate/date/quantity.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Create new version:</span> deliberate action with the changed-input summary above; an ordinary repeat save does not create a duplicate.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="estimator-touch-target -my-1 -mr-2 inline-flex shrink-0 items-center justify-center rounded-md px-2 text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)]"
+                                    onClick={dismissCostingSaveGuidance}
+                                    aria-label="Dismiss costing save guidance"
+                                    title="Dismiss costing save guidance"
+                                >
+                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                </button>
+                            </div>
+                        )}
 
                         <div className="space-y-2 2xl:w-[520px]">
                             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
