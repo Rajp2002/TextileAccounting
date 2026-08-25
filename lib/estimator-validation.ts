@@ -253,8 +253,6 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   }
   if (overheadMode === 'monthly_expenses') {
     addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS, required: true })
-  } else if (input.monthly_output_m != null) {
-    addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS })
   }
   if (input.loom_count != null) addNumberIssue(issues, warnings, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })
   if (input.monthly_working_days != null) addNumberIssue(issues, warnings, 'monthly_working_days', 'Monthly working days', input.monthly_working_days, { max: 31 })

@@ -39,6 +39,8 @@ describe('Sprint 3 estimator simplicity and textile workflow', () => {
     }
     expect(validateFactoryCostProfile(monthly).valid).toBe(true)
     expect(validateFactoryCostProfile({ ...monthly, overhead_pct: Number.NaN }).valid).toBe(true)
+    expect(validateFactoryCostProfile({ ...monthly, overhead_mode: 'monthly_expenses', monthly_output_m: 0 }).valid).toBe(false)
+    expect(validateFactoryCostProfile({ ...monthly, overhead_mode: 'direct', overhead_override_per_m: 12.5, monthly_output_m: 0 }).valid).toBe(true)
     expect(validateFactoryCostProfile({ ...monthly, overhead_mode: 'direct', overhead_override_per_m: 0 }).valid).toBe(false)
   })
 
