@@ -179,7 +179,11 @@ export function getMissingYarnRateCandidates(
 }
 
 export function getYarnRateConflicts(templates: YarnRateTemplate[]): YarnRateConflict[] {
-    return collectYarnRateCandidates(templates)
+    // The conflict review is an editable Saved Quality concern. Saved costings
+    // are immutable historical snapshots, so an older snapshot rate must not
+    // make a current Saved Quality appear inconsistent.
+    const savedQualityTemplates = templates.filter(template => template.discoverySource !== 'saved_costing')
+    return collectYarnRateCandidates(savedQualityTemplates)
         .flatMap(candidate => candidate.conflict ? [candidate.conflict] : [])
 }
 

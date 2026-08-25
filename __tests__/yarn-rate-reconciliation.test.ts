@@ -106,6 +106,26 @@ describe('saved-quality yarn rate reconciliation', () => {
         expect(conflicts[0].usages.map(usage => usage.templateName)).toEqual(['Assam Silk', 'Assam Silk Fine'])
     })
 
+    it('does not treat an older saved-costing snapshot as a Saved Quality conflict', () => {
+        const sources = [
+            {
+                id: 'quality-current',
+                name: 'Same Quality',
+                discoverySource: 'saved_quality' as const,
+                weft_rows: [weft('weft-current', 'Weft Yarn 150D', 240)],
+            },
+            {
+                id: 'costing-old',
+                name: 'Same Quality',
+                discoverySource: 'saved_costing' as const,
+                weft_rows: [weft('weft-old', 'Weft Yarn 150D', 220)],
+            },
+        ]
+
+        expect(collectYarnRateCandidates(sources)[0].conflict?.rates).toEqual([220, 240])
+        expect(getYarnRateConflicts(sources)).toEqual([])
+    })
+
     it('applies the chosen rate to every matching warp and weft layer only', () => {
         const updated = applyYarnRateToTemplate({
             warp_rows: [warp('warp-a', '30/1000 MUALTI', 322), warp('warp-other', '30 CHIKU', 110)],
