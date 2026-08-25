@@ -29,7 +29,7 @@ import {
 import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getEstimatorQuoteDetail, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { addDays, format } from 'date-fns'
-import { formatDateOnly } from '@/lib/format'
+import { formatDateOnly, formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import {
     History,
@@ -502,7 +502,7 @@ function SavedQualityLibraryView({
                                         </span>
                                         <span className="mt-1 block text-xs text-subtle">
                                             {group.records.length > 0
-                                                ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatDateOnly(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatTimestampDate(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
                                                 : tx('Saved recipe · no saved costing yet')}
                                         </span>
                                     </span>
@@ -563,7 +563,7 @@ function SavedQualityLibraryView({
                                             </div>
                                             <DialogDescription>
                                                 {group.records.length > 0
-                                                    ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatDateOnly(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                    ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatTimestampDate(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
                                                     : 'Saved recipe · no saved costing yet'}
                                             </DialogDescription>
                                             <DialogClose asChild>
@@ -622,7 +622,7 @@ function SavedQualityLibraryView({
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
                                                         <p className="text-sm font-black text-ink">{tx('Latest Saved Costing breakdown')}</p>
-                                                        <p className="mt-1 text-xs text-subtle">Snapshot v{Number(latest.version_number ?? 1)} · {formatDateOnly(latest.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                                        <p className="mt-1 text-xs text-subtle">Snapshot v{Number(latest.version_number ?? 1)} · {formatTimestampDate(latest.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {canUseProduction ? <>
@@ -733,7 +733,7 @@ function SavedQualityLibraryView({
                                                                 </span>
                                                                 <div className="min-w-0 flex-1">
                                                                     <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
-                                                                    <p className="mt-1 truncate text-[10px] text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatDateOnly(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatDateOnly(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
+                                                                    <p className="mt-1 truncate text-[10px] text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatTimestampDate(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
                                                                     <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[11px] text-body">
                                                                         <span className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-surface-soft px-2 py-0.5" title={contextLabel}>{contextLabel}</span>
                                                                         {costingStatus !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(costingStatus)} />}
@@ -1524,7 +1524,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <td className="max-w-[240px] px-4 py-4">
                                                 <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)} title={getSavedCostingIdentity(quote).label}>{getSavedCostingIdentity(quote).label}</p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-subtle">
-                                                    <span>Saved {formatDateOnly(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                    <span>Saved {formatTimestampDate(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                                     {getCostingStatus(quote) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(quote))} />}
                                                 </div>
                                             </td>
@@ -1711,7 +1711,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold uppercase tracking-wider text-subtle">{t('common.date')}</p>
-                                            <p className="mt-0.5 text-xs font-bold text-body">{formatDateOnly(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                            <p className="mt-0.5 text-xs font-bold text-body">{formatTimestampDate(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                         </div>
                                     </div>
 
@@ -1962,7 +1962,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-subtle">Metric</th>
                                             {comparisonCostings.map((costing, index) => {
                                                 const identity = getSavedCostingIdentity(costing)
-                                                return <th key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] truncate text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatDateOnly(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
+                                                return <th key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] truncate text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
                                             })}
                                             <th className="px-4 py-3 text-xs uppercase tracking-wide text-subtle">Change</th>
                                         </tr>

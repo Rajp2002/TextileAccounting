@@ -4,6 +4,7 @@ import {
     YARN_RATE_DISCOVERY_SOURCE_LABELS,
     type YarnRateDiscoverySource,
 } from './yarn-rate-reconciliation'
+import { formatToSurat } from './time'
 
 export type CostRateRow = {
     id: string
@@ -48,7 +49,8 @@ export function getRateReviewStatus(
 ): RateReviewStatus {
     if (rate.is_reviewed === false) return 'needs_review'
     const dueAt = getRateReviewDueDate(rate).getTime()
-    const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    const [year, month, day] = formatToSurat(now, 'yyyy-MM-dd').split('-').map(Number)
+    const today = Date.UTC(year, month - 1, day)
     if (dueAt < today) return 'overdue'
     if (dueAt - today <= 14 * DAY_MS) return 'due_soon'
     return 'current'

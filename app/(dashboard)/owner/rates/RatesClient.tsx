@@ -55,7 +55,7 @@ import {
 import { parseNonNegativeInput } from '@/lib/numeric-input'
 import { useTranslation } from '@/lib/i18n/context'
 import { formatDateOnly } from '@/lib/format'
-import { formatSuratDateTime, formatToSurat } from '@/lib/time'
+import { formatSuratDateTime, formatToSurat, getSuratTodayString } from '@/lib/time'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
 
@@ -88,7 +88,7 @@ const REVIEW_STATUS_PRIORITY = {
 } as const
 
 function today() {
-    return formatToSurat(new Date(), 'yyyy-MM-dd')
+    return getSuratTodayString()
 }
 
 function defaultDraft(reviewIntervalDays: number, category: YarnRateCategory = 'yarn_warp'): CostRateInput {

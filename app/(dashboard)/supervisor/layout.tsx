@@ -8,6 +8,7 @@ import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.serve
 import QueryProvider from '@/components/query-provider'
 import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
 import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
+import { getCachedOrgTier, tierSatisfies } from '@/lib/subscription'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
@@ -19,6 +20,10 @@ export default async function SupervisorLayout({ children }: { children: React.R
         () => requireRole(['supervisor', 'owner'])
     )
     const userOrgId = profile.org_id
+    if (profile.role === 'owner') {
+        const tier = await getCachedOrgTier(userOrgId)
+        if (!tierSatisfies(tier, 'premium')) redirect('/owner/estimator')
+    }
     const cacheScope = createPrincipalCacheScope({ userId: user.id, organizationId: userOrgId })
     const userFullName = profile.full_name
 

@@ -2,6 +2,9 @@ import { Suspense } from 'react'
 import { getFactoryToday } from './actions'
 import { FactoryTodayClient } from './FactoryTodayClient'
 import { FactoryTodayLoading } from '@/components/factory-today/factory-today-loading'
+import { requireRole } from '@/lib/auth'
+import { getCachedOrgTier, tierSatisfies } from '@/lib/subscription'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +18,11 @@ async function FactoryTodayContent() {
     return <FactoryTodayClient initialData={data} />
 }
 
-export default function FactoryTodayPage() {
+export default async function FactoryTodayPage() {
+    const { profile } = await requireRole(['owner'])
+    const tier = await getCachedOrgTier(profile.org_id)
+    if (!tierSatisfies(tier, 'premium')) redirect('/owner/estimator')
+
     return (
         <Suspense
             fallback={<FactoryTodayLoading />}
