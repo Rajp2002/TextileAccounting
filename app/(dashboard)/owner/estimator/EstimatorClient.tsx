@@ -133,7 +133,7 @@ import {
     hasMeaningfulFactoryCostBaseline,
     type FactoryProfileId,
 } from '@/lib/factory-cost-profiles'
-import { formatDateOnly } from '@/lib/format'
+import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 
@@ -1829,6 +1829,27 @@ function RowCard({
 
 type WeavingRateInputMode = 'perMeter' | 'perPick'
 
+function getDirectWeavingRateInput(
+    perPickCostPaisa: number | string | null | undefined,
+    weftRows: Array<Pick<WeftRow, 'picks'>>,
+) {
+    const totalPicks = weftRows.reduce((sum, row) => sum + Number(row.picks ?? 0), 0)
+    const ratePerMeter = Number(perPickCostPaisa ?? 0) * totalPicks
+    return Number.isFinite(ratePerMeter) && ratePerMeter > 0
+        ? ratePerMeter.toFixed(2)
+        : ''
+}
+
+function getTemplateDirectWeavingRateInput(template: EstimatorTemplate, state: EstimateState) {
+    const weftRows = template.weft_rows && template.weft_rows.length > 0
+        ? template.weft_rows
+        : state.weftRows
+    return getDirectWeavingRateInput(
+        template.per_pick_cost_paise ?? state.perPickCostPaisa,
+        weftRows,
+    )
+}
+
 function WeavingRateFields({
     state,
     dispatch,
@@ -2842,7 +2863,10 @@ export default function EstimatorClient({
         lastGeneratedWeft.current = null
 
         rawDispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
-        setDirectWeavingRateInput('')
+        setDirectWeavingRateInput(getDirectWeavingRateInput(
+            restored.state.perPickCostPaisa,
+            restored.state.weftRows,
+        ))
         setPartyName(restored.partyName)
         setQualityLabel(restored.qualityLabel)
         setWarpInstruction(restored.warpInstruction)
@@ -3206,7 +3230,7 @@ export default function EstimatorClient({
     }
 
     const applyTemplate = useCallback((tpl: EstimatorTemplate) => {
-        setDirectWeavingRateInput('')
+        setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(tpl, state))
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
@@ -3227,7 +3251,7 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
         toast.success(tx(`${t('estimator.quality.applied')} ${tpl.name}`))
-    }, [dispatch, t, tx])
+    }, [dispatch, state, t, tx])
 
     const openSaveTemplateDialog = useCallback(() => {
         setTemplateName(
@@ -3615,12 +3639,13 @@ export default function EstimatorClient({
         const refreshed = tRes.data?.find(template => template.id === editRatesTpl.id)
         if (tRes.data) setTemplates(tRes.data)
         
-        setDirectWeavingRateInput('')
+        const applied = refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
+        setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
         dispatch({
             type: 'APPLY_TEMPLATE',
-            template: refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
+            template: applied,
         })
-        setAppliedTemplate(refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt })
+        setAppliedTemplate(applied)
         setQualityLabel(editRatesTpl.name)
         setSourceQuoteId(null)
         setSourceQuoteUpdatedAt(null)
@@ -3640,7 +3665,7 @@ export default function EstimatorClient({
     /** Apply template directly (without editing rates). */
     const handleApplyCurrentRates = () => {
         if (!editRatesTpl) return
-        setDirectWeavingRateInput('')
+        setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(editRatesTpl, state))
         dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
         setAppliedTemplate(editRatesTpl)
         setQualityLabel(editRatesTpl.name)
@@ -4170,7 +4195,7 @@ export default function EstimatorClient({
                                         <span className="ml-1 text-[var(--color-warning-amber)]">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
                                     )}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
-                                        <span className="ml-1 text-[var(--color-warning-amber)]">· saved {formatDateOnly(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">· saved {formatTimestampDate(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                     )}
                                     {canUseProduction && draft.sourceRecordKind !== 'costing' && ' — editable Quotations update in place; accepted Quotations create a linked version'}
                                     {draft.sourceRecordKind === 'costing' && ' — saving creates a new costing version without changing the original'}
@@ -4351,7 +4376,7 @@ export default function EstimatorClient({
                                         <span className="sr-only">{t('estimator.sprint1.quality')}: </span>{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                                     </span>
                                     {sourceQuoteId && sourceRecordKind === 'costing' && (
-                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.sprint1.costing')} v{sourceQuoteVersionNumber ?? 1}{sourceQuoteCreatedAt ? ` · ${formatDateOnly(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.sprint1.costing')} v{sourceQuoteVersionNumber ?? 1}{sourceQuoteCreatedAt ? ` · ${formatTimestampDate(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
                                     )}
                                 </div>
                                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
@@ -4360,7 +4385,7 @@ export default function EstimatorClient({
                                         {sourceQuoteId && sourceRecordKind === 'costing' && !sourceFactoryProfileUpdatedAt
                                             ? t('estimator.sprint1.baseline_not_recorded')
                                             : sourceFactoryProfileUpdatedAt
-                                                ? `${t('estimator.sprint1.baseline_captured')}: ${formatDateOnly(sourceFactoryProfileUpdatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                ? `${t('estimator.sprint1.baseline_captured')}: ${formatTimestampDate(sourceFactoryProfileUpdatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
                                                 : 'Current factory baseline'}
                                     </span>
                                     {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing snapshot</span>}
@@ -5104,7 +5129,7 @@ export default function EstimatorClient({
                                             Last Quotation:{' '}
                                             <span className="font-bold text-slate-700">₹{partyHint.quote_price_per_meter.toFixed(2)}/m</span>
                                             {' '}for <span className="font-medium">{partyHint.quality_label}</span>
-                                            {' '}· {formatDateOnly(partyHint.created_at, { day: 'numeric', month: 'short' })}
+                                            {' '}· {formatTimestampDate(partyHint.created_at, { day: 'numeric', month: 'short' })}
                                         </p>
                                     )}
                                 </div>
@@ -6272,7 +6297,7 @@ export default function EstimatorClient({
                     <EstimatorCostSummaryRail
                         activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                         versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
-                            ? `Costing v${sourceQuoteVersionNumber ?? 1}${sourceQuoteCreatedAt ? ` · ${formatDateOnly(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
+                            ? `Costing v${sourceQuoteVersionNumber ?? 1}${sourceQuoteCreatedAt ? ` · ${formatTimestampDate(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
                             : 'New costing snapshot'}
                         validityLabel={validityStatus.label}
                         validityClassName={validityStatus.className}

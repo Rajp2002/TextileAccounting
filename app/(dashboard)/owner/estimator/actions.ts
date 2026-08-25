@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
@@ -28,6 +29,24 @@ function generateTrackingToken(): string {
 
 const ESTIMATOR_NAME_MAX_LENGTH = 120
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
+    userId: string,
+    orgId: string,
+    payload: T,
+): Promise<{ payload?: T & { server_attestation_id: string }; error?: string }> {
+    const admin = createAdminClient()
+    const { data, error } = await admin.rpc('register_estimator_costing_attestation', {
+        p_user_id: userId,
+        p_org_id: orgId,
+        p_payload: payload,
+    })
+    if (error) return { error: error.message }
+    if (typeof data !== 'string' || !UUID_PATTERN.test(data)) {
+        return { error: 'The server could not verify the canonical costing payload.' }
+    }
+    return { payload: { ...payload, server_attestation_id: data } }
+}
 
 function buildQuotationReference(id: string, createdAt = new Date()) {
     return `QT-${createdAt.getUTCFullYear()}-${id.replaceAll('-', '').slice(0, 8).toUpperCase()}`
@@ -587,7 +606,7 @@ export async function saveAsFabricTemplate(data: {
     hoursPerShift?:   number | null
     estimate:          EstimateState
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const recipeError = validateTemplateRecipe(data)
@@ -756,11 +775,14 @@ export async function saveAsFabricTemplate(data: {
         yarn_rate_per_kg: snapshotEstimate.warpRows[0]?.yarnRate ?? 0,
     }
 
+    const attestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
+    if (!attestation.payload) return { error: attestation.error ?? 'The costing payload could not be verified.' }
+
     const { data: atomicResult, error: atomicError } = await supabase.rpc(
         'create_saved_quality_with_initial_costing_v1',
         {
             p_template_payload: templatePayload,
-            p_quote_payload: quotePayload,
+            p_quote_payload: attestation.payload,
         },
     )
     if (atomicError) return { error: templateWriteError(atomicError) }
@@ -1172,8 +1194,9 @@ export async function saveEstimatorQuoteV3(params: {
     quotationValidUntil?: string | null
     customerTerms?: string | null
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+    const admin = createAdminClient()
     const [tier, productionModeResult] = await Promise.all([
         getOrgTier(profile.org_id),
         getOrganizationProductionMode(supabase, profile.org_id),
@@ -1376,6 +1399,14 @@ export async function saveEstimatorQuoteV3(params: {
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
     }
 
+    const costingAttestation = newRecordKind === 'costing'
+        ? await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
+        : null
+    if (costingAttestation && !costingAttestation.payload) {
+        return { error: costingAttestation.error ?? 'The costing payload could not be verified.' }
+    }
+    const trustedQuotePayload = costingAttestation?.payload ?? quotePayload
+
     if (params.updateSavedQuality) {
         if (newRecordKind !== 'costing') {
             return { error: 'Only a Cost Estimate can update a Saved Quality.' }
@@ -1391,7 +1422,7 @@ export async function saveEstimatorQuoteV3(params: {
         const { data: combined, error: combinedError } = await supabase.rpc(
             'save_estimator_costing_revision_v2',
             {
-                p_quote_payload: quotePayload,
+                p_quote_payload: trustedQuotePayload,
                 p_source_quote_id: params.sourceQuoteId ?? null,
                 p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
                 p_template_id: params.templateId,
@@ -1426,7 +1457,7 @@ export async function saveEstimatorQuoteV3(params: {
         const { data: costingResult, error: costingError } = await supabase.rpc(
             'save_estimator_costing_revision_v2',
             {
-                p_quote_payload: quotePayload,
+                p_quote_payload: trustedQuotePayload,
                 p_source_quote_id: params.sourceQuoteId ?? null,
                 p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
                 p_template_id: params.templateId ?? null,
@@ -1498,7 +1529,7 @@ export async function saveEstimatorQuoteV3(params: {
             }
 
             const versionId = crypto.randomUUID()
-            const { data: version, error: versionError } = await supabase
+            const { data: version, error: versionError } = await admin
                 .from('estimator_quotes')
                 .insert({
                     ...quotePayload,
@@ -1539,7 +1570,7 @@ export async function saveEstimatorQuoteV3(params: {
     }
 
     const savedId = crypto.randomUUID()
-    const { data: saved, error } = await supabase
+    const { data: saved, error } = await admin
         .from('estimator_quotes')
         .insert({
             ...quotePayload,
@@ -2252,6 +2283,7 @@ export async function createMarketRunFromEstimator(params: {
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+    const admin = createAdminClient()
 
     const tierError = await requirePremiumTier(profile.org_id)
     if (tierError) return { error: tierError }
@@ -2302,7 +2334,7 @@ export async function createMarketRunFromEstimator(params: {
     )
 
     // 1. Save estimator snapshot as a quote (party_name = fabric label for display)
-    const { data: savedQuote, error: quoteError } = await supabase
+    const { data: savedQuote, error: quoteError } = await admin
         .from('estimator_quotes')
         .insert({
             org_id:               profile.org_id,
@@ -2389,12 +2421,12 @@ export async function createMarketRunFromEstimator(params: {
 
     if (runError || !marketRun) {
         // Cleanup orphaned quote
-        await supabase.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
+        await admin.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
         return { error: runError?.message ?? 'Failed to create market run.' }
     }
 
     // 3. Backlink quote → market_run
-    await supabase
+    await admin
         .from('estimator_quotes')
         .update({ market_run_id: marketRun.id })
         .eq('id', savedQuote.id)
@@ -2424,11 +2456,11 @@ export async function createMarketRunFromEstimator(params: {
     if (orderError || !order) {
         // Cleanup
         await supabase.from('market_runs').delete().eq('id', marketRun.id).eq('org_id', profile.org_id)
-        await supabase.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
+        await admin.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
         return { error: orderError?.message ?? 'Failed to create production order.' }
     }
 
-    await supabase
+    await admin
         .from('estimator_quotes')
         .update({ order_id: order.id, market_run_id: marketRun.id })
         .eq('id', savedQuote.id)

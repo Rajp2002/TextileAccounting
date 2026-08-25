@@ -25,10 +25,18 @@ ALTER FUNCTION public.emergency_lockdown()
   SET search_path = pg_catalog, public;
 ALTER FUNCTION public.get_cycle_bounds(date, integer)
   SET search_path = pg_catalog, public;
-ALTER FUNCTION public.get_user_org_id()
-  SET search_path = pg_catalog, public;
-ALTER FUNCTION public.get_user_role()
-  SET search_path = pg_catalog, public;
+DO $optional_profile_helpers$
+BEGIN
+  IF to_regprocedure('public.get_user_org_id()') IS NOT NULL THEN
+    ALTER FUNCTION public.get_user_org_id()
+      SET search_path = pg_catalog, public;
+  END IF;
+  IF to_regprocedure('public.get_user_role()') IS NOT NULL THEN
+    ALTER FUNCTION public.get_user_role()
+      SET search_path = pg_catalog, public;
+  END IF;
+END;
+$optional_profile_helpers$;
 ALTER FUNCTION public.handle_grievance_target_date()
   SET search_path = pg_catalog, public;
 ALTER FUNCTION public.log_audit_event()
@@ -840,8 +848,15 @@ REVOKE ALL ON FUNCTION public.touch_updated_at()
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.update_updated_at_column()
   FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.rls_auto_enable()
-  FROM PUBLIC, anon, authenticated;
+DO $optional_rls_auto_enable$
+BEGIN
+  IF to_regprocedure('public.rls_auto_enable()') IS NOT NULL THEN
+    REVOKE ALL ON FUNCTION public.rls_auto_enable()
+      FROM PUBLIC, anon, authenticated;
+    GRANT EXECUTE ON FUNCTION public.rls_auto_enable() TO service_role;
+  END IF;
+END;
+$optional_rls_auto_enable$;
 
 GRANT EXECUTE ON FUNCTION public.assign_fabric_package_no() TO service_role;
 GRANT EXECUTE ON FUNCTION public.auto_complete_order_on_log() TO service_role;
@@ -852,7 +867,6 @@ GRANT EXECUTE ON FUNCTION public.log_audit_event() TO service_role;
 GRANT EXECUTE ON FUNCTION public.protect_default_categories() TO service_role;
 GRANT EXECUTE ON FUNCTION public.touch_updated_at() TO service_role;
 GRANT EXECUTE ON FUNCTION public.update_updated_at_column() TO service_role;
-GRANT EXECUTE ON FUNCTION public.rls_auto_enable() TO service_role;
 
 CREATE OR REPLACE FUNCTION public.machine_meets_activation_requirements(
   p_org_id uuid,

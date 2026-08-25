@@ -60,7 +60,7 @@ describe('pilot no-go remediation', () => {
 
     expect(notice).toContain('duration: 12000')
     expect(notice).not.toContain('duration: Infinity')
-    expect(rates).toContain("formatToSurat(new Date(), 'yyyy-MM-dd')")
+    expect(rates).toContain('getSuratTodayString()')
     expect(rates).not.toContain('new Date().toISOString().slice(0, 10)')
     expect(rates).toContain('Archiving “${pendingRateName}”…')
   })

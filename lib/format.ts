@@ -49,6 +49,13 @@ export function formatDateOnly(
   return date.toLocaleDateString('en-IN', { ...options, timeZone: SURAT_TIMEZONE })
 }
 
+export function formatTimestampDate(
+  value: string | number | Date,
+  options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' },
+): string {
+  return new Date(value).toLocaleDateString('en-IN', { ...options, timeZone: SURAT_TIMEZONE })
+}
+
 export function formatDate(dateStr: string): string {
   return formatDateOnly(dateStr)
 }
