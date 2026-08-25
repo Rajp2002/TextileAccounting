@@ -26,9 +26,14 @@ describe('Estimator-first billing rollout', () => {
     expect(billingPage).toContain('Premium self-serve checkout is paused for the Base pilot.')
   })
 
-  it('routes onboarding checkout through the same Base-only rollout switch', () => {
-    const onboarding = read('app/(auth)/onboarding/checklist.tsx')
-    expect(onboarding).toContain('BILLING_SELF_SERVE_DEFAULT_TIER')
-    expect(onboarding).not.toContain('planTier="premium"')
+  it('keeps Base Plan purchase and users out of factory onboarding', () => {
+    const onboardingPage = read('app/(auth)/onboarding/page.tsx')
+    const onboardingChecklist = read('app/(auth)/onboarding/checklist.tsx')
+
+    expect(onboardingPage).toContain("if (tier === 'none') redirect('/owner/billing')")
+    expect(onboardingPage).toContain("if (tier === 'base') redirect('/owner/estimator')")
+    expect(onboardingChecklist).not.toContain('BILLING_SELF_SERVE_DEFAULT_TIER')
+    expect(onboardingChecklist).not.toContain('Choose your plan')
+    expect(onboardingChecklist).not.toContain('PlanSelectionForm')
   })
 })

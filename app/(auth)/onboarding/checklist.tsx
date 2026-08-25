@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
     CheckCircle2, ArrowRight, Loader2,
     Cpu, Layers, Users, Plus, Trash2, Upload,
-    ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Calendar, Store,
+    ChevronDown, ChevronUp, Sparkles, Calendar, Store,
     Calculator, ClipboardList, Link2, Activity, IndianRupee,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -20,8 +20,6 @@ import { updateOrganizationProductionMode } from '@/app/(dashboard)/owner/action
 import { addMeterWorkersBulk } from '@/app/(dashboard)/supervisor/actions'
 import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
-import { SubscribeButton } from '@/components/billing/SubscribeButton'
-import { BILLING_SELF_SERVE_DEFAULT_TIER, getBillingPlan, getBillingPrice } from '@/lib/billing-constants'
 import { BrandBackground } from '@/components/brand-background'
 import { LoomiAvatar } from '@/components/onboarding/loomi-avatar'
 import { PRODUCTION_MODE_OPTIONS, type ProductionMode } from '@/lib/production-mode'
@@ -656,37 +654,6 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
 
  // ─── Plan Selection Form ──────────────────────────────────────────────────────────
 
-function PlanSelectionForm({ onDone }: { onDone: () => void }) {
-    const plan = getBillingPlan(BILLING_SELF_SERVE_DEFAULT_TIER)
-    const price = getBillingPrice(BILLING_SELF_SERVE_DEFAULT_TIER, 'initial_purchase')
-
-    return (
-        <div className="pt-4 border-t border-gray-100 space-y-4">
-            <p className="text-sm text-gray-500">Choose the paid Estimator plan to activate your costing workspace.</p>
-
-            <div className="grid grid-cols-1 gap-3">
-                <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start sm:items-center gap-3 sm:gap-2 min-w-0">
-                        <Star className="h-5 w-5 sm:h-4 sm:w-4 text-amber-500 fill-amber-400 shrink-0 mt-0.5 sm:mt-0" />
-                        <div>
-                            <p className="text-sm font-semibold text-gray-900">{plan.name}</p>
-                            <p className="text-xs text-gray-500">₹{(price.totalPaise / 100).toLocaleString('en-IN')} total first year · ₹{(price.basePaise / 100).toLocaleString('en-IN')} + ₹{(price.gstPaise / 100).toLocaleString('en-IN')} GST</p>
-                        </div>
-                    </div>
-                    <div className="w-full sm:w-auto shrink-0">
-                        <SubscribeButton
-                            planTier={BILLING_SELF_SERVE_DEFAULT_TIER}
-                            tierName={plan.name}
-                            displayAmount={`₹${(price.totalPaise / 100).toLocaleString('en-IN')}`}
-                            onSuccess={() => onDone()}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 const STEPS = [
     {
         key: 'hasProductionMode' as keyof OnboardingStatus,
@@ -719,14 +686,6 @@ const STEPS = [
         description: 'Define the monthly payroll period, pay date, and reminder timing.',
         accentColor: 'violet',
         form: PayrollCycleForm,
-    },
-    {
-        key: 'hasPlan' as keyof OnboardingStatus,
-        icon: CreditCard,
-        title: 'Choose your plan',
-        description: 'Choose a paid plan to keep using factory workflows.',
-        accentColor: 'amber',
-        form: PlanSelectionForm,
     },
 ]
 
@@ -885,8 +844,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const [refreshing, setRefreshing] = useState(false)
     const [completing, setCompleting] = useState(false)
 
-    const completedCount = [status.hasProductionMode, status.hasMachine, status.hasWorker, status.hasPayrollConfig, status.hasPlan].filter(Boolean).length
-    const progressPct = (completedCount / 5) * 100
+    const completedCount = [status.hasProductionMode, status.hasMachine, status.hasWorker, status.hasPayrollConfig].filter(Boolean).length
+    const progressPct = (completedCount / STEPS.length) * 100
 
     const refresh = async () => {
         setRefreshing(true)
@@ -985,7 +944,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                         <Layers className="h-7 w-7 text-amber-700" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Set up your factory</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Complete these 5 steps to start tracking production</p>
+                    <p className="text-gray-500 mt-1 text-sm">Complete these 4 steps to start tracking production</p>
 
                     {/* Progress */}
                     <div className="mt-5 flex items-center gap-3">
@@ -998,7 +957,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                             />
                         </div>
                         <span className="text-sm font-semibold text-gray-700 tabular-nums w-12 text-right">
-                            {completedCount}/5
+                            {completedCount}/{STEPS.length}
                         </span>
                     </div>
                 </div>

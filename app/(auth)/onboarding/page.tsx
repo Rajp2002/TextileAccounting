@@ -7,10 +7,10 @@ import OnboardingChecklist from './checklist'
 import { getOrgTier } from '@/lib/subscription'
 
 /**
- * /onboarding — Owner setup checklist (server component)
+ * /onboarding — Full Suite owner setup checklist (server component)
  *
- * This page is a BLOCKING GATE for owners. They cannot reach /owner/analytics
- * until at least 1 machine, 1 quality, and 1 worker exist in their org.
+ * This page is a BLOCKING GATE for Full Suite owners. Base owners go directly
+ * to the estimator and owners without an active plan go to Billing.
  *
  * Not dismissible. No skip button. An org with no data is broken downstream.
  */
@@ -21,11 +21,6 @@ export default async function OnboardingPage() {
     if (!user) redirect('/login')
 
     const userClaims = getUserClaims(user)
-
-    // Fast path: JWT already has claims — use them directly
-    if (userClaims.onboarding_complete === true) {
-        redirect('/owner/today')
-    }
 
     // Determine role: prefer JWT claim, fall back to DB (handles JWT race condition
     // where custom_access_token_hook fires before the profile row is visible).
@@ -49,9 +44,16 @@ export default async function OnboardingPage() {
         redirect('/supervisor/production')
     }
 
-    // Estimator-only customers intentionally skip factory onboarding.
-    if (role === 'owner' && orgId && await getOrgTier(orgId) === 'base') {
-        redirect('/owner/estimator')
+    // Factory setup only belongs to the Full Suite. Keep both non-Full-Suite
+    // states out of this page, including direct/stale links to /onboarding.
+    if (role === 'owner' && orgId) {
+        const tier = await getOrgTier(orgId)
+        if (tier === 'none') redirect('/owner/billing')
+        if (tier === 'base') redirect('/owner/estimator')
+    }
+
+    if (role === 'owner' && userClaims.onboarding_complete === true) {
+        redirect('/owner/today')
     }
 
     // If role is still unknown (very rare edge case), show the checklist safely
