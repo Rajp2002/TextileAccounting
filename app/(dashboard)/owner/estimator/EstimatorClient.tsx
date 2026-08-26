@@ -3299,6 +3299,13 @@ export default function EstimatorClient({
             ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
             : templates,
     [templates, templateSearch])
+    const quickQualityTemplates = useMemo(() => {
+        const activeTemplate = appliedTemplate
+            ? templates.find(template => template.id === appliedTemplate.id)
+            : null
+        const remainingTemplates = templates.filter(template => template.id !== activeTemplate?.id)
+        return [...(activeTemplate ? [activeTemplate] : []), ...remainingTemplates].slice(0, 4)
+    }, [appliedTemplate, templates])
     const hasActiveQualityRecipeChanges = appliedTemplate
         ? hasSavedQualityRecipeChanges(appliedTemplate, state)
         : false
@@ -5006,6 +5013,67 @@ export default function EstimatorClient({
                                 </div>
                             </div>
                         </div>
+                        {templatesLoaded && templates.length > 0 && (
+                            <div
+                                data-testid="saved-quality-quick-picker"
+                                className="mt-3 border-t border-[var(--color-hairline)]/80 pt-3"
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">Saved qualities</p>
+                                        <p className="mt-0.5 text-[11px] font-medium text-[var(--color-muted)]">Tap a recipe to populate the costing inputs.</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowQualityLibrary(true)}
+                                        className="h-9 shrink-0 rounded-[9px] px-2.5 text-[11px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
+                                    >
+                                        View all
+                                        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </Button>
+                                </div>
+                                <div
+                                    className="mobile-scroll-x mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar"
+                                    aria-label="Saved qualities"
+                                >
+                                    {quickQualityTemplates.map(template => {
+                                        const isActive = appliedTemplate?.id === template.id || (!template.id && qualityLabel === template.name)
+                                        return (
+                                            <button
+                                                key={template.id}
+                                                type="button"
+                                                aria-pressed={isActive}
+                                                aria-label={isActive ? `${template.name}, selected` : `Load quality ${template.name}`}
+                                                onClick={() => applyTemplate(template)}
+                                                className={`min-w-[11rem] max-w-[15rem] shrink-0 rounded-[10px] border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 ${isActive
+                                                    ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]/70 shadow-[0_2px_8px_rgba(217,107,28,0.10)]'
+                                                    : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)] hover:bg-[var(--color-surface-soft)]'
+                                                }`}
+                                            >
+                                                <span className={`block truncate text-[12px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>
+                                                    {template.name}
+                                                </span>
+                                                <span className="mt-0.5 block text-[10px] font-medium text-[var(--color-muted)]">
+                                                    {isActive ? 'Selected' : 'Load quality'}
+                                                </span>
+                                            </button>
+                                        )
+                                    })}
+                                    {templates.length > quickQualityTemplates.length && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowQualityLibrary(true)}
+                                            className="min-w-[7.5rem] shrink-0 rounded-[10px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)] px-3 py-2 text-left text-[11px] font-semibold text-[var(--color-yarn-orange-dark)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
+                                        >
+                                            +{templates.length - quickQualityTemplates.length} more
+                                            <span className="mt-0.5 block text-[10px] font-medium text-[var(--color-muted)]">Open library</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         <div data-testid="costing-validity" className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
                             <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                             <span className="font-semibold">{validityStatus.label}</span>
