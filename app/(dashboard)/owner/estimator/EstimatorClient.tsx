@@ -43,6 +43,7 @@ import {
     ReceiptText,
     FileDown,
     Pencil,
+    MoreHorizontal,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -100,6 +101,13 @@ import {
 import {
     Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
@@ -1133,94 +1141,6 @@ function assumptionSourceLabel(source: string): string {
     }
 }
 
-function EstimatorCostSummaryRail({
-    activeName,
-    versionLabel,
-    validityLabel,
-    validityClassName,
-    hasValidCostResult,
-    quoteIsValid,
-    productionCostPerM,
-    suggestedSellingPricePerM,
-    actualMarginPct,
-}: {
-    activeName: string
-    versionLabel?: string
-    validityLabel: string
-    validityClassName: string
-    hasValidCostResult: boolean
-    quoteIsValid: boolean
-    productionCostPerM: number
-    suggestedSellingPricePerM: number
-    actualMarginPct: number | null
-}) {
-    const marginTone = actualMarginPct === null
-        ? 'text-[var(--color-muted)]'
-        : actualMarginPct > 0
-            ? 'text-[var(--color-factory-green)]'
-            : actualMarginPct < 0
-                ? 'text-[var(--color-risk-red)]'
-                : 'text-[var(--color-warning-amber)]'
-    const marginSurface = actualMarginPct === null
-        ? 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'
-        : actualMarginPct > 0
-            ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)]'
-            : actualMarginPct < 0
-                ? 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)]'
-                : 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/55'
-
-    return (
-        <section
-            data-testid="costing-summary-rail"
-            aria-label="Live cost estimate"
-            className="estimator-cost-summary-rail overflow-hidden rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]"
-        >
-            <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4">
-                <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-yarn-orange-dark)]">Live cost estimate</p>
-                        <p className="mt-1 truncate text-[15px] font-bold text-[var(--color-ink)]" title={activeName}>{activeName}</p>
-                        {versionLabel && <p className="mt-0.5 truncate text-[11px] font-medium text-[var(--color-muted)]">{versionLabel}</p>}
-                    </div>
-                    <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--color-yarn-orange)]" aria-hidden="true" />
-                </div>
-                <div className={`mt-3 rounded-[9px] border px-3 py-2.5 text-[11px] font-semibold leading-4 ${validityClassName}`} role="status">
-                    {validityLabel}
-                </div>
-            </div>
-
-            <div className="space-y-3 px-4 py-4">
-                <div className="space-y-3">
-                    <div className="min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
-                        <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Production cost / m</p>
-                        <p className="mt-1 break-words font-mono text-[1.6rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
-                            {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'}
-                        </p>
-                    </div>
-                    <div className="min-w-0 rounded-[10px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-3 py-3">
-                        <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Suggested price / m</p>
-                        <p className="mt-1 break-words font-mono text-[1.6rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
-                            {hasValidCostResult && quoteIsValid ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'}
-                        </p>
-                    </div>
-                </div>
-
-                <div className={`rounded-[10px] border px-3 py-3 ${marginSurface}`}>
-                    <div className="flex items-baseline justify-between gap-2">
-                        <p className={`text-[11px] font-semibold ${marginTone}`}>Actual margin</p>
-                        <p className={`font-mono text-[1.6rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
-                            {actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`}
-                        </p>
-                    </div>
-                    <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
-                        {actualMarginPct === null ? 'Complete estimate' : actualMarginPct > 0 ? 'Above break-even' : actualMarginPct < 0 ? 'Below break-even' : 'At break-even'}
-                    </p>
-                </div>
-            </div>
-        </section>
-    )
-}
-
 function MobileLiveEstimateShortcut({
     visible,
     keyboardVisible,
@@ -1241,6 +1161,10 @@ function MobileLiveEstimateShortcut({
     needsReview,
     readinessMessage,
     onJumpToInput,
+    assumptions,
+    actions,
+    expectedProfitTotal,
+    hasOrderQty,
 }: {
     visible: boolean
     keyboardVisible: boolean
@@ -1261,6 +1185,10 @@ function MobileLiveEstimateShortcut({
     needsReview: boolean
     readinessMessage: string | null
     onJumpToInput: () => void
+    assumptions?: React.ReactNode
+    actions?: React.ReactNode | ((onDismiss: () => void) => React.ReactNode)
+    expectedProfitTotal?: number | null
+    hasOrderQty?: boolean
 }) {
     const [open, setOpen] = useState(false)
     const hasValidPrice = hasValidCostResult && quoteIsValid
@@ -1294,7 +1222,7 @@ function MobileLiveEstimateShortcut({
         <>
             {visible && !keyboardVisible && !open && (
                 <div
-                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:hidden"
+                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-6 md:right-6 min-[1660px]:right-[16rem]"
                     data-testid="mobile-live-estimate-shortcut"
                 >
                     <button
@@ -1330,7 +1258,7 @@ function MobileLiveEstimateShortcut({
                 <SheetContent
                     id="mobile-live-estimate-panel"
                     side="bottom"
-                    className="max-h-[min(72dvh,34rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:hidden"
+                    className="max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:bottom-6 md:right-6 md:inset-x-auto md:w-[min(calc(100vw-3rem),38rem)] md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] min-[1660px]:right-[16rem]"
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
                         <SheetTitle className="text-[17px]">Live cost estimate</SheetTitle>
@@ -1378,6 +1306,17 @@ function MobileLiveEstimateShortcut({
                         </div>
                     </div>
 
+                    {hasOrderQty && expectedProfitTotal != null && (
+                        <div className="mx-5 mt-2.5 flex items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
+                            <span className="text-[11px] font-semibold text-[var(--color-muted)]">Expected profit</span>
+                            <span className={`font-mono text-[13px] font-semibold tabular-nums ${expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
+                                ₹{expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                    )}
+
+                    {assumptions && <div className="px-5 pt-3">{assumptions}</div>}
+
                     {hasReviewState ? (
                         <button
                             type="button"
@@ -1395,6 +1334,12 @@ function MobileLiveEstimateShortcut({
                         </button>
                     ) : (
                         <p className="px-5 pt-4 text-[10px] font-medium leading-4 text-[var(--color-muted)]">Use the estimate above while reviewing the form, then save when the costing is ready.</p>
+                    )}
+
+                    {actions && (
+                        <div className="border-t border-[var(--color-hairline)]/80 px-5 pb-1 pt-4">
+                            {typeof actions === 'function' ? actions(() => setOpen(false)) : actions}
+                        </div>
                     )}
                 </SheetContent>
             </Sheet>
@@ -1604,6 +1549,257 @@ function CostingSaveReview({
                 </p>
             )}
         </section>
+    )
+}
+
+function EstimatorLiveCostActions({
+    isStandaloneCostingSession,
+    mode,
+    canUseProduction,
+    allowsPartyOrders,
+    allowsMarketRuns,
+    sourceQuoteId,
+    savingQuote,
+    savingTemplate,
+    appliedTemplate,
+    hasActiveQualityRecipeChanges,
+    canPersistCostResult,
+    hasValidCostResult,
+    quoteIsValid,
+    qualityLabel,
+    totalProductionCostPerM,
+    hasOrderQty,
+    partyName,
+    exportReady,
+    firstCostingReadinessMessage,
+    actionReadinessMessage,
+    actionReadinessId,
+    topCostingActionLabel,
+    onSaveCosting,
+    onStartPartyOrder,
+    onSaveAccepted,
+    onExport,
+    onSaveDraft,
+    onStartMarketRun,
+    onSwitchMarket,
+    onSwitchQuote,
+    onUpdateQuality,
+    onSaveAsNewQuality,
+    onNewQuality,
+    onDismiss,
+}: {
+    isStandaloneCostingSession: boolean
+    mode: EstimatorWorkflowMode
+    canUseProduction: boolean
+    allowsPartyOrders: boolean
+    allowsMarketRuns: boolean
+    sourceQuoteId: string | null
+    savingQuote: boolean
+    savingTemplate: boolean
+    appliedTemplate: EstimatorTemplate | null
+    hasActiveQualityRecipeChanges: boolean
+    canPersistCostResult: boolean
+    hasValidCostResult: boolean
+    quoteIsValid: boolean
+    qualityLabel: string
+    totalProductionCostPerM: number
+    hasOrderQty: boolean
+    partyName: string
+    exportReady: boolean
+    firstCostingReadinessMessage: string | null
+    actionReadinessMessage: string | null
+    actionReadinessId: string
+    topCostingActionLabel: string
+    onSaveCosting: () => void
+    onStartPartyOrder: () => void
+    onSaveAccepted: () => void
+    onExport: () => void
+    onSaveDraft: () => void
+    onStartMarketRun: () => void
+    onSwitchMarket: () => void
+    onSwitchQuote: () => void
+    onUpdateQuality: () => void
+    onSaveAsNewQuality: () => void
+    onNewQuality: () => void
+    onDismiss: () => void
+}) {
+    const requiresCommercialContext = !isStandaloneCostingSession
+    const saveCostingDisabled = savingQuote
+        || !canPersistCostResult
+        || !hasValidCostResult
+        || !qualityLabel.trim()
+        || totalProductionCostPerM <= 0
+        || (requiresCommercialContext && !hasOrderQty)
+        || (requiresCommercialContext && !partyName.trim())
+        || (requiresCommercialContext && !quoteIsValid)
+    const qualitySaveLabel = appliedTemplate && hasActiveQualityRecipeChanges
+        ? 'Quality changed · Update Quality'
+        : appliedTemplate
+            ? 'Quality unchanged'
+            : 'Save as Quality'
+    const runAction = (action: () => void) => {
+        onDismiss()
+        action()
+    }
+
+    return (
+        <div className="space-y-3" data-testid="live-cost-action-hub">
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-yarn-orange-dark)]">Actions</p>
+                    <p className="mt-0.5 text-[10px] font-medium leading-4 text-[var(--color-muted)]">Save the current result, reuse the recipe, or open a utility.</p>
+                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label="More costing actions"
+                            title="More costing actions"
+                            className="h-10 w-10 shrink-0 rounded-[10px] border-[var(--color-hairline)] bg-white"
+                        >
+                            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem disabled={!exportReady} onSelect={() => runAction(onExport)}>
+                            <FileDown className="h-4 w-4" aria-hidden="true" />
+                            Export Cost Sheet
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => runAction(onNewQuality)}>
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            New Quality / Reset
+                        </DropdownMenuItem>
+                        {canUseProduction && !isStandaloneCostingSession && allowsMarketRuns && (
+                            <DropdownMenuItem onSelect={() => runAction(onSwitchMarket)}>
+                                <Gauge className="h-4 w-4" aria-hidden="true" />
+                                Market Run
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+
+            {(mode === 'quote' || isStandaloneCostingSession) ? (
+                <div className="grid gap-2 sm:grid-cols-2">
+                    {canUseProduction && !isStandaloneCostingSession && (
+                        <Button
+                            id="btn-start-party-order"
+                            type="button"
+                            size="sm"
+                            className="h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)]"
+                            onClick={() => runAction(onStartPartyOrder)}
+                            disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totalProductionCostPerM <= 0 || !quoteIsValid}
+                            aria-busy={savingQuote}
+                        >
+                            {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
+                            <span className="truncate">Start Party Order</span>
+                        </Button>
+                    )}
+                    <Button
+                        id="btn-save-accept"
+                        data-testid="save-costing-action"
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        className={`${canUseProduction && !isStandaloneCostingSession ? 'sm:col-span-1' : 'sm:col-span-2'} h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55`}
+                        onClick={() => runAction(isStandaloneCostingSession ? onSaveCosting : onSaveAccepted)}
+                        disabled={saveCostingDisabled}
+                        aria-busy={savingQuote}
+                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
+                        aria-label={isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'}
+                        title={firstCostingReadinessMessage ?? (saveCostingDisabled ? 'Complete the required inputs before saving.' : undefined)}
+                    >
+                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                        <span className="truncate">{isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save Quotation' : 'Save & Accept'}</span>
+                    </Button>
+                    {canUseProduction && !isStandaloneCostingSession && (
+                        <Button
+                            id="btn-save-quote"
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-12 rounded-[10px] border-[var(--color-hairline)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                            onClick={() => runAction(onSaveDraft)}
+                            disabled={savingQuote || !quoteIsValid}
+                            aria-busy={savingQuote}
+                        >
+                            {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
+                            <span className="truncate">Save Quotation</span>
+                        </Button>
+                    )}
+                    {canUseProduction && !isStandaloneCostingSession && !allowsPartyOrders && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => runAction(onSwitchMarket)} disabled={savingQuote} className="h-12 rounded-[10px]">
+                            <Gauge className="h-3.5 w-3.5" /> Market Run
+                        </Button>
+                    )}
+                </div>
+            ) : (
+                <div className="grid gap-2 sm:grid-cols-2">
+                    <Button
+                        id="btn-start-market-run"
+                        type="button"
+                        size="sm"
+                        className="h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55"
+                        onClick={() => runAction(onStartMarketRun)}
+                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totalProductionCostPerM <= 0 || !quoteIsValid}
+                        aria-busy={savingQuote}
+                    >
+                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Gauge className="h-3.5 w-3.5 shrink-0" />}
+                        <span className="truncate">Start Market Run</span>
+                    </Button>
+                    {allowsPartyOrders && (
+                        <Button type="button" size="sm" variant="outline" className="h-12 rounded-[10px]" onClick={() => runAction(onSaveDraft)} disabled={savingQuote || !quoteIsValid}>
+                            <Save className="h-3.5 w-3.5" /> <span className="truncate">Save Quotation</span>
+                        </Button>
+                    )}
+                    {allowsPartyOrders && (
+                        <Button type="button" size="sm" variant="outline" className="h-12 rounded-[10px]" onClick={() => runAction(onSwitchQuote)} disabled={savingQuote}>
+                            <Play className="h-3.5 w-3.5" /> <span className="truncate">Party Order</span>
+                        </Button>
+                    )}
+                </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-2">
+                {appliedTemplate && hasActiveQualityRecipeChanges && (
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => runAction(onUpdateQuality)}
+                        disabled={savingTemplate}
+                        aria-busy={savingTemplate}
+                        className="h-10 min-w-0 flex-1 rounded-[9px] border-[var(--color-yarn-orange)]/35 bg-white px-3 text-[12px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)] sm:flex-none"
+                    >
+                        {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                        <span className="truncate">{qualitySaveLabel}</span>
+                    </Button>
+                )}
+                <Button
+                    type="button"
+                    data-testid="save-as-new-quality"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => runAction(onSaveAsNewQuality)}
+                    className="h-10 min-w-0 flex-1 rounded-[9px] border-[var(--color-hairline)] bg-white px-3 text-[12px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:flex-none"
+                >
+                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">Save as Quality</span>
+                </Button>
+                {appliedTemplate && !hasActiveQualityRecipeChanges && (
+                    <span className="text-[10px] font-medium text-[var(--color-muted)]">{qualitySaveLabel}</span>
+                )}
+            </div>
+
+            {actionReadinessMessage && (
+                <p id={actionReadinessId} role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-800">
+                    {actionReadinessMessage}
+                </p>
+            )}
+        </div>
     )
 }
 
@@ -2029,7 +2225,6 @@ function QuickCostingView({
     onWidthUnitChange,
     showStarterRecipe,
     onUseStarterRecipe,
-    onOpenDetailed,
     onOpenOverheadDetails,
     onOverheadModeChange,
     weavingRateInputMode,
@@ -2055,7 +2250,6 @@ function QuickCostingView({
     onWidthUnitChange: (value: 'cm' | 'inch') => void
     showStarterRecipe: boolean
     onUseStarterRecipe: () => void
-    onOpenDetailed: () => void
     onOpenOverheadDetails: () => void
     onOverheadModeChange: (mode: OverheadMode) => void
     weavingRateInputMode: WeavingRateInputMode
@@ -2068,46 +2262,6 @@ function QuickCostingView({
 
     return (
         <div className="space-y-3">
-            <section className="rounded-xl border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 shadow-[var(--shadow-card)] sm:px-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <Zap className="h-4 w-4 text-[var(--color-yarn-orange)]" />
-                            <h2 className="text-[15px] font-semibold text-[var(--color-ink)]">Quick Costing</h2>
-                            <span className="rounded-full border border-[var(--color-yarn-orange)]/25 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-yarn-orange-dark)]">same calculation engine</span>
-                        </div>
-                        <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]/75">Enter the numbers you use for a quality. Capacity and monthly expense details stay out of the way until you need them.</p>
-                    </div>
-                    <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={onOpenDetailed}>
-                        <Calculator className="h-3.5 w-3.5" /> Detailed view
-                    </Button>
-                </div>
-            </section>
-
-            {showStarterRecipe && (
-                <section className="rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 px-4 py-4 shadow-[var(--shadow-card)] sm:px-5" aria-labelledby="grey-fabric-starter-title">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Sparkles className="h-4 w-4 shrink-0 text-[var(--color-info-blue)]" />
-                                <h3 id="grey-fabric-starter-title" className="text-sm font-bold text-[var(--color-ink)]">Try a grey-fabric example</h3>
-                                <span className="rounded-full border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-info-blue)]">example only</span>
-                            </div>
-                            <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]">See where PPI, finished width, crimp, waste, rates, capacity, commission, transport, and margin enter the calculation. Replace every value with your rate book before saving.</p>
-                            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium text-[var(--color-body)] sm:grid-cols-4">
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">150D · 3,500 warp ends</span>
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">52 PPI · 63 inch width</span>
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">5% crimp · 3% waste</span>
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">4 looms · 10,000 m/month</span>
-                            </div>
-                        </div>
-                        <Button type="button" size="sm" className="min-h-11 shrink-0 bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]" onClick={onUseStarterRecipe}>
-                            Use example values
-                        </Button>
-                    </div>
-                </section>
-            )}
-
             <EstimatorCard accent="neutral">
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
@@ -2179,6 +2333,30 @@ function QuickCostingView({
                     )}
                 </CardContent>
             </EstimatorCard>
+
+            {showStarterRecipe && (
+                <section className="rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 px-4 py-4 shadow-[var(--shadow-card)] sm:px-5" aria-labelledby="grey-fabric-starter-title">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Sparkles className="h-4 w-4 shrink-0 text-[var(--color-info-blue)]" />
+                                <h3 id="grey-fabric-starter-title" className="text-sm font-bold text-[var(--color-ink)]">Try a grey-fabric example</h3>
+                                <span className="rounded-full border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-info-blue)]">example only</span>
+                            </div>
+                            <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]">See where PPI, finished width, crimp, waste, rates, capacity, commission, transport, and margin enter the calculation. Replace every value with your rate book before saving.</p>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium text-[var(--color-body)] sm:grid-cols-4">
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">150D · 3,500 warp ends</span>
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">52 PPI · 63 inch width</span>
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">5% crimp · 3% waste</span>
+                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">4 looms · 10,000 m/month</span>
+                            </div>
+                        </div>
+                        <Button type="button" size="sm" className="min-h-11 shrink-0 bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]" onClick={onUseStarterRecipe}>
+                            Use example values
+                        </Button>
+                    </div>
+                </section>
+            )}
 
             <EstimatorCard accent="warp">
                 <SectionHeader
@@ -2584,6 +2762,7 @@ export default function EstimatorClient({
 
     // Template search
     const [templateSearch,   setTemplateSearch]   = useState('')
+    const [showQualityLibrary, setShowQualityLibrary] = useState(false)
     const savedQualitiesRailRef = useRef<HTMLDivElement>(null)
     const [savedQualitiesScrollState, setSavedQualitiesScrollState] = useState({
         canScrollLeft: false,
@@ -2595,10 +2774,9 @@ export default function EstimatorClient({
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
-    const mobileCostingVisibilityRef = useRef<HTMLDivElement>(null)
     const mobileShortcutSeenRef = useRef(false)
     const mobileShortcutLabelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const [mobileCostingShortcutVisible, setMobileCostingShortcutVisible] = useState(false)
+    const [mobileCostingShortcutVisible] = useState(true)
     const [mobileCostingShortcutExpanded, setMobileCostingShortcutExpanded] = useState(false)
     const [mobileKeyboardVisible, setMobileKeyboardVisible] = useState(false)
 
@@ -2639,29 +2817,6 @@ export default function EstimatorClient({
         assumptionsManuallyToggledRef.current = true
         setAssumptionsExpanded(current => !current)
     }, [])
-
-    useEffect(() => {
-        if (loading) return
-        const cockpit = mobileCostingVisibilityRef.current
-        if (!cockpit || typeof window === 'undefined') return
-
-        const mediaQuery = window.matchMedia('(min-width: 768px)')
-        const syncViewport = () => setMobileCostingShortcutVisible(!mediaQuery.matches)
-        const observer = 'IntersectionObserver' in window
-            ? new IntersectionObserver(([entry]) => {
-                setMobileCostingShortcutVisible(!mediaQuery.matches && !entry.isIntersecting)
-            }, { threshold: 0.05 })
-            : null
-
-        syncViewport()
-        observer?.observe(cockpit)
-        mediaQuery.addEventListener?.('change', syncViewport)
-
-        return () => {
-            observer?.disconnect()
-            mediaQuery.removeEventListener?.('change', syncViewport)
-        }
-    }, [loading])
 
     useEffect(() => {
         if (mobileKeyboardVisible) {
@@ -3192,7 +3347,7 @@ export default function EstimatorClient({
             window.removeEventListener('resize', updateSavedQualitiesScrollState)
             resizeObserver?.disconnect()
         }
-    }, [filteredTemplates, updateSavedQualitiesScrollState])
+    }, [filteredTemplates, showQualityLibrary, updateSavedQualitiesScrollState])
 
     const scrollSavedQualities = useCallback((direction: 'left' | 'right') => {
         const rail = savedQualitiesRailRef.current
@@ -3250,6 +3405,7 @@ export default function EstimatorClient({
         setWeftInstruction('')
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
+        setShowQualityLibrary(false)
         toast.success(tx(`${t('estimator.quality.applied')} ${tpl.name}`))
     }, [dispatch, state, t, tx])
 
@@ -3595,6 +3751,7 @@ export default function EstimatorClient({
         setWarningSavePending(false)
         setShowAdvancedOverhead(false)
         setShowConfirmNewQuality(false)
+        setShowQualityLibrary(false)
         toast.success(tx('Started blank quality recipe'))
     }
 
@@ -3657,6 +3814,7 @@ export default function EstimatorClient({
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
+        setShowQualityLibrary(false)
         toast.success('noChange' in res && res.noChange
             ? t('estimator.sprint1.quality_no_change')
             : t('estimator.sprint1.rates_updated_no_snapshot'))
@@ -3679,6 +3837,7 @@ export default function EstimatorClient({
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
+        setShowQualityLibrary(false)
         toast.success(tx(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`))
     }
 
@@ -4362,9 +4521,9 @@ export default function EstimatorClient({
                     <div className="relative min-w-0">
                     {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
                     <div
-                        ref={mobileCostingVisibilityRef}
                         data-testid="estimator-primary-cockpit"
-                        className="estimator-primary-cockpit relative py-3 md:sticky md:top-3 md:z-40 md:-mt-3"
+                        aria-hidden="true"
+                        className="hidden"
                     >
                 <div className={`${hudShellClass} premium-focus-surface`}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
@@ -4405,7 +4564,7 @@ export default function EstimatorClient({
                             </div>
                         </div>
                     </div>
-                    <div data-testid="costing-validity" className={`mb-4 flex min-h-11 items-start gap-2.5 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
+                    <div data-testid="legacy-costing-validity" className={`mb-4 flex min-h-11 items-start gap-2.5 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
                         <validityStatus.icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                         <div className="min-w-0">
                             <span className="font-semibold">{validityStatus.label}</span>
@@ -4563,7 +4722,7 @@ export default function EstimatorClient({
                                 <>
                                     {/* PRIMARY: atomically create the accepted quote and live order */}
                                     {canUseProduction && !isStandaloneCostingSession && <Button
-                                        id="btn-start-party-order"
+                                        id="legacy-btn-start-party-order"
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => void handleStartPartyOrder()}
@@ -4581,8 +4740,8 @@ export default function EstimatorClient({
 
                                     {/* Base keeps costing as the primary action; Full Suite retains quote acceptance styling. */}
                                     <Button
-                                        id="btn-save-accept"
-                                        data-testid="save-costing-action"
+                                        id="legacy-btn-save-accept"
+                                        data-testid="legacy-save-costing-action"
                                         size="sm"
                                         variant={isStandaloneCostingSession ? 'default' : 'outline'}
                                         className={isStandaloneCostingSession
@@ -4607,7 +4766,7 @@ export default function EstimatorClient({
 
                                     {isStandaloneCostingSession && (
                                         <Button
-                                            id="btn-export-cost-sheet"
+                                            id="legacy-btn-export-cost-sheet"
                                             size="sm"
                                             variant="outline"
                                             className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
@@ -4623,7 +4782,7 @@ export default function EstimatorClient({
 
                                     {/* TERTIARY: Save Quote */}
                                     {canUseProduction && !isStandaloneCostingSession && <Button
-                                        id="btn-save-quote"
+                                        id="legacy-btn-save-quote"
                                         size="sm"
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
@@ -4639,7 +4798,7 @@ export default function EstimatorClient({
                                     {/* TERTIARY: Switch to Market mode */}
                                     {canUseProduction && !isStandaloneCostingSession && allowsMarketRuns && (
                                         <Button
-                                            id="btn-switch-market"
+                                            id="legacy-btn-switch-market"
                                             size="sm"
                                             variant="ghost"
                                             className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
@@ -4654,7 +4813,7 @@ export default function EstimatorClient({
                                 <>
                                     {/* PRIMARY: Start Market Run */}
                                     <Button
-                                        id="btn-start-market-run"
+                                        id="legacy-btn-start-market-run"
                                         size="sm"
                                         className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => handleSaveQuote('market')}
@@ -4672,7 +4831,7 @@ export default function EstimatorClient({
 
                                     {/* SECONDARY: Save Quote (draft) */}
                                     {allowsPartyOrders && <Button
-                                        id="btn-save-quote-market"
+                                        id="legacy-btn-save-quote-market"
                                         size="sm"
                                         variant="outline"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
@@ -4687,7 +4846,7 @@ export default function EstimatorClient({
 
                                     {/* TERTIARY: Transition to Party Order mode */}
                                     {allowsPartyOrders && <Button
-                                        id="btn-start-party-order-market"
+                                        id="legacy-btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
                                         className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
@@ -4716,7 +4875,7 @@ export default function EstimatorClient({
                                         <span className="truncate">{tx(savingTemplate ? 'Saving Fabric Quality…' : 'Update Fabric Quality')}</span>
                                     </Button>
                                     <Button
-                                        data-testid="save-as-new-quality"
+                                        data-testid="legacy-save-as-new-quality"
                                         variant="outline"
                                         size="sm"
                                         onClick={() => openSaveAsNewQualityDialog()}
@@ -4739,7 +4898,7 @@ export default function EstimatorClient({
                                 </div>
                             ) : (
                                 <Button
-                                    data-testid="save-as-new-quality"
+                                    data-testid="legacy-save-as-new-quality"
                                     size="sm"
                                     variant="outline"
                                     className="col-span-2 h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:col-span-1"
@@ -4768,7 +4927,7 @@ export default function EstimatorClient({
                     </div>
 
                     {actionReadinessMessage && (
-                        <p id={actionReadinessId} role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-relaxed text-amber-800">
+                        <p id={`${actionReadinessId}-legacy`} role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-relaxed text-amber-800">
                             {actionReadinessMessage}
                         </p>
                     )}
@@ -4808,12 +4967,67 @@ export default function EstimatorClient({
                     {/* ── MAIN FORM ────────────────────────────────────────────── */}
                     <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`}>
 
+                {/* ── CURRENT QUALITY + MODE ─────────────────────────────── */}
+                <Sheet open={showQualityLibrary} onOpenChange={setShowQualityLibrary}>
+                    <section
+                        id="active-quality"
+                        aria-labelledby="active-quality-title"
+                        className="premium-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
+                    >
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-yarn-orange-dark)]">Current quality</p>
+                                <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
+                                    <h2 id="active-quality-title" className="max-w-full break-words text-[15px] font-bold leading-5 text-[var(--color-ink)]">
+                                        {appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                                    </h2>
+                                    {sourceQuoteId && sourceRecordKind === 'costing' && (
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">Costing v{sourceQuoteVersionNumber ?? 1}</span>
+                                    )}
+                                </div>
+                                <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--color-muted)]">
+                                    {appliedTemplate ? 'Saved recipe loaded' : 'Manual costing'} · enter the costing inputs below
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setShowQualityLibrary(true)}
+                                    className="h-11 justify-center rounded-[10px] border-[var(--color-hairline-strong)] bg-white px-4 text-[12px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)]"
+                                >
+                                    <BookmarkPlus className="h-3.5 w-3.5" />
+                                    Change quality
+                                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                </Button>
+                                <div className="flex items-center rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Quick Costing · same calculation engine">
+                                    <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                    <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-testid="costing-validity" className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
+                            <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span className="font-semibold">{validityStatus.label}</span>
+                            <span className="hidden font-medium opacity-85 sm:inline">{validityStatus.description}</span>
+                        </div>
+                    </section>
+
+                    <SheetContent
+                        side="bottom"
+                        className="max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:mx-auto md:w-[min(calc(100vw-3rem),48rem)] md:rounded-b-[22px] md:border md:border-[var(--color-hairline)]"
+                    >
+                        <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
+                            <SheetTitle className="text-[17px]">Change quality</SheetTitle>
+                            <SheetDescription className="text-[12px] font-medium text-[var(--color-muted)]">Search and select a saved fabric recipe. Your current costing stays in place until you choose one.</SheetDescription>
+                        </SheetHeader>
+                        <div className="p-4 sm:p-5">
                 {/* ── SAVED FABRIC QUALITIES ─────────────────────────────── */}
                 <section
                     id="saved-qualities"
                     aria-labelledby="saved-qualities-title"
                     aria-busy={!templatesLoaded}
-                    className="premium-focus-surface overflow-hidden rounded-[16px] border-2 border-[var(--color-yarn-orange)]/15 bg-white/95 shadow-[0_10px_28px_rgba(30,37,40,0.07)]"
+                    className="premium-focus-surface overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"
                 >
                     <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
                         <div className="flex items-start gap-3">
@@ -5063,6 +5277,9 @@ export default function EstimatorClient({
                         )}
                     </div>
                 </section>
+                        </div>
+                    </SheetContent>
+                </Sheet>
 
                 {entryMode === 'quick' ? (
                     <div key="quick" className="premium-content-swap">
@@ -5085,7 +5302,6 @@ export default function EstimatorClient({
                         onWidthUnitChange={setWidthUnit}
                         showStarterRecipe={showStarterRecipe}
                         onUseStarterRecipe={applyStarterRecipe}
-                        onOpenDetailed={() => handleEntryModeChange('detailed')}
                         onOpenOverheadDetails={() => {
                             handleEntryModeChange('detailed')
                             setShowAdvancedOverhead(true)
@@ -6294,19 +6510,6 @@ export default function EstimatorClient({
                     className="estimator-reference-rail space-y-3"
                     aria-label="Estimator reference information"
                 >
-                    <EstimatorCostSummaryRail
-                        activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
-                        versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
-                            ? `Costing v${sourceQuoteVersionNumber ?? 1}${sourceQuoteCreatedAt ? ` · ${formatTimestampDate(sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
-                            : 'New costing snapshot'}
-                        validityLabel={validityStatus.label}
-                        validityClassName={validityStatus.className}
-                        hasValidCostResult={hasValidCostResult}
-                        quoteIsValid={costingResult.quoteIsValid}
-                        productionCostPerM={costingResult.productionCostPerM}
-                        suggestedSellingPricePerM={costingResult.suggestedSellingPricePerM}
-                        actualMarginPct={displayMarginPct}
-                    />
                     <BasePlanFactoryGlossary />
                     <ArchivePolicyNotice />
                 </aside>
@@ -6334,6 +6537,54 @@ export default function EstimatorClient({
                 needsReview={costingReadiness.status !== 'ready'}
                 readinessMessage={firstCostingReadinessMessage}
                 onJumpToInput={jumpToFirstEstimatorIssue}
+                hasOrderQty={hasOrderQty}
+                expectedProfitTotal={costingResult.expectedProfitTotal}
+                assumptions={(
+                    <CostingAssumptionsSummary
+                        result={costingResult}
+                        isStandaloneCostingSession={isStandaloneCostingSession}
+                        expanded={assumptionsExpanded}
+                        onToggle={toggleAssumptions}
+                    />
+                )}
+                actions={(onDismiss) => (
+                    <EstimatorLiveCostActions
+                        isStandaloneCostingSession={isStandaloneCostingSession}
+                        mode={mode}
+                        canUseProduction={canUseProduction}
+                        allowsPartyOrders={allowsPartyOrders}
+                        allowsMarketRuns={allowsMarketRuns}
+                        sourceQuoteId={sourceQuoteId}
+                        savingQuote={savingQuote}
+                        savingTemplate={savingTemplate}
+                        appliedTemplate={appliedTemplate}
+                        hasActiveQualityRecipeChanges={hasActiveQualityRecipeChanges}
+                        canPersistCostResult={canPersistCostResult}
+                        hasValidCostResult={hasValidCostResult}
+                        quoteIsValid={costingResult.quoteIsValid}
+                        qualityLabel={qualityLabel}
+                        totalProductionCostPerM={totals.totalProductionCostPerM}
+                        hasOrderQty={hasOrderQty}
+                        partyName={partyName}
+                        exportReady={Boolean(exportModel)}
+                        firstCostingReadinessMessage={firstCostingReadinessMessage}
+                        actionReadinessMessage={actionReadinessMessage}
+                        actionReadinessId={actionReadinessId}
+                        topCostingActionLabel={topCostingActionLabel}
+                        onSaveCosting={() => void handleSaveQuote('quote', 'draft')}
+                        onStartPartyOrder={() => void handleStartPartyOrder()}
+                        onSaveAccepted={() => void handleSaveQuote('quote', 'accepted')}
+                        onExport={() => setShowExportDialog(true)}
+                        onSaveDraft={() => void handleSaveQuote('quote', 'draft')}
+                        onStartMarketRun={() => void handleSaveQuote('market')}
+                        onSwitchMarket={() => setMode('market')}
+                        onSwitchQuote={() => setMode('quote')}
+                        onUpdateQuality={() => void handleUpdateTemplate()}
+                        onSaveAsNewQuality={() => openSaveAsNewQualityDialog()}
+                        onNewQuality={() => setShowConfirmNewQuality(true)}
+                        onDismiss={onDismiss}
+                    />
+                )}
             />
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}

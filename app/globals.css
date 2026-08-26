@@ -473,19 +473,11 @@
     margin-top: 1.25rem;
   }
 
-  .estimator-cost-summary-rail {
-    display: none;
-  }
-
   @media (min-width: 1660px) {
     /* The route entrance animation applies a transform to the root, which
        would make fixed descendants relative to the narrow content shell. */
     .premium-route-enter.estimator-mobile-form {
       animation: none;
-    }
-
-    .estimator-primary-cockpit {
-      display: none;
     }
 
     .estimator-reference-rail {
@@ -501,9 +493,6 @@
       scrollbar-width: thin;
     }
 
-    .estimator-cost-summary-rail {
-      display: block;
-    }
   }
 
   @media (min-width: 768px) and (max-width: 1699.98px) {
