@@ -146,7 +146,7 @@ describe('Sprint 15 Base estimator trust gates', () => {
     expect(defaultTotals.weftRows[0]?.shortagePctUsed).toBe(10)
   })
 
-  it('keeps the UI language explicit about default, applied, and effective waste', () => {
+  it('keeps the UI language explicit about the manual base-cost-then-waste workflow', () => {
     const source = fs.readFileSync(
       path.join(root, 'app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
       'utf8',
@@ -154,7 +154,9 @@ describe('Sprint 15 Base estimator trust gates', () => {
 
     expect(source).toContain('Default weft waste')
     expect(source).toContain('Applied to pricing:')
-    expect(source).toContain('Effective weft wastage used in formula:')
+    expect(source).toContain('Wastage applied after base yarn costing:')
+    expect(source).toContain('Manual yarn-cost workflow')
+    expect(source).toContain('Base yarn subtotal')
     expect(source).toContain('Open capacity inputs')
   })
 

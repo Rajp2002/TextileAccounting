@@ -47,8 +47,8 @@ describe('Sprint 10 saved costing identity and comparison', () => {
 
   it('compares immutable yarn, waste, overhead, margin, and price evidence', () => {
     const leftState = makeDefaultEstimateState()
-    leftState.warpRows = [{ ...leftState.warpRows[0], label: 'Warp 75D', yarnRate: 110 }]
-    leftState.weftRows = [{ ...leftState.weftRows[0], label: 'Weft 75D', yarnRate: 112 }]
+    leftState.warpRows = [{ ...leftState.warpRows[0], label: 'Warp 75D', calcDenier: 75, beamEnds: 3200, yarnRate: 110 }]
+    leftState.weftRows = [{ ...leftState.weftRows[0], label: 'Weft 75D', calcDenier: 75, picks: 68, effectiveCostingWidthCm: 112, reedSpace: 112, yarnRate: 112 }]
     leftState.yarnShortagePct = 2
     leftState.warpCrimpPct = 5
     leftState.overheadMode = 'direct'
@@ -74,6 +74,8 @@ describe('Sprint 10 saved costing identity and comparison', () => {
     expect(comparison.canonical.source).toBe('canonical_result')
     expect(comparison.yarn.changed).toBe(true)
     expect(comparison.yarn.warp.ratePerKg.delta).toBe(15)
+    expect(comparison.yarn.warp.baseKgPer100m.delta).toBe(0)
+    expect(comparison.yarn.warp.baseCostPerM.delta).toBeGreaterThan(0)
     expect(comparison.waste.changed).toBe(true)
     expect(comparison.overhead.changed).toBe(true)
     expect(comparison.margin.changed).toBe(true)
@@ -127,7 +129,7 @@ describe('Sprint 10 saved costing identity and comparison', () => {
     expect(quotes).toContain('Use as Starting Point')
     expect(quotes).toContain('showFavoritesOnly')
     expect(quotes).toContain('current Rate Book is not read')
-    expect(quotes).toContain("title: 'Yarn'")
+    expect(quotes).toContain("title: 'Base yarn calculation'")
     expect(quotes).toContain("title: 'Waste'")
     expect(quotes).toContain("title: 'Overhead'")
     expect(quotes).toContain('Cost-driving changes')

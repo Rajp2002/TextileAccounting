@@ -603,22 +603,28 @@ export type SavedCostingLayerComparison = {
   left: Array<{
     name: string
     ratePerKg: number | null
+    baseKgPer100m: number | null
     finalKgPer100m: number | null
     wastePct: number | null
     crimpPct: number | null
     effectiveCostingWidthInches: number | null
+    baseCostPerM: number | null
     costPerM: number | null
   }>
   right: Array<{
     name: string
     ratePerKg: number | null
+    baseKgPer100m: number | null
     finalKgPer100m: number | null
     wastePct: number | null
     crimpPct: number | null
     effectiveCostingWidthInches: number | null
+    baseCostPerM: number | null
     costPerM: number | null
   }>
   costPerM: SavedCostingDelta
+  baseCostPerM: SavedCostingDelta
+  baseKgPer100m: SavedCostingDelta
   ratePerKg: SavedCostingDelta
   wastePct: SavedCostingDelta
   widthInches: SavedCostingDelta
@@ -687,6 +693,7 @@ type SavedCostingAuditLayer = {
   label?: unknown
   yarnRate?: unknown
   ratePerKg?: unknown
+  baseKgPer100mUsed?: unknown
   finalKgPer100m?: unknown
   wastePct?: unknown
   shortagePct?: unknown
@@ -695,6 +702,7 @@ type SavedCostingAuditLayer = {
   effectiveCostingWidthCm?: unknown
   reedSpace?: unknown
   costPerMeter?: unknown
+  baseCostPerMeter?: unknown
 }
 
 function numericOrNull(value: unknown): number | null {
@@ -727,10 +735,12 @@ function layerSummaryFromAudit(layers: EstimatorYarnLayerAudit[] | undefined) {
   return (layers ?? []).map(layer => ({
     name: layer.name || 'Unnamed yarn',
     ratePerKg: numericOrNull(layer.ratePerKg),
+    baseKgPer100m: numericOrNull(layer.baseKgPer100mUsed),
     finalKgPer100m: numericOrNull(layer.finalKgPer100m),
     wastePct: numericOrNull(layer.wastePct),
     crimpPct: numericOrNull(layer.crimpPct),
     effectiveCostingWidthInches: numericOrNull(layer.effectiveCostingWidthInches),
+    baseCostPerM: numericOrNull(layer.baseCostPerMeter),
     costPerM: numericOrNull(layer.costPerMeter),
   }))
 }
@@ -741,6 +751,7 @@ function layerSummaryFromSavedRows(rows: SavedCostingAuditLayer[]) {
       ? String(row.name ?? row.label).trim()
       : 'Unnamed yarn',
     ratePerKg: numericOrNull(row.ratePerKg ?? row.yarnRate),
+    baseKgPer100m: numericOrNull(row.baseKgPer100mUsed),
     finalKgPer100m: numericOrNull(row.finalKgPer100m),
     wastePct: numericOrNull(row.wastePct ?? row.shortagePct),
     crimpPct: numericOrNull(row.crimpPct),
@@ -753,6 +764,7 @@ function layerSummaryFromSavedRows(rows: SavedCostingAuditLayer[]) {
           ? null
           : Number(row.reedSpace) / 2.54),
     ),
+    baseCostPerM: numericOrNull(row.baseCostPerMeter),
     costPerM: numericOrNull(row.costPerMeter),
   }))
 }
@@ -761,10 +773,12 @@ function layerSignature(layers: SavedCostingLayerComparison['left']) {
   return JSON.stringify(layers.map(layer => ({
     name: layer.name.toLocaleLowerCase('en-IN'),
     ratePerKg: layer.ratePerKg,
+    baseKgPer100m: layer.baseKgPer100m,
     finalKgPer100m: layer.finalKgPer100m,
     wastePct: layer.wastePct,
     crimpPct: layer.crimpPct,
     effectiveCostingWidthInches: layer.effectiveCostingWidthInches,
+    baseCostPerM: layer.baseCostPerM,
     costPerM: layer.costPerM,
   })))
 }
@@ -776,6 +790,18 @@ function buildLayerComparison(
   rightCost: unknown,
 ): SavedCostingLayerComparison {
   const costPerM = delta(leftCost, rightCost)
+  const sumBaseCost = (layers: SavedCostingLayerComparison['left'], fallback: unknown) => (
+    layers.length > 0 && layers.every(layer => layer.baseCostPerM != null)
+      ? layers.reduce((sum, layer) => sum + (layer.baseCostPerM ?? 0), 0)
+      : fallback
+  )
+  const baseCostPerM = delta(sumBaseCost(leftLayers, leftCost), sumBaseCost(rightLayers, rightCost))
+  const sumBaseKg = (layers: SavedCostingLayerComparison['left']) => (
+    layers.length > 0 && layers.every(layer => layer.baseKgPer100m != null)
+      ? layers.reduce((sum, layer) => sum + (layer.baseKgPer100m ?? 0), 0)
+      : null
+  )
+  const baseKgPer100m = delta(sumBaseKg(leftLayers), sumBaseKg(rightLayers))
   const leftRate = leftLayers.length === 1 ? leftLayers[0].ratePerKg : null
   const rightRate = rightLayers.length === 1 ? rightLayers[0].ratePerKg : null
   const ratePerKg = delta(leftRate, rightRate)
@@ -788,11 +814,15 @@ function buildLayerComparison(
   return {
     changed: layerSignature(leftLayers) !== layerSignature(rightLayers)
       || deltaChanged(costPerM)
+      || deltaChanged(baseCostPerM)
+      || deltaChanged(baseKgPer100m)
       || deltaChanged(wastePct)
       || deltaChanged(widthInches),
     left: leftLayers,
     right: rightLayers,
     costPerM,
+    baseCostPerM,
+    baseKgPer100m,
     ratePerKg,
     wastePct,
     widthInches,

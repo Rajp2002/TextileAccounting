@@ -713,6 +713,32 @@ describe('Estimator full totals', () => {
         expect(calcFullTotals(makeEstimate(10, 10, 10)).weftRows[0].crimpPct).toBe(0)
     })
 
+    it('exposes base yarn weight and cost before adding wastage in the manual workflow', () => {
+        const estimate = makeDefaultEstimateState()
+        estimate.warpRows = [{
+            ...estimate.warpRows[0],
+            calcDenier: 110,
+            beamEnds: 1974,
+            yarnRate: 172,
+            gstPct: 0,
+            shortagePct: 10,
+        }]
+        estimate.weftRows = []
+        estimate.warpCrimpPct = 0
+
+        const totals = calcFullTotals(estimate)
+        const row = totals.warpRows[0]
+
+        expect(row.baseKgPer100mUsed).toBeCloseTo(2.4126666667, 9)
+        expect(row.baseCostPer100m).toBeCloseTo(row.baseKgPer100mUsed * 172, 9)
+        expect(row.finalKgPer100m).toBeCloseTo(row.baseKgPer100mUsed * 1.10, 9)
+        expect(totals.yarnShortageCostPerM).toBeCloseTo(row.baseCostPerMeter * 0.10, 9)
+        expect(totals.audit.yarnTotalCostPerMeter).toBeCloseTo(
+            totals.audit.yarnBaseCostPerMeter + totals.audit.yarnAdjustmentCostPerMeter,
+            9,
+        )
+    })
+
     it('uses effective costing width for weft formula and warns on dangerous cm widths', () => {
         const effectiveWidthCm = inchesToCm(62)
         const estimate: EstimateState = {

@@ -75,6 +75,11 @@ describe('Base P1 pilot remediation', () => {
     expect(customer).toContain('Quotation value')
     expect(internal).toContain('Expected profit')
     expect(internal).toContain('10.0%')
+    expect(internal).toContain('Base warp yarn')
+    expect(internal).toContain('Base weft yarn')
+    expect(internal).toContain('Yarn wastage / crimp')
+    expect(internal).toContain('Base yarn calculation')
+    expect(internal).toContain('Base kg / 100m')
   })
 
   it('validates the complete initial quality snapshot before inserting the template', () => {

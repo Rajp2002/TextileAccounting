@@ -463,6 +463,18 @@ function SavedQualityLibraryView({
                 const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
                 const latestResult = latest ? getHistoricalCostingResult(latest) : null
+                const latestYarnCostLines: Array<[string, number]> = latestResult?.audit
+                    ? [
+                        ['Base warp yarn', latestResult.audit.warp.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
+                        ['Base weft yarn', latestResult.audit.weft.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
+                        ['Yarn wastage / crimp', latestResult.audit.yarnAdjustmentCostPerMeter],
+                    ]
+                    : latestResult
+                        ? [
+                            ['Warp yarn (saved adjusted cost)', latestResult.breakdown.warpCostPerM],
+                            ['Weft yarn (saved adjusted cost)', latestResult.breakdown.weftCostPerM],
+                        ]
+                        : []
                 const latestDetailLoading = latest != null && detailLoadingId === latest.id
                 const usages = group.records
                     .map(record => ({ record, order: getLinkedOrder(record) }))
@@ -644,8 +656,7 @@ function SavedQualityLibraryView({
 
                                                 <div className="mt-4 divide-y divide-hairline text-sm">
                                                     {[
-                                                        ['Warp yarn', latestResult.breakdown.warpCostPerM],
-                                                        ['Weft yarn', latestResult.breakdown.weftCostPerM],
+                                                        ...latestYarnCostLines,
                                                         ['Weaving', latestResult.breakdown.weaveCostPerM],
                                                         ['Warping & sizing', latestResult.breakdown.warpingAndSizingPerM],
                                                         ['Processing & finishing', latestResult.breakdown.windingPerM + latestResult.breakdown.processingPerM + latestResult.breakdown.finishingPerM],
@@ -920,15 +931,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const comparisonSections: ComparisonSection[] = comparison ? [
         {
-            title: 'Yarn',
+            title: 'Base yarn calculation',
             changed: comparison.yarn.changed,
             rows: [
-                { label: 'Warp yarn cost', value: comparison.yarn.warp.costPerM, unit: 'money' as const, changed: comparison.yarn.warp.changed },
+                { label: 'Warp base weight (kg/100m)', value: comparison.yarn.warp.baseKgPer100m, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.warp.baseKgPer100m) },
+                { label: 'Warp base yarn cost', value: comparison.yarn.warp.baseCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.yarn.warp.baseCostPerM) },
                 { label: 'Warp yarn rate', value: comparison.yarn.warp.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.warp.changed },
-                { label: 'Warp applied waste', value: comparison.yarn.warp.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.warp.wastePct) },
-                { label: 'Weft yarn cost', value: comparison.yarn.weft.costPerM, unit: 'money' as const, changed: comparison.yarn.weft.changed },
+                { label: 'Weft base weight (kg/100m)', value: comparison.yarn.weft.baseKgPer100m, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.weft.baseKgPer100m) },
+                { label: 'Weft base yarn cost', value: comparison.yarn.weft.baseCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.yarn.weft.baseCostPerM) },
                 { label: 'Weft yarn rate', value: comparison.yarn.weft.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.weft.changed },
-                { label: 'Weft applied waste', value: comparison.yarn.weft.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.weft.wastePct) },
                 { label: 'Weft costing width (in)', value: comparison.yarn.weft.widthInches, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.weft.widthInches) },
             ],
         },
@@ -938,6 +949,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             rows: [
                 { label: 'Yarn shortage / waste', value: comparison.waste.yarnShortagePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.waste.yarnShortagePct) },
                 { label: 'Warp crimp', value: comparison.waste.warpCrimpPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.waste.warpCrimpPct) },
+                { label: 'Warp applied waste', value: comparison.yarn.warp.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.warp.wastePct) },
+                { label: 'Weft applied waste', value: comparison.yarn.weft.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.weft.wastePct) },
                 { label: 'Yarn waste cost', value: comparison.waste.yarnAdjustmentCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.waste.yarnAdjustmentCostPerM) },
             ],
         },

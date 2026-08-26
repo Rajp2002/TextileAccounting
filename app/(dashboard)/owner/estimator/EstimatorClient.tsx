@@ -1867,7 +1867,7 @@ function formatWasteProvenance(
 ) {
     const source = rowWaste !== null && rowWaste !== undefined ? 'Override' : 'Default'
     const sourceValue = rowWaste !== null && rowWaste !== undefined ? rowWaste : defaultWaste
-    return `${source} ${sourceValue.toFixed(1)}% → applied ${appliedWaste.toFixed(1)}% · formula ${formulaAdjustment.toFixed(1)}%`
+    return `${source} ${sourceValue.toFixed(1)}% → applied after base yarn costing ${appliedWaste.toFixed(1)}% · total adjustment ${formulaAdjustment.toFixed(1)}%`
 }
 
 function RowCard({
@@ -1917,17 +1917,17 @@ function RowCard({
                     <span className="min-w-0 flex-1">
                         <span className="block break-words text-[13px] font-semibold leading-4 text-[var(--color-ink)]">{displayName}</span>
                         <span className="mt-0.5 block break-words text-[10px] font-medium leading-4 text-[var(--color-muted)]">
-                            {title} · {showCalculatedValues ? `${kgPer100m.toFixed(3)} kg/100m` : 'Complete inputs'}
+                            {title} · {showCalculatedValues ? `Base weight ${kgPer100m.toFixed(3)} kg/100m` : 'Complete inputs'}
                             {ratePerKg != null && ratePerKg > 0 ? ` · ₹${ratePerKg.toFixed(2)}/kg` : ''}
                         </span>
                     </span>
                     <span className="flex min-w-[4.25rem] shrink-0 flex-col items-end gap-1 text-right">
                         <span className={`break-words font-mono text-[12px] font-semibold tabular-nums ${showCalculatedValues ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>
-                            {showCalculatedValues ? `₹${costPerM.toFixed(2)}/m` : '—'}
+                            {showCalculatedValues ? `Base cost ₹${costPerM.toFixed(2)}/m` : '—'}
                         </span>
                         {adjustmentPct != null && showCalculatedValues && (
                             <span className={`max-w-full break-words rounded-[6px] border px-1.5 py-0.5 text-[9px] font-semibold leading-3 ${c.badge}`}>
-                                {accent === 'emerald' ? 'Waste' : 'Total adj.'} {adjustmentPct.toFixed(1)}%
+                                Applied later {adjustmentPct.toFixed(1)}%
                             </span>
                         )}
                     </span>
@@ -1949,7 +1949,7 @@ function RowCard({
                 <div id={detailsId} className="border-t border-[var(--color-hairline)]/70 bg-white">
                     {adjustmentDetail && showCalculatedValues && (
                         <p className="border-b border-[var(--color-hairline)]/70 px-4 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
-                            Applied waste and adjustment: {adjustmentDetail}
+                            Manual workflow: calculate this base weight and cost first. {adjustmentDetail}
                         </p>
                     )}
                     {/* Warp rows have eight formula fields; four desktop columns keep the
@@ -2277,7 +2277,7 @@ function QuickCostingView({
                     accent="warp"
                     step={2}
                     detail={<p className="text-[11px] text-[var(--color-muted)]">{state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · crimp {state.warpCrimpPct || 0}% + waste {state.yarnShortagePct || 0}%</p>}
-                    badgeContent={<SectionCostPill value={totals.warpCostPerM} valid={hasValidCostResult} />}
+                    badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     {state.warpRows.map((row, index) => (
@@ -2290,8 +2290,8 @@ function QuickCostingView({
                             accent="indigo"
                             canRemove={state.warpRows.length > 1}
                             onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
-                            kgPer100m={totals.warpRows[index]?.kgPer100m ?? 0}
-                            costPer100m={totals.warpRows[index]?.costPer100m ?? 0}
+                            kgPer100m={totals.warpRows[index]?.baseKgPer100mUsed ?? 0}
+                            costPer100m={totals.warpRows[index]?.baseCostPer100m ?? 0}
                             adjustmentPct={totals.warpRows[index]?.totalAdjustmentPct ?? 0}
                             adjustmentDetail={formatWasteProvenance(
                                 row.shortagePct,
@@ -2331,13 +2331,13 @@ function QuickCostingView({
                     icon={Scissors}
                     accent="weft"
                     step={3}
-                    badgeContent={<div className="flex items-center gap-2"><div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5"><button type="button" onClick={() => onWidthUnitChange('cm')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>cm</button><button type="button" onClick={() => onWidthUnitChange('inch')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>inch</button></div><SectionCostPill value={totals.weftCostPerM} valid={hasValidCostResult} /></div>}
+                    badgeContent={<div className="flex items-center gap-2"><div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5"><button type="button" onClick={() => onWidthUnitChange('cm')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>cm</button><button type="button" onClick={() => onWidthUnitChange('inch')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>inch</button></div><SectionCostPill value={totals.yarnBaseWeftPerM} valid={hasValidCostResult} /></div>}
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         return (
-                            <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.kgPer100m ?? 0} costPer100m={totals.weftRows[index]?.costPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
+                            <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.baseKgPer100mUsed ?? 0} costPer100m={totals.weftRows[index]?.baseCostPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
                                 <NumField label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
@@ -4033,8 +4033,9 @@ export default function EstimatorClient({
         && breakEvenScenario?.quotePricePerM != null
         && costingResult.breakEvenPricePerM.toFixed(2) === costingResult.productionCostPerM.toFixed(2)
     const costSegments = hasValidCostResult ? [
-        { label: 'Warp Yarn', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
-        { label: 'Weft Yarn', value: totals.weftCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
+        { label: 'Base Warp Yarn', value: totals.yarnBaseWarpPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
+        { label: 'Base Weft Yarn', value: totals.yarnBaseWeftPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
+        { label: 'Yarn Waste / Crimp', value: totals.yarnShortageCostPerM, color: 'bg-[#C98A2E]', text: 'text-[#9A651E]' },
         { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
         { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
         { label: 'Overhead', value: costingResult.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
@@ -4096,23 +4097,10 @@ export default function EstimatorClient({
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
         ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
     ]
-    const yarnGroupTotals = {
-        warp: {
-            blendCount: totals.audit.warp.layers.length,
-            base: totals.yarnBaseWarpPerM,
-            adjustment: Math.max(0, totals.audit.warp.totalCostPerMeter - totals.yarnBaseWarpPerM),
-            adjusted: totals.audit.warp.totalCostPerMeter,
-        },
-        weft: {
-            blendCount: totals.audit.weft.layers.length,
-            base: totals.yarnBaseWeftPerM,
-            adjustment: Math.max(0, totals.audit.weft.totalCostPerMeter - totals.yarnBaseWeftPerM),
-            adjusted: totals.audit.weft.totalCostPerMeter,
-        },
-    }
+    const yarnBaseCostPerM = totals.yarnBaseWarpPerM + totals.yarnBaseWeftPerM
     const auditCostLines = [
-        { label: 'Adjusted warp yarn', value: totals.audit.warp.totalCostPerMeter },
-        { label: 'Adjusted weft yarn', value: totals.audit.weft.totalCostPerMeter },
+        { label: 'Base yarn subtotal', value: yarnBaseCostPerM },
+        { label: 'Yarn wastage / crimp', value: totals.yarnShortageCostPerM },
         { label: 'Weave / loom', value: totals.audit.weaveCostPerMeter },
         { label: 'Warping + sizing', value: totals.audit.warpingAndSizingCostPerMeter },
         { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
@@ -5221,7 +5209,7 @@ export default function EstimatorClient({
                         accent="warp"
                         step={2}
                         detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
-                        badgeContent={<SectionCostPill value={totals.warpCostPerM} valid={hasValidCostResult} />}
+                        badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Block */}
@@ -5275,8 +5263,8 @@ export default function EstimatorClient({
                                     accent="indigo"
                                     canRemove={state.warpRows.length > 1}
                                     onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
-                                    kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
-                                    costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
+                                    kgPer100m={totals.warpRows[i]?.baseKgPer100mUsed ?? 0}
+                                    costPer100m={totals.warpRows[i]?.baseCostPer100m ?? 0}
                                     adjustmentPct={totals.warpRows[i]?.totalAdjustmentPct ?? 0}
                                     adjustmentDetail={formatWasteProvenance(
                                         row.shortagePct,
@@ -5441,7 +5429,7 @@ export default function EstimatorClient({
                                         inch
                                     </button>
                                 </div>
-                                <SectionCostPill value={totals.weftCostPerM} valid={hasValidCostResult} />
+                                <SectionCostPill value={totals.yarnBaseWeftPerM} valid={hasValidCostResult} />
                             </div>
                         }
                     />
@@ -5479,7 +5467,7 @@ export default function EstimatorClient({
                                         Applied to pricing: <span className="font-mono">{appliedWasteLabel}</span>
                                     </div>
                                     <div className="border-t border-[#CDE5D3] px-4 py-2.5 text-[11px] font-medium text-[var(--color-muted)]" data-testid="effective-weft-waste-summary">
-                                        Effective weft wastage used in formula: <span className="font-mono font-semibold text-[var(--color-ink)]">{effectiveWasteLabel}</span> <span>(effective waste after construction adjustments; value entering formula)</span>
+                                        Wastage applied after base yarn costing: <span className="font-mono font-semibold text-[var(--color-ink)]">{effectiveWasteLabel}</span>
                                     </div>
                                 </div>
                             )
@@ -5505,8 +5493,8 @@ export default function EstimatorClient({
                                         accent="emerald"
                                         canRemove={state.weftRows.length > 1}
                                         onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })}
-                                        kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
-                                        costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
+                                        kgPer100m={totals.weftRows[i]?.baseKgPer100mUsed ?? 0}
+                                        costPer100m={totals.weftRows[i]?.baseCostPer100m ?? 0}
                                         adjustmentPct={totals.weftRows[i]?.totalAdjustmentPct ?? 0}
                                         adjustmentDetail={formatWasteProvenance(
                                             row.shortagePct,
@@ -6167,18 +6155,17 @@ export default function EstimatorClient({
                         ) : (
                         <>
                         <div className="overflow-hidden rounded-[12px] border border-[var(--color-hairline)]">
-                            <div className="hidden grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)] md:grid">
+                            <div className="hidden grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.8fr_1.1fr] gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)] md:grid">
                                 <span>Yarn</span>
                                 <span>Mode</span>
                                 <span>Base kg/100m</span>
-                                <span>Adjust</span>
-                                <span>Final kg/100m</span>
                                 <span>Rate</span>
-                                <span className="text-right">Adjusted cost</span>
+                                <span className="text-right">Base cost</span>
+                                <span>Applied after subtotal</span>
                             </div>
                             <div className="divide-y divide-[var(--color-hairline)] bg-white">
                                 {auditLayerRows.map(layer => (
-                                    <div key={`${layer.section}-${layer.id}`} className="grid gap-2 px-3 py-3 text-xs md:grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.8fr_0.8fr] md:gap-3 md:items-center">
+                                    <div key={`${layer.section}-${layer.id}`} className="grid gap-2 px-3 py-3 text-xs md:grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.8fr_1.1fr] md:gap-3 md:items-center">
                                         <div>
                                             <p className="font-semibold text-[var(--color-ink)]">{layer.name}</p>
                                             <p className="text-[10px] font-medium text-[var(--color-muted)]">{layer.section}</p>
@@ -6199,17 +6186,16 @@ export default function EstimatorClient({
                                             <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.formulaDescription}</p>
                                         </div>
                                         <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
+                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(0)}/kg</p>
+                                        <p className="text-right font-mono font-semibold text-[var(--color-factory-green)]">₹{layer.baseCostPerMeter.toFixed(2)}/m</p>
                                         <div>
                                             <p className="font-mono text-[var(--color-warning-amber)]">{layer.totalAdjustmentPct.toFixed(1)}%</p>
                                             <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.crimpPct.toFixed(1)}% crimp + {layer.wastePct.toFixed(1)}% applied waste</p>
                                             <p className="mt-1 text-[10px] font-medium leading-tight text-[var(--color-muted)]">
                                                 Default waste {layer.defaultWastePct.toFixed(1)}% · {layer.wastePctSource === 'row_override' ? 'Override' : layer.wastePctSource === 'default' ? 'Default' : 'Saved value'} applied {layer.wastePct.toFixed(1)}%
                                             </p>
-                                            <p className="text-[10px] font-semibold leading-tight text-[var(--color-ink)]">Effective waste after construction adjustments: {layer.totalAdjustmentPct.toFixed(1)}% enters formula</p>
+                                            <p className="text-[10px] font-semibold leading-tight text-[var(--color-ink)]">Added only after base yarn costs are summed.</p>
                                         </div>
-                                        <p className="font-mono text-[var(--color-ink)]">{layer.finalKgPer100m.toFixed(3)}</p>
-                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(0)}/kg</p>
-                                        <p className="text-right font-mono font-semibold text-[var(--color-factory-green)]">₹{layer.costPerMeter.toFixed(2)}/m</p>
                                     </div>
                                 ))}
                             </div>
@@ -6218,57 +6204,36 @@ export default function EstimatorClient({
                         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
                             <div className="rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4">
                                 <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Adjusted yarn calculation</p>
-                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Each section first adds all of its blends, then applies the relevant adjustment.</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Manual yarn-cost workflow</p>
+                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wastage.</p>
                                 </div>
 
-                                <div className="mt-4 space-y-3">
-                                    {([
-                                        {
-                                            label: 'Warp',
-                                            note: 'wastage + crimp',
-                                            totals: yarnGroupTotals.warp,
-                                        },
-                                        {
-                                            label: 'Weft',
-                                            note: 'wastage only',
-                                            totals: yarnGroupTotals.weft,
-                                        },
-                                    ] as const).map(group => (
-                                        <div key={group.label} className="rounded-[10px] border border-[var(--color-hairline)] bg-white p-3">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <p className="text-xs font-semibold text-[var(--color-ink)]">{group.label} yarn</p>
-                                                    <p className="text-[10px] text-[var(--color-muted)]">{group.totals.blendCount} {group.totals.blendCount === 1 ? 'blend' : 'blends'} combined</p>
-                                                </div>
-                                                <p className="text-[10px] font-medium text-[var(--color-muted)]">{group.note}</p>
-                                            </div>
-                                            <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-end gap-2">
-                                                <div>
-                                                    <p className="text-[9px] leading-tight text-[var(--color-muted)]">Base {group.label.toLowerCase()} total</p>
-                                                    <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-ink)]">₹{group.totals.base.toFixed(2)}</p>
-                                                </div>
-                                                <span className="pb-0.5 text-sm font-semibold text-[var(--color-muted)]">+</span>
-                                                <div>
-                                                    <p className="text-[9px] leading-tight text-[var(--color-muted)]">{group.label === 'Warp' ? 'Waste + crimp' : 'Waste add-on'}</p>
-                                                    <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-warning-amber)]">₹{group.totals.adjustment.toFixed(2)}</p>
-                                                </div>
-                                                <span className="pb-0.5 text-sm font-semibold text-[var(--color-muted)]">=</span>
-                                                <div>
-                                                    <p className="text-[9px] leading-tight text-[var(--color-muted)]">Adjusted {group.label.toLowerCase()}</p>
-                                                    <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-factory-green)]">₹{group.totals.adjusted.toFixed(2)}/m</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="mt-3 flex flex-col gap-2 rounded-[10px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-factory-green)]">Final adjusted yarn rate</p>
-                                        <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Adjusted warp ₹{yarnGroupTotals.warp.adjusted.toFixed(2)} + adjusted weft ₹{yarnGroupTotals.weft.adjusted.toFixed(2)}</p>
+                                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                    <div className="rounded-[10px] border border-[var(--color-hairline)] bg-white p-3">
+                                        <p className="text-[9px] uppercase tracking-[0.05em] text-[var(--color-muted)]">1 · Base warp yarn</p>
+                                        <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-ink)]">₹{totals.yarnBaseWarpPerM.toFixed(2)}/m</p>
                                     </div>
-                                    <p className="font-mono text-lg font-semibold text-[var(--color-factory-green)]">₹{totals.audit.yarnTotalCostPerMeter.toFixed(2)}/m</p>
+                                    <div className="rounded-[10px] border border-[var(--color-hairline)] bg-white p-3">
+                                        <p className="text-[9px] uppercase tracking-[0.05em] text-[var(--color-muted)]">2 · Base weft yarn</p>
+                                        <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-ink)]">₹{totals.yarnBaseWeftPerM.toFixed(2)}/m</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-end gap-2 rounded-[10px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] p-3">
+                                    <div>
+                                        <p className="text-[9px] leading-tight text-[var(--color-muted)]">3 · Base yarn subtotal</p>
+                                        <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-ink)]">₹{yarnBaseCostPerM.toFixed(2)}</p>
+                                    </div>
+                                    <span className="pb-0.5 text-sm font-semibold text-[var(--color-muted)]">+</span>
+                                    <div>
+                                        <p className="text-[9px] leading-tight text-[var(--color-muted)]">4 · Wastage / crimp</p>
+                                        <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-warning-amber)]">₹{totals.yarnShortageCostPerM.toFixed(2)}</p>
+                                    </div>
+                                    <span className="pb-0.5 text-sm font-semibold text-[var(--color-muted)]">=</span>
+                                    <div>
+                                        <p className="text-[9px] leading-tight text-[var(--color-muted)]">Adjusted yarn cost</p>
+                                        <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-factory-green)]">₹{totals.audit.yarnTotalCostPerMeter.toFixed(2)}/m</p>
+                                    </div>
                                 </div>
                             </div>
                             <div className="rounded-[12px] border border-[var(--color-hairline)] bg-white p-4">

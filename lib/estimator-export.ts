@@ -341,10 +341,21 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
   const customerDisclaimer = options.showGstNote
     ? `GST will be charged as applicable on the final tax invoice. ${CUSTOMER_QUOTATION_NOT_TAX_INVOICE_NOTICE}`
     : CUSTOMER_QUOTATION_NOT_TAX_INVOICE_NOTICE
+  const hasMatchingLayerDetails = Number.isFinite(totals.totalProductionCostPerM)
+    && Math.abs(totals.totalProductionCostPerM - model.result.productionCostPerM) <= 0.01
+  const yarnCostItems: [string, number][] = hasMatchingLayerDetails
+    ? [
+        ['Base warp yarn', totals.yarnBaseWarpPerM],
+        ['Base weft yarn', totals.yarnBaseWeftPerM],
+        ['Yarn wastage / crimp', totals.yarnShortageCostPerM],
+      ]
+    : [
+        ['Warp yarn (saved adjusted cost)', model.result.breakdown.warpCostPerM],
+        ['Weft yarn (saved adjusted cost)', model.result.breakdown.weftCostPerM],
+      ]
 
   const costItems = [
-    ['Warp yarn', model.result.breakdown.warpCostPerM],
-    ['Weft yarn', model.result.breakdown.weftCostPerM],
+    ...yarnCostItems,
     ['Machine weaving', model.result.breakdown.weaveCostPerM],
     ['Warping + sizing', model.result.breakdown.warpingAndSizingPerM],
     ...(model.result.breakdown.windingPerM > 0 ? [['Winding', model.result.breakdown.windingPerM] as [string, number]] : []),
@@ -359,15 +370,13 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
     `${money(value)}/m`,
   ])).join('') + tableRow(['Production cost', '100.0%', `${money(model.productionCostPerM)}/m`], 'total')
 
-  const hasMatchingLayerDetails = Number.isFinite(totals.totalProductionCostPerM)
-    && Math.abs(totals.totalProductionCostPerM - model.result.productionCostPerM) <= 0.01
   const layerRows = hasMatchingLayerDetails
     ? [
         ...totals.warpRows.map((row, index) => tableRow([
-          'Warp', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+          'Warp', row.label || `Layer ${index + 1}`, `${decimal(row.baseKgPer100mUsed, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.baseCostPerMeter)}/m`,
         ])),
         ...totals.weftRows.map((row, index) => tableRow([
-          'Weft', row.label || `Layer ${index + 1}`, `${decimal(row.finalKgPer100m, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.costPerMeter)}/m`,
+          'Weft', row.label || `Layer ${index + 1}`, `${decimal(row.baseKgPer100mUsed, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.baseCostPerMeter)}/m`,
         ])),
       ].join('')
     : tableRow(['Historical yarn details', 'Unavailable', 'Re-enter and save this costing', '—', '—'])
@@ -393,8 +402,8 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
     <section class="section"><div class="sectionhead"><h2>Cost breakdown</h2><span>Per metre of finished fabric</span></div>
       <table><thead><tr><th>Cost component</th><th class="num">Share</th><th class="num">Cost / m</th></tr></thead><tbody>${costRows}</tbody></table>
     </section>
-    <section class="section"><div class="sectionhead"><h2>Yarn assumptions</h2><span>${hasMatchingLayerDetails ? 'Saved with this costing snapshot' : 'Detailed historical values unavailable'}</span></div>
-      <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Consumption / 100m</th><th class="num">Rate</th><th class="num">Cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
+    <section class="section"><div class="sectionhead"><h2>Base yarn calculation</h2><span>${hasMatchingLayerDetails ? 'Wastage is shown separately in the cost breakdown above' : 'Detailed historical values unavailable'}</span></div>
+      <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Base kg / 100m</th><th class="num">Rate</th><th class="num">Base cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
     </section>
     <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
       <div class="commercial"><div><span>Broker commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport charge</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>

@@ -307,6 +307,8 @@ export interface WarpRowResult extends WarpRow {
   totalAdjustmentPct: number
   finalKgPer100m: number
   ratePerKg: number
+  baseCostPer100m: number // base kg × rate × GST, before waste/crimp
+  baseCostPerMeter: number
   costPerMeter: number
   kgPer100m:        number   // final yarn kg per 100m of fabric after adjustment
   costPer100m:      number   // ₹ per 100m (GST + adjustment inclusive)
@@ -327,6 +329,8 @@ export interface WeftRowResult extends WeftRow {
   totalAdjustmentPct: number
   finalKgPer100m: number
   ratePerKg: number
+  baseCostPer100m: number
+  baseCostPerMeter: number
   costPerMeter: number
   effectiveCostingWidthInches: number
   kgPer100m:        number
@@ -356,6 +360,7 @@ export interface EstimatorYarnLayerAudit {
   finalKgPer100m: number
   ratePerKg: number
   gstPct: number
+  baseCostPerMeter: number
   costPerMeter: number
 }
 
@@ -1145,6 +1150,12 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
     : raw.wastePctSource === 'default'
       ? 'default'
       : 'unknown'
+  const savedBaseCostPerMeter = readNullableNumber('baseCostPerMeter')
+  const adjustmentFactor = new Decimal(1).plus(new Decimal(parsedRequired.totalAdjustmentPct!).div(100))
+  const baseCostPerMeter = savedBaseCostPerMeter
+    ?? (adjustmentFactor.gt(0)
+      ? new Decimal(parsedRequired.costPerMeter!).div(adjustmentFactor).toNumber()
+      : parsedRequired.costPerMeter!)
 
   return {
     id,
@@ -1167,6 +1178,7 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
     finalKgPer100m: parsedRequired.finalKgPer100m!,
     ratePerKg: parsedRequired.ratePerKg!,
     gstPct: parsedRequired.gstPct!,
+    baseCostPerMeter,
     costPerMeter: parsedRequired.costPerMeter!,
   }
 }
@@ -1527,6 +1539,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       totalAdjustmentPct: totalAdjustmentPct.toNumber(),
       finalKgPer100m,
       ratePerKg: r.yarnRate,
+      baseCostPer100m,
+      baseCostPerMeter: new Decimal(baseCostPer100m).div(100).toNumber(),
       costPerMeter: new Decimal(costPer100m).div(100).toNumber(),
       kgPer100m: finalKgPer100m,
       costPer100m,
@@ -1581,6 +1595,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       totalAdjustmentPct: totalAdjustmentPct.toNumber(),
       finalKgPer100m,
       ratePerKg: r.yarnRate,
+      baseCostPer100m,
+      baseCostPerMeter: new Decimal(baseCostPer100m).div(100).toNumber(),
       costPerMeter: new Decimal(costPer100m).div(100).toNumber(),
       effectiveCostingWidthInches: cmToInches(effectiveCostingWidthCm),
       kgPer100m: finalKgPer100m,
@@ -1634,8 +1650,10 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const finishingPerM  = estimate.enabledSections.finishing  ? new Decimal(estimate.finishingRatePerM)  : new Decimal(0)
 
   // ── Direct Cost (sum of all layers above) ───────────────────────────────
+  // Sum base yarn costs first, then add the separately calculated yarn
+  // waste/crimp allowance to mirror the factory's manual worksheet.
   const directCostPerM =
-    warpCostPerM.plus(weftCostPerM).plus(weaveCostPerM).plus(
+    yarnBaseWarpPerM.plus(yarnBaseWeftPerM).plus(yarnShortageCostPerM).plus(weaveCostPerM).plus(
     warpingAndSizingPerM).plus(windingPerM).plus(processingPerM).plus(finishingPerM)
 
   // ── Layer 8: Overhead (sum of monthly fixed costs ÷ monthly output) ────
@@ -1718,6 +1736,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       finalKgPer100m: row.finalKgPer100m,
       ratePerKg: row.ratePerKg,
       gstPct: row.gstPct,
+      baseCostPerMeter: row.baseCostPerMeter,
       costPerMeter: row.costPerMeter,
     }
   }

@@ -151,6 +151,18 @@ export function CostAnalysisDetails({
     )
     const layerTotals = hasMatchingLayerDetails && totals ? totals : null
     const showLegacyWarning = !historicalResult
+    const yarnCostLines: Array<{ label: string; value: number; tone?: 'muted' }> = historicalResult?.audit
+        ? [
+            { label: 'Base warp yarn', value: historicalResult.audit.warp.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0) },
+            { label: 'Base weft yarn', value: historicalResult.audit.weft.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0) },
+            { label: 'Yarn wastage / crimp', value: historicalResult.audit.yarnAdjustmentCostPerMeter, tone: 'muted' },
+        ]
+        : historicalResult
+            ? [
+                { label: 'Warp yarn (saved adjusted cost)', value: historicalResult.breakdown.warpCostPerM },
+                { label: 'Weft yarn (saved adjusted cost)', value: historicalResult.breakdown.weftCostPerM },
+            ]
+            : []
 
     return (
         <div className="space-y-3">
@@ -196,8 +208,7 @@ export function CostAnalysisDetails({
                 </div>
                 {historicalResult ? (
                     <>
-                        <CostLine label="Warp yarn" value={historicalResult.breakdown.warpCostPerM} targetMeters={meters} />
-                        <CostLine label="Weft yarn" value={historicalResult.breakdown.weftCostPerM} targetMeters={meters} />
+                        {yarnCostLines.map(line => <CostLine key={line.label} {...line} targetMeters={meters} />)}
                         <CostLine label="Weave charge / karighar" value={historicalResult.breakdown.weaveCostPerM} targetMeters={meters} tone="strong" />
                         <CostLine label="Warping + sizing" value={historicalResult.breakdown.warpingAndSizingPerM} targetMeters={meters} />
                         {historicalResult.breakdown.windingPerM > 0 && <CostLine label="Winding" value={historicalResult.breakdown.windingPerM} targetMeters={meters} />}
@@ -245,13 +256,14 @@ export function CostAnalysisDetails({
                                         </p>
                                         <p className="text-[11px] font-semibold text-slate-500">
                                             {row.mode === 'manual'
-                                                ? `Manual · base ${row.baseKgPer100mUsed.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`
-                                                : `Formula · ${row.calcDenier}D × ${row.beamEnds} ends / 90000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`}
+                                                ? `Manual base · ${row.baseKgPer100mUsed.toFixed(3)} kg/100m`
+                                                : `Formula base · ${row.calcDenier}D × ${row.beamEnds} ends / 90000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m`}
                                         </p>
                                     </div>
                                     <div className="text-right font-mono">
-                                        <p className="text-sm font-black text-primary">{money(row.costPer100m / 100)}</p>
-                                        {meters > 0 && <p className="text-[11px] text-slate-400">{totalMoney((row.costPer100m / 100) * meters)}</p>}
+                                        <p className="text-sm font-black text-primary">{money(row.baseCostPerMeter)}</p>
+                                        <p className="text-[10px] font-semibold text-slate-400">base cost / m</p>
+                                        {meters > 0 && <p className="text-[11px] text-slate-400">{totalMoney(row.baseCostPerMeter * meters)}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-4 gap-2 text-[11px]">
@@ -268,7 +280,7 @@ export function CostAnalysisDetails({
                                         <p className="font-mono font-semibold text-slate-700">{row.wastePct.toFixed(1)}%</p>
                                     </div>
                                     <div>
-                                        <p className="font-bold uppercase tracking-wider text-slate-400">Total adj.</p>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Added later</p>
                                         <p className="font-mono font-semibold text-slate-700">
                                             {row.totalAdjustmentPct.toFixed(1)}%
                                         </p>
@@ -297,13 +309,14 @@ export function CostAnalysisDetails({
                                         </p>
                                         <p className="text-[11px] font-semibold text-slate-500">
                                             {row.mode === 'manual'
-                                                ? `Manual · base ${row.baseKgPer100mUsed.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`
-                                                : `Formula · ${row.calcDenier}D × ${row.picks} PPI × ${row.effectiveCostingWidthInches.toFixed(1)} in × ${row.formulaLengthM.toFixed(3)}m / 9000000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`}
+                                                ? `Manual base · ${row.baseKgPer100mUsed.toFixed(3)} kg/100m`
+                                                : `Formula base · ${row.calcDenier}D × ${row.picks} PPI × ${row.effectiveCostingWidthInches.toFixed(1)} in × ${row.formulaLengthM.toFixed(3)}m / 9000000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m`}
                                         </p>
                                     </div>
                                     <div className="text-right font-mono">
-                                        <p className="text-sm font-black text-primary">{money(row.costPer100m / 100)}</p>
-                                        {meters > 0 && <p className="text-[11px] text-slate-400">{totalMoney((row.costPer100m / 100) * meters)}</p>}
+                                        <p className="text-sm font-black text-primary">{money(row.baseCostPerMeter)}</p>
+                                        <p className="text-[10px] font-semibold text-slate-400">base cost / m</p>
+                                        {meters > 0 && <p className="text-[11px] text-slate-400">{totalMoney(row.baseCostPerMeter * meters)}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-4 gap-2 text-[11px]">
@@ -320,7 +333,7 @@ export function CostAnalysisDetails({
                                         <p className="font-mono font-semibold text-slate-700">{row.wastePct.toFixed(1)}%</p>
                                     </div>
                                     <div>
-                                        <p className="font-bold uppercase tracking-wider text-slate-400">Total adj.</p>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Added later</p>
                                         <p className="font-mono font-semibold text-slate-700">
                                             {row.totalAdjustmentPct.toFixed(1)}%
                                         </p>
