@@ -1196,7 +1196,7 @@ function MobileLiveEstimateShortcut({
                 <SheetContent
                     id="mobile-live-estimate-panel"
                     side="bottom"
-                    className="max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:bottom-6 md:right-6 md:inset-x-auto md:w-[min(calc(100vw-3rem),38rem)] md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] min-[1660px]:right-[16rem]"
+                    className="max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:bottom-6 md:top-6 md:mx-auto md:h-auto md:max-h-none md:w-[min(calc(100vw-3rem),38rem)] md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)]"
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
                         <SheetTitle className="text-[17px]">Live cost estimate</SheetTitle>
