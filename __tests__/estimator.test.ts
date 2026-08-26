@@ -346,6 +346,64 @@ describe('Estimator formula primitives', () => {
         expect(calcWeftYarnKg(68, 62, 50.6)).toBeCloseTo(0.9332003, 6)
     })
 
+    it('divides the 100m weft formula multiplier across all weft components', () => {
+        const weftComponent = {
+            id: 'weft-1',
+            picks: 68,
+            reedSpace: 62,
+            effectiveCostingWidthCm: 62,
+            calcDenier: 75,
+            yarnRate: 100,
+            gstPct: 0,
+            shortagePct: 0,
+        }
+        const calculateForCount = (count: number) => calcFullTotals({
+            ...makeDefaultEstimateState(),
+            yarnShortagePct: 0,
+            weftRows: Array.from({ length: count }, (_, index) => ({
+                ...weftComponent,
+                id: `weft-${index + 1}`,
+            })),
+        })
+
+        const oneComponent = calculateForCount(1)
+        const twoComponents = calculateForCount(2)
+        const threeComponents = calculateForCount(3)
+
+        expect(oneComponent.weftRows[0].formulaLengthM).toBe(100)
+        expect(twoComponents.weftRows[0].formulaLengthM).toBe(50)
+        expect(threeComponents.weftRows[0].formulaLengthM).toBeCloseTo(100 / 3, 10)
+        expect(twoComponents.weftRows[0].formulaKgPer100m).toBeCloseTo(
+            oneComponent.weftRows[0].formulaKgPer100m / 2,
+            10,
+        )
+        expect(threeComponents.weftRows[0].formulaKgPer100m).toBeCloseTo(
+            oneComponent.weftRows[0].formulaKgPer100m / 3,
+            10,
+        )
+        const totalWeftKg = (totals: ReturnType<typeof calcFullTotals>) => totals.weftRows
+            .reduce((sum, row) => sum + row.kgPer100m, 0)
+        expect(totalWeftKg(twoComponents)).toBeCloseTo(totalWeftKg(oneComponent), 10)
+        expect(totalWeftKg(threeComponents)).toBeCloseTo(totalWeftKg(oneComponent), 10)
+    })
+
+    it('does not divide explicit manual weft consumption by the component count', () => {
+        const estimate = makeDefaultEstimateState()
+        estimate.yarnShortagePct = 0
+        estimate.weftRows = [1, 2].map(index => ({
+            ...estimate.weftRows[0],
+            id: `manual-weft-${index}`,
+            calculationMode: 'manual',
+            manualKgPer100m: 2.5,
+            shortagePct: 0,
+        }))
+
+        const totals = calcFullTotals(estimate)
+
+        expect(totals.weftRows.map(row => row.baseKgPer100mUsed)).toEqual([2.5, 2.5])
+        expect(totals.weftRows.reduce((sum, row) => sum + row.kgPer100m, 0)).toBe(5)
+    })
+
 
     it('calculates weave cost as picks times per-pick rupee rate', () => {
         expect(calcWeaveCostPerMeter(68, 0.16)).toBeCloseTo(10.88, 6)
@@ -553,7 +611,7 @@ describe('Estimator full totals', () => {
         })
         expect(formulaTotals.audit.weft.layers[0]).toMatchObject({
             mode: 'formula',
-            formulaDescription: 'denier × PPI × effective width inches / 90000',
+            formulaDescription: 'denier × PPI × effective width inches × 100m / 9000000',
             calcDenier: 157.2580645161,
             picks: 60,
             effectiveCostingWidthInches: expect.closeTo(62, 6),

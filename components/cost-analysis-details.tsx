@@ -298,7 +298,7 @@ export function CostAnalysisDetails({
                                         <p className="text-[11px] font-semibold text-slate-500">
                                             {row.mode === 'manual'
                                                 ? `Manual · base ${row.baseKgPer100mUsed.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`
-                                                : `Formula · ${row.calcDenier}D × ${row.picks} PPI × ${row.effectiveCostingWidthInches.toFixed(1)} in / 90000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`}
+                                                : `Formula · ${row.calcDenier}D × ${row.picks} PPI × ${row.effectiveCostingWidthInches.toFixed(1)} in × ${row.formulaLengthM.toFixed(3)}m / 9000000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`}
                                         </p>
                                     </div>
                                     <div className="text-right font-mono">

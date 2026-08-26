@@ -6186,7 +6186,7 @@ export default function EstimatorClient({
                                                 <p className="mt-1 text-[10px] font-medium leading-tight text-[var(--color-muted)]">
                                                     {layer.section === 'Warp'
                                                         ? `${layer.calcDenier.toFixed(2)}D × ${layer.beamEnds ?? 0} ends / 90000 = ${layer.formulaKgPer100m.toFixed(3)} kg/100m`
-                                                        : `${layer.calcDenier.toFixed(2)}D × ${layer.picks ?? 0} PPI × ${(layer.effectiveCostingWidthInches ?? 0).toFixed(1)} in / 90000 = ${layer.formulaKgPer100m.toFixed(3)} kg/100m`}
+                                                        : `${layer.calcDenier.toFixed(2)}D × ${layer.picks ?? 0} PPI × ${(layer.effectiveCostingWidthInches ?? 0).toFixed(1)} in × ${layer.formulaLengthM.toFixed(3)}m / 9000000 = ${layer.formulaKgPer100m.toFixed(3)} kg/100m`}
                                                 </p>
                                             ) : (
                                                 <p className="mt-1 text-[10px] font-medium leading-tight text-[var(--color-muted)]">

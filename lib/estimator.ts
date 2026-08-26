@@ -317,6 +317,7 @@ export interface WarpRowResult extends WarpRow {
 /** Weft row after formula has been applied */
 export interface WeftRowResult extends WeftRow {
   mode: YarnCalculationMode
+  formulaLengthM: number
   formulaKgPer100m: number
   baseKgPer100mUsed: number
   crimpPct: number
@@ -343,6 +344,7 @@ export interface EstimatorYarnLayerAudit {
   beamEnds: number | null
   picks: number | null
   effectiveCostingWidthInches: number | null
+  formulaLengthM: number
   formulaKgPer100m: number
   manualKgPer100m: number | null
   baseKgPer100mUsed: number
@@ -572,7 +574,7 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
 /**
  * Weft yarn weight per 100m of finished fabric.
  *
- * Formula: (picks × (clothWidth / 2.54) × calcDenier × 100) / 9_000_000
+ * Formula: (picks × (clothWidth / 2.54) × calcDenier × fabricLengthM) / 9_000_000
  *   - picks     = picks per INCH (PPI) — standard Surat unit
  *   - clothWidth = FINISHED cloth output width in cm (NOT loom/reed width)
  *
@@ -582,20 +584,26 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
  * consumption by ~20–35%.
  *
  *   Per 1m fabric length: picks × (clothWidth / 2.54) inches of weft thread
- *   × 100 (per-100m) ÷ 9000 (denier→g/m) ÷ 1000 (g→kg)
+ *   × fabricLengthM ÷ 9000 (denier→g/m) ÷ 1000 (g→kg)
  *
  * @param picks      - picks per inch (PPI)
  * @param clothWidth - finished cloth output width in cm
  * @param calcDenier - effective weft yarn denier
+ * @param fabricLengthM - this component's share of a 100m fabric run
  * @returns kg per 100m
  */
-export function calcWeftYarnKg(picks: number, clothWidth: number, calcDenier: number): number {
+export function calcWeftYarnKg(
+  picks: number,
+  clothWidth: number,
+  calcDenier: number,
+  fabricLengthM = 100,
+): number {
   // clothWidth is in cm. Convert to inches: clothWidth / 2.54
   const clothWidthInches = new Decimal(clothWidth).div(2.54)
   return new Decimal(picks)
     .times(clothWidthInches)
     .times(calcDenier)
-    .times(100)
+    .times(fabricLengthM)
     .div(9_000_000)
     .toNumber()
 }
@@ -1126,6 +1134,7 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
   const beamEnds = readNullableNumber('beamEnds')
   const picks = readNullableNumber('picks')
   const effectiveCostingWidthInches = readNullableNumber('effectiveCostingWidthInches')
+  const formulaLengthM = readNullableNumber('formulaLengthM') ?? 100
   const manualKgPer100m = readNullableNumber('manualKgPer100m')
   // Older snapshots did not persist waste provenance. Their applied waste is
   // still truthful, so retain it as the best available default and make the
@@ -1146,6 +1155,7 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
     beamEnds,
     picks,
     effectiveCostingWidthInches,
+    formulaLengthM,
     formulaKgPer100m: parsedRequired.formulaKgPer100m!,
     manualKgPer100m,
     baseKgPer100mUsed: parsedRequired.baseKgPer100mUsed!,
@@ -1526,11 +1536,17 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   })
 
   // ── Layer 2: Weft Yarn (waste only; warp crimp does not apply) ───────────
+  // A 100m fabric run is shared equally by all configured weft components.
+  // Formula rows therefore use 100 / component count (100, 50, 33.333..., ...).
+  // Manual rows remain explicit kg/100m inputs and are not scaled again.
+  const weftFormulaLengthM = new Decimal(100)
+    .div(Math.max(1, estimate.weftRows.length))
+    .toNumber()
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
     const effectiveCostingWidthCm = getEffectiveCostingWidthCm(r)
     const effectiveDenier = getEffectiveYarnDenier(r)
-    const formulaKgPer100m = calcWeftYarnKg(r.picks, effectiveCostingWidthCm, effectiveDenier)
+    const formulaKgPer100m = calcWeftYarnKg(r.picks, effectiveCostingWidthCm, effectiveDenier, weftFormulaLengthM)
     const manualKgPer100m = r.manualKgPer100m != null && Number.isFinite(Number(r.manualKgPer100m))
       ? Number(r.manualKgPer100m)
       : null
@@ -1555,6 +1571,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       calculationMode: mode,
       manualKgPer100m,
       effectiveCostingWidthCm,
+      formulaLengthM: weftFormulaLengthM,
       formulaKgPer100m,
       baseKgPer100mUsed,
       crimpPct: 0,
@@ -1672,6 +1689,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
 
   const toYarnLayerAudit = (row: WarpRowResult | WeftRowResult, fallbackName: string): EstimatorYarnLayerAudit => {
     const isWarp = 'beamEnds' in row
+    const formulaLengthM = isWarp ? 100 : row.formulaLengthM
+    const formulaLengthLabel = new Decimal(formulaLengthM).toSignificantDigits(8).toString()
     return {
       id: row.id,
       name: row.label?.trim() || fallbackName,
@@ -1679,14 +1698,15 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       formulaDescription: row.linearDensityUnit === 'cotton_count_ne'
         ? (isWarp
             ? '(5315 ÷ Ne) × beam ends / 90000'
-            : '(5315 ÷ Ne) × PPI × effective width inches / 90000')
+            : `(5315 ÷ Ne) × PPI × effective width inches × ${formulaLengthLabel}m / 9000000`)
         : (isWarp
             ? 'denier × beam ends / 90000'
-            : 'denier × PPI × effective width inches / 90000'),
+            : `denier × PPI × effective width inches × ${formulaLengthLabel}m / 9000000`),
       calcDenier: row.calcDenier,
       beamEnds: isWarp ? row.beamEnds : null,
       picks: 'picks' in row ? row.picks : null,
       effectiveCostingWidthInches: 'effectiveCostingWidthInches' in row ? row.effectiveCostingWidthInches : null,
+      formulaLengthM,
       formulaKgPer100m: row.formulaKgPer100m,
       manualKgPer100m: row.manualKgPer100m ?? null,
       baseKgPer100mUsed: row.baseKgPer100mUsed,
