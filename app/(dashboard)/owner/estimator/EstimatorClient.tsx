@@ -3301,13 +3301,6 @@ export default function EstimatorClient({
             ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
             : templates,
     [templates, templateSearch])
-    const quickQualityTemplates = useMemo(() => {
-        const activeTemplate = appliedTemplate
-            ? templates.find(template => template.id === appliedTemplate.id)
-            : null
-        const remainingTemplates = templates.filter(template => template.id !== activeTemplate?.id)
-        return [...(activeTemplate ? [activeTemplate] : []), ...remainingTemplates].slice(0, 4)
-    }, [appliedTemplate, templates])
     const hasActiveQualityRecipeChanges = appliedTemplate
         ? hasSavedQualityRecipeChanges(appliedTemplate, state)
         : false
@@ -5011,65 +5004,23 @@ export default function EstimatorClient({
                             </div>
                         </div>
                         {templatesLoaded && templates.length > 0 && (
-                            <div
+                            <button
+                                type="button"
                                 data-testid="saved-quality-quick-picker"
-                                className="mt-3 border-t border-[var(--color-hairline)]/80 pt-3"
+                                onClick={() => setShowQualityLibrary(true)}
+                                aria-haspopup="dialog"
+                                aria-label={`Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}`}
+                                className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)]/60 px-3.5 py-2.5 text-left transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
                             >
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">Saved qualities</p>
-                                        <p className="mt-0.5 text-[11px] font-medium text-[var(--color-muted)]">Tap a recipe to populate the costing inputs.</p>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowQualityLibrary(true)}
-                                        className="h-9 shrink-0 rounded-[9px] px-2.5 text-[11px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
-                                    >
-                                        View all
-                                        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                                    </Button>
-                                </div>
-                                <div
-                                    className="mobile-scroll-x mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar"
-                                    aria-label="Saved qualities"
-                                >
-                                    {quickQualityTemplates.map(template => {
-                                        const isActive = appliedTemplate?.id === template.id || (!template.id && qualityLabel === template.name)
-                                        return (
-                                            <button
-                                                key={template.id}
-                                                type="button"
-                                                aria-pressed={isActive}
-                                                aria-label={isActive ? `${template.name}, selected` : `Load quality ${template.name}`}
-                                                onClick={() => applyTemplate(template)}
-                                                className={`min-w-[11rem] max-w-[15rem] shrink-0 rounded-[10px] border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 ${isActive
-                                                    ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]/70 shadow-[0_2px_8px_rgba(217,107,28,0.10)]'
-                                                    : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)] hover:bg-[var(--color-surface-soft)]'
-                                                }`}
-                                            >
-                                                <span className={`block truncate text-[12px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>
-                                                    {template.name}
-                                                </span>
-                                                <span className="mt-0.5 block text-[10px] font-medium text-[var(--color-muted)]">
-                                                    {isActive ? 'Selected' : 'Load quality'}
-                                                </span>
-                                            </button>
-                                        )
-                                    })}
-                                    {templates.length > quickQualityTemplates.length && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowQualityLibrary(true)}
-                                            className="min-w-[7.5rem] shrink-0 rounded-[10px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)] px-3 py-2 text-left text-[11px] font-semibold text-[var(--color-yarn-orange-dark)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
-                                        >
-                                            +{templates.length - quickQualityTemplates.length} more
-                                            <span className="mt-0.5 block text-[10px] font-medium text-[var(--color-muted)]">Open library</span>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+                                <span className="min-w-0">
+                                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">Saved qualities</span>
+                                    <span className="mt-0.5 block truncate text-[12px] font-medium text-[var(--color-body)]">Tap to view {templates.length} saved {templates.length === 1 ? 'quality' : 'qualities'}</span>
+                                </span>
+                                <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-yarn-orange-dark)]">
+                                    View
+                                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
+                            </button>
                         )}
                         <div data-testid="costing-validity" className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
                             <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -5088,12 +5039,42 @@ export default function EstimatorClient({
                             <SheetDescription className="text-[12px] font-medium text-[var(--color-muted)]">Search and select a saved fabric recipe. Your current costing stays in place until you choose one.</SheetDescription>
                         </SheetHeader>
                         <div className="p-4 sm:p-5">
+                            {templatesLoaded && templates.length > 0 && (
+                                <div className="relative">
+                                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                                    <input
+                                        type="search"
+                                        value={templateSearch}
+                                        onChange={e => setTemplateSearch(e.target.value)}
+                                        placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
+                                        aria-label={tx('Search saved qualities')}
+                                        className="h-12 w-full rounded-[11px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-10 pr-10 text-[13px] font-medium text-[var(--color-ink)] placeholder:font-normal placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/15"
+                                    />
+                                    {templateSearch && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setTemplateSearch('')}
+                                            className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                                            aria-label={tx('Clear quality search')}
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            {templatesLoaded && templates.length > 0 && templateSearch && (
+                                <p className="mt-1.5 text-[10px] font-medium text-[var(--color-muted)]">
+                                    {t('estimator.quality.searchResults')
+                                        .replace('{shown}', String(filteredTemplates.length))
+                                        .replace('{total}', String(templates.length))}
+                                </p>
+                            )}
                 {/* ── SAVED FABRIC QUALITIES ─────────────────────────────── */}
                 <section
                     id="saved-qualities"
                     aria-labelledby="saved-qualities-title"
                     aria-busy={!templatesLoaded}
-                    className="premium-focus-surface overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"
+                    className="premium-focus-surface mt-4 overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"
                 >
                     <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
                         <div className="flex items-start gap-3">
@@ -5123,37 +5104,6 @@ export default function EstimatorClient({
                                 {tx('Saved quality details are temporarily unavailable. The Cost Estimate remains ready to use.')}
                             </div>
                         )}
-                        {templates.length > 5 && (
-                                <div className="relative min-w-0 flex-1">
-                                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
-                                    <input
-                                        type="text"
-                                        value={templateSearch}
-                                        onChange={e => setTemplateSearch(e.target.value)}
-                                        placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
-                                        className="h-11 w-full rounded-[11px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-10 pr-9 text-[13px] font-medium text-[var(--color-ink)] placeholder:font-normal placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/15"
-                                    />
-                                    {templateSearch && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setTemplateSearch('')}
-                                            className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
-                                            aria-label={tx('Clear quality search')}
-                                        >
-                                            <X className="h-3.5 w-3.5" />
-                                        </button>
-                                    )}
-                                </div>
-                        )}
-
-                        {templates.length > 5 && templateSearch && (
-                            <p className="-mt-2 text-[10px] font-medium text-[var(--color-muted)]">
-                                {t('estimator.quality.searchResults')
-                                    .replace('{shown}', String(filteredTemplates.length))
-                                    .replace('{total}', String(templates.length))}
-                            </p>
-                        )}
-
                         {!templatesLoaded ? null : templates.length === 0 ? (
                             <div className="flex items-start gap-3 rounded-[12px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)]/55 px-3.5 py-3.5 sm:items-center">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white text-[var(--color-yarn-orange)] shadow-sm">
