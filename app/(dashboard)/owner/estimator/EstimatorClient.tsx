@@ -5120,36 +5120,25 @@ export default function EstimatorClient({
                                     <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-muted)]">{t('estimator.quality.savedRecipesLabel')}</p>
                                     <p className="text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.quality.hint')}</p>
                                 </div>
-                                <div className="relative">
+                                <div className={filteredTemplates.length > 1 ? 'flex min-w-0 items-center gap-2' : 'min-w-0'}>
                                     {filteredTemplates.length > 1 && (
-                                        <>
-                                            <button
-                                                type="button"
-                                                onClick={() => scrollSavedQualities('left')}
-                                                disabled={!savedQualitiesScrollState.canScrollLeft}
-                                                aria-disabled={!savedQualitiesScrollState.canScrollLeft}
-                                                className="estimator-touch-target absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] text-[var(--color-body)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35"
-                                                aria-label={t('estimator.quality.previousSavedQualities')}
-                                                title={t('estimator.quality.previousSavedQualities')}
-                                            >
-                                                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => scrollSavedQualities('right')}
-                                                disabled={!savedQualitiesScrollState.canScrollRight}
-                                                aria-disabled={!savedQualitiesScrollState.canScrollRight}
-                                                className="estimator-touch-target absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] text-[var(--color-body)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35"
-                                                aria-label={t('estimator.quality.nextSavedQualities')}
-                                                title={t('estimator.quality.nextSavedQualities')}
-                                            >
-                                                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                                            </button>
-                                        </>
+                                        <button
+                                            type="button"
+                                            onClick={() => scrollSavedQualities('left')}
+                                            disabled={!savedQualitiesScrollState.canScrollLeft}
+                                            aria-disabled={!savedQualitiesScrollState.canScrollLeft}
+                                            aria-controls="saved-quality-rail"
+                                            className="estimator-touch-target flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] text-[var(--color-body)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35"
+                                            aria-label={t('estimator.quality.previousSavedQualities')}
+                                            title={t('estimator.quality.previousSavedQualities')}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                                        </button>
                                     )}
                                     <div
+                                        id="saved-quality-rail"
                                         ref={savedQualitiesRailRef}
-                                        className="mobile-scroll-x flex snap-x snap-mandatory gap-3 overflow-x-auto px-12 pb-3 pt-1 scroll-smooth no-scrollbar"
+                                        className="mobile-scroll-x flex min-w-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto pb-3 pt-1 scroll-smooth no-scrollbar"
                                         role="list"
                                         aria-label={t('estimator.quality.savedRecipesLabel')}
                                     >
@@ -5160,7 +5149,7 @@ export default function EstimatorClient({
                                                 key={tpl.id}
                                                 data-saved-quality-card
                                                 role="listitem"
-                                                className={`group flex w-[78vw] max-w-[340px] shrink-0 snap-start items-stretch overflow-hidden rounded-[12px] border transition-colors ${
+                                                className={`group flex w-full max-w-[340px] shrink-0 snap-start items-stretch overflow-hidden rounded-[12px] border transition-colors ${
                                                     isActive
                                                         ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]/70 shadow-[0_3px_10px_rgba(217,107,28,0.10)]'
                                                         : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)] hover:shadow-[0_3px_10px_rgba(30,37,40,0.05)]'
@@ -5217,6 +5206,20 @@ export default function EstimatorClient({
                                         );
                                     })}
                                     </div>
+                                    {filteredTemplates.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => scrollSavedQualities('right')}
+                                            disabled={!savedQualitiesScrollState.canScrollRight}
+                                            aria-disabled={!savedQualitiesScrollState.canScrollRight}
+                                            aria-controls="saved-quality-rail"
+                                            className="estimator-touch-target flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] text-[var(--color-body)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-yarn-orange)] hover:text-[var(--color-yarn-orange-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35 disabled:pointer-events-none disabled:opacity-35"
+                                            aria-label={t('estimator.quality.nextSavedQualities')}
+                                            title={t('estimator.quality.nextSavedQualities')}
+                                        >
+                                            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                                        </button>
+                                    )}
                                 </div>
                                 {filteredTemplates.length === 0 && templateSearch && (
                                     <p className="rounded-[10px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)] px-3 py-2.5 text-xs italic text-[var(--color-muted)]">{t('estimator.quality.noMatch').replace('{query}', templateSearch)}</p>
