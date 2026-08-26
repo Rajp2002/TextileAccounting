@@ -1698,23 +1698,25 @@ function EstimatorLiveCostActions({
                             <span className="truncate">Start Party Order</span>
                         </Button>
                     )}
-                    <Button
-                        id="btn-save-accept"
-                        data-testid="save-costing-action"
-                        type="button"
-                        size="sm"
-                        variant="default"
-                        className={`${canUseProduction && !isStandaloneCostingSession ? 'sm:col-span-1' : 'sm:col-span-2'} h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55`}
-                        onClick={() => runAction(isStandaloneCostingSession ? onSaveCosting : onSaveAccepted)}
-                        disabled={saveCostingDisabled}
-                        aria-busy={savingQuote}
-                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                        aria-label={isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'}
-                        title={firstCostingReadinessMessage ?? (saveCostingDisabled ? 'Complete the required inputs before saving.' : undefined)}
-                    >
-                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                        <span className="truncate">{isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save Quotation' : 'Save & Accept'}</span>
-                    </Button>
+                    <div data-testid="save-costing-action-top" className={`min-w-0 ${canUseProduction && !isStandaloneCostingSession ? 'sm:col-span-1' : 'sm:col-span-2'}`}>
+                        <Button
+                            id="btn-save-accept"
+                            data-testid="save-costing-action"
+                            type="button"
+                            size="sm"
+                            variant="default"
+                            className="h-12 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55"
+                            onClick={() => runAction(isStandaloneCostingSession ? onSaveCosting : onSaveAccepted)}
+                            disabled={saveCostingDisabled}
+                            aria-busy={savingQuote}
+                            aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
+                            aria-label={isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'}
+                            title={firstCostingReadinessMessage ?? (saveCostingDisabled ? 'Complete the required inputs before saving.' : undefined)}
+                        >
+                            {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                            <span className="truncate">{isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save Quotation' : 'Save & Accept'}</span>
+                        </Button>
+                    </div>
                     {canUseProduction && !isStandaloneCostingSession && (
                         <Button
                             id="btn-save-quote"
@@ -3309,11 +3311,6 @@ export default function EstimatorClient({
     const hasActiveQualityRecipeChanges = appliedTemplate
         ? hasSavedQualityRecipeChanges(appliedTemplate, state)
         : false
-    const topCostingSaveDisabled = savingQuote
-        || !canPersistCostResult
-        || !hasValidCostResult
-        || !qualityLabel.trim()
-        || totals.totalProductionCostPerM <= 0
     const topCostingActionLabel = sourceQuoteId && sourceRecordKind === 'costing'
         ? 'Save New Version'
         : 'Save Costing'
@@ -5083,7 +5080,8 @@ export default function EstimatorClient({
 
                     <SheetContent
                         side="bottom"
-                        className="max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:mx-auto md:w-[min(calc(100vw-3rem),48rem)] md:rounded-b-[22px] md:border md:border-[var(--color-hairline)]"
+                        onOpenAutoFocus={event => event.preventDefault()}
+                        className="max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:top-1/2 md:bottom-auto md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[min(calc(100vw-3rem),48rem)] md:rounded-[22px] md:border md:border-[var(--color-hairline)]"
                     >
                         <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
                             <SheetTitle className="text-[17px]">Change quality</SheetTitle>
@@ -5125,9 +5123,7 @@ export default function EstimatorClient({
                                 {tx('Saved quality details are temporarily unavailable. The Cost Estimate remains ready to use.')}
                             </div>
                         )}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            {/* Search — only shown when there are more than 5 qualities */}
-                            {templates.length > 5 ? (
+                        {templates.length > 5 && (
                                 <div className="relative min-w-0 flex-1">
                                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
                                     <input
@@ -5148,73 +5144,7 @@ export default function EstimatorClient({
                                         </button>
                                     )}
                                 </div>
-                            ) : <div className="hidden sm:block" />}
-
-                            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-                                {appliedTemplate ? (
-                                    <>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => void handleUpdateTemplate()}
-                                            disabled={savingTemplate || !hasActiveQualityRecipeChanges}
-                                            aria-busy={savingTemplate}
-                                            title={!hasActiveQualityRecipeChanges ? tx('No Saved Quality changes to update') : undefined}
-                                            className="h-11 w-full rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
-                                        >
-                                            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                            {tx(savingTemplate ? 'Saving Fabric Quality…' : 'Update Fabric Quality')}
-                                        </Button>
-                                        <Button
-                                            data-testid="save-as-new-quality-top"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => openSaveAsNewQualityDialog()}
-                                            className="h-11 w-full rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:w-auto"
-                                            title={tx('Use as Starting Point for this saved quality and save it as a separate quality')}
-                                        >
-                                            <BookmarkPlus className="h-4 w-4" />
-                                            {tx('Save as New Quality')}
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <Button
-                                        size="sm"
-                                        onClick={() => openSaveTemplateDialog()}
-                                        className="h-11 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)] sm:w-auto"
-                                    >
-                                        <Save className="h-4 w-4" />
-                                        {t('estimator.quality.saveCurrentAsQuality')}
-                                    </Button>
-                                )}
-                                {isStandaloneCostingSession && (
-                                    <Button
-                                        data-testid="save-costing-action-top"
-                                        size="sm"
-                                        onClick={() => void handleSaveQuote('quote', 'draft')}
-                                        disabled={topCostingSaveDisabled}
-                                        aria-busy={savingQuote}
-                                        aria-label={tx(topCostingActionLabel)}
-                                        title={topCostingSaveDisabled
-                                            ? tx(firstCostingReadinessMessage ?? 'Complete quality and cost inputs first.')
-                                            : undefined}
-                                        className="h-11 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(217,107,28,0.22)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
-                                    >
-                                        {savingQuote ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                        {tx(topCostingActionLabel)}
-                                    </Button>
-                                )}
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowConfirmNewQuality(true)}
-                                    className="h-11 w-full rounded-[10px] border border-[var(--color-hairline-strong)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] shadow-[0_1px_3px_rgba(30,37,40,0.04)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:w-auto"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    {t('estimator.quality.newQuality')}
-                                </Button>
-                            </div>
-                        </div>
+                        )}
 
                         {templates.length > 5 && templateSearch && (
                             <p className="-mt-2 text-[10px] font-medium text-[var(--color-muted)]">
