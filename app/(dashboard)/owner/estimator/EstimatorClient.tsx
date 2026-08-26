@@ -301,65 +301,6 @@ function buildEstimatorBaseline(
     return next
 }
 
-const GREY_FABRIC_STARTER_LABEL = '50×50 Grey Fabric (example)'
-
-function buildGreyFabricStarterState(
-    profile?: FactoryCostProfile,
-    sections: FactorySections = DEFAULT_FACTORY_SECTIONS,
-    workers: FixedWorkerOverhead[] = [],
-): EstimateState {
-    const base = buildEstimatorBaseline(profile ?? { enabled_sections: sections }, workers)
-    const configuredSections = {
-        ...base.enabledSections,
-        // The example demonstrates the commercial assumptions without changing
-        // the user's saved factory profile for future estimates.
-        commission: true,
-        transport: true,
-    }
-
-    return {
-        ...base,
-        warpRows: [{
-            id: nanoid(),
-            ...DEFAULT_WARP_ROW,
-            label: 'Warp yarn',
-            calcDenier: 150,
-            beamEnds: 3500,
-            yarnRate: 220,
-            gstPct: 5,
-        }],
-        weftRows: [{
-            id: nanoid(),
-            ...DEFAULT_WEFT_ROW,
-            label: 'Weft yarn',
-            picks: 52,
-            effectiveCostingWidthCm: 160.02,
-            reedSpace: 160.02,
-            calcDenier: 150,
-            yarnRate: 220,
-            gstPct: 5,
-        }],
-        tapeLengthM: 1000,
-        warpCrimpPct: 5,
-        yarnShortagePct: 3,
-        perPickCostPaisa: 0.16,
-        warpingRatePerKg: base.warpingRatePerKg > 0 ? base.warpingRatePerKg : 8,
-        sizingRatePerKg: base.sizingRatePerKg > 0 ? base.sizingRatePerKg : 4,
-        overheadMode: 'direct',
-        overheadOverridePerM: base.overheadOverridePerM != null && base.overheadOverridePerM > 0
-            ? base.overheadOverridePerM
-            : 8,
-        monthlyOutputM: 10000,
-        loomCount: 4,
-        monthlyWorkingDays: 26,
-        avgOutputPerLoomPerDay: 100,
-        commissionPct: 2,
-        transportPerM: 1.5,
-        profitPct: base.profitPct > 0 ? base.profitPct : 10,
-        enabledSections: configuredSections,
-    }
-}
-
 function resolveOverheadMode(profile: Pick<FactoryCostProfile, 'overhead_mode' | 'overhead_override_per_m'> | null | undefined): OverheadMode {
     if (profile?.overhead_mode === 'direct') return 'direct'
     if (profile?.overhead_mode === 'monthly_expenses') return 'monthly_expenses'
@@ -490,7 +431,6 @@ type Action =
     | { type: 'INIT_FROM_PROFILE'; data: { profile: FactoryCostProfile; sections: FactorySections } }
     | { type: 'MERGE_FIXED_WORKERS'; workers: FixedWorkerOverhead[] }
     | { type: 'APPLY_TEMPLATE'; template: EstimatorTemplate }
-    | { type: 'APPLY_GREY_FABRIC_STARTER'; data: { profile?: FactoryCostProfile; sections: FactorySections; workers: FixedWorkerOverhead[] } }
     | { type: 'SET'; field: keyof EstimateState; value: EstimateStateValue }
     | { type: 'SET_LOOM_TYPE'; loomType: LoomType | null }
     | { type: 'SET_LOOM_RPM'; rpm: number | null }
@@ -623,8 +563,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 overheadMode: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? 'direct' : state.overheadMode,
             }
         }
-        case 'APPLY_GREY_FABRIC_STARTER':
-            return buildGreyFabricStarterState(action.data.profile, action.data.sections, action.data.workers)
         case 'SET':
             return { ...state, [action.field]: action.value }
         case 'SET_LOOM_TYPE': {
@@ -2225,8 +2163,6 @@ function QuickCostingView({
     canUseProduction,
     widthUnit,
     onWidthUnitChange,
-    showStarterRecipe,
-    onUseStarterRecipe,
     onOpenOverheadDetails,
     onOverheadModeChange,
     weavingRateInputMode,
@@ -2250,8 +2186,6 @@ function QuickCostingView({
     canUseProduction: boolean
     widthUnit: 'cm' | 'inch'
     onWidthUnitChange: (value: 'cm' | 'inch') => void
-    showStarterRecipe: boolean
-    onUseStarterRecipe: () => void
     onOpenOverheadDetails: () => void
     onOverheadModeChange: (mode: OverheadMode) => void
     weavingRateInputMode: WeavingRateInputMode
@@ -2335,30 +2269,6 @@ function QuickCostingView({
                     )}
                 </CardContent>
             </EstimatorCard>
-
-            {showStarterRecipe && (
-                <section className="rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 px-4 py-4 shadow-[var(--shadow-card)] sm:px-5" aria-labelledby="grey-fabric-starter-title">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Sparkles className="h-4 w-4 shrink-0 text-[var(--color-info-blue)]" />
-                                <h3 id="grey-fabric-starter-title" className="text-sm font-bold text-[var(--color-ink)]">Try a grey-fabric example</h3>
-                                <span className="rounded-full border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-info-blue)]">example only</span>
-                            </div>
-                            <p className="mt-1 text-xs leading-relaxed text-[var(--color-body)]">See where PPI, finished width, crimp, waste, rates, capacity, commission, transport, and margin enter the calculation. Replace every value with your rate book before saving.</p>
-                            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium text-[var(--color-body)] sm:grid-cols-4">
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">150D · 3,500 warp ends</span>
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">52 PPI · 63 inch width</span>
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">5% crimp · 3% waste</span>
-                                <span className="rounded-lg bg-[var(--color-surface)]/80 px-2.5 py-2">4 looms · 10,000 m/month</span>
-                            </div>
-                        </div>
-                        <Button type="button" size="sm" className="min-h-11 shrink-0 bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]" onClick={onUseStarterRecipe}>
-                            Use example values
-                        </Button>
-                    </div>
-                </section>
-            )}
 
             <EstimatorCard accent="warp">
                 <SectionHeader
@@ -2937,44 +2847,6 @@ export default function EstimatorClient({
         markUserEdit()
         setWeftInstruction(value)
     }, [markUserEdit])
-
-    const applyStarterRecipe = useCallback(() => {
-        dispatch({
-            type: 'APPLY_GREY_FABRIC_STARTER',
-            data: {
-                profile: initialProfile,
-                sections: initialProfile?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
-                workers: initialWorkers || [],
-            },
-        })
-        setEntryMode('quick')
-        setAssumptionsExpanded(false)
-        assumptionsManuallyToggledRef.current = false
-        setOutputSuggestion(null)
-        setWeavingRateInputMode('perMeter')
-        setDirectWeavingRateInput('')
-        setAppliedTemplate(null)
-        setPartyNameFromUser('')
-        setQualityLabelFromUser(GREY_FABRIC_STARTER_LABEL)
-        setWarpInstructionFromUser('')
-        setWeftInstructionFromUser('')
-        setSourceQuoteId(null)
-        setSourceQuoteUpdatedAt(null)
-        setSourceQuoteVersionNumber(null)
-        setSourceQuoteCreatedAt(null)
-        setSourceQuoteStatus(null)
-        setSourceState(null)
-        setSourceFactoryProfileUpdatedAt(null)
-        setSourceRecordKind(null)
-        quoteRequestIdRef.current = null
-        autoRestoredDraftSavedAtRef.current = null
-        setShowValidation(false)
-        lastGeneratedWarp.current = null
-        lastGeneratedWeft.current = null
-        toast.info(tx('Grey-fabric example loaded'), {
-            description: tx('Replace the example values with your current rate book before saving.'),
-        })
-    }, [dispatch, initialProfile, initialWorkers, setPartyNameFromUser, setQualityLabelFromUser, setWarpInstructionFromUser, setWeftInstructionFromUser, tx])
 
     const buildCurrentDraft = useCallback((
         clientRequestId = quoteRequestIdRef.current,
@@ -4145,15 +4017,6 @@ export default function EstimatorClient({
     const showPartyField = canUseProduction && !isStandaloneCostingSession && mode !== 'market'
     const requiresCommercialContext = !isStandaloneCostingSession
     const actionReadinessId = 'estimator-action-readiness'
-    const hasStarterInputs = Boolean(
-        qualityLabel.trim()
-        || partyName.trim()
-        || state.warpRows.some(row => Number(row.calcDenier) > 0 || Number(row.beamEnds) > 0 || Number(row.manualKgPer100m) > 0)
-        || state.weftRows.some(row => Number(row.calcDenier) > 0 || Number(row.picks) > 0 || Number(row.effectiveCostingWidthCm) > 0 || Number(row.manualKgPer100m) > 0)
-        || Number(state.perPickCostPaisa) > 0
-    )
-    const showStarterRecipe = !hasDraft && !draft && !hasStarterInputs
-
     // Validation: Pilot Safety Rails
     const isZeroConfig = state.overheadMode === 'monthly_expenses'
         && state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
@@ -5251,8 +5114,6 @@ export default function EstimatorClient({
                         canUseProduction={canUseProduction}
                         widthUnit={widthUnit}
                         onWidthUnitChange={setWidthUnit}
-                        showStarterRecipe={showStarterRecipe}
-                        onUseStarterRecipe={applyStarterRecipe}
                         onOpenOverheadDetails={() => {
                             handleEntryModeChange('detailed')
                             setShowAdvancedOverhead(true)
