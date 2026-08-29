@@ -83,6 +83,7 @@ function BaseExperienceWall({ routeName }: { routeName: string }) {
         '/owner/advances': 'Worker Advances',
         '/owner/fixed-workers': 'Fixed Workers',
         '/owner/machines': 'Loom Management',
+        '/owner/production': 'Production',
         '/owner/archive': 'Archive',
         '/owner/system-health': 'System Health',
     }
@@ -138,6 +139,7 @@ function UpgradeWall({
         '/owner/advances': 'Worker Advances',
         '/owner/fixed-workers': 'Fixed Workers',
         '/owner/machines': 'Loom Management',
+        '/owner/production': 'Production',
         '/owner/archive': 'Archive',
         '/owner/system-health': 'System Health',
     }

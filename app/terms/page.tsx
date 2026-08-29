@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
         <PolicyPage
             activePath="/terms"
             title="Terms of Service"
-            description="The contract for the Base Plan initial rollout: a focused, single-factory textile costing workspace."
+            description="The contract for the Base Plan initial rollout: a focused, single-factory textile costing workspace with a lightweight production core."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
@@ -73,14 +73,15 @@ export default function TermsOfServicePage() {
                     <li>Fabric qualities, reusable costing assumptions, saved costings, and draft recovery</li>
                     <li>Factory cost, shortage, transport, commission, GST assumption, landed-cost, break-even, and margin calculations</li>
                     <li>Customer quotation or Cost Sheet documents where enabled in the Base workspace</li>
+                    <li>Simple production jobs created from saved costings, owner-entered production metres, piece-rate worker records, advances, and basic capped payroll settlement</li>
                     <li>Owner-accessible organization data export and billing history</li>
                 </ul>
                 <p>
                     The subscription covers one Customer organization or factory workspace. Individual user credentials may not be shared. Features may have reasonable usage, file-size, security, or technical limits displayed in the product.
                 </p>
-                <PolicyCallout tone="neutral" title="Full Suite is future scope only">
+                <PolicyCallout tone="neutral" title="Full Suite modules remain separate scope">
                     <p>
-                        Production logging, orders, worker or machine management, inventory or stock, dispatch, payroll, advances, factory analytics, WhatsApp operations, and related modules are not part of the Base Plan initial rollout. They are not available for purchase under these Terms, are not promised for any date, and do not become an entitlement through a Base Plan payment, referral, renewal, demonstration, screenshot, or roadmap discussion. Any future Full Suite offering will require separate availability, pricing, and applicable terms.
+                        Formal party orders and quotation lifecycle, supervisor logins, machine or loom management, inventory or stock, dispatch, fixed-worker salary payroll, statutory payroll features, factory analytics, WhatsApp operations, and related modules are not part of the Base Plan initial rollout. They are not available for purchase under these Terms, are not promised for any date, and do not become an entitlement through a Base Plan payment, referral, renewal, demonstration, screenshot, or roadmap discussion. Any future Full Suite offering will require separate availability, pricing, and applicable terms.
                     </p>
                 </PolicyCallout>
             </PolicySection>

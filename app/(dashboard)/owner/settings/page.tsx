@@ -1073,7 +1073,7 @@ export default function SettingsPage() {
                             <Calculator className="h-4 w-4 text-saffron" />
                             <h3 className="text-base font-semibold text-ink">Weavly Estimator</h3>
                         </div>
-                         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your Estimator Plan includes reusable Fabric Qualities, saved Cost Estimates, and configurable Cost Estimate defaults.</p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx('Your Base Plan workspace includes reusable Fabric Qualities, saved Cost Estimates, configurable Cost Estimate defaults, and the lightweight Production Core.')}</p>
                         <div className="mt-4 space-y-2">
                             <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <CreditCard className="h-4 w-4" />

@@ -414,6 +414,7 @@ export async function updateSession(request: NextRequest) {
             !pathname.startsWith('/owner/estimator') &&
             !pathname.startsWith('/owner/quotes') &&
             !pathname.startsWith('/owner/rates') &&
+            !pathname.startsWith('/owner/production') &&
             !pathname.startsWith('/owner/machines') &&
             !pathname.startsWith('/owner/workers') &&
             !pathname.startsWith('/owner/settings')

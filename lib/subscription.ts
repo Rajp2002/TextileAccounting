@@ -23,7 +23,7 @@ export {
  * Subscription tier hierarchy:
  *   'none'    — no active subscription (blocked)
  *   'trial'   — legacy trial access for already-created rows; new trials are retired
- *   'base'    — paid Base plan (Estimator only)
+ *   'base'    — paid Base plan (Estimator + owner-only Production Core)
  *   'premium' — paid Premium plan (full access)
  */
 // ─── getOrgTier ───────────────────────────────────────────────────────────────

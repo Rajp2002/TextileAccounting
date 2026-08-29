@@ -16,8 +16,9 @@ describe('Estimator-only product presentation', () => {
     const rateBook = read('app/(dashboard)/owner/rates/RatesClient.tsx')
     const rateActions = read('app/(dashboard)/owner/rates/actions.ts')
 
-    it('limits Base navigation to estimator destinations and account billing', () => {
-        expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings'])")
+    it('limits Base navigation to costing, production core, and account billing', () => {
+        expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/production', '/owner/settings'])")
+        expect(sidebar).toContain("href: \"/owner/production\"")
         expect(sidebar).toContain("? 'Saved Costings'")
         expect(sidebar).toContain('Yarn Rate Book')
         expect(sidebar).toContain('Subscription & Billing')

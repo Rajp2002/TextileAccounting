@@ -81,7 +81,7 @@ export default function LandingHero() {
                             Open the app. See the numbers before you quote.
                         </h2>
                         <p className="mt-5 text-lg leading-8 text-zinc-700 dark:text-zinc-300">
-                            The Base Plan keeps the first release focused: build a reliable cost estimate, understand the margin, reuse a fabric quality, and export the costing when you are ready.
+                            The Base Plan keeps the first release focused: build a reliable cost estimate, start a simple production job, record output, understand piece-rate pay, and export the costing when you are ready.
                         </p>
                         <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                             {estimatorSignals.map((signal) => (
@@ -108,7 +108,7 @@ export default function LandingHero() {
                             <div className="relative aspect-[16/10] overflow-hidden bg-[#fff8ea]">
                                 <Image
                                     src="/images/estimator-base-owner.png"
-                                    alt="Current Weavly Base Plan estimator workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
+                                    alt="Current Weavly Base Plan workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
                                     fill
                                     priority
                                     sizes="(max-width: 1024px) 100vw, 62vw"

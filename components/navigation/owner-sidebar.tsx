@@ -23,6 +23,7 @@ import {
     Archive,
     Tags,
     BellRing,
+    ClipboardList,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -38,6 +39,7 @@ const navGroups = [
         items: [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
             { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+            { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
             { name: "Yarn Rate Book", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
             { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
@@ -88,6 +90,7 @@ const bottomNavItems = [
     { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs", workflow: "marketRuns" },
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
     { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+    { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
     { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
@@ -118,7 +121,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     const { t } = useTranslation()
     const productionMode = normalizeProductionMode(rawProductionMode)
     const hasPremium = tierSatisfies(subscriptionTier, 'premium')
-    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings'])
+    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/production', '/owner/settings'])
     const visibleGroups = navGroups
         .map((group) => ({
             ...group,
@@ -143,7 +146,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
                             <p data-i18n-skip="true" className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
-                            <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Estimator Plan'}</p>
+                            <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Base Plan workspace'}</p>
                         </div>
                     </div>
                 )}
@@ -227,7 +230,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
     const visibleBottomNavItems = bottomNavItems
         .filter((item) => hasPremium
             ? isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey)
-            : item.href === '/owner/estimator')
+            : item.href === '/owner/estimator' || item.href === '/owner/production')
         .slice(0, 5)
     const moreIsActive = !visibleBottomNavItems.some((item) => (
         pathname === item.href || pathname.startsWith(item.href + "/")

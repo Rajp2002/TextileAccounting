@@ -1,4 +1,4 @@
-import { Calculator, ClipboardList, Copy, Download, MessageCircle, ReceiptIndianRupee } from 'lucide-react'
+import { Calculator, ClipboardList, Copy, Download, Factory, MessageCircle, ReceiptIndianRupee, WalletCards } from 'lucide-react'
 
 const painPoints = [
     'Yarn price changes make quotation margins hard to trust.',
@@ -35,6 +35,18 @@ const workflow = [
         outcome: 'Keep the decision record ready for the next customer conversation.',
         icon: Download,
     },
+    {
+        title: 'Run a simple production job',
+        description: 'Start a production job from the costing, record metres as the owner, and keep the target and economics together.',
+        outcome: 'Move from a price decision to a useful production record without opening a full ERP.',
+        icon: Factory,
+    },
+    {
+        title: 'Settle piece-rate pay',
+        description: 'Use recorded metres, rate snapshots, and owner-entered advances to see gross pay, capped recovery, and net payout.',
+        outcome: 'Know what each worker is owed while the more advanced payroll tools stay in the Full Suite.',
+        icon: WalletCards,
+    },
 ]
 
 const trustItems = [
@@ -49,8 +61,8 @@ const trustItems = [
         icon: ClipboardList,
     },
     {
-        title: 'Full Suite in development',
-        copy: 'Production logging, stock, dispatch, payroll, and connected factory dashboards are planned for a later Full Suite release. They are not part of the Base Plan today.',
+        title: 'Full Suite stays focused',
+        copy: 'Formal party orders, supervisor production, looms, inventory/stock, dispatch, fixed-worker payroll, analytics, and connected factory controls remain separate Full Suite scope.',
         icon: MessageCircle,
     },
 ]
@@ -110,7 +122,7 @@ export default function LandingFeatures() {
                         <div>
                             <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Estimator workflow</p>
                             <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                                One clear loop from inputs to Cost Sheet.
+                                 One clear loop from inputs to worker pay.
                             </h2>
                         </div>
                         <p className="max-w-2xl text-lg leading-8 text-[var(--color-body)] lg:ml-auto">
@@ -120,7 +132,7 @@ export default function LandingFeatures() {
 
                     <div className="relative mt-14">
                         <div className="absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-orange-300 to-transparent lg:block" />
-                        <div className="grid gap-5 lg:grid-cols-4">
+                        <div className="grid gap-5 lg:grid-cols-3 xl:grid-cols-6">
                             {workflow.map((step, index) => (
                                 <div key={step.title} className="relative border border-zinc-200 bg-white/92 p-6 shadow-[0_20px_60px_rgba(154,52,18,0.07)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/75">
                                     <div className="flex items-center justify-between gap-4">
@@ -155,7 +167,7 @@ export default function LandingFeatures() {
                                 </h2>
                             </div>
                             <p className="text-lg leading-8 text-zinc-700 lg:pt-12">
-                                The first release stays deliberately focused on the costing work that happens before production: capture the right assumptions, trust the math, and carry the costing into the next conversation.
+                                The Base release stays deliberately focused on a small operating loop: capture the right assumptions, start a job, record output, and understand piece-rate pay without bringing every factory module into the workspace.
                             </p>
                         </div>
 

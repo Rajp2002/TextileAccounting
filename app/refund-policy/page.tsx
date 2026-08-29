@@ -25,7 +25,7 @@ export default function RefundPolicyPage() {
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
             description="The payment, non-renewal, refund, and export rules for the Base Plan initial rollout."
-            lastUpdated="August 24, 2026"
+            lastUpdated="August 29, 2026"
             sections={sections}
             facts={[
                 { label: 'Billing model', value: 'Manual annual renewal; no automatic charge', icon: CalendarDays },
@@ -40,7 +40,7 @@ export default function RefundPolicyPage() {
 
             <PolicySection id="scope" title="1. Scope and Base Plan Boundary">
                 <p>
-                    The current Base Plan purchase covers the single-factory costing workspace described in the Terms. Production, orders, worker or machine management, stock, dispatch, payroll, advances, analytics, WhatsApp operations, and other Full Suite modules are future scope. A Base payment does not purchase those modules, and their absence is not grounds for a refund.
+                    The current Base Plan purchase covers the single-factory costing workspace and lightweight owner-run production core described in the Terms. Formal party orders, supervisor or machine management, inventory or stock, dispatch, fixed-worker salary payroll, advanced payroll, analytics, WhatsApp operations, and other Full Suite modules remain future Full Suite scope. A Base payment does not purchase those modules, and their absence is not grounds for a refund.
                 </p>
                 <PolicyCallout tone="blue" title="Current catalog">
                     <p>

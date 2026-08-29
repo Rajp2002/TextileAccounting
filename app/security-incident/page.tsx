@@ -75,7 +75,7 @@ export default function SecurityIncidentPage() {
                             ))}
                         </ul>
                         <p className="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                            Production, worker, payroll, inventory, stock, and dispatch modules are future Full Suite scope and are not part of the Base Plan initial rollout.
+                            Base includes owner-run production records, piece-rate workers, advances, and basic payroll settlement. Formal orders, supervisor or machine management, inventory, stock, dispatch, fixed-worker payroll, and advanced analytics remain future Full Suite scope and are not part of the Base Plan initial rollout.
                         </p>
                     </section>
 

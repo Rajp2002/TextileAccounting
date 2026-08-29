@@ -1,11 +1,11 @@
 const faqs = [
     {
         question: 'Does Weavly work for grey fabric weaving factories?',
-        answer: 'Yes. The current Base Plan is designed around the costing work before production: fabric qualities, warp and weft inputs, factory costs, GST, margin, break-even price, saved costings, and Cost Sheet exports.',
+        answer: 'Yes. The current Base Plan covers the small loop from fabric costing to owner-recorded production and piece-rate pay: qualities, warp and weft inputs, factory costs, GST, margin, saved costings, production jobs, worker metres, advances, and Cost Sheet exports.',
     },
     {
         question: 'What is included in the current rollout?',
-        answer: 'The paid Base Plan includes the Estimator, reusable fabric qualities, saved costing history, configurable costing defaults, margin visibility, and Cost Sheet export. Full Suite factory operations are in development and are not available yet.',
+        answer: 'The paid Base Plan includes the Estimator, reusable qualities, saved costing history, costing defaults, margin visibility, Cost Sheet export, simple production jobs, owner-entered production metres, piece-rate workers, advances, and basic payroll settlement. Formal orders, supervisor logging, looms, stock, dispatch, fixed-worker payroll, and analytics remain Full Suite scope and are in development.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',
@@ -21,7 +21,7 @@ const faqs = [
     },
     {
         question: 'Can I start with only the costing desk?',
-        answer: 'Yes. That is the intended Base Plan rollout: start with one factory, one owner, and a clear costing process before considering the Full Suite when it becomes available.',
+        answer: 'Yes. That is the intended Base Plan rollout: start with one factory and one owner, then carry a costing into a simple production job and worker-pay record before considering the Full Suite modules.',
     },
 ]
 

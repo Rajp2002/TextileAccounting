@@ -6,6 +6,7 @@ export type EstimatorWorkflowMode = 'quote' | 'market'
 export type WorkflowKey =
     | 'estimator'
     | 'quotes'
+    | 'baseProduction'
     | 'orders'
     | 'marketRuns'
     | 'productionLogging'
@@ -57,6 +58,7 @@ export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, bool
     market_run: {
         estimator: true,
         quotes: false,
+        baseProduction: false,
         orders: false,
         marketRuns: true,
         productionLogging: true,
@@ -75,6 +77,7 @@ export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, bool
     order_based: {
         estimator: true,
         quotes: true,
+        baseProduction: false,
         orders: true,
         marketRuns: false,
         productionLogging: true,
@@ -93,6 +96,7 @@ export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, bool
     both: {
         estimator: true,
         quotes: true,
+        baseProduction: false,
         orders: true,
         marketRuns: true,
         productionLogging: true,

@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing service. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with the current Weavly Estimator (Base Plan). It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
+                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing and lightweight production-record service. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with the current Weavly Estimator (Base Plan). It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
             </p>
 
             <PolicySection id="scope" title="1. Scope and Our Data Roles">
@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
                     An account owner may also enter personal information about customers, suppliers, brokers, employees, or other business contacts into a costing workspace. For that customer-provided information, the account owner decides what to enter and why, and Weavly processes it to provide the subscribed service. The account owner is responsible for having an appropriate basis to provide that information to Weavly.
                 </p>
                 <p>
-                    This notice covers the Base Plan offered in the initial rollout. Production logging, worker management, payroll, inventory, dispatch, order tracking, and related Full Suite features are not included. If those features are offered later, we will update the applicable notice before collecting the additional operational or worker data they require.
+                    This notice covers the Base Plan offered in the initial rollout, including owner-created production jobs, production metre entries, piece-rate worker names and rates, advances, and basic payroll settlement records. It does not cover formal party orders, supervisor or machine management, inventory, dispatch, fixed-worker salary payroll, advanced payroll, analytics, WhatsApp operations, or other Full Suite features. The Base workflow does not require worker phone numbers, supervisor accounts, attendance, or statutory payroll identifiers.
                 </p>
             </PolicySection>
 
@@ -75,14 +75,21 @@ export default function PrivacyPolicyPage() {
                     <li>Cost Sheet and organization-export activity, including export-history metadata; downloaded files are saved wherever you choose on your device</li>
                 </ul>
 
-                <h3>2.3 Billing and support information</h3>
+                <h3>2.3 Production and worker-pay information</h3>
+                <ul>
+                    <li>Production job quality labels, targets, dates, optional customer or internal references, notes, and status</li>
+                    <li>Owner-entered production dates, metres, short notes, and the worker rate snapshot used for each entry</li>
+                    <li>Piece-rate worker names, metre rates, active status, advance amounts and descriptions, and basic settlement totals and payment mode</li>
+                </ul>
+
+                <h3>2.4 Billing and support information</h3>
                 <ul>
                     <li>Billing name and address, GSTIN if supplied, plan and subscription status, payment references, receipts, and refund or dispute records</li>
                     <li>Messages, attachments, and account references you send in support, privacy, or grievance communications</li>
                     <li>Razorpay processes payment-instrument information. Weavly receives transaction references and status information, not complete card, bank-account, or UPI credentials</li>
                 </ul>
 
-                <h3>2.4 Technical, security, and browser information</h3>
+                <h3>2.5 Technical, security, and browser information</h3>
                 <ul>
                     <li>IP address, request time, browser and device information, session identifiers, authentication events, and security or rate-limit events</li>
                     <li>Error reports, performance traces, route information, and diagnostic context sent to our monitoring provider after application-level redaction</li>
@@ -95,6 +102,7 @@ export default function PrivacyPolicyPage() {
                 <ul>
                     <li>Create and secure accounts, authenticate users, and isolate each organization&apos;s workspace</li>
                     <li>Calculate, save, restore, and export costing work requested by the account owner</li>
+                    <li>Record owner-run production jobs and metres, calculate piece-rate pay from saved rate snapshots, and record basic advance recovery and settlement information</li>
                     <li>Process subscriptions, payments, renewals, receipts, refunds, and billing support</li>
                     <li>Provide support, respond to privacy requests and grievances, and maintain request and resolution records</li>
                     <li>Detect abuse, enforce rate limits, investigate errors, maintain availability, and respond to security incidents</li>

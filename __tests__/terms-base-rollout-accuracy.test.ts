@@ -13,8 +13,8 @@ describe('Base Plan initial-rollout Terms accuracy', () => {
     const refunds = source('app/refund-policy/page.tsx')
 
     it('publishes a new version that identifies the pre-incorporation operator', () => {
-        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-08-24')
-        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-08-24')
+        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-08-29')
+        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-08-29')
         expect(LEGAL_OPERATOR.displayName).toBe('Raj Patel, operating under the Weavly name')
         expect(terms).toContain('LEGAL_DOCUMENTS.terms.displayDate')
         expect(terms).toContain('LEGAL_OPERATOR.displayName')
@@ -32,8 +32,9 @@ describe('Base Plan initial-rollout Terms accuracy', () => {
         expect(terms).toContain('single-factory costing workspace')
     })
 
-    it('makes Full Suite future scope without a present entitlement or release promise', () => {
-        expect(terms).toContain('Full Suite is future scope only')
+    it('keeps the Base production core separate from Full Suite scope', () => {
+        expect(terms).toContain('Full Suite modules remain separate scope')
+        expect(terms).toContain('Simple production jobs created from saved costings')
         expect(terms).toContain('are not available for purchase under these Terms')
         expect(terms).toContain('are not promised for any date')
         expect(terms).toContain('Any future Full Suite offering will require separate availability, pricing, and applicable terms')
