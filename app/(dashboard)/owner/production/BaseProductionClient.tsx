@@ -11,6 +11,7 @@ import {
     Clock3,
     Edit3,
     HardHat,
+    History,
     IndianRupee,
     Loader2,
     Plus,
@@ -62,6 +63,7 @@ import {
 } from './actions'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
+import BasePayrollRecords from './BasePayrollRecords'
 import type { BaseProductionInitialData } from './loaders'
 
 type DialogName = 'worker' | 'machine' | 'job' | 'advance' | null
@@ -469,10 +471,23 @@ export default function BaseProductionClient({
                             <Button variant="outline" onClick={openNewWorker}><Plus className="h-4 w-4" /> Add worker</Button>
                         </>
                     )}
+                    {view === 'payroll' && (
+                        <Button
+                            variant={activeTab === 'history' ? 'default' : 'outline'}
+                            onClick={() => setActiveTab(activeTab === 'history' ? 'pay' : 'history')}
+                        >
+                            <History className="h-4 w-4" />
+                            {activeTab === 'history' ? 'Current payroll' : 'Payroll records'}
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {view === 'payroll' && activeTab === 'history' && (
+                <BasePayrollRecords initialData={initialData} onBack={() => setActiveTab('pay')} />
+            )}
+
+            {!(view === 'payroll' && activeTab === 'history') && <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {view === 'production' && <>
                     <SummaryCard label="Open jobs" value={String(openJobs)} detail="Planned or active" icon={<ClipboardList className="h-4 w-4" />} />
                     <SummaryCard label="Produced this period" value={formatMeters(producedThisPeriod)} detail={`${formatDateOnly(initialData.payrollPeriod.start)} – ${formatDateOnly(initialData.payrollPeriod.end)}`} icon={<CheckCircle2 className="h-4 w-4" />} />
@@ -486,7 +501,7 @@ export default function BaseProductionClient({
                     <SummaryCard label="Worker payout" value={formatINR(unsettledPayable, { hideDecimals: true })} detail="Unsettled net pay" icon={<WalletCards className="h-4 w-4" />} />
                     <SummaryCard label="Pending advances" value={formatINR(pendingAdvances, { hideDecimals: true })} detail="Before capped recovery" icon={<IndianRupee className="h-4 w-4" />} />
                 </>}
-            </div>
+            </div>}
 
             {view === 'production' && <Card className="border-saffron/20 bg-saffron-soft/30">
                 <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -507,7 +522,7 @@ export default function BaseProductionClient({
                 </CardContent>
             </Card>}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            {!(view === 'payroll' && activeTab === 'history') && <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
                 {view === 'production' && <TabsList className="grid h-auto w-full grid-cols-2">
                     <TabsTrigger value="jobs">Jobs</TabsTrigger>
                     <TabsTrigger value="production">Daily production</TabsTrigger>
@@ -704,7 +719,7 @@ export default function BaseProductionClient({
                         </div>
                     )}
                 </TabsContent>}
-            </Tabs>
+            </Tabs>}
 
             <Dialog open={dialog === 'machine'} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent>

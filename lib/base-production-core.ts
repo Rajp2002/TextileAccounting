@@ -152,6 +152,25 @@ export type BasePayrollSettlement = {
     net_payout: number
     payment_mode: BasePayrollPaymentMode
     paid_at: string
+    worker_name_snapshot?: string
+    advance_balance_before?: number
+    remaining_advance_balance?: number
+}
+
+export type BasePayrollSettlementLine = {
+    id: string
+    settlement_id: string
+    worker_id: string
+    production_date: string
+    shift: BaseProductionShift | null
+    machine_id: string | null
+    machine_label: string
+    job_id: string | null
+    costing_label: string
+    meters: number
+    worker_rate_snapshot: number
+    gross_pay: number
+    source_kind: 'legacy_entry' | 'worker_total' | 'machine_allocation'
 }
 
 export type BaseJobSummary = {

@@ -6,6 +6,7 @@ import {
     toBaseNumber,
     type BaseDailyProductionStatus,
     type BasePayrollSettlement,
+    type BasePayrollSettlementLine,
     type BaseProductionCosting,
     type BaseProductionAllocation,
     type BaseProductionEntry,
@@ -22,6 +23,7 @@ import {
 
 export type BaseProductionInitialData = {
     orgId: string
+    factoryName?: string
     today: string
     payrollPeriod: { start: string; end: string }
     costings: BaseProductionCosting[]
@@ -34,6 +36,7 @@ export type BaseProductionInitialData = {
     dailyBatches: BaseProductionBatch[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
+    settlementLines: BasePayrollSettlementLine[]
     payables: BaseWorkerPayable[]
     allocations: BaseProductionAllocation[]
 }
@@ -74,12 +77,14 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const payrollPeriod = getBasePayrollPeriod(today)
 
     const [
+        organizationResult,
         costingsResult,
         jobsResult,
         entriesResult,
         workersResult,
         advancesResult,
         settlementsResult,
+        settlementLinesResult,
         machinesResult,
         assignmentsResult,
         contextsResult,
@@ -87,6 +92,11 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         dailyEntriesResult,
         dailyAllocationsResult,
     ] = await Promise.all([
+        supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', orgId)
+            .maybeSingle(),
         supabase
             .from('estimator_quotes')
             .select('id, quality_label, costing_group_id, version_number, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m')
@@ -118,9 +128,15 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .order('created_at', { ascending: false }),
         supabase
             .from('base_payroll_settlements')
-            .select('id, worker_id, period_start, period_end, gross_pay, advance_deducted, net_payout, payment_mode, paid_at')
+            .select('id, worker_id, period_start, period_end, gross_pay, advance_deducted, net_payout, payment_mode, paid_at, worker_name_snapshot, advance_balance_before, remaining_advance_balance')
             .eq('org_id', orgId)
             .order('period_end', { ascending: false }),
+        supabase
+            .from('base_payroll_settlement_lines')
+            .select('id, settlement_id, worker_id, production_date, shift, machine_id, machine_label, job_id, costing_label, meters, worker_rate_snapshot, gross_pay, source_kind')
+            .eq('org_id', orgId)
+            .order('production_date')
+            .order('machine_label'),
         supabase
             .from('base_production_machines')
             .select('id, name, machine_type, custom_label, is_active')
@@ -157,12 +173,16 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .order('created_at', { ascending: false }),
     ])
 
+    if (organizationResult.error) {
+        throw new Error(`Failed to load Base production organization: ${organizationResult.error.message ?? 'unknown database error'}`)
+    }
     const rawCostings = requireRows(costingsResult, 'costings')
     const rawJobs = requireRows(jobsResult, 'jobs')
     const rawEntries = requireRows(entriesResult, 'entries')
     const rawWorkers = requireRows(workersResult, 'workers')
     const rawAdvances = requireRows(advancesResult, 'advances')
     const rawSettlements = requireRows(settlementsResult, 'settlements')
+    const rawSettlementLines = requireRows(settlementLinesResult, 'settlement history lines')
     const rawMachines = requireRows(machinesResult, 'machines')
     const rawAssignments = requireRows(assignmentsResult, 'assignments')
     const rawContexts = requireRows(contextsResult, 'machine job contexts')
@@ -242,6 +262,27 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         net_payout: toBaseNumber(row.net_payout),
         payment_mode: toPaymentMode(row.payment_mode),
         paid_at: String(row.paid_at || new Date(0).toISOString()),
+        worker_name_snapshot: String(row.worker_name_snapshot || 'Worker'),
+        advance_balance_before: toBaseNumber(row.advance_balance_before),
+        remaining_advance_balance: toBaseNumber(row.remaining_advance_balance),
+    }))
+
+    const settlementLines: BasePayrollSettlementLine[] = rawSettlementLines.map((row) => ({
+        id: String(row.id),
+        settlement_id: String(row.settlement_id),
+        worker_id: String(row.worker_id),
+        production_date: toDate(row.production_date, today),
+        shift: row.shift === 'day' || row.shift === 'night' ? row.shift : null,
+        machine_id: row.machine_id ? String(row.machine_id) : null,
+        machine_label: String(row.machine_label || 'Unassigned machine'),
+        job_id: row.job_id ? String(row.job_id) : null,
+        costing_label: String(row.costing_label || 'Production job'),
+        meters: toBaseNumber(row.meters),
+        worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
+        gross_pay: toBaseNumber(row.gross_pay),
+        source_kind: row.source_kind === 'machine_allocation' || row.source_kind === 'worker_total'
+            ? row.source_kind
+            : 'legacy_entry',
     }))
 
     const machines: BaseProductionMachine[] = rawMachines.map((row) => ({
@@ -329,6 +370,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
 
     return {
         orgId,
+        factoryName: String(organizationResult.data?.name || 'Weavly'),
         today,
         payrollPeriod,
         costings,
@@ -341,6 +383,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         dailyBatches,
         advances,
         settlements,
+        settlementLines,
         payables: calculateBaseWorkerPayables({ workers, entries, allocations, advances, settlements, periodEnd: today }),
         allocations,
     }
