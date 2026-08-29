@@ -1235,7 +1235,7 @@ function translateStrictBasePlanPattern(source: string, language: LocalLanguage)
 
   const pricingAssumptions = source.match(/^Pricing assumptions\. (\d+) active\. (.+?) target margin\. (.+?) commission\.(.*)$/i)
   if (pricingAssumptions) {
-    const [_, active, margin, commission, suffix] = pricingAssumptions
+    const [, active, margin, commission, suffix] = pricingAssumptions
     return language === "hi"
       ? `कीमत की धारणाएँ। ${active} सक्रिय · ${margin} लक्ष्य margin · ${commission} कमीशन।${suffix}`
       : `કિંમતની ધારણાઓ. ${active} સક્રિય · ${margin} લક્ષ્ય margin · ${commission} કમિશન.${suffix}`

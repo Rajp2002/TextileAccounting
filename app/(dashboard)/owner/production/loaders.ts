@@ -4,11 +4,17 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
     calculateBaseWorkerPayables,
     toBaseNumber,
+    type BaseDailyProductionStatus,
     type BasePayrollSettlement,
     type BaseProductionCosting,
+    type BaseProductionAllocation,
     type BaseProductionEntry,
     type BaseProductionJob,
+    type BaseProductionMachine,
+    type BaseProductionBatch,
     type BaseProductionWorker,
+    type BaseMachineJobContext,
+    type BaseWorkerMachineAssignment,
     type BaseWorkerAdvance,
     type BaseWorkerPayable,
     getBasePayrollPeriod,
@@ -22,9 +28,14 @@ export type BaseProductionInitialData = {
     jobs: BaseProductionJob[]
     entries: BaseProductionEntry[]
     workers: BaseProductionWorker[]
+    machines: BaseProductionMachine[]
+    assignments: BaseWorkerMachineAssignment[]
+    machineJobContexts: BaseMachineJobContext[]
+    dailyBatches: BaseProductionBatch[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     payables: BaseWorkerPayable[]
+    allocations: BaseProductionAllocation[]
 }
 
 type QueryError = { message?: string } | null
@@ -50,21 +61,42 @@ function toPaymentMode(value: unknown): BasePayrollSettlement['payment_mode'] {
     return value === 'bank_transfer' || value === 'upi' || value === 'cheque' ? value : 'cash'
 }
 
+function toShift(value: unknown): 'day' | 'night' {
+    return value === 'night' ? 'night' : 'day'
+}
+
+function toDailyStatus(value: unknown): BaseDailyProductionStatus {
+    return value === 'entered' || value === 'zero' || value === 'absent' ? value : 'blank'
+}
+
 export async function loadBaseProductionInitialData(orgId: string, today: string): Promise<BaseProductionInitialData> {
     const supabase = await createServerClient()
     const payrollPeriod = getBasePayrollPeriod(today)
 
-    const [costingsResult, jobsResult, entriesResult, workersResult, advancesResult, settlementsResult] = await Promise.all([
+    const [
+        costingsResult,
+        jobsResult,
+        entriesResult,
+        workersResult,
+        advancesResult,
+        settlementsResult,
+        machinesResult,
+        assignmentsResult,
+        contextsResult,
+        batchesResult,
+        dailyEntriesResult,
+        dailyAllocationsResult,
+    ] = await Promise.all([
         supabase
             .from('estimator_quotes')
-            .select('id, quality_label, costing_group_id, version_number, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter')
+            .select('id, quality_label, costing_group_id, version_number, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m')
             .eq('org_id', orgId)
             .eq('record_kind', 'costing')
             .eq('is_archived', false)
             .order('updated_at', { ascending: false }),
         supabase
             .from('base_production_jobs')
-            .select('id, costing_id, costing_group_id, costing_version, quality_label, target_meters, start_date, due_date, customer_reference, notes, status, planned_cost_per_meter, planned_price_per_meter, created_at')
+            .select('id, costing_id, costing_group_id, costing_version, quality_label, target_meters, start_date, due_date, customer_reference, notes, status, worker_rate_per_meter, planned_cost_per_meter, planned_price_per_meter, created_at')
             .eq('org_id', orgId)
             .order('updated_at', { ascending: false }),
         supabase
@@ -89,6 +121,40 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .select('id, worker_id, period_start, period_end, gross_pay, advance_deducted, net_payout, payment_mode, paid_at')
             .eq('org_id', orgId)
             .order('period_end', { ascending: false }),
+        supabase
+            .from('base_production_machines')
+            .select('id, name, machine_type, custom_label, is_active')
+            .eq('org_id', orgId)
+            .order('is_active', { ascending: false })
+            .order('name'),
+        supabase
+            .from('base_worker_machine_assignments')
+            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to')
+            .eq('org_id', orgId)
+            .order('active', { ascending: false })
+            .order('effective_from', { ascending: false }),
+        supabase
+            .from('base_machine_job_contexts')
+            .select('id, machine_id, job_id, active, effective_from, effective_to')
+            .eq('org_id', orgId)
+            .order('active', { ascending: false })
+            .order('effective_from', { ascending: false }),
+        supabase
+            .from('base_production_batches')
+            .select('id, production_date, shift, status, client_request_id, created_at, updated_at')
+            .eq('org_id', orgId)
+            .order('production_date', { ascending: false })
+            .order('shift'),
+        supabase
+            .from('base_daily_production_entries')
+            .select('id, batch_id, worker_id, entry_status, meters, worker_rate_snapshot, machine_id, job_id, machine_label, job_label, assignment_snapshot, allocation_mode, notes, updated_at')
+            .eq('org_id', orgId)
+            .order('updated_at', { ascending: false }),
+        supabase
+            .from('base_daily_production_allocations')
+            .select('id, entry_id, worker_id, assignment_id, machine_id, job_id, meters, worker_rate_snapshot, machine_label, job_label, assignment_snapshot, created_at')
+            .eq('org_id', orgId)
+            .order('created_at', { ascending: false }),
     ])
 
     const rawCostings = requireRows(costingsResult, 'costings')
@@ -97,6 +163,12 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const rawWorkers = requireRows(workersResult, 'workers')
     const rawAdvances = requireRows(advancesResult, 'advances')
     const rawSettlements = requireRows(settlementsResult, 'settlements')
+    const rawMachines = requireRows(machinesResult, 'machines')
+    const rawAssignments = requireRows(assignmentsResult, 'assignments')
+    const rawContexts = requireRows(contextsResult, 'machine job contexts')
+    const rawBatches = requireRows(batchesResult, 'daily batches')
+    const rawDailyEntries = requireRows(dailyEntriesResult, 'daily entries')
+    const rawDailyAllocations = requireRows(dailyAllocationsResult, 'daily production allocations')
 
     const costings: BaseProductionCosting[] = rawCostings.map((row) => ({
         id: String(row.id),
@@ -106,6 +178,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         production_cost_per_meter: toBaseNumber(row.production_cost_per_meter),
         landed_cost_per_meter: toBaseNumber(row.landed_cost_per_meter),
         quote_price_per_meter: toBaseNumber(row.quote_price_per_meter),
+        worker_rate_per_meter: toBaseNumber(row.worker_rate_per_m),
     }))
 
     const jobs: BaseProductionJob[] = rawJobs.map((row) => ({
@@ -122,12 +195,13 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         customer_reference: toStringOrNull(row.customer_reference),
         notes: toStringOrNull(row.notes),
         status: toStatus(row.status),
+        worker_rate_per_meter: toBaseNumber(row.worker_rate_per_meter),
         planned_cost_per_meter: toBaseNumber(row.planned_cost_per_meter),
         planned_price_per_meter: toBaseNumber(row.planned_price_per_meter),
         created_at: String(row.created_at || new Date(0).toISOString()),
     }))
 
-    const entries: BaseProductionEntry[] = rawEntries.map((row) => ({
+    const legacyEntries: BaseProductionEntry[] = rawEntries.map((row) => ({
         id: String(row.id),
         job_id: String(row.job_id),
         worker_id: String(row.worker_id),
@@ -167,6 +241,89 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         paid_at: String(row.paid_at || new Date(0).toISOString()),
     }))
 
+    const machines: BaseProductionMachine[] = rawMachines.map((row) => ({
+        id: String(row.id),
+        name: String(row.name || 'Unnamed machine'),
+        machine_type: String(row.machine_type || 'other'),
+        custom_label: toStringOrNull(row.custom_label),
+        is_active: row.is_active !== false,
+    }))
+
+    const assignments: BaseWorkerMachineAssignment[] = rawAssignments.map((row) => ({
+        id: String(row.id),
+        worker_id: String(row.worker_id),
+        machine_id: String(row.machine_id),
+        shift: toShift(row.shift),
+        active: row.active !== false,
+        effective_from: toDate(row.effective_from, today),
+        effective_to: toStringOrNull(row.effective_to),
+    }))
+
+    const machineJobContexts: BaseMachineJobContext[] = rawContexts.map((row) => ({
+        id: String(row.id),
+        machine_id: String(row.machine_id),
+        job_id: String(row.job_id),
+        active: row.active !== false,
+        effective_from: toDate(row.effective_from, today),
+        effective_to: toStringOrNull(row.effective_to),
+    }))
+
+    const dailyBatches: BaseProductionBatch[] = rawBatches.map((row) => ({
+        id: String(row.id),
+        production_date: toDate(row.production_date, today),
+        shift: toShift(row.shift),
+        status: row.status === 'finalized' ? 'finalized' : row.status === 'draft' ? 'draft' : 'saved',
+        client_request_id: String(row.client_request_id),
+        created_at: String(row.created_at || new Date(0).toISOString()),
+        updated_at: String(row.updated_at || row.created_at || new Date(0).toISOString()),
+    }))
+
+    const batchById = new Map(dailyBatches.map((batch) => [batch.id, batch]))
+    const dailyEntries: BaseProductionEntry[] = rawDailyEntries.map((row) => {
+        const batch = batchById.get(String(row.batch_id))
+        const entryStatus = toDailyStatus(row.entry_status)
+
+        return {
+            id: String(row.id),
+            job_id: row.job_id ? String(row.job_id) : '',
+            worker_id: String(row.worker_id),
+            production_date: batch?.production_date ?? today,
+            meters: toBaseNumber(row.meters),
+            worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
+            notes: toStringOrNull(row.notes),
+            created_at: String(row.updated_at || batch?.updated_at || new Date(0).toISOString()),
+            batch_id: String(row.batch_id),
+            shift: batch?.shift ?? 'day',
+            entry_status: entryStatus,
+            allocation_mode: row.allocation_mode === 'machine_breakdown' ? 'machine_breakdown' : 'worker_total',
+            machine_id: row.machine_id ? String(row.machine_id) : null,
+            machine_label: toStringOrNull(row.machine_label),
+            job_label: toStringOrNull(row.job_label),
+            assignment_snapshot: row.assignment_snapshot ?? [],
+        }
+    })
+
+    const allocations: BaseProductionAllocation[] = rawDailyAllocations.map((row) => ({
+        id: String(row.id),
+        entry_id: String(row.entry_id),
+        worker_id: String(row.worker_id),
+        assignment_id: row.assignment_id ? String(row.assignment_id) : null,
+        machine_id: String(row.machine_id),
+        job_id: String(row.job_id),
+        meters: toBaseNumber(row.meters),
+        worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
+        machine_label: String(row.machine_label || 'Machine'),
+        job_label: String(row.job_label || 'Production job'),
+        assignment_snapshot: row.assignment_snapshot ?? {},
+        created_at: String(row.created_at || new Date(0).toISOString()),
+    }))
+
+    const entries = [...legacyEntries, ...dailyEntries].sort((a, b) => {
+        const dateOrder = b.production_date.localeCompare(a.production_date)
+        if (dateOrder !== 0) return dateOrder
+        return b.created_at.localeCompare(a.created_at)
+    })
+
     return {
         orgId,
         today,
@@ -175,8 +332,13 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         jobs,
         entries,
         workers,
+        machines,
+        assignments,
+        machineJobContexts,
+        dailyBatches,
         advances,
         settlements,
-        payables: calculateBaseWorkerPayables({ workers, entries, advances, settlements, periodEnd: today }),
+        payables: calculateBaseWorkerPayables({ workers, entries, allocations, advances, settlements, periodEnd: today }),
+        allocations,
     }
 }

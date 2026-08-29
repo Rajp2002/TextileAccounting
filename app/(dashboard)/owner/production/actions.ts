@@ -53,6 +53,78 @@ const BaseSettlementSchema = z.object({
     paymentMode: z.enum(['cash', 'bank_transfer', 'upi', 'cheque']),
 })
 
+const BaseMachineTypeSchema = z.enum(['jacquard', 'power_loom', 'rapier', 'water_jet', 'air_jet', 'circular', 'other'])
+
+const BaseMachineSchema = z.object({
+    name: z.string().trim().max(120, 'Machine name is too long').optional().or(z.literal('')),
+    machineType: BaseMachineTypeSchema,
+    customLabel: z.string().trim().max(80, 'Custom label is too long').optional().or(z.literal('')),
+    isActive: z.boolean().default(true),
+})
+
+const UpdateMachineSchema = BaseMachineSchema.extend({
+    machineId: UuidSchema,
+    name: z.string().trim().min(1, 'Machine name is required').max(120, 'Machine name is too long'),
+})
+
+const BaseAssignmentSchema = z.object({
+    workerId: UuidSchema,
+    machineId: UuidSchema,
+    shift: z.enum(['day', 'night']),
+    effectiveFrom: DateSchema,
+    replaceExisting: z.boolean().default(false),
+})
+
+const BaseMachineContextSchema = z.object({
+    machineId: UuidSchema,
+    jobId: UuidSchema.nullable(),
+    effectiveFrom: DateSchema,
+})
+
+const BaseDailyProductionRowSchema = z.object({
+    workerId: UuidSchema,
+    meters: z.number().finite().nonnegative().max(100_000, 'Metres are too high').nullable().transform((value) => value === null ? null : Number(value.toFixed(2))),
+    status: z.enum(['blank', 'entered', 'zero', 'absent']),
+    notes: z.string().trim().max(500, 'Notes are too long').optional().or(z.literal('')),
+    allocations: z.array(z.object({
+        machineId: UuidSchema,
+        jobId: UuidSchema,
+        meters: z.number().finite().positive('Allocation metres must be greater than 0').max(100_000, 'Allocation is too high').transform((value) => Number(value.toFixed(2))),
+    })).max(100).default([]),
+}).superRefine((row, context) => {
+    if (row.status === 'blank' && row.meters !== null) {
+        context.addIssue({ code: 'custom', path: ['meters'], message: 'Blank rows cannot contain metres.' })
+    }
+    if (row.status === 'entered' && (!row.meters || row.meters <= 0)) {
+        context.addIssue({ code: 'custom', path: ['meters'], message: 'Enter positive metres for a production row.' })
+    }
+    if ((row.status === 'zero' || row.status === 'absent') && row.meters !== 0) {
+        context.addIssue({ code: 'custom', path: ['meters'], message: 'Zero and absent rows must contain zero metres.' })
+    }
+    if (row.status !== 'entered' && row.allocations.length > 0) {
+        context.addIssue({ code: 'custom', path: ['allocations'], message: 'Only produced rows can contain machine allocations.' })
+    }
+    const allocationKeys = row.allocations.map((allocation) => `${allocation.machineId}:${allocation.jobId}`)
+    if (new Set(allocationKeys).size !== allocationKeys.length) {
+        context.addIssue({ code: 'custom', path: ['allocations'], message: 'A machine and costing can appear only once per worker row.' })
+    }
+})
+
+const BaseDailyProductionSchema = z.object({
+    productionDate: DateSchema,
+    shift: z.enum(['day', 'night']),
+    clientRequestId: UuidSchema,
+    entries: z.array(BaseDailyProductionRowSchema).min(1, 'Add at least one worker row.').max(500),
+}).superRefine((input, context) => {
+    const workerIds = input.entries.map((entry) => entry.workerId)
+    if (new Set(workerIds).size !== workerIds.length) {
+        context.addIssue({ code: 'custom', path: ['entries'], message: 'Each worker can appear only once on a daily sheet.' })
+    }
+    if (!input.entries.some((entry) => entry.status !== 'blank')) {
+        context.addIssue({ code: 'custom', path: ['entries'], message: 'Enter production or mark at least one row zero/absent.' })
+    }
+})
+
 async function requireBaseProductionOwner() {
     const result = await requireWritableOrg(['owner'])
     const tier = await getOrgTier(result.profile.org_id)
@@ -67,6 +139,220 @@ async function requireBaseProductionOwner() {
 function databaseError(error: { message?: string } | null | undefined, fallback: string) {
     if (error?.message) console.error(`[base-production] ${error.message}`)
     return { error: fallback }
+}
+
+export async function createBaseProductionMachine(input: {
+    name?: string
+    machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'
+    customLabel?: string
+}) {
+    const { user, profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(BaseMachineSchema, {
+        ...input,
+        name: input.name ?? '',
+        customLabel: input.customLabel ?? '',
+        isActive: true,
+    })
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data: existingMachines, error: machinesError } = await supabase
+        .from('base_production_machines')
+        .select('name')
+        .eq('org_id', profile.org_id)
+
+    if (machinesError) return databaseError(machinesError, 'Machines could not be checked. Please try again.')
+
+    const names = new Set((existingMachines ?? []).map((machine) => String(machine.name).trim().toLowerCase()))
+    const requestedName = parsed.data.name?.trim() ?? ''
+    let nextAutoNumber = names.size + 1
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        let machineName = requestedName
+        if (!machineName) {
+            do {
+                machineName = `Loom #${nextAutoNumber}`
+                nextAutoNumber += 1
+            } while (names.has(machineName.toLowerCase()))
+        }
+
+        const { data, error } = await supabase
+            .from('base_production_machines')
+            .insert({
+                org_id: profile.org_id,
+                name: machineName,
+                machine_type: parsed.data.machineType,
+                custom_label: parsed.data.customLabel?.trim() || null,
+                is_active: true,
+                created_by: user.id,
+            })
+            .select('id')
+            .maybeSingle()
+
+        if (!error && data) {
+            revalidatePath('/owner/production')
+            return { success: true, machineId: data.id }
+        }
+        if (error?.code !== '23505' || requestedName) {
+            return databaseError(error, 'Machine could not be added. Please try again.')
+        }
+        names.add(machineName.toLowerCase())
+    }
+
+    return { error: 'Machine numbering is busy. Please try again.' }
+}
+
+export async function updateBaseProductionMachine(input: {
+    machineId: string
+    name: string
+    machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'
+    customLabel?: string
+    isActive: boolean
+}) {
+    const { profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(UpdateMachineSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { error } = await supabase
+        .from('base_production_machines')
+        .update({
+            name: parsed.data.name.trim(),
+            machine_type: parsed.data.machineType,
+            custom_label: parsed.data.customLabel?.trim() || null,
+            is_active: parsed.data.isActive,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('org_id', profile.org_id)
+        .eq('id', parsed.data.machineId)
+
+    if (error?.code === '23505') return { error: 'A machine with this name already exists.' }
+    if (error) return databaseError(error, 'Machine could not be updated. Please try again.')
+
+    revalidatePath('/owner/production')
+    return { success: true }
+}
+
+export async function upsertBaseWorkerMachineAssignment(input: {
+    workerId: string
+    machineId: string
+    shift: 'day' | 'night'
+    effectiveFrom: string
+    replaceExisting?: boolean
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(BaseAssignmentSchema, { ...input, replaceExisting: input.replaceExisting ?? false })
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('upsert_base_worker_machine_assignment', {
+        p_worker_id: parsed.data.workerId,
+        p_machine_id: parsed.data.machineId,
+        p_shift: parsed.data.shift,
+        p_effective_from: parsed.data.effectiveFrom,
+        p_replace_existing: parsed.data.replaceExisting,
+    })
+
+    if (error) return databaseError(error, 'Assignment could not be saved. Please try again.')
+    const result = data as { conflict?: boolean; assignment_id?: string; current_worker_name?: string; message?: string; replaced_worker_name?: string } | null
+    if (result?.conflict) {
+        return {
+            conflict: true,
+            currentWorkerName: result.current_worker_name ?? 'Another worker',
+            message: result.message ?? 'This machine already has a primary worker for this shift.',
+        }
+    }
+
+    revalidatePath('/owner/production')
+    return {
+        success: true,
+        assignmentId: result?.assignment_id ?? null,
+        replaced: Boolean((data as { replaced?: boolean } | null)?.replaced),
+        replacedWorkerName: result?.replaced_worker_name ?? null,
+    }
+}
+
+export async function removeBaseWorkerMachineAssignment(input: { assignmentId: string }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(z.object({ assignmentId: UuidSchema }), input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('delete_base_worker_machine_assignment', {
+        p_assignment_id: parsed.data.assignmentId,
+    })
+
+    if (error) return databaseError(error, 'Assignment could not be removed. Please try again.')
+
+    revalidatePath('/owner/production')
+    const result = data as { removed?: boolean; deleted?: boolean } | null
+    return { success: true, removed: Boolean(result?.removed ?? result?.deleted) }
+}
+
+export async function setBaseMachineJobContext(input: {
+    machineId: string
+    jobId: string | null
+    effectiveFrom: string
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(BaseMachineContextSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('set_base_machine_job_context', {
+        p_machine_id: parsed.data.machineId,
+        p_job_id: parsed.data.jobId,
+        p_effective_from: parsed.data.effectiveFrom,
+    })
+
+    if (error) return databaseError(error, 'Machine job context could not be saved. Please try again.')
+
+    revalidatePath('/owner/production')
+    return { success: true, context: data }
+}
+
+export async function saveBaseDailyProductionBatch(input: {
+    productionDate: string
+    shift: 'day' | 'night'
+    clientRequestId: string
+    entries: Array<{
+        workerId: string
+        meters: number | null
+        status: 'blank' | 'entered' | 'zero' | 'absent'
+        notes?: string
+        allocations: Array<{
+            machineId: string
+            jobId: string
+            meters: number
+        }>
+    }>
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(BaseDailyProductionSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('save_base_daily_production', {
+        p_production_date: parsed.data.productionDate,
+        p_shift: parsed.data.shift,
+        p_client_request_id: parsed.data.clientRequestId,
+        p_entries: parsed.data.entries.map((entry) => ({
+            worker_id: entry.workerId,
+            meters: entry.meters,
+            entry_status: entry.status,
+            notes: entry.notes || null,
+            allocations: entry.allocations.map((allocation) => ({
+                machine_id: allocation.machineId,
+                job_id: allocation.jobId,
+                meters: allocation.meters,
+            })),
+        })),
+    })
+
+    if (error) return databaseError(error, 'The daily production sheet could not be saved. Please try again.')
+
+    revalidatePath('/owner/production')
+    return { success: true, summary: data }
 }
 
 export async function createBaseProductionWorker(input: {
@@ -111,7 +397,7 @@ export async function updateBaseProductionWorker(input: {
     ratePerMeter: number
     isActive: boolean
 }) {
-    await requireBaseProductionOwner()
+    const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(UpdateWorkerSchema, input)
     if ('error' in parsed) return parsed
 
@@ -124,6 +410,7 @@ export async function updateBaseProductionWorker(input: {
             is_active: parsed.data.isActive,
             updated_at: new Date().toISOString(),
         })
+        .eq('org_id', profile.org_id)
         .eq('id', parsed.data.workerId)
 
     if (error?.code === '23505') return { error: 'A worker with this name already exists.' }
@@ -153,7 +440,7 @@ export async function createBaseProductionJob(input: {
     const supabase = await createServerClient()
     const { data: costing, error: costingError } = await supabase
         .from('estimator_quotes')
-        .select('id, record_kind, quality_label, costing_group_id, version_number, is_archived, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter')
+        .select('id, record_kind, quality_label, costing_group_id, version_number, is_archived, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m')
         .eq('id', parsed.data.costingId)
         .eq('org_id', profile.org_id)
         .eq('record_kind', 'costing')
@@ -176,6 +463,7 @@ export async function createBaseProductionJob(input: {
             due_date: dueDate,
             customer_reference: parsed.data.customerReference || null,
             notes: parsed.data.notes || null,
+            worker_rate_per_meter: costing.worker_rate_per_m ?? 0,
             planned_cost_per_meter: costing.production_cost_per_meter ?? costing.landed_cost_per_meter ?? 0,
             planned_price_per_meter: costing.quote_price_per_meter ?? 0,
             created_by: user.id,
@@ -191,7 +479,7 @@ export async function updateBaseProductionJobStatus(input: {
     jobId: string
     status: 'planned' | 'active' | 'completed' | 'cancelled'
 }) {
-    await requireBaseProductionOwner()
+    const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(BaseJobStatusSchema, input)
     if ('error' in parsed) return parsed
 
@@ -202,6 +490,7 @@ export async function updateBaseProductionJobStatus(input: {
             status: parsed.data.status,
             updated_at: new Date().toISOString(),
         })
+        .eq('org_id', profile.org_id)
         .eq('id', parsed.data.jobId)
 
     if (error) return databaseError(error, 'Job status could not be updated. Please try again.')

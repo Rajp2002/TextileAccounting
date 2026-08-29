@@ -6,6 +6,45 @@ export const BASE_PAYROLL_DEDUCTION_PERCENT = 50
 
 export type BaseProductionJobStatus = 'planned' | 'active' | 'completed' | 'cancelled'
 export type BasePayrollPaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
+export type BaseProductionShift = 'day' | 'night'
+export type BaseDailyProductionStatus = 'blank' | 'entered' | 'zero' | 'absent'
+
+export type BaseProductionMachine = {
+    id: string
+    name: string
+    machine_type: string
+    custom_label: string | null
+    is_active: boolean
+}
+
+export type BaseWorkerMachineAssignment = {
+    id: string
+    worker_id: string
+    machine_id: string
+    shift: BaseProductionShift
+    active: boolean
+    effective_from: string
+    effective_to: string | null
+}
+
+export type BaseMachineJobContext = {
+    id: string
+    machine_id: string
+    job_id: string
+    effective_from: string
+    effective_to: string | null
+    active: boolean
+}
+
+export type BaseProductionBatch = {
+    id: string
+    production_date: string
+    shift: BaseProductionShift
+    status: 'draft' | 'saved' | 'finalized'
+    client_request_id: string
+    created_at: string
+    updated_at: string
+}
 
 export type BaseProductionWorker = {
     id: string
@@ -22,6 +61,7 @@ export type BaseProductionCosting = {
     production_cost_per_meter: number
     landed_cost_per_meter: number
     quote_price_per_meter: number
+    worker_rate_per_meter: number
 }
 
 export type BaseProductionJob = {
@@ -36,6 +76,7 @@ export type BaseProductionJob = {
     customer_reference: string | null
     notes: string | null
     status: BaseProductionJobStatus
+    worker_rate_per_meter: number
     planned_cost_per_meter: number
     planned_price_per_meter: number
     created_at: string
@@ -50,6 +91,43 @@ export type BaseProductionEntry = {
     worker_rate_snapshot: number
     notes: string | null
     created_at: string
+    batch_id?: string | null
+    shift?: BaseProductionShift
+    entry_status?: BaseDailyProductionStatus
+    allocation_mode?: 'worker_total' | 'machine_breakdown'
+    machine_id?: string | null
+    machine_label?: string | null
+    job_label?: string | null
+    assignment_snapshot?: unknown
+}
+
+export type BaseProductionAllocation = {
+    id: string
+    entry_id: string
+    worker_id: string
+    assignment_id: string | null
+    machine_id: string
+    job_id: string
+    meters: number
+    worker_rate_snapshot: number
+    machine_label: string
+    job_label: string
+    assignment_snapshot: unknown
+    created_at: string
+}
+
+export type BaseDailyProductionRow = {
+    worker_id: string
+    meters: number | null
+    status: BaseDailyProductionStatus
+}
+
+export type BaseDailyProductionSummary = {
+    total_meters: number
+    entered_count: number
+    zero_count: number
+    absent_count: number
+    outstanding_count: number
 }
 
 export type BaseWorkerAdvance = {
@@ -140,10 +218,16 @@ export function getBasePayrollPeriod(periodEnd: string): { start: string; end: s
 export function calculateBaseJobSummary(
     job: Pick<BaseProductionJob, 'id' | 'target_meters' | 'planned_cost_per_meter' | 'planned_price_per_meter'>,
     entries: Pick<BaseProductionEntry, 'job_id' | 'meters'>[],
+    allocations: Pick<BaseProductionAllocation, 'job_id' | 'meters'>[] = [],
 ): BaseJobSummary {
     const produced = entries
         .filter((entry) => entry.job_id === job.id)
         .reduce((total, entry) => total.plus(toDecimal(entry.meters)), new Decimal(0))
+        .plus(
+            allocations
+                .filter((allocation) => allocation.job_id === job.id)
+                .reduce((total, allocation) => total.plus(toDecimal(allocation.meters)), new Decimal(0)),
+        )
     const target = Decimal.max(0, toDecimal(job.target_meters))
     const remaining = Decimal.max(0, target.minus(produced))
     const progress = target.gt(0)
@@ -156,6 +240,49 @@ export function calculateBaseJobSummary(
         progress_percent: toRoundedNumber(progress),
         planned_cost_total: toRoundedNumber(target.times(toDecimal(job.planned_cost_per_meter))),
         planned_value_total: toRoundedNumber(target.times(toDecimal(job.planned_price_per_meter))),
+    }
+}
+
+function calculateBaseEntryGrossDecimal(
+    entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id'>,
+    allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot'>[],
+) {
+    if (entry.allocation_mode === 'machine_breakdown') {
+        return allocations
+            .filter((allocation) => allocation.entry_id === entry.id)
+            .reduce(
+                (total, allocation) => total.plus(toDecimal(allocation.meters).times(toDecimal(allocation.worker_rate_snapshot))),
+                new Decimal(0),
+            )
+    }
+
+    return toDecimal(entry.meters).times(toDecimal(entry.worker_rate_snapshot))
+}
+
+export function calculateBaseEntryGrossPay(
+    entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id'>,
+    allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot'>[] = [],
+) {
+    return toRoundedNumber(calculateBaseEntryGrossDecimal(entry, allocations))
+}
+
+export function calculateBaseDailyProductionSummary(
+    rows: BaseDailyProductionRow[],
+): BaseDailyProductionSummary {
+    const total = rows.reduce(
+        (sum, row) => {
+            const meters = toDecimal(row.meters)
+            return sum.plus(row.status === 'entered' && meters.gt(0) ? meters : 0)
+        },
+        new Decimal(0),
+    )
+
+    return {
+        total_meters: toRoundedNumber(total),
+        entered_count: rows.filter((row) => row.status === 'entered').length,
+        zero_count: rows.filter((row) => row.status === 'zero').length,
+        absent_count: rows.filter((row) => row.status === 'absent').length,
+        outstanding_count: rows.filter((row) => row.status === 'blank').length,
     }
 }
 
@@ -179,16 +306,25 @@ function getWorkerPeriodStart(
 export function calculateBaseWorkerPayables({
     workers,
     entries,
+    allocations = [],
     advances,
     settlements,
     periodEnd,
 }: {
     workers: BaseProductionWorker[]
     entries: BaseProductionEntry[]
+    allocations?: BaseProductionAllocation[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     periodEnd: string
 }): BaseWorkerPayable[] {
+    const allocationsByEntry = new Map<string, BaseProductionAllocation[]>()
+    for (const allocation of allocations) {
+        const current = allocationsByEntry.get(allocation.entry_id) ?? []
+        current.push(allocation)
+        allocationsByEntry.set(allocation.entry_id, current)
+    }
+
     return workers.map((worker) => {
         const periodStart = getWorkerPeriodStart(worker.id, settlements, periodEnd)
         const periodEntries = entries.filter((entry) => (
@@ -197,7 +333,11 @@ export function calculateBaseWorkerPayables({
             && entry.production_date <= periodEnd
         ))
         const gross = periodEntries.reduce(
-            (total, entry) => total.plus(toDecimal(entry.meters).times(toDecimal(entry.worker_rate_snapshot ?? worker.rate_per_meter))),
+            (total, entry) => total.plus(
+                entry.allocation_mode === 'machine_breakdown'
+                    ? calculateBaseEntryGrossDecimal(entry, allocationsByEntry.get(entry.id) ?? [])
+                    : toDecimal(entry.meters).times(toDecimal(entry.worker_rate_snapshot ?? worker.rate_per_meter)),
+            ),
             new Decimal(0),
         )
         const pendingAdvance = advances

@@ -3,9 +3,12 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+    calculateBaseDailyProductionSummary,
+    calculateBaseEntryGrossPay,
     calculateBaseJobSummary,
     calculateBaseWorkerPayables,
     getBasePayrollPeriod,
+    type BaseProductionAllocation,
     type BaseProductionEntry,
     type BaseProductionWorker,
 } from '../lib/base-production-core'
@@ -35,6 +38,21 @@ function entry(overrides: Partial<BaseProductionEntry> = {}): BaseProductionEntr
 }
 
 describe('Base Production Core calculations', () => {
+    it('totals a daily worker sheet once and keeps blank, zero, and absent distinct', () => {
+        expect(calculateBaseDailyProductionSummary([
+            { worker_id: 'worker-1', meters: 160, status: 'entered' },
+            { worker_id: 'worker-2', meters: null, status: 'blank' },
+            { worker_id: 'worker-3', meters: 0, status: 'zero' },
+            { worker_id: 'worker-4', meters: 0, status: 'absent' },
+        ])).toEqual({
+            total_meters: 160,
+            entered_count: 1,
+            zero_count: 1,
+            absent_count: 1,
+            outstanding_count: 1,
+        })
+    })
+
     it('keeps job progress bounded and never returns negative remaining metres', () => {
         const summary = calculateBaseJobSummary(
             {
@@ -77,6 +95,123 @@ describe('Base Production Core calculations', () => {
         expect(result.remaining_debt).toBe(200)
     })
 
+    it('calculates machine-specific costing rates once in the worker payable', () => {
+        const dailyEntry = entry({
+            id: 'daily-1',
+            job_id: '',
+            meters: 320,
+            worker_rate_snapshot: 2.75,
+            allocation_mode: 'machine_breakdown',
+        })
+        const allocations: BaseProductionAllocation[] = [
+            {
+                id: 'allocation-1',
+                entry_id: 'daily-1',
+                worker_id: 'worker-1',
+                assignment_id: 'assignment-1',
+                machine_id: 'machine-1',
+                job_id: 'job-a',
+                meters: 160,
+                worker_rate_snapshot: 2.5,
+                machine_label: 'Rapier #1',
+                job_label: 'Job A',
+                assignment_snapshot: {},
+                created_at: '2026-08-20T10:00:00.000Z',
+            },
+            {
+                id: 'allocation-2',
+                entry_id: 'daily-1',
+                worker_id: 'worker-1',
+                assignment_id: 'assignment-2',
+                machine_id: 'machine-4',
+                job_id: 'job-b',
+                meters: 160,
+                worker_rate_snapshot: 3,
+                machine_label: 'Rapier #4',
+                job_label: 'Job B',
+                assignment_snapshot: {},
+                created_at: '2026-08-20T10:00:00.000Z',
+            },
+        ]
+
+        expect(calculateBaseEntryGrossPay(dailyEntry, allocations)).toBe(880)
+
+        const result = calculateBaseWorkerPayables({
+            workers: [worker],
+            entries: [dailyEntry],
+            allocations,
+            advances: [],
+            settlements: [],
+            periodEnd: '2026-08-31',
+        })[0]
+
+        expect(result.meters).toBe(320)
+        expect(result.gross_pay).toBe(880)
+        expect(result.net_payout).toBe(880)
+
+        const changedWorkerRate = calculateBaseWorkerPayables({
+            workers: [{ ...worker, rate_per_meter: 99 }],
+            entries: [dailyEntry],
+            allocations,
+            advances: [],
+            settlements: [],
+            periodEnd: '2026-08-31',
+        })[0]
+
+        expect(changedWorkerRate.gross_pay).toBe(880)
+    })
+
+    it('counts machine-breakdown allocations once in each costing job summary', () => {
+        const dailyEntry = entry({
+            id: 'daily-2',
+            job_id: '',
+            meters: 320,
+            worker_rate_snapshot: 2.75,
+            allocation_mode: 'machine_breakdown',
+        })
+        const allocations: BaseProductionAllocation[] = [
+            {
+                id: 'allocation-a',
+                entry_id: 'daily-2',
+                worker_id: 'worker-1',
+                assignment_id: 'assignment-a',
+                machine_id: 'machine-a',
+                job_id: 'job-a',
+                meters: 160,
+                worker_rate_snapshot: 2.5,
+                machine_label: 'Rapier #1',
+                job_label: 'Job A',
+                assignment_snapshot: {},
+                created_at: '2026-08-20T10:00:00.000Z',
+            },
+            {
+                id: 'allocation-b',
+                entry_id: 'daily-2',
+                worker_id: 'worker-1',
+                assignment_id: 'assignment-b',
+                machine_id: 'machine-b',
+                job_id: 'job-b',
+                meters: 160,
+                worker_rate_snapshot: 3,
+                machine_label: 'Rapier #4',
+                job_label: 'Job B',
+                assignment_snapshot: {},
+                created_at: '2026-08-20T10:00:00.000Z',
+            },
+        ]
+
+        expect(calculateBaseJobSummary(
+            { id: 'job-a', target_meters: 160, planned_cost_per_meter: 10, planned_price_per_meter: 12 },
+            [dailyEntry],
+            allocations,
+        )).toMatchObject({ produced_meters: 160, remaining_meters: 0, progress_percent: 100 })
+        expect(calculateBaseJobSummary(
+            { id: 'job-b', target_meters: 320, planned_cost_per_meter: 10, planned_price_per_meter: 12 },
+            [dailyEntry],
+            allocations,
+        )).toMatchObject({ produced_meters: 160, remaining_meters: 160, progress_percent: 50 })
+    })
+
     it('starts a new payable period after a prior settlement', () => {
         const result = calculateBaseWorkerPayables({
             workers: [worker],
@@ -114,8 +249,12 @@ describe('Base Production Core boundary contracts', () => {
     it('keeps Base production tables and settlement access separate from Full Suite records', () => {
         const migration = read('supabase/migrations/20260829090000_base_production_core.sql')
         const hardeningMigration = read('supabase/migrations/20260830000000_base_production_core_security_hardening.sql')
+        const operationalMigration = read('supabase/migrations/20260830100000_base_operational_loop.sql')
+        const machineFirstMigration = read('supabase/migrations/20260830110000_base_machine_first_production.sql')
         const actions = read('app/(dashboard)/owner/production/actions.ts')
         const client = read('app/(dashboard)/owner/production/BaseProductionClient.tsx')
+        const dailySheet = read('app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx')
+        const assignments = read('app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx')
         const sidebar = read('components/navigation/owner-sidebar.tsx')
 
         expect(migration).toContain('base_production_core_access')
@@ -136,6 +275,30 @@ describe('Base Production Core boundary contracts', () => {
         expect(hardeningMigration).toContain('private.base_production_core_access')
         expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION public.base_production_core_access(uuid)')
         expect(client).toContain('Fixed salary, statutory deductions, payslips, and WhatsApp remain Full Suite features.')
+        expect(operationalMigration).toContain('base_production_machines')
+        expect(operationalMigration).toContain('base_worker_machine_assignments')
+        expect(operationalMigration).toContain('base_production_batches')
+        expect(operationalMigration).toContain('base_daily_production_entries')
+        expect(operationalMigration).toContain('save_base_daily_production')
+        expect(operationalMigration).toContain('pg_advisory_xact_lock')
+        expect(operationalMigration).toContain('private.base_production_core_access')
+        expect(operationalMigration).toContain('entry_status')
+        expect(operationalMigration).toContain('assignment_snapshot')
+        expect(operationalMigration).toContain('UNION ALL')
+        expect(actions).toContain("supabase.rpc('save_base_daily_production'")
+        expect(actions).toContain("supabase.rpc('upsert_base_worker_machine_assignment'")
+        expect(dailySheet).toContain('Enter metres once per machine')
+        expect(dailySheet).toContain('Save machine production')
+        expect(dailySheet).toContain('Worker payroll roll-up')
+        expect(dailySheet).not.toContain('Select a job')
+        expect(machineFirstMigration).toContain('base_daily_production_allocations')
+        expect(machineFirstMigration).toContain('worker_rate_per_meter')
+        expect(machineFirstMigration).toContain('allocation_mode')
+        expect(machineFirstMigration).toContain('worker_rate_snapshot')
+        expect(machineFirstMigration).toContain('SUM(allocation.meters * allocation.worker_rate_snapshot)')
+        expect(machineFirstMigration).toContain('assert_base_daily_production_allocation_totals')
+        expect(assignments).toContain('onDrop')
+        expect(assignments).toContain('Tap Assign or Change')
         expect(sidebar).toContain("href: \"/owner/production\"")
     })
 })

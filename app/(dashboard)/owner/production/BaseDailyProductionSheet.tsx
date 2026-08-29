@@ -1,0 +1,585 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { AlertTriangle, CheckCircle2, ClipboardList, Loader2, Plus, Save, Users } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { formatINR } from '@/lib/finance'
+import {
+    calculateBaseDailyProductionSummary,
+    type BaseDailyProductionStatus,
+} from '@/lib/base-production-core'
+import type { BaseProductionInitialData } from './loaders'
+import { saveBaseDailyProductionBatch } from './actions'
+
+type DraftRow = {
+    meters: string
+    status: BaseDailyProductionStatus
+    machineMeters: Record<string, string>
+    savedUnallocatedMeters: number | null
+}
+
+type MachineContext = {
+    machineId: string
+    machineLabel: string
+    machineType: string
+    assignmentId: string | null
+    workerId: string | null
+    workerName: string | null
+    jobId: string | null
+    jobLabel: string | null
+    ratePerMeter: number
+    rateSource: 'costing' | 'worker'
+}
+
+function newClientRequestId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+        const random = Math.floor(Math.random() * 16)
+        const value = character === 'x' ? random : (random & 0x3) | 0x8
+        return value.toString(16)
+    })
+}
+
+function formatMeters(value: number) {
+    return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)} m`
+}
+
+function formatDateOnly(value: string) {
+    const [year, month, day] = value.split('-').map(Number)
+    if (![year, month, day].every(Number.isFinite)) return value
+    return new Intl.DateTimeFormat('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Kolkata',
+    }).format(new Date(Date.UTC(year, month - 1, day)))
+}
+
+function getActionError(result: unknown) {
+    if (!result || typeof result !== 'object' || !('error' in result)) return null
+    const error = (result as { error?: unknown }).error
+    return typeof error === 'string' ? error : 'The daily production sheet could not be saved.'
+}
+
+function toDraftStatus(value: unknown): BaseDailyProductionStatus {
+    return value === 'entered' || value === 'zero' || value === 'absent' ? value : 'blank'
+}
+
+function contextKey(context: Pick<MachineContext, 'machineId' | 'jobId'>) {
+    return `${context.machineId}:${context.jobId ?? 'unassigned'}`
+}
+
+function parseMeters(value: string | number | null | undefined) {
+    const numeric = typeof value === 'number' ? value : Number(value)
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : 0
+}
+
+function isContextValidForDate(
+    effectiveFrom: string,
+    effectiveTo: string | null,
+    productionDate: string,
+) {
+    return effectiveFrom <= productionDate && (!effectiveTo || effectiveTo >= productionDate)
+}
+
+export default function BaseDailyProductionSheet({
+    initialData,
+    onAddWorker,
+    onAddMachine,
+}: {
+    initialData: BaseProductionInitialData
+    onAddWorker: () => void
+    onAddMachine: () => void
+}) {
+    const router = useRouter()
+    const [productionDate, setProductionDate] = useState(initialData.today)
+    const [shift, setShift] = useState<'day' | 'night'>('day')
+    const [rows, setRows] = useState<Record<string, DraftRow>>({})
+    const [requestId, setRequestId] = useState(newClientRequestId)
+    const [isSaving, setIsSaving] = useState(false)
+
+    const jobById = useMemo(
+        () => new Map(initialData.jobs.map((job) => [job.id, job])),
+        [initialData.jobs],
+    )
+    const workerById = useMemo(
+        () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
+        [initialData.workers],
+    )
+    const currentBatch = useMemo(
+        () => initialData.dailyBatches.find((batch) => batch.production_date === productionDate && batch.shift === shift) ?? null,
+        [initialData.dailyBatches, productionDate, shift],
+    )
+    const currentBatchEntries = useMemo(
+        () => currentBatch ? initialData.entries.filter((entry) => entry.batch_id === currentBatch.id) : [],
+        [currentBatch, initialData.entries],
+    )
+    const assignedWorkerIds = useMemo(
+        () => new Set(initialData.assignments
+            .filter((assignment) => assignment.shift === shift && assignment.active && isContextValidForDate(assignment.effective_from, assignment.effective_to, productionDate))
+            .map((assignment) => assignment.worker_id)),
+        [initialData.assignments, productionDate, shift],
+    )
+    const sheetWorkers = useMemo(() => {
+        const savedWorkerIds = new Set(currentBatchEntries.map((entry) => entry.worker_id))
+        return initialData.workers.filter((worker) => worker.is_active || savedWorkerIds.has(worker.id) || assignedWorkerIds.has(worker.id))
+    }, [assignedWorkerIds, currentBatchEntries, initialData.workers])
+    const isCurrentBatchLocked = currentBatch?.status === 'finalized'
+
+    const allocationsByEntry = useMemo(() => {
+        const map = new Map<string, typeof initialData.allocations>()
+        for (const allocation of initialData.allocations) {
+            const current = map.get(allocation.entry_id) ?? []
+            current.push(allocation)
+            map.set(allocation.entry_id, current)
+        }
+        return map
+    }, [initialData])
+
+    const machineContexts = useMemo(() => {
+        const currentJobContexts = new Map<string, { effectiveFrom: string; jobId: string; jobLabel: string; ratePerMeter: number }>()
+        for (const context of initialData.machineJobContexts) {
+            if (!context.active || !isContextValidForDate(context.effective_from, context.effective_to, productionDate)) continue
+            const job = jobById.get(context.job_id)
+            if (!job || job.status === 'cancelled') continue
+            const existing = currentJobContexts.get(context.machine_id)
+            if (!existing || context.effective_from > existing.effectiveFrom) {
+                currentJobContexts.set(context.machine_id, {
+                    effectiveFrom: context.effective_from,
+                    jobId: job.id,
+                    jobLabel: job.quality_label,
+                    ratePerMeter: job.worker_rate_per_meter > 0 ? job.worker_rate_per_meter : 0,
+                })
+            }
+        }
+
+        const currentAssignments = new Map<string, typeof initialData.assignments[number]>()
+        for (const assignment of initialData.assignments) {
+            if (assignment.shift !== shift || !assignment.active || !isContextValidForDate(assignment.effective_from, assignment.effective_to, productionDate)) continue
+            const existing = currentAssignments.get(assignment.machine_id)
+            if (!existing || assignment.effective_from > existing.effective_from) currentAssignments.set(assignment.machine_id, assignment)
+        }
+
+        const savedMachineIds = new Set(
+            initialData.allocations
+                .filter((allocation) => currentBatchEntries.some((entry) => entry.id === allocation.entry_id))
+                .map((allocation) => allocation.machine_id),
+        )
+
+        return initialData.machines
+            .filter((machine) => machine.is_active || savedMachineIds.has(machine.id))
+            .map((machine): MachineContext => {
+                const assignment = currentAssignments.get(machine.id)
+                const worker = assignment ? workerById.get(assignment.worker_id) ?? null : null
+                const jobContext = currentJobContexts.get(machine.id)
+                const hasCostingRate = Boolean(jobContext?.jobId && jobContext.ratePerMeter > 0)
+
+                return {
+                    machineId: machine.id,
+                    machineLabel: machine.custom_label || machine.name,
+                    machineType: machine.machine_type,
+                    assignmentId: assignment?.id ?? null,
+                    workerId: worker?.id ?? null,
+                    workerName: worker?.name ?? null,
+                    jobId: jobContext?.jobId ?? null,
+                    jobLabel: jobContext?.jobLabel ?? null,
+                    ratePerMeter: hasCostingRate ? jobContext!.ratePerMeter : worker?.rate_per_meter ?? 0,
+                    rateSource: hasCostingRate ? 'costing' : 'worker',
+                }
+            })
+            .sort((a, b) => a.machineLabel.localeCompare(b.machineLabel))
+    }, [currentBatchEntries, initialData, jobById, productionDate, shift, workerById])
+
+    const contextsByWorker = useMemo(() => {
+        const map = new Map<string, MachineContext[]>()
+        for (const context of machineContexts) {
+            if (!context.workerId) continue
+            const current = map.get(context.workerId) ?? []
+            current.push(context)
+            map.set(context.workerId, current)
+        }
+        return map
+    }, [machineContexts])
+
+    useEffect(() => {
+        const existingByWorker = new Map(currentBatchEntries.map((entry) => [entry.worker_id, entry]))
+
+        setRows(Object.fromEntries(sheetWorkers.map((worker) => {
+            const existing = existingByWorker.get(worker.id)
+            const contexts = contextsByWorker.get(worker.id) ?? []
+            const existingAllocations = existing ? allocationsByEntry.get(existing.id) ?? [] : []
+            const machineMeters: Record<string, string> = {}
+
+            for (const allocation of existingAllocations) {
+                machineMeters[`${allocation.machine_id}:${allocation.job_id}`] = String(allocation.meters)
+            }
+
+            const historicalContextMatches = existing?.machine_id && existing.job_id
+                ? contexts.some((context) => context.machineId === existing.machine_id && context.jobId === existing.job_id)
+                : !existing?.machine_id && !existing?.job_id && contexts.length === 1 && Boolean(contexts[0].jobId)
+            const canCarrySingleHistoricalTotal = Boolean(
+                existing
+                && existing.entry_status === 'entered'
+                && existing.meters > 0
+                && existingAllocations.length === 0
+                && contexts.length === 1
+                && contexts[0].jobId
+                && historicalContextMatches,
+            )
+
+            if (canCarrySingleHistoricalTotal) {
+                machineMeters[contextKey(contexts[0])] = String(existing!.meters)
+            }
+
+            const hasUnallocatedHistoricalTotal = Boolean(
+                existing
+                && existing.entry_status === 'entered'
+                && existing.meters > 0
+                && existingAllocations.length === 0
+                && !canCarrySingleHistoricalTotal,
+            )
+
+            return [worker.id, {
+                status: toDraftStatus(existing?.entry_status),
+                meters: contexts.length > 0 ? '' : existing?.entry_status === 'entered' ? String(existing.meters) : '',
+                machineMeters,
+                savedUnallocatedMeters: hasUnallocatedHistoricalTotal ? existing!.meters : null,
+            }]
+        })))
+    }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers])
+
+    function getRow(workerId: string): DraftRow {
+        return rows[workerId] ?? { meters: '', status: 'blank', machineMeters: {}, savedUnallocatedMeters: null }
+    }
+
+    function getRowTotal(workerId: string) {
+        const row = getRow(workerId)
+        const contexts = contextsByWorker.get(workerId) ?? []
+        if (contexts.length === 0) return row.status === 'entered' ? parseMeters(row.meters) : 0
+        return contexts.reduce((total, context) => total + parseMeters(row.machineMeters[contextKey(context)]), 0)
+    }
+
+    function getRowGrossPay(workerId: string) {
+        const row = getRow(workerId)
+        const contexts = contextsByWorker.get(workerId) ?? []
+        if (contexts.length === 0) return getRowTotal(workerId) * (workerById.get(workerId)?.rate_per_meter ?? 0)
+        return contexts.reduce((total, context) => total + parseMeters(row.machineMeters[contextKey(context)]) * context.ratePerMeter, 0)
+    }
+
+    const summary = calculateBaseDailyProductionSummary(sheetWorkers.map((worker) => {
+        const row = getRow(worker.id)
+        return {
+            worker_id: worker.id,
+            status: row.status,
+            meters: row.status === 'entered' ? getRowTotal(worker.id) : row.status === 'zero' || row.status === 'absent' ? 0 : null,
+        }
+    }))
+
+    const invalidEnteredCount = sheetWorkers.filter((worker) => {
+            const row = getRow(worker.id)
+            if (row.status !== 'entered') return false
+            const contexts = contextsByWorker.get(worker.id) ?? []
+            if (contexts.length === 0) return parseMeters(row.meters) <= 0
+            if (getRowTotal(worker.id) <= 0) return true
+            if (row.savedUnallocatedMeters !== null && getRowTotal(worker.id) <= 0) return true
+            return contexts.some((context) => {
+                const enteredMeters = row.machineMeters[contextKey(context)]?.trim()
+                return Boolean(enteredMeters) && !context.jobId
+            })
+        }).length
+
+    function updateRow(workerId: string, update: Partial<DraftRow>) {
+        setRows((current) => {
+            const previous = current[workerId] ?? { meters: '', status: 'blank' as const, machineMeters: {}, savedUnallocatedMeters: null }
+            return { ...current, [workerId]: { ...previous, ...update } }
+        })
+    }
+
+    function handleUnassignedMetersChange(workerId: string, value: string) {
+        const current = getRow(workerId)
+        updateRow(workerId, {
+            meters: value,
+            status: value.trim() ? 'entered' : current.status === 'entered' ? 'blank' : current.status,
+        })
+    }
+
+    function handleMachineMetersChange(context: MachineContext, value: string) {
+        if (!context.workerId) return
+        const current = getRow(context.workerId)
+        const machineMeters = { ...current.machineMeters, [contextKey(context)]: value }
+        const hasAnyMeters = Object.values(machineMeters).some((candidate) => candidate.trim().length > 0)
+        updateRow(context.workerId, {
+            machineMeters,
+            status: hasAnyMeters ? 'entered' : current.status === 'entered' ? 'blank' : current.status,
+        })
+    }
+
+    function handleStatusChange(workerId: string, value: BaseDailyProductionStatus) {
+        const current = getRow(workerId)
+        updateRow(workerId, {
+            status: value,
+            meters: value === 'entered' ? current.meters : '',
+            machineMeters: value === 'entered' ? current.machineMeters : {},
+        })
+    }
+
+    async function handleSave() {
+        if (isSaving) return
+        if (isCurrentBatchLocked) {
+            toast.error('This production sheet is finalized and cannot be changed.')
+            return
+        }
+        if (invalidEnteredCount > 0) {
+            toast.error('Enter positive metres for every produced machine, and assign a costing before saving.')
+            return
+        }
+        if (summary.entered_count + summary.zero_count + summary.absent_count === 0) {
+            toast.error('Enter production or mark at least one worker zero or absent.')
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            const result = await saveBaseDailyProductionBatch({
+                productionDate,
+                shift,
+                clientRequestId: requestId,
+                entries: sheetWorkers.map((worker) => {
+                    const row = getRow(worker.id)
+                    const contexts = contextsByWorker.get(worker.id) ?? []
+                    const totalMeters = getRowTotal(worker.id)
+                    return {
+                        workerId: worker.id,
+                        meters: row.status === 'blank' ? null : row.status === 'entered' ? Number(totalMeters.toFixed(2)) : 0,
+                        status: row.status,
+                        allocations: row.status === 'entered'
+                            ? contexts
+                                .filter((context) => context.jobId && parseMeters(row.machineMeters[contextKey(context)]) > 0)
+                                .map((context) => ({
+                                    machineId: context.machineId,
+                                    jobId: context.jobId!,
+                                    meters: Number(parseMeters(row.machineMeters[contextKey(context)]).toFixed(2)),
+                                }))
+                            : [],
+                    }
+                }),
+            })
+            const error = getActionError(result)
+            if (error) {
+                toast.error(error)
+                return
+            }
+
+            const summaryData = (result as { summary?: { total_meters?: number; idempotent?: boolean } }).summary
+            toast.success(summaryData?.idempotent ? 'This shift was already saved.' : `Shift saved · ${formatMeters(Number(summaryData?.total_meters ?? summary.total_meters))}`)
+            setRequestId(newClientRequestId())
+            router.refresh()
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'The daily production sheet could not be saved.')
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    const assignedMachineContexts = machineContexts.filter((context) => context.workerId)
+    const unassignedMachines = machineContexts.filter((context) => !context.workerId)
+    const unassignedWorkers = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length === 0)
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                <div>
+                    <h2 className="text-lg font-bold text-ink">Daily machine production</h2>
+                    <p className="text-sm text-body">Enter metres once per machine. The assigned worker, costing, and pay rate are filled from the current shift setup.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={onAddWorker}>
+                    <Plus className="h-4 w-4" /> Add worker
+                </Button>
+            </div>
+
+            <Card className="border-saffron/20 bg-saffron-soft/25">
+                <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="base-daily-date">Date</Label>
+                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} onChange={(event) => setProductionDate(event.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="base-daily-shift">Shift</Label>
+                            <Select value={shift} onValueChange={(value) => setShift(value as 'day' | 'night')}>
+                                <SelectTrigger id="base-daily-shift"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="day">Day shift</SelectItem>
+                                    <SelectItem value="night">Night shift</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-sm sm:min-w-[360px]">
+                        <Stat label="Machines" value={`${assignedMachineContexts.length}/${machineContexts.length}`} />
+                        <Stat label="Workers" value={`${summary.entered_count}/${sheetWorkers.length}`} />
+                        <Stat label="Total" value={formatMeters(summary.total_meters)} />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {currentBatch && (
+                <div className="flex items-center gap-2 rounded-lg border border-success/25 bg-success/5 px-3 py-2 text-xs text-body">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <span>{isCurrentBatchLocked ? 'Finalized' : 'Saved'} for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. {isCurrentBatchLocked ? 'Corrections are locked.' : 'You can correct it until worker pay is settled.'}</span>
+                </div>
+            )}
+
+            {sheetWorkers.length === 0 ? (
+                <Card>
+                    <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                        <Users className="h-8 w-8 text-saffron-deep" />
+                        <div>
+                            <p className="font-bold text-ink">Add a worker to record production</p>
+                            <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Worker setup is kept outside onboarding. Add only the piece-rate workers you receive on the daily sheet.</p>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-2"><Button onClick={onAddWorker}><Plus className="h-4 w-4" /> Add worker</Button><Button variant="outline" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>
+                    </CardContent>
+                </Card>
+            ) : (
+                <>
+                    <Card>
+                        <CardHeader className="border-b border-hairline/70">
+                            <CardTitle className="flex items-center gap-2 text-base"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
+                            <CardDescription>Each machine row is the source entry. Its assigned worker, costing, and rate are shown automatically; payroll is rolled up to that worker.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] gap-3 border-b border-hairline bg-surface-soft/50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground md:grid">
+                                <span>Machine</span><span>Assigned worker</span><span>Costing / rate</span><span className="text-right">Metres</span>
+                            </div>
+                            <div className="divide-y divide-hairline">
+                                {assignedMachineContexts.map((context) => {
+                                    const row = getRow(context.workerId!)
+                                    const value = row.machineMeters[contextKey(context)] ?? ''
+                                    return (
+                                        <div key={context.machineId} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] md:items-center">
+                                            <div className="min-w-0"><p className="font-semibold text-ink">{context.machineLabel}</p><p className="text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}</p></div>
+                                            <div className="text-sm text-body"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</p></div>
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'}>{context.jobLabel ?? 'Costing not assigned'}</Badge>{context.jobId && <span className="text-xs font-semibold text-body">{context.rateSource === 'costing' ? 'Costing' : 'Worker fallback'} ₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
+                                                {!context.jobId && <p className="mt-1 text-xs font-medium text-warning">Assign a costing/job before entering metres.</p>}
+                                            </div>
+                                            <Input
+                                                aria-label={`${context.machineLabel} ${context.workerName} metres`}
+                                                type="number"
+                                                min="0.01"
+                                                step="0.01"
+                                                inputMode="decimal"
+                                                placeholder="Metres"
+                                                value={value}
+                                                disabled={row.status === 'zero' || row.status === 'absent' || isCurrentBatchLocked || !context.jobId}
+                                                onChange={(event) => handleMachineMetersChange(context, event.target.value)}
+                                                className="text-right font-semibold"
+                                            />
+                                        </div>
+                                    )
+                                })}
+                                {unassignedMachines.map((context) => (
+                                    <div key={context.machineId} className="flex items-start gap-2 bg-warning/5 px-4 py-4 text-sm">
+                                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                                        <div><p className="font-semibold text-ink">{context.machineLabel} has no worker for this shift</p><p className="text-xs text-body">Assign a worker before entering production so the metres can flow into payroll.</p></div>
+                                    </div>
+                                ))}
+                                {machineContexts.length === 0 && <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-sm text-body"><p>No active machines are available for this shift. Add a machine and assign a worker first.</p><Button variant="outline" size="sm" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="border-b border-hairline/70">
+                            <CardTitle className="text-base">Worker payroll roll-up</CardTitle>
+                            <CardDescription>These totals are calculated from the machine metres above. Set zero or absent only when the worker has no production for this shift.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="divide-y divide-hairline p-0">
+                            {sheetWorkers.map((worker) => {
+                                const row = getRow(worker.id)
+                                const contexts = contextsByWorker.get(worker.id) ?? []
+                                const rowTotal = getRowTotal(worker.id)
+                                const rowGrossPay = getRowGrossPay(worker.id)
+                                return (
+                                    <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
+                                        <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'}` : 'No current machine assignment'} · default ₹{worker.rate_per_meter.toFixed(2)}/m</p></div>
+                                        <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline">{context.machineLabel}</Badge></span>) : <span className="text-warning">Unassigned worker entry</span>}</div>
+                                        <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={isCurrentBatchLocked}>
+                                            <SelectTrigger className="w-full" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="blank">Not entered</SelectItem>
+                                                <SelectItem value="entered">Produced</SelectItem>
+                                                <SelectItem value="zero">Zero output</SelectItem>
+                                                <SelectItem value="absent">Absent / no production</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="text-left md:text-right"><p className="font-bold text-ink">{formatMeters(rowTotal)}</p><p className="text-xs text-body">{formatINR(rowGrossPay)}</p></div>
+                                        {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
+                                    </div>
+                                )
+                            })}
+                            {unassignedWorkers.map((worker) => {
+                                const row = getRow(worker.id)
+                                return (
+                                    <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-warning/5 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
+                                        <div><p className="font-semibold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · default ₹{worker.rate_per_meter.toFixed(2)}/m</p></div>
+                                        <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Production can be recorded at the worker default, but job reporting will remain unallocated.</div>
+                                        <span className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
+                                        <Input
+                                            aria-label={`${worker.name} unassigned metres`}
+                                            type="number"
+                                            min="0.01"
+                                            step="0.01"
+                                            inputMode="decimal"
+                                            placeholder="Metres"
+                                            value={row.meters}
+                                            disabled={row.status === 'zero' || row.status === 'absent' || isCurrentBatchLocked}
+                                            onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
+                                            className="text-right font-semibold"
+                                        />
+                                    </div>
+                                )
+                            })}
+                        </CardContent>
+                    </Card>
+                </>
+            )}
+
+            {sheetWorkers.length > 0 && (
+                <div className="sticky bottom-2 z-10 flex flex-col gap-3 rounded-xl border border-saffron/30 bg-surface/95 p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3 text-sm">
+                        <div className="rounded-lg bg-saffron-soft p-2 text-saffron-deep"><Save className="h-4 w-4" /></div>
+                        <div>
+                            <p className="font-bold text-ink">{formatMeters(summary.total_meters)} across {summary.entered_count} workers</p>
+                            <p className="text-xs text-body">{summary.outstanding_count} not entered · {summary.zero_count} zero · {summary.absent_count} absent</p>
+                        </div>
+                    </div>
+                    <Button onClick={handleSave} disabled={isSaving || isCurrentBatchLocked || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="sm:min-w-[210px]">
+                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {isSaving ? 'Saving machine sheet…' : 'Save machine production'}
+                    </Button>
+                </div>
+            )}
+        </div>
+    )
+}
+
+function toWorkerStatusLabel(status: BaseDailyProductionStatus) {
+    if (status === 'entered') return 'Production entered'
+    if (status === 'zero') return 'Zero output'
+    if (status === 'absent') return 'Absent / no production'
+    return 'Not entered'
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+    return <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-bold text-ink">{value}</p></div>
+}

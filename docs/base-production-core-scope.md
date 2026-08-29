@@ -1,13 +1,15 @@
 # Base Production Core scope
 
 **Decision date:** 29 August 2026
-**Status:** Initial implementation scope
+**Status:** Sprint 7 machine-first implementation applied
 **Primary actor:** Owner
+
+> The next-phase design for worker-to-machine assignment and machine-first daily production entry is documented in the [Base Operational Loop Sprint Plan](base-operational-loop-sprint-plan.md). This document describes the original small Production Core baseline; the Sprint 7 implementation extends it with machine allocation and costing-aware payroll.
 
 Base now gets a small operating loop so the costing has a practical next step:
 
 ```text
-saved costing → production job → owner records metres → piece-rate pay
+    saved costing → production job → owner records machine metres → worker piece-rate pay
 ```
 
 ## Included in Base
@@ -15,13 +17,13 @@ saved costing → production job → owner records metres → piece-rate pay
 - Create a lightweight production job from an active saved costing. The job keeps a snapshot of the costing label, version, planned cost, and planned price.
 - Track a target, start/due dates, a short reference, progress, and a simple planned-cost total.
 - Maintain a small piece-rate worker roster with name, current rate per metre, and active/inactive state.
-- Record production for one worker at a time with production date, metres, and an optional short note.
-- Save the worker-rate snapshot on each entry so later rate changes do not rewrite past earnings.
+- Record production once per assigned machine with the worker and costing populated automatically, plus a worker roll-up and optional short note.
+- Save the costing/machine rate snapshot on each allocation so later rate or assignment changes do not rewrite past earnings.
 - Record worker advances and settle the current piece-rate period using gross metres × saved rate.
 - Apply the existing 50% advance-recovery cap and carry the unpaid balance forward.
 - Mark a settlement as paid with a basic payment mode: cash, bank transfer, UPI, or cheque.
 
-All of these actions are owner-only. Base entries are append-only in the first cut: there is no supervisor login, shift assignment, loom assignment, inventory movement, or correction console.
+All of these actions are owner-only. Base now supports dated shift assignment, machine-first daily correction before settlement/finalization, and machine/costing payroll allocation; there is still no supervisor login, inventory movement, or Full Suite correction console.
 
 ## Kept for Full Suite
 

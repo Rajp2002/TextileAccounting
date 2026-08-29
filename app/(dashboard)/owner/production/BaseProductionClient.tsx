@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -39,27 +39,39 @@ import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
 import {
     calculateBaseJobSummary,
+    calculateBaseEntryGrossPay,
     type BasePayrollPaymentMode,
+    type BaseProductionMachine,
     type BaseProductionJobStatus,
     type BaseProductionWorker,
 } from '@/lib/base-production-core'
 
 import {
     createBaseProductionJob,
+    createBaseProductionMachine,
     createBaseProductionWorker,
     createBaseWorkerAdvance,
-    recordBaseProduction,
     settleBaseWorkerPayroll,
     updateBaseProductionJobStatus,
+    updateBaseProductionMachine,
     updateBaseProductionWorker,
 } from './actions'
+import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
+import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import type { BaseProductionInitialData } from './loaders'
 
-type DialogName = 'worker' | 'job' | 'advance' | null
+type DialogName = 'worker' | 'machine' | 'job' | 'advance' | null
 
 type WorkerDraft = {
     name: string
     ratePerMeter: string
+    isActive: boolean
+}
+
+type MachineDraft = {
+    name: string
+    machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'
+    customLabel: string
     isActive: boolean
 }
 
@@ -72,30 +84,10 @@ type JobDraft = {
     notes: string
 }
 
-type RecordDraft = {
-    jobId: string
-    workerId: string
-    productionDate: string
-    meters: string
-    notes: string
-}
-
 type AdvanceDraft = {
     workerId: string
     amount: string
     description: string
-}
-
-function newClientRequestId() {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID()
-    }
-
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
-        const random = Math.floor(Math.random() * 16)
-        const value = character === 'x' ? random : (random & 0x3) | 0x8
-        return value.toString(16)
-    })
 }
 
 function formatDateOnly(value: string | null | undefined) {
@@ -145,6 +137,10 @@ function emptyWorkerDraft(): WorkerDraft {
     return { name: '', ratePerMeter: '', isActive: true }
 }
 
+function emptyMachineDraft(): MachineDraft {
+    return { name: '', machineType: 'other', customLabel: '', isActive: true }
+}
+
 function emptyJobDraft(today: string): JobDraft {
     return {
         costingId: '',
@@ -162,23 +158,18 @@ function emptyAdvanceDraft(workerId = ''): AdvanceDraft {
 
 export default function BaseProductionClient({ initialData }: { initialData: BaseProductionInitialData }) {
     const router = useRouter()
-    const [activeTab, setActiveTab] = useState('jobs')
+    const [activeTab, setActiveTab] = useState('production')
     const [dialog, setDialog] = useState<DialogName>(null)
     const [pendingAction, setPendingAction] = useState<string | null>(null)
+    const [workerPromptShown, setWorkerPromptShown] = useState(false)
     const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null)
+    const [editingMachineId, setEditingMachineId] = useState<string | null>(null)
     const [settlingWorkerId, setSettlingWorkerId] = useState<string | null>(null)
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
     const [workerDraft, setWorkerDraft] = useState<WorkerDraft>(emptyWorkerDraft)
+    const [machineDraft, setMachineDraft] = useState<MachineDraft>(emptyMachineDraft)
     const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today))
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
-    const [recordDraft, setRecordDraft] = useState<RecordDraft>({
-        jobId: initialData.jobs.find((job) => job.status === 'planned' || job.status === 'active')?.id ?? '',
-        workerId: initialData.workers.find((worker) => worker.is_active)?.id ?? '',
-        productionDate: initialData.today,
-        meters: '',
-        notes: '',
-    })
-    const [recordRequestId, setRecordRequestId] = useState(newClientRequestId)
 
     const workerById = useMemo(
         () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
@@ -189,8 +180,8 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         [initialData.jobs],
     )
     const jobSummaries = useMemo(
-        () => new Map(initialData.jobs.map((job) => [job.id, calculateBaseJobSummary(job, initialData.entries)])),
-        [initialData.entries, initialData.jobs],
+        () => new Map(initialData.jobs.map((job) => [job.id, calculateBaseJobSummary(job, initialData.entries, initialData.allocations)])),
+        [initialData.allocations, initialData.entries, initialData.jobs],
     )
     const activeJobs = initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active')
     const activeWorkers = initialData.workers.filter((worker) => worker.is_active)
@@ -203,6 +194,13 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         .filter((payable) => payable.status === 'unsettled')
         .reduce((total, payable) => total + payable.net_payout, 0)
     const settlingWorker = initialData.payables.find((payable) => payable.worker_id === settlingWorkerId)
+
+    useEffect(() => {
+        if (activeTab === 'production' && initialData.workers.length === 0 && !workerPromptShown) {
+            setWorkerPromptShown(true)
+            setDialog('worker')
+        }
+    }, [activeTab, initialData.workers.length, workerPromptShown])
 
     async function runAction(
         key: string,
@@ -237,6 +235,23 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         setDialog('worker')
     }
 
+    function openNewMachine() {
+        setEditingMachineId(null)
+        setMachineDraft(emptyMachineDraft())
+        setDialog('machine')
+    }
+
+    function openEditMachine(machine: BaseProductionMachine) {
+        setEditingMachineId(machine.id)
+        setMachineDraft({
+            name: machine.name,
+            machineType: machine.machine_type as MachineDraft['machineType'],
+            customLabel: machine.custom_label ?? '',
+            isActive: machine.is_active,
+        })
+        setDialog('machine')
+    }
+
     function openEditWorker(worker: BaseProductionWorker) {
         setEditingWorkerId(worker.id)
         setWorkerDraft({
@@ -257,7 +272,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         setDialog('advance')
     }
 
-    function openRecord(jobId?: string) {
+    function openRecord() {
         if (activeWorkers.length === 0) {
             setEditingWorkerId(null)
             setWorkerDraft(emptyWorkerDraft())
@@ -266,12 +281,6 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
             return
         }
 
-        setRecordDraft((current) => ({
-            ...current,
-            jobId: jobId ?? current.jobId ?? activeJobs[0]?.id ?? '',
-            workerId: current.workerId || activeWorkers[0]?.id || '',
-            productionDate: current.productionDate || initialData.today,
-        }))
         setActiveTab('production')
     }
 
@@ -310,6 +319,36 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         )
     }
 
+    function handleMachineSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        if (editingMachineId) {
+            void runAction(
+                'machine-update',
+                () => updateBaseProductionMachine({
+                    machineId: editingMachineId,
+                    name: machineDraft.name,
+                    machineType: machineDraft.machineType,
+                    customLabel: machineDraft.customLabel,
+                    isActive: machineDraft.isActive,
+                }),
+                'Machine updated.',
+                closeDialog,
+            )
+            return
+        }
+
+        void runAction(
+            'machine-create',
+            () => createBaseProductionMachine({
+                name: machineDraft.name,
+                machineType: machineDraft.machineType,
+                customLabel: machineDraft.customLabel,
+            }),
+            'Machine added.',
+            closeDialog,
+        )
+    }
+
     function handleJobSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         const targetMeters = Number.parseFloat(jobDraft.targetMeters)
@@ -329,32 +368,9 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                 notes: jobDraft.notes,
             }),
             'Production job created.',
-            closeDialog,
-        )
-    }
-
-    function handleRecordSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-        const meters = Number.parseFloat(recordDraft.meters)
-        if (!recordDraft.jobId || !recordDraft.workerId || !Number.isFinite(meters) || meters <= 0) {
-            toast.error('Choose a job, choose a worker, and enter metres greater than 0.')
-            return
-        }
-
-        void runAction(
-            'production-record',
-            () => recordBaseProduction({
-                jobId: recordDraft.jobId,
-                workerId: recordDraft.workerId,
-                productionDate: recordDraft.productionDate,
-                meters,
-                notes: recordDraft.notes,
-                clientRequestId: recordRequestId,
-            }),
-            'Production recorded.',
             () => {
-                setRecordDraft((current) => ({ ...current, meters: '', notes: '' }))
-                setRecordRequestId(newClientRequestId())
+                closeDialog()
+                if (initialData.machines.length === 0) setDialog('machine')
             },
         )
     }
@@ -413,9 +429,9 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                         <Plus className="h-4 w-4" />
                         New production job
                     </Button>
-                    <Button variant="outline" onClick={() => openRecord()}>
+                    <Button variant="outline" onClick={openRecord}>
                         <ClipboardList className="h-4 w-4" />
-                        Record metres
+                        Daily production
                     </Button>
                 </div>
             </div>
@@ -448,9 +464,10 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
             </Card>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid h-auto w-full grid-cols-3">
+                <TabsList className="grid h-auto w-full grid-cols-4">
                     <TabsTrigger value="jobs">Jobs</TabsTrigger>
-                    <TabsTrigger value="production">Record</TabsTrigger>
+                    <TabsTrigger value="production">Daily production</TabsTrigger>
+                    <TabsTrigger value="assignments">Assignments</TabsTrigger>
                     <TabsTrigger value="pay">Worker pay</TabsTrigger>
                 </TabsList>
 
@@ -483,7 +500,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
 
                     <div className="grid gap-4 lg:grid-cols-2">
                         {initialData.jobs.map((job) => {
-                            const summary = jobSummaries.get(job.id) ?? calculateBaseJobSummary(job, initialData.entries)
+                            const summary = jobSummaries.get(job.id) ?? calculateBaseJobSummary(job, initialData.entries, initialData.allocations)
                             const nextStatus = getNextStatus(job.status)
                             const isJobPending = pendingAction === `job-status-${job.id}`
 
@@ -531,8 +548,8 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                                         </div>
 
                                         <div className="flex flex-wrap gap-2">
-                                            <Button size="sm" onClick={() => openRecord(job.id)} disabled={job.status === 'completed' || job.status === 'cancelled'}>
-                                                <ClipboardList className="h-4 w-4" /> Record metres
+                                            <Button size="sm" onClick={openRecord} disabled={job.status === 'completed' || job.status === 'cancelled'}>
+                                                <ClipboardList className="h-4 w-4" /> Daily production
                                             </Button>
                                             {nextStatus && (
                                                 <Button
@@ -554,74 +571,32 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                 </TabsContent>
 
                 <TabsContent value="production" className="space-y-4">
-                    <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Record production</CardTitle>
-                                <CardDescription>Enter the metres produced by one worker. The current worker rate is saved with the entry.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {activeJobs.length === 0 || activeWorkers.length === 0 ? (
-                                    <EmptyState
-                                        compact
-                                        title={activeJobs.length === 0 ? 'Create an active job first' : 'Add an active worker first'}
-                                        description={activeJobs.length === 0 ? 'Production entries need a planned or active job.' : 'Production entries need a piece-rate worker.'}
-                                        action={activeJobs.length === 0
-                                            ? <Button size="sm" onClick={openNewJob} disabled={initialData.costings.length === 0}>Create job</Button>
-                                            : <Button size="sm" onClick={openNewWorker}><Plus className="h-4 w-4" /> Add worker</Button>}
-                                    />
-                                ) : (
-                                    <form className="space-y-4" onSubmit={handleRecordSubmit}>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="base-record-job">Production job</Label>
-                                            <Select value={recordDraft.jobId} onValueChange={(value) => setRecordDraft((current) => ({ ...current, jobId: value }))}>
-                                                <SelectTrigger id="base-record-job" className="w-full"><SelectValue placeholder="Select a job" /></SelectTrigger>
-                                                <SelectContent>
-                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label} · {formatMeters(job.target_meters)}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="base-record-worker">Worker</Label>
-                                            <Select value={recordDraft.workerId} onValueChange={(value) => setRecordDraft((current) => ({ ...current, workerId: value }))}>
-                                                <SelectTrigger id="base-record-worker" className="w-full"><SelectValue placeholder="Select a worker" /></SelectTrigger>
-                                                <SelectContent>
-                                                    {activeWorkers.map((worker) => <SelectItem key={worker.id} value={worker.id}>{worker.name} · {formatINR(worker.rate_per_meter)}/m</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="space-y-2"><Label htmlFor="base-record-date">Production date</Label><Input id="base-record-date" type="date" max={initialData.today} value={recordDraft.productionDate} onChange={(event) => setRecordDraft((current) => ({ ...current, productionDate: event.target.value }))} /></div>
-                                            <div className="space-y-2"><Label htmlFor="base-record-meters">Metres produced</Label><Input id="base-record-meters" type="number" min="0.01" step="0.01" inputMode="decimal" placeholder="0.00" value={recordDraft.meters} onChange={(event) => setRecordDraft((current) => ({ ...current, meters: event.target.value }))} /></div>
-                                        </div>
-                                        <div className="space-y-2"><Label htmlFor="base-record-notes">Notes <span className="font-normal text-muted-foreground">(optional)</span></Label><Textarea id="base-record-notes" rows={2} placeholder="Any short production note" value={recordDraft.notes} onChange={(event) => setRecordDraft((current) => ({ ...current, notes: event.target.value }))} /></div>
-                                        <Button type="submit" disabled={pendingAction === 'production-record'}>{pendingAction === 'production-record' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />} Save production</Button>
-                                    </form>
-                                )}
-                            </CardContent>
-                        </Card>
+                    <BaseDailyProductionSheet initialData={initialData} onAddWorker={openNewWorker} onAddMachine={openNewMachine} />
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base"><Clock3 className="h-4 w-4 text-saffron-deep" /> Recent production</CardTitle>
-                                <CardDescription>Latest owner-entered production records across Base jobs.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {initialData.entries.length === 0 ? (
-                                    <EmptyState compact title="No production recorded" description="Your saved entries will appear here." />
-                                ) : (
-                                    <div className="divide-y divide-hairline rounded-lg border border-hairline">
-                                        {initialData.entries.slice(0, 12).map((entry) => (
-                                            <div key={entry.id} className="flex flex-col gap-1 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                                                <div className="min-w-0"><p className="truncate font-semibold text-ink">{workerById.get(entry.worker_id)?.name ?? 'Worker'} · {jobById.get(entry.job_id)?.quality_label ?? 'Job'}</p><p className="text-xs text-muted-foreground">{formatDateOnly(entry.production_date)}</p></div>
-                                                <div className="shrink-0 font-bold text-ink">{formatMeters(entry.meters)} <span className="text-xs font-normal text-muted-foreground">· {formatINR(entry.meters * entry.worker_rate_snapshot)}</span></div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-base"><Clock3 className="h-4 w-4 text-saffron-deep" /> Recent production</CardTitle>
+                            <CardDescription>Latest saved machine production. Worker totals and pay are rolled up from each machine’s costing rate.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {initialData.entries.filter((entry) => entry.meters > 0 || entry.entry_status === 'zero' || entry.entry_status === 'absent').length === 0 ? (
+                                <EmptyState compact title="No production recorded" description="Your saved worker totals will appear here." />
+                            ) : (
+                                <div className="divide-y divide-hairline rounded-lg border border-hairline">
+                                    {initialData.entries.filter((entry) => entry.meters > 0 || entry.entry_status === 'zero' || entry.entry_status === 'absent').slice(0, 12).map((entry) => (
+                                        <div key={entry.id} className="flex flex-col gap-1 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{workerById.get(entry.worker_id)?.name ?? 'Worker'} · {entry.job_label ?? jobById.get(entry.job_id)?.quality_label ?? 'Unallocated worker total'}</p><p className="text-xs text-muted-foreground">{formatDateOnly(entry.production_date)}{entry.shift ? ` · ${entry.shift} shift` : ''}{entry.machine_label ? ` · ${entry.machine_label}` : ''}</p></div>
+                                            <div className="shrink-0 font-bold text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="assignments" className="space-y-4">
+                    <BaseAssignmentWorkspace initialData={initialData} onAddWorker={openNewWorker} onAddMachine={openNewMachine} onEditMachine={openEditMachine} />
                 </TabsContent>
 
                 <TabsContent value="pay" className="space-y-4">
@@ -643,7 +618,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                     <Card className="border-hairline bg-surface-soft/45">
                         <CardContent className="flex items-start gap-3 py-4 text-sm">
                             <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" />
-                            <p className="leading-relaxed text-body">Pay is calculated from the rate saved when production was recorded. Advance recovery is capped at 50% of gross pay, and the unpaid balance carries forward. Fixed salary, statutory deductions, payslips, and WhatsApp remain Full Suite features.</p>
+                            <p className="leading-relaxed text-body">Pay is calculated from each machine allocation’s costing rate snapshot. Advance recovery is capped at 50% of gross pay, and the unpaid balance carries forward. Fixed salary, statutory deductions, payslips, and WhatsApp remain Full Suite features.</p>
                         </CardContent>
                     </Card>
 
@@ -658,7 +633,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                                     <Card key={payable.worker_id} className={!worker?.is_active ? 'opacity-75' : undefined}>
                                         <CardHeader className="border-b border-hairline/70">
                                             <div className="flex items-start justify-between gap-3">
-                                                <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `₹${worker.rate_per_meter.toFixed(2)}/m current rate` : 'Inactive worker'}</CardDescription></div>
+                                                <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `₹${worker.rate_per_meter.toFixed(2)}/m default rate · machine rates applied where configured` : 'Inactive worker'}</CardDescription></div>
                                                 <div className="flex items-center gap-2"><Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Edit ${payable.worker_name}`} onClick={() => worker && openEditWorker(worker)}><Edit3 className="h-3.5 w-3.5" /></Button></div>
                                             </div>
                                         </CardHeader>
@@ -686,6 +661,19 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                     )}
                 </TabsContent>
             </Tabs>
+
+            <Dialog open={dialog === 'machine'} onOpenChange={(open) => !open && closeDialog()}>
+                <DialogContent>
+                    <DialogHeader><DialogTitle>{editingMachineId ? 'Edit machine' : 'Add machine'}</DialogTitle><DialogDescription>Add only the context needed for Base production. The machine is independent of Full Suite loom setup.</DialogDescription></DialogHeader>
+                    <form className="space-y-4" onSubmit={handleMachineSubmit}>
+                        <div className="space-y-2"><Label htmlFor="base-machine-name">Machine name {!editingMachineId && <span className="font-normal text-muted-foreground">(optional)</span>}</Label><Input id="base-machine-name" autoFocus value={machineDraft.name} onChange={(event) => setMachineDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Leave blank for Loom #1" required={Boolean(editingMachineId)} /></div>
+                        <div className="space-y-2"><Label htmlFor="base-machine-type">Machine type</Label><Select value={machineDraft.machineType} onValueChange={(value) => setMachineDraft((current) => ({ ...current, machineType: value as MachineDraft['machineType'] }))}><SelectTrigger id="base-machine-type" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jacquard">Jacquard</SelectItem><SelectItem value="power_loom">Power loom</SelectItem><SelectItem value="rapier">Rapier</SelectItem><SelectItem value="water_jet">Water jet</SelectItem><SelectItem value="air_jet">Air jet</SelectItem><SelectItem value="circular">Circular</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>
+                        <div className="space-y-2"><Label htmlFor="base-machine-label">Custom label <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-machine-label" value={machineDraft.customLabel} onChange={(event) => setMachineDraft((current) => ({ ...current, customLabel: event.target.value }))} placeholder="e.g. Rapier #1" /></div>
+                        {editingMachineId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={machineDraft.isActive} onChange={(event) => setMachineDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Available for new assignments and daily context</label>}
+                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === (editingMachineId ? 'machine-update' : 'machine-create')}>{pendingAction === (editingMachineId ? 'machine-update' : 'machine-create') ? <Loader2 className="h-4 w-4 animate-spin" /> : editingMachineId ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {editingMachineId ? 'Save changes' : 'Add machine'}</Button></DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={dialog === 'worker'} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent>
