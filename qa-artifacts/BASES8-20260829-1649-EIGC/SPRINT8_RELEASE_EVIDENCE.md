@@ -1,18 +1,21 @@
 # Sprint 8 release evidence
 
 - Run ID: `BASES8-20260829-1649-EIGC`
-- Captured: 29 August 2026, 17:12 IST
+- Captured: 29 August 2026, 17:56 IST
 - Scope: Base operational loop — costing, production job, dated machine/worker setup, machine-first daily production, and piece-rate payroll.
 - Canonical production URL: `https://textile-accounting.vercel.app`
 - Linked Supabase project: `vzhwahudircrpgtitwzd`
-- Local repository HEAD and `origin/main`: `86a75c7c312c54ac744d8d4cb7f80d6cedbc6414`
-- Deployment status: pending. The Base implementation and migration files remain uncommitted in the local worktree, so the production deployment is not evidence for this run.
+- Local repository HEAD and `origin/main`: `879d1c5bc5a221b1dfab7c9eb90008dee2c5d3da`
+- Implementation commits: `d7889ce941489c39437dc33e00eb78070b2b9a39` (machine-first loop), `f5a900128a251303be5452b0d88a448efbc1de16` (settled-sheet UI lock), and `879d1c5bc5a221b1dfab7c9eb90008dee2c5d3da` (forward settlement-lock trigger).
+- Production deployment: `READY`, deployment `dpl_FmAyWWunHdQGqa19eJNJWfoYPP82`, URL `https://textile-accounting-m702iwhoj-rajpatel86420-9825s-projects.vercel.app`, aliased to `https://textile-accounting.vercel.app`.
+- Vercel deployment metadata identifies commit `879d1c5bc5a221b1dfab7c9eb90008dee2c5d3da` on `main`.
+- `vercel logs dpl_FmAyWWunHdQGqa19eJNJWfoYPP82 --level error --since 1h --no-follow` returned no error records during verification.
 
 ## Current decision
 
-**Conditional Go for local implementation verification; production pilot gate remains blocked.**
+**Conditional Go for the Base Sprint 8 pilot slice; broader pre-pilot guide remains not Go.**
 
-The local implementation is ready for release review. The authenticated production golden journey, responsive assignment proof, live persistence/reconciliation, and release attribution must be rerun after the intended commit is deployed. No production runtime result below is used as proof of the local changes.
+The machine-first Base loop is committed, migrated, deployed, and verified through an authenticated owner QA journey. The remaining broader gate is unchanged: full-audit toolchain advisories, backup/restore, rollback, and unrelated Full Suite scenarios still require separate evidence.
 
 ## Automated hardening
 
@@ -33,8 +36,8 @@ The machine-first regression coverage now proves both sides of the key invariant
 
 ## Linked production database
 
-- `supabase_migrations.schema_migrations` ends at `20260830110000 / base_machine_first_production`.
-- `npx supabase db push --linked --dry-run --yes` returned `Remote database is up to date.`
+- `supabase_migrations.schema_migrations` ends at `20260830120000 / base_settlement_finalizes_batches`.
+- `npx supabase db push --linked --dry-run --yes` returned `Remote database is up to date.` after the migration was applied.
 - All ten Base tables are RLS-enabled and have policies: workers, jobs, machines, assignments, job contexts, batches, daily entries, daily allocations, advances, and settlements.
 - `base_daily_production_allocations` has one authenticated SELECT policy and no direct INSERT/UPDATE/DELETE table grant.
 - Direct RPC execution is limited to the intended authenticated paths: assignment upsert/delete, machine job context, daily batch save, and payroll settlement. Internal allocation validators have no public/anon/authenticated execute grant.
@@ -42,17 +45,21 @@ The machine-first regression coverage now proves both sides of the key invariant
 - Same-organization foreign keys, the allocation uniqueness key `(entry_id, machine_id, job_id)`, positive-meter checks, and allocation-mode checks are present.
 - Supabase advisor output contains no Base RLS-without-policy finding. Existing advisor notices include intentional authenticated SECURITY DEFINER RPC warnings and informational Base foreign-key/unused-index observations; these are documented for follow-up and do not replace the tenant/RLS/grant checks above.
 
-## Browser evidence
+## Authenticated production evidence
 
-- The in-app Browser connected successfully.
-- Logged-out production smoke checks for `/owner/production`, `/owner/inventory`, `/owner/ledger`, `/owner/settings/audit`, and `/owner/system-health` all returned the login screen. A synthetic `/track/BASES8-smoke` request did not expose page content.
-- The local build was started at `http://127.0.0.1:3000` using `.env.local`, but no QA password was entered and no authenticated mutation was performed.
-- The authenticated production walkthrough is not recorded as pass because the current worktree is dirty and the deployment cannot be aligned to this exact implementation until release authorization is provided.
+- The in-app Browser authenticated successfully as the reusable isolated Base QA owner for tenant `Base pilot testing`; no credentials are stored in this artifact.
+- The desktop assignment board connected one worker to both run-prefixed machines, with separate active jobs/costings attached to the machine contexts.
+- The 390×844 viewport exposed the compact tap-to-assign flow, including both machine choices, without drag or horizontal-scroll dependency. The temporary viewport override was reset afterward.
+- The daily machine sheet recorded `100 m` on Rapier A at `₹8.00/m` and `130 m` on Rapier B at `₹8.32/m`. Refresh/reopen retained `230 m` and `₹1,881.60` gross.
+- The pre-settlement correction from `120 m` to `130 m` persisted. The reconciled equation is `100 × ₹8.00 + 130 × ₹8.32 = ₹1,881.60`, with one worker entry and two machine allocations totaling `230 m`.
+- Job progress refreshed to `100/160 m = 62.5%` and `130/160 m = 81.25%`; no allocation double count was observed.
+- Payroll preview showed a `₹1,000` advance, the `₹940.80` 50% recovery cap, and `₹940.80` net pay. The authorized cash settlement completed, the worker displayed `Paid`, `₹940.80` was recovered, and `₹59.20` carried forward.
+- The final canonical deployment reload showed `Finalized for 29 Aug 2026 · Day shift. Corrections are locked.` Both machine inputs, the worker status selector, and the save button were disabled; browser console errors/warnings were `[]`.
+- Read-only production reconciliation found one saved batch, one machine-breakdown worker entry, two allocations, `230 m` at `₹1,881.60`, one settlement at `₹940.80`, and one `₹1,000` advance with `₹940.80` recovered. The QA settlement predates the forward-only finalization trigger, so its stored batch status remains `saved`; the settlement-derived UI lock and settlement-period server guard still make the batch immutable. No broad historical status backfill was run.
 
 ## Open release gates
 
-1. Authorize and complete the normal release path: commit the intended changes, push, merge to `main`, deploy, and verify the deployed commit and migration head.
-2. Run the authenticated Base journey with an isolated QA owner: costing → production job → machine/worker assignment → daily machine sheet → payroll preview/settlement.
-3. Capture refresh/reopen persistence, duplicate-submit/idempotency, date-boundary, correction-lock, desktop connector, and 320–480px tap-assignment evidence.
-4. Reconcile machine metres, worker roll-up, allocation rates, job progress, and persisted payroll rows from the isolated QA tenant.
-5. Resolve or formally accept the full-audit development/toolchain advisories and complete backup/restore and rollback evidence before declaring the broader pre-pilot guide Go.
+1. Resolve or formally accept the full-audit development/toolchain advisories: `11 high` and `1 moderate` remain in development/tooling dependency paths.
+2. Complete disposable backup/restore and application/database rollback evidence.
+3. Run the remaining comprehensive guide scenarios: duplicate/timeout submission, cross-tenant and role-boundary runtime attempts, date-boundary variants, accessibility checks, and Full Suite order/stock/dispatch/commercial journeys.
+4. Verify production source-map/Sentry attribution and required environment-variable failure behavior if the broader pilot gate requires them.

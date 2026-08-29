@@ -24,7 +24,7 @@
       "scenario": "Run `npm run lint`.",
       "expected": "Zero errors and zero warnings.",
       "status": "code_verified",
-      "actual": "npm run lint exited 0 with zero errors and zero warnings after the Sprint 8 i18n cleanup.",
+      "actual": "npm run lint exited 0 with zero errors and zero warnings after the settled-sheet lock fix.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -38,7 +38,7 @@
       "scenario": "Run `npx vitest run`.",
       "expected": "All required tests pass; skipped test is explained.",
       "status": "code_verified",
-      "actual": "Full Vitest run passed: 169 files, 1,043 tests; one existing skipped test.",
+      "actual": "Full Vitest run passed after the settled-sheet lock fix: 169 files, 1,043 tests; one existing skipped test.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -52,7 +52,7 @@
       "scenario": "Run `npm run build`.",
       "expected": "Production build succeeds without runtime/config warnings.",
       "status": "code_verified",
-      "actual": "npm run build passed with Next.js 16.2.12, TypeScript, static generation, and PWA worker generation.",
+      "actual": "Production build passed with Next.js 16.2.12, TypeScript, static generation, and PWA worker generation; the post-fix Vercel production build also reached READY.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -94,7 +94,7 @@
       "scenario": "Compare deployed migrations with repository migrations.",
       "expected": "No pending, failed, or out-of-order migration.",
       "status": "pass",
-      "actual": "Linked production migration head is 20260830110000/base_machine_first_production and supabase db push --linked --dry-run --yes reported Remote database is up to date.",
+      "actual": "Linked production migration head is 20260830120000/base_settlement_finalizes_batches and supabase db push --linked --dry-run --yes reported Remote database is up to date.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -107,8 +107,8 @@
       "section": "8. Technical and Deployment Gate",
       "scenario": "Verify PostgREST schema cache after RPC changes.",
       "expected": "Current RPC signatures are callable from the app.",
-      "status": "code_verified",
-      "actual": "Production function signatures, schema objects, and authenticated RPC grants were verified; authenticated browser callability remains pending deployment-aligned QA.",
+      "status": "pass",
+      "actual": "Production function signatures and grants were verified, and the authenticated deployed owner journey successfully called assignment, daily-save, advance, and settlement paths.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -134,7 +134,7 @@
       "scenario": "Verify production source maps, Sentry, and release version.",
       "expected": "Errors are attributable to the deployed commit without leaking PII.",
       "status": "blocked",
-      "actual": "The local implementation is not deployed; no current-commit production source-map/Sentry attribution proof was collected.",
+      "actual": "The deployed commit is now attributable through Vercel metadata and clean browser console/log checks, but current-commit source-map/Sentry attribution was not collected.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -189,13 +189,13 @@
       "section": "8. Technical and Deployment Gate",
       "scenario": "Record deployed commit, migration head, and test report.",
       "expected": "Pilot build is uniquely identifiable.",
-      "status": "blocked",
-      "actual": "The worktree contains uncommitted Base implementation and migration changes, so the deployed commit cannot yet be uniquely attributed to this run.",
+      "status": "pass",
+      "actual": "Deployed commit 879d1c5bc5a221b1dfab7c9eb90008dee2c5d3da is READY in production; migration head is 20260830120000/base_settlement_finalizes_batches; full tests, TypeScript, lint, and production build passed.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
       "notes": "",
-      "severity": "Blocker",
+      "severity": "",
       "updatedAt": "2026-08-29T11:43:34.139Z"
     },
     {
@@ -647,8 +647,8 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Assign a piece-rate worker to a loom with a decimal per-meter rate.",
       "expected": "Assignment rate persists exactly, is snapshotted on production logs, and drives payroll without changing historical logs.",
-      "status": "code_verified",
-      "actual": "Base assignment RPC and machine-first sheet use dated assignment context and costing worker-rate snapshots; runtime assignment proof is pending deployment-aligned QA.",
+      "status": "pass",
+      "actual": "Authenticated desktop QA assigned the same worker to two machines, showed both current assignments, and the saved machine rows retained worker, costing, and rate snapshots.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -1459,8 +1459,8 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Current date and current shift defaults.",
       "expected": "Correct Asia/Kolkata date and intended shift.",
-      "status": "code_verified",
-      "actual": "Daily sheet defaults and server validation use the Asia/Kolkata factory date and explicit day/night shift.",
+      "status": "pass",
+      "actual": "Deployed QA opened the daily sheet on 2026-08-29 with Day shift selected; the saved row remained 29 Aug 2026 after refresh.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -1547,8 +1547,8 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Valid positive meters.",
       "expected": "One production log with correct worker, work anchor, rate snapshot, date, shift, and submitted time.",
-      "status": "code_verified",
-      "actual": "Machine-first save RPC resolves worker, machine, job, rate, labels, assignment, and snapshots server-side.",
+      "status": "pass",
+      "actual": "Authenticated QA saved one machine-first sheet: Rapier A 100m at ₹8.00/m and Rapier B 130m at ₹8.32/m; the persisted entry and two allocations carried server-resolved context and snapshots.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -1684,7 +1684,7 @@
       "scenario": "Correct period after worker payroll is settled.",
       "expected": "Blocked.",
       "status": "code_verified",
-      "actual": "Save RPC checks settled periods and finalized batches before replacing a daily sheet.",
+      "actual": "After the QA worker was paid, the deployed sheet displayed Finalized/Corrections are locked and disabled both machine inputs and Save; the server RPC retains the settled-period guard. A direct correction submit was not forced against the paid test data.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -1794,7 +1794,7 @@
       "scenario": "Verify order progress, market run, expected stock, analytics, Today, and payroll after submit.",
       "expected": "Every downstream total changes once.",
       "status": "code_verified",
-      "actual": "Machine allocation totals feed job progress and payroll through explicit allocation-aware calculations; runtime downstream refresh proof remains pending.",
+      "actual": "Live QA refreshed both Base job progress cards (100/160m = 62.5% and 130/160m = 81.25%) and worker payroll from the same two allocations; Full Suite stock/market/analytics downstream scenarios remain outside this run.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -1807,8 +1807,8 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Compare visible “shift meters” terminology with stored synthetic readings.",
       "expected": "No user-facing claim of real opening/closing counter proof.",
-      "status": "code_verified",
-      "actual": "Base UI uses shift-total/metres language and does not require a production-order selector for machine rows.",
+      "status": "pass",
+      "actual": "Live machine sheet used shift-total/metres language, showed costing/rate context per machine, and required no repeated worker or production-order selection.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -1822,7 +1822,7 @@
       "scenario": "Mobile usability with 20+ looms.",
       "expected": "Fast selection, readable cards, no accidental cross-row edits, submit reachable.",
       "status": "code_verified",
-      "actual": "The machine sheet and assignment workspace include responsive mobile layouts and no-horizontal-scroll tap assignment affordances; viewport runtime proof remains pending.",
+      "actual": "At the deployed 390×844 viewport, the assignment workspace showed compact tap-to-assign controls with both machine choices and no horizontal-scroll dependency; a 20+ machine stress run remains untested.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -2675,8 +2675,8 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Piece-rate gross across looms/rates.",
       "expected": "Sum of each production log’s meters × rate snapshot.",
-      "status": "code_verified",
-      "actual": "Payroll calculation test covers 160m at 2.50 plus 160m at 3.00 for 880 gross and one 320m worker total.",
+      "status": "pass",
+      "actual": "Live QA reconciled gross pay as 100×₹8.00 + 130×₹8.32 = ₹1,881.60 for one worker and 230m, with two persisted allocations and no double count.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -2847,8 +2847,8 @@
       "section": "21. Payroll, Advances, Attendance, and Worker Money",
       "scenario": "Preview versus settlement.",
       "expected": "Persisted gross, each deduction, adjustment, debt, and net equal preview.",
-      "status": "code_verified",
-      "actual": "Allocation-aware gross, worker total, and net calculations are covered by the Base core regression suite; persisted settlement preview remains pending runtime QA.",
+      "status": "pass",
+      "actual": "Live preview showed ₹1,881.60 gross, ₹940.80 capped advance recovery, and ₹940.80 net; persisted settlement matched those values and the advance retained ₹59.20 debt.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
@@ -3954,7 +3954,7 @@
       "scenario": "Empty/loading/error/offline states.",
       "expected": "Distinct and actionable.",
       "status": "code_verified",
-      "actual": "Machine sheet has distinct empty, unassigned, saved/finalized, validation, and loading states in source.",
+      "actual": "Machine sheet source includes empty, unassigned, saved/finalized, validation, and loading states; live QA also displayed the finalized/locked state after settlement.",
       "evidence": [
         "SPRINT8_RELEASE_EVIDENCE.md"
       ],
