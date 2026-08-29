@@ -570,7 +570,7 @@ function SavedQualityLibraryView({
                                     className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
                                 >
                                     <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
-                                        <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-14 sm:px-6">
+                                        <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
                                             <div className="flex min-w-0 items-center gap-2">
                                                 <DialogTitle className="min-w-0 flex-1 truncate text-xl font-black" title={group.name}>{group.name}</DialogTitle>
                                                 {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
@@ -767,7 +767,15 @@ function SavedQualityLibraryView({
                                                             : 'Saved Costing'
                                                     const costingStatus = getCostingStatus(record)
                                                     return (
-                                                        <article key={record.id} className={`rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none ${selected ? 'premium-selected-row border-info/30 bg-info-soft/60' : 'border-hairline bg-surface hover:bg-surface-soft/70'}`}>
+                                                        <article
+                                                            key={record.id}
+                                                            onClick={event => {
+                                                                const target = event.target as HTMLElement
+                                                                if (target.closest('a, button, input, [data-costing-card-control]')) return
+                                                                onToggleComparison(record.id)
+                                                            }}
+                                                            className={`cursor-pointer rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none ${selected ? 'premium-selected-row border-info/30 bg-info-soft/60' : 'border-hairline bg-surface hover:bg-surface-soft/70'}`}
+                                                        >
                                                             <div className="flex min-w-0 items-start gap-3">
                                                                 <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
                                                                     <input type="checkbox" checked={selected} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" />
@@ -807,7 +815,7 @@ function SavedQualityLibraryView({
                                                                             <dd className="mt-0.5 truncate text-xs text-body">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</dd>
                                                                         </div>
                                                                     </dl>
-                                                                    <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-hairline pt-2">
+                                                                    <div data-costing-card-control className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-hairline pt-2">
                                                                         {!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id} aria-label={`View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}`} className="h-8 px-2 text-xs"><Eye className="h-3.5 w-3.5" /> <span>View breakdown</span></Button>}
                                                                         <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`} className="h-8 w-8">
                                                                             <Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} />
