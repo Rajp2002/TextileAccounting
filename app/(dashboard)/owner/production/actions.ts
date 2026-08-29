@@ -20,7 +20,7 @@ function revalidatePath(path: string) {
 
 const BaseWorkerSchema = z.object({
     name: z.string().trim().min(1, 'Worker name is required').max(120, 'Worker name is too long'),
-    ratePerMeter: z.number().finite().nonnegative('Rate cannot be negative').max(100_000, 'Rate is too high'),
+    shiftAvailability: z.enum(['day', 'night', 'both']),
     isActive: z.boolean().default(true),
 })
 
@@ -249,11 +249,24 @@ export async function upsertBaseWorkerMachineAssignment(input: {
     effectiveFrom: string
     replaceExisting?: boolean
 }) {
-    await requireBaseProductionOwner()
+    const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(BaseAssignmentSchema, { ...input, replaceExisting: input.replaceExisting ?? false })
     if ('error' in parsed) return parsed
 
     const supabase = await createServerClient()
+    const { data: worker, error: workerError } = await supabase
+        .from('base_production_workers')
+        .select('shift_availability, is_active')
+        .eq('org_id', profile.org_id)
+        .eq('id', parsed.data.workerId)
+        .maybeSingle()
+
+    if (workerError) return databaseError(workerError, 'Worker availability could not be checked. Please try again.')
+    if (!worker?.is_active) return { error: 'Only active workers can be assigned.' }
+    if (worker.shift_availability !== 'both' && worker.shift_availability !== parsed.data.shift) {
+        return { error: `This worker is only available for the ${worker.shift_availability} shift. Edit the worker to change availability.` }
+    }
+
     const { data, error } = await supabase.rpc('upsert_base_worker_machine_assignment', {
         p_worker_id: parsed.data.workerId,
         p_machine_id: parsed.data.machineId,
@@ -366,7 +379,7 @@ export async function saveBaseDailyProductionBatch(input: {
 
 export async function createBaseProductionWorker(input: {
     name: string
-    ratePerMeter: number
+    shiftAvailability: 'day' | 'night' | 'both'
 }) {
     const { user, profile } = await requireBaseProductionOwner()
     const parsed = safeParse(BaseWorkerSchema, { ...input, isActive: true })
@@ -388,7 +401,8 @@ export async function createBaseProductionWorker(input: {
         .insert({
             org_id: profile.org_id,
             name: parsed.data.name,
-            rate_per_meter: parsed.data.ratePerMeter,
+            rate_per_meter: 0,
+            shift_availability: parsed.data.shiftAvailability,
             is_active: true,
             created_by: user.id,
         })
@@ -403,7 +417,7 @@ export async function createBaseProductionWorker(input: {
 export async function updateBaseProductionWorker(input: {
     workerId: string
     name: string
-    ratePerMeter: number
+    shiftAvailability: 'day' | 'night' | 'both'
     isActive: boolean
 }) {
     const { profile } = await requireBaseProductionOwner()
@@ -415,7 +429,7 @@ export async function updateBaseProductionWorker(input: {
         .from('base_production_workers')
         .update({
             name: parsed.data.name,
-            rate_per_meter: parsed.data.ratePerMeter,
+            shift_availability: parsed.data.shiftAvailability,
             is_active: parsed.data.isActive,
             updated_at: new Date().toISOString(),
         })

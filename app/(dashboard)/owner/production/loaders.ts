@@ -107,7 +107,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .order('created_at', { ascending: false }),
         supabase
             .from('base_production_workers')
-            .select('id, name, rate_per_meter, is_active')
+            .select('id, name, rate_per_meter, shift_availability, is_active')
             .eq('org_id', orgId)
             .order('is_active', { ascending: false })
             .order('name'),
@@ -216,6 +216,9 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         id: String(row.id),
         name: String(row.name || 'Unnamed worker'),
         rate_per_meter: toBaseNumber(row.rate_per_meter),
+        shift_availability: row.shift_availability === 'day' || row.shift_availability === 'night'
+            ? row.shift_availability
+            : 'both',
         is_active: row.is_active !== false,
     }))
 

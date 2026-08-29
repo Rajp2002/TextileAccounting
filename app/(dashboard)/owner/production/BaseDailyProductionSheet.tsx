@@ -36,7 +36,7 @@ type MachineContext = {
     jobId: string | null
     jobLabel: string | null
     ratePerMeter: number
-    rateSource: 'costing' | 'worker'
+    rateSource: 'costing'
 }
 
 function newClientRequestId() {
@@ -130,8 +130,12 @@ export default function BaseDailyProductionSheet({
     )
     const sheetWorkers = useMemo(() => {
         const savedWorkerIds = new Set(currentBatchEntries.map((entry) => entry.worker_id))
-        return initialData.workers.filter((worker) => worker.is_active || savedWorkerIds.has(worker.id) || assignedWorkerIds.has(worker.id))
-    }, [assignedWorkerIds, currentBatchEntries, initialData.workers])
+        return initialData.workers.filter((worker) => (
+            (worker.is_active && (worker.shift_availability === 'both' || worker.shift_availability === shift))
+            || savedWorkerIds.has(worker.id)
+            || assignedWorkerIds.has(worker.id)
+        ))
+    }, [assignedWorkerIds, currentBatchEntries, initialData.workers, shift])
     const settledWorkerIds = useMemo(
         () => new Set(
             initialData.settlements
@@ -191,8 +195,6 @@ export default function BaseDailyProductionSheet({
                 const assignment = currentAssignments.get(machine.id)
                 const worker = assignment ? workerById.get(assignment.worker_id) ?? null : null
                 const jobContext = currentJobContexts.get(machine.id)
-                const hasCostingRate = Boolean(jobContext?.jobId && jobContext.ratePerMeter > 0)
-
                 return {
                     machineId: machine.id,
                     machineLabel: machine.custom_label || machine.name,
@@ -202,8 +204,8 @@ export default function BaseDailyProductionSheet({
                     workerName: worker?.name ?? null,
                     jobId: jobContext?.jobId ?? null,
                     jobLabel: jobContext?.jobLabel ?? null,
-                    ratePerMeter: hasCostingRate ? jobContext!.ratePerMeter : worker?.rate_per_meter ?? 0,
-                    rateSource: hasCostingRate ? 'costing' : 'worker',
+                    ratePerMeter: jobContext?.ratePerMeter ?? 0,
+                    rateSource: 'costing',
                 }
             })
             .sort((a, b) => a.machineLabel.localeCompare(b.machineLabel))
@@ -281,7 +283,7 @@ export default function BaseDailyProductionSheet({
     function getRowGrossPay(workerId: string) {
         const row = getRow(workerId)
         const contexts = contextsByWorker.get(workerId) ?? []
-        if (contexts.length === 0) return getRowTotal(workerId) * (workerById.get(workerId)?.rate_per_meter ?? 0)
+        if (contexts.length === 0) return 0
         return contexts.reduce((total, context) => total + parseMeters(row.machineMeters[contextKey(context)]) * context.ratePerMeter, 0)
     }
 
@@ -455,7 +457,7 @@ export default function BaseDailyProductionSheet({
                         <Users className="h-8 w-8 text-saffron-deep" />
                         <div>
                             <p className="font-bold text-ink">Add a worker to record production</p>
-                            <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Worker setup is kept outside onboarding. Add only the piece-rate workers you receive on the daily sheet.</p>
+                            <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Add workers in Setup and choose which shift they are available for.</p>
                         </div>
                         <div className="flex flex-wrap justify-center gap-2"><Button onClick={onAddWorker}><Plus className="h-4 w-4" /> Add worker</Button><Button variant="outline" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>
                     </CardContent>
@@ -480,7 +482,7 @@ export default function BaseDailyProductionSheet({
                                             <div className="min-w-0"><p className="font-semibold text-ink">{context.machineLabel}</p><p className="text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}</p></div>
                                             <div className="text-sm text-body"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</p></div>
                                             <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'}>{context.jobLabel ?? 'Costing not assigned'}</Badge>{context.jobId && <span className="text-xs font-semibold text-body">{context.rateSource === 'costing' ? 'Costing' : 'Worker fallback'} ₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
+                                                <div className="flex flex-wrap items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'}>{context.jobLabel ?? 'Costing not assigned'}</Badge>{context.jobId && <span className="text-xs font-semibold text-body">Costing ₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
                                                 {!context.jobId && <p className="mt-1 text-xs font-medium text-warning">Assign a costing/job before entering metres.</p>}
                                             </div>
                                             <Input
@@ -522,7 +524,7 @@ export default function BaseDailyProductionSheet({
                                 const rowGrossPay = getRowGrossPay(worker.id)
                                 return (
                                     <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'}` : 'No current machine assignment'} · default ₹{worker.rate_per_meter.toFixed(2)}/m</p></div>
+                                        <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · costing rates applied` : 'No current machine assignment'}</p></div>
                                         <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline">{context.machineLabel}</Badge></span>) : <span className="text-warning">Unassigned worker entry</span>}</div>
                                         <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={isCurrentBatchLocked}>
                                             <SelectTrigger className="w-full" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
@@ -542,8 +544,8 @@ export default function BaseDailyProductionSheet({
                                 const row = getRow(worker.id)
                                 return (
                                     <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-warning/5 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div><p className="font-semibold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · default ₹{worker.rate_per_meter.toFixed(2)}/m</p></div>
-                                        <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Production can be recorded at the worker default, but job reporting will remain unallocated.</div>
+                                        <div><p className="font-semibold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no costing rate</p></div>
+                                        <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and costing before recording production so pay and job reporting are allocated correctly.</div>
                                         <span className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
                                         <Input
                                             aria-label={`${worker.name} unassigned metres`}

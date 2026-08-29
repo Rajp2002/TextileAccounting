@@ -47,6 +47,7 @@ import {
     type BaseProductionMachine,
     type BaseProductionJobStatus,
     type BaseProductionWorker,
+    type BaseWorkerShiftAvailability,
 } from '@/lib/base-production-core'
 
 import {
@@ -67,7 +68,7 @@ type DialogName = 'worker' | 'machine' | 'job' | 'advance' | null
 
 type WorkerDraft = {
     name: string
-    ratePerMeter: string
+    shiftAvailability: BaseWorkerShiftAvailability
     isActive: boolean
 }
 
@@ -137,7 +138,7 @@ function getActionError(result: unknown) {
 }
 
 function emptyWorkerDraft(): WorkerDraft {
-    return { name: '', ratePerMeter: '', isActive: true }
+    return { name: '', shiftAvailability: 'both', isActive: true }
 }
 
 function emptyMachineDraft(): MachineDraft {
@@ -275,7 +276,7 @@ export default function BaseProductionClient({
         setEditingWorkerId(worker.id)
         setWorkerDraft({
             name: worker.name,
-            ratePerMeter: String(worker.rate_per_meter),
+            shiftAvailability: worker.shift_availability,
             isActive: worker.is_active,
         })
         setDialog('worker')
@@ -297,7 +298,7 @@ export default function BaseProductionClient({
 
     function openRecord() {
         if (activeWorkers.length === 0) {
-            toast.info('Add and assign a worker in Operations before recording production.')
+            toast.info('Add and assign a worker in Setup before recording production.')
             openOperations()
             return
         }
@@ -311,9 +312,8 @@ export default function BaseProductionClient({
 
     function handleWorkerSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        const ratePerMeter = Number.parseFloat(workerDraft.ratePerMeter)
-        if (!workerDraft.name.trim() || !Number.isFinite(ratePerMeter) || ratePerMeter < 0) {
-            toast.error('Enter a worker name and a valid rate per metre.')
+        if (!workerDraft.name.trim()) {
+            toast.error('Enter a worker name.')
             return
         }
 
@@ -323,7 +323,7 @@ export default function BaseProductionClient({
                 () => updateBaseProductionWorker({
                     workerId: editingWorkerId,
                     name: workerDraft.name,
-                    ratePerMeter,
+                    shiftAvailability: workerDraft.shiftAvailability,
                     isActive: workerDraft.isActive,
                 }),
                 'Worker updated.',
@@ -334,7 +334,7 @@ export default function BaseProductionClient({
 
         void runAction(
             'worker-create',
-            () => createBaseProductionWorker({ name: workerDraft.name, ratePerMeter }),
+            () => createBaseProductionWorker({ name: workerDraft.name, shiftAvailability: workerDraft.shiftAvailability }),
             'Worker added.',
             closeDialog,
         )
@@ -440,11 +440,11 @@ export default function BaseProductionClient({
                 <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>
                     <h1 className="mt-1 text-2xl font-black tracking-tight text-ink sm:text-3xl">
-                        {view === 'operations' ? 'Operations' : view === 'payroll' ? 'Payroll' : 'Production'}
+                        {view === 'operations' ? 'Setup' : view === 'payroll' ? 'Payroll' : 'Production'}
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-body">
                         {view === 'operations'
-                            ? 'Set up machines, piece-rate workers, and their current shift assignments.'
+                            ? 'Set up machines, workers, and their current shift assignments.'
                             : view === 'payroll'
                                 ? 'Review piece-rate earnings, worker advances, and settle the current pay period.'
                                 : 'Create production jobs from saved costings and record daily machine metres.'}
@@ -497,7 +497,7 @@ export default function BaseProductionClient({
                         <div>
                             <p className="text-sm font-bold text-ink">Keep the Base workflow small</p>
                             <p className="mt-1 text-xs leading-relaxed text-body">
-                                Production now stays focused on jobs and daily metre entry. Machine and worker setup lives in Operations, while earnings and settlements live in Payroll.
+                                Production now stays focused on jobs and daily metre entry. Machine and worker setup lives in Setup, while earnings and settlements live in Payroll.
                             </p>
                         </div>
                     </div>
@@ -638,7 +638,7 @@ export default function BaseProductionClient({
                 </TabsContent>}
 
                 {view === 'operations' && <TabsContent value="assignments" className="space-y-4">
-                    <BaseAssignmentWorkspace initialData={initialData} onAddWorker={openNewWorker} onAddMachine={openNewMachine} onEditWorker={openEditWorker} onEditMachine={openEditMachine} />
+                    <BaseAssignmentWorkspace initialData={initialData} onEditWorker={openEditWorker} onEditMachine={openEditMachine} />
                 </TabsContent>}
 
                 {view === 'payroll' && <TabsContent value="pay" className="space-y-4">
@@ -665,7 +665,7 @@ export default function BaseProductionClient({
                     </Card>
 
                     {initialData.workers.length === 0 ? (
-                        <EmptyState title="No piece-rate workers yet" description="Add workers in Operations before recording metres or settling payroll." action={<Button size="sm" onClick={openOperations}><Settings2 className="h-4 w-4" /> Open Operations</Button>} />
+                        <EmptyState title="No workers yet" description="Add workers in Setup before recording metres or settling payroll." action={<Button size="sm" onClick={openOperations}><Settings2 className="h-4 w-4" /> Open Setup</Button>} />
                     ) : (
                         <div className="grid gap-4 lg:grid-cols-2">
                             {initialData.payables.map((payable) => {
@@ -675,8 +675,8 @@ export default function BaseProductionClient({
                                     <Card key={payable.worker_id} className={!worker?.is_active ? 'opacity-75' : undefined}>
                                         <CardHeader className="border-b border-hairline/70">
                                             <div className="flex items-start justify-between gap-3">
-                                                <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `₹${worker.rate_per_meter.toFixed(2)}/m default rate · machine rates applied where configured` : 'Inactive worker'}</CardDescription></div>
-                                                <div className="flex items-center gap-2"><Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Operations`} onClick={openOperations}><Settings2 className="h-3.5 w-3.5" /></Button></div>
+                                                <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `${worker.shift_availability === 'both' ? 'Day & night' : worker.shift_availability === 'day' ? 'Day' : 'Night'} shift · costing rate applied per machine` : 'Inactive worker'}</CardDescription></div>
+                                                <div className="flex items-center gap-2"><Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Setup`} onClick={openOperations}><Settings2 className="h-3.5 w-3.5" /></Button></div>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="space-y-4 pt-0">
@@ -719,10 +719,10 @@ export default function BaseProductionClient({
 
             <Dialog open={dialog === 'worker'} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : 'Add piece-rate worker'}</DialogTitle><DialogDescription>Only the name and metre rate are needed for the Base workflow. Past production keeps its saved rate.</DialogDescription></DialogHeader>
+                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : 'Add worker'}</DialogTitle><DialogDescription>Pay rates come from the costing assigned to each machine. Choose when this worker is available.</DialogDescription></DialogHeader>
                     <form className="space-y-4" onSubmit={handleWorkerSubmit}>
                         <div className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
-                        <div className="space-y-2"><Label htmlFor="base-worker-rate">Rate per metre</Label><Input id="base-worker-rate" type="number" min="0" step="0.01" inputMode="decimal" value={workerDraft.ratePerMeter} onChange={(event) => setWorkerDraft((current) => ({ ...current, ratePerMeter: event.target.value }))} placeholder="0.00" /></div>
+                        <div className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>
                         {editingWorkerId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={workerDraft.isActive} onChange={(event) => setWorkerDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Active worker</label>}
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === 'worker-create' || pendingAction === 'worker-update'}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{editingWorkerId ? 'Save changes' : 'Add worker'}</Button></DialogFooter>
                     </form>

@@ -20,6 +20,7 @@ const worker: BaseProductionWorker = {
     id: 'worker-1',
     name: 'Ramesh',
     rate_per_meter: 10,
+    shift_availability: 'both',
     is_active: true,
 }
 
@@ -251,6 +252,7 @@ describe('Base Production Core boundary contracts', () => {
         const hardeningMigration = read('supabase/migrations/20260830000000_base_production_core_security_hardening.sql')
         const operationalMigration = read('supabase/migrations/20260830100000_base_operational_loop.sql')
         const machineFirstMigration = read('supabase/migrations/20260830110000_base_machine_first_production.sql')
+        const workerShiftMigration = read('supabase/migrations/20260829203707_add_base_worker_shift_availability.sql')
         const actions = read('app/(dashboard)/owner/production/actions.ts')
         const client = read('app/(dashboard)/owner/production/BaseProductionClient.tsx')
         const dailySheet = read('app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx')
@@ -299,7 +301,14 @@ describe('Base Production Core boundary contracts', () => {
         expect(machineFirstMigration).toContain('worker_rate_snapshot')
         expect(machineFirstMigration).toContain('SUM(allocation.meters * allocation.worker_rate_snapshot)')
         expect(machineFirstMigration).toContain('assert_base_daily_production_allocation_totals')
-        expect(assignments).toContain('onDrop')
+        expect(workerShiftMigration).toContain('shift_availability')
+        expect(workerShiftMigration).toContain("CHECK (shift_availability IN ('day', 'night', 'both'))")
+        expect(workerShiftMigration).toContain('SET rate_per_meter = 0')
+        expect(assignments).toContain('onPointerMove')
+        expect(assignments).toContain('data-machine-node')
+        expect(assignments).toContain('connectorPath')
+        expect(assignments).toContain('<MachineTypeFilters')
+        expect(assignments).not.toContain('placeholder="Search machines"')
         expect(assignments).toContain('Tap Assign or Change')
         expect(sidebar).toContain("href: \"/owner/production\"")
         expect(sidebar).toContain("href: \"/owner/operations\"")

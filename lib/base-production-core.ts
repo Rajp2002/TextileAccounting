@@ -7,6 +7,7 @@ export const BASE_PAYROLL_DEDUCTION_PERCENT = 50
 export type BaseProductionJobStatus = 'planned' | 'active' | 'completed' | 'cancelled'
 export type BasePayrollPaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 export type BaseProductionShift = 'day' | 'night'
+export type BaseWorkerShiftAvailability = BaseProductionShift | 'both'
 export type BaseDailyProductionStatus = 'blank' | 'entered' | 'zero' | 'absent'
 
 export type BaseProductionMachine = {
@@ -50,6 +51,7 @@ export type BaseProductionWorker = {
     id: string
     name: string
     rate_per_meter: number
+    shift_availability: BaseWorkerShiftAvailability
     is_active: boolean
 }
 

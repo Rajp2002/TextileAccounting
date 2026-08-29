@@ -42,7 +42,7 @@ const navGroups = [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
             { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
             { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
-            { name: "Operations", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
+            { name: "Setup", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
             { name: "Yarn Rate Book", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
             { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
@@ -94,11 +94,12 @@ const bottomNavItems = [
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
     { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
     { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
-    { name: "Operations", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
+    { name: "Setup", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
     { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
 function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
+    if (item.name === 'Setup') return 'Setup'
     if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Stock'
     if (item.name === 'Quotations') return productionMode === 'market_run' ? 'Saved Costings' : 'Costings & Quotations'
     if (item.name === 'Analytics') return 'Analytics'
