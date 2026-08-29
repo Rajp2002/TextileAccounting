@@ -24,6 +24,8 @@ import {
     Tags,
     BellRing,
     ClipboardList,
+    LockKeyhole,
+    Wrench,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -31,7 +33,7 @@ import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
 import { isWorkflowVisible, normalizeProductionMode, type ProductionMode, type WorkflowKey } from "@/lib/production-mode"
-import { tierSatisfies, type SubscriptionTier } from "@/lib/subscription-access"
+import { hasCapability, type SubscriptionTier } from "@/lib/subscription-access"
 
 const navGroups = [
     {
@@ -40,6 +42,7 @@ const navGroups = [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
             { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
             { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
+            { name: "Operations", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
             { name: "Yarn Rate Book", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
             { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
@@ -91,6 +94,7 @@ const bottomNavItems = [
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
     { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
     { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
+    { name: "Operations", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
     { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
@@ -120,13 +124,25 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     const pathname = usePathname()
     const { t } = useTranslation()
     const productionMode = normalizeProductionMode(rawProductionMode)
-    const hasPremium = tierSatisfies(subscriptionTier, 'premium')
-    const standaloneEstimatorRoutes = new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/production', '/owner/settings'])
+    const hasLegacyWorkspace = hasCapability(subscriptionTier, 'legacy_full_suite')
+    const hasProduction = hasCapability(subscriptionTier, 'production')
+    const costingWorkspaceRoutes = new Set([
+        '/owner/estimator',
+        '/owner/quotes',
+        '/owner/rates',
+        '/owner/production',
+        '/owner/billing',
+        '/owner/settings',
+    ])
+    if (hasProduction) {
+        costingWorkspaceRoutes.add('/owner/operations')
+        costingWorkspaceRoutes.add('/owner/payroll')
+    }
     const visibleGroups = navGroups
         .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
-                if (!hasPremium) return standaloneEstimatorRoutes.has(item.href)
+                if (!hasLegacyWorkspace) return costingWorkspaceRoutes.has(item.href)
                 return isWorkflowVisible(productionMode, item.workflow as WorkflowKey)
             }),
         }))
@@ -146,7 +162,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
                             <p data-i18n-skip="true" className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
-                            <p className="text-[11px] font-medium text-zinc-400">{hasPremium ? 'Owner control' : 'Base Plan workspace'}</p>
+                            <p className="text-[11px] font-medium text-zinc-400">{hasLegacyWorkspace ? 'Owner control' : hasProduction ? 'Weavly Base workspace' : 'Weavly Lite workspace'}</p>
                         </div>
                     </div>
                 )}
@@ -184,11 +200,16 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                             <BellRing className="absolute -right-2.5 -top-2.5 h-3.5 w-3.5 fill-amber-300 text-amber-300" aria-hidden="true" />
                                         )}
                                     </span>
-                {!hasPremium && item.href === '/owner/quotes'
+                {!hasLegacyWorkspace && item.href === '/owner/quotes'
                   ? 'Saved Costings'
+                  : !hasLegacyWorkspace && item.href === '/owner/payroll'
+                    ? 'Payroll'
                   : item.name === 'Yarn Rate Book'
                     ? 'Yarn Rate Book'
                     : getNavLabel(item, productionMode, t)}
+                                    {item.href === '/owner/production' && !hasProduction && (
+                                        <LockKeyhole className="ml-auto h-3.5 w-3.5 text-zinc-500" aria-label="Requires Weavly Base" />
+                                    )}
                                     {item.name === 'Yarn Rate Book' && yarnReviewDueCount > 0 && (
                                         <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black leading-none text-amber-950" aria-label={`${yarnReviewDueCount} yarn rates due for review`}>
                                             {yarnReviewDueCount > 99 ? '99+' : yarnReviewDueCount}
@@ -207,7 +228,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                     <p data-i18n-skip="true" className="mb-3 truncate text-xs font-medium text-zinc-400">{userName}</p>
                 )}
                 <div className="flex flex-col gap-3">
-                    {!hasPremium && (
+                    {!hasLegacyWorkspace && (
                         <Link href="/owner/billing" onClick={onLinkClick} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
                             <CreditCard className="h-[18px] w-[18px]" />
                             Subscription & Billing
@@ -226,9 +247,9 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
     const pathname = usePathname()
     const { t } = useTranslation()
     const normalizedProductionMode = normalizeProductionMode(productionMode)
-    const hasPremium = tierSatisfies(subscriptionTier, 'premium')
+    const hasLegacyWorkspace = hasCapability(subscriptionTier, 'legacy_full_suite')
     const visibleBottomNavItems = bottomNavItems
-        .filter((item) => hasPremium
+        .filter((item) => hasLegacyWorkspace
             ? isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey)
             : item.href === '/owner/estimator' || item.href === '/owner/production')
         .slice(0, 5)
@@ -275,8 +296,12 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
                 {visibleBottomNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-                    const navLabel = getNavLabel(item, normalizedProductionMode, t)
-                    const mobileNavLabel = getMobileNavLabel(item, normalizedProductionMode, t)
+                    const navLabel = !hasLegacyWorkspace && item.href === '/owner/payroll'
+                        ? 'Payroll'
+                        : getNavLabel(item, normalizedProductionMode, t)
+                    const mobileNavLabel = !hasLegacyWorkspace && item.href === '/owner/payroll'
+                        ? 'Payroll'
+                        : getMobileNavLabel(item, normalizedProductionMode, t)
 
                     return (
                         <Link

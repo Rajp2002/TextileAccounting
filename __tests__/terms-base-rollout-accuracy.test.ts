@@ -13,8 +13,8 @@ describe('Base Plan initial-rollout Terms accuracy', () => {
     const refunds = source('app/refund-policy/page.tsx')
 
     it('publishes a new version that identifies the pre-incorporation operator', () => {
-        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-08-29')
-        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-08-29')
+        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-08-30')
+        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-08-30')
         expect(LEGAL_OPERATOR.displayName).toBe('Raj Patel, operating under the Weavly name')
         expect(terms).toContain('LEGAL_DOCUMENTS.terms.displayDate')
         expect(terms).toContain('LEGAL_OPERATOR.displayName')
@@ -24,25 +24,28 @@ describe('Base Plan initial-rollout Terms accuracy', () => {
     })
 
     it('matches the server-authoritative Base catalog and self-serve boundary', () => {
-        expect(BILLING_SELF_SERVE_PLAN_TIERS).toEqual(['base'])
-        expect(BILLING_PLANS.base.firstYearTotalPaise).toBe(826_000)
-        expect(BILLING_PLANS.base.renewalTotalPaise).toBe(236_000)
-        expect(terms).toContain('₹8,260 total')
-        expect(terms).toContain('₹2,360 total/year')
-        expect(terms).toContain('single-factory costing workspace')
+        expect(BILLING_SELF_SERVE_PLAN_TIERS).toEqual(['lite', 'base'])
+        expect(BILLING_PLANS.lite.firstYearTotalPaise).toBe(299_900)
+        expect(BILLING_PLANS.lite.renewalTotalPaise).toBe(149_900)
+        expect(BILLING_PLANS.base.firstYearTotalPaise).toBe(999_900)
+        expect(BILLING_PLANS.base.renewalTotalPaise).toBe(499_900)
+        expect(terms).toContain('₹2,999 total')
+        expect(terms).toContain('₹1,499 total/year')
+        expect(terms).toContain('₹9,999 total')
+        expect(terms).toContain('₹4,999 total/year')
+        expect(terms).toContain('one Customer organization or factory workspace')
     })
 
-    it('keeps the Base production core separate from Full Suite scope', () => {
-        expect(terms).toContain('Full Suite modules remain separate scope')
-        expect(terms).toContain('Simple production jobs created from saved costings')
-        expect(terms).toContain('are not available for purchase under these Terms')
-        expect(terms).toContain('are not promised for any date')
-        expect(terms).toContain('Any future Full Suite offering will require separate availability, pricing, and applicable terms')
-        expect(refunds).toContain('A Base payment does not purchase those modules')
+    it('keeps the Base production core separate from broader future scope', () => {
+        expect(terms).toContain('Other broader operational modules')
+        expect(terms).toContain('production jobs created from saved costings')
+        expect(terms).toContain('are outside the current Lite and Base catalog')
+        expect(terms).toContain('are not promised under these Terms')
+        expect(refunds).toContain('Other operational modules outside the current catalog')
     })
 
     it('describes manual renewal and actual post-expiry export behavior', () => {
-        expect(terms).toContain('We do not automatically charge the Base Plan renewal')
+        expect(terms).toContain('We do not automatically charge a Lite or Base renewal')
         expect(terms).toContain('no cancellation action is required')
         expect(terms).toContain('owner-only organization export remains available while the account is retained')
         expect(terms).not.toContain('30-day window to export')

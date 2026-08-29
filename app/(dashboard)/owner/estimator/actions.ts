@@ -277,7 +277,7 @@ async function requirePremiumTier(orgId: string): Promise<string | null> {
     const tier = await getOrgTier(orgId)
     return tierSatisfies(tier, 'premium')
         ? null
-        : 'This action requires the Weavly Full Suite. Your Estimator plan cannot create production records.'
+        : 'This action requires the broader factory workflow. Your costing workspace cannot create this record.'
 }
 
 function getAuthoritativeQuoteTotals(

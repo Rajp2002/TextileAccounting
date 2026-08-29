@@ -1,12 +1,12 @@
 import 'server-only'
 
 import { jsPDF } from 'jspdf'
-import { getBillingPrice, getBillingPlan, type BillingPurchaseType, type PurchasablePlanTier } from './billing-constants'
+import { getBillingPrice, getBillingPlan, type BillingPurchaseType, type BillingPlanTier } from './billing-constants'
 import { LEGAL_OPERATOR } from './legal-operator'
 
 export type PaymentReceiptInput = {
   organizationName: string
-  planTier: PurchasablePlanTier
+  planTier: BillingPlanTier
   purchaseType: BillingPurchaseType
   amountPaise: number
   paymentId: string

@@ -145,6 +145,7 @@ import {
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -2215,7 +2216,7 @@ function QuickCostingView({
                             <datalist id="quick-estimator-party-options">
                                 {partyNames.map(name => <option key={name} value={name} />)}
                             </datalist>
-                            <p className="text-[10px] font-medium leading-normal text-slate-400">Required for a Full Suite quotation or party order.</p>
+                            <p className="text-[10px] font-medium leading-normal text-slate-400">Required for a broader factory quotation or party-order workflow.</p>
                             {partyHint && (
                                 <p className="flex items-center gap-1 text-[10px] text-slate-500">
                                     <span className="text-blue-500">💡</span>
@@ -2623,6 +2624,16 @@ export default function EstimatorClient({
     const [sourceState, setSourceState] = useState<EstimateState | null>(null)
     const [sourceFactoryProfileUpdatedAt, setSourceFactoryProfileUpdatedAt] = useState<string | null>(null)
     const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
+    const estimatorOpenedRef = useRef(false)
+    const costingStartedRef = useRef(false)
+
+    useEffect(() => {
+        if (estimatorOpenedRef.current) return
+        estimatorOpenedRef.current = true
+        void trackPlanEvent('estimator_opened', {
+            workspace: canUseProduction ? 'base_or_legacy' : 'lite_or_base',
+        })
+    }, [canUseProduction])
     const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
     const versionInputChanges = useMemo(
         () => summarizeCostingInputChanges(sourceState, state),
@@ -2913,6 +2924,11 @@ export default function EstimatorClient({
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
+        if (restored.sourceQuoteId) {
+            void trackPlanEvent('costing_reopened', {
+                record_kind: restored.sourceRecordKind === 'quotation' ? 'quotation' : 'costing',
+            })
+        }
         setDismissedWarnings([])
         setAcknowledgedWarningKey(null)
         warningContinuationRef.current = null
@@ -3278,6 +3294,7 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
         setShowQualityLibrary(false)
+        void trackPlanEvent('quality_reused', { source: 'estimator_quality_library' })
         toast.success(tx(`${t('estimator.quality.applied')} ${tpl.name}`))
     }, [dispatch, state, t, tx])
 
@@ -3492,6 +3509,7 @@ export default function EstimatorClient({
                 setTemplateSaveError(null)
                 clearDraft()
                 suppressAutosaveUntilChanged()
+                void trackPlanEvent('quality_created', { source: 'estimator' })
                 toast.success(t('estimator.quality.saved'), {
                     description: tx(`Recipe saved for reuse. Costing snapshot v${res.versionNumber ?? 1} · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you intentionally want another costing version.`),
                 })
@@ -3783,6 +3801,10 @@ export default function EstimatorClient({
         if (!hasValidCostResult) {
             return toast.error(tx(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before saving.'))
         }
+        if (!costingStartedRef.current) {
+            costingStartedRef.current = true
+            void trackPlanEvent('costing_started', { source: 'estimator' })
+        }
         if (!warningAlreadyReviewed && requireWarningReview(() => handleSaveQuote(
             targetMode,
             status,
@@ -3921,6 +3943,17 @@ export default function EstimatorClient({
                 })
                 if (res.success) {
                     const wasEditingCosting = Boolean(sourceQuoteId)
+                    void trackPlanEvent('costing_completed', {
+                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                        edited: wasEditingCosting,
+                    })
+                    void trackPlanEvent('costing_saved', {
+                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                        edited: wasEditingCosting,
+                    })
+                    if (wasEditingCosting && saveAsStandaloneCosting) {
+                        void trackPlanEvent('costing_recalculated', { source: 'saved_costing' })
+                    }
                     if (resolvedPartyName) {
                         setPartyNames(current => {
                             if (current.some(name => name.toLocaleLowerCase('en-IN') === resolvedPartyName.toLocaleLowerCase('en-IN'))) {

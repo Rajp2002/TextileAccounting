@@ -74,7 +74,7 @@ export function evaluateBillingReadiness(
       canCreateOrder: false,
       mode: 'blocked',
       code: 'live_supplier_not_ready',
-      publicMessage: 'Live Base Plan checkout is not enabled yet. Complete incorporation, GST supplier, invoice, and Razorpay configuration before accepting payment.',
+      publicMessage: 'Live Lite and Base checkout is not enabled yet. Complete incorporation, GST supplier, invoice, and Razorpay configuration before accepting payment.',
       missing,
     }
   }
@@ -83,7 +83,7 @@ export function evaluateBillingReadiness(
     canCreateOrder: true,
     mode: 'live',
     code: 'live_ready',
-    publicMessage: 'Live Base Plan checkout is ready.',
+    publicMessage: 'Live Lite and Base checkout is ready.',
     missing: [],
   }
 }

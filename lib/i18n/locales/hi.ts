@@ -1227,7 +1227,7 @@ export const hi = {
     invalid_code: "अमान्य एक्सेस कोड",
   },
   base_plan: {
-    language_promise: "Base Plan English, Hindi और Gujarati — तीनों भाषाओं में उपलब्ध है।",
+    language_promise: "Weavly Lite और Weavly Base — English, Hindi और Gujarati तीनों भाषाओं में उपलब्ध हैं।",
     glossary_title: "फैक्ट्री के शब्द",
     glossary_help: "ये शब्द फैक्ट्री में इस्तेमाल होने वाले रूप में रखे गए हैं; नीचे का अर्थ स्टाफ को फ़ील्ड समझाता है।",
     glossary: {

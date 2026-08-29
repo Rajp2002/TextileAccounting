@@ -7,12 +7,12 @@ import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 
 export const metadata: Metadata = {
     title: 'Terms of Service — Weavly',
-    description: 'Terms governing the Weavly Estimator Base Plan initial rollout.',
+    description: 'Terms governing Weavly Lite costing and Weavly Base production management subscriptions.',
 }
 
 const sections = [
     { href: '#parties-acceptance', title: 'Parties & Acceptance' },
-    { href: '#base-plan', title: 'Base Plan Scope' },
+    { href: '#base-plan', title: 'Lite & Base Scope' },
     { href: '#accounts', title: 'Accounts' },
     { href: '#commercial-terms', title: 'Price & Payment' },
     { href: '#customer-data', title: 'Customer Data' },
@@ -32,9 +32,14 @@ const sections = [
 
 const plans = [
     {
-        name: 'Weavly Estimator (Base Plan)',
-        firstYear: '₹8,260 total (₹7,000 service price + ₹1,260 indicated GST)',
-        renewal: '₹2,360 total/year (₹2,000 service price + ₹360 indicated GST)',
+        name: 'Weavly Lite',
+        firstYear: '₹2,999 total (GST included)',
+        renewal: '₹1,499 total/year (GST included)',
+    },
+    {
+        name: 'Weavly Base',
+        firstYear: '₹9,999 total (GST included)',
+        renewal: '₹4,999 total/year (GST included)',
     },
 ]
 
@@ -43,45 +48,43 @@ export default function TermsOfServicePage() {
         <PolicyPage
             activePath="/terms"
             title="Terms of Service"
-            description="The contract for the Base Plan initial rollout: a focused, single-factory textile costing workspace with a lightweight production core."
+            description="The contract for Weavly Lite, the complete textile costing workspace, and Weavly Base, which adds the connected production workflow."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
-                { label: 'Available plan', value: 'Weavly Estimator (Base Plan)', icon: Database },
-                { label: 'First-year total', value: '₹8,260 at the current catalog price', icon: IndianRupee },
+                { label: 'Available plans', value: 'Weavly Lite and Weavly Base', icon: Database },
+                { label: 'First-year totals', value: '₹2,999 Lite · ₹9,999 Base', icon: IndianRupee },
                 { label: 'Renewal', value: 'Manual from 30 days before expiry', icon: CalendarDays },
                 { label: 'Contract location', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                These Terms of Service (&quot;Terms&quot;) govern the Weavly Estimator Base Plan initial rollout. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
+                These Terms of Service (&quot;Terms&quot;) govern subscriptions to Weavly Lite and Weavly Base. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
             </p>
 
             <PolicySection id="parties-acceptance" title="1. Parties and Acceptance">
                 <p>
-                    These Terms form an agreement between Weavly and the individual, proprietorship, firm, company, or other organization identified in the account or billing details (&quot;Customer&quot;, &quot;you&quot;, or &quot;your&quot;). By affirmatively accepting these Terms at signup, purchasing the Base Plan, or using the Service after acceptance, you agree to these Terms, the <Link href="/privacy">Privacy Policy</Link>, and the <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link>.
+                    These Terms form an agreement between Weavly and the individual, proprietorship, firm, company, or other organization identified in the account or billing details (&quot;Customer&quot;, &quot;you&quot;, or &quot;your&quot;). By affirmatively accepting these Terms at signup, purchasing a plan, or using the Service after acceptance, you agree to these Terms, the <Link href="/privacy">Privacy Policy</Link>, and the <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link>.
                 </p>
                 <p>
                     You must be at least 18 years old and legally competent to contract. If you lack authority to bind the named business, do not create or purchase an account on its behalf.
                 </p>
             </PolicySection>
 
-            <PolicySection id="base-plan" title="2. Base Plan Initial Rollout">
-                <p>The only plan offered for new purchase under these Terms is the Weavly Estimator (Base Plan), a single-factory costing workspace that includes the Base features made available in the product, such as:</p>
+            <PolicySection id="base-plan" title="2. Lite and Base Plan Scope">
+                <p>Weavly offers two current plans for one Customer organization or factory workspace. Weavly Lite preserves the complete original costing-management product, while Weavly Base includes everything in Lite plus the Base Production Core:</p>
                 <ul>
-                    <li>Warp and weft yarn cost estimation and rate inputs</li>
-                    <li>Fabric qualities, reusable costing assumptions, saved costings, and draft recovery</li>
-                    <li>Factory cost, shortage, transport, commission, GST assumption, landed-cost, break-even, and margin calculations</li>
-                    <li>Customer quotation or Cost Sheet documents where enabled in the Base workspace</li>
-                    <li>Simple production jobs created from saved costings, owner-entered production metres, piece-rate worker records, advances, and basic capped payroll settlement</li>
+                    <li><strong>Weavly Lite:</strong> the complete textile estimator, live costing calculations, saved costings and history, reusable qualities, Rate Book references, costing tools, and hosted account data.</li>
+                    <li><strong>Weavly Base:</strong> all Lite functionality plus production jobs created from saved costings, planned/produced/remaining metres, machine or loom allocation where enabled, owner production updates, piece-rate worker records, advances, and production settlement records.</li>
+                    <li>Cost Sheets, exports, costing breakdowns, and other costing-management workflows where enabled in the selected workspace</li>
                     <li>Owner-accessible organization data export and billing history</li>
                 </ul>
                 <p>
-                    The subscription covers one Customer organization or factory workspace. Individual user credentials may not be shared. Features may have reasonable usage, file-size, security, or technical limits displayed in the product.
+                    The subscription covers one Customer organization or factory workspace. Individual user credentials may not be shared. Lite and Base use the same costing engine, formulas, inputs, accuracy, and validation behavior. Normal costing functionality is not intentionally limited in Lite to force an upgrade.
                 </p>
-                <PolicyCallout tone="neutral" title="Full Suite modules remain separate scope">
+                <PolicyCallout tone="neutral" title="Production is the plan boundary">
                     <p>
-                        Formal party orders and quotation lifecycle, supervisor logins, machine or loom management, inventory or stock, dispatch, fixed-worker salary payroll, statutory payroll features, factory analytics, WhatsApp operations, and related modules are not part of the Base Plan initial rollout. They are not available for purchase under these Terms, are not promised for any date, and do not become an entitlement through a Base Plan payment, referral, renewal, demonstration, screenshot, or roadmap discussion. Any future Full Suite offering will require separate availability, pricing, and applicable terms.
+                        Lite is a complete costing-management product for customers who do not need production management. Base adds only the production workflow currently described in the product, with the originating costing and quality carried into the production record where supported. Other broader operational modules shown in internal plans or development materials are outside the current Lite and Base catalog and are not promised under these Terms.
                     </p>
                 </PolicyCallout>
             </PolicySection>
@@ -97,7 +100,7 @@ export default function TermsOfServicePage() {
             </PolicySection>
 
             <PolicySection id="commercial-terms" title="4. Price, Payment, Renewal, and Referrals">
-                <h3>4.1 Current Base Plan catalog</h3>
+                <h3>4.1 Current Lite and Base catalog</h3>
                 <div className="not-prose my-6 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-zinc-50 text-zinc-600 dark:bg-white/5 dark:text-zinc-300">
@@ -119,7 +122,7 @@ export default function TermsOfServicePage() {
                     </table>
                 </div>
                 <ul>
-                    <li>The first-year fee is paid upfront for 365 days of Base Plan access. Any onboarding assistance included with a purchase is limited to what is described at checkout or agreed in writing; custom implementation or data migration is not included unless expressly agreed.</li>
+                    <li>The selected first-year fee is paid upfront for 365 days of Lite or Base access. Any onboarding assistance included with a purchase is limited to what is described at checkout or agreed in writing; custom implementation or data migration is not included unless expressly agreed.</li>
                     <li>The final amount, tax treatment, and supplier details shown at live checkout or on the applicable order control if they differ from this page because of a lawful tax or catalog update.</li>
                     <li>Live payment collection and GST tax invoices are subject to completion of the required supplier, payment-provider, and tax configuration. A payment receipt is not a GST tax invoice.</li>
                     <li>Razorpay or another disclosed payment provider may process the payment. You authorize the selected provider to process the transaction information needed to complete it.</li>
@@ -128,13 +131,13 @@ export default function TermsOfServicePage() {
                 <h3>4.2 Manual renewal</h3>
                 <ul>
                     <li>Renewal is manual and may be purchased during the final 30 days of the current paid period.</li>
-                    <li>We do not automatically charge the Base Plan renewal under the initial-rollout billing model. If you do not wish to renew, no cancellation action is required; simply do not complete a renewal payment.</li>
-                    <li>A renewal adds the next 365-day Base Plan period after successful payment and server-side activation.</li>
+                    <li>We do not automatically charge a Lite or Base renewal. If you do not wish to renew, no cancellation action is required; simply do not complete a renewal payment.</li>
+                    <li>A renewal adds the next 365-day period for the selected plan after successful payment and server-side activation.</li>
                 </ul>
 
                 <h3>4.3 Referral program</h3>
                 <p>
-                    A referral program applies only while it is displayed as active in the product. Under the current program, an eligible active Base Plan Customer that has paid its initial year may earn one non-cash Base renewal credit when a referred organization pays its own initial Base year, subject to the displayed annual cap and anti-abuse checks. Credits are not transferable, cannot be redeemed for cash or an initial purchase, and may be reversed for duplicate, fraudulent, refunded, or chargeback transactions.
+                    A referral program applies only while it is displayed as active in the product. Under the current program, an eligible active Weavly Base Customer that has paid its initial year may earn one non-cash Base renewal credit when a referred organization pays its own initial Base year, subject to the displayed annual cap and anti-abuse checks. Credits are not transferable, cannot be redeemed for cash or an initial purchase, and may be reversed for duplicate, fraudulent, refunded, or chargeback transactions.
                 </p>
             </PolicySection>
 
@@ -175,16 +178,16 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="availability" title="8. Availability, Support, and Service Changes">
                 <p>
-                    We aim to keep the Base Plan available but do not promise uninterrupted or error-free operation. Access may be affected by maintenance, internet or provider outages, security incidents, force majeure events, or emergency remediation.
+                    We aim to keep Lite and Base available but do not promise uninterrupted or error-free operation. Access may be affected by maintenance, internet or provider outages, security incidents, force majeure events, or emergency remediation.
                 </p>
                 <p>
-                    We may improve, replace, or discontinue individual Base features. During a paid period, we will not intentionally remove the core ability to calculate, save, and export Base costings without a security, legal, provider, or technical reason. If we permanently discontinue the paid Base Plan for convenience before the end of a Customer&apos;s current period, we will provide a reasonable export opportunity and a pro-rata refund or comparable remedy for the unused period.
+                    We may improve, replace, or discontinue individual features. During a paid period, we will not intentionally remove the core ability to calculate, save, and export Lite costings without a security, legal, provider, or technical reason. If we permanently discontinue a paid Lite or Base plan for convenience before the end of a Customer&apos;s current period, we will provide a reasonable export opportunity and a pro-rata refund or comparable remedy for the unused period.
                 </p>
             </PolicySection>
 
             <PolicySection id="ip" title="9. Intellectual Property and Feedback">
                 <p>
-                    The Service, software, interface, documentation, formulas as implemented, branding, and other materials supplied by Weavly are owned by {LEGAL_OPERATOR.grievanceOfficer} or the applicable licensors and are protected by law. Subject to these Terms and payment, Customer receives a limited, non-exclusive, non-transferable, non-sublicensable right to use the Base Plan internally during the applicable access period.
+                    The Service, software, interface, documentation, formulas as implemented, branding, and other materials supplied by Weavly are owned by {LEGAL_OPERATOR.grievanceOfficer} or the applicable licensors and are protected by law. Subject to these Terms and payment, Customer receives a limited, non-exclusive, non-transferable, non-sublicensable right to use the selected plan internally during the applicable access period.
                 </p>
                 <p>
                     If you provide suggestions or feedback, you permit us to use it without payment or restriction, provided we do not identify you publicly without permission.
@@ -193,7 +196,8 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="termination" title="10. Suspension, Expiry, and Termination">
                 <ul>
-                    <li><strong>Expiry</strong> — Paid Base features expire at the end of the current 365-day period unless manually renewed.</li>
+                    <li><strong>Expiry</strong> — Paid Lite or Base capabilities expire at the end of the current 365-day period unless manually renewed. Lite costing functionality remains available when the account is placed in Lite; Base-only production creation and mutation actions are unavailable until Base is renewed.</li>
+                    <li><strong>Production records</strong> — A plan change or expiry does not delete production history. Existing production records remain retained with the organization, and Base capability is restored when an eligible Base renewal is activated.</li>
                     <li><strong>Customer deletion</strong> — The owner may permanently delete the workspace through Settings. Deletion also attempts to cancel any applicable provider subscription before database removal.</li>
                     <li><strong>Immediate protective suspension</strong> — We may restrict access without advance notice when reasonably necessary to address a security threat, unlawful use, fraud, payment reversal, or risk to another customer or the Service.</li>
                     <li><strong>Other material breach</strong> — Where reasonably curable, we will give notice and a reasonable opportunity to cure before terminating for material breach.</li>
@@ -215,7 +219,7 @@ export default function TermsOfServicePage() {
                     To the maximum extent permitted by law, neither party is liable to the other for indirect, incidental, special, exemplary, punitive, or consequential loss, or for lost profits, revenue, goodwill, or business opportunity, arising from these Terms, even if advised that such loss was possible.
                 </p>
                 <p>
-                    Except for liability that cannot lawfully be limited, each party&apos;s aggregate liability arising from the Service will not exceed the Base Plan fees paid or payable by Customer during the 12 months immediately preceding the event giving rise to the claim. The limitations do not exclude liability for fraud, wilful misconduct, infringement or misappropriation of the other party&apos;s intellectual property, or Customer&apos;s payment obligations.
+                    Except for liability that cannot lawfully be limited, each party&apos;s aggregate liability arising from the Service will not exceed the fees paid or payable for the selected plan during the 12 months immediately preceding the event giving rise to the claim. The limitations do not exclude liability for fraud, wilful misconduct, infringement or misappropriation of the other party&apos;s intellectual property, or Customer&apos;s payment obligations.
                 </p>
             </PolicySection>
 
@@ -227,7 +231,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="term-changes" title="14. Changes to These Terms">
                 <p>
-                    We may update these Terms when the Base Plan, provider arrangements, or law changes. We will update the displayed version and date. A change will not retroactively increase the price already paid for a current period. We will give reasonable advance notice of a materially adverse change where practicable and request fresh acceptance where required by law or where the change materially expands Customer obligations. If you reject a materially adverse change, you may stop using the Service and decline the next manual renewal.
+                    We may update these Terms when Lite or Base, provider arrangements, or law changes. We will update the displayed version and date. A change will not retroactively increase the price already paid for a current period. We will give reasonable advance notice of a materially adverse change where practicable and request fresh acceptance where required by law or where the change materially expands Customer obligations. If you reject a materially adverse change, you may stop using the Service and decline the next manual renewal.
                 </p>
             </PolicySection>
 
@@ -243,7 +247,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="general" title="16. General Terms">
                 <ul>
-                    <li><strong>Entire agreement</strong> — These Terms, the accepted order or checkout, Privacy Policy, and Refund Policy form the agreement for the Base Plan and replace prior statements about the same subject.</li>
+                    <li><strong>Entire agreement</strong> — These Terms, the accepted order or checkout, Privacy Policy, and Refund Policy form the agreement for the selected plan and replace prior statements about the same subject.</li>
                     <li><strong>Order of precedence</strong> — A signed written order controls over conflicting general language in these Terms for that order; the Privacy Policy controls for privacy disclosures.</li>
                     <li><strong>Assignment</strong> — Customer may not transfer the account or agreement without written consent. We may transfer the agreement to a successor entity or incorporated Weavly business that assumes the obligations, with notice to Customer.</li>
                     <li><strong>Force majeure</strong> — Neither party is liable for delay caused by events beyond reasonable control, except that this does not excuse amounts already due.</li>

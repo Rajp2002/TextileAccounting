@@ -236,7 +236,7 @@ export async function getOrCreateReferralCode(orgId: string): Promise<string> {
     }
     const eligibility = await loadReferralEligibility(orgId)
     if (!eligibility.eligible) {
-        throw new Error('Referral rewards require an active Base Plan with the initial year paid.')
+        throw new Error('Referral rewards require an active Weavly Base plan with the initial year paid.')
     }
 
     const admin = createAdminClient()
@@ -399,7 +399,7 @@ export async function applyReferralCode(code: string, refereeOrgId: string) {
 
     const eligibility = await loadReferralEligibility(codeRow.org_id)
     if (!eligibility.eligible) {
-        throw new Error('Referral rewards require an active Base Plan with the initial year paid.')
+        throw new Error('Referral rewards require an active Weavly Base plan with the initial year paid.')
     }
 
     const { start, end } = indiaCalendarYearBounds(indiaCalendarYear(new Date()))

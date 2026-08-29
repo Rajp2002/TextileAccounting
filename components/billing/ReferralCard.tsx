@@ -103,7 +103,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
     const [copyFailed, setCopyFailed] = useState(false)
 
     // The server intentionally returns no code for trials, unpaid accounts,
-    // expired Base accounts, and Full Suite accounts.
+    // expired Base accounts and retained legacy operations accounts.
     if (!stats || !stats.eligible || !stats.code) return null
 
     const referralCode = stats.code
@@ -154,7 +154,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
 
     const shareWhatsApp = () => {
         const signupUrl = `${window.location.origin}/signup?ref=${encodeURIComponent(referralCode)}`
-        const text = `Join Weavly with my referral link: ${signupUrl}. When you pay the initial Base Plan year, I receive one free annual renewal.`
+        const text = `Join Weavly with my referral link: ${signupUrl}. When you pay the initial Weavly Base year, I receive one free annual renewal.`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
     }
 
@@ -210,7 +210,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                         </div>
                     </div>
                     <p className="mt-2 text-[11px] leading-relaxed text-surface-muted">
-                        Used referrals stay pending until the new member pays the initial Base Plan year. Your initial Base Plan payment is required before any free renewal can be used. Active referrals are eligible to redeem; redeeming them reserves consecutive future renewals.
+                        Used referrals stay pending until the new member pays the initial Weavly Base year. Your initial Weavly Base payment is required before any free renewal can be used. Active referrals are eligible to redeem; redeeming them reserves consecutive future renewals.
                     </p>
                 </div>
 

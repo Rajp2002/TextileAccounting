@@ -1,6 +1,50 @@
 /** Pure subscription access resolution shared by server code and unit tests. */
-export type SubscriptionTier = 'none' | 'trial' | 'base' | 'premium'
+export type SubscriptionTier = 'none' | 'trial' | 'lite' | 'base' | 'premium'
 export type ProductExperience = 'base' | 'full_suite'
+
+/**
+ * Customer-facing capabilities are deliberately broader than plan names. This
+ * keeps route/action checks stable when another commercial tier is added and
+ * prevents the estimator from being duplicated for Lite and Base.
+ */
+export type PlanCapability =
+  | 'estimator'
+  | 'saved_costings'
+  | 'qualities'
+  | 'rate_book'
+  | 'existing_costing_tools'
+  | 'account_data'
+  | 'production'
+  | 'production_management'
+  | 'production_tracking'
+  | 'production_linked'
+  | 'legacy_full_suite'
+
+const LITE_CAPABILITIES = [
+  'estimator',
+  'saved_costings',
+  'qualities',
+  'rate_book',
+  'existing_costing_tools',
+  'account_data',
+] as const satisfies readonly PlanCapability[]
+
+const BASE_CAPABILITIES = [
+  ...LITE_CAPABILITIES,
+  'production',
+  'production_management',
+  'production_tracking',
+  'production_linked',
+] as const satisfies readonly PlanCapability[]
+
+/** Internal legacy access is retained for existing accounts only. */
+export const PLAN_CAPABILITIES = {
+  none: [] as const,
+  lite: LITE_CAPABILITIES,
+  base: BASE_CAPABILITIES,
+  trial: [...BASE_CAPABILITIES, 'legacy_full_suite'] as const,
+  premium: [...BASE_CAPABILITIES, 'legacy_full_suite'] as const,
+} satisfies Record<SubscriptionTier, readonly PlanCapability[]>
 
 export type OrgPlanAccess = {
   /** Paid/trial entitlement retained for billing and conversion eligibility. */
@@ -16,6 +60,7 @@ type SubscriptionAccessRow = {
   plan_tier: string | null
   current_start?: string | null
   current_end: string | null
+  razorpay_payment_id?: string | null
   created_at?: string | null
 }
 
@@ -29,10 +74,29 @@ const ACCESS_BEARING_STATUSES = new Set([
   'completed',
 ])
 
+const PAID_HISTORY_STATUSES = new Set([
+  'active',
+  'authenticated',
+  'paused',
+  'halted',
+  'cancelled',
+  'completed',
+  'expired',
+])
+
+export function hasCapability(actual: SubscriptionTier, capability: PlanCapability): boolean {
+  return (PLAN_CAPABILITIES[actual] as readonly PlanCapability[]).includes(capability)
+}
+
+/**
+ * Compatibility helper for older costing/full-suite call sites. New code
+ * should use hasCapability() so a Base production check cannot accidentally
+ * become a Lite costing check.
+ */
 export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'premium'): boolean {
-  if (actual === 'none') return false
-  if (actual === 'trial' || actual === 'premium') return true
-  return actual === 'base' && required === 'base'
+  return required === 'premium'
+    ? hasCapability(actual, 'legacy_full_suite')
+    : hasCapability(actual, 'estimator')
 }
 
 export function normalizeProductExperience(value: unknown): ProductExperience {
@@ -47,19 +111,39 @@ export function normalizeProductExperience(value: unknown): ProductExperience {
 export function resolveOrgPlanAccess(
   subscriptionTier: SubscriptionTier,
   productExperienceValue: unknown,
+  retainLiteAfterBaseExpiry = false,
 ): OrgPlanAccess {
   const productExperience = normalizeProductExperience(productExperienceValue)
   const hasFullSuiteEntitlement = tierSatisfies(subscriptionTier, 'premium')
+  const fallbackTier = retainLiteAfterBaseExpiry && subscriptionTier === 'none' ? 'lite' : subscriptionTier
 
   return {
     subscriptionTier,
     effectiveTier: productExperience === 'base' && hasFullSuiteEntitlement
       ? 'base'
-      : subscriptionTier,
+      : fallbackTier,
     productExperience,
     // Initial rollout conversion is limited to activated paid Full Suite orgs.
     canSwitchExperience: subscriptionTier === 'premium',
   }
+}
+
+/**
+ * A paid Base period downgrades to Lite when it ends; it never removes the
+ * costing desk or the customer's records. Checkout rows in `created` or
+ * `pending` state are deliberately excluded because they are not payment
+ * proof. The server uses this only after current access has been resolved.
+ */
+export function hasPaidBaseHistory(
+  rows: readonly SubscriptionAccessRow[],
+  nowMs = Date.now(),
+): boolean {
+  return rows.some((row) => {
+    if (row.plan_tier !== 'base' || !row.current_end) return false
+    const endMs = new Date(row.current_end).getTime()
+    if (!Number.isFinite(endMs) || endMs >= nowMs) return false
+    return Boolean(row.razorpay_payment_id) || PAID_HISTORY_STATUSES.has(row.status)
+  })
 }
 
 function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): boolean {
@@ -88,14 +172,14 @@ export function resolveEffectiveSubscription<T extends SubscriptionAccessRow>(
   rows: T[],
   nowMs = Date.now()
 ): { tier: SubscriptionTier; subscription: T | null } {
-  const rank: Record<SubscriptionTier, number> = { none: 0, base: 1, trial: 2, premium: 3 }
+  const rank: Record<SubscriptionTier, number> = { none: 0, lite: 1, base: 2, trial: 3, premium: 4 }
   const current = rows
     .filter((row) => isSubscriptionRowCurrent(row, nowMs))
     .map((row) => ({
       row,
-      tier: (['base', 'trial', 'premium'].includes(row.plan_tier ?? '')
+      tier: (['lite', 'base', 'trial', 'premium'].includes(row.plan_tier ?? '')
         ? row.plan_tier
-        : 'premium') as SubscriptionTier,
+        : 'none') as SubscriptionTier,
     }))
     .sort((a, b) => {
       const tierDelta = rank[b.tier] - rank[a.tier]

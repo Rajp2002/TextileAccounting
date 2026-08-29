@@ -23,8 +23,8 @@ export function ReferralRewardButton() {
             const redeemedCount = data.redeemedCount ?? 1
             toast.success(
                 redeemedCount === 1
-                    ? 'Your free Base Plan renewal is reserved.'
-                    : `${redeemedCount} free Base Plan renewals are reserved.`,
+                    ? 'Your free Weavly Base renewal is reserved.'
+                    : `${redeemedCount} free Weavly Base renewals are reserved.`,
             )
             router.refresh()
         } catch (error) {

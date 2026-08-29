@@ -16,8 +16,11 @@ describe('Estimator-only product presentation', () => {
     const rateBook = read('app/(dashboard)/owner/rates/RatesClient.tsx')
     const rateActions = read('app/(dashboard)/owner/rates/actions.ts')
 
-    it('limits Base navigation to costing, production core, and account billing', () => {
-        expect(sidebar).toContain("new Set(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/production', '/owner/settings'])")
+    it('keeps Lite navigation complete and adds a Base production entry point', () => {
+        expect(sidebar).toContain("'/owner/production',\n        '/owner/billing',\n        '/owner/settings',")
+        expect(sidebar).toContain("if (hasProduction) {")
+        expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/operations')")
+        expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/payroll')")
         expect(sidebar).toContain("href: \"/owner/production\"")
         expect(sidebar).toContain("? 'Saved Costings'")
         expect(sidebar).toContain('Yarn Rate Book')
@@ -25,7 +28,7 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('presents rates as a single-purpose yarn rate book', () => {
-        expect(rateBook).toContain('Yarn Rate Book')
+        expect(rateBook).toContain('Rate Book')
         expect(rateBook).toContain('Add Yarn Rate')
         expect(rateBook).toContain("const YARN_CATEGORIES: YarnRateCategory[] = ['yarn_warp', 'yarn_weft']")
         expect(rateBook).not.toContain("['processing', 'Processing']")
@@ -39,7 +42,7 @@ describe('Estimator-only product presentation', () => {
         expect(rateActions).not.toContain('defaultWeftName')
     })
 
-    it('keeps Base quality-first while retaining Full Suite quotation actions', () => {
+    it('keeps Lite and Base quality-first while retaining legacy quotation actions', () => {
         expect(estimator).toContain("const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'")
         expect(estimator).toContain("const resolvedPartyName = effectiveTargetMode === 'market'")
         expect(estimator).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
@@ -56,7 +59,7 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('hasValidCostResult && costingResult.quoteIsValid')
     })
 
-    it('keeps the costing backbone and terminology shared with Full Suite', () => {
+    it('keeps the costing backbone and terminology shared with Base', () => {
         const english = read('lib/i18n/locales/en.ts')
 
         expect(english).toContain('quote_per_m: "Suggested Selling Price / m"')
@@ -79,8 +82,8 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('saveEstimatorQuoteV3({')
     })
 
-    it('does not mount full-suite settings for the Estimator Plan', () => {
-        expect(settingsLayout).toContain('requiredTier="base"')
+    it('does not mount legacy operations settings for the Lite costing workspace', () => {
+        expect(settingsLayout).toContain('requiredCapability="account_data"')
         expect(settings).toContain('{hasPremium && <div')
         expect(settings).toContain('{hasPremium && <SettingsSection id="automations"')
         expect(settings).toContain("hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'")
@@ -101,9 +104,9 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('uses an intentional deep-link explanation with a return path', () => {
-        expect(gate).toContain('Unlock {featureName}')
+        expect(gate).toContain('Take your costing into production')
         expect(gate).toContain('Back to Cost Estimates')
         expect(gate).toContain('routeName')
-        expect(gate).not.toContain('Lock className=')
+        expect(gate).toContain('ProductionUpgradeWall')
     })
 })

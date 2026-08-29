@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import type { BaseProductionMachine, BaseProductionShift, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
+import type { BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
 import {
     removeBaseWorkerMachineAssignment,
     setBaseMachineJobContext,
@@ -42,11 +42,13 @@ export default function BaseAssignmentWorkspace({
     initialData,
     onAddWorker,
     onAddMachine,
+    onEditWorker,
     onEditMachine,
 }: {
     initialData: BaseProductionInitialData
     onAddWorker: () => void
     onAddMachine: () => void
+    onEditWorker: (worker: BaseProductionWorker) => void
     onEditMachine: (machine: BaseProductionMachine) => void
 }) {
     const router = useRouter()
@@ -305,7 +307,7 @@ export default function BaseAssignmentWorkspace({
                                 return (
                                     <div key={worker.id} className={`flex min-h-[72px] items-center justify-between gap-3 rounded-xl border bg-surface px-3 py-3 shadow-xs transition-colors ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40' : 'border-hairline'}`}>
                                         <div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">₹{worker.rate_per_meter.toFixed(2)}/m {worker.is_active ? '' : '· inactive'}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.map((assignment) => <Badge key={assignment.id} variant="brand">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</Badge>)}</div></div>
-                                        <div className="flex shrink-0 items-center gap-1.5"><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>Assign</Button><span draggable={worker.is_active} onDragStart={(event) => { event.stopPropagation(); setDraggingWorkerId(worker.id) }} onDragEnd={() => setDraggingWorkerId(null)} className="flex h-8 w-8 cursor-grab items-center justify-center rounded-full border-2 border-dashed border-saffron/60 text-saffron-deep active:cursor-grabbing" title={worker.is_active ? `Drag ${worker.name} to a machine` : 'Inactive workers cannot be assigned'} aria-label={worker.is_active ? `Drag ${worker.name} to a machine` : `${worker.name} is inactive`}><Link2 className="h-4 w-4" /></span></div>
+                                        <div className="flex shrink-0 items-center gap-1.5"><Button variant="ghost" size="icon-xs" aria-label={`Edit ${worker.name}`} onClick={() => onEditWorker(worker)}><Edit3 className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>Assign</Button><span draggable={worker.is_active} onDragStart={(event) => { event.stopPropagation(); setDraggingWorkerId(worker.id) }} onDragEnd={() => setDraggingWorkerId(null)} className="flex h-8 w-8 cursor-grab items-center justify-center rounded-full border-2 border-dashed border-saffron/60 text-saffron-deep active:cursor-grabbing" title={worker.is_active ? `Drag ${worker.name} to a machine` : 'Inactive workers cannot be assigned'} aria-label={worker.is_active ? `Drag ${worker.name} to a machine` : `${worker.name} is inactive`}><Link2 className="h-4 w-4" /></span></div>
                                     </div>
                                 )
                             })}
@@ -337,7 +339,7 @@ export default function BaseAssignmentWorkspace({
                     <div className="space-y-2">
                         {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." action={onAddWorker} actionLabel="Add worker" /> : visibleWorkers.map((worker) => {
                             const assignments = assignmentByWorker.get(worker.id) ?? []
-                            return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <Badge key={assignment.id} variant="brand">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</Badge>) : <Badge variant="warning">Unassigned</Badge>}</div></div><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div>
+                            return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <Badge key={assignment.id} variant="brand">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</Badge>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex items-center gap-1"><Button variant="ghost" size="icon-xs" aria-label={`Edit ${worker.name}`} onClick={() => onEditWorker(worker)}><Edit3 className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
                         })}
                     </div>
                 </CardContent>

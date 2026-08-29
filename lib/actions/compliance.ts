@@ -561,7 +561,7 @@ export async function createSecurityIncident(input: {
     if (awareAt.getTime() > Date.now() + 5 * 60 * 1000) throw new Error('Awareness time cannot be in the future.')
     const allowedCategories: SecurityIncidentDataCategory[] = ['account_authentication', 'costings_business_contacts', 'billing_subscription_references', 'support_privacy_communications', 'technical_diagnostic_security_logs']
     if (input.affected_data_categories.length === 0 || input.affected_data_categories.some((category) => !allowedCategories.includes(category))) {
-        throw new Error('Select at least one valid Base Plan data category.')
+        throw new Error('Select at least one valid workspace data category.')
     }
 
     const supabase = createAdminClient()

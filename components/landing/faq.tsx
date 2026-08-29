@@ -1,11 +1,11 @@
 const faqs = [
     {
         question: 'Does Weavly work for grey fabric weaving factories?',
-        answer: 'Yes. The current Base Plan covers the small loop from fabric costing to owner-recorded production and piece-rate pay: qualities, warp and weft inputs, factory costs, GST, margin, saved costings, production jobs, worker metres, advances, and Cost Sheet exports.',
+        answer: 'Yes. Weavly Lite covers the complete costing workflow: qualities, warp and weft inputs, factory costs, GST, margin, saved costings, Rate Book references, and Cost Sheet exports. Weavly Base adds production jobs, worker metres, advances, and settlement records.',
     },
     {
         question: 'What is included in the current rollout?',
-        answer: 'The paid Base Plan includes the Estimator, reusable qualities, saved costing history, costing defaults, margin visibility, Cost Sheet export, simple production jobs, owner-entered production metres, piece-rate workers, advances, and basic payroll settlement. Formal orders, supervisor logging, looms, stock, dispatch, fixed-worker payroll, and analytics remain Full Suite scope and are in development.',
+        answer: 'Weavly Lite includes the complete Estimator, reusable qualities, saved costing history, costing defaults, margin visibility, Rate Book, and Cost Sheet export. Weavly Base includes everything in Lite plus simple production jobs, owner-entered production metres, piece-rate workers, advances, and basic settlement.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',
@@ -21,7 +21,7 @@ const faqs = [
     },
     {
         question: 'Can I start with only the costing desk?',
-        answer: 'Yes. That is the intended Base Plan rollout: start with one factory and one owner, then carry a costing into a simple production job and worker-pay record before considering the Full Suite modules.',
+        answer: 'Yes. Lite is designed as a complete costing-management product for factories that do not need production management. You can move to Base later and use an existing costing without recreating it.',
     },
 ]
 

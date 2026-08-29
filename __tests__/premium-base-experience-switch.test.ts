@@ -51,7 +51,7 @@ describe('Full Suite to Base Plan experience switch', () => {
     expect(settings).toContain('planAccess.canSwitchExperience')
     expect(settings).toContain('updateOrganizationProductExperience')
     expect(settings).toContain('Existing production and factory records are never deleted.')
-    expect(gate).toContain('Base Plan workspace is active')
+    expect(gate).toContain('Costing workspace is active')
     expect(gate).toContain('/owner/settings#workspace-experience')
     expect(actions).toContain("subscription.tier !== 'premium'")
     expect(actions).toContain(".update({ product_experience: parsed.data })")

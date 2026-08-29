@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { Fragment, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
@@ -79,6 +80,7 @@ import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
 
@@ -417,6 +419,7 @@ function getCurrentRecipeCostPerM(
 function SavedQualityLibraryView({
     groups,
     canUseProduction,
+    canUseProductionPipeline,
     openKey,
     selectedCostingIds,
     updatingId,
@@ -437,6 +440,7 @@ function SavedQualityLibraryView({
 }: {
     groups: SavedQualityGroup[]
     canUseProduction: boolean
+    canUseProductionPipeline: boolean
     openKey: string | null
     selectedCostingIds: string[]
     updatingId: string | null
@@ -619,12 +623,30 @@ function SavedQualityLibraryView({
                                                         {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open and save new version')}</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                        {canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
+                                                            <Link
+                                                                href={`/owner/production?costingId=${encodeURIComponent(latest.id)}`}
+                                                                onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
+                                                                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
+                                                            >
+                                                                <Factory className="h-3.5 w-3.5" /> Start Production
+                                                            </Link>
+                                                        )}
                                                     </> : <>
                                                         {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as New Quality')}</Button>
                                                     </>}
+                                                    {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
+                                                        <Link
+                                                            href={`/owner/production?costingId=${encodeURIComponent(latest.id)}`}
+                                                            onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
+                                                            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
+                                                        >
+                                                            <Factory className="h-3.5 w-3.5" /> Start Production
+                                                        </Link>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -647,6 +669,15 @@ function SavedQualityLibraryView({
                                                             <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                             <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as New Quality')}</Button>
                                                         </>}
+                                                        {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
+                                                            <Link
+                                                                href={`/owner/production?costingId=${encodeURIComponent(latest.id)}`}
+                                                                onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' })}
+                                                                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
+                                                            >
+                                                                <Factory className="h-3.5 w-3.5" /> Start Production
+                                                            </Link>
+                                                        )}
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>
                                                             {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
                                                         {tx(updatingId === latest.id ? latest.is_archived ? `Restoring ${getSavedCostingIdentity(latest).label}…` : `Archiving ${getSavedCostingIdentity(latest).label}…` : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
@@ -749,6 +780,15 @@ function SavedQualityLibraryView({
                                                                         <span className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-surface-soft px-2 py-0.5" title={contextLabel}>{contextLabel}</span>
                                                                         {costingStatus !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(costingStatus)} />}
                                                                     </div>
+                                                                    {canUseProductionPipeline && isStandaloneCosting(record.record_kind) && !record.is_archived && (
+                                                                        <Link
+                                                                            href={`/owner/production?costingId=${encodeURIComponent(record.id)}`}
+                                                                            onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_history' })}
+                                                                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-saffron-deep hover:underline"
+                                                                        >
+                                                                            <Factory className="h-3.5 w-3.5" /> Start Production
+                                                                        </Link>
+                                                                    )}
                                                                     <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                                                         <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
                                                                             <dt className="truncate text-[9px] font-bold uppercase tracking-wide text-subtle">Cost</dt>
@@ -797,7 +837,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProduction, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProduction, canUseProductionPipeline, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseProductionPipeline: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
     const { t, tx } = useTranslation()
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
@@ -1479,6 +1519,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <SavedQualityLibraryView
                     groups={qualityGroups}
                     canUseProduction={canUseProduction}
+                    canUseProductionPipeline={canUseProductionPipeline}
                     openKey={openQualityKey}
                     selectedCostingIds={selectedCostingIds}
                     updatingId={updatingId}

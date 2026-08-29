@@ -16,6 +16,8 @@ import {
     Plus,
     ReceiptText,
     RotateCcw,
+    Settings2,
+    Users,
     WalletCards,
 } from 'lucide-react'
 
@@ -37,6 +39,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
     calculateBaseJobSummary,
     calculateBaseEntryGrossPay,
@@ -141,9 +144,9 @@ function emptyMachineDraft(): MachineDraft {
     return { name: '', machineType: 'other', customLabel: '', isActive: true }
 }
 
-function emptyJobDraft(today: string): JobDraft {
+function emptyJobDraft(today: string, costingId = ''): JobDraft {
     return {
-        costingId: '',
+        costingId,
         targetMeters: '',
         startDate: today,
         dueDate: '',
@@ -156,19 +159,26 @@ function emptyAdvanceDraft(workerId = ''): AdvanceDraft {
     return { workerId, amount: '', description: '' }
 }
 
-export default function BaseProductionClient({ initialData }: { initialData: BaseProductionInitialData }) {
+export default function BaseProductionClient({
+    initialData,
+    initialCostingId = null,
+    view = 'production',
+}: {
+    initialData: BaseProductionInitialData
+    initialCostingId?: string | null
+    view?: 'production' | 'operations' | 'payroll'
+}) {
     const router = useRouter()
-    const [activeTab, setActiveTab] = useState('production')
+    const [activeTab, setActiveTab] = useState(view === 'operations' ? 'assignments' : view === 'payroll' ? 'pay' : 'production')
     const [dialog, setDialog] = useState<DialogName>(null)
     const [pendingAction, setPendingAction] = useState<string | null>(null)
-    const [workerPromptShown, setWorkerPromptShown] = useState(false)
     const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null)
     const [editingMachineId, setEditingMachineId] = useState<string | null>(null)
     const [settlingWorkerId, setSettlingWorkerId] = useState<string | null>(null)
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
     const [workerDraft, setWorkerDraft] = useState<WorkerDraft>(emptyWorkerDraft)
     const [machineDraft, setMachineDraft] = useState<MachineDraft>(emptyMachineDraft)
-    const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today))
+    const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today, initialCostingId ?? ''))
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
 
     const workerById = useMemo(
@@ -194,13 +204,12 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         .filter((payable) => payable.status === 'unsettled')
         .reduce((total, payable) => total + payable.net_payout, 0)
     const settlingWorker = initialData.payables.find((payable) => payable.worker_id === settlingWorkerId)
+    const activeMachines = initialData.machines.filter((machine) => machine.is_active)
+    const activeAssignments = initialData.assignments.filter((assignment) => assignment.active)
 
     useEffect(() => {
-        if (activeTab === 'production' && initialData.workers.length === 0 && !workerPromptShown) {
-            setWorkerPromptShown(true)
-            setDialog('worker')
-        }
-    }, [activeTab, initialData.workers.length, workerPromptShown])
+        trackPlanEvent('production_viewed', { surface: 'base_production_core' })
+    }, [])
 
     async function runAction(
         key: string,
@@ -220,6 +229,16 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
             }
 
             toast.success(successMessage)
+            trackPlanEvent('production_activity', { action: key })
+            if (key === 'job-create') {
+                trackPlanEvent('production_created', { source: 'saved_costing' })
+                trackPlanEvent('production_created_from_costing', {})
+            } else if (key.startsWith('job-status-')) {
+                trackPlanEvent('production_status_updated', { action: successMessage })
+                if (successMessage === 'Job marked complete.') trackPlanEvent('production_completed', {})
+            } else if (key.startsWith('daily-')) {
+                trackPlanEvent('production_quantity_updated', {})
+            }
             onSuccess?.()
             router.refresh()
         } catch (error) {
@@ -263,7 +282,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
     }
 
     function openNewJob() {
-        setJobDraft(emptyJobDraft(initialData.today))
+        setJobDraft(emptyJobDraft(initialData.today, initialCostingId ?? ''))
         setDialog('job')
     }
 
@@ -272,12 +291,14 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         setDialog('advance')
     }
 
+    function openOperations() {
+        router.push('/owner/operations')
+    }
+
     function openRecord() {
         if (activeWorkers.length === 0) {
-            setEditingWorkerId(null)
-            setWorkerDraft(emptyWorkerDraft())
-            setActiveTab('production')
-            setDialog('worker')
+            toast.info('Add and assign a worker in Operations before recording production.')
+            openOperations()
             return
         }
 
@@ -370,7 +391,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
             'Production job created.',
             () => {
                 closeDialog()
-                if (initialData.machines.length === 0) setDialog('machine')
+                if (initialData.machines.length === 0) openOperations()
             },
         )
     }
@@ -417,33 +438,57 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
         <div className="space-y-5 pb-8">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Base Production Core</p>
-                    <h1 className="mt-1 text-2xl font-black tracking-tight text-ink sm:text-3xl">Production</h1>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>
+                    <h1 className="mt-1 text-2xl font-black tracking-tight text-ink sm:text-3xl">
+                        {view === 'operations' ? 'Operations' : view === 'payroll' ? 'Payroll' : 'Production'}
+                    </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-body">
-                        Turn a saved costing into a simple job, record metres, and keep piece-rate worker pay clear.
-                        You are recording production as the owner for now.
+                        {view === 'operations'
+                            ? 'Set up machines, piece-rate workers, and their current shift assignments.'
+                            : view === 'payroll'
+                                ? 'Review piece-rate earnings, worker advances, and settle the current pay period.'
+                                : 'Create production jobs from saved costings and record daily machine metres.'}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button onClick={openNewJob} disabled={initialData.costings.length === 0}>
-                        <Plus className="h-4 w-4" />
-                        New production job
-                    </Button>
-                    <Button variant="outline" onClick={openRecord}>
-                        <ClipboardList className="h-4 w-4" />
-                        Daily production
-                    </Button>
+                    {view === 'production' && (
+                        <>
+                            <Button onClick={openNewJob} disabled={initialData.costings.length === 0}>
+                                <Plus className="h-4 w-4" />
+                                New production job
+                            </Button>
+                            <Button variant="outline" onClick={openRecord}>
+                                <ClipboardList className="h-4 w-4" />
+                                Daily production
+                            </Button>
+                        </>
+                    )}
+                    {view === 'operations' && (
+                        <>
+                            <Button onClick={openNewMachine}><Plus className="h-4 w-4" /> Add machine</Button>
+                            <Button variant="outline" onClick={openNewWorker}><Plus className="h-4 w-4" /> Add worker</Button>
+                        </>
+                    )}
                 </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <SummaryCard label="Open jobs" value={String(openJobs)} detail="Planned or active" icon={<ClipboardList className="h-4 w-4" />} />
-                <SummaryCard label="Produced this period" value={formatMeters(producedThisPeriod)} detail={`${formatDateOnly(initialData.payrollPeriod.start)} – ${formatDateOnly(initialData.payrollPeriod.end)}`} icon={<CheckCircle2 className="h-4 w-4" />} />
-                <SummaryCard label="Worker payout" value={formatINR(unsettledPayable, { hideDecimals: true })} detail="Unsettled net pay" icon={<WalletCards className="h-4 w-4" />} />
-                <SummaryCard label="Pending advances" value={formatINR(pendingAdvances, { hideDecimals: true })} detail="Before capped recovery" icon={<IndianRupee className="h-4 w-4" />} />
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {view === 'production' && <>
+                    <SummaryCard label="Open jobs" value={String(openJobs)} detail="Planned or active" icon={<ClipboardList className="h-4 w-4" />} />
+                    <SummaryCard label="Produced this period" value={formatMeters(producedThisPeriod)} detail={`${formatDateOnly(initialData.payrollPeriod.start)} – ${formatDateOnly(initialData.payrollPeriod.end)}`} icon={<CheckCircle2 className="h-4 w-4" />} />
+                </>}
+                {view === 'operations' && <>
+                    <SummaryCard label="Active machines" value={String(activeMachines.length)} detail={`${initialData.machines.length} total machines`} icon={<Settings2 className="h-4 w-4" />} />
+                    <SummaryCard label="Active workers" value={String(activeWorkers.length)} detail={`${initialData.workers.length} total workers`} icon={<Users className="h-4 w-4" />} />
+                    <SummaryCard label="Current assignments" value={String(activeAssignments.length)} detail="Across day and night shifts" icon={<HardHat className="h-4 w-4" />} />
+                </>}
+                {view === 'payroll' && <>
+                    <SummaryCard label="Worker payout" value={formatINR(unsettledPayable, { hideDecimals: true })} detail="Unsettled net pay" icon={<WalletCards className="h-4 w-4" />} />
+                    <SummaryCard label="Pending advances" value={formatINR(pendingAdvances, { hideDecimals: true })} detail="Before capped recovery" icon={<IndianRupee className="h-4 w-4" />} />
+                </>}
             </div>
 
-            <Card className="border-saffron/20 bg-saffron-soft/30">
+            {view === 'production' && <Card className="border-saffron/20 bg-saffron-soft/30">
                 <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3">
                         <div className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
@@ -452,8 +497,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                         <div>
                             <p className="text-sm font-bold text-ink">Keep the Base workflow small</p>
                             <p className="mt-1 text-xs leading-relaxed text-body">
-                                This workspace covers jobs, owner-entered metres, piece-rate workers, advances, and basic settlement only.
-                                Orders, stock, looms, supervisor access, and advanced payroll remain in the Full Suite.
+                                Production now stays focused on jobs and daily metre entry. Machine and worker setup lives in Operations, while earnings and settlements live in Payroll.
                             </p>
                         </div>
                     </div>
@@ -461,17 +505,15 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                         Open cost estimates <ArrowRight className="h-4 w-4" />
                     </Link>
                 </CardContent>
-            </Card>
+            </Card>}
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid h-auto w-full grid-cols-4">
+                {view === 'production' && <TabsList className="grid h-auto w-full grid-cols-2">
                     <TabsTrigger value="jobs">Jobs</TabsTrigger>
                     <TabsTrigger value="production">Daily production</TabsTrigger>
-                    <TabsTrigger value="assignments">Assignments</TabsTrigger>
-                    <TabsTrigger value="pay">Worker pay</TabsTrigger>
-                </TabsList>
+                </TabsList>}
 
-                <TabsContent value="jobs" className="space-y-4">
+                {view === 'production' && <TabsContent value="jobs" className="space-y-4">
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                         <div>
                             <h2 className="text-lg font-bold text-ink">Production jobs</h2>
@@ -568,10 +610,10 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                             )
                         })}
                     </div>
-                </TabsContent>
+                </TabsContent>}
 
-                <TabsContent value="production" className="space-y-4">
-                    <BaseDailyProductionSheet initialData={initialData} onAddWorker={openNewWorker} onAddMachine={openNewMachine} />
+                {view === 'production' && <TabsContent value="production" className="space-y-4">
+                    <BaseDailyProductionSheet initialData={initialData} onAddWorker={openOperations} onAddMachine={openOperations} />
 
                     <Card>
                         <CardHeader>
@@ -593,13 +635,13 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                             )}
                         </CardContent>
                     </Card>
-                </TabsContent>
+                </TabsContent>}
 
-                <TabsContent value="assignments" className="space-y-4">
-                    <BaseAssignmentWorkspace initialData={initialData} onAddWorker={openNewWorker} onAddMachine={openNewMachine} onEditMachine={openEditMachine} />
-                </TabsContent>
+                {view === 'operations' && <TabsContent value="assignments" className="space-y-4">
+                    <BaseAssignmentWorkspace initialData={initialData} onAddWorker={openNewWorker} onAddMachine={openNewMachine} onEditWorker={openEditWorker} onEditMachine={openEditMachine} />
+                </TabsContent>}
 
-                <TabsContent value="pay" className="space-y-4">
+                {view === 'payroll' && <TabsContent value="pay" className="space-y-4">
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
                         <div>
                             <h2 className="text-lg font-bold text-ink">Worker pay</h2>
@@ -611,19 +653,19 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                                 <SelectContent><SelectItem value="cash">Paid by cash</SelectItem><SelectItem value="bank_transfer">Bank transfer</SelectItem><SelectItem value="upi">UPI</SelectItem><SelectItem value="cheque">Cheque</SelectItem></SelectContent>
                             </Select>
                             <Button variant="outline" onClick={() => openAdvance()} disabled={activeWorkers.length === 0}><Plus className="h-4 w-4" /> Add advance</Button>
-                            <Button variant="outline" onClick={openNewWorker}><Plus className="h-4 w-4" /> Add worker</Button>
+                            <Button variant="outline" onClick={openOperations}><Settings2 className="h-4 w-4" /> Manage workers</Button>
                         </div>
                     </div>
 
                     <Card className="border-hairline bg-surface-soft/45">
                         <CardContent className="flex items-start gap-3 py-4 text-sm">
                             <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" />
-                            <p className="leading-relaxed text-body">Pay is calculated from each machine allocation’s costing rate snapshot. Advance recovery is capped at 50% of gross pay, and the unpaid balance carries forward. Fixed salary, statutory deductions, payslips, and WhatsApp remain Full Suite features.</p>
+                            <p className="leading-relaxed text-body">Pay is calculated from each machine allocation’s costing rate snapshot. Advance recovery is capped at 50% of gross pay, and the unpaid balance carries forward. Fixed salary, statutory deductions, payslips, and WhatsApp are outside the current Lite and Base catalog.</p>
                         </CardContent>
                     </Card>
 
                     {initialData.workers.length === 0 ? (
-                        <EmptyState title="No piece-rate workers yet" description="Add the workers whose metres you want to record and settle." action={<Button size="sm" onClick={openNewWorker}><Plus className="h-4 w-4" /> Add worker</Button>} />
+                        <EmptyState title="No piece-rate workers yet" description="Add workers in Operations before recording metres or settling payroll." action={<Button size="sm" onClick={openOperations}><Settings2 className="h-4 w-4" /> Open Operations</Button>} />
                     ) : (
                         <div className="grid gap-4 lg:grid-cols-2">
                             {initialData.payables.map((payable) => {
@@ -634,7 +676,7 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                                         <CardHeader className="border-b border-hairline/70">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `₹${worker.rate_per_meter.toFixed(2)}/m default rate · machine rates applied where configured` : 'Inactive worker'}</CardDescription></div>
-                                                <div className="flex items-center gap-2"><Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Edit ${payable.worker_name}`} onClick={() => worker && openEditWorker(worker)}><Edit3 className="h-3.5 w-3.5" /></Button></div>
+                                                <div className="flex items-center gap-2"><Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Operations`} onClick={openOperations}><Settings2 className="h-3.5 w-3.5" /></Button></div>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="space-y-4 pt-0">
@@ -659,12 +701,12 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
                             })}
                         </div>
                     )}
-                </TabsContent>
+                </TabsContent>}
             </Tabs>
 
             <Dialog open={dialog === 'machine'} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>{editingMachineId ? 'Edit machine' : 'Add machine'}</DialogTitle><DialogDescription>Add only the context needed for Base production. The machine is independent of Full Suite loom setup.</DialogDescription></DialogHeader>
+                    <DialogHeader><DialogTitle>{editingMachineId ? 'Edit machine' : 'Add machine'}</DialogTitle><DialogDescription>Add only the context needed for Weavly Base production. This machine record is independent of broader factory administration.</DialogDescription></DialogHeader>
                     <form className="space-y-4" onSubmit={handleMachineSubmit}>
                         <div className="space-y-2"><Label htmlFor="base-machine-name">Machine name {!editingMachineId && <span className="font-normal text-muted-foreground">(optional)</span>}</Label><Input id="base-machine-name" autoFocus value={machineDraft.name} onChange={(event) => setMachineDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Leave blank for Loom #1" required={Boolean(editingMachineId)} /></div>
                         <div className="space-y-2"><Label htmlFor="base-machine-type">Machine type</Label><Select value={machineDraft.machineType} onValueChange={(value) => setMachineDraft((current) => ({ ...current, machineType: value as MachineDraft['machineType'] }))}><SelectTrigger id="base-machine-type" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jacquard">Jacquard</SelectItem><SelectItem value="power_loom">Power loom</SelectItem><SelectItem value="rapier">Rapier</SelectItem><SelectItem value="water_jet">Water jet</SelectItem><SelectItem value="air_jet">Air jet</SelectItem><SelectItem value="circular">Circular</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>

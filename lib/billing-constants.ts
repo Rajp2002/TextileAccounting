@@ -1,33 +1,48 @@
 /** Commercial prices are represented only in paise and include explicit GST. */
 export const GST_RATE = 0.18
 
-export type PurchasablePlanTier = 'base' | 'premium'
+export type PurchasablePlanTier = 'lite' | 'base'
+/** Existing legacy records remain readable but are not purchasable. */
+export type LegacyPlanTier = 'premium'
+export type BillingPlanTier = PurchasablePlanTier | LegacyPlanTier
 export type BillingPurchaseType = 'initial_purchase' | 'renewal'
 
 /**
- * Temporary self-serve rollout surface for the Estimator-first release.
- *
- * Keep the Full Suite in the catalog and server-side billing lifecycle so
- * existing tenants and a future self-serve rollout do not need new billing
- * architecture. This list only controls which plans new accounts can select.
+ * The two plans currently available to customers. The legacy operations tier
+ * is intentionally absent so it cannot appear in a new checkout.
  */
-export const BILLING_SELF_SERVE_PLAN_TIERS: readonly PurchasablePlanTier[] = ['base']
-export const BILLING_SELF_SERVE_DEFAULT_TIER: PurchasablePlanTier = 'base'
+export const BILLING_SELF_SERVE_PLAN_TIERS: readonly PurchasablePlanTier[] = ['lite', 'base']
+export const BILLING_SELF_SERVE_DEFAULT_TIER: PurchasablePlanTier = 'lite'
 
 export const BILLING_PLANS = {
+  lite: {
+    tier: 'lite',
+    catalogId: 'weavly_lite_2026',
+    name: 'Weavly Lite',
+    positioning: 'Textile costing and rate management',
+    firstYearBasePaise: 254_153,
+    firstYearGstPaise: 45_747,
+    firstYearTotalPaise: 299_900,
+    renewalBasePaise: 127_034,
+    renewalGstPaise: 22_866,
+    renewalTotalPaise: 149_900,
+  },
   base: {
     tier: 'base',
-    name: 'Weavly Estimator',
-    firstYearBasePaise: 700_000,       // ₹7,000
-    firstYearGstPaise: 126_000,        // ₹1,260
-    firstYearTotalPaise: 826_000,      // ₹8,260
-    renewalBasePaise: 200_000,         // ₹2,000
-    renewalGstPaise: 36_000,           // ₹360
-    renewalTotalPaise: 236_000,        // ₹2,360
+    catalogId: 'weavly_base_2026',
+    name: 'Weavly Base',
+    positioning: 'Costing and production management',
+    firstYearBasePaise: 847_373,
+    firstYearGstPaise: 152_527,
+    firstYearTotalPaise: 999_900,
+    renewalBasePaise: 423_644,
+    renewalGstPaise: 76_256,
+    renewalTotalPaise: 499_900,
   },
   premium: {
     tier: 'premium',
-    name: 'Weavly Full Suite',
+    catalogId: 'plan_SeGwtIQO8LE25h',
+    name: 'Weavly legacy operations',
     firstYearBasePaise: 2_500_000,     // ₹25,000
     firstYearGstPaise: 450_000,        // ₹4,500
     firstYearTotalPaise: 2_950_000,    // ₹29,500
@@ -38,7 +53,11 @@ export const BILLING_PLANS = {
 } as const
 
 export function isPurchasablePlanTier(value: unknown): value is PurchasablePlanTier {
-  return value === 'base' || value === 'premium'
+  return value === 'lite' || value === 'base'
+}
+
+export function isBillingPlanTier(value: unknown): value is BillingPlanTier {
+  return isPurchasablePlanTier(value) || value === 'premium'
 }
 
 /**
@@ -50,7 +69,7 @@ export function isSelfServePlanTier(value: unknown): value is PurchasablePlanTie
   return isPurchasablePlanTier(value) && BILLING_SELF_SERVE_PLAN_TIERS.includes(value)
 }
 
-export function getBillingPlan(tier: PurchasablePlanTier) {
+export function getBillingPlan(tier: BillingPlanTier) {
   return BILLING_PLANS[tier]
 }
 
@@ -58,7 +77,7 @@ export function isBillingPurchaseType(value: unknown): value is BillingPurchaseT
   return value === 'initial_purchase' || value === 'renewal'
 }
 
-export function getBillingPrice(tier: PurchasablePlanTier, purchaseType: BillingPurchaseType) {
+export function getBillingPrice(tier: BillingPlanTier, purchaseType: BillingPurchaseType) {
   const plan = getBillingPlan(tier)
 
   return purchaseType === 'renewal'

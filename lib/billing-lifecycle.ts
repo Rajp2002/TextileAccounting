@@ -3,10 +3,10 @@ import {
   BILLING_MODEL,
   getBillingPrice,
   isBillingPurchaseType,
-  isPurchasablePlanTier,
+  isBillingPlanTier,
   RENEWAL_ELIGIBILITY_DAYS,
   type BillingPurchaseType,
-  type PurchasablePlanTier,
+  type BillingPlanTier,
 } from './billing-constants'
 
 export type BillingSubscriptionRow = {
@@ -123,7 +123,7 @@ export function resolveBillingCheckoutPresentation(
 }
 
 function rowHasPaidHistory(row: BillingSubscriptionRow, capturedSubscriptionIds: Set<string>): boolean {
-  if (!isPurchasablePlanTier(row.plan_tier)) return false
+  if (!isBillingPlanTier(row.plan_tier)) return false
   if (capturedSubscriptionIds.has(row.id)) return true
   if (row.razorpay_payment_id) return true
   if (row.razorpay_subscription_id && validTime(row.current_start) !== null && validTime(row.current_end) !== null) {
@@ -150,7 +150,7 @@ function isCurrentlyActive(row: BillingSubscriptionRow, nowMs: number): boolean 
 export function resolveBillingPurchase(
   subscriptions: BillingSubscriptionRow[],
   payments: BillingPaymentRow[],
-  targetTier: PurchasablePlanTier,
+  targetTier: 'lite' | 'base',
   now = new Date()
 ): BillingPurchaseDecision {
   const nowMs = now.getTime()
@@ -163,13 +163,23 @@ export function resolveBillingPurchase(
   const paidRows = subscriptions.filter((row) => rowHasPaidHistory(row, capturedSubscriptionIds))
   const activePaidRows = paidRows.filter((row) => isCurrentlyActive(row, nowMs))
   const hasActivePremium = activePaidRows.some((row) => row.plan_tier === 'premium')
+  const hasActiveBase = activePaidRows.some((row) => row.plan_tier === 'base')
+
+  if (targetTier === 'lite' && (hasActiveBase || hasActivePremium)) {
+    return {
+      allowed: false,
+      purchaseType: 'renewal',
+      periodStart: now.toISOString(),
+      reason: 'A Lite subscription can be selected after the current Base period ends.',
+    }
+  }
 
   if (targetTier === 'base' && hasActivePremium) {
     return {
       allowed: false,
       purchaseType: 'initial_purchase',
       periodStart: now.toISOString(),
-      reason: 'Weavly Full Suite already includes Estimator access. A downgrade can be selected after the current Premium period ends.',
+      reason: 'This account already has legacy operations access. A Base subscription can be selected after that access ends.',
     }
   }
 
@@ -218,7 +228,7 @@ export type BillingOrderLike = {
 
 export type BillingOrderContext = {
   orgId: string
-  planTier: PurchasablePlanTier
+  planTier: BillingPlanTier
   purchaseType: BillingPurchaseType
   amountPaise: number
 }
@@ -230,7 +240,7 @@ export function readBillingOrderContext(order: BillingOrderLike): BillingOrderCo
   const planTier = notes.plan_tier
   const purchaseType = notes.purchase_type ?? notes.payment_type
 
-  if (!orgId || !isPurchasablePlanTier(planTier) || !isBillingPurchaseType(purchaseType)) return null
+  if (!orgId || !isBillingPlanTier(planTier) || !isBillingPurchaseType(purchaseType)) return null
   if (notes.purchase_type && notes.payment_type && notes.purchase_type !== notes.payment_type) return null
 
   const price = getBillingPrice(planTier, purchaseType)

@@ -13,7 +13,8 @@ function readProjectFile(path: string) {
 describe('P1 Billing Orders Static Analysis Tests', () => {
     
     it('verifies billing-constants.ts contains the correct pricing values', () => {
-        expect(BILLING_PLANS.base).toMatchObject({ firstYearTotalPaise: 826000, renewalTotalPaise: 236000 })
+        expect(BILLING_PLANS.lite).toMatchObject({ firstYearTotalPaise: 299900, renewalTotalPaise: 149900 })
+        expect(BILLING_PLANS.base).toMatchObject({ firstYearTotalPaise: 999900, renewalTotalPaise: 499900 })
         expect(BILLING_PLANS.premium).toMatchObject({ firstYearTotalPaise: 2950000, renewalTotalPaise: 826000 })
         const content = readProjectFile('lib/billing-constants.ts')
         expect(content).toContain("BILLING_MODEL = 'upfront_first_year_plus_annual_renewal'")
@@ -44,19 +45,20 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('Do not pay again')
     })
 
-    it('verifies billing page contains updated Full Suite pricing descriptions', () => {
+    it('verifies billing page contains the Lite and Base pricing descriptions', () => {
         const content = readProjectFile('app/(dashboard)/owner/billing/page.tsx')
-        expect(content).toContain('Weavly Full Suite')
-        expect(content).toContain('Weavly Estimator')
-        expect(content).toContain('₹8,260')
-        expect(content).toContain('₹2,000')
-        expect(content).toContain('₹7,000')
+        expect(content).toContain('Weavly Lite')
+        expect(content).toContain('Weavly Base')
+        expect(content).toContain('Complete costing desk')
+        expect(content).toContain('Everything in Lite')
+        expect(content).toContain('Manual annual renewal from year 2')
         expect(content).toContain('activeRenewalPrice')
-        expect(content).toContain("tier === 'base'")
+        expect(content).toContain("subscriptionTier === 'lite'")
         expect(content).toContain('Payment history')
         expect(content).toContain('Download receipt')
         expect(content.toLowerCase()).not.toContain('₹2,360/month')
         expect(content.toLowerCase()).not.toContain('₹5,900/month')
+        expect(content).not.toContain('Weavly Full Suite')
         expect(content).not.toContain('AutoRenewToggle')
     })
 
@@ -65,8 +67,10 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('BILLING_PLANS')
         expect(content).toContain('First year')
         expect(content).toContain('Renewal from year 2')
+        expect(content).toContain('Weavly Lite')
+        expect(content).toContain('Weavly Base')
         expect(content).not.toContain('/month')
-        expect(content).not.toContain('₹4,999')
+        expect(content).not.toContain('Weavly Full Suite')
     })
 
     it('verifies SubscribeButton uses order_id and calls new endpoints', () => {
@@ -92,11 +96,12 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('orderContext.orgId')
     })
 
-    it('verifies AccessGate upgrade wall displays correct Weavly Full Suite info', () => {
+    it('verifies AccessGate upgrade wall displays correct Weavly Base production info', () => {
         const content = readProjectFile('components/billing/AccessGate.tsx')
-        expect(content).toContain('Weavly Full Suite')
-        expect(content).toContain("getBillingPrice('premium', 'initial_purchase')")
-        expect(content).toContain("getBillingPrice('premium', 'renewal')")
+        expect(content).toContain('Weavly Base')
+        expect(content).toContain("getBillingPrice('base', 'initial_purchase')")
+        expect(content).toContain("getBillingPrice('base', 'renewal')")
+        expect(content).toContain('Take your costing into production')
         expect(content).toContain('featureName')
     })
 
@@ -166,11 +171,6 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
             allowed: true,
             purchaseType: 'initial_purchase',
         })
-        expect(resolveBillingPurchase([trial], [], 'premium', now)).toMatchObject({
-            allowed: true,
-            purchaseType: 'initial_purchase',
-        })
-
         const activeBase: BillingSubscriptionRow = {
             id: 'base-paid',
             plan_tier: 'base',
@@ -189,10 +189,6 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         }], [], 'base', now)).toMatchObject({
             allowed: true,
             purchaseType: 'renewal',
-        })
-        expect(resolveBillingPurchase([activeBase], [], 'premium', now)).toMatchObject({
-            allowed: true,
-            purchaseType: 'initial_purchase',
         })
     })
 
@@ -221,7 +217,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
             purchaseType: 'initial_purchase',
             periodStart: now.toISOString(),
         })
-        expect(getBillingPrice('base', 'initial_purchase').totalPaise).toBe(826000)
+        expect(getBillingPrice('base', 'initial_purchase').totalPaise).toBe(999900)
     })
 
     it('keeps halted or cancelled paid history eligible for renewal only with payment proof', () => {
@@ -266,7 +262,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         })
     })
 
-    it('blocks an active Premium downgrade and uses renewal prices for historical target tiers', () => {
+    it('blocks an active legacy operations downgrade and uses renewal prices for current tiers', () => {
         const now = new Date('2026-07-10T00:00:00.000Z')
         const activePremium: BillingSubscriptionRow = {
             id: 'premium-paid',
@@ -277,18 +273,13 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(resolveBillingPurchase([activePremium], [], 'base', now)).toMatchObject({
             allowed: false,
         })
-        expect(resolveBillingPurchase([activePremium], [], 'premium', now)).toMatchObject({
-            allowed: false,
-            purchaseType: 'renewal',
-            periodStart: '2026-12-31T00:00:00.000Z',
-        })
-        expect(getBillingPrice('base', 'renewal').totalPaise).toBe(236000)
+        expect(getBillingPrice('base', 'renewal').totalPaise).toBe(499900)
         expect(getBillingPrice('premium', 'renewal').totalPaise).toBe(826000)
     })
 
     it('binds plan, purchase type, amount split, currency, model, and access days in order context', () => {
         const validOrder = {
-            amount: 236000,
+            amount: 499900,
             currency: 'INR',
             notes: {
                 org_id: 'org-1',
@@ -296,9 +287,9 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
                 payment_type: 'renewal',
                 purchase_type: 'renewal',
                 billing_model: BILLING_MODEL,
-                base_amount_paise: '200000',
-                gst_paise: '36000',
-                total_paise: '236000',
+                base_amount_paise: '423644',
+                gst_paise: '76256',
+                total_paise: '499900',
                 currency: 'INR',
                 access_days: '365',
             },
@@ -308,9 +299,9 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
             orgId: 'org-1',
             planTier: 'base',
             purchaseType: 'renewal',
-            amountPaise: 236000,
+            amountPaise: 499900,
         })
-        expect(readBillingOrderContext({ ...validOrder, amount: 826000 })).toBeNull()
+        expect(readBillingOrderContext({ ...validOrder, amount: 999900 })).toBeNull()
         expect(readBillingOrderContext({ ...validOrder, currency: 'USD' })).toBeNull()
         expect(readBillingOrderContext({
             ...validOrder,

@@ -91,7 +91,7 @@ export function EmergencyLockdown() {
                 ) : (
                     <div className="flex flex-col gap-4">
                         <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 text-xs text-orange-800">
-                            <p className="font-bold mb-1 uppercase tracking-wider">Full Suite emergency containment:</p>
+                            <p className="font-bold mb-1 uppercase tracking-wider">Workspace emergency containment:</p>
                             <p>Triggering a lockdown records an immediate containment action for later investigation. It does not by itself satisfy or determine any regulatory notification duty. This action is irreversible via the UI for safety.</p>
                         </div>
                         

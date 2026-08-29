@@ -2,21 +2,31 @@ import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BILLING_PLANS, BILLING_SELF_SERVE_PLAN_TIERS } from '@/lib/billing-constants'
 
-const basePlanDetails = {
-    badge: 'Base Plan · available now',
-    description: 'A focused owner workspace that takes reliable fabric costing into a simple production job, owner-entered metres, piece-rate pay, and basic settlement without adding a full ERP.',
-    features: [
-        'Warp and weft cost estimator',
-        'Fabric templates and saved qualities',
-        'Saved costing history and draft recovery',
-        'Margin, break-even, and landed-cost visibility',
-        'Cost Sheet export',
-        'Create production jobs from saved costings',
-        'Owner-entered production metres',
-        'Piece-rate worker pay and advances',
-        '50% capped advance recovery and basic settlement',
-        'Independent owner access',
-    ],
+const planDetails = {
+    lite: {
+        badge: 'Complete costing desk',
+        description: 'The complete textile costing-management product for manufacturers who need reliable estimates, saved records, qualities, and rates without production management.',
+        features: [
+            'Complete estimator with live costing calculations',
+            'Saved costing history, reuse, and recalculation',
+            'Saved qualities and textile specifications',
+            'Rate Book viewing, history, and costing references',
+            'Cost breakdowns, margin visibility, and Cost Sheet export',
+            'Hosted account data and persistent records',
+        ],
+    },
+    base: {
+        badge: 'Costing + production',
+        description: 'Everything in Lite, connected to a focused production workflow for jobs, metres, machines, piece-rate pay, advances, and settlement.',
+        features: [
+            'Everything in Weavly Lite',
+            'Create production directly from saved costings',
+            'Track planned, produced, and remaining metres',
+            'Machines and daily production entries',
+            'Piece-rate worker pay, advances, and basic settlement',
+            'Production history with costing references',
+        ],
+    },
 } as const
 
 function formatRupees(paise: number) {
@@ -24,14 +34,10 @@ function formatRupees(paise: number) {
 }
 
 export default function LandingPricing() {
-    const plans = BILLING_SELF_SERVE_PLAN_TIERS.flatMap((tier) => {
-        if (tier !== 'base') return []
-
-        return [{
-            ...BILLING_PLANS.base,
-            ...basePlanDetails,
-        }]
-    })
+    const plans = BILLING_SELF_SERVE_PLAN_TIERS.map((tier) => ({
+        ...BILLING_PLANS[tier],
+        ...planDetails[tier],
+    }))
 
     return (
         <section className="landing-section relative overflow-hidden py-20 sm:py-28 lg:py-16" id="pricing">
@@ -40,20 +46,20 @@ export default function LandingPricing() {
                     <div>
                         <p className="text-xs font-black uppercase leading-7 tracking-[0.32em] text-orange-700 dark:text-orange-500">Pricing</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                            Start with the Base Estimator.
+                            Choose the costing workflow you need.
                         </h2>
                     </div>
                     <div className="max-w-2xl lg:ml-auto">
                         <p className="text-lg leading-8 text-zinc-700 dark:text-zinc-300">
-                            The current rollout keeps the Base Plan focused: cost the fabric, run a simple production job, record output, and settle piece-rate pay from one owner workspace.
+                            Weavly Lite is a complete professional textile costing desk. Weavly Base adds the production layer when you are ready to carry a costing into a job.
                         </p>
                         <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
-                            Prices below show the GST-inclusive total and its 18% breakdown. Renewal is manual and opens 30 days before expiry. Payment receipts are provided after successful payment; GST invoices are issued only when approved billing details and supplier tax configuration are complete.
+                            Prices below show GST-inclusive totals and the 18% breakdown. Renewal is manual and opens during the final 30 days of the current annual period.
                         </p>
                     </div>
                 </div>
 
-                <div className="mx-auto mt-10 max-w-3xl">
+                <div className="mx-auto mt-10 grid max-w-6xl gap-6 lg:grid-cols-2">
                     {plans.map((plan) => {
                         const firstYearBase = formatRupees(plan.firstYearBasePaise)
                         const firstYearGst = formatRupees(plan.firstYearGstPaise)
@@ -95,10 +101,10 @@ export default function LandingPricing() {
                                 </div>
 
                                 <Button asChild className="mt-6 w-full rounded-md bg-orange-600 py-6 font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-700">
-                                    <a href="/signup">Request Base Plan access</a>
+                                    <a href={`/signup?plan=${plan.tier}`}>Choose {plan.name}</a>
                                 </Button>
 
-                                <div className="mt-7 grid gap-3 text-sm leading-6 text-zinc-700 sm:grid-cols-2">
+                                <div className="mt-7 grid flex-1 gap-3 text-sm leading-6 text-zinc-700 sm:grid-cols-2">
                                     {plan.features.map((feature) => (
                                         <div key={feature} className="flex gap-3">
                                             <Check className="mt-0.5 h-5 w-5 flex-none text-orange-600" aria-hidden="true" />
@@ -111,9 +117,8 @@ export default function LandingPricing() {
                     })}
                 </div>
 
-                <div className="mx-auto mt-5 flex max-w-3xl flex-col gap-2 border border-orange-200 bg-orange-50/80 px-5 py-4 text-sm text-zinc-700 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-zinc-300">
-                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> Full Suite formal orders, supervisor production, looms, inventory/stock, dispatch, fixed-worker payroll, and analytics remain separate, are in development, and are not available for purchase yet.</p>
-                    <a className="shrink-0 font-bold text-orange-700 underline decoration-orange-300 underline-offset-4 hover:text-orange-800 dark:text-orange-300" href="/signup">Request access</a>
+                <div className="mx-auto mt-5 flex max-w-6xl flex-col gap-2 border border-orange-200 bg-orange-50/80 px-5 py-4 text-sm text-zinc-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-zinc-300">
+                    <p><span className="font-bold text-zinc-950 dark:text-white">One factory included.</span> The current rollout focuses on costing and the connected Base production workflow. Broader operational modules are outside these plans and are not offered for purchase.</p>
                 </div>
             </div>
         </section>

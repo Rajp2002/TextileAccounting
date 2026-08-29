@@ -1,13 +1,22 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath as revalidateNextPath } from 'next/cache'
 import { z } from 'zod'
 
 import { requireWritableOrg } from '@/lib/auth'
-import { getOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getOrgTier } from '@/lib/subscription'
+import { hasCapability } from '@/lib/subscription-access'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { DateSchema, UuidSchema, safeParse } from '@/lib/schemas'
 import { getSuratTodayString } from '@/lib/time'
+
+function revalidatePath(path: string) {
+    revalidateNextPath(path)
+    if (path === '/owner/production') {
+        revalidateNextPath('/owner/operations')
+        revalidateNextPath('/owner/payroll')
+    }
+}
 
 const BaseWorkerSchema = z.object({
     name: z.string().trim().min(1, 'Worker name is required').max(120, 'Worker name is too long'),
@@ -129,8 +138,8 @@ async function requireBaseProductionOwner() {
     const result = await requireWritableOrg(['owner'])
     const tier = await getOrgTier(result.profile.org_id)
 
-    if (!tierSatisfies(tier, 'base')) {
-        throw new Error('An active Weavly Base or Full Suite subscription is required.')
+    if (!hasCapability(tier, 'production')) {
+        throw new Error('An active Weavly Base subscription is required for production management.')
     }
 
     return result

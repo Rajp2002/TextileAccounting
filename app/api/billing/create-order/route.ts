@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     const orgId = profile.org_id
 
     const requested = await req.json().catch(() => ({})) as { planTier?: unknown; clientRequestId?: unknown }
-    // Missing tier is an intentional Base rollout default. Any supplied tier
+    // Missing tier is an intentional Lite rollout default. Any supplied tier
     // must pass the explicit self-serve allowlist before pricing, lifecycle
     // resolution, checkout-claim creation, or provider order creation.
     const planTier = requested.planTier === undefined
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         : requested.planTier
     if (!isSelfServePlanTier(planTier)) {
         return NextResponse.json(
-            { error: 'Only the Weavly Estimator Base Plan is available for self-serve checkout right now.' },
+            { error: 'Only Weavly Lite and Weavly Base are available for self-serve checkout.' },
             { status: 403 },
         )
     }
@@ -243,7 +243,7 @@ export async function POST(req: NextRequest) {
             .from('org_subscriptions')
             .insert({
                 org_id: orgId,
-                plan_id: null,
+                plan_id: plan.catalogId,
                 plan_tier: planTier,
                 status: 'created',
                 billing_model: BILLING_MODEL,

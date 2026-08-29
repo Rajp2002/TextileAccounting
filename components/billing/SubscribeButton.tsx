@@ -9,6 +9,7 @@ import { toast, userFacingError } from '@/lib/app-notifications'
 import { cn } from '@/lib/utils'
 import { BILLING_SELF_SERVE_DEFAULT_TIER, type BillingPurchaseType, type PurchasablePlanTier } from '@/lib/billing-constants'
 import { useTranslation } from '@/lib/i18n/context'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 
 type RazorpayCheckoutOptions = {
     key: string
@@ -128,6 +129,7 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
             if (state === 'activated') {
                 setOutcome({ state: 'success', planName, purchaseType, amount, paymentId: data.paymentId ?? paymentId ?? undefined, orderId, activeUntil: data.activeUntil })
                 toast.success(tx(`${planName} is now active. ${t('base_plan.billing.success')}`))
+                trackPlanEvent('upgrade_completed', { plan_tier: planTier, purchase_type: purchaseType })
                 if (data.paymentId ?? paymentId) onSuccess?.((data.paymentId ?? paymentId) as string)
                 router.refresh()
                 return
@@ -167,8 +169,9 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
     async function handleSubscribe() {
         setLoading(true)
         setOutcome(null)
+        trackPlanEvent('upgrade_initiated', { plan_tier: planTier })
         try {
-            const planName = tierName ?? (planTier === 'base' ? 'Weavly Estimator' : 'Weavly Full Suite')
+            const planName = tierName ?? (planTier === 'lite' ? 'Weavly Lite' : 'Weavly Base')
             const isLoaded = await loadRazorpayScript()
             if (!isLoaded) throw new Error('Razorpay Checkout could not load. Disable content blockers/adblock for this site or try another browser.')
 
@@ -270,7 +273,7 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
                 </div>
             ) : (
                 <Button type="button" id={`subscribe-btn-${planTier}`} onClick={handleSubscribe} disabled={loading} size="lg" className={cn('w-full gap-2 bg-amber-600 text-white shadow-lg shadow-amber-200/50 transition-all hover:bg-amber-700', className)}>
-                    {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {tx('Opening secure payment...')}</> : <><CreditCard className="h-4 w-4" /> {tx(buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'base' ? '₹8,260' : '₹29,500')} & Activate`)}</>}
+                    {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {tx('Opening secure payment...')}</> : <><CreditCard className="h-4 w-4" /> {tx(buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'lite' ? '₹2,999' : '₹9,999')} & Activate`)}</>}
                 </Button>
             )}
         </div>

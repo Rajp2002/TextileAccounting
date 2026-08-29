@@ -4,6 +4,7 @@ import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
+    hasPaidBaseHistory,
     resolveEffectiveSubscription,
     resolveOrgPlanAccess,
     type OrgPlanAccess,
@@ -11,6 +12,7 @@ import {
 } from './subscription-access'
 
 export {
+    hasPaidBaseHistory,
     resolveEffectiveSubscription,
     resolveOrgPlanAccess,
     tierSatisfies,
@@ -23,8 +25,9 @@ export {
  * Subscription tier hierarchy:
  *   'none'    — no active subscription (blocked)
  *   'trial'   — legacy trial access for already-created rows; new trials are retired
- *   'base'    — paid Base plan (Estimator + owner-only Production Core)
- *   'premium' — paid Premium plan (full access)
+ *   'lite'    — paid Lite plan (complete costing management)
+ *   'base'    — paid Base plan (Lite + owner-only Production Core)
+ *   'premium' — retained legacy operations entitlement
  */
 // ─── getOrgTier ───────────────────────────────────────────────────────────────
 
@@ -41,14 +44,19 @@ export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
 
     const { data, error } = await admin
         .from('organizations')
-        .select('product_experience, org_subscriptions(status, plan_tier, current_start, current_end, created_at)')
+        .select('product_experience, org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at)')
         .eq('id', orgId)
         .maybeSingle()
 
     if (error) throw new Error(`Unable to resolve organization plan access: ${error.code}`)
 
-    const subscriptionTier = resolveEffectiveSubscription(data?.org_subscriptions ?? []).tier
-    return resolveOrgPlanAccess(subscriptionTier, data?.product_experience)
+    const subscriptionRows = data?.org_subscriptions ?? []
+    const subscriptionTier = resolveEffectiveSubscription(subscriptionRows).tier
+    return resolveOrgPlanAccess(
+        subscriptionTier,
+        data?.product_experience,
+        subscriptionTier === 'none' && hasPaidBaseHistory(subscriptionRows),
+    )
 }
 
 export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {

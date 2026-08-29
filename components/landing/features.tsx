@@ -44,7 +44,7 @@ const workflow = [
     {
         title: 'Settle piece-rate pay',
         description: 'Use recorded metres, rate snapshots, and owner-entered advances to see gross pay, capped recovery, and net payout.',
-        outcome: 'Know what each worker is owed while the more advanced payroll tools stay in the Full Suite.',
+        outcome: 'Know what each worker is owed while broader payroll workflows remain outside the current catalog.',
         icon: WalletCards,
     },
 ]
@@ -61,8 +61,8 @@ const trustItems = [
         icon: ClipboardList,
     },
     {
-        title: 'Full Suite stays focused',
-        copy: 'Formal party orders, supervisor production, looms, inventory/stock, dispatch, fixed-worker payroll, analytics, and connected factory controls remain separate Full Suite scope.',
+        title: 'Choose the operational layer you need',
+        copy: 'Lite is the complete costing product. Base adds the connected production workflow. Broader factory modules remain outside the current catalog so each plan stays clear and dependable.',
         icon: MessageCircle,
     },
 ]

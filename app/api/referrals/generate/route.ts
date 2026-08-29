@@ -45,7 +45,7 @@ export async function POST() {
         return NextResponse.json({ code });
     } catch (error) {
         const message = error instanceof Error ? error.message : ''
-        if (message.includes('active Base Plan') || message === REFERRAL_CAMPAIGN_DISABLED_MESSAGE) {
+        if (message.includes('active Weavly Base plan') || message === REFERRAL_CAMPAIGN_DISABLED_MESSAGE) {
             return NextResponse.json({ error: message }, { status: 403 });
         }
         Sentry.captureException(error, { tags: { route: 'referrals_generate', method: 'POST' } });

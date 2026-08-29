@@ -7,9 +7,9 @@ import OnboardingChecklist from './checklist'
 import { getOrgTier } from '@/lib/subscription'
 
 /**
- * /onboarding — Full Suite owner first-session setup (server component)
+ * /onboarding — legacy factory setup (server component)
  *
- * This page is a small blocking gate for Full Suite owners. Base owners go
+ * This page is a small blocking gate for legacy factory owners. Lite/Base go
  * directly to the estimator and owners without an active plan go to Billing.
  * Looms, workers, and payroll are deliberately deferred to the workflows that
  * need them.
@@ -47,12 +47,12 @@ export default async function OnboardingPage() {
         redirect('/supervisor/production')
     }
 
-    // Factory setup only belongs to the Full Suite. Keep both non-Full-Suite
+    // Factory setup only belongs to the legacy factory workspace. Keep Lite/Base
     // states out of this page, including direct/stale links to /onboarding.
     if (role === 'owner' && orgId) {
         const tier = await getOrgTier(orgId)
         if (tier === 'none') redirect('/owner/billing')
-        if (tier === 'base') redirect('/owner/estimator')
+        if (tier === 'lite' || tier === 'base') redirect('/owner/estimator')
     }
 
     if (role === 'owner' && userClaims.onboarding_complete === true) {

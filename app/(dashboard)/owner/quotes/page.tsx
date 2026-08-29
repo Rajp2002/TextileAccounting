@@ -2,6 +2,7 @@ import { getEstimatorQuotes, getEstimatorTemplates } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getCachedOrgPlanAccess, tierSatisfies } from '@/lib/subscription'
+import { hasCapability } from '@/lib/subscription-access'
 import { getEstimatorWorkflowConfig, normalizeProductionMode } from '@/lib/production-mode'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
@@ -30,6 +31,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         : undefined
     const { user, profile } = auth
     const canUseProduction = tierSatisfies(planAccess.effectiveTier, 'premium')
+    const canUseProductionPipeline = hasCapability(planAccess.effectiveTier, 'production')
     const productionMode = normalizeProductionMode(organizationRes.data?.production_mode)
     const canUseQuotationWorkflow = canUseProduction
         && getEstimatorWorkflowConfig(productionMode).allowsPartyOrders
@@ -44,6 +46,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
             userId={user.id}
             orgId={profile.org_id}
             canUseProduction={canUseProduction}
+            canUseProductionPipeline={canUseProductionPipeline}
             canUseQuotationWorkflow={canUseQuotationWorkflow}
             organizationName={organizationRes.data?.name ?? ''}
         />

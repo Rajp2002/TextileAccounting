@@ -540,7 +540,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                 intro: 'The plan step activates the account for continued use after setup.',
                 why: [
                     'A paid plan keeps the factory workflow available after setup.',
-                    'Billing status gates long-term access to premium workflows.',
+                    'Billing status gates long-term access to broader factory workflows.',
                     'Owners can change plan details later from Billing.',
                 ],
                 actions: [

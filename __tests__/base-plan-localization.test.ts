@@ -29,6 +29,7 @@ describe('Base Plan strict localization', () => {
   it('limits strict cleanup to Base-plan surfaces', () => {
     expect(isBasePlanSurfacePath('/owner/estimator')).toBe(true)
     expect(isBasePlanSurfacePath('/owner/orders')).toBe(true)
-    expect(isBasePlanSurfacePath('/owner/payroll')).toBe(false)
+    expect(isBasePlanSurfacePath('/owner/operations')).toBe(true)
+    expect(isBasePlanSurfacePath('/owner/payroll')).toBe(true)
   })
 })

@@ -250,7 +250,7 @@ function OnboardingGuideCard() {
 
 function DeferredSetupCard({ status }: { status: OnboardingStatus }) {
     const items = [
-        { label: 'Looms', detail: 'Add when starting a Full Suite production run.', icon: Server, done: status.hasMachine },
+        { label: 'Looms', detail: 'Add when starting a broader production run.', icon: Server, done: status.hasMachine },
         { label: 'Workers', detail: 'Add when recording production.', icon: Users, done: status.hasWorker },
         { label: 'Payroll', detail: 'Configure when you are ready to pay workers.', icon: Calendar, done: status.hasPayrollConfig },
     ]

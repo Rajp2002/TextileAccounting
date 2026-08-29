@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
     title: 'Factory Today — Weavly',
-    description: "Your factory's live action list for today. Production, stock, dispatches, and payroll — all in one view.",
+    description: "A retained operational action view for existing factory workspaces.",
 }
 
 async function FactoryTodayContent() {

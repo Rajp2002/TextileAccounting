@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getBillingPrice, type BillingPurchaseType, type PurchasablePlanTier } from '@/lib/billing-constants'
+import { getBillingPrice, type BillingPurchaseType, type BillingPlanTier } from '@/lib/billing-constants'
 import { BILLING_DOCUMENT_POLICY, isGstInvoiceSupported } from '@/lib/billing-document-policy'
 
 type BillingProfile = {
@@ -75,7 +75,7 @@ export async function ensureBillingInvoice({
 }: {
   orgId: string
   paymentId: string
-  planTier: PurchasablePlanTier
+  planTier: BillingPlanTier
   purchaseType: BillingPurchaseType
   amountPaise: number
 }): Promise<{ issued: boolean; invoice?: IssuedInvoice; reason?: string }> {

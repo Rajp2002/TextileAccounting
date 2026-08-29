@@ -29,7 +29,7 @@ export async function POST(req: Request) {
             'Cannot use your own referral code',
             'Referral code already applied for this organization',
             'This referral code has reached its five-referral limit for this year.',
-            'Referral rewards require an active Base Plan with the initial year paid.',
+            'Referral rewards require an active Weavly Base plan with the initial year paid.',
             REFERRAL_CAMPAIGN_DISABLED_MESSAGE,
         ]
         if (!safeMessages.includes(message)) {

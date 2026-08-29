@@ -34,7 +34,7 @@ describe('Sprint 4 billing trust boundaries', () => {
 
   it('accepts only a server-owned catalog order context', () => {
     const valid = readBillingOrderContext({
-      amount: 8_260_00,
+      amount: 999_900,
       currency: 'INR',
       notes: {
         org_id: 'org-rajesh',
@@ -42,22 +42,22 @@ describe('Sprint 4 billing trust boundaries', () => {
         plan_tier: 'base',
         purchase_type: 'initial_purchase',
         payment_type: 'initial_purchase',
-        base_amount_paise: '700000',
-        gst_paise: '126000',
-        total_paise: '826000',
+        base_amount_paise: '847373',
+        gst_paise: '152527',
+        total_paise: '999900',
         access_days: '365',
         currency: 'INR',
       },
     })
-    expect(valid).toMatchObject({ orgId: 'org-rajesh', planTier: 'base', purchaseType: 'initial_purchase', amountPaise: 826000 })
+    expect(valid).toMatchObject({ orgId: 'org-rajesh', planTier: 'base', purchaseType: 'initial_purchase', amountPaise: 999900 })
 
     expect(readBillingOrderContext({
-      amount: 8_260_00,
+      amount: 999_900,
       currency: 'INR',
       notes: { ...validNotes(), total_paise: '236000' },
     })).toBeNull()
     expect(readBillingOrderContext({
-      amount: 8_260_00,
+      amount: 999_900,
       currency: 'INR',
       notes: { ...validNotes(), plan_tier: 'premium' },
     })).toBeNull()
@@ -137,9 +137,9 @@ function validNotes() {
     plan_tier: 'base',
     purchase_type: 'initial_purchase',
     payment_type: 'initial_purchase',
-    base_amount_paise: '700000',
-    gst_paise: '126000',
-    total_paise: '826000',
+    base_amount_paise: '847373',
+    gst_paise: '152527',
+    total_paise: '999900',
     access_days: '365',
     currency: 'INR',
   }

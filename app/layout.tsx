@@ -22,8 +22,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   applicationName: "Weavly",
-  title: "Weavly — Factory OS for Textile Weaving Units",
-  description: "Weavly connects Cost Estimates, Fabric Quality, loom production, Party Orders, Godown Stock, Dispatches, Upaad, Worker Hisaab, and messages for grey-fabric weaving factories.",
+  title: "Weavly — Textile Costing & Production Management",
+  description: "Weavly helps weaving factories calculate, save, and manage textile costings, yarn rates, qualities, and connected production workflows.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

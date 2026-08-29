@@ -21,8 +21,8 @@ const footerSections = [
         title: 'Resources',
         links: [
             { name: 'FAQ', href: '/#faq' },
-            { name: 'Base Plan workspace', href: '/login' },
-            { name: 'Request Base Plan access', href: '/signup' },
+            { name: 'Weavly Lite / Base workspace', href: '/login' },
+            { name: 'Choose a plan', href: '/signup' },
         ]
     },
     {

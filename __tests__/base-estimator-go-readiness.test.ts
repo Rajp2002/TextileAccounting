@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { resolveEffectiveSubscription } from '../lib/subscription-access'
+import { hasPaidBaseHistory, resolveEffectiveSubscription, resolveOrgPlanAccess } from '../lib/subscription-access'
 import { validateFactoryCostProfile } from '../lib/estimator-validation'
 
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
@@ -12,6 +12,24 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(resolveEffectiveSubscription([{ status: 'paused', plan_tier: 'base', current_start: '2026-01-01T00:00:00Z', current_end: '2026-07-22T00:00:00Z' }], now).tier).toBe('base')
     expect(resolveEffectiveSubscription([{ status: 'active', plan_tier: 'base', current_start: '2026-07-22T00:00:00Z', current_end: '2027-07-22T00:00:00Z' }], now).tier).toBe('none')
     expect(resolveEffectiveSubscription([{ status: 'failed', plan_tier: 'base', current_start: '2026-01-01T00:00:00Z', current_end: '2027-01-01T00:00:00Z' }], now).tier).toBe('none')
+  })
+
+  it('retains the Lite costing desk after a paid Base period expires', () => {
+    const now = Date.parse('2026-08-30T12:00:00Z')
+    const expiredBase = {
+      status: 'expired',
+      plan_tier: 'base',
+      current_start: '2025-08-30T00:00:00Z',
+      current_end: '2026-08-29T00:00:00Z',
+      razorpay_payment_id: 'pay_base_paid',
+    }
+
+    expect(hasPaidBaseHistory([expiredBase], now)).toBe(true)
+    expect(resolveOrgPlanAccess('none', 'base', true)).toMatchObject({
+      subscriptionTier: 'none',
+      effectiveTier: 'lite',
+    })
+    expect(resolveOrgPlanAccess('none', 'base', false).effectiveTier).toBe('none')
   })
 
   it('rejects invalid factory economics before persistence', () => {
@@ -50,7 +68,7 @@ describe('Base Estimator Go-readiness hardening', () => {
   })
 
   it('gates Rate Book at route, action, RLS, and lockdown boundaries', () => {
-    expect(source('app/(dashboard)/owner/rates/layout.tsx')).toContain('requiredTier="base"')
+    expect(source('app/(dashboard)/owner/rates/layout.tsx')).toContain('requiredCapability="rate_book"')
     const actions = source('app/(dashboard)/owner/rates/actions.ts')
     expect(actions.match(/requireBaseTier\(profile\.org_id\)/g)?.length).toBeGreaterThanOrEqual(4)
     const migration = source('supabase/migrations/20260721183000_base_estimator_go_readiness.sql')

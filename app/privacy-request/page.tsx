@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
     title: 'Privacy & Grievance Requests — Weavly',
-    description: 'How to submit and follow up on a privacy request or grievance for the Weavly Base Plan.',
+    description: 'How to submit and follow up on a privacy request or grievance for a Weavly Lite or Base workspace.',
 }
 
 export default function PrivacyRequestPage() {
@@ -32,7 +32,7 @@ export default function PrivacyRequestPage() {
 
             <section className="border-b border-white/10 bg-zinc-950 text-white">
                 <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300">Base Plan privacy channel</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300">Weavly privacy channel</p>
                     <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl">Privacy and grievance requests</h1>
                     <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">
                         Use the monitored channel below to ask about your personal information, request a correction or deletion, report a concern, or challenge an earlier response.

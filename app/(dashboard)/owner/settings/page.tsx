@@ -338,8 +338,8 @@ export default function SettingsPage() {
         },
         onSuccess: (_result, productExperience) => {
             toast.success(tx(productExperience === 'base'
-                ? 'Base Plan workspace is now active'
-                : 'Full Suite workspace is now active'))
+                ? 'Costing workspace is now active'
+                : 'Broader operations workspace is now active'))
             router.refresh()
         },
         onError: (err: unknown) => {
@@ -602,12 +602,12 @@ export default function SettingsPage() {
                                     {([
                                         {
                                             value: 'base' as const,
-                                            title: 'Base experience',
+                                            title: 'Costing workspace',
                                             description: 'Cost Estimates, Saved Costings, Yarn Rate Book, settings, and billing.',
                                         },
                                         {
                                             value: 'full_suite' as const,
-                                            title: 'Full Suite experience',
+                                            title: 'Broader operations workspace',
                                             description: 'All factory, production, workforce, stock, dispatch, and costing workflows.',
                                         },
                                     ]).map((option) => {
@@ -645,7 +645,7 @@ export default function SettingsPage() {
                                     })}
                                 </div>
                                 <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
-                                    {tx('Existing production and factory records are never deleted. Switch back to Full Suite at any time to use them again.')}
+                                    {tx('Existing production and factory records are never deleted. Open the broader operations workspace at any time to use them again.')}
                                 </p>
                             </SettingsPanel>
                         </SettingsSection>
@@ -846,18 +846,18 @@ export default function SettingsPage() {
                                     <PanelHeading
                                         icon={SlidersHorizontal}
                                         title="Choose the workspace for this rollout"
-                                        description="Your paid Full Suite plan stays active. This setting only changes which product experience the organization uses."
+                                        description="Your paid legacy operations entitlement stays active. This setting only changes which workspace experience the organization uses."
                                     />
                                     <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
                                         {([
                                             {
                                                 value: 'base' as const,
-                                                title: 'Base Plan',
+                                                title: 'Costing workspace',
                                                 description: 'Cost Estimates, Saved Costings, Yarn Rate Book, settings, and billing.',
                                             },
                                             {
                                                 value: 'full_suite' as const,
-                                                title: 'Full Suite',
+                                                title: 'Broader operations workspace',
                                                 description: 'All factory, production, workforce, stock, dispatch, and costing workflows.',
                                             },
                                         ]).map((option) => {
@@ -895,7 +895,7 @@ export default function SettingsPage() {
                                         })}
                                     </div>
                                     <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
-                                        {tx('Existing production and factory records are never deleted. Switch back to Full Suite at any time to use them again.')}
+                                        {tx('Existing production and factory records are never deleted. Open the broader operations workspace at any time to use them again.')}
                                     </p>
                                 </SettingsPanel>
                             </SettingsSection>
@@ -1073,7 +1073,7 @@ export default function SettingsPage() {
                             <Calculator className="h-4 w-4 text-saffron" />
                             <h3 className="text-base font-semibold text-ink">Weavly Estimator</h3>
                         </div>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx('Your Base Plan workspace includes reusable Fabric Qualities, saved Cost Estimates, configurable Cost Estimate defaults, and the lightweight Production Core.')}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx('Your Weavly costing workspace includes reusable Fabric Qualities, saved Cost Estimates, configurable Cost Estimate defaults, Rate Book references, and persistent account data.')}</p>
                         <div className="mt-4 space-y-2">
                             <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <CreditCard className="h-4 w-4" />

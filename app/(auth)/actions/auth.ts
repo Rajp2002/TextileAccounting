@@ -83,6 +83,7 @@ type CreateOrganizationInput = {
     factoryName: string
     phone: string
     referralCode?: string
+    selectedPlan?: 'lite' | 'base'
     legalAcceptance: {
         accepted: boolean
         termsVersion: string
@@ -313,7 +314,8 @@ export async function createOrganizationAndRedirect(input: CreateOrganizationInp
     if (result && 'error' in result) return result
     // Plan selection comes before factory onboarding. Estimator-only owners do
     // not need machines, workers, payroll, or production-mode setup.
-    redirect('/owner/billing')
+    const selectedPlan = input.selectedPlan === 'base' ? 'base' : 'lite'
+    redirect(`/owner/billing?plan=${selectedPlan}`)
 }
 
 // ─── validateJoinCode ──────────────────────────────────────────────────────────
@@ -577,12 +579,12 @@ export async function signIn(input: { email: string; password: string; traceId?:
         const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
 
         if (!onboardingComplete) {
-            if (tier === 'base') return succeed('/owner/estimator')
+            if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')
             if (tier === 'none') return succeed('/owner/billing')
             return succeed('/onboarding')
         }
 
-        if (tier === 'base') return succeed('/owner/estimator')
+        if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')
         return succeed('/owner/today')
     } else if (userRole === 'supervisor') {
         return succeed('/supervisor/dashboard')

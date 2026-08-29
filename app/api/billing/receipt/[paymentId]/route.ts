@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generatePaymentReceiptPdf } from '@/lib/generate-payment-receipt'
-import { isBillingPurchaseType, isPurchasablePlanTier } from '@/lib/billing-constants'
+import { isBillingPurchaseType, isBillingPlanTier } from '@/lib/billing-constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +45,7 @@ export async function GET(
 
   const planTier = subscription?.plan_tier
   const purchaseType = subscription?.checkout_purchase_type
-  if (!subscription || !isPurchasablePlanTier(planTier) || !isBillingPurchaseType(purchaseType)) {
+  if (!subscription || !isBillingPlanTier(planTier) || !isBillingPurchaseType(purchaseType)) {
     return NextResponse.json({ error: 'Payment receipt details are incomplete.' }, { status: 409 })
   }
 

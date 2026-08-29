@@ -8,7 +8,7 @@ import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     return (
-        <AccessGate requiredTier="base">
+        <AccessGate requiredCapability="account_data" routeName="/owner/settings">
             <SettingsDataLoader>{children}</SettingsDataLoader>
         </AccessGate>
     )

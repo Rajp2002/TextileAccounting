@@ -60,7 +60,7 @@ describe('Annual referral application and redemption wiring', () => {
         expect(route).toContain("requireRole(['owner'])")
         expect(route).toContain("rpc('redeem_referral_year_credit'")
         expect(button).toContain("'/api/billing/redeem-referral-year'")
-        expect(card).toContain('initial Base Plan payment is required')
+        expect(card).toContain('initial Weavly Base payment is required')
         expect(card).toContain('capped at five')
     })
 })

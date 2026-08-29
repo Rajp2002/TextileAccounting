@@ -11,8 +11,8 @@ describe('Base Plan privacy policy accuracy', () => {
     const privacy = source('app/privacy/page.tsx')
 
     it('publishes a new version for the corrected privacy notice', () => {
-        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-08-29')
-        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-08-29')
+        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-08-30')
+        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-08-30')
         expect(privacy).toContain('LEGAL_DOCUMENTS.privacy.displayDate')
     })
 
@@ -64,5 +64,7 @@ describe('Base Plan privacy policy accuracy', () => {
         expect(privacy).toContain('within one month of receipt')
         expect(privacy).not.toContain("value: '7 working days'")
         expect(privacy).toContain('does not represent that every DPDP provision is already in force')
+        expect(privacy).toContain('Lite and Base')
+        expect(privacy).toContain('Product-usage events are first-party service analytics')
     })
 })

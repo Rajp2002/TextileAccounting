@@ -1232,7 +1232,7 @@ export const en = {
     invalid_code: "Invalid access code",
   },
   base_plan: {
-    language_promise: "The Base Plan is available in English, Hindi, and Gujarati.",
+    language_promise: "Weavly Lite and Weavly Base are available in English, Hindi, and Gujarati.",
     glossary_title: "Factory terms",
     glossary_help: "These terms stay in the familiar factory form; the explanation tells staff what the field means.",
     glossary: {

@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/nextjs'
 import {
     getBillingPrice,
     type BillingPurchaseType,
-    type PurchasablePlanTier,
+    type BillingPlanTier,
 } from '@/lib/billing-constants'
 
 type AtomicActivationResult = {
@@ -45,7 +45,7 @@ export async function activateInitialPurchase({
     razorpayPaymentId: string
     amountPaise: number
     method: string | null
-    planTier: PurchasablePlanTier
+    planTier: BillingPlanTier
     purchaseType: BillingPurchaseType
 }) {
     const expectedAmount = getBillingPrice(planTier, purchaseType).totalPaise

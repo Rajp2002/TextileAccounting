@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
-const proofItems = ['Base Plan available now', 'GST-inclusive pricing', 'Works as an installable PWA']
+const proofItems = ['Lite + Base plans available', 'GST-inclusive pricing', 'Works as an installable PWA']
 
 const estimatorSignals = [
     'Production cost per metre',
@@ -31,13 +31,13 @@ export default function LandingHero() {
                         </p>
 
                         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                            <Link href="/signup" className="w-full sm:w-auto">
+                            <Link href="/signup?plan=lite" className="w-full sm:w-auto">
                                 <Button
                                     id="hero-owner-signup-btn"
                                     size="lg"
                                     className="w-full rounded-md bg-zinc-950 px-8 py-6 text-base font-bold text-white shadow-xl shadow-zinc-950/10 transition-all hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 sm:w-auto"
                                 >
-                                    Start with the Base Plan
+                                    Start with Weavly Lite
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
@@ -76,12 +76,12 @@ export default function LandingHero() {
             <section className="landing-section relative z-10 isolate overflow-hidden" id="product" aria-label="Current Weavly estimator view">
                 <div className="mx-auto grid w-full max-w-7xl gap-7 px-3 py-14 xs:px-6 sm:py-20 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:px-8 lg:py-12">
                     <div className="max-w-xl">
-                        <p className="text-xs font-black uppercase tracking-[0.3em] text-orange-700 dark:text-orange-400">The actual Base Plan workspace</p>
+                        <p className="text-xs font-black uppercase tracking-[0.3em] text-orange-700 dark:text-orange-400">The Weavly costing workspace</p>
                         <h2 className="mt-4 text-4xl font-black leading-[1.05] text-zinc-950 sm:text-6xl dark:text-white">
                             Open the app. See the numbers before you quote.
                         </h2>
                         <p className="mt-5 text-lg leading-8 text-zinc-700 dark:text-zinc-300">
-                            The Base Plan keeps the first release focused: build a reliable cost estimate, start a simple production job, record output, understand piece-rate pay, and export the costing when you are ready.
+                            Lite gives you the complete costing desk: build a reliable estimate, save the quality and rates, and return to the decision whenever you need it. When the decision becomes a production job, Base carries that costing into the production workflow.
                         </p>
                         <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                             {estimatorSignals.map((signal) => (
@@ -92,7 +92,7 @@ export default function LandingHero() {
                             ))}
                         </ul>
                         <p className="mt-7 border-l-2 border-orange-500 pl-4 text-xs leading-5 text-zinc-700 dark:text-zinc-400">
-                            Authentic Weavly Base Plan owner-screen capture from the current QA build. Demo costing data shown.
+                            Authentic Weavly owner-screen capture from the current QA build. Demo costing data shown.
                         </p>
                     </div>
 
@@ -108,7 +108,7 @@ export default function LandingHero() {
                             <div className="relative aspect-[16/10] overflow-hidden bg-[#fff8ea]">
                                 <Image
                                     src="/images/estimator-base-owner.png"
-                                    alt="Current Weavly Base Plan workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
+                                    alt="Current Weavly costing workspace showing production cost, suggested price, margin, break-even price, and pricing assumptions"
                                     fill
                                     priority
                                     sizes="(max-width: 1024px) 100vw, 62vw"

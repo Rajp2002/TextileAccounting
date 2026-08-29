@@ -9,10 +9,10 @@ function readProjectFile(path: string) {
 }
 
 describe('P1 Billing Gates Coverage', () => {
-    it('verifies /owner/quotes has AccessGate with base tier', () => {
+    it('verifies /owner/quotes has AccessGate with the saved-costings capability', () => {
         const content = readProjectFile('app/(dashboard)/owner/quotes/layout.tsx')
         expect(content).toContain('AccessGate')
-        expect(content).toContain('requiredTier="base"')
+        expect(content).toContain('requiredCapability="saved_costings"')
     })
 
     it('verifies /owner/market-runs has AccessGate with premium tier', () => {

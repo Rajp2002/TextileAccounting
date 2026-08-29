@@ -24,12 +24,13 @@ describe('Base Plan security incident workflow', () => {
         expect(settings).toContain('href="/security-incident"')
     })
 
-    it('keeps the initial workflow limited to Base Plan data', () => {
+    it('keeps the initial workflow limited to current Lite/Base data', () => {
         expect(constants).toContain('Account and authentication data')
         expect(constants).toContain('Costings and associated business contacts')
         expect(constants).toContain('Billing references and subscription records')
         expect(constants).not.toContain('Worker payroll data')
-        expect(page).toContain('future Full Suite scope')
+        expect(page).toContain('Weavly Lite stores costing records')
+        expect(page).toContain('Weavly Base additionally stores owner-run production records')
         expect(migration).toContain('security_incidents_base_categories_only')
     })
 

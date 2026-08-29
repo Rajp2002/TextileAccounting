@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { getCachedOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getCachedOrgTier } from '@/lib/subscription'
+import { hasCapability } from '@/lib/subscription-access'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import {
     collectYarnRateCandidates,
@@ -50,9 +51,9 @@ const UNITS = new Set<CostRateUnit>(['per_kg', 'per_m', 'percent'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 async function requireBaseTier(orgId: string) {
-    return tierSatisfies(await getCachedOrgTier(orgId), 'base')
+    return hasCapability(await getCachedOrgTier(orgId), 'rate_book')
         ? null
-        : 'An active Weavly Estimator or Full Suite subscription is required.'
+        : 'An active Weavly Lite or Weavly Base subscription is required.'
 }
 
 function validateRate(input: CostRateInput) {

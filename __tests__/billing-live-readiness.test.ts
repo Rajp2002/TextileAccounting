@@ -85,7 +85,7 @@ describe('live billing readiness gate', () => {
     it('removes payment buttons from the owner billing page while blocked', () => {
         const page = source('app/(dashboard)/owner/billing/page.tsx')
 
-        expect(page).toContain('Base Plan payments are not open yet')
+        expect(page).toContain('Plan payments are not open yet')
         expect(page).toContain('canShowPlanCards && billingReadiness.canCreateOrder')
         expect(page).toContain('billingReady={billingReadiness.canCreateOrder}')
     })

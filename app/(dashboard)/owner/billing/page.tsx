@@ -8,7 +8,7 @@ import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
     CheckCircle2, AlertCircle, ChevronDown, Clock, Download, XCircle,
-    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, CreditCard,
+    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, CreditCard, Calculator,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
@@ -17,6 +17,8 @@ import {
     BILLING_SELF_SERVE_PLAN_TIERS,
     getBillingPlan,
     getBillingPrice,
+    isSelfServePlanTier,
+    type BillingPlanTier,
     type PurchasablePlanTier,
 } from '@/lib/billing-constants'
 import {
@@ -32,6 +34,7 @@ import { getBillingReadiness } from '@/lib/billing-readiness'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { Suspense } from 'react'
 import { PageHeader, SectionHeader, StatusBadge } from '@/components/ui/page-header'
+import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -89,8 +92,9 @@ function formatAmount(paise: number): string {
 }
 
 function getBillingPlanName(planTier: string | null | undefined): string {
-    if (planTier === 'base') return 'Weavly Estimator'
-    if (planTier === 'premium') return 'Weavly Full Suite'
+    if (planTier === 'lite') return 'Weavly Lite'
+    if (planTier === 'base') return 'Weavly Base'
+    if (planTier === 'premium') return 'Weavly legacy operations'
     return 'Weavly payment'
 }
 
@@ -310,8 +314,9 @@ function WorkspaceCard({
     paidSubscriptionTier: string
     productExperience: 'base' | 'full_suite'
 }) {
-    const isBaseWorkspace = productExperience === 'base' || workspaceTier === 'base'
-    const hasFullSuiteFunding = isBaseWorkspace && paidSubscriptionTier === 'premium'
+    const isLiteWorkspace = workspaceTier === 'lite'
+    const isBaseWorkspace = workspaceTier === 'base'
+    const isLegacyWorkspace = paidSubscriptionTier === 'premium' && !isBaseWorkspace && !isLiteWorkspace
     const isActive = workspaceTier !== 'none'
 
     return (
@@ -329,16 +334,18 @@ function WorkspaceCard({
                 </span>
                 <div className="min-w-0">
                     <h2 className="text-lg font-bold tracking-tight text-ink">
-                        {isBaseWorkspace ? 'Base Plan / Estimator workspace' : paidSubscriptionTier === 'premium' ? 'Full Suite workspace' : 'Workspace not active'}
+                        {isLiteWorkspace ? 'Weavly Lite' : isBaseWorkspace ? 'Weavly Base' : isLegacyWorkspace ? 'Legacy operations workspace' : 'Workspace not active'}
                     </h2>
                     <p className="mt-1 text-sm leading-relaxed text-body">
                         {!isActive
                             ? 'Choose an available subscription below to activate a workspace.'
-                            : hasFullSuiteFunding
-                                ? 'Your Full Suite subscription funds this Base workspace. Factory operations stay outside the current workspace.'
+                            : isLiteWorkspace
+                                ? 'Complete textile costing, saved costings, qualities, Rate Book, and account data are enabled here.'
                                 : isBaseWorkspace
-                                    ? 'Costing, saved qualities, and customer quotations are enabled here.'
-                                    : 'Estimator and connected factory operations are enabled here.'}
+                                    ? 'Everything in Lite plus connected production jobs, progress, machines, and worker settlement records is enabled here.'
+                                    : isLegacyWorkspace
+                                        ? 'This retained legacy entitlement is separate from the current Lite and Base catalog.'
+                                        : 'Choose a plan to activate the costing workspace.'}
                     </p>
                 </div>
             </div>
@@ -359,7 +366,7 @@ function SubscriptionCard({
     billingReadinessMessage,
 }: {
     subscriptionTier: string
-    displayPlanTier: PurchasablePlanTier | null
+    displayPlanTier: BillingPlanTier | null
     subscription: { plan_tier: string; current_end: string | null } | null
     activeRenewalPrice: ReturnType<typeof getBillingPrice> | null
     renewalPlanTier: PurchasablePlanTier | null
@@ -369,23 +376,25 @@ function SubscriptionCard({
     billingReady: boolean
     billingReadinessMessage: string
 }) {
-    const isActive = ['base', 'premium', 'trial'].includes(subscriptionTier)
+    const isActive = ['lite', 'base', 'premium', 'trial'].includes(subscriptionTier)
     const isTrial = subscriptionTier === 'trial'
     const hasExpiredPlan = !isActive && Boolean(displayPlanTier)
     const planName = displayPlanTier
         ? getBillingPlan(displayPlanTier).name
         : isTrial
-            ? 'Legacy Full Suite trial'
+            ? 'Legacy trial access'
             : 'No active subscription'
     const subscriptionDescription = isTrial
         ? 'Legacy trial access is temporary and does not create a paid subscription.'
         : hasExpiredPlan
             ? 'This paid period has ended. A new payment is required to restore access.'
             : displayPlanTier === 'premium'
-                ? 'This subscription includes Full Suite entitlement, even when the selected workspace is Base Plan / Estimator.'
+                ? 'This retained subscription provides legacy operational access for existing accounts.'
                 : displayPlanTier === 'base'
-                    ? 'This subscription provides the Base Plan / Estimator costing workspace.'
-                    : 'A paid subscription has not been activated yet.'
+                    ? 'This subscription provides the complete Lite costing desk plus Base production management.'
+                    : displayPlanTier === 'lite'
+                        ? 'This subscription provides the complete textile costing desk.'
+                        : 'A paid subscription has not been activated yet.'
     const canRenew = Boolean(renewalAvailable && renewalPlanTier && activeRenewalPrice)
 
     return (
@@ -442,7 +451,7 @@ function SubscriptionCard({
                         )}
                     </>
                 ) : displayPlanTier === 'premium' ? (
-                    <p className="mt-1 text-xs leading-relaxed text-body">Premium self-serve checkout is paused for the Base pilot. No Full Suite checkout action is available here.</p>
+                    <p className="mt-1 text-xs leading-relaxed text-body">Legacy operations checkout is not available from the current Lite/Base catalog.</p>
                 ) : renewalIsUpcoming && subscription?.current_end ? (
                     <p className="mt-1 text-xs leading-relaxed text-body">Renewal opens on {formatShortDate(renewalEligibleAt)}. No automatic charge will be made.</p>
                 ) : isActive ? (
@@ -503,9 +512,9 @@ function AccessStateCallout({
     isPending: boolean
     isRetryable: boolean
 }) {
-    if (subscriptionTier === 'base' || subscriptionTier === 'premium') return null
+    if (subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium') return null
 
-    const expiredPlan = subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
+    const expiredPlan = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
         ? getBillingPlan(subscription.plan_tier)
         : null
 
@@ -515,8 +524,8 @@ function AccessStateCallout({
                 <div className="h-1.5 w-full bg-warning" />
                 <CardContent className="space-y-3 p-5">
                     <div className="flex items-center gap-2 text-warning"><Timer className="h-4 w-4" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-wider">Legacy trial access</p></div>
-                    <h2 className="text-xl font-bold tracking-tight text-ink">Temporary Full Suite access</h2>
-                    <p className="text-sm leading-relaxed text-body">Access is available until {formatDate(subscription?.current_end ?? null)}. New Full Suite self-serve checkout is paused; the available Estimator subscription is shown below.</p>
+                    <h2 className="text-xl font-bold tracking-tight text-ink">Temporary access</h2>
+                    <p className="text-sm leading-relaxed text-body">Access is available until {formatDate(subscription?.current_end ?? null)}. Choose Weavly Lite or Weavly Base below when you are ready for a paid plan.</p>
                 </CardContent>
             </Card>
         )
@@ -530,7 +539,7 @@ function AccessStateCallout({
                 ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
                 : expiredPlan
                     ? { icon: Lock, label: 'Subscription expired', title: `${expiredPlan.name} access has ended.`, text: 'Choose the available renewal option below to restore access. Your previous payment records remain available.' }
-                    : { icon: Star, label: 'No active subscription', title: 'Choose an available subscription.', text: 'Start with the standalone Estimator for costing, saved qualities, and customer quotations.' }
+                    : { icon: Star, label: 'No active subscription', title: 'Choose Lite or Base.', text: 'Start with Weavly Lite for complete costing management, or choose Base when you need connected production management.' }
     const Icon = state.icon
 
     return (
@@ -619,30 +628,30 @@ function PlanCards({
 }) {
     const plans = [
         {
-            tier: 'base' as const,
-            name: 'Weavly Estimator',
-            badge: 'Standalone',
-            renewal: '₹2,360 total/year (₹2,000 + ₹360 GST)',
-            features: ['Estimator workspace', 'Saved Fabric Qualities', 'Customer quotation documents', 'Draft recovery', 'Independent account access'],
-            icon: Zap,
+            tier: 'lite' as const,
+            name: 'Weavly Lite',
+            badge: 'Complete costing desk',
+            positioning: 'Textile costing and rate management',
+            features: ['Complete textile estimator and live calculations', 'Saved costings, history, reuse, and recalculation', 'Saved qualities and Rate Book references', 'Hosted account data and persistent records'],
+            icon: Calculator,
         },
         {
-            tier: 'premium' as const,
-            name: 'Weavly Full Suite',
-            badge: 'Complete factory',
-            renewal: '₹8,260 total/year (₹7,000 + ₹1,260 GST)',
-            features: ['Everything in Estimator', 'Production & order tracking', 'Market runs and godown stock', 'Dispatches', 'Payroll, advances, and analytics'],
-            icon: Star,
+            tier: 'base' as const,
+            name: 'Weavly Base',
+            badge: 'Costing + production',
+            positioning: 'Costing and production management',
+            features: ['Everything in Lite', 'Create production directly from saved costings', 'Track planned, produced, and remaining metres', 'Machines, daily production, piece-rate pay, advances, and settlements'],
+            icon: Zap,
         },
     ]
         .filter((plan) => visibleTiers.includes(plan.tier))
-        .filter((plan) => currentTier !== 'base' || plan.tier === 'premium')
         .filter((plan) => decisions[plan.tier].allowed)
 
     if (plans.length === 0) return null
 
     return (
         <div className="space-y-5 pt-4">
+            <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: currentTier }} />
             <SectionHeader title={label} description="Clear annual pricing. 18% GST is included in every total shown." />
             <div className="grid gap-6 lg:grid-cols-2">
                 {plans.map((plan) => {
@@ -663,12 +672,13 @@ function PlanCards({
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron"><Icon className="h-5 w-5" /></div>
                                     <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
                                 </div>
+                                <p className="text-sm font-semibold text-saffron-deep">{plan.positioning}</p>
                                 <div>
                                     <div className="flex items-baseline gap-1"><span className="text-3xl font-bold tracking-tight text-ink">{total}</span><span className="text-sm text-subtle">/{isRenewal ? 'renewal year' : 'first year'}</span></div>
                                     <p className="mt-1 text-xs text-body">{breakdown}</p>
                                 </div>
                                 <div className="rounded-lg border border-hairline bg-surface-soft p-3 text-sm font-medium text-body">
-                                    <p>Manual renewal from year 2</p><p className="mt-0.5 text-xs text-subtle">{plan.renewal}</p>
+                                    <p>Manual annual renewal from year 2</p><p className="mt-0.5 text-xs text-subtle">{formatAmount(getBillingPrice(plan.tier, 'renewal').totalPaise)} total renewal · GST included</p>
                                 </div>
                             </div>
                             <ul className="flex-1 space-y-3">
@@ -681,8 +691,8 @@ function PlanCards({
                                 buttonLabel={resumePendingCheckout
                                     ? `Resume secure payment · ${total}`
                                     : `Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
-                                successHref={isRenewal ? '/owner/billing' : plan.tier === 'premium' ? '/onboarding' : '/owner/estimator'}
-                                successLabel={isRenewal ? 'View payment history' : plan.tier === 'premium' ? 'Set up your factory' : 'Start your first Cost Estimate'}
+                                successHref="/owner/estimator"
+                                successLabel={isRenewal ? 'View payment history' : 'Start your first Cost Estimate'}
                             />
                         </div>
                     </div>
@@ -702,12 +712,12 @@ function PlanCards({
 export default async function BillingPage({
     searchParams,
 }: {
-    searchParams?: Promise<{ from?: string | string[] }>
+    searchParams?: Promise<{ from?: string | string[]; plan?: string | string[] }>
 }) {
     const { profile } = await requireRole(['owner'])
     if (!profile.org_id) redirect('/owner/today')
 
-    const queryPromise: Promise<{ from?: string | string[] }> = searchParams
+    const queryPromise: Promise<{ from?: string | string[]; plan?: string | string[] }> = searchParams
         ? searchParams
         : Promise.resolve({})
 
@@ -734,12 +744,12 @@ export default async function BillingPage({
             .order('created_at', { ascending: false }),
     ])
     const { subscription } = subscriptionDetail
-    // `tier` is the workspace experience enforced by the owner shell. The
-    // paid subscription tier stays separate so a Full Suite payment can be
-    // shown as funding a selected Base workspace without relabeling it.
+    // `tier` is the workspace capability tier enforced by the owner shell;
+    // the paid subscription tier remains separate for legacy history.
     const tier = planAccess.effectiveTier
     const subscriptionTier = planAccess.subscriptionTier
     const requestedRoute = typeof query.from === 'string' ? query.from : null
+    const requestedPlan = query.plan === 'base' || query.plan === 'lite' ? query.plan : null
     const requestedFeature = getFeatureLabel(requestedRoute)
     const payments = (paymentsResult.data ?? []) as SubscriptionPaymentRow[]
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
@@ -750,22 +760,25 @@ export default async function BillingPage({
     // see renewal pricing while trials still see first-year pricing.
     const billingNow = new Date()
     const purchaseDecisions: Record<PurchasablePlanTier, BillingPurchaseDecision> = {
+        lite: resolveBillingPurchase(billingSubscriptions, billingPayments, 'lite', billingNow),
         base: resolveBillingPurchase(billingSubscriptions, billingPayments, 'base', billingNow),
-        premium: resolveBillingPurchase(billingSubscriptions, billingPayments, 'premium', billingNow),
     }
     const subscriptionById = new Map(
         billingSubscriptions.map((row) => [row.id, row])
     )
-    const activePaidTier = subscriptionTier === 'base' || subscriptionTier === 'premium' ? subscriptionTier : null
-    const latestSubscriptionTier = subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
+    const activePaidTier = subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium' ? subscriptionTier : null
+    const latestSubscriptionTier = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
         ? subscription.plan_tier
         : null
-    const historicalPaidTier = latestSubscriptionTier && purchaseDecisions[latestSubscriptionTier].purchaseType === 'renewal'
+    const latestSelfServeTier = latestSubscriptionTier === 'lite' || latestSubscriptionTier === 'base'
         ? latestSubscriptionTier
+        : null
+    const historicalPaidTier = latestSelfServeTier && purchaseDecisions[latestSelfServeTier].purchaseType === 'renewal'
+        ? latestSelfServeTier
         : null
     const billingPlanTier = activePaidTier ?? historicalPaidTier
     const activeRenewalPrice = billingPlanTier ? getBillingPrice(billingPlanTier, 'renewal') : null
-    const selfServeActiveTier = billingPlanTier && BILLING_SELF_SERVE_PLAN_TIERS.includes(billingPlanTier)
+    const selfServeActiveTier = billingPlanTier && isSelfServePlanTier(billingPlanTier)
         ? billingPlanTier
         : null
 
@@ -798,13 +811,25 @@ export default async function BillingPage({
     // A created Razorpay order is not a payment. Keep a recovery action visible
     // after a tab, browser, or checkout crash; create-order safely reuses the
     // tenant's existing provider order instead of creating a second intent.
-    const canShowPlanCards = subscriptionTier !== 'premium' && !isActivating && !renewalAvailable
+    // A Lite customer can upgrade to Base during the current paid period. Do
+    // not let the Lite renewal card hide that upgrade path; the plan cards
+    // omit the duplicate Lite renewal option below.
+    const cardPlanTiers: readonly PurchasablePlanTier[] = subscriptionTier === 'lite'
+        ? ['base']
+        : visiblePlanTiers
+    const canShowPlanCards = subscriptionTier !== 'premium'
+        && !isActivating
+        && (subscriptionTier === 'lite' ? purchaseDecisions.base.allowed : !renewalAvailable)
     const billingReadiness = getBillingReadiness()
     const planSectionLabel = billingPlanTier && subscriptionTier === 'none'
         ? `Renew ${getBillingPlan(billingPlanTier).name}`
-        : tier === 'base'
+        : requestedPlan === 'base'
+            ? 'Take your costing into production'
+            : requestedPlan === 'lite'
+                ? 'Choose Weavly Lite'
+                : tier === 'base'
             ? 'Available subscriptions'
-            : 'Choose Weavly Estimator'
+            : 'Choose Weavly Lite or Base'
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
@@ -824,7 +849,7 @@ export default async function BillingPage({
                         )}
                     </>
                 )}
-                meta={subscriptionTier === 'base' || subscriptionTier === 'premium' ? <StatusBadge status="active" /> : subscriptionTier === 'trial' ? <StatusBadge status="pending" label="Trial" /> : null}
+                meta={subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium' ? <StatusBadge status="active" /> : subscriptionTier === 'trial' ? <StatusBadge status="pending" label="Trial" /> : null}
                 actions={(
                     <Link href="/owner/data-export" className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-saffron-deep underline-offset-4 hover:bg-saffron-soft hover:underline">
                         Export organization data
@@ -868,7 +893,7 @@ export default async function BillingPage({
                             <div className="flex items-start gap-3">
                                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
                                 <div>
-                                    <h2 className="text-sm font-bold text-ink">Base Plan payments are not open yet</h2>
+                            <h2 className="text-sm font-bold text-ink">Plan payments are not open yet</h2>
                                     <p className="mt-1 text-sm leading-relaxed text-body">{billingReadiness.publicMessage}</p>
                                     <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. No Razorpay order can be created until the server configuration passes the launch gate.</p>
                                 </div>
@@ -880,7 +905,7 @@ export default async function BillingPage({
                             label={planSectionLabel}
                             currentTier={subscriptionTier}
                             decisions={purchaseDecisions}
-                            visibleTiers={visiblePlanTiers}
+                            visibleTiers={cardPlanTiers}
                             resumePendingCheckout={isPending}
                         />
                     )}

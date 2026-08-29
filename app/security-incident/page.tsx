@@ -13,7 +13,7 @@ import {
 
 export const metadata: Metadata = {
     title: 'Report a Security Incident — Weavly',
-    description: 'How to report a suspected account or data-security incident affecting the Weavly Base Plan.',
+    description: 'How to report a suspected account or data-security incident affecting a Weavly Lite or Base workspace.',
 }
 
 export default function SecurityIncidentPage() {
@@ -33,7 +33,7 @@ export default function SecurityIncidentPage() {
 
             <section className="border-b border-red-400/20 bg-zinc-950 text-white">
                 <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-300">Base Plan security channel</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-300">Weavly security channel</p>
                     <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">Report a suspected security incident</h1>
                     <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">
                         Use this monitored channel for suspicious account activity, possible unauthorized access, billing-reference concerns, impersonation, or a potential vulnerability affecting Weavly.
@@ -75,7 +75,7 @@ export default function SecurityIncidentPage() {
                             ))}
                         </ul>
                         <p className="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                            Base includes owner-run production records, piece-rate workers, advances, and basic payroll settlement. Formal orders, supervisor or machine management, inventory, stock, dispatch, fixed-worker payroll, and advanced analytics remain future Full Suite scope and are not part of the Base Plan initial rollout.
+                            Weavly Lite stores costing records, qualities, rates, and account data. Weavly Base additionally stores owner-run production records, piece-rate workers, advances, and basic settlement data. Report incidents affecting either workspace through this channel.
                         </p>
                     </section>
 

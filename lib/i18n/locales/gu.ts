@@ -1229,7 +1229,7 @@ export const gu = {
     invalid_code: "અમાન્ય એક્સેસ કોડ",
   },
   base_plan: {
-    language_promise: "Base Plan English, Hindi અને Gujarati — ત્રણેય ભાષામાં ઉપલબ્ધ છે.",
+    language_promise: "Weavly Lite અને Weavly Base — English, Hindi અને Gujarati ત્રણેય ભાષામાં ઉપલબ્ધ છે.",
     glossary_title: "ફેક્ટરીના શબ્દો",
     glossary_help: "આ શબ્દો ફેક્ટરીમાં વપરાતા રૂપમાં જ રાખ્યા છે; નીચેની સમજ staff ને field સમજવામાં મદદ કરે છે.",
     glossary: {

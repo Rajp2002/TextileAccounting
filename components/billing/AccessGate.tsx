@@ -1,76 +1,74 @@
 import { getCachedSession } from '@/lib/auth'
-import { getCachedOrgPlanAccess, tierSatisfies, type SubscriptionTier } from '@/lib/subscription'
+import { getCachedOrgPlanAccess } from '@/lib/subscription'
+import { hasCapability, type PlanCapability, type SubscriptionTier } from '@/lib/subscription-access'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calculator, Zap, Star, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Calculator, ArrowRight, ArrowLeft, CheckCircle2, Lock, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createPerfTimer } from '@/lib/perf'
 import { getBillingPrice } from '@/lib/billing-constants'
+import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
+import PlanAnalyticsLink from '@/components/billing/PlanAnalyticsLink'
 
 interface AccessGateProps {
-    /** Minimum tier needed to view this content */
-    requiredTier: 'base' | 'premium'
-    /** Optional route label for performance logs. */
+    /** Preferred capability boundary for new routes. */
+    requiredCapability?: PlanCapability
+    /** Compatibility prop for the older route declarations. */
+    requiredTier?: 'base' | 'premium'
+    /** Optional route label for performance logs and upgrade context. */
     routeName?: string
     children: React.ReactNode
 }
 
 /**
- * Server component that gates content behind a subscription tier check.
- *
- * - If the user's tier meets `requiredTier` → renders children.
- * - If the user is 'none' (no subscription) → redirects to /owner/billing.
- * - If tier is 'base' but 'premium' is required → shows upgrade wall.
- *
- * Uses getCachedSession() and getCachedOrgPlanAccess() so that the auth + profiles
- * and org_subscriptions queries are deduplicated per request. When the owner
- * layout, AccessGate, and the page's own requireRole() all run within the same
- * request, Supabase is contacted only once for each.
+ * Server component that gates a capability while keeping plan inheritance in
+ * one place. Lite and Base share the same costing capabilities; Base adds the
+ * production capabilities. Legacy premium routes remain readable for old
+ * accounts but are not part of the new self-serve catalog.
  */
 export default async function AccessGate({
+    requiredCapability,
     requiredTier,
     routeName = '/owner/* access-gate',
     children,
 }: AccessGateProps) {
     const perf = createPerfTimer(routeName)
-
-    // getCachedSession() is a request-scoped cache: the getUser + profiles lookup
-    // is shared with OwnerLayout and any requireRole() calls on the same page.
     const session = await perf.measure('authSession', () => getCachedSession(), 0)
     if (!session) redirect('/login')
 
-    // Billing entitlement and selected product experience are resolved together.
     const planAccess = await perf.measure(
         'profileOrgTier',
         () => getCachedOrgPlanAccess(session.profile.org_id),
-        1
+        1,
     )
+    const capability = requiredCapability ?? (requiredTier === 'premium' ? 'legacy_full_suite' : 'estimator')
     const tier = planAccess.effectiveTier
-    perf.log({ required_tier: requiredTier })
+    perf.log({ required_capability: capability })
 
-    // No subscription at all → send to billing
     if (tier === 'none') {
         redirect(`/owner/billing?from=${encodeURIComponent(routeName)}`)
     }
 
-    // Tier is sufficient → render the protected content
-    if (tierSatisfies(tier, requiredTier)) {
+    if (hasCapability(tier, capability)) {
         return <>{children}</>
     }
 
     if (
-        requiredTier === 'premium'
+        capability === 'legacy_full_suite'
         && planAccess.subscriptionTier === 'premium'
         && planAccess.productExperience === 'base'
     ) {
-        return <BaseExperienceWall routeName={routeName} />
+        return <LegacyWorkspaceWall routeName={routeName} />
     }
 
-    // Tier is insufficient (base trying to access premium) → show upgrade wall
-    return <UpgradeWall currentTier={tier} routeName={routeName} />
+    if (capability === 'production' || capability === 'production_management' || capability === 'production_tracking' || capability === 'production_linked') {
+        return <ProductionUpgradeWall currentTier={tier} routeName={routeName} />
+    }
+
+    return <LegacyCapabilityWall routeName={routeName} />
 }
 
-function BaseExperienceWall({ routeName }: { routeName: string }) {
+function routeLabel(routeName: string): string {
     const routeLabels: Record<string, string> = {
         '/owner/today': 'Factory Today',
         '/owner/analytics': 'Analytics',
@@ -80,14 +78,18 @@ function BaseExperienceWall({ routeName }: { routeName: string }) {
         '/owner/dispatches': 'Dispatches',
         '/owner/commercials': 'Commercials',
         '/owner/payroll': 'Payroll',
+        '/owner/operations': 'Operations',
         '/owner/advances': 'Worker Advances',
         '/owner/fixed-workers': 'Fixed Workers',
         '/owner/machines': 'Loom Management',
-        '/owner/production': 'Production',
         '/owner/archive': 'Archive',
         '/owner/system-health': 'System Health',
     }
-    const featureName = routeLabels[routeName] ?? 'This factory feature'
+    return routeLabels[routeName] ?? 'This factory feature'
+}
+
+function LegacyWorkspaceWall({ routeName }: { routeName: string }) {
+    const featureName = routeLabel(routeName)
 
     return (
         <div className="flex min-h-[60vh] items-center justify-center p-6">
@@ -96,9 +98,9 @@ function BaseExperienceWall({ routeName }: { routeName: string }) {
                     <Calculator className="h-8 w-8 text-orange-600" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Base Plan workspace is active</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Costing workspace is active</h2>
                     <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                        {featureName} is hidden while this account uses the Base Plan experience. Your Full Suite plan and existing factory records are unchanged.
+                        {featureName} is hidden while this account uses the costing workspace. Existing factory records remain unchanged.
                     </p>
                 </div>
                 <Link href="/owner/estimator" className="block">
@@ -109,7 +111,7 @@ function BaseExperienceWall({ routeName }: { routeName: string }) {
                 </Link>
                 <Link href="/owner/settings#workspace-experience" className="block">
                     <Button size="lg" className="w-full gap-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700">
-                        Switch back to Full Suite
+                        Open workspace settings
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 </Link>
@@ -118,106 +120,86 @@ function BaseExperienceWall({ routeName }: { routeName: string }) {
     )
 }
 
-// ─── Upgrade Wall UI ──────────────────────────────────────────────────────────
-
-function UpgradeWall({
-    currentTier,
-    routeName,
-}: {
-    currentTier: SubscriptionTier
-    routeName: string
-}) {
-    const routeLabels: Record<string, string> = {
-        '/owner/today': 'Factory Today',
-        '/owner/analytics': 'Analytics',
-        '/owner/orders': 'Party Orders',
-        '/owner/market-runs': 'Market Runs',
-        '/owner/stock': 'Godown Stock',
-        '/owner/dispatches': 'Dispatches',
-        '/owner/commercials': 'Commercials',
-        '/owner/payroll': 'Payroll',
-        '/owner/advances': 'Worker Advances',
-        '/owner/fixed-workers': 'Fixed Workers',
-        '/owner/machines': 'Loom Management',
-        '/owner/production': 'Production',
-        '/owner/archive': 'Archive',
-        '/owner/system-health': 'System Health',
-    }
-    const featureName = routeLabels[routeName] ?? 'This connected factory feature'
-    const premiumPrice = getBillingPrice('premium', 'initial_purchase')
-    const premiumRenewal = getBillingPrice('premium', 'renewal')
-    const formatAmount = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`
+function LegacyCapabilityWall({ routeName }: { routeName: string }) {
+    const featureName = routeLabel(routeName)
 
     return (
-        <div className="flex items-center justify-center min-h-[60vh] p-6">
-            <div className="max-w-md w-full text-center space-y-6">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center shadow-sm">
-                    <Calculator className="h-8 w-8 text-orange-600" />
+        <div className="flex min-h-[60vh] items-center justify-center p-6">
+            <div className="w-full max-w-md space-y-5 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-soft">
+                    <Lock className="h-7 w-7 text-subtle" />
                 </div>
-
-                {/* Headline */}
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                        Unlock {featureName}
-                    </h2>
-                    <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                        {featureName} is part of the <strong>Weavly Full Suite</strong>.
-                        {currentTier === 'base' && (
-                            <> Your <strong>Base Estimator workspace</strong> remains active and complete for calculating, saving, and exporting fabric costings and customer quotations.</>
-                        )}
+                    <h2 className="text-2xl font-bold text-ink">{featureName} is outside your current plan</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-body">
+                        Your Weavly plan includes the complete costing desk. This broader factory module is not part of the current Lite or Base rollout.
                     </p>
                 </div>
-
                 <Link href="/owner/estimator" className="block">
                     <Button variant="outline" size="lg" className="w-full gap-2 rounded-xl">
                         <ArrowLeft className="h-4 w-4" />
                         Back to Cost Estimates
                     </Button>
                 </Link>
+            </div>
+        </div>
+    )
+}
 
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-left space-y-3">
-                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest">Premium unlocks</p>
-                    <ul className="space-y-2 text-sm text-gray-700">
-                        {[
-                            'Production and party-order tracking',
-                            'Looms, workers, payroll, and advances',
-                            'Market runs, stock, and dispatches',
-                            'Analytics and owner visibility',
-                            'One connected factory workflow',
-                        ].map(f => (
-                            <li key={f} className="flex items-center gap-2">
-                                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400 shrink-0" />
-                                {f}
-                            </li>
-                        ))}
-                    </ul>
+function ProductionUpgradeWall({ currentTier, routeName }: { currentTier: SubscriptionTier; routeName: string }) {
+    const price = getBillingPrice('base', 'initial_purchase')
+    const renewal = getBillingPrice('base', 'renewal')
+    const featureName = routeName === '/owner/production' ? 'Production' : routeLabel(routeName)
+    const formatAmount = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`
+
+    return (
+        <div className="flex min-h-[60vh] items-center justify-center p-6">
+            <div className="w-full max-w-md space-y-6 text-center">
+                <PlanAnalyticsBeacon eventName="production_cta_viewed" properties={{ feature: featureName }} />
+                <PlanAnalyticsBeacon eventName="upgrade_screen_opened" properties={{ feature: featureName, plan_tier: currentTier }} />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 shadow-sm">
+                    <Zap className="h-8 w-8 text-orange-600" />
                 </div>
-
-                {/* Price highlight */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                    <p className="text-sm text-gray-500">Weavly Full Suite</p>
-                    <p className="text-3xl font-extrabold text-gray-900 mt-1">
-                        {formatAmount(premiumPrice.totalPaise)}<span className="text-lg font-normal text-gray-400"> total / first year</span>
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Take your costing into production</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                        {currentTier === 'lite'
+                            ? `${featureName} is available with Weavly Base. Keep your costing connected while you create jobs and track production progress.`
+                            : `${featureName} requires an active Weavly Base entitlement.`}
                     </p>
-                    <p className="text-xs text-gray-400">{formatAmount(premiumPrice.basePaise)} + {formatAmount(premiumPrice.gstPaise)} GST · {formatAmount(premiumRenewal.totalPaise)} total renewal</p>
                 </div>
-
-                {/* CTA */}
-                <Link href="/owner/billing">
-                    <Button
-                        id="upgrade-to-premium-btn"
-                        size="lg"
-                        className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200 rounded-xl"
-                    >
+                <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left">
+                    {[
+                        'Create production directly from a saved costing',
+                        'Track planned, produced, and remaining metres',
+                        'Keep costing, machine, worker, and settlement data connected',
+                    ].map((feature) => (
+                        <div key={feature} className="flex items-start gap-2 text-sm text-gray-700">
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                            <span>{feature}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                    <p className="text-sm text-gray-500">Weavly Base</p>
+                    <p className="mt-1 text-3xl font-extrabold text-gray-900">
+                        {formatAmount(price.totalPaise)}<span className="text-lg font-normal text-gray-400"> total / first year</span>
+                    </p>
+                    <p className="text-xs text-gray-400">{formatAmount(price.basePaise)} + {formatAmount(price.gstPaise)} GST · {formatAmount(renewal.totalPaise)} total renewal</p>
+                </div>
+                <PlanAnalyticsLink
+                    href="/owner/billing?plan=base"
+                    className="block"
+                    eventName="production_cta_clicked"
+                    properties={{ feature: featureName, source: 'production_upgrade_wall' }}
+                >
+                    <Button id="upgrade-to-base-production-btn" size="lg" className="w-full gap-2 rounded-xl bg-amber-600 text-white shadow-lg shadow-amber-200 hover:bg-amber-700">
                         <Zap className="h-4 w-4" />
-                        Upgrade to Full Suite
+                        Take costing into production
                         <ArrowRight className="h-4 w-4" />
                     </Button>
-                </Link>
-
-                <p className="text-xs text-gray-400">
-                    Secure Razorpay checkout · GST-inclusive totals shown
-                </p>
+                </PlanAnalyticsLink>
+                <p className="text-xs text-gray-400">Secure Razorpay checkout · GST-inclusive totals shown</p>
             </div>
         </div>
     )

@@ -53,6 +53,7 @@ function SignupForm() {
     const searchParams = useSearchParams()
     
     const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '')
+    const selectedPlan = searchParams?.get('plan') === 'base' ? 'base' as const : 'lite' as const
     
     const [loading, setLoading] = useState(false)
     const [ownerName, setOwnerName]     = useState('')
@@ -109,6 +110,7 @@ function SignupForm() {
                 confirmPassword,
                 factoryName: factoryName.trim(),
                 referralCode: referralCode.trim() || undefined,
+                selectedPlan,
                 legalAcceptance: {
                     accepted: consentGiven,
                     ...SIGNUP_LEGAL_ACCEPTANCE,

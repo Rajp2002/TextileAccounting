@@ -58,6 +58,8 @@ import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime, formatToSurat, getSuratTodayString } from '@/lib/time'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
+import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 
 type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
 type RateHistoryRow = {
@@ -556,6 +558,10 @@ export default function RatesClient({
                 } else {
                     toast.success(tx(target.id ? 'Rate updated. Existing costing snapshots were not changed.' : 'Rate added for future estimates.'))
                 }
+                void trackPlanEvent('rate_book_action', {
+                    action: target.id ? 'update' : 'save',
+                    category: target.category,
+                })
                 setDraft(null)
             } catch (error) {
                 const message = userFacingError(error, 'Rate could not be saved. Try again.')
@@ -586,6 +592,7 @@ export default function RatesClient({
                     ? { ...rate, ...savedRate, is_reviewed: true }
                     : rate))
                 toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+                void trackPlanEvent('rate_book_action', { action: 'review', category: target.category })
                 setReviewRate(null)
             } catch (error) {
                 const message = tx(userFacingError(error, 'The current rate could not be confirmed. Try again.'))
@@ -655,8 +662,10 @@ export default function RatesClient({
                     : rate))
                 if (restoring) {
                     toast.success(tx('Rate restored to the active Rate Book. Existing costing snapshots were not changed.'))
+                    void trackPlanEvent('rate_book_action', { action: 'restore', category: target.category })
                 } else {
                     const archivedUpdatedAt = result.updatedAt ?? target.updated_at
+                    void trackPlanEvent('rate_book_action', { action: 'archive', category: target.category })
                     toast.success(tx('Rate archived from the active Rate Book. Saved Qualities and costing snapshots were not changed.'), {
                         action: {
                             label: tx('Undo'),
@@ -673,6 +682,7 @@ export default function RatesClient({
                                             ? { ...rate, is_active: true, updated_at: undoResult.updatedAt ?? rate.updated_at }
                                             : rate))
                                         toast.success(tx('Archive undone. The rate is active again.'))
+                                        void trackPlanEvent('rate_book_action', { action: 'undo_archive', category: target.category })
                                     } catch (error) {
                                         toast.error(tx(userFacingError(error, 'The archive could not be undone. Refresh and try again.')))
                                     } finally {
@@ -717,7 +727,8 @@ export default function RatesClient({
 
     return (
         <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
-            {/* Yarn Rate Book is the single-purpose Base Plan source of truth for yarn prices. */}
+            <PlanAnalyticsBeacon eventName="rate_book_viewed" />
+            {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
                 route="/owner/rates"
                 shellVisible

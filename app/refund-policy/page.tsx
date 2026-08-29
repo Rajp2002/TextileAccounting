@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import { CalendarDays, Clock3, Mail, RefreshCw } from 'lucide-react'
 import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
+import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
-    description: 'Base Plan initial-rollout rules for manual renewal, refunds, billing errors, and data export.',
+    description: 'Weavly Lite and Weavly Base rules for manual renewal, refunds, billing errors, and data export.',
 }
 
 const sections = [
@@ -24,8 +25,8 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="The payment, non-renewal, refund, and export rules for the Base Plan initial rollout."
-            lastUpdated="August 29, 2026"
+            description="The payment, non-renewal, refund, and export rules for Weavly Lite and Weavly Base."
+            lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
                 { label: 'Billing model', value: 'Manual annual renewal; no automatic charge', icon: CalendarDays },
@@ -35,31 +36,31 @@ export default function RefundPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                This policy applies only to the Weavly Estimator (Base Plan) initial rollout offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. It does not apply to any future Full Suite offering.
+                This policy applies to Weavly Lite and Weavly Base subscriptions offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. The current catalog does not include broader operational modules outside these two plans.
             </p>
 
-            <PolicySection id="scope" title="1. Scope and Base Plan Boundary">
+            <PolicySection id="scope" title="1. Scope and Plan Boundary">
                 <p>
-                    The current Base Plan purchase covers the single-factory costing workspace and lightweight owner-run production core described in the Terms. Formal party orders, supervisor or machine management, inventory or stock, dispatch, fixed-worker salary payroll, advanced payroll, analytics, WhatsApp operations, and other Full Suite modules remain future Full Suite scope. A Base payment does not purchase those modules, and their absence is not grounds for a refund.
+                    Weavly Lite covers the complete textile costing-management product: estimator calculations, saved costings, qualities, Rate Book, costing history, and hosted account data. Weavly Base includes all Lite functionality and adds the current Base Production Core, including production records linked to costing/quality data where supported. Other operational modules outside the current catalog are not included in either plan, and their absence is not grounds for a refund.
                 </p>
                 <PolicyCallout tone="blue" title="Current catalog">
                     <p>
-                        The current catalog displays ₹8,260 total for the first 365-day Base period and ₹2,360 total for a later 365-day renewal, including the indicated 18% GST component. The final lawful price and tax treatment displayed at live checkout control. GST tax invoices are issued only after the required supplier registration and tax configuration are complete.
+                        The current catalog displays ₹2,999 for the first 365-day Weavly Lite period and ₹1,499 for its later annual renewal. Weavly Base displays ₹9,999 for the first 365-day period and ₹4,999 for its later annual renewal. Each displayed total includes the indicated 18% GST component. The final lawful price and tax treatment displayed at live checkout control. GST tax invoices are issued only after the required supplier registration and tax configuration are complete.
                     </p>
                 </PolicyCallout>
             </PolicySection>
 
             <PolicySection id="non-renewal" title="2. Non-Renewal, Expiry, and Account Deletion">
                 <ul>
-                    <li><strong>No automatic renewal</strong> — The Base Plan initial rollout uses manual renewal. We do not automatically charge the next annual period.</li>
+                    <li><strong>No automatic renewal</strong> — Lite and Base use manual renewal. We do not automatically charge the next annual period.</li>
                     <li><strong>Choosing not to renew</strong> — No cancellation switch or cancellation request is required. Do not complete a renewal payment.</li>
-                    <li><strong>Paid access</strong> — Base features remain available until the current paid period expires, unless access is suspended or terminated under the Terms.</li>
-                    <li><strong>After expiry</strong> — Paid Base features may be restricted, but the owner-only organization export remains available while the account is retained.</li>
+                    <li><strong>Paid access</strong> — The selected plan remains available until the current paid period expires, unless access is suspended or terminated under the Terms.</li>
+                    <li><strong>After expiry</strong> — Lite costing functionality remains available where the account is placed in Lite. Base-only production creation and mutation actions are restricted until Base is renewed; existing production records are retained and the owner-only organization export remains available while the account is retained.</li>
                     <li><strong>Permanent deletion</strong> — The owner may delete the workspace through Settings. Deletion follows the Privacy Policy and is different from allowing paid access to expire.</li>
                 </ul>
             </PolicySection>
 
-            <PolicySection id="initial-payment" title="3. Initial Base Plan Payment Refunds">
+            <PolicySection id="initial-payment" title="3. Initial Plan Payment Refunds">
                 <p>We review initial-payment requests according to the following rules:</p>
                 <ul>
                     <li><strong>Duplicate charge, verified unauthorized payment, or billing error</strong> — Eligible for correction or refund after verification.</li>
@@ -67,7 +68,7 @@ export default function RefundPolicyPage() {
                     <li><strong>Configuration started but not substantially delivered</strong> — We may offer a partial refund after explaining and deducting the reasonable value of completed work and non-recoverable provider costs, where legally permitted.</li>
                     <li><strong>After substantive delivery or use</strong> — The payment is ordinarily non-refundable after material onboarding, configuration, training, saved costing use, or export has occurred, except for verified billing errors, material service deficiency, misdescription, or another remedy required by law.</li>
                 </ul>
-                <p>Submitting a request does not itself terminate or delete the account. If a refund is approved for the entire initial payment, paid Base access may be withdrawn when the refund is processed.</p>
+                <p>Submitting a request does not itself terminate or delete the account. If a refund is approved for the entire initial payment, paid Lite or Base access may be withdrawn when the refund is processed.</p>
             </PolicySection>
 
             <PolicySection id="renewal-payment" title="4. Manual Renewal Payment Refunds">
@@ -91,7 +92,7 @@ export default function RefundPolicyPage() {
 
             <PolicySection id="data-export" title="6. Data Export">
                 <p>
-                    The owner-only structured organization export remains available while the account is retained, including after paid Base access expires. Download important records before requesting permanent account deletion. Deletion is designed to remove the active workspace and cannot be undone through the product.
+                    The owner-only structured organization export remains available while the account is retained, including after paid Base access expires. Production records are not deleted merely because a Base subscription expires or becomes Lite; Base-only actions are restricted until renewal. Download important records before requesting permanent account deletion. Deletion is designed to remove the active workspace and cannot be undone through the product.
                 </p>
             </PolicySection>
 

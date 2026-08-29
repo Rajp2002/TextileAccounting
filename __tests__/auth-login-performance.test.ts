@@ -100,7 +100,7 @@ describe('sign-in critical-path performance', () => {
         )
     })
 
-    it('routes Base Plan owners to the estimator and Full Suite owners to Factory Today', () => {
+    it('routes Lite and Base owners to the estimator and retained legacy owners to Factory Today', () => {
         const authActions = read('app/(auth)/actions/auth.ts')
         const signInBody = authActions.slice(
             authActions.indexOf('export async function signIn'),
@@ -116,7 +116,7 @@ describe('sign-in critical-path performance', () => {
         expect(tierLookup).toBeGreaterThan(-1)
         expect(baseDestination).toBeGreaterThan(incompleteBranch)
         expect(completedDestination).toBeGreaterThan(tierLookup)
-        expect(ownerBranch).toContain("if (tier === 'base') return succeed('/owner/estimator')")
+        expect(ownerBranch).toContain("if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')")
 
         const todayLayout = read('app/(dashboard)/owner/today/layout.tsx')
         expect(todayLayout).toContain('requiredTier="premium"')

@@ -924,11 +924,11 @@ export async function updateOrganizationProductExperience(productExperience: str
     const parsed = safeParse(ProductExperienceSchema, productExperience)
     if ('error' in parsed) return { error: parsed.error }
 
-    // Keep the billing entitlement immutable. Only an activated paid Full Suite
-    // organization may choose between the Full Suite and Base experiences.
+    // Keep the billing entitlement immutable. Only an activated retained
+    // legacy-operations organization may change its workspace experience.
     const subscription = await getSubscriptionDetail(profile.org_id)
     if (subscription.tier !== 'premium') {
-        return { error: 'An active Full Suite plan is required to switch workspace experience.' }
+        return { error: 'An active legacy operations entitlement is required to switch workspace experience.' }
     }
 
     const supabase = await createServerClient()
