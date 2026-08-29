@@ -127,19 +127,32 @@ export function PwaUpdateNotice() {
                 activateWaitingWorker(registration)
             }
 
-            // A waiting worker can be left behind by another tab. Do not turn
-            // a fresh navigation into an interruption; only announce workers
-            // that finish installing while this tab is already open.
+            // Watch workers that start installing while this tab is open. A
+            // worker that is already waiting is handled below without forcing
+            // a reload during navigation.
             const handleUpdateFound = () => {
                 removeInstallingWorkerListener()
                 removeInstallingWorkerListener = watchWorker(registration, registration.installing)
             }
             registration.addEventListener('updatefound', handleUpdateFound)
 
-            // A fresh tab should not trigger an update check just to display a
-            // refresh prompt. Recheck when an already-used tab returns to the
-            // foreground, which still lets long-lived tabs pick up deployments
-            // without interrupting their initial navigation.
+            // A worker may have finished while this tab was closed, or another
+            // tab may have installed it. Surface that state immediately so a
+            // normal browser profile cannot keep using an old route bundle
+            // silently. The toast is safe for drafts because it never reloads
+            // until the user chooses the refresh action.
+            if (registration.waiting && navigator.serviceWorker.controller) {
+                showUpdateToast(registration)
+            }
+
+            // Service-worker update checks are not guaranteed on every page
+            // load. Check once after the registration is ready so a long-lived
+            // normal browser profile discovers the current route bundle, then
+            // recheck when an already-used tab returns to the foreground.
+            void registration.update().catch(() => {
+                // Update checks are best-effort and must not interrupt app use.
+            })
+
             let hasCompletedInitialVisibility = document.visibilityState === 'visible'
             let wasHiddenAfterInitialVisibility = false
             const handleVisibilityChange = () => {
