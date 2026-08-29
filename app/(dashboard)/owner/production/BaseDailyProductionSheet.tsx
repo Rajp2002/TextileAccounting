@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { AlertTriangle, CheckCircle2, ClipboardList, Loader2, Plus, Save, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ClipboardList, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -105,6 +106,8 @@ export default function BaseDailyProductionSheet({
     const [rows, setRows] = useState<Record<string, DraftRow>>({})
     const [requestId, setRequestId] = useState(newClientRequestId)
     const [isSaving, setIsSaving] = useState(false)
+    const [unlockedBatchId, setUnlockedBatchId] = useState<string | null>(null)
+    const [isUnlockDialogOpen, setIsUnlockDialogOpen] = useState(false)
 
     const jobById = useMemo(
         () => new Map(initialData.jobs.map((job) => [job.id, job])),
@@ -148,6 +151,12 @@ export default function BaseDailyProductionSheet({
         currentBatch?.status === 'finalized'
         || currentBatchEntries.some((entry) => settledWorkerIds.has(entry.worker_id)),
     )
+    const isSavedBatchProtected = Boolean(
+        currentBatch
+        && !isCurrentBatchLocked
+        && unlockedBatchId !== currentBatch.id,
+    )
+    const areInputsDisabled = isCurrentBatchLocked || isSavedBatchProtected
 
     const allocationsByEntry = useMemo(() => {
         const map = new Map<string, typeof initialData.allocations>()
@@ -350,6 +359,10 @@ export default function BaseDailyProductionSheet({
             toast.error('This production sheet is finalized and cannot be changed.')
             return
         }
+        if (isSavedBatchProtected) {
+            toast.error('Unlock the saved production log before making a correction.')
+            return
+        }
         if (invalidEnteredCount > 0) {
             toast.error('Enter positive metres for every produced machine, and assign a costing before saving.')
             return
@@ -393,6 +406,7 @@ export default function BaseDailyProductionSheet({
 
             const summaryData = (result as { summary?: { total_meters?: number; idempotent?: boolean } }).summary
             toast.success(summaryData?.idempotent ? 'This shift was already saved.' : `Shift saved · ${formatMeters(Number(summaryData?.total_meters ?? summary.total_meters))}`)
+            setUnlockedBatchId(null)
             setRequestId(newClientRequestId())
             router.refresh()
         } catch (error) {
@@ -445,9 +459,23 @@ export default function BaseDailyProductionSheet({
             </Card>
 
             {currentBatch && (
-                <div className="flex items-center gap-2 rounded-lg border border-success/25 bg-success/5 px-3 py-2 text-xs text-body">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
-                    <span>{isCurrentBatchLocked ? 'Finalized' : 'Saved'} for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. {isCurrentBatchLocked ? 'Corrections are locked.' : 'You can correct it until worker pay is settled.'}</span>
+                <div className={`flex flex-col gap-3 rounded-lg border px-3 py-3 text-xs sm:flex-row sm:items-center sm:justify-between ${isSavedBatchProtected ? 'border-warning/30 bg-warning/5' : 'border-success/25 bg-success/5'}`}>
+                    <div className="flex items-start gap-2 text-body">
+                        {isSavedBatchProtected ? <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />}
+                        <span>
+                            {isCurrentBatchLocked ? 'Finalized' : 'Saved'} for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift.{' '}
+                            {isCurrentBatchLocked
+                                ? 'Corrections are locked because the sheet is finalized or worker pay is settled.'
+                                : isSavedBatchProtected
+                                    ? 'Editing is locked to prevent accidental changes.'
+                                    : 'Correction mode is active. Review every changed value before saving.'}
+                        </span>
+                    </div>
+                    {isSavedBatchProtected && (
+                        <Button variant="outline" size="sm" className="shrink-0 border-warning/40" onClick={() => setIsUnlockDialogOpen(true)}>
+                            <LockOpen className="h-4 w-4" /> Edit saved log
+                        </Button>
+                    )}
                 </div>
             )}
 
@@ -493,7 +521,7 @@ export default function BaseDailyProductionSheet({
                                                 inputMode="decimal"
                                                 placeholder="Metres"
                                                 value={value}
-                                                disabled={row.status === 'zero' || row.status === 'absent' || isCurrentBatchLocked || !context.jobId}
+                                                disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || !context.jobId}
                                                 onChange={(event) => handleMachineMetersChange(context, event.target.value)}
                                                 className="text-right font-semibold"
                                             />
@@ -526,7 +554,7 @@ export default function BaseDailyProductionSheet({
                                     <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
                                         <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · costing rates applied` : 'No current machine assignment'}</p></div>
                                         <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline">{context.machineLabel}</Badge></span>) : <span className="text-warning">Unassigned worker entry</span>}</div>
-                                        <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={isCurrentBatchLocked}>
+                                        <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled}>
                                             <SelectTrigger className="w-full" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="blank">Not entered</SelectItem>
@@ -555,7 +583,7 @@ export default function BaseDailyProductionSheet({
                                             inputMode="decimal"
                                             placeholder="Metres"
                                             value={row.meters}
-                                            disabled={row.status === 'zero' || row.status === 'absent' || isCurrentBatchLocked}
+                                            disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled}
                                             onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
                                             className="text-right font-semibold"
                                         />
@@ -576,12 +604,38 @@ export default function BaseDailyProductionSheet({
                             <p className="text-xs text-body">{summary.outstanding_count} not entered · {summary.zero_count} zero · {summary.absent_count} absent</p>
                         </div>
                     </div>
-                    <Button onClick={handleSave} disabled={isSaving || isCurrentBatchLocked || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="sm:min-w-[210px]">
+                    <Button onClick={handleSave} disabled={isSaving || areInputsDisabled || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="sm:min-w-[210px]">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {isSaving ? 'Saving machine sheet…' : 'Save machine production'}
+                        {isSaving ? 'Saving machine sheet…' : currentBatch ? 'Save production correction' : 'Save machine production'}
                     </Button>
                 </div>
             )}
+
+            <Dialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit this saved production log?</DialogTitle>
+                        <DialogDescription>
+                            This sheet is already saved for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. Any correction can change production totals and worker payroll.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-3 text-sm text-body">
+                        Check the machine, worker, and metres carefully. Editing stays unlocked only for this saved shift and locks again after you save.
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsUnlockDialogOpen(false)}>Keep locked</Button>
+                        <Button
+                            onClick={() => {
+                                if (!currentBatch || isCurrentBatchLocked) return
+                                setUnlockedBatchId(currentBatch.id)
+                                setIsUnlockDialogOpen(false)
+                            }}
+                        >
+                            <LockOpen className="h-4 w-4" /> Unlock editing
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
