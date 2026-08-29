@@ -660,7 +660,7 @@ export default function BaseProductionClient({
                     <Card className="border-hairline bg-surface-soft/45">
                         <CardContent className="flex items-start gap-3 py-4 text-sm">
                             <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" />
-                            <p className="leading-relaxed text-body">Pay is calculated from each machine allocation’s costing rate snapshot. Advance recovery is capped at 50% of gross pay, and the unpaid balance carries forward. Fixed salary, statutory deductions, payslips, and WhatsApp are outside the current Lite and Base catalog.</p>
+                            <p className="leading-relaxed text-body">Pay is calculated from each machine allocation’s costing rate snapshot. Advance recovery is the lower of the pending advance balance or 50% of gross pay; any unrecovered balance carries forward. Fixed salary, statutory deductions, payslips, and WhatsApp are outside the current Lite and Base catalog.</p>
                         </CardContent>
                     </Card>
 
@@ -689,7 +689,9 @@ export default function BaseProductionClient({
                                             <div className="rounded-lg bg-surface-soft/70 p-3 text-xs text-body">
                                                 {payable.status === 'paid'
                                                     ? <>Paid on {formatDateOnly(payable.paid_at)} · {formatINR(payable.advance_recovery, { hideDecimals: true })} advance recovered.</>
-                                                    : <>Up to {formatINR(payable.max_advance_recovery, { hideDecimals: true })} can be recovered this period. Pending advance balance: {formatINR(payable.pending_advance, { hideDecimals: true })}{payable.remaining_debt > 0 ? ` · ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>}
+                                                    : payable.pending_advance > 0
+                                                        ? <>{formatINR(payable.advance_recovery, { hideDecimals: true })} advance will be recovered this period from {formatINR(payable.pending_advance, { hideDecimals: true })} pending.{payable.remaining_debt > 0 ? ` ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>
+                                                        : <>No advance to recover. Full gross pay is due this period.</>}
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 <Button size="sm" onClick={() => openAdvance(payable.worker_id)} disabled={!worker?.is_active}><Plus className="h-4 w-4" /> Add advance</Button>

@@ -72,14 +72,14 @@ describe('Base Production Core calculations', () => {
         expect(summary.planned_value_total).toBe(3000)
     })
 
-    it('uses the recorded rate snapshot and caps advance recovery at 50%', () => {
+    it('recovers ₹300 from ₹600 wages and carries ₹200 of a ₹500 advance forward', () => {
         const result = calculateBaseWorkerPayables({
             workers: [worker],
-            entries: [entry()],
+            entries: [entry({ worker_rate_snapshot: 6 })],
             advances: [{
                 id: 'advance-1',
                 worker_id: 'worker-1',
-                amount: 600,
+                amount: 500,
                 recovered_amount: 0,
                 description: null,
                 status: 'pending',
@@ -89,11 +89,26 @@ describe('Base Production Core calculations', () => {
             periodEnd: '2026-08-31',
         })[0]
 
-        expect(result.gross_pay).toBe(800)
-        expect(result.max_advance_recovery).toBe(400)
-        expect(result.advance_recovery).toBe(400)
-        expect(result.net_payout).toBe(400)
+        expect(result.gross_pay).toBe(600)
+        expect(result.max_advance_recovery).toBe(300)
+        expect(result.advance_recovery).toBe(300)
+        expect(result.net_payout).toBe(300)
         expect(result.remaining_debt).toBe(200)
+    })
+
+    it('recovers nothing and leaves full gross pay due when there is no advance balance', () => {
+        const result = calculateBaseWorkerPayables({
+            workers: [worker],
+            entries: [entry()],
+            advances: [],
+            settlements: [],
+            periodEnd: '2026-08-31',
+        })[0]
+
+        expect(result.gross_pay).toBe(800)
+        expect(result.pending_advance).toBe(0)
+        expect(result.advance_recovery).toBe(0)
+        expect(result.net_payout).toBe(800)
     })
 
     it('calculates machine-specific costing rates once in the worker payable', () => {
@@ -279,6 +294,8 @@ describe('Base Production Core boundary contracts', () => {
         expect(hardeningMigration).toContain('private.base_production_core_access')
         expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION public.base_production_core_access(uuid)')
         expect(client).toContain('Fixed salary, statutory deductions, payslips, and WhatsApp are outside the current Lite and Base catalog.')
+        expect(client).toContain('No advance to recover. Full gross pay is due this period.')
+        expect(client).not.toContain('Up to {formatINR(payable.max_advance_recovery')
         expect(operationalMigration).toContain('base_production_machines')
         expect(operationalMigration).toContain('base_worker_machine_assignments')
         expect(operationalMigration).toContain('base_production_batches')
