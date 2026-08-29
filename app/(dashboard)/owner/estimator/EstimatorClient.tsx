@@ -109,6 +109,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { ContextualMachineDialog } from '@/components/onboarding/contextual-machine-dialog'
 const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
     loading: () => null,
@@ -2591,6 +2592,8 @@ export default function EstimatorClient({
     const [saving,    setSaving]    = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
     const saveQuoteLockRef = useRef(false)
+    const [showMachineSetup, setShowMachineSetup] = useState(false)
+    const machineSetupContinuationRef = useRef<(() => void) | null>(null)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<EstimatorTemplate[]>(initialTemplates ?? [])
     const [templatesLoaded, setTemplatesLoaded] = useState(initialTemplates !== undefined)
@@ -3743,6 +3746,23 @@ export default function EstimatorClient({
         toast.success(tx('Quality archived. It remains available in History and can be restored.'))
     }
 
+    const requestMachineSetup = (continuation: () => void) => {
+        machineSetupContinuationRef.current = continuation
+        setShowMachineSetup(true)
+    }
+
+    const handleMachineSetupOpenChange = (open: boolean) => {
+        setShowMachineSetup(open)
+        if (!open) machineSetupContinuationRef.current = null
+    }
+
+    const handleMachineAdded = () => {
+        const continuation = machineSetupContinuationRef.current
+        machineSetupContinuationRef.current = null
+        setShowMachineSetup(false)
+        continuation?.()
+    }
+
     const handleSaveQuote = async (
         targetMode: 'quote' | 'market' = mode,
         status: 'draft' | 'accepted' = 'draft',
@@ -3850,7 +3870,13 @@ export default function EstimatorClient({
                     deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0], // 30 days default
                     templateId:              appliedTemplate?.id,
                 })
-                if (res.error) {
+                if ('error' in res) {
+                    if ('setupRequired' in res && res.setupRequired === 'machine') {
+                        requestMachineSetup(() => {
+                            void handleSaveQuote(targetMode, status, true, recordKindOverride, qualityUpdateDecision, true)
+                        })
+                        return
+                    }
                     toast.error(tx(userFacingError(res.error, 'The Market Run could not be started. Try again.')))
                 } else {
                     clearDraft()
@@ -3979,6 +4005,12 @@ export default function EstimatorClient({
             })
 
             if ('error' in result) {
+                if ('setupRequired' in result && result.setupRequired === 'machine') {
+                    requestMachineSetup(() => {
+                        void handleStartPartyOrder(true)
+                    })
+                    return
+                }
                 toast.error(tx(userFacingError(result.error, 'Party Order could not be started. Try again.')))
                 return
             }
@@ -6365,6 +6397,12 @@ export default function EstimatorClient({
             />
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
+
+            <ContextualMachineDialog
+                open={showMachineSetup}
+                onOpenChange={handleMachineSetupOpenChange}
+                onMachineAdded={handleMachineAdded}
+            />
 
             {showExportDialog && (
                 <CostingExportDialog

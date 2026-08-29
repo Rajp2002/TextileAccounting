@@ -30,6 +30,32 @@ function generateTrackingToken(): string {
 const ESTIMATOR_NAME_MAX_LENGTH = 120
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+type ProductionSetupRequirement = {
+    error: string
+    setupRequired?: 'machine'
+}
+
+async function getProductionSetupRequirement(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+): Promise<ProductionSetupRequirement | null> {
+    const { count, error } = await supabase
+        .from('machines')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+
+    if (error) {
+        console.error('Failed to check loom setup before production start:', error)
+        return { error: 'Could not check loom setup. Please try again.' }
+    }
+
+    if ((count ?? 0) === 0) {
+        return { error: 'Add at least one loom before starting production.', setupRequired: 'machine' }
+    }
+
+    return null
+}
+
 async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
     userId: string,
     orgId: string,
@@ -1749,6 +1775,9 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
         ? Math.max(1, Math.ceil(targetMeters / totals.estimatedBeamCapacityM))
         : null
 
+    const productionSetupRequirement = await getProductionSetupRequirement(supabase, profile.org_id)
+    if (productionSetupRequirement) return productionSetupRequirement
+
     // ── Atomic RPC: quote + order + backlinks + yarn requirements ─────────────
     const { data: rpcRows, error: rpcError } = await supabase.rpc(
         'start_party_order_from_estimator_v2',
@@ -2332,6 +2361,9 @@ export async function createMarketRunFromEstimator(params: {
         estimate.weftRows,
         estimate.perPickCostPaisa ?? 0
     )
+
+    const productionSetupRequirement = await getProductionSetupRequirement(supabase, profile.org_id)
+    if (productionSetupRequirement) return productionSetupRequirement
 
     // 1. Save estimator snapshot as a quote (party_name = fabric label for display)
     const { data: savedQuote, error: quoteError } = await admin

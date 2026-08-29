@@ -631,12 +631,13 @@ export async function regenerateJoinCode() {
 // ─── getOnboardingStatus ───────────────────────────────────────────────────────
 
 /**
- * Checks whether the org has at least 1 machine and 1 worker.
- * When both are present, flips onboarding_complete = true in the DB
- * so the next JWT refresh picks it up and middleware stops redirecting.
+ * Checks the minimum setup needed to enter the owner workspace.
  *
- * NOTE: Quality is no longer a mandatory onboarding gate (lean arch pivot).
- * Owners can define qualities anytime from settings/inventory.
+ * Factory master data is intentionally not part of this blocking gate. Looms,
+ * workers, and payroll are collected contextually when the owner first opens
+ * the workflow that needs them. This keeps first-session onboarding focused on
+ * choosing the factory's production mode while preserving the status fields for
+ * the in-app setup guidance and legacy callers.
  */
 export async function getOnboardingStatus(): Promise<{
     hasProductionMode: boolean
@@ -689,7 +690,7 @@ export async function getOnboardingStatus(): Promise<{
         }
     }
 
-    const isComplete = hasProductionMode && hasMachine && hasWorker && hasPayrollConfig && hasPlan
+    const isComplete = hasProductionMode && hasPlan
 
     if (isComplete) {
         // Flip the flag so future middleware checks use JWT cache, not DB.

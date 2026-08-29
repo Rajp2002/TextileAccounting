@@ -7,12 +7,15 @@ import OnboardingChecklist from './checklist'
 import { getOrgTier } from '@/lib/subscription'
 
 /**
- * /onboarding — Full Suite owner setup checklist (server component)
+ * /onboarding — Full Suite owner first-session setup (server component)
  *
- * This page is a BLOCKING GATE for Full Suite owners. Base owners go directly
- * to the estimator and owners without an active plan go to Billing.
+ * This page is a small blocking gate for Full Suite owners. Base owners go
+ * directly to the estimator and owners without an active plan go to Billing.
+ * Looms, workers, and payroll are deliberately deferred to the workflows that
+ * need them.
  *
- * Not dismissible. No skip button. An org with no data is broken downstream.
+ * The production mode choice is required so the owner lands in the right
+ * workflow; operational master data is not required to reach first value.
  */
 export default async function OnboardingPage() {
     const supabase = await createClient()

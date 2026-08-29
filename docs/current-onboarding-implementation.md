@@ -1,20 +1,19 @@
 # Current Onboarding Implementation
 
-Last analyzed from the active codebase on May 31, 2026.
+Last updated from the active codebase on August 29, 2026.
 
 ## Executive Summary
 
-Onboarding is a blocking gate for owner users. It now uses a five-step checklist:
+Onboarding is a small blocking gate for owner users. The only factory setup choice collected before first use is the production mode:
 
 1. Choose production mode.
-2. Add loom types and machine counts.
-3. Add piece-rate workers.
-4. Configure payroll cycle, pay date, and reminder window.
-5. Start a trial or subscribe.
+2. Enter the owner workspace.
+
+Looms, workers, and payroll are deliberately deferred. The owner is prompted to add them from the workflow that needs them—for example, the estimator asks for a loom before starting a Full Suite production order, and Base production opens worker setup when the owner first chooses to record metres.
 
 When complete, the owner lands on `/owner/today`. Supervisors do not run onboarding; they join through `/join` and are routed to the supervisor production workspace.
 
-The flow is organization-based and role-gated. The durable completion flag is `organizations.onboarding_complete`, and the current checklist state is inferred from production mode, machines, workers, payroll config, and subscription/trial state.
+The flow is organization-based and role-gated. The durable completion flag is `organizations.onboarding_complete`, and the current checklist state is inferred from production mode, optional operational setup, and subscription/trial state.
 
 ## Route Map
 
@@ -28,7 +27,7 @@ The flow is organization-based and role-gated. The durable completion flag is `o
 
 Middleware redirects complete owners to `/owner/today`, incomplete owners to `/onboarding`, and supervisors to `/supervisor/dashboard` or `/supervisor/production` depending on entry point.
 
-## Onboarding Steps
+## Onboarding Step
 
 ### 1. Choose Production Mode
 
@@ -42,50 +41,30 @@ Options:
 
 This setting controls owner navigation visibility through `lib/production-mode.ts`.
 
-### 2. Add Machines
+### Contextual operational setup
 
-The machine form collects loom type and quantity, then creates named machines such as `Jacquard 1` or a custom type label. It writes through `addMachine` and requires at least one configured loom type/count.
+The onboarding page shows the operational setup categories as “set up when you need them” guidance; it does not render machine, worker, or payroll forms.
 
-### 3. Add Workers
-
-The worker form creates piece-rate meter workers through `addMeterWorker`. It supports manual rows and bulk import. Phone numbers are optional; if any phone is saved, the owner must confirm consent. Worker phone and language are saved through `saveWorkerWhatsApp`.
-
-Fixed workers, PF/ESI details, rates, and deeper worker setup remain post-onboarding workflows.
-
-### 4. Configure Payroll
-
-The payroll form writes `payroll_configs` through `savePayrollConfig`.
-
-Fields:
-
-- `cycle_start_day`: day 1-28 that starts the wage cycle.
-- `pay_date_day`: first selected day after cycle close when wages are scheduled.
-- `pay_reminder_days`: 0-14 day reminder/opening window before pay date.
-
-Common presets include Surat-style and month-end-plus-10th setups.
-
-### 5. Choose Plan
-
-The plan step uses the trial/subscription components. A valid `org_subscriptions` row with active/authenticated status and non-expired `current_end` satisfies the gate.
+- **Looms:** `startPartyOrderFromEstimator` and `createMarketRunFromEstimator` verify that the organization has at least one loom. If none exists, the estimator opens `ContextualMachineDialog`, which creates one loom and resumes the requested production workflow.
+- **Base workers:** The owner-only Base Production Core keeps its minimal name/rate form and opens it immediately when the owner chooses **Record metres** without an active worker.
+- **Full Suite workers and payroll:** Existing management pages remain available for richer worker verification, assignments, payroll cycles, and statutory configuration when those workflows are needed.
 
 ## Completion Logic
 
 `getOnboardingStatus` checks:
 
 - `organizations.production_mode`, unless the org was already completed before production mode existed.
-- At least one `machines` row.
-- At least one `workers` row.
-- A `payroll_configs` row.
+- Optional setup status for machines, workers, and `payroll_configs` for the deferred-setup guidance.
 - A valid active/authenticated subscription or trial.
 
-If all checks pass, it updates `organizations.onboarding_complete = true` using the admin client so future JWT refreshes carry the completed state.
+Production mode plus a valid subscription is enough to update `organizations.onboarding_complete = true` using the admin client so future JWT refreshes carry the completed state.
 
 `markOnboardingComplete` is called before the final hard navigation to `/owner/today`, but the call is intentionally non-fatal because middleware has a DB fallback.
 
 ## Current Limitations
 
 - Onboarding does not collect estimator qualities, yarn rates, worker rates, fixed workers, stock opening balances, or party masters.
-- Production logging still requires active loom/order/worker setup after onboarding.
+- Full Suite production logging still requires active loom/order/worker setup after onboarding; those are intentionally workflow prerequisites rather than signup blockers.
 - Production mode affects navigation, not data migration.
 - Some comments in auth/onboarding source files still mention older `/owner/analytics` wording, but the live redirects now point owners to `/owner/today`.
 

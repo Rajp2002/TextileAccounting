@@ -258,6 +258,14 @@ export default function BaseProductionClient({ initialData }: { initialData: Bas
     }
 
     function openRecord(jobId?: string) {
+        if (activeWorkers.length === 0) {
+            setEditingWorkerId(null)
+            setWorkerDraft(emptyWorkerDraft())
+            setActiveTab('production')
+            setDialog('worker')
+            return
+        }
+
         setRecordDraft((current) => ({
             ...current,
             jobId: jobId ?? current.jobId ?? activeJobs[0]?.id ?? '',

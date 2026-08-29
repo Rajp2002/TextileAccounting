@@ -28,4 +28,11 @@ describe('Full Suite automatic costing snapshots', () => {
     expect(savedCostings).not.toContain("quote.record_kind !== 'market_run'")
     expect(savedCostings).toContain("record.record_kind === 'market_run'")
   })
+
+  it('defers loom setup until a production workflow needs it', () => {
+    expect(actions).toContain("setupRequired: 'machine'")
+    expect(actions).toContain(".from('machines')")
+    expect(estimator).toContain('ContextualMachineDialog')
+    expect(estimator).toContain('handleMachineAdded')
+  })
 })
