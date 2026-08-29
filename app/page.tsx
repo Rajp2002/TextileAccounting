@@ -1,6 +1,7 @@
 import LandingHeader from "@/components/landing/header";
 import LandingHero from "@/components/landing/hero";
 import LandingFeatures from "@/components/landing/features";
+import LandingPlanShowcase from "@/components/landing/plan-showcase";
 import LandingPricing from "@/components/landing/pricing";
 import LandingFAQ from "@/components/landing/faq";
 import Link from 'next/link';
@@ -20,6 +21,10 @@ export default function Home() {
         
         <div>
           <LandingFeatures />
+        </div>
+
+        <div>
+          <LandingPlanShowcase />
         </div>
         
         <div>

@@ -46,12 +46,12 @@ export default function LandingPricing() {
                     <div>
                         <p className="text-xs font-black uppercase leading-7 tracking-[0.32em] text-orange-700 dark:text-orange-500">Pricing</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
-                            Choose the costing workflow you need.
+                            Compare the plans, then choose with confidence.
                         </h2>
                     </div>
                     <div className="max-w-2xl lg:ml-auto">
                         <p className="text-lg leading-8 text-zinc-700 dark:text-zinc-300">
-                            Weavly Lite is a complete professional textile costing desk. Weavly Base adds the production layer when you are ready to carry a costing into a job.
+                            Weavly Lite gives your costing desk the complete decision record. Weavly Base keeps that record connected as the job moves through production and worker settlement.
                         </p>
                         <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
                             Prices below show GST-inclusive totals and the 18% breakdown. Renewal is manual and opens during the final 30 days of the current annual period.

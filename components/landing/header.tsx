@@ -15,6 +15,7 @@ export default function LandingHeader() {
     const navLinks = [
         { name: 'Product', href: '#product' },
         { name: 'Workflow', href: '#workflow' },
+        { name: 'Plans', href: '#plans' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
     ]
@@ -82,7 +83,7 @@ export default function LandingHeader() {
                         </Link>
 
                         {/* Desktop Nav */}
-                        <nav className="hidden md:flex items-center gap-8">
+                        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
@@ -95,7 +96,7 @@ export default function LandingHeader() {
                             ))}
                         </nav>
 
-                        <div className="hidden md:flex items-center gap-4">
+                        <div className="hidden items-center gap-3 lg:flex xl:gap-4">
                             <Link href="/login">
                                 <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-white/10 font-semibold rounded-full px-6 transition-all">
                                     Log in
@@ -109,7 +110,7 @@ export default function LandingHeader() {
                         </div>
 
                         {/* Mobile Menu Toggle */}
-                        <div className="flex md:hidden">
+                        <div className="flex lg:hidden">
                             <button
                                 type="button"
                                 className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-gray-200 hover:bg-white/10 transition-colors"
@@ -130,7 +131,7 @@ export default function LandingHeader() {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div id="landing-mobile-menu" className="mt-2 md:hidden">
+                    <div id="landing-mobile-menu" className="mt-2 lg:hidden">
                         <div className="overflow-hidden rounded-xl bg-black/95 shadow-2xl ring-1 ring-gray-700/50 backdrop-blur-2xl">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (
