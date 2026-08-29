@@ -123,6 +123,8 @@ describe('Base Production Core boundary contracts', () => {
         expect(migration).toContain('settle_base_worker_payroll')
         expect(migration).toContain('public.estimator_quotes(org_id, id)')
         expect(migration).not.toContain('require_premium_tenant_mutation')
+        expect(migration).toContain("status text NOT NULL DEFAULT 'pending',")
+        expect(migration.match(/base_worker_advances_status_check/g)).toHaveLength(1)
         expect(actions).toContain('worker_rate_snapshot: worker.rate_per_meter')
         expect(actions).toContain("supabase.rpc('settle_base_worker_payroll'")
         expect(migration).toContain('NEW.worker_rate_snapshot := v_worker_rate')

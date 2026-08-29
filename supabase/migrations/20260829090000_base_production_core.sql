@@ -118,7 +118,7 @@ CREATE TABLE public.base_worker_advances (
     AND recovered_amount <= amount
   ),
   description text CHECK (description IS NULL OR char_length(description) <= 240),
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'deducted')),
+  status text NOT NULL DEFAULT 'pending',
   recovered_at timestamptz,
   last_recovered_period_end date,
   created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
