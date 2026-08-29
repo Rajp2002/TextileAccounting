@@ -132,7 +132,18 @@ export default function BaseDailyProductionSheet({
         const savedWorkerIds = new Set(currentBatchEntries.map((entry) => entry.worker_id))
         return initialData.workers.filter((worker) => worker.is_active || savedWorkerIds.has(worker.id) || assignedWorkerIds.has(worker.id))
     }, [assignedWorkerIds, currentBatchEntries, initialData.workers])
-    const isCurrentBatchLocked = currentBatch?.status === 'finalized'
+    const settledWorkerIds = useMemo(
+        () => new Set(
+            initialData.settlements
+                .filter((settlement) => settlement.period_start <= productionDate && settlement.period_end >= productionDate)
+                .map((settlement) => settlement.worker_id),
+        ),
+        [initialData.settlements, productionDate],
+    )
+    const isCurrentBatchLocked = Boolean(
+        currentBatch?.status === 'finalized'
+        || currentBatchEntries.some((entry) => settledWorkerIds.has(entry.worker_id)),
+    )
 
     const allocationsByEntry = useMemo(() => {
         const map = new Map<string, typeof initialData.allocations>()
