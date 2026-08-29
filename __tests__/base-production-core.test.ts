@@ -113,6 +113,7 @@ describe('Base Production Core calculations', () => {
 describe('Base Production Core boundary contracts', () => {
     it('keeps Base production tables and settlement access separate from Full Suite records', () => {
         const migration = read('supabase/migrations/20260829090000_base_production_core.sql')
+        const hardeningMigration = read('supabase/migrations/20260830000000_base_production_core_security_hardening.sql')
         const actions = read('app/(dashboard)/owner/production/actions.ts')
         const client = read('app/(dashboard)/owner/production/BaseProductionClient.tsx')
         const sidebar = read('components/navigation/owner-sidebar.tsx')
@@ -131,6 +132,9 @@ describe('Base Production Core boundary contracts', () => {
         expect(migration).not.toContain('machine_label')
         expect(migration).not.toContain('shift text')
         expect(migration).not.toContain('auth.role()')
+        expect(hardeningMigration).toContain('CREATE SCHEMA IF NOT EXISTS private')
+        expect(hardeningMigration).toContain('private.base_production_core_access')
+        expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION public.base_production_core_access(uuid)')
         expect(client).toContain('Fixed salary, statutory deductions, payslips, and WhatsApp remain Full Suite features.')
         expect(sidebar).toContain("href: \"/owner/production\"")
     })
