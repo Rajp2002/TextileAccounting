@@ -41,6 +41,10 @@ function formatMeters(value: number) {
     return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)} m`
 }
 
+function formatCount(value: number, singular: string, plural = `${singular}s`) {
+    return `${value} ${value === 1 ? singular : plural}`
+}
+
 function formatPdfINR(value: number) {
     return `Rs ${new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)}`
 }
@@ -228,7 +232,7 @@ export default function BasePayrollRecords({
                                         <SelectContent>
                                             {periods.map((period) => (
                                                 <SelectItem key={period.key} value={period.key}>
-                                                    {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {period.workers.length} workers
+                                                    {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {formatCount(period.workers.length, 'worker')}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -250,8 +254,8 @@ export default function BasePayrollRecords({
                     </Card>
 
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <SummaryMetric label="Total production" value={formatMeters(selectedPeriod.totalMeters)} detail={`${selectedPeriod.machines.length} machines`} />
-                        <SummaryMetric label="Gross earnings" value={formatINR(selectedPeriod.totalGrossPay)} detail={`${selectedPeriod.workers.length} ${selectedPeriod.workers.length === 1 ? 'worker' : 'workers'} settled`} />
+                        <SummaryMetric label="Total production" value={formatMeters(selectedPeriod.totalMeters)} detail={formatCount(selectedPeriod.machines.length, 'machine')} />
+                        <SummaryMetric label="Gross earnings" value={formatINR(selectedPeriod.totalGrossPay)} detail={`${formatCount(selectedPeriod.workers.length, 'worker')} settled`} />
                         <SummaryMetric label="Advances recovered" value={formatINR(selectedPeriod.totalAdvanceRecovered)} detail="Deducted in this period" />
                         <SummaryMetric label="Net payroll" value={formatINR(selectedPeriod.totalNetPayout)} detail={`Paid by ${selectedPeriod.paymentModes.map(mode => mode === 'upi' ? 'UPI' : paymentModeLabel(mode).toLocaleLowerCase('en-IN')).join(', ')}`} />
                     </div>
@@ -273,12 +277,12 @@ export default function BasePayrollRecords({
                                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                                     <div className="flex min-w-0 items-start gap-2">
                                                         {expanded ? <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
-                                                        <div><CardTitle className="text-base">{worker.workerName}</CardTitle><CardDescription>{machineCount} machines · paid {formatDateOnly(worker.paidAt)}</CardDescription></div>
+                                                        <div><CardTitle className="text-base">{worker.workerName}</CardTitle><CardDescription>{formatCount(machineCount, 'machine')} · paid {formatDateOnly(worker.paidAt)}</CardDescription></div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
                                                         <div><p className="text-xs text-muted-foreground">Production</p><p className="font-bold text-ink">{formatMeters(worker.meters)}</p></div>
                                                         <div><p className="text-xs text-muted-foreground">Gross</p><p className="font-bold text-ink">{formatINR(worker.grossPay)}</p></div>
-                                                        <div><p className="text-xs text-muted-foreground">Advance</p><p className="font-bold text-ink">{formatINR(worker.advanceRecovered)}</p></div>
+                                                        <div><p className="text-xs text-muted-foreground">Recovered</p><p className="font-bold text-ink">{formatINR(worker.advanceRecovered)}</p></div>
                                                         <div><p className="text-xs text-muted-foreground">Net paid</p><p className="font-black text-saffron-deep">{formatINR(worker.netPayout)}</p></div>
                                                     </div>
                                                 </div>
@@ -326,7 +330,7 @@ export default function BasePayrollRecords({
                                         <button type="button" className="w-full text-left" onClick={() => toggleMachine(key)} aria-expanded={expanded}>
                                             <CardHeader className="transition-colors hover:bg-surface-soft/50">
                                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                                    <div className="flex items-start gap-2">{expanded ? <ChevronDown className="mt-0.5 h-4 w-4 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground" />}<div><CardTitle className="text-base">{machine.machineLabel}</CardTitle><CardDescription>{machine.workerCount} workers · {machine.costingCount} costings</CardDescription></div></div>
+                                                    <div className="flex items-start gap-2">{expanded ? <ChevronDown className="mt-0.5 h-4 w-4 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground" />}<div><CardTitle className="text-base">{machine.machineLabel}</CardTitle><CardDescription>{formatCount(machine.workerCount, 'worker')} · {formatCount(machine.costingCount, 'costing')}</CardDescription></div></div>
                                                     <div className="flex gap-6 text-sm"><div><p className="text-xs text-muted-foreground">Period production</p><p className="font-bold text-ink">{formatMeters(machine.meters)}</p></div><div><p className="text-xs text-muted-foreground">Worker cost</p><p className="font-black text-saffron-deep">{formatINR(machine.grossPay)}</p></div></div>
                                                 </div>
                                             </CardHeader>
