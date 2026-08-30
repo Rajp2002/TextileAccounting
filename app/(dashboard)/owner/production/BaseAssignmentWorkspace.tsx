@@ -76,6 +76,7 @@ export default function BaseAssignmentWorkspace({
     const [connectorPositions, setConnectorPositions] = useState<ConnectorPositions>({ workers: {}, machines: {} })
     const [pickerWorkerId, setPickerWorkerId] = useState<string | null>(null)
     const [pendingKey, setPendingKey] = useState<string | null>(null)
+    const [mobileView, setMobileView] = useState<'workers' | 'machines'>('workers')
     const boardRef = useRef<HTMLDivElement>(null)
 
     const workerById = useMemo(
@@ -353,23 +354,23 @@ export default function BaseAssignmentWorkspace({
             </div>
 
             <Card className="border-saffron/20 bg-saffron-soft/20">
-                <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
+                <CardContent className="flex items-center justify-between gap-3 py-3 sm:py-4">
                     <div>
                         <p className="text-sm font-bold text-ink">Primary meter worker · {shift === 'day' ? 'Day' : 'Night'} shift</p>
-                        <p className="mt-1 text-xs leading-relaxed text-body">A worker can connect to more than one machine. Each machine has one primary Base worker for this shift.</p>
+                        <p className="mt-1 hidden text-xs leading-relaxed text-body sm:block">A worker can connect to more than one machine. Each machine has one primary Base worker for this shift.</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Label htmlFor="base-assignment-shift" className="text-xs">View shift</Label>
+                    <div className="flex shrink-0 items-center gap-3">
+                        <Label htmlFor="base-assignment-shift" className="sr-only">View shift</Label>
                         <Select value={shift} onValueChange={(value) => setShift(value as BaseProductionShift)}>
-                            <SelectTrigger id="base-assignment-shift" className="w-[140px]"><SelectValue /></SelectTrigger>
+                            <SelectTrigger id="base-assignment-shift" className="w-[126px] sm:w-[140px]"><SelectValue /></SelectTrigger>
                             <SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem></SelectContent>
                         </Select>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={showInactive} onChange={(event) => setShowInactive(event.target.checked)} /> Show inactive records</label>
+            <div className="flex items-center justify-between gap-2">
+                <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm text-body"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={(event) => setShowInactive(event.target.checked)} /> Show inactive</label>
                 <Badge variant="secondary"><Link2 className="h-3 w-3" /> {currentAssignments.length} current assignment{currentAssignments.length === 1 ? '' : 's'}</Badge>
             </div>
 
@@ -428,17 +429,48 @@ export default function BaseAssignmentWorkspace({
                 </CardContent>
             </Card>
 
-            <Card className="md:hidden">
-                <CardHeader className="border-b border-hairline/70"><CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4 text-saffron-deep" /> Workers</CardTitle><CardDescription>Tap Assign or Change, then choose a machine. No drag or horizontal scrolling is needed.</CardDescription></CardHeader>
-                <CardContent className="p-3">
-                    <div className="mb-3 relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} placeholder="Search workers" className="pl-9" /></div>
-                    <div className="space-y-2">
-                        {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
-                            const assignments = assignmentByWorker.get(worker.id) ?? []
-                            return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <Badge key={assignment.id} variant="brand">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</Badge>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex items-center gap-1"><Button variant="ghost" size="icon-xs" aria-label={`Edit ${worker.name}`} onClick={() => onEditWorker(worker)}><Edit3 className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
-                        })}
+            <Card className="gap-3 md:hidden">
+                <CardHeader className="border-b border-hairline/70 pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Assignment workspace</CardTitle>
+                    <div className="grid grid-cols-2 rounded-lg bg-surface-soft p-1" role="group" aria-label="Assignment workspace view">
+                        <Button type="button" size="sm" variant={mobileView === 'workers' ? 'secondary' : 'ghost'} aria-pressed={mobileView === 'workers'} onClick={() => setMobileView('workers')}><Users className="h-4 w-4" /> Workers</Button>
+                        <Button type="button" size="sm" variant={mobileView === 'machines' ? 'secondary' : 'ghost'} aria-pressed={mobileView === 'machines'} onClick={() => setMobileView('machines')}><Wrench className="h-4 w-4" /> Machines</Button>
                     </div>
-                </CardContent>
+                </CardHeader>
+                {mobileView === 'workers' ? (
+                    <CardContent className="p-3 pt-0">
+                        <p className="mb-3 text-xs text-body">Assign each worker to one or more machines.</p>
+                        <div className="relative mb-3"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} placeholder="Search workers" className="pl-9" /></div>
+                        <div className="space-y-2">
+                            {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
+                                const assignments = assignmentByWorker.get(worker.id) ?? []
+                                return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <Badge key={assignment.id} variant="brand">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</Badge>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex shrink-0 items-center gap-1"><Button variant="ghost" size="icon-sm" aria-label={`Edit ${worker.name}`} onClick={() => onEditWorker(worker)}><Edit3 className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
+                            })}
+                        </div>
+                    </CardContent>
+                ) : (
+                    <CardContent className="p-3 pt-0">
+                        <p className="mb-3 text-xs text-body">Set the production job used for each machine’s daily metres.</p>
+                        <div className="mb-3"><MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} /></div>
+                        <div className="space-y-2">
+                            {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
+                                const assignment = assignmentByMachine.get(machine.id)
+                                const worker = assignment ? workerById.get(assignment.worker_id) : null
+                                const jobId = currentJobByMachine.get(machine.id) ?? 'none'
+                                const pending = pendingKey === `context-${machine.id}`
+                                return (
+                                    <div key={machine.id} className="rounded-xl border border-hairline px-3 py-3">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{machineLabel(machine)}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}</p></div>
+                                            <div className="flex shrink-0 items-center gap-1">{worker ? <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge> : <Badge variant="warning">Unassigned</Badge>}<Button variant="ghost" size="icon-sm" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}><Edit3 className="h-4 w-4" /></Button></div>
+                                        </div>
+                                        <div className="mt-3 flex items-center gap-2"><BriefcaseBusiness className="h-4 w-4 shrink-0 text-muted-foreground" /><Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}><SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="min-w-0 flex-1"><SelectValue placeholder="No active job" /></SelectTrigger><SelectContent><SelectItem value="none">No active job</SelectItem>{activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}</SelectContent></Select>{pending ? <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" /> : null}</div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </CardContent>
+                )}
             </Card>
 
             <Sheet open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open) setPickerWorkerId(null) }}>
