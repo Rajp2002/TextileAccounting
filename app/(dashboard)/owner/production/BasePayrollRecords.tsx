@@ -24,6 +24,7 @@ import {
     buildBasePayrollHistoryCsv,
     type BasePayrollHistoryPeriod,
 } from '@/lib/base-payroll-history'
+import { generateBasePayrollPdf } from '@/lib/generate-base-payroll-pdf'
 import type { BasePayrollPaymentMode } from '@/lib/base-production-core'
 
 import type { BaseProductionInitialData } from './loaders'
@@ -43,10 +44,6 @@ function formatMeters(value: number) {
 
 function formatCount(value: number, singular: string, plural = `${singular}s`) {
     return `${value} ${value === 1 ? singular : plural}`
-}
-
-function formatPdfINR(value: number) {
-    return `Rs ${new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)}`
 }
 
 function paymentModeLabel(mode: BasePayrollPaymentMode) {
@@ -83,16 +80,7 @@ function SummaryMetric({ label, value, detail }: { label: string; value: string;
     )
 }
 
-function createPdfLines(period: BasePayrollHistoryPeriod) {
-    return period.workers.flatMap((worker) => [
-        `${worker.workerName} | ${formatMeters(worker.meters)} | Gross ${formatPdfINR(worker.grossPay)} | Advance ${formatPdfINR(worker.advanceRecovered)} | Net ${formatPdfINR(worker.netPayout)}`,
-        ...worker.earnings.map((earning) => (
-            `    ${earning.machineLabel} | ${earning.costingLabel} | ${formatMeters(earning.meters)} x ${formatPdfINR(earning.rate)}/m = ${formatPdfINR(earning.grossPay)}`
-        )),
-        `    Paid ${formatDateOnly(worker.paidAt)} by ${paymentModeLabel(worker.paymentMode)} | Advance balance ${formatPdfINR(worker.advanceBalanceBefore)} -> ${formatPdfINR(worker.remainingAdvanceBalance)}`,
-        '',
-    ])
-}
+
 
 export default function BasePayrollRecords({
     initialData,
@@ -164,32 +152,10 @@ export default function BasePayrollRecords({
         if (!selectedPeriod || exportingPdf) return
         setExportingPdf(true)
         try {
-            const { jsPDF } = await import('jspdf')
-            const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-            const left = 42
-            const pageWidth = doc.internal.pageSize.getWidth()
-            const pageHeight = doc.internal.pageSize.getHeight()
-            let y = 48
-
-            const write = (text: string, size = 9, bold = false, gap = 5) => {
-                doc.setFont('helvetica', bold ? 'bold' : 'normal')
-                doc.setFontSize(size)
-                const wrapped = doc.splitTextToSize(text, pageWidth - left * 2) as string[]
-                const needed = wrapped.length * (size + 3) + gap
-                if (y + needed > pageHeight - 42) {
-                    doc.addPage()
-                    y = 44
-                }
-                doc.text(wrapped, left, y)
-                y += needed
-            }
-
-            write(initialData.factoryName ?? 'Weavly Payroll', 16, true, 8)
-            write(`Payroll record: ${formatDateOnly(selectedPeriod.start)} - ${formatDateOnly(selectedPeriod.end)}`, 12, true, 10)
-            write(`Workers: ${selectedPeriod.workers.length} | Production: ${formatMeters(selectedPeriod.totalMeters)} | Gross: ${formatPdfINR(selectedPeriod.totalGrossPay)} | Advances: ${formatPdfINR(selectedPeriod.totalAdvanceRecovered)} | Net paid: ${formatPdfINR(selectedPeriod.totalNetPayout)}`, 9, false, 12)
-            for (const line of createPdfLines(selectedPeriod)) write(line, 8.5, !line.startsWith(' ') && line.length > 0, line.length > 0 ? 4 : 8)
-            write('Generated from immutable settlement totals and settlement-time earning snapshots.', 7.5, false, 0)
-            doc.save(`${safeFilename(initialData.factoryName ?? 'Weavly')}_Payroll_${selectedPeriod.start}_${selectedPeriod.end}.pdf`)
+            await generateBasePayrollPdf(selectedPeriod, {
+                factoryName: initialData.factoryName,
+                autoSave: true,
+            })
             toast.success('Detailed payroll PDF exported.')
         } catch (error) {
             console.error('[base-payroll-history] PDF export failed', error)
