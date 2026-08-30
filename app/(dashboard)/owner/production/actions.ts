@@ -267,6 +267,22 @@ export async function upsertBaseWorkerMachineAssignment(input: {
         return { error: `This worker is only available for the ${worker.shift_availability} shift. Edit the worker to change availability.` }
     }
 
+    const { data: machineContext, error: contextError } = await supabase
+        .from('base_machine_job_contexts')
+        .select('id, job_id, active, effective_from, effective_to, base_production_jobs!inner(id, status)')
+        .eq('org_id', profile.org_id)
+        .eq('machine_id', parsed.data.machineId)
+        .eq('active', true)
+        .lte('effective_from', parsed.data.effectiveFrom)
+        .or(`effective_to.is.null,effective_to.gte.${parsed.data.effectiveFrom}`)
+        .in('base_production_jobs.status', ['planned', 'active'])
+        .maybeSingle()
+
+    if (contextError) return databaseError(contextError, 'Machine costing context could not be verified. Please try again.')
+    if (!machineContext) {
+        return { error: 'This machine does not have an active costing. Assign an active costing before assigning a worker.' }
+    }
+
     const { data, error } = await supabase.rpc('upsert_base_worker_machine_assignment', {
         p_worker_id: parsed.data.workerId,
         p_machine_id: parsed.data.machineId,

@@ -432,12 +432,13 @@ function SavedQualityLibraryView({
     onOpen,
     onStartFrom,
     onSaveAsNewQuality,
-     onExport,
-     onAudit,
-     auditingId,
-     onToggleFavorite,
-     onToggleArchived,
+    onExport,
+    onAudit,
+    auditingId,
+    onToggleFavorite,
+    onToggleArchived,
     onOpenUsage,
+    onEnsureDetail,
     factoryInputsCapturedLabel,
 }: {
     groups: SavedQualityGroup[]
@@ -455,40 +456,51 @@ function SavedQualityLibraryView({
     onStartFrom: (quote: QuoteRow) => void
     onSaveAsNewQuality: (quote: QuoteRow) => void
     onExport: (quote: QuoteRow) => void
-     onAudit: (quote: QuoteRow) => void
-     auditingId: string | null
-     onToggleFavorite: (quote: QuoteRow) => void
-     onToggleArchived: (quote: QuoteRow) => void
+    onAudit: (quote: QuoteRow) => void
+    auditingId: string | null
+    onToggleFavorite: (quote: QuoteRow) => void
+    onToggleArchived: (quote: QuoteRow) => void
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
+    onEnsureDetail?: (quote: QuoteRow) => Promise<QuoteRow | null>
     factoryInputsCapturedLabel: string
 }) {
     const { t, tx } = useTranslation()
+    const [selectedRecordIdByGroup, setSelectedRecordIdByGroup] = useState<Record<string, string>>({})
 
     return (
         <div className="space-y-3">
             {groups.map(group => {
                 const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
-                const latestResult = latest ? getHistoricalCostingResult(latest) : null
-                const latestYarnCostLines: Array<[string, number]> = latestResult?.audit
+                const selectedRecordId = selectedRecordIdByGroup[group.key]
+                const activeRecord = (selectedRecordId ? group.records.find(r => r.id === selectedRecordId) : null) ?? (group.records.length === 1 ? group.records[0] : null)
+                const targetRecord = activeRecord ?? latest
+                const activeResult = activeRecord ? getHistoricalCostingResult(activeRecord) : null
+                const activeDetailLoading = targetRecord != null && detailLoadingId === targetRecord.id
+                const activeYarnCostLines: Array<[string, number]> = activeResult?.audit
                     ? [
-                        ['Base warp yarn', latestResult.audit.warp.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
-                        ['Base weft yarn', latestResult.audit.weft.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
-                        ['Yarn wastage / crimp', latestResult.audit.yarnAdjustmentCostPerMeter],
+                        ['Base warp yarn', activeResult.audit.warp.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
+                        ['Base weft yarn', activeResult.audit.weft.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
+                        ['Yarn wastage / crimp', activeResult.audit.yarnAdjustmentCostPerMeter],
                     ]
-                    : latestResult
+                    : activeResult
                         ? [
-                            ['Warp yarn (saved adjusted cost)', latestResult.breakdown.warpCostPerM],
-                            ['Weft yarn (saved adjusted cost)', latestResult.breakdown.weftCostPerM],
+                            ['Warp yarn (saved adjusted cost)', activeResult.breakdown.warpCostPerM],
+                            ['Weft yarn (saved adjusted cost)', activeResult.breakdown.weftCostPerM],
                         ]
                         : []
-                const latestDetailLoading = latest != null && detailLoadingId === latest.id
                 const usages = group.records
                     .map(record => ({ record, order: getLinkedOrder(record) }))
                     .filter((item): item is { record: QuoteRow; order: QuoteLinkedOrder } => Boolean(item.order))
                     .filter((item, index, all) => all.findIndex(other => other.order.id === item.order.id) === index)
                 const totalProduced = usages.reduce((sum, usage) => sum + getProducedMeters(usage.order), 0)
                 const openGroupDetails = () => onOpenDetails(group.key, group.records.length === 1 ? group.records[0] : null)
+                const handleInspectRecord = (record: QuoteRow) => {
+                    setSelectedRecordIdByGroup(prev => ({ ...prev, [group.key]: record.id }))
+                    if (onEnsureDetail) {
+                        void onEnsureDetail(record)
+                    }
+                }
 
                 return (
                     <Card
@@ -578,7 +590,7 @@ function SavedQualityLibraryView({
                                                 <DialogTitle className="min-w-0 flex-1 truncate text-xl font-black" title={group.name}>{group.name}</DialogTitle>
                                                 {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
                                                 {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-[10px] font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
-                                                {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
+                                                {(activeRecord ?? latest) && <Badge variant="outline" className="text-[10px] font-bold">v{Number((activeRecord ?? latest)?.version_number ?? 1)}</Badge>}
                                             </div>
                                             <DialogDescription>
                                                 {group.records.length > 0
@@ -597,30 +609,32 @@ function SavedQualityLibraryView({
                                         </DialogHeader>
 
                                         <div className="premium-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
-                                    {!latest || latestDetailLoading || !latestResult ? (
+                                    {!activeRecord || activeDetailLoading || !activeResult ? (
                                         <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
-                                            {latestDetailLoading ? <Loader2 className="h-6 w-6 animate-spin text-info" /> : latest ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
-                                            <p className="mt-3 text-sm font-bold text-body">{tx(latestDetailLoading
+                                            {activeDetailLoading ? <Loader2 className="h-6 w-6 animate-spin text-info" /> : (activeRecord ?? latest) ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
+                                            <p className="mt-3 text-sm font-bold text-body">{tx(activeDetailLoading
                                                 ? 'Loading saved costing details…'
-                                                : latest
+                                                : !activeRecord
                                                     ? group.records.length > 1
                                                         ? 'Choose a costing version to view its breakdown'
-                                                        : 'This saved costing does not have a detailed breakdown yet'
-                                                    : group.currentRecipeCostPerM != null
-                                                        ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
-                                                        : 'No costing saved for this quality yet')}</p>
-                                            <p className="mt-1 max-w-md text-xs text-subtle">{tx(latestDetailLoading
+                                                        : 'No costing saved for this quality yet'
+                                                    : !activeResult
+                                                        ? 'This saved costing does not have a detailed breakdown yet'
+                                                        : group.currentRecipeCostPerM != null
+                                                            ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
+                                                            : 'No costing saved for this quality yet')}</p>
+                                            <p className="mt-1 max-w-md text-xs text-subtle">{tx(activeDetailLoading
                                                 ? 'Loading the saved assumptions and financial breakdown for this snapshot.'
-                                                : latest
+                                                : !activeRecord
                                                     ? group.records.length > 1
                                                         ? 'This quality has multiple saved versions. Select View breakdown on the version you want to inspect; saved commercial totals remain unchanged.'
-                                                        : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.'
-                                                    : group.currentRecipeCostPerM != null
-                                                        ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
-                                                        : canUseProduction
-                                                            ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
-                                                            : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.')}</p>
-                                            {latest && !latestDetailLoading && (
+                                                        : group.currentRecipeCostPerM != null
+                                                            ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
+                                                            : canUseProduction
+                                                                ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
+                                                                : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'
+                                                    : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.')}</p>
+                                            {latest && !activeDetailLoading && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                                                     {canUseProduction ? <>
                                                         {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open')}</Button>}
@@ -658,43 +672,43 @@ function SavedQualityLibraryView({
                                             <section className="rounded-xl border border-hairline bg-surface p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
-                                                        <p className="text-sm font-black text-ink">{tx('Latest Saved Costing breakdown')}</p>
-                                                        <p className="mt-1 text-xs text-subtle">Snapshot v{Number(latest.version_number ?? 1)} · {formatTimestampDate(latest.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                                        <p className="text-sm font-black text-ink">{tx(group.records.length > 1 ? `Saved Costing v${Number(activeRecord.version_number ?? 1)} breakdown` : 'Latest Saved Costing breakdown')}</p>
+                                                        <p className="mt-1 text-xs text-subtle">Snapshot v{Number(activeRecord.version_number ?? 1)} · {formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {canUseProduction ? <>
-                                                            {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>{tx('Open')}</Button>}
-                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                            {!activeRecord.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>{tx('Open')}</Button>}
+                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
                                                         </> : <>
-                                                            {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
-                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
+                                                            {!activeRecord.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
                                                         </>}
-                                                        {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
+                                                        {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
                                                             <Link
-                                                                href={`/owner/production?costingId=${encodeURIComponent(latest.id)}`}
+                                                                href={`/owner/production?costingId=${encodeURIComponent(activeRecord.id)}`}
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >
                                                                 <Factory className="h-3.5 w-3.5" /> Start Production
                                                             </Link>
                                                         )}
-                                                        <Button variant="outline" size="sm" onClick={() => onToggleArchived(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>
-                                                            {updatingId === latest.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : latest.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                                        {tx(updatingId === latest.id ? latest.is_archived ? `Restoring ${getSavedCostingIdentity(latest).label}…` : `Archiving ${getSavedCostingIdentity(latest).label}…` : latest.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
+                                                        <Button variant="outline" size="sm" onClick={() => onToggleArchived(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>
+                                                            {updatingId === activeRecord.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : activeRecord.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                                                        {tx(updatingId === activeRecord.id ? activeRecord.is_archived ? `Restoring ${getSavedCostingIdentity(activeRecord).label}…` : `Archiving ${getSavedCostingIdentity(activeRecord).label}…` : activeRecord.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
                                                         </Button>
                                                     </div>
                                                         </div>
 
                                                 <div className="mt-4 divide-y divide-hairline text-sm">
                                                     {[
-                                                        ...latestYarnCostLines,
-                                                        ['Weaving', latestResult.breakdown.weaveCostPerM],
-                                                        ['Warping & sizing', latestResult.breakdown.warpingAndSizingPerM],
-                                                        ['Processing & finishing', latestResult.breakdown.windingPerM + latestResult.breakdown.processingPerM + latestResult.breakdown.finishingPerM],
-                                                        ['Factory expenses', latestResult.breakdown.overheadPerM],
+                                                        ...activeYarnCostLines,
+                                                        ['Weaving', activeResult.breakdown.weaveCostPerM],
+                                                        ['Warping & sizing', activeResult.breakdown.warpingAndSizingPerM],
+                                                        ['Processing & finishing', activeResult.breakdown.windingPerM + activeResult.breakdown.processingPerM + activeResult.breakdown.finishingPerM],
+                                                        ['Factory expenses', activeResult.breakdown.overheadPerM],
                                                     ].map(([label, value]) => (
                                                         <div key={String(label)} className="flex items-center justify-between py-2">
                                                             <span className="text-body">{label}</span>
@@ -703,15 +717,15 @@ function SavedQualityLibraryView({
                                                     ))}
                                                 </div>
                                                 <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg bg-loom p-3 text-white sm:grid-cols-3">
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.production_cost_per_m')}</p><p className="mt-1 font-mono text-sm font-black">₹{latestResult.productionCostPerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1 font-mono text-sm font-black text-saffron">₹{latestResult.suggestedSellingPricePerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">Actual Margin</p><p className="mt-1 font-mono text-sm font-black text-success">{latestResult.actualMarginPct.toFixed(1)}%</p></div>
+                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.production_cost_per_m')}</p><p className="mt-1 font-mono text-sm font-black">₹{activeResult.productionCostPerM.toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1 font-mono text-sm font-black text-saffron">₹{activeResult.suggestedSellingPricePerM.toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-surface-muted">Actual Margin</p><p className="mt-1 font-mono text-sm font-black text-success">{activeResult.actualMarginPct.toFixed(1)}%</p></div>
                                                 </div>
-                                                {getCostingStatus(latest) !== 'verified' && (
+                                                {getCostingStatus(activeRecord) !== 'verified' && (
                                                     <div className="mt-3 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
-                                                        <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(latest.reconciliation_note || getCostingTrustCopy(getCostingStatus(latest)))}</p></div>
-                                                        <Button variant="outline" size="sm" onClick={() => onAudit(latest)} disabled={auditingId === latest.id} aria-busy={auditingId === latest.id} className="shrink-0 border-warning/30 bg-surface text-warning hover:bg-warning-soft">
-                                                            {auditingId === latest.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx(auditingId === latest.id ? 'Checking…' : 'Check saved numbers')}
+                                                        <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(activeRecord.reconciliation_note || getCostingTrustCopy(getCostingStatus(activeRecord)))}</p></div>
+                                                        <Button variant="outline" size="sm" onClick={() => onAudit(activeRecord)} disabled={auditingId === activeRecord.id} aria-busy={auditingId === activeRecord.id} className="shrink-0 border-warning/30 bg-surface text-warning hover:bg-warning-soft">
+                                                            {auditingId === activeRecord.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx(auditingId === activeRecord.id ? 'Checking…' : 'Check saved numbers')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -760,6 +774,7 @@ function SavedQualityLibraryView({
                                             <p className="mt-1 text-xs text-subtle">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
                                             <div className="mt-3 space-y-2">
                                                 {group.records.map(record => {
+                                                    const isInspected = activeRecord?.id === record.id
                                                     const selected = selectedCostingIds.includes(record.id)
                                                     const preparing = detailLoadingId === record.id
                                                     const identity = getSavedCostingIdentity(record)
@@ -775,9 +790,19 @@ function SavedQualityLibraryView({
                                                             onClick={event => {
                                                                 const target = event.target as HTMLElement
                                                                 if (target.closest('a, button, input, [data-costing-card-control]')) return
-                                                                if (comparisonMode) onToggleComparison(record.id)
+                                                                if (comparisonMode) {
+                                                                    onToggleComparison(record.id)
+                                                                } else {
+                                                                    handleInspectRecord(record)
+                                                                }
                                                             }}
-                                                            className={`${comparisonMode ? 'cursor-pointer' : ''} rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none ${selected ? 'premium-selected-row border-info/30 bg-info-soft/60' : 'border-hairline bg-surface hover:bg-surface-soft/70'}`}
+                                                            className={`rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
+                                                                selected
+                                                                    ? 'premium-selected-row border-info/30 bg-info-soft/60'
+                                                                    : isInspected
+                                                                        ? 'border-saffron/40 bg-saffron-soft/20 shadow-sm ring-1 ring-saffron/30'
+                                                                        : 'border-hairline bg-surface hover:bg-surface-soft/70'
+                                                            }`}
                                                         >
                                                             <div className="flex min-w-0 items-start gap-3">
                                                                 {comparisonMode && <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
@@ -785,7 +810,14 @@ function SavedQualityLibraryView({
                                                                     {preparing && <Loader2 className="h-3.5 w-3.5 animate-spin text-info" aria-hidden="true" />}
                                                                 </span>}
                                                                 <div className="min-w-0 flex-1">
-                                                                    <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
+                                                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                                                        <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
+                                                                        {isInspected && (
+                                                                            <Badge variant="outline" className="border-saffron/30 bg-saffron-soft text-[10px] font-bold text-saffron-deep">
+                                                                                {tx('Active breakdown')}
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
                                                                     <p className="mt-1 truncate text-[10px] text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatTimestampDate(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
                                                                     <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[11px] text-body">
                                                                         <span className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-surface-soft px-2 py-0.5" title={contextLabel}>{contextLabel}</span>
@@ -810,7 +842,19 @@ function SavedQualityLibraryView({
                                                                         </div>
                                                                     </dl>
                                                                     <div data-costing-card-control className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-hairline pt-2">
-                                                                        {!record.is_archived && group.template?.is_active !== false && <Button variant="ghost" size="sm" onClick={() => onOpen(record)} disabled={updatingId === record.id} aria-label={`View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}`} className="h-8 px-2 text-xs"><Eye className="h-3.5 w-3.5" /> <span>View breakdown</span></Button>}
+                                                                        {!record.is_archived && group.template?.is_active !== false && (
+                                                                            <Button
+                                                                                variant={isInspected ? "secondary" : "ghost"}
+                                                                                size="sm"
+                                                                                onClick={() => handleInspectRecord(record)}
+                                                                                disabled={updatingId === record.id || detailLoadingId === record.id}
+                                                                                aria-label={`View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}`}
+                                                                                className="h-8 px-2 text-xs"
+                                                                            >
+                                                                                {detailLoadingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                                                                                <span>{tx('View breakdown')}</span>
+                                                                            </Button>
+                                                                        )}
                                                                         <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`} className="h-8 w-8">
                                                                             <Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} />
                                                                         </Button>
@@ -1544,6 +1588,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
                     onOpenUsage={(quote, order) => { setOpenQualityKey(null); openAppliedProduction(quote, order) }}
+                    onEnsureDetail={ensureQuoteDetail}
                     factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                 />
             ) : !canUseProduction || !canUseQuotationWorkflow ? (

@@ -87,21 +87,6 @@ export default function BaseAssignmentWorkspace({
         () => new Map(initialData.machines.map((machine) => [machine.id, machine])),
         [initialData.machines],
     )
-    const currentAssignments = useMemo(
-        () => initialData.assignments.filter((assignment) => assignment.shift === shift && assignment.active && isEffectiveOnDate(assignment.effective_from, assignment.effective_to, initialData.today)),
-        [initialData.assignments, initialData.today, shift],
-    )
-    const assignmentByWorker = useMemo(() => {
-        const result = new Map<string, typeof currentAssignments>()
-        for (const assignment of currentAssignments) {
-            result.set(assignment.worker_id, [...(result.get(assignment.worker_id) ?? []), assignment])
-        }
-        return result
-    }, [currentAssignments])
-    const assignmentByMachine = useMemo(
-        () => new Map(currentAssignments.map((assignment) => [assignment.machine_id, assignment])),
-        [currentAssignments],
-    )
     const activeJobs = useMemo(
         () => initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active'),
         [initialData.jobs],
@@ -116,6 +101,27 @@ export default function BaseAssignmentWorkspace({
         }
         return result
     }, [activeJobIds, initialData.machineJobContexts, initialData.today])
+
+    const currentAssignments = useMemo(
+        () => initialData.assignments.filter((assignment) => (
+            assignment.shift === shift
+            && assignment.active
+            && isEffectiveOnDate(assignment.effective_from, assignment.effective_to, initialData.today)
+            && currentJobByMachine.has(assignment.machine_id)
+        )),
+        [currentJobByMachine, initialData.assignments, initialData.today, shift],
+    )
+    const assignmentByWorker = useMemo(() => {
+        const result = new Map<string, typeof currentAssignments>()
+        for (const assignment of currentAssignments) {
+            result.set(assignment.worker_id, [...(result.get(assignment.worker_id) ?? []), assignment])
+        }
+        return result
+    }, [currentAssignments])
+    const assignmentByMachine = useMemo(
+        () => new Map(currentAssignments.map((assignment) => [assignment.machine_id, assignment])),
+        [currentAssignments],
+    )
 
     const visibleWorkers = useMemo(() => initialData.workers.filter((worker) => {
         if (!showInactive && !worker.is_active) return false
@@ -181,7 +187,7 @@ export default function BaseAssignmentWorkspace({
     function machineAtPoint(clientX: number, clientY: number) {
         const target = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>('[data-machine-node]')
         const machineId = target?.dataset.machineNode ?? null
-        return machineId && machineById.get(machineId)?.is_active ? machineId : null
+        return machineId && machineById.get(machineId)?.is_active && currentJobByMachine.has(machineId) ? machineId : null
     }
 
     function handleConnectorPointerDown(event: ReactPointerEvent<HTMLElement>, workerId: string) {
@@ -216,6 +222,10 @@ export default function BaseAssignmentWorkspace({
     }
 
     async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
+        if (!currentJobByMachine.has(machineId)) {
+            toast.error('This machine does not have an active costing. Assign an active costing before assigning a worker.')
+            return
+        }
         const key = `assign-${workerId}-${machineId}`
         if (pendingKey) return
         const previousAssignment = assignmentByMachine.get(machineId)
@@ -415,11 +425,60 @@ export default function BaseAssignmentWorkspace({
                                 const assignment = assignmentByMachine.get(machine.id)
                                 const worker = assignment ? workerById.get(assignment.worker_id) : null
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
+                                const hasActiveJob = jobId !== 'none'
                                 const pending = pendingKey === `context-${machine.id}`
+                                const isDropTargetValid = Boolean(draggingWorkerId && machine.is_active && hasActiveJob)
                                 return (
-                                    <div key={machine.id} data-machine-node={machine.id} className={`min-h-[76px] rounded-xl border bg-surface px-3 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : draggingWorkerId && machine.is_active ? 'border-saffron/55 bg-saffron-soft/20' : 'border-hairline'}`}>
-                                        <div className="flex items-start justify-between gap-2"><span data-machine-handle={machine.id} className={`-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-saffron-deep transition-colors ${hoveredMachineId === machine.id ? 'border-saffron bg-saffron text-white' : 'border-saffron/60 bg-saffron-soft'}`} title={machine.is_active ? 'Drop a worker here' : 'Inactive machines cannot be assigned'} aria-label={machine.is_active ? `Drop a worker on ${machineLabel(machine)}` : `${machineLabel(machine)} is inactive`}><Link2 className="h-3.5 w-3.5" /></span><div className="min-w-0 flex-1"><p className="truncate font-semibold text-ink">{machineLabel(machine)}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{machine.is_active ? '' : ' · inactive'}</p></div><div className="flex items-center gap-2">{worker ? <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge> : <Badge variant="warning">Unassigned</Badge>}<Button variant="ghost" size="icon-xs" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}><Edit3 className="h-4 w-4" /></Button></div></div>
-                                        <div className="mt-2 flex items-center gap-2"><BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /><Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}><SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="h-8 min-w-0 flex-1 text-xs"><SelectValue placeholder="No active job context" /></SelectTrigger><SelectContent><SelectItem value="none">No active job</SelectItem>{activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}</SelectContent></Select>{assignment && <Button variant="ghost" size="icon-xs" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey === `remove-${assignment.id}`}><Unlink className="h-4 w-4" /></Button>}</div>
+                                    <div key={machine.id} data-machine-node={machine.id} className={`min-h-[76px] rounded-xl border bg-surface px-3 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <span
+                                                data-machine-handle={machine.id}
+                                                className={`-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                                    hoveredMachineId === machine.id
+                                                        ? 'border-saffron bg-saffron text-white'
+                                                        : hasActiveJob
+                                                            ? 'border-saffron/60 bg-saffron-soft text-saffron-deep'
+                                                            : 'border-hairline/80 bg-surface-soft text-muted-foreground/50 cursor-not-allowed'
+                                                }`}
+                                                title={!machine.is_active ? 'Inactive machines cannot be assigned' : !hasActiveJob ? 'Assign a costing before linking a worker' : 'Drop a worker here'}
+                                                aria-label={!machine.is_active ? `${machineLabel(machine)} is inactive` : !hasActiveJob ? `${machineLabel(machine)} has no active costing` : `Drop a worker on ${machineLabel(machine)}`}
+                                            >
+                                                <Link2 className="h-3.5 w-3.5" />
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
+                                                <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{machine.is_active ? '' : ' · inactive'}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {worker ? (
+                                                    <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge>
+                                                ) : !hasActiveJob ? (
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No costing</Badge>
+                                                ) : (
+                                                    <Badge variant="warning">Unassigned</Badge>
+                                                )}
+                                                <Button variant="ghost" size="icon-xs" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}>
+                                                    <Edit3 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                            <Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}>
+                                                <SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="h-8 min-w-0 flex-1 text-xs">
+                                                    <SelectValue placeholder="No active job context" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">No active job</SelectItem>
+                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            {assignment && (
+                                                <Button variant="ghost" size="icon-xs" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey === `remove-${assignment.id}`}>
+                                                    <Unlink className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 )
                             })}
@@ -457,14 +516,41 @@ export default function BaseAssignmentWorkspace({
                                 const assignment = assignmentByMachine.get(machine.id)
                                 const worker = assignment ? workerById.get(assignment.worker_id) : null
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
+                                const hasActiveJob = jobId !== 'none'
                                 const pending = pendingKey === `context-${machine.id}`
                                 return (
                                     <div key={machine.id} className="rounded-xl border border-hairline px-3 py-3">
                                         <div className="flex items-start justify-between gap-2">
-                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{machineLabel(machine)}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}</p></div>
-                                            <div className="flex shrink-0 items-center gap-1">{worker ? <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge> : <Badge variant="warning">Unassigned</Badge>}<Button variant="ghost" size="icon-sm" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}><Edit3 className="h-4 w-4" /></Button></div>
+                                            <div className="min-w-0">
+                                                <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
+                                                <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}</p>
+                                            </div>
+                                            <div className="flex shrink-0 items-center gap-1">
+                                                {worker ? (
+                                                    <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge>
+                                                ) : !hasActiveJob ? (
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No costing</Badge>
+                                                ) : (
+                                                    <Badge variant="warning">Unassigned</Badge>
+                                                )}
+                                                <Button variant="ghost" size="icon-sm" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}>
+                                                    <Edit3 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <div className="mt-3 flex items-center gap-2"><BriefcaseBusiness className="h-4 w-4 shrink-0 text-muted-foreground" /><Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}><SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="min-w-0 flex-1"><SelectValue placeholder="No active job" /></SelectTrigger><SelectContent><SelectItem value="none">No active job</SelectItem>{activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}</SelectContent></Select>{pending ? <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" /> : null}</div>
+                                        <div className="mt-3 flex items-center gap-2">
+                                            <BriefcaseBusiness className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                            <Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}>
+                                                <SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="min-w-0 flex-1">
+                                                    <SelectValue placeholder="No active job" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">No active job</SelectItem>
+                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            {pending ? <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" /> : null}
+                                        </div>
                                     </div>
                                 )
                             })}
@@ -482,8 +568,39 @@ export default function BaseAssignmentWorkspace({
                             const assignment = assignmentByMachine.get(machine.id)
                             const assignedWorker = assignment ? workerById.get(assignment.worker_id) : null
                             const isCurrent = assignment?.worker_id === pickerWorkerId
+                            const hasActiveJob = currentJobByMachine.has(machine.id)
                             const pending = pendingKey === `assign-${pickerWorkerId}-${machine.id}`
-                            return <button key={machine.id} type="button" className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-3 py-3 text-left transition-colors hover:border-saffron hover:bg-saffron-soft/30 disabled:opacity-50" onClick={() => pickerWorkerId && void handleAssign(pickerWorkerId, machine.id)} disabled={pending || isCurrent}><span><span className="block font-semibold text-ink">{machineLabel(machine)}</span><span className="mt-0.5 block text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{assignedWorker && !isCurrent ? ` · ${assignedWorker.name} currently assigned` : ''}</span></span>{pending ? <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" /> : isCurrent ? <Badge variant="success"><Check className="h-3 w-3" /> Current</Badge> : <span className="text-xs font-bold text-saffron-deep">Choose</span>}</button>
+                            const isOptionDisabled = pending || isCurrent || !hasActiveJob
+                            return (
+                                <button
+                                    key={machine.id}
+                                    type="button"
+                                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-3 py-3 text-left transition-colors hover:border-saffron hover:bg-saffron-soft/30 disabled:opacity-50 disabled:pointer-events-none"
+                                    onClick={() => pickerWorkerId && void handleAssign(pickerWorkerId, machine.id)}
+                                    disabled={isOptionDisabled}
+                                >
+                                    <span>
+                                        <span className="block font-semibold text-ink">{machineLabel(machine)}</span>
+                                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                                            {formatMachineType(machine.machine_type)}
+                                            {!hasActiveJob
+                                                ? ' · No active costing'
+                                                : assignedWorker && !isCurrent
+                                                    ? ` · ${assignedWorker.name} currently assigned`
+                                                    : ''}
+                                        </span>
+                                    </span>
+                                    {pending ? (
+                                        <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" />
+                                    ) : isCurrent ? (
+                                        <Badge variant="success"><Check className="h-3 w-3" /> Current</Badge>
+                                    ) : !hasActiveJob ? (
+                                        <span className="text-xs font-semibold text-muted-foreground">No costing</span>
+                                    ) : (
+                                        <span className="text-xs font-bold text-saffron-deep">Choose</span>
+                                    )}
+                                </button>
+                            )
                         })}
                     </div>
                     <SheetFooter><Button variant="outline" onClick={() => setPickerWorkerId(null)}>Close</Button></SheetFooter>
