@@ -2651,8 +2651,6 @@ export default function EstimatorClient({
     const [renameError, setRenameError] = useState<string | null>(null)
     const [renamingTpl, setRenamingTpl] = useState(false)
     const [showDiscardDraft, setShowDiscardDraft] = useState(false)
-    const [showRenameDraft, setShowRenameDraft] = useState(false)
-    const [draftRenameValue, setDraftRenameValue] = useState('')
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
         targetMode: 'quote' | 'market'
@@ -2820,7 +2818,6 @@ export default function EstimatorClient({
         draft,
         restoreDraft,
         dismissDraft,
-        renameDraft,
         clearDraft,
         saveDraft,
         saveDraftNow,
@@ -3543,7 +3540,7 @@ export default function EstimatorClient({
             id:               appliedTemplate.id,
             expectedUpdatedAt: appliedTemplate.updated_at,
             // A Saved Quality keeps its identity. A different construction is
-            // saved with "Save as New Quality" instead of being renamed here.
+            // saved as a separate quality instead of being renamed here.
             name:             appliedTemplate.name,
             warpRows,
             weftRows,
@@ -3662,7 +3659,7 @@ export default function EstimatorClient({
         const expectedUpdatedAt = editRatesTpl.updated_at
 
         // Update rates only. The quality name is an identity and is not edited
-        // from this dialog; use "Save as New Quality" for a new construction.
+        // from this dialog; save a separate quality for a new construction.
         const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
             ...r,
             yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
@@ -4269,8 +4266,7 @@ export default function EstimatorClient({
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
                                         <span className="ml-1 text-[var(--color-warning-amber)]">· saved {formatTimestampDate(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                     )}
-                                    {canUseProduction && draft.sourceRecordKind !== 'costing' && ' — editable Quotations update in place; accepted Quotations create a linked version'}
-                                    {draft.sourceRecordKind === 'costing' && ' — saving creates a new costing version without changing the original'}
+                                    {draft.sourceRecordKind === 'costing' && ' · a new version will preserve the original'}
                                 </>
                             ) : (
                                 <>
@@ -4279,9 +4275,6 @@ export default function EstimatorClient({
                                     {canUseProduction && draft.partyName && <span className="text-[var(--color-warning-amber)]"> · {draft.partyName}</span>}
                                 </>
                             )}
-                            {draft.sourceQuoteId && (
-                                <span className="ml-1 text-[var(--color-warning-amber)]">· draft created {formatSuratDateTime(draft.createdAt)}</span>
-                            )}
                         </p>
                         <button
                             type="button"
@@ -4289,14 +4282,7 @@ export default function EstimatorClient({
                             aria-label="Restore draft"
                             className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] underline underline-offset-2 hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
-                            Restore draft
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setDraftRenameValue(draft.qualityLabel || ''); setShowRenameDraft(true) }}
-                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
-                        >
-                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Rename
+                            Resume
                         </button>
                         <button
                             type="button"
@@ -4304,14 +4290,6 @@ export default function EstimatorClient({
                             className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                             aria-label="Discard draft"
                         ><X className="h-3.5 w-3.5" aria-hidden="true" /> <span>Discard</span></button>
-                        <button
-                            type="button"
-                            onClick={() => setShowConfirmNewQuality(true)}
-                            aria-label="Start fresh"
-                            className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
-                        >
-                            Start fresh
-                        </button>
                     </div>
                 </div>
             )}
@@ -4793,11 +4771,11 @@ export default function EstimatorClient({
                                         size="sm"
                                         onClick={() => openSaveAsNewQualityDialog()}
                                         className="h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)]"
-                                        title={tx('Use as Starting Point for this saved quality and save it as a separate quality')}
+                                        title={tx('Use this recipe as the starting point for a separate quality')}
                                         aria-label={tx(`Use ${appliedTemplate.name} as a starting point; save as a new quality`)}
                                     >
                                         <BookmarkPlus className="mr-1.5 h-4 w-4" />
-                                        <span className="truncate">{tx('Save as New Quality')}</span>
+                                        <span className="truncate">{tx('Save as separate quality')}</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -4809,20 +4787,7 @@ export default function EstimatorClient({
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </div>
-                            ) : (
-                                <Button
-                                    data-testid="legacy-save-as-new-quality"
-                                    size="sm"
-                                    variant="outline"
-                                    className="col-span-2 h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:col-span-1"
-                                    onClick={() => openSaveAsNewQualityDialog()}
-                                    aria-label={tx('Save as New Quality')}
-                                >
-                                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="truncate sm:hidden">{tx('New Quality')}</span>
-                                    <span className="hidden truncate sm:inline">{tx('Save as New Quality')}</span>
-                                </Button>
-                            )}
+                            ) : null}
                             </div>
                             {isStandaloneCostingSession && !exportModel && (
                                 <p id="export-cost-sheet-hint" className="w-full text-xs font-medium leading-relaxed text-amber-700">
@@ -4833,7 +4798,7 @@ export default function EstimatorClient({
                                 {isStandaloneCostingSession
                                         ? sourceQuoteId
                                         ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
-                                        : tx('Save Quality creates the reusable recipe and initial v1 costing snapshot. Use Save Costing for a later costing version.')
+                                        : tx('Save Costing creates the reusable quality and its first immutable costing version.')
                                     : tx('Save & Accept stores the quotation and moves it into the accepted workflow.')}
                             </p>
                         </div>
@@ -6656,7 +6621,7 @@ export default function EstimatorClient({
             >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>{tx('Save as New Quality')}</DialogTitle>
+                        <DialogTitle>{tx('Save as separate quality')}</DialogTitle>
                         <DialogDescription>{tx('Create a separate reusable quality. To change the open quality, close this dialog and use Update.')}</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
@@ -6751,43 +6716,6 @@ export default function EstimatorClient({
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>{tx('Keep for later')}</Button>
                         <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success(tx('Cost Estimate draft discarded')) }}>{tx('Discard draft')}</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Draft rename dialog */}
-            <Dialog open={showRenameDraft} onOpenChange={setShowRenameDraft}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{tx('Rename this draft')}</DialogTitle>
-                        <DialogDescription>{tx('Give this unfinished Cost Estimate a clear name so it is easy to identify before restoring it.')}</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-1.5 py-4">
-                        <Label htmlFor="draft-quality-name">{tx('Quality name')}</Label>
-                        <Input
-                            id="draft-quality-name"
-                            value={draftRenameValue}
-                            onChange={event => setDraftRenameValue(event.target.value)}
-                            maxLength={120}
-                            autoFocus
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowRenameDraft(false)}>{tx('Cancel')}</Button>
-                        <Button
-                            onClick={() => {
-                                const normalized = draftRenameValue.trim()
-                                if (!normalized || !renameDraft(normalized)) {
-                                    toast.error(tx('The draft name could not be saved.'))
-                                    return
-                                }
-                                setShowRenameDraft(false)
-                                toast.success(tx(`Draft renamed to “${normalized}”`))
-                            }}
-                            disabled={!draftRenameValue.trim()}
-                        >
-                            {tx('Save name')}
-                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

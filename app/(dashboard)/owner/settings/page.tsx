@@ -238,7 +238,7 @@ export default function SettingsPage() {
     const planAccess = useOwnerPlanAccess()
     const subscriptionTier = planAccess.effectiveTier
     const hasPremium = tierSatisfies(subscriptionTier, 'premium')
-    const isBaseExperience = subscriptionTier === 'base'
+    const isFocusedPlanExperience = subscriptionTier === 'lite' || subscriptionTier === 'base'
 
     const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
     const [factoryName, setFactoryName] = useState('')
@@ -417,32 +417,26 @@ export default function SettingsPage() {
         toast.success(tx('Settings refreshed'))
     }
 
-    // Base is a costing desk, not a factory-operations console. Keep its
-    // settings path focused on the inputs that change a new estimate, and put
+    // Lite and Base are focused workspaces, not the legacy factory console. Keep
+    // settings focused on the inputs that change a new estimate, and put
     // infrequent account/data actions behind one low-frequency disclosure.
-    if (isBaseExperience) {
+    if (isFocusedPlanExperience) {
         return (
             <div className="premium-route-enter settings-page-frame settings-readable">
                 <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
                 <PageHeader
                     id="overview"
-                    eyebrow="Estimator Plan"
+                    eyebrow={subscriptionTier === 'lite' ? 'Weavly Lite' : 'Weavly Base'}
                     icon={SlidersHorizontal}
                     title={t('settings.title')}
                     description="Set the defaults used when you create a new Cost Estimate. Saved Costings keep the values captured when they were saved."
                     actions={(
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Button asChild variant="saffron" className="w-fit gap-2">
-                                <Link href="/owner/estimator">
-                                    <Calculator className="h-4 w-4" />
-                                    Open Cost Estimate
-                                </Link>
-                            </Button>
-                            <Button variant="outline" className="w-fit gap-2" onClick={refreshSettings}>
-                                <RefreshCw className="h-4 w-4" />
-                                {tx('Refresh')}
-                            </Button>
-                        </div>
+                        <Button asChild variant="saffron" className="w-fit gap-2">
+                            <Link href="/owner/estimator">
+                                <Calculator className="h-4 w-4" />
+                                Open Cost Estimate
+                            </Link>
+                        </Button>
                     )}
                 />
 
@@ -455,9 +449,15 @@ export default function SettingsPage() {
                         <SettingsSection id="cost-profile" title="Default costing inputs" icon={Calculator}>
                             <FactoryCostProfile standaloneEstimator />
                         </SettingsSection>
-                        <SettingsSection id="qualities" title="Saved fabric qualities" icon={ShieldCheck} collapsible>
-                            <TemplateManager />
-                        </SettingsSection>
+                        <SettingsPanel className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                            <div>
+                                <p className="font-semibold text-ink">Saved qualities</p>
+                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Review versions, favourites, and archived qualities in Saved Costings.</p>
+                            </div>
+                            <Button asChild variant="outline" className="w-fit shrink-0">
+                                <Link href="/owner/quotes">Manage saved qualities</Link>
+                            </Button>
+                        </SettingsPanel>
                     </SettingsCategory>
 
                     <SettingsCategory
@@ -467,12 +467,7 @@ export default function SettingsPage() {
                     >
                         <SettingsSection id="factory-identity" title="Business name" icon={Factory}>
                             <SettingsPanel className="p-5 sm:p-6">
-                                <PanelHeading
-                                    icon={Factory}
-                                    title="Business name"
-                                    description="Used on documents generated after this change. Saved costing values, versions, and history are unchanged."
-                                />
-                                <div className="mt-5 space-y-2">
+                                <div className="space-y-2">
                                     <div className="flex items-center justify-between gap-3">
                                         <Label>Business name</Label>
                                         {currentFactoryName !== org?.name && !isEditingName && (

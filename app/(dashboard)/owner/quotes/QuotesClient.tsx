@@ -421,6 +421,7 @@ function SavedQualityLibraryView({
     canUseProduction,
     canUseProductionPipeline,
     openKey,
+    comparisonMode,
     selectedCostingIds,
     updatingId,
     detailLoadingId,
@@ -442,6 +443,7 @@ function SavedQualityLibraryView({
     canUseProduction: boolean
     canUseProductionPipeline: boolean
     openKey: string | null
+    comparisonMode: boolean
     selectedCostingIds: string[]
     updatingId: string | null
     detailLoadingId: string | null
@@ -620,8 +622,8 @@ function SavedQualityLibraryView({
                                             {latest && !latestDetailLoading && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                                                     {canUseProduction ? <>
-                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open and save new version')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
+                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
                                                         {canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
                                                             <Link
@@ -636,7 +638,7 @@ function SavedQualityLibraryView({
                                                         {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as New Quality')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
                                                     </>}
                                                     {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
                                                         <Link
@@ -660,14 +662,14 @@ function SavedQualityLibraryView({
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {canUseProduction ? <>
-                                                            {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>{tx('Open and save new version')}</Button>}
-                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}</Button>
+                                                            {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}>{tx('Open')}</Button>}
+                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                             <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
                                                         </> : <>
                                                             {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} aria-busy={updatingId === latest.id}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
                                                             <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                             <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as New Quality')}</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
                                                         </>}
                                                         {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
                                                             <Link
@@ -754,7 +756,7 @@ function SavedQualityLibraryView({
                                     {group.records.length > 0 && (
                                         <section className="mt-4 rounded-xl border border-hairline bg-surface p-4">
                                             <p className="text-sm font-black text-ink">Saved Costing history</p>
-                                            <p className="mt-1 text-xs text-subtle">{group.records.length === 1 ? 'This snapshot is shown above. Use View breakdown to load it into Cost Estimate, or select it when comparing with another costing.' : 'Choose View breakdown on a version to inspect its saved assumptions. Select two snapshots only when comparing their commercial assumptions.'}</p>
+                                            <p className="mt-1 text-xs text-subtle">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
                                             <div className="mt-3 space-y-2">
                                                 {group.records.map(record => {
                                                     const selected = selectedCostingIds.includes(record.id)
@@ -772,15 +774,15 @@ function SavedQualityLibraryView({
                                                             onClick={event => {
                                                                 const target = event.target as HTMLElement
                                                                 if (target.closest('a, button, input, [data-costing-card-control]')) return
-                                                                onToggleComparison(record.id)
+                                                                if (comparisonMode) onToggleComparison(record.id)
                                                             }}
-                                                            className={`cursor-pointer rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none ${selected ? 'premium-selected-row border-info/30 bg-info-soft/60' : 'border-hairline bg-surface hover:bg-surface-soft/70'}`}
+                                                            className={`${comparisonMode ? 'cursor-pointer' : ''} rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none ${selected ? 'premium-selected-row border-info/30 bg-info-soft/60' : 'border-hairline bg-surface hover:bg-surface-soft/70'}`}
                                                         >
                                                             <div className="flex min-w-0 items-start gap-3">
-                                                                <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
+                                                                {comparisonMode && <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
                                                                     <input type="checkbox" checked={selected} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" />
                                                                     {preparing && <Loader2 className="h-3.5 w-3.5 animate-spin text-info" aria-hidden="true" />}
-                                                                </span>
+                                                                </span>}
                                                                 <div className="min-w-0 flex-1">
                                                                     <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
                                                                     <p className="mt-1 truncate text-[10px] text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatTimestampDate(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
@@ -863,6 +865,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [costingSort, setCostingSort] = useState<SavedCostingSort>('recent')
     const [marginFilter, setMarginFilter] = useState<SavedCostingMarginFilter>('all')
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+    const [comparisonMode, setComparisonMode] = useState(false)
     const [selectedCostingIds, setSelectedCostingIds] = useState<string[]>([])
     const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
@@ -1410,8 +1413,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     ))}
             </Toolbar>}
 
-            <Toolbar className="overflow-hidden">
-                    <div className="grid min-w-0 gap-3 lg:grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_210px_170px_auto_auto]">
+            <Toolbar className="overflow-visible">
+                    <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
                         <div className="relative min-w-0">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
                             <Label htmlFor="saved-costings-search" className="sr-only">{canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}</Label>
@@ -1421,33 +1424,33 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 onChange={event => setSearchQuery(event.target.value)}
                                 placeholder="Search saved records…"
                                 aria-label={canUseQuotationWorkflow ? 'Search saved qualities, costings, quotations, and party names' : 'Search saved qualities and costings'}
-                                aria-describedby="saved-costings-search-help"
                                 className="h-10 w-full min-w-0 pl-9"
                             />
                         </div>
-                        <select
-                            aria-label={t('common.sort_saved_costings')}
-                            value={costingSort}
-                            onChange={event => setCostingSort(event.target.value as SavedCostingSort)}
-                            className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
+                        <details className="group relative z-20">
+                            <summary className="flex h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
+                                Filters{marginFilter !== 'all' ? ' · 1' : ''}
+                                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                            </summary>
+                            <div className="absolute right-0 mt-2 grid w-64 gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-[var(--shadow-card)]">
+                                <Label htmlFor="saved-costings-sort" className="text-xs font-semibold text-body">Sort by</Label>
+                                <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink">
+                                    <option value="recent">Recently updated</option><option value="oldest">Oldest updated</option><option value="margin_desc">Highest margin</option><option value="cost_asc">Lowest production cost</option>
+                                </select>
+                                <Label htmlFor="saved-costings-margin" className="text-xs font-semibold text-body">Margin</Label>
+                                <select id="saved-costings-margin" value={marginFilter} onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink">
+                                    <option value="all">All margins</option><option value="negative">Negative margin</option><option value="under_10">Under 10%</option><option value="10_to_20">10–20%</option><option value="over_20">Over 20%</option>
+                                </select>
+                            </div>
+                        </details>
+                        <Button
+                            variant={comparisonMode ? 'secondary' : 'outline'}
+                            onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
+                            className="h-10"
+                            aria-pressed={comparisonMode}
                         >
-                            <option value="recent">Recently updated</option>
-                            <option value="oldest">Oldest updated</option>
-                            <option value="margin_desc">Highest margin</option>
-                            <option value="cost_asc">Lowest production cost</option>
-                        </select>
-                        <select
-                            aria-label="Filter saved costings by margin"
-                            value={marginFilter}
-                            onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)}
-                            className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
-                        >
-                            <option value="all">All margins</option>
-                            <option value="negative">Negative margin</option>
-                            <option value="under_10">Under 10%</option>
-                            <option value="10_to_20">10–20%</option>
-                            <option value="over_20">Over 20%</option>
-                        </select>
+                            <GitCompareArrows className="h-4 w-4" /> {comparisonMode ? 'Done' : 'Compare'}
+                        </Button>
                         <Button
                             variant={showFavoritesOnly ? 'secondary' : 'outline'}
                             onClick={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
@@ -1460,7 +1463,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
                         </Button>
                     </div>
-                    {selectedCostings.length === 2 ? (
+                    {comparisonMode && selectedCostings.length === 2 ? (
                         <div className="premium-status-enter mt-3 flex flex-col gap-3 rounded-lg border border-info/25 bg-info-soft/60 p-3 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite" aria-busy={Boolean(detailLoadingId)}>
                             <div>
                                 <p className="text-xs font-bold text-info">Two costings selected</p>
@@ -1473,22 +1476,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 <Button variant="ghost" onClick={() => setSelectedCostingIds([])} className="h-9 text-body">Clear selection</Button>
                             </div>
                         </div>
-                    ) : (
+                    ) : comparisonMode ? (
                         <p id="compare-costings-help" className="mt-2 text-xs font-medium text-body">
                             {selectedCostings.length === 1
                                 ? 'One costing selected. Select one more if you want to compare.'
                                 : 'Compare Costings is optional. Select two snapshots when you need to understand a change.'}
                         </p>
-                    )}
-                    <p className="mt-2 text-xs text-body">
+                    ) : null}
+                    <p className="mt-3 text-xs font-medium text-body">
                         {showQualityLibrary
-                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'} shown · open a quality to review its costing history.`
-                            : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'} shown · select any two to compare.`}
-                    </p>
-                    <p id="saved-costings-search-help" className="mt-1 text-[11px] leading-relaxed text-subtle">
-                        {canUseQuotationWorkflow
-                            ? 'Searches saved quality names, costing snapshots, quotation references, statuses, and party names. Yarn rates are in the Rate Book.'
-                            : 'Searches saved quality names, costing snapshots, and costing versions. Yarn rates are in the Rate Book.'}
+                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`
+                            : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'}`}
                     </p>
                 </Toolbar>
 
@@ -1529,6 +1527,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     canUseProduction={canUseProduction}
                     canUseProductionPipeline={canUseProductionPipeline}
                     openKey={openQualityKey}
+                    comparisonMode={comparisonMode}
                     selectedCostingIds={selectedCostingIds}
                     updatingId={updatingId}
                     detailLoadingId={detailLoadingId}
@@ -1608,7 +1607,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 <div className="flex justify-end gap-1">
                                                     {!quote.is_archived && <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-9 text-xs font-semibold text-info">{tx('Open')}</Button>}
                                                     <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
-                                                        <Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}
+                                                        <Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}
                                                     </Button>
                                                     <Button variant="ghost" size="sm" onClick={() => { void openQuoteExport(quote) }} className="h-9 text-xs font-semibold">
                                                         <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
@@ -1682,8 +1681,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         </div>
                                         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {!quote.is_archived && <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-10 text-xs font-semibold text-info">Open</Button>}
-                                            <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Use as Starting Point" className="h-10 text-xs font-semibold">
-                                                <Copy className="h-3.5 w-3.5" /> {tx('Use as Starting Point')}
+                                            <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Duplicate costing" className="h-10 text-xs font-semibold">
+                                                <Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => { void openQuoteExport(quote) }} className="h-10 text-xs font-semibold">
                                                 <Eye className="h-3.5 w-3.5" /> {tx('Preview')}

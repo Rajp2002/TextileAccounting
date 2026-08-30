@@ -308,11 +308,9 @@ function PaymentHistory({ entries }: { entries: BillingHistoryEntry[] }) {
 function WorkspaceCard({
     workspaceTier,
     paidSubscriptionTier,
-    productExperience,
 }: {
     workspaceTier: string
     paidSubscriptionTier: string
-    productExperience: 'base' | 'full_suite'
 }) {
     const isLiteWorkspace = workspaceTier === 'lite'
     const isBaseWorkspace = workspaceTier === 'base'
@@ -462,39 +460,6 @@ function SubscriptionCard({
                     <p className="mt-1 text-xs leading-relaxed text-body">Choose an available subscription below to activate access.</p>
                 )}
             </div>
-        </Card>
-    )
-}
-
-function LatestBillingDocumentsCard({ latestCapturedPayment }: { latestCapturedPayment: SubscriptionPaymentRow | null }) {
-    return (
-        <Card className="min-w-0 gap-4 p-5 shadow-[var(--shadow-card)]">
-            <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Billing documents</p>
-                <p className="mt-1 text-xs text-body">Your latest successful payment and receipt.</p>
-            </div>
-            {latestCapturedPayment ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                        <div>
-                            <p className="text-sm font-semibold text-emerald-950">Latest payment receipt</p>
-                            <p className="mt-1 text-xs text-emerald-900/75">{formatShortDate(latestCapturedPayment.captured_at || latestCapturedPayment.created_at)} · {formatAmount(latestCapturedPayment.amount_paise)}</p>
-                        </div>
-                        <StatusBadge status="success" label="Receipt available" />
-                    </div>
-                    <Link
-                        href={`/api/billing/receipt/${latestCapturedPayment.id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
-                    >
-                        <Download className="h-4 w-4" aria-hidden="true" /> Download receipt
-                    </Link>
-                </div>
-            ) : (
-                <p className="rounded-xl border border-dashed border-hairline bg-surface-soft p-4 text-sm leading-relaxed text-subtle">A payment receipt will appear here after a successful payment.</p>
-            )}
-            <BillingDocumentNotice compact />
         </Card>
     )
 }
@@ -802,7 +767,6 @@ export default async function BillingPage({
     const renewalIsUpcoming = Boolean(
         renewalEligibleAt && new Date(renewalEligibleAt).getTime() > billingNow.getTime()
     )
-    const latestCapturedPayment = payments.find((payment) => payment.status === 'captured') ?? null
     const billingHistoryEntries = buildBillingHistoryEntries(payments, attempts, subscriptionById)
     const latestAttemptNeedsAttention = Boolean(
         latestAttempt
@@ -850,18 +814,12 @@ export default async function BillingPage({
                     </>
                 )}
                 meta={subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium' ? <StatusBadge status="active" /> : subscriptionTier === 'trial' ? <StatusBadge status="pending" label="Trial" /> : null}
-                actions={(
-                    <Link href="/owner/data-export" className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-saffron-deep underline-offset-4 hover:bg-saffron-soft hover:underline">
-                        Export organization data
-                    </Link>
-                )}
             />
 
-            <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
                 <WorkspaceCard
                     workspaceTier={tier}
                     paidSubscriptionTier={subscriptionTier}
-                    productExperience={planAccess.productExperience}
                 />
                 <SubscriptionCard
                     subscriptionTier={subscriptionTier}
@@ -875,8 +833,8 @@ export default async function BillingPage({
                     billingReady={billingReadiness.canCreateOrder}
                     billingReadinessMessage={billingReadiness.publicMessage}
                 />
-                <LatestBillingDocumentsCard latestCapturedPayment={latestCapturedPayment} />
             </div>
+            <BillingDocumentNotice compact />
 
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                 <div className="space-y-6 lg:col-span-8">
@@ -913,9 +871,17 @@ export default async function BillingPage({
                 </div>
 
                 <aside className="space-y-6 lg:col-span-4">
-                    <Suspense fallback={<ReferralLoading />}>
-                        <DeferredReferralSection />
-                    </Suspense>
+                    <details className="group overflow-hidden rounded-xl border border-hairline bg-surface">
+                        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
+                            Referral rewards
+                            <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="border-t border-hairline p-3">
+                            <Suspense fallback={<ReferralLoading />}>
+                                <DeferredReferralSection />
+                            </Suspense>
+                        </div>
+                    </details>
                     {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (
                         <Card className="space-y-3 p-5">
                             <div className="flex items-start gap-3 rounded-xl border border-dashed border-warning/40 bg-warning-soft px-4 py-3">

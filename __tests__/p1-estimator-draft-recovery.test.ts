@@ -99,9 +99,10 @@ describe('P1 estimator recovery integration guards', () => {
     expect(autosave).toContain('flushRef.current()')
     expect(autosave).toContain("window.addEventListener('storage'")
     expect(autosave).toContain('A newer remote write is surfaced')
-    expect(estimator).toContain('Restore draft')
+    expect(estimator).toContain('aria-label="Restore draft"')
+    expect(estimator).toContain('Resume')
     expect(estimator).toContain('Discard draft')
-    expect(estimator).toContain('Start fresh')
+    expect(estimator).not.toContain('aria-label="Start fresh"')
     expect(estimator).toContain('draft.createdAt')
   })
 

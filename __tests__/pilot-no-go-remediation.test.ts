@@ -46,7 +46,9 @@ describe('pilot no-go remediation', () => {
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
     expect(autosave).toContain('renameDraft')
-    expect(estimator).toContain('/> Rename')
+    expect(estimator).toContain('aria-label="Restore draft"')
+    expect(estimator).toContain('Resume')
+    expect(estimator).not.toContain('/> Rename')
     expect(estimator).toContain('> <span>Discard</span></button>')
     expect(actions).toContain('export async function getQuoteStatusHistory')
     expect(quotes).toContain('Quotation history')
