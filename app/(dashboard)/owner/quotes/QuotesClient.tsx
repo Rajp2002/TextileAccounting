@@ -635,15 +635,15 @@ function SavedQualityLibraryView({
                                                                 ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
                                                                 : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'
                                                     : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.')}</p>
-                                            {latest && !activeDetailLoading && (
+                                            {targetRecord && !activeDetailLoading && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                                                     {canUseProduction ? <>
-                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(latest)}>{tx('Open')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
-                                                        {canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
+                                                        {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(targetRecord)}>{tx('Open')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
+                                                        {canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
                                                             <Link
-                                                                href={`/owner/production?costingId=${encodeURIComponent(latest.id)}`}
+                                                                href={`/owner/production?costingId=${encodeURIComponent(targetRecord.id)}`}
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >
@@ -651,14 +651,14 @@ function SavedQualityLibraryView({
                                                             </Link>
                                                         )}
                                                     </> : <>
-                                                        {!latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(latest)}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(latest)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(latest)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(latest)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
+                                                        {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(targetRecord)}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
                                                     </>}
-                                                    {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(latest.record_kind) && !latest.is_archived && (
+                                                    {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
                                                         <Link
-                                                            href={`/owner/production?costingId=${encodeURIComponent(latest.id)}`}
+                                                            href={`/owner/production?costingId=${encodeURIComponent(targetRecord.id)}`}
                                                             onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                         >
