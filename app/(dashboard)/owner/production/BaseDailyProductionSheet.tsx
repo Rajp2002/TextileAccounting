@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardList, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { formatINR } from '@/lib/finance'
 import {
     calculateBaseDailyProductionSummary,
@@ -108,6 +109,8 @@ export default function BaseDailyProductionSheet({
     const [isSaving, setIsSaving] = useState(false)
     const [unlockedBatchId, setUnlockedBatchId] = useState<string | null>(null)
     const [isUnlockDialogOpen, setIsUnlockDialogOpen] = useState(false)
+    const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false)
+    const [correctionReason, setCorrectionReason] = useState('')
     const [isPayrollExpanded, setIsPayrollExpanded] = useState(false)
 
     const jobById = useMemo(
@@ -126,6 +129,11 @@ export default function BaseDailyProductionSheet({
         () => currentBatch ? initialData.entries.filter((entry) => entry.batch_id === currentBatch.id) : [],
         [currentBatch, initialData.entries],
     )
+    const currentBatchRevisions = useMemo(
+        () => currentBatch ? initialData.batchRevisions.filter((revision) => revision.batch_id === currentBatch.id) : [],
+        [currentBatch, initialData.batchRevisions],
+    )
+    const correctionCount = currentBatchRevisions.filter((revision) => revision.change_kind === 'corrected').length
     const assignedWorkerIds = useMemo(
         () => new Set(initialData.assignments
             .filter((assignment) => assignment.shift === shift && assignment.active && isContextValidForDate(assignment.effective_from, assignment.effective_to, productionDate))
@@ -279,6 +287,11 @@ export default function BaseDailyProductionSheet({
         })))
     }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers])
 
+    useEffect(() => {
+        setUnlockedBatchId(null)
+        setCorrectionReason('')
+    }, [productionDate, shift])
+
     function getRow(workerId: string): DraftRow {
         return rows[workerId] ?? { meters: '', status: 'blank', machineMeters: {}, savedUnallocatedMeters: null }
     }
@@ -390,6 +403,7 @@ export default function BaseDailyProductionSheet({
                 productionDate,
                 shift,
                 clientRequestId: requestId,
+                correctionReason: currentBatch ? correctionReason : undefined,
                 entries: sheetWorkers.map((worker) => {
                     const row = getRow(worker.id)
                     const contexts = contextsByWorker.get(worker.id) ?? []
@@ -419,6 +433,7 @@ export default function BaseDailyProductionSheet({
             const summaryData = (result as { summary?: { total_meters?: number; idempotent?: boolean } }).summary
             toast.success(summaryData?.idempotent ? 'This shift was already saved.' : `Shift saved · ${formatMeters(Number(summaryData?.total_meters ?? summary.total_meters))}`)
             setUnlockedBatchId(null)
+            setCorrectionReason('')
             setRequestId(newClientRequestId())
             router.refresh()
         } catch (error) {
@@ -484,11 +499,18 @@ export default function BaseDailyProductionSheet({
                                     : 'Correction mode is active. Review every changed value before saving.'}
                         </span>
                     </div>
-                    {isSavedBatchProtected && (
-                        <Button variant="outline" size="sm" className="shrink-0 border-warning/40" onClick={() => setIsUnlockDialogOpen(true)}>
-                            <LockOpen className="h-4 w-4" /> Edit saved log
-                        </Button>
-                    )}
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                        {currentBatchRevisions.length > 0 && (
+                            <Button variant="ghost" size="sm" onClick={() => setIsHistoryDialogOpen(true)}>
+                                <FileClock className="h-4 w-4" /> {correctionCount > 0 ? `${correctionCount} ${correctionCount === 1 ? 'correction' : 'corrections'}` : 'Saved receipt'}
+                            </Button>
+                        )}
+                        {isSavedBatchProtected && (
+                            <Button variant="outline" size="sm" className="border-warning/40" onClick={() => setIsUnlockDialogOpen(true)}>
+                                <LockOpen className="h-4 w-4" /> Edit saved log
+                            </Button>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -648,9 +670,25 @@ export default function BaseDailyProductionSheet({
                     <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-3 text-sm text-body">
                         Check the machine, worker, and metres carefully. Editing stays unlocked only for this saved shift and locks again after you save.
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="base-correction-reason">Reason for correction</Label>
+                        <Textarea
+                            id="base-correction-reason"
+                            value={correctionReason}
+                            onChange={(event) => setCorrectionReason(event.target.value)}
+                            maxLength={240}
+                            placeholder="Example: Meter reading corrected from the paper shift register"
+                            autoFocus
+                        />
+                        <div className="flex justify-between gap-3 text-xs text-muted-foreground">
+                            <span>This explanation stays with the production record.</span>
+                            <span>{correctionReason.length}/240</span>
+                        </div>
+                    </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsUnlockDialogOpen(false)}>Keep locked</Button>
                         <Button
+                            disabled={correctionReason.trim().length < 3}
                             onClick={() => {
                                 if (!currentBatch || isCurrentBatchLocked) return
                                 setUnlockedBatchId(currentBatch.id)
@@ -662,8 +700,57 @@ export default function BaseDailyProductionSheet({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Production audit trail</DialogTitle>
+                        <DialogDescription>
+                            Permanent receipts for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. Corrections never overwrite their explanation.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+                        {currentBatchRevisions.map((revision) => {
+                            const beforeMeters = revision.before_snapshot?.total_meters ?? null
+                            const afterMeters = revision.after_snapshot.total_meters
+                            const delta = beforeMeters === null ? null : afterMeters - beforeMeters
+                            return (
+                                <div key={revision.id} className="rounded-lg border border-hairline p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="font-semibold text-ink">{revision.change_kind === 'created' ? 'Original production saved' : `Correction ${revision.revision_number}`}</p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(revision.changed_at)}</p>
+                                        </div>
+                                        <Badge variant={revision.change_kind === 'created' ? 'secondary' : 'warning'}>{revision.change_kind === 'created' ? 'Original' : 'Corrected'}</Badge>
+                                    </div>
+                                    {revision.correction_reason && <p className="mt-3 text-sm leading-relaxed text-body">{revision.correction_reason}</p>}
+                                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-soft px-2.5 py-2 text-xs text-body">
+                                        {beforeMeters === null
+                                            ? <span><strong className="text-ink">{formatMeters(afterMeters)}</strong> recorded</span>
+                                            : <span><strong className="text-ink">{formatMeters(beforeMeters)}</strong> → <strong className="text-ink">{formatMeters(afterMeters)}</strong></span>}
+                                        {delta !== null && <span className={delta === 0 ? 'text-muted-foreground' : delta > 0 ? 'text-success' : 'text-warning'}>{delta === 0 ? 'No total change' : `${delta > 0 ? '+' : ''}${formatMeters(delta)}`}</span>}
+                                        <span>{revision.after_snapshot.entered_count} produced · {revision.after_snapshot.zero_count} zero · {revision.after_snapshot.absent_count} absent</span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <DialogFooter><Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>Close</Button></DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
+}
+
+function formatDateTime(value: string) {
+    return new Intl.DateTimeFormat('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: 'Asia/Kolkata',
+    }).format(new Date(value))
 }
 
 function toWorkerStatusLabel(status: BaseDailyProductionStatus) {

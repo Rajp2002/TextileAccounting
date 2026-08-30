@@ -344,7 +344,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(operationalMigration).toContain('entry_status')
         expect(operationalMigration).toContain('assignment_snapshot')
         expect(operationalMigration).toContain('UNION ALL')
-        expect(actions).toContain("supabase.rpc('save_base_daily_production'")
+        expect(actions).toContain("supabase.rpc('save_base_daily_production_with_reason'")
         expect(actions).toContain("supabase.rpc('upsert_base_worker_machine_assignment'")
         expect(dailySheet).toContain('Enter metres once per machine')
         expect(dailySheet).toContain('Save machine production')
