@@ -14,6 +14,8 @@ import {
     type BaseProductionJob,
     type BaseProductionMachine,
     type BaseProductionBatch,
+    type BaseProductionBatchRevision,
+    type BaseProductionRevisionSnapshot,
     type BaseProductionWorker,
     type BaseMachineJobContext,
     type BaseWorkerMachineAssignment,
@@ -35,6 +37,7 @@ export type BaseProductionInitialData = {
     assignments: BaseWorkerMachineAssignment[]
     machineJobContexts: BaseMachineJobContext[]
     dailyBatches: BaseProductionBatch[]
+    batchRevisions: BaseProductionBatchRevision[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     settlementLines: BasePayrollSettlementLine[]
@@ -73,6 +76,17 @@ function toDailyStatus(value: unknown): BaseDailyProductionStatus {
     return value === 'entered' || value === 'zero' || value === 'absent' ? value : 'blank'
 }
 
+function toRevisionSnapshot(value: unknown): BaseProductionRevisionSnapshot {
+    const snapshot = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+    return {
+        total_meters: toBaseNumber(typeof snapshot.total_meters === 'string' || typeof snapshot.total_meters === 'number' ? snapshot.total_meters : 0),
+        entered_count: Math.max(0, Number(snapshot.entered_count) || 0),
+        zero_count: Math.max(0, Number(snapshot.zero_count) || 0),
+        absent_count: Math.max(0, Number(snapshot.absent_count) || 0),
+        worker_count: Math.max(0, Number(snapshot.worker_count) || 0),
+    }
+}
+
 export async function loadBaseProductionInitialData(orgId: string, today: string): Promise<BaseProductionInitialData> {
     const supabase = await createServerClient()
     const payrollPeriod = getBasePayrollPeriod(today)
@@ -90,6 +104,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         assignmentsResult,
         contextsResult,
         batchesResult,
+        batchRevisionsResult,
         dailyEntriesResult,
         dailyAllocationsResult,
     ] = await Promise.all([
@@ -163,6 +178,11 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .order('production_date', { ascending: false })
             .order('shift'),
         supabase
+            .from('base_production_batch_revisions')
+            .select('id, batch_id, revision_number, change_kind, correction_reason, before_snapshot, after_snapshot, changed_at')
+            .eq('org_id', orgId)
+            .order('changed_at', { ascending: false }),
+        supabase
             .from('base_daily_production_entries')
             .select('id, batch_id, worker_id, entry_status, meters, worker_rate_snapshot, machine_id, job_id, machine_label, job_label, assignment_snapshot, allocation_mode, notes, updated_at')
             .eq('org_id', orgId)
@@ -188,6 +208,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const rawAssignments = requireRows(assignmentsResult, 'assignments')
     const rawContexts = requireRows(contextsResult, 'machine job contexts')
     const rawBatches = requireRows(batchesResult, 'daily batches')
+    const rawBatchRevisions = requireRows(batchRevisionsResult, 'daily batch correction history')
     const rawDailyEntries = requireRows(dailyEntriesResult, 'daily entries')
     const rawDailyAllocations = requireRows(dailyAllocationsResult, 'daily production allocations')
 
@@ -323,6 +344,17 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         updated_at: String(row.updated_at || row.created_at || new Date(0).toISOString()),
     }))
 
+    const batchRevisions: BaseProductionBatchRevision[] = rawBatchRevisions.map((row) => ({
+        id: String(row.id),
+        batch_id: String(row.batch_id),
+        revision_number: Math.max(1, Number(row.revision_number) || 1),
+        change_kind: row.change_kind === 'corrected' ? 'corrected' : 'created',
+        correction_reason: toStringOrNull(row.correction_reason),
+        before_snapshot: row.before_snapshot ? toRevisionSnapshot(row.before_snapshot) : null,
+        after_snapshot: toRevisionSnapshot(row.after_snapshot),
+        changed_at: String(row.changed_at || new Date(0).toISOString()),
+    }))
+
     const batchById = new Map(dailyBatches.map((batch) => [batch.id, batch]))
     const dailyEntries: BaseProductionEntry[] = rawDailyEntries.map((row) => {
         const batch = batchById.get(String(row.batch_id))
@@ -386,6 +418,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         assignments,
         machineJobContexts,
         dailyBatches,
+        batchRevisions,
         advances,
         settlements,
         settlementLines,

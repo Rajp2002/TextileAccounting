@@ -47,6 +47,25 @@ export type BaseProductionBatch = {
     updated_at: string
 }
 
+export type BaseProductionRevisionSnapshot = {
+    total_meters: number
+    entered_count: number
+    zero_count: number
+    absent_count: number
+    worker_count: number
+}
+
+export type BaseProductionBatchRevision = {
+    id: string
+    batch_id: string
+    revision_number: number
+    change_kind: 'created' | 'corrected'
+    correction_reason: string | null
+    before_snapshot: BaseProductionRevisionSnapshot | null
+    after_snapshot: BaseProductionRevisionSnapshot
+    changed_at: string
+}
+
 export type BaseProductionWorker = {
     id: string
     name: string

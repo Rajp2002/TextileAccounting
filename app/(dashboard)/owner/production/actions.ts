@@ -134,6 +134,8 @@ const BaseDailyProductionSchema = z.object({
     }
 })
 
+const BaseCorrectionReasonSchema = z.string().trim().min(3, 'Briefly explain why this correction is needed.').max(240, 'Correction reason is too long.')
+
 async function requireBaseProductionOwner() {
     const result = await requireWritableOrg(['owner'])
     const tier = await getOrgTier(result.profile.org_id)
@@ -353,6 +355,7 @@ export async function saveBaseDailyProductionBatch(input: {
     productionDate: string
     shift: 'day' | 'night'
     clientRequestId: string
+    correctionReason?: string
     entries: Array<{
         workerId: string
         meters: number | null
@@ -368,12 +371,17 @@ export async function saveBaseDailyProductionBatch(input: {
     const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(BaseDailyProductionSchema, input)
     if ('error' in parsed) return parsed
+    const correctionReason = input.correctionReason?.trim()
+        ? safeParse(BaseCorrectionReasonSchema, input.correctionReason)
+        : null
+    if (correctionReason && 'error' in correctionReason) return correctionReason
 
     const supabase = await createServerClient()
-    const { data, error } = await supabase.rpc('save_base_daily_production', {
+    const { data, error } = await supabase.rpc('save_base_daily_production_with_reason', {
         p_production_date: parsed.data.productionDate,
         p_shift: parsed.data.shift,
         p_client_request_id: parsed.data.clientRequestId,
+        p_correction_reason: correctionReason?.data ?? null,
         p_entries: parsed.data.entries.map((entry) => ({
             worker_id: entry.workerId,
             meters: entry.meters,
