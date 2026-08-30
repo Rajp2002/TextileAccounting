@@ -878,21 +878,25 @@ export default function RatesClient({
                                                 <td className="px-3 py-3 align-top"><ReviewBadge rate={rate} /></td>
                                                 <td className="px-3 py-3 align-top"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></td>
                                                 <td className="px-3 py-3 align-top">
-                                                    <div className="ml-auto flex w-full max-w-[210px] flex-col items-center gap-1">
-                                                        {!archived && (
-                                                            <div className="flex w-full flex-col items-center gap-1.5">
-                                                                {reviewState !== 'current' && <Button variant="default" size="xs" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`} className="h-7 w-fit max-w-full justify-center rounded-full border-0 !px-3 text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white">
+                                                    <div className="ml-auto flex w-full max-w-[210px] items-center justify-end gap-1.5">
+                                                        {!archived && reviewState !== 'current' ? (
+                                                            <Button variant="default" size="sm" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`} className="h-9 max-w-full rounded-full border-0 px-3 text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white">
                                                                     {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
-                                                                </Button>}
-                                                                <Button variant="outline" size="xs" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending} className="h-7 w-fit max-w-full justify-center rounded-full border-saffron/35 bg-saffron-soft/55 !px-3 text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>
-                                                            </div>
-                                                        )}
-                                                        <div className="flex w-full flex-wrap items-center justify-center gap-1.5 pt-0.5">
-                                                            <Button variant="ghost" size="xs" onClick={() => openHistory(rate)} disabled={isPending} className="h-7 w-fit justify-center rounded-full border border-hairline/60 bg-surface-soft/40 !px-3 text-body shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"><History className="h-3.5 w-3.5" /> {tx('Activity')}</Button>
-                                                            <Button variant="ghost" size="xs" onClick={() => { setArchiveError(null); setArchiveRate(rate) }} disabled={isPending} className="h-7 w-fit justify-center rounded-full border border-hairline/60 bg-surface-soft/40 !px-3 text-subtle shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-risk/30 hover:bg-risk-soft/60 hover:text-risk">
-                                                                {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
                                                             </Button>
-                                                        </div>
+                                                        ) : !archived ? (
+                                                            <Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending} className="h-9 rounded-full border-saffron/35 bg-saffron-soft/55 px-3 text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>
+                                                        ) : null}
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label={`More actions for ${rate.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-48">
+                                                                {!archived && reviewState !== 'current' && <DropdownMenuItem onSelect={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}><Pencil /> {tx('Change rate')}</DropdownMenuItem>}
+                                                                <DropdownMenuItem onSelect={() => openHistory(rate)}><History /> {tx('Activity')}</DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem onSelect={() => { setArchiveError(null); setArchiveRate(rate) }} className={archived ? '' : 'text-risk focus:text-risk'}>
+                                                                    {archived ? <ArchiveRestore /> : <Archive />} {tx(archived ? 'Restore rate' : 'Archive rate')}
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
                                                 </td>
                                             </tr>

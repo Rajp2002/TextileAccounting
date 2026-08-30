@@ -18,11 +18,11 @@ describe('Settings simplification fixes', () => {
         expect(hasMeaningfulFactoryCostBaseline({ overhead_override_per_m: '8.5' })).toBe(true)
     })
 
-    it('routes premium owners using Base through the Base settings surface', () => {
-        expect(page).toContain("const isBaseExperience = subscriptionTier === 'base'")
-        expect(page).toContain('if (isBaseExperience)')
+    it('routes Lite and Base owners through the focused settings surface', () => {
+        expect(page).toContain("const isFocusedPlanExperience = subscriptionTier === 'lite' || subscriptionTier === 'base'")
+        expect(page).toContain('if (isFocusedPlanExperience)')
         expect(page).toContain('<FactoryCostProfile standaloneEstimator />')
-        expect(page).toContain('<TemplateManager />')
+        expect(page).toContain('Manage saved qualities')
 
         const accountIndex = page.indexOf('id="account-data"')
         const workspaceIndex = page.indexOf('id="workspace-experience"')

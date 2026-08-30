@@ -126,7 +126,7 @@ describe('Sprint 10 saved costing identity and comparison', () => {
     const rates = read('app/(dashboard)/owner/rates/actions.ts')
     const migration = read('supabase/migrations/20260802121858_sprint10_saved_costing_library_state.sql')
 
-    expect(quotes).toContain('Use as Starting Point')
+    expect(quotes).toContain("tx('Duplicate')")
     expect(quotes).toContain('showFavoritesOnly')
     expect(quotes).toContain('current Rate Book is not read')
     expect(quotes).toContain("title: 'Base yarn calculation'")

@@ -17,8 +17,11 @@ describe('Estimator-only product presentation', () => {
     const rateActions = read('app/(dashboard)/owner/rates/actions.ts')
 
     it('keeps Lite navigation complete and adds a Base production entry point', () => {
-        expect(sidebar).toContain("'/owner/production',\n        '/owner/billing',\n        '/owner/settings',")
+        expect(sidebar).toContain('const liteBottomNavItems = [')
+        expect(sidebar).toContain('{ name: "Saved Costings", href: "/owner/quotes"')
+        expect(sidebar).toContain('{ name: "Rates", href: "/owner/rates"')
         expect(sidebar).toContain("if (hasProduction) {")
+        expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/production')")
         expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/operations')")
         expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/payroll')")
         expect(sidebar).toContain("href: \"/owner/production\"")
@@ -77,13 +80,16 @@ describe('Estimator-only product presentation', () => {
         expect(quotes).toContain("t('common.search_quality_costing')")
         expect(quotes).toContain('Compare Saved Costings')
         expect(quotes).toContain("t('common.open_and_save_new_version')")
-        expect(quotes).toContain('Use as Starting Point')
+        expect(quotes).toContain("tx('Duplicate')")
         expect(quotes).toContain('Costing loaded as a starting point')
         expect(estimator).toContain('saveEstimatorQuoteV3({')
     })
 
     it('does not mount legacy operations settings for the Lite costing workspace', () => {
         expect(settingsLayout).toContain('requiredCapability="account_data"')
+        expect(settings).toContain("subscriptionTier === 'lite' || subscriptionTier === 'base'")
+        expect(settings).toContain("subscriptionTier === 'lite' ? 'Weavly Lite' : 'Weavly Base'")
+        expect(settings).toContain('Manage saved qualities')
         expect(settings).toContain('{hasPremium && <div')
         expect(settings).toContain('{hasPremium && <SettingsSection id="automations"')
         expect(settings).toContain("hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'")
