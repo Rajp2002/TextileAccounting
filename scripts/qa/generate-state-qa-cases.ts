@@ -90,7 +90,7 @@ async function run() {
         totalAdvanceRecovered: 3000,
         totalNetPayout: 27750,
         paymentModes: ['bank_transfer'],
-        latestPaidAt: null,
+        latestPaidAt: '',
         machines: [],
         workers: [
             {
@@ -116,7 +116,7 @@ async function run() {
         totalAdvanceRecovered: 0,
         totalNetPayout: 30750,
         paymentModes: ['cash'],
-        latestPaidAt: null,
+        latestPaidAt: '',
         machines: [],
         workers: [
             {

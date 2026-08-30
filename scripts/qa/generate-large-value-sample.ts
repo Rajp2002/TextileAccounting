@@ -85,7 +85,7 @@ async function run() {
     })
     const arrayBuffer = doc.output('arraybuffer')
     writeFileSync(join(outDir, 'large_values_sample.pdf'), Buffer.from(arrayBuffer))
-    console.log(`Exported large value sample with ${doc.internal.getNumberOfPages()} pages.`)
+    console.log(`Exported large value sample with ${doc.getNumberOfPages()} pages.`)
 }
 
 run().catch(console.error)

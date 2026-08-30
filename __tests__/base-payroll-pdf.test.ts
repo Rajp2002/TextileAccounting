@@ -186,7 +186,7 @@ describe('Base Payroll PDF Generator', () => {
         it('derives Partially Settled state when some workers are paid and others are unpaid', () => {
             const partialPeriod: BasePayrollHistoryPeriod = {
                 ...samplePeriod,
-                latestPaidAt: null,
+                latestPaidAt: '',
                 workers: [
                     {
                         ...samplePeriod.workers[0],
@@ -307,7 +307,7 @@ describe('Base Payroll PDF Generator', () => {
             expect(result.filename).toBe('ASHOK-TEXTILE_Payroll_2026-08-01_to_2026-08-30.pdf')
             expect(result.blob.size).toBeGreaterThan(1000)
 
-            const numPages = result.doc.internal.getNumberOfPages()
+            const numPages = result.doc.getNumberOfPages()
             expect(numPages).toBe(1)
         })
 
@@ -330,7 +330,7 @@ describe('Base Payroll PDF Generator', () => {
             const result = await generateBasePayrollPdf(noAdvancePeriod, {
                 factoryName: 'ASHOK TEXTILE',
             })
-            expect(result.doc.internal.getNumberOfPages()).toBe(1)
+            expect(result.doc.getNumberOfPages()).toBe(1)
         })
 
         it('handles multi-worker datasets spanning multiple pages with repeating table headers and footers', async () => {
@@ -383,7 +383,7 @@ describe('Base Payroll PDF Generator', () => {
                 factoryName: 'MODERN WEAVING MILLS PVT LTD',
             })
 
-            const pages = result.doc.internal.getNumberOfPages()
+            const pages = result.doc.getNumberOfPages()
             expect(pages).toBeGreaterThanOrEqual(3)
         })
 
@@ -411,7 +411,7 @@ describe('Base Payroll PDF Generator', () => {
                 factoryName: 'ASHOK TEXTILE',
             })
 
-            const pages = result.doc.internal.getNumberOfPages()
+            const pages = result.doc.getNumberOfPages()
             expect(pages).toBeGreaterThanOrEqual(2)
         })
     })

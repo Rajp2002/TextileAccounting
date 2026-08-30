@@ -475,7 +475,8 @@ function SavedQualityLibraryView({
                 const selectedRecordId = selectedRecordIdByGroup[group.key]
                 const activeRecord = (selectedRecordId ? group.records.find(r => r.id === selectedRecordId) : null) ?? (group.records.length === 1 ? group.records[0] : null)
                 const targetRecord = activeRecord ?? latest
-                const activeResult = activeRecord ? getHistoricalCostingResult(activeRecord) : null
+                const latestResult = activeRecord ? getHistoricalCostingResult(activeRecord) : null
+                const activeResult = latestResult
                 const activeDetailLoading = targetRecord != null && detailLoadingId === targetRecord.id
                 const activeYarnCostLines: Array<[string, number]> = activeResult?.audit
                     ? [
@@ -697,18 +698,18 @@ function SavedQualityLibraryView({
                                                         )}
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>
                                                             {updatingId === activeRecord.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : activeRecord.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                                        {tx(updatingId === activeRecord.id ? activeRecord.is_archived ? `Restoring ${getSavedCostingIdentity(activeRecord).label}…` : `Archiving ${getSavedCostingIdentity(activeRecord).label}…` : activeRecord.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
+                                                            {tx(updatingId === activeRecord.id ? activeRecord.is_archived ? `Restoring ${getSavedCostingIdentity(activeRecord).label}…` : `Archiving ${getSavedCostingIdentity(activeRecord).label}…` : (activeRecord.is_archived || latest.is_archived ? 'Restore snapshot' : 'Archive snapshot'))}
                                                         </Button>
                                                     </div>
-                                                        </div>
+                                                </div>
 
                                                 <div className="mt-4 divide-y divide-hairline text-sm">
                                                     {[
                                                         ...activeYarnCostLines,
-                                                        ['Weaving', activeResult.breakdown.weaveCostPerM],
-                                                        ['Warping & sizing', activeResult.breakdown.warpingAndSizingPerM],
-                                                        ['Processing & finishing', activeResult.breakdown.windingPerM + activeResult.breakdown.processingPerM + activeResult.breakdown.finishingPerM],
-                                                        ['Factory expenses', activeResult.breakdown.overheadPerM],
+                                                        ['Weaving', latestResult.breakdown.weaveCostPerM],
+                                                        ['Warping & sizing', latestResult.breakdown.warpingAndSizingPerM],
+                                                        ['Processing & finishing', latestResult.breakdown.windingPerM + latestResult.breakdown.processingPerM + latestResult.breakdown.finishingPerM],
+                                                        ['Factory expenses', latestResult.breakdown.overheadPerM],
                                                     ].map(([label, value]) => (
                                                         <div key={String(label)} className="flex items-center justify-between py-2">
                                                             <span className="text-body">{label}</span>
@@ -717,9 +718,9 @@ function SavedQualityLibraryView({
                                                     ))}
                                                 </div>
                                                 <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg bg-loom p-3 text-white sm:grid-cols-3">
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.production_cost_per_m')}</p><p className="mt-1 font-mono text-sm font-black">₹{activeResult.productionCostPerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1 font-mono text-sm font-black text-saffron">₹{activeResult.suggestedSellingPricePerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">Actual Margin</p><p className="mt-1 font-mono text-sm font-black text-success">{activeResult.actualMarginPct.toFixed(1)}%</p></div>
+                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.production_cost_per_m')}</p><p className="mt-1 font-mono text-sm font-black">₹{latestResult.productionCostPerM.toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1 font-mono text-sm font-black text-saffron">₹{latestResult.suggestedSellingPricePerM.toFixed(2)}/m</p></div>
+                                                    <div><p className="text-[10px] uppercase text-surface-muted">Actual Margin</p><p className="mt-1 font-mono text-sm font-black text-success">{latestResult.actualMarginPct.toFixed(1)}%</p></div>
                                                 </div>
                                                 {getCostingStatus(activeRecord) !== 'verified' && (
                                                     <div className="mt-3 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">

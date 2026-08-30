@@ -129,4 +129,14 @@ describe('saved quality costing library', () => {
     expect(totals.totalProductionCostPerM).toBeGreaterThan(0)
     expect(totals.overheadPerM).toBe(5)
   })
+
+  it('populates costing version breakdown when inspecting a version in the quality library', () => {
+    const client = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+
+    expect(client).toContain('handleInspectRecord(record)')
+    expect(client).toContain('onEnsureDetail={ensureQuoteDetail}')
+    expect(client).toContain('Active breakdown')
+    expect(client).toContain('selectedRecordIdByGroup')
+  })
 })
+

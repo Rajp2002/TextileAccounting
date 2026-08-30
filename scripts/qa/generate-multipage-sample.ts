@@ -61,7 +61,7 @@ async function run() {
     })
     const arrayBuffer = doc.output('arraybuffer')
     writeFileSync(join(outDir, 'multipage_sample.pdf'), Buffer.from(arrayBuffer))
-    console.log(`Exported multipage sample with ${doc.internal.getNumberOfPages()} pages.`)
+    console.log(`Exported multipage sample with ${doc.getNumberOfPages()} pages.`)
 }
 
 run().catch(console.error)

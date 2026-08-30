@@ -888,7 +888,7 @@ export class BasePayrollPdfRenderer {
 
     /** Multi-page Footer & Pagination Pass */
     private drawFooters() {
-        const totalPages = this.doc.internal.getNumberOfPages()
+        const totalPages = this.doc.getNumberOfPages()
         const footerY = PDF_THEME.layout.pageHeight - 16
 
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
