@@ -39,6 +39,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
+import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
     calculateBaseJobSummary,
@@ -62,6 +63,7 @@ import {
 } from './actions'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
+import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BasePayrollRecords from './BasePayrollRecords'
 import type { BaseProductionInitialData } from './loaders'
 
@@ -208,6 +210,16 @@ export default function BaseProductionClient({
     const settlingWorker = initialData.payables.find((payable) => payable.worker_id === settlingWorkerId)
     const activeMachines = initialData.machines.filter((machine) => machine.is_active)
     const activeAssignments = initialData.assignments.filter((assignment) => assignment.active)
+    const payrollReadiness = useMemo(() => buildBasePayrollReadiness({
+        payables: initialData.payables,
+        entries: initialData.entries,
+        allocations: initialData.allocations,
+    }), [initialData.allocations, initialData.entries, initialData.payables])
+    const readinessByWorker = useMemo(
+        () => new Map(payrollReadiness.workers.map((worker) => [worker.workerId, worker])),
+        [payrollReadiness.workers],
+    )
+    const settlingReadiness = settlingWorkerId ? readinessByWorker.get(settlingWorkerId) : null
 
     useEffect(() => {
         trackPlanEvent('production_viewed', { surface: 'base_production_core' })
@@ -427,6 +439,10 @@ export default function BaseProductionClient({
 
     function handleSettle() {
         if (!settlingWorkerId) return
+        if (settlingReadiness?.issueCount) {
+            toast.error('Resolve the payroll readiness issues before marking this worker paid.')
+            return
+        }
         void runAction(
             `settle-${settlingWorkerId}`,
             () => settleBaseWorkerPayroll({ workerId: settlingWorkerId, paymentMode }),
@@ -608,12 +624,18 @@ export default function BaseProductionClient({
                                 <EmptyState compact title="No production recorded" description="Your saved worker totals will appear here." />
                             ) : (
                                 <div className="divide-y divide-hairline rounded-lg border border-hairline">
-                                    {initialData.entries.filter((entry) => entry.meters > 0 || entry.entry_status === 'zero' || entry.entry_status === 'absent').slice(0, 12).map((entry) => (
-                                        <div key={entry.id} className="flex flex-col gap-1 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{workerById.get(entry.worker_id)?.name ?? 'Worker'} · {entry.job_label ?? jobById.get(entry.job_id)?.quality_label ?? 'Unallocated worker total'}</p><p className="text-xs text-muted-foreground">{formatDateOnly(entry.production_date)}{entry.shift ? ` · ${entry.shift} shift` : ''}{entry.machine_label ? ` · ${entry.machine_label}` : ''}</p></div>
-                                            <div className="shrink-0 font-bold text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
-                                        </div>
-                                    ))}
+                                    {initialData.entries.filter((entry) => entry.meters > 0 || entry.entry_status === 'zero' || entry.entry_status === 'absent').slice(0, 12).map((entry) => {
+                                        const isLegacyWorkerTotal = entry.meters > 0 && entry.allocation_mode !== 'machine_breakdown' && !entry.machine_id
+                                        return (
+                                            <div key={entry.id} className="flex flex-col gap-1 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-semibold text-ink">{workerById.get(entry.worker_id)?.name ?? 'Worker'} · {entry.job_label ?? jobById.get(entry.job_id)?.quality_label ?? (isLegacyWorkerTotal ? 'Legacy worker total' : 'Production')}</p>
+                                                    <p className="text-xs text-muted-foreground">{formatDateOnly(entry.production_date)}{entry.shift ? ` · ${entry.shift} shift` : ''}{entry.machine_label ? ` · ${entry.machine_label}` : ''}{isLegacyWorkerTotal ? ' · payroll included at saved rate' : ''}</p>
+                                                </div>
+                                                <div className="shrink-0 font-bold text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             )}
                         </CardContent>
@@ -639,6 +661,8 @@ export default function BaseProductionClient({
                         </div>
                     </div>
 
+                    <BasePayrollReadinessPanel readiness={payrollReadiness} />
+
                     <Card className="border-hairline bg-surface-soft/45">
                         <CardContent className="flex items-start gap-3 py-4 text-sm">
                             <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" />
@@ -652,13 +676,14 @@ export default function BaseProductionClient({
                         <div className="grid gap-4 lg:grid-cols-2">
                             {initialData.payables.map((payable) => {
                                 const worker = workerById.get(payable.worker_id)
+                                const workerReadiness = readinessByWorker.get(payable.worker_id)
                                 const settlePending = pendingAction === `settle-${payable.worker_id}`
                                 return (
                                     <Card key={payable.worker_id} className={!worker?.is_active ? 'opacity-75' : undefined}>
                                         <CardHeader className="border-b border-hairline/70">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `${worker.shift_availability === 'both' ? 'Day & night' : worker.shift_availability === 'day' ? 'Day' : 'Night'} shift · weaver rate applied per machine` : 'Inactive worker'}</CardDescription></div>
-                                                <div className="flex items-center gap-2"><Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Setup`} onClick={openOperations}><Settings2 className="h-3.5 w-3.5" /></Button></div>
+                                                <div className="flex items-center gap-2">{workerReadiness?.issueCount ? <Badge variant="warning">Review</Badge> : null}<Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Setup`} onClick={openOperations}><Settings2 className="h-3.5 w-3.5" /></Button></div>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="space-y-4 pt-0">
@@ -675,9 +700,12 @@ export default function BaseProductionClient({
                                                         ? <>{formatINR(payable.advance_recovery, { hideDecimals: true })} advance will be recovered this period from {formatINR(payable.pending_advance, { hideDecimals: true })} pending.{payable.remaining_debt > 0 ? ` ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>
                                                         : <>No advance to recover. Full gross pay is due this period.</>}
                                             </div>
+                                            {workerReadiness && workerReadiness.verifiedLineCount > 0 && (
+                                                <p className="flex items-center gap-1.5 text-xs font-medium text-success"><CheckCircle2 className="h-3.5 w-3.5" /> {workerReadiness.verifiedLineCount} earning {workerReadiness.verifiedLineCount === 1 ? 'line' : 'lines'} reconciled{workerReadiness.legacyLineCount > 0 ? ` · ${workerReadiness.legacyLineCount} legacy` : ''}</p>
+                                            )}
                                             <div className="flex flex-wrap gap-2">
                                                 <Button size="sm" onClick={() => openAdvance(payable.worker_id)} disabled={!worker?.is_active}><Plus className="h-4 w-4" /> Add advance</Button>
-                                                {payable.status === 'unsettled' && payable.gross_pay > 0 && <Button size="sm" variant="outline" onClick={() => setSettlingWorkerId(payable.worker_id)} disabled={settlePending}>{settlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} Mark paid</Button>}
+                                                {payable.status === 'unsettled' && payable.gross_pay > 0 && <Button size="sm" variant="outline" onClick={() => setSettlingWorkerId(payable.worker_id)} disabled={settlePending || Boolean(workerReadiness?.issueCount)}>{settlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} {workerReadiness?.issueCount ? 'Review before paying' : 'Mark paid'}</Button>}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -743,7 +771,7 @@ export default function BaseProductionClient({
                 open={Boolean(settlingWorkerId)}
                 onOpenChange={(open) => !open && setSettlingWorkerId(null)}
                 title={`Mark ${settlingWorker?.worker_name ?? 'worker'} as paid?`}
-                description={settlingWorker ? `This records ${formatINR(settlingWorker.net_payout, { hideDecimals: true })} as paid for the current Base period. The action uses the production and advance records on the server.` : 'The current worker payroll will be settled.'}
+                description={settlingWorker ? `This records ${formatINR(settlingWorker.net_payout, { hideDecimals: true })} as paid from ${settlingReadiness?.verifiedLineCount ?? 0} reconciled earning ${(settlingReadiness?.verifiedLineCount ?? 0) === 1 ? 'line' : 'lines'}. The settlement freezes the production, rates, advance recovery, and payment record.` : 'The current worker payroll will be settled.'}
                 confirmLabel="Mark as paid"
                 onConfirm={handleSettle}
                 isLoading={pendingAction === `settle-${settlingWorkerId}`}

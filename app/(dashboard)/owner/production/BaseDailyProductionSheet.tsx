@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardList, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
@@ -345,6 +345,17 @@ export default function BaseDailyProductionSheet({
         })
     }
 
+    function handleMachineMetersKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
+        if (event.key !== 'Enter') return
+        const fields = Array.from(document.querySelectorAll<HTMLInputElement>('[data-base-machine-meters]:not(:disabled)'))
+        const currentIndex = fields.indexOf(event.currentTarget)
+        const nextField = fields[currentIndex + 1]
+        if (!nextField) return
+        event.preventDefault()
+        nextField.focus()
+        nextField.select()
+    }
+
     function handleStatusChange(workerId: string, value: BaseDailyProductionStatus) {
         const current = getRow(workerId)
         updateRow(workerId, {
@@ -497,7 +508,7 @@ export default function BaseDailyProductionSheet({
                     <Card>
                         <CardHeader className="border-b border-hairline/70 pb-3 sm:pb-5">
                             <CardTitle className="flex items-center gap-2 text-base"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
-                            <CardDescription className="hidden sm:block">Each machine row is the source entry. Worker pay is calculated automatically from the saved job rate.</CardDescription>
+                            <CardDescription className="hidden sm:block">Each machine row is the source entry. Worker pay is calculated automatically from the saved job rate. Press Enter to move to the next machine.</CardDescription>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] gap-3 border-b border-hairline bg-surface-soft/50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground md:grid">
@@ -522,9 +533,12 @@ export default function BaseDailyProductionSheet({
                                                 step="0.01"
                                                 inputMode="decimal"
                                                 placeholder="Metres"
+                                                data-base-machine-meters
                                                 value={value}
                                                 disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || !context.jobId}
                                                 onChange={(event) => handleMachineMetersChange(context, event.target.value)}
+                                                onKeyDown={handleMachineMetersKeyDown}
+                                                onFocus={(event) => event.currentTarget.select()}
                                                 className="row-span-2 row-start-1 h-11 self-center text-right text-base font-semibold md:col-auto md:row-auto md:h-10 md:text-sm"
                                             />
                                         </div>
