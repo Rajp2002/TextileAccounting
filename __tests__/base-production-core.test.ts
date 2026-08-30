@@ -8,6 +8,8 @@ import {
     calculateBaseJobSummary,
     calculateBaseWorkerPayables,
     getBasePayrollPeriod,
+    reconcileBaseProductionJobStatuses,
+    type BaseProductionJob,
     type BaseProductionAllocation,
     type BaseProductionEntry,
     type BaseProductionWorker,
@@ -70,6 +72,41 @@ describe('Base Production Core calculations', () => {
         expect(summary.progress_percent).toBe(100)
         expect(summary.planned_cost_total).toBe(2000)
         expect(summary.planned_value_total).toBe(3000)
+    })
+
+    it('treats recorded output as authoritative evidence that a planned job started', () => {
+        const plannedJob = {
+            id: 'job-1',
+            status: 'planned',
+        } satisfies Pick<BaseProductionJob, 'id' | 'status'>
+        const completedJob = {
+            id: 'job-2',
+            status: 'completed',
+        } satisfies Pick<BaseProductionJob, 'id' | 'status'>
+
+        expect(reconcileBaseProductionJobStatuses(
+            [plannedJob, completedJob],
+            [entry({ job_id: 'job-1', meters: 100 }), entry({ id: 'entry-2', job_id: 'job-2', meters: 20 })],
+        )).toEqual([
+            { id: 'job-1', status: 'active' },
+            completedJob,
+        ])
+    })
+
+    it('activates a planned job from machine allocations but not zero-output records', () => {
+        const jobs = [
+            { id: 'job-1', status: 'planned' as const },
+            { id: 'job-2', status: 'planned' as const },
+        ]
+
+        expect(reconcileBaseProductionJobStatuses(
+            jobs,
+            [entry({ job_id: 'job-1', meters: 0 })],
+            [{ job_id: 'job-2', meters: 1 }],
+        )).toEqual([
+            { id: 'job-1', status: 'planned' },
+            { id: 'job-2', status: 'active' },
+        ])
     })
 
     it('recovers ₹300 from ₹600 wages and carries ₹200 of a ₹500 advance forward', () => {
@@ -293,7 +330,8 @@ describe('Base Production Core boundary contracts', () => {
         expect(hardeningMigration).toContain('CREATE SCHEMA IF NOT EXISTS private')
         expect(hardeningMigration).toContain('private.base_production_core_access')
         expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION public.base_production_core_access(uuid)')
-        expect(client).toContain('Fixed salary, statutory deductions, payslips, and WhatsApp are outside the current Lite and Base catalog.')
+        expect(client).toContain('Pay uses each machine allocation’s saved weaver rate.')
+        expect(client).not.toContain('outside the current Lite and Base catalog')
         expect(client).toContain('No advance to recover. Full gross pay is due this period.')
         expect(client).not.toContain('Up to {formatINR(payable.max_advance_recovery')
         expect(operationalMigration).toContain('base_production_machines')

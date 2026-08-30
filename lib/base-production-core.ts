@@ -264,6 +264,26 @@ export function calculateBaseJobSummary(
     }
 }
 
+export function reconcileBaseProductionJobStatuses<TJob extends Pick<BaseProductionJob, 'id' | 'status'>>(
+    jobs: TJob[],
+    entries: Pick<BaseProductionEntry, 'job_id' | 'meters'>[],
+    allocations: Pick<BaseProductionAllocation, 'job_id' | 'meters'>[] = [],
+): TJob[] {
+    const startedJobIds = new Set<string>()
+    for (const entry of entries) {
+        if (entry.job_id && toDecimal(entry.meters).gt(0)) startedJobIds.add(entry.job_id)
+    }
+    for (const allocation of allocations) {
+        if (allocation.job_id && toDecimal(allocation.meters).gt(0)) startedJobIds.add(allocation.job_id)
+    }
+
+    return jobs.map((job) => (
+        job.status === 'planned' && startedJobIds.has(job.id)
+            ? { ...job, status: 'active' }
+            : job
+    ))
+}
+
 function calculateBaseEntryGrossDecimal(
     entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id'>,
     allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot'>[],

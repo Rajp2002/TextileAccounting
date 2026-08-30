@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
     calculateBaseWorkerPayables,
+    reconcileBaseProductionJobStatuses,
     toBaseNumber,
     type BaseDailyProductionStatus,
     type BasePayrollSettlement,
@@ -201,7 +202,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         worker_rate_per_meter: toBaseNumber(row.worker_rate_per_m),
     }))
 
-    const jobs: BaseProductionJob[] = rawJobs.map((row) => ({
+    const storedJobs: BaseProductionJob[] = rawJobs.map((row) => ({
         id: String(row.id),
         costing_id: String(row.costing_id),
         costing_group_id: toStringOrNull(row.costing_group_id),
@@ -367,6 +368,10 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         if (dateOrder !== 0) return dateOrder
         return b.created_at.localeCompare(a.created_at)
     })
+
+    // Recorded output is the authoritative signal that a job has started. Keep
+    // legacy rows coherent while the write path repairs the stored status.
+    const jobs = reconcileBaseProductionJobStatuses(storedJobs, entries, allocations)
 
     return {
         orgId,

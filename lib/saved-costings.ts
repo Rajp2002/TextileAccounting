@@ -15,6 +15,13 @@ import {
 export type SavedCostingSort = 'recent' | 'oldest' | 'margin_desc' | 'cost_asc'
 export type SavedCostingMarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
 
+export function isSavedCostingArchived(
+  record: { is_archived?: boolean | null },
+  template?: { is_active?: boolean | null } | null,
+) {
+  return Boolean(record.is_archived) || template?.is_active === false
+}
+
 export type SavedCostingListItem = {
   id: string
   party_name: string | null

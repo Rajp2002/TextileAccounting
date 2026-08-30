@@ -15,7 +15,7 @@ export function BaseRouteLoading({
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
             <PageHeader
                 title={title}
-                description={<div className="h-4 w-72 max-w-full animate-pulse rounded-md bg-surface-soft" />}
+                description={<div className="h-4 w-72 max-w-full animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none" />}
             />
             {children}
         </div>
