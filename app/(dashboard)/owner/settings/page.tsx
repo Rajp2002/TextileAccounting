@@ -832,7 +832,7 @@ export default function SettingsPage() {
 
                     <SettingsCategory
                         title="Advanced Options"
-                        description="Controls for team access, workflow visibility, privacy, and account maintenance. Most Base users can leave these unchanged."
+                        description="Controls for team access, workflow visibility, privacy, and account maintenance. Most Lite users can leave these unchanged."
                         icon={KeyRound}
                     >
                         {planAccess.canSwitchExperience && (

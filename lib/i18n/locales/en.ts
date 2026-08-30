@@ -1079,7 +1079,8 @@ export const en = {
     },
     simulation: {
       title: "Cost Estimate Quantity",
-      base_title: "Quotation Price Assumptions",
+      base_title: "Selling price and quantity",
+      base_description: "Optional for a per-metre cost; complete when you want a customer price or total value.",
       market_title: "Market Run & Quantity",
       quantity: "Cost Estimate Quantity",
       market_target: "Target Production",

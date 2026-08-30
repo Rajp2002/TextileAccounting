@@ -130,6 +130,7 @@ import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
 import type { EstimatorDraftInput, EstimatorQuoteStatus } from '@/lib/estimator-drafts'
 import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
 import { createClientRequestUuid } from '@/lib/client-request-id'
+import { runMutationWithTimeout } from '@/lib/mutation-outcome'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { RouteMilestones } from '@/components/performance/route-milestones'
@@ -137,6 +138,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
+import { initWebVitals } from '@/lib/web-vitals'
 import {
     getMatchingFactoryProfileId,
     hasMeaningfulFactoryCostBaseline,
@@ -1315,7 +1317,10 @@ function CostingAssumptionsSummary({
     const overheadDescription = overhead
         ? overhead.source === 'monthly_expenses' ? 'Monthly expenses ÷ output' : 'Direct rate entered'
         : result.overheadMode === 'monthly_expenses' ? 'Monthly expenses ÷ output' : 'Direct rate entered'
-    const activeAssumptionsCount = assumptions ? 4 : 0
+    const hasWinding = result.breakdown?.windingPerM != null && result.breakdown.windingPerM > 0
+    const hasProcessing = result.breakdown?.processingPerM != null && result.breakdown.processingPerM > 0
+    const hasFinishing = result.breakdown?.finishingPerM != null && result.breakdown.finishingPerM > 0
+    const activeAssumptionsCount = (assumptions ? 4 : 0) + (hasWinding ? 1 : 0) + (hasProcessing ? 1 : 0) + (hasFinishing ? 1 : 0)
     const formatPercent = (value: number) => Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`
     const displayQualityWarning = warningItems.length > 0
 
@@ -1392,6 +1397,33 @@ function CostingAssumptionsSummary({
                                 </div>
                                 <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">{formatPercent(targetMargin)}</p>
                             </div>
+                            {hasWinding && (
+                                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                    <div className="min-w-0">
+                                        <p className="text-[12px] font-semibold text-[var(--color-ink)]">Winding</p>
+                                        <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">Active winding assumption</p>
+                                    </div>
+                                    <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">₹{result.breakdown.windingPerM.toFixed(2)}/m</p>
+                                </div>
+                            )}
+                            {hasProcessing && (
+                                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                    <div className="min-w-0">
+                                        <p className="text-[12px] font-semibold text-[var(--color-ink)]">Processing / Dyeing</p>
+                                        <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">Active processing assumption</p>
+                                    </div>
+                                    <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">₹{result.breakdown.processingPerM.toFixed(2)}/m</p>
+                                </div>
+                            )}
+                            {hasFinishing && (
+                                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4" role="listitem">
+                                    <div className="min-w-0">
+                                        <p className="text-[12px] font-semibold text-[var(--color-ink)]">Finishing</p>
+                                        <p className="mt-0.5 text-[11px] leading-4 text-[var(--color-muted)]">Active finishing assumption</p>
+                                    </div>
+                                    <p className="max-w-[48vw] break-words text-right font-mono text-[12px] font-semibold tabular-nums text-[var(--color-ink)]">₹{result.breakdown.finishingPerM.toFixed(2)}/m</p>
+                                </div>
+                            )}
                             <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:px-4 ${!hasQuantity ? 'bg-[var(--color-warning-amber-soft)]/35' : ''}`} role="listitem">
                                 <div className="min-w-0">
                                     <p className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--color-ink)]">
@@ -2431,7 +2463,13 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="neutral">
-                <SectionHeader title="Selling and quantity (optional for Base)" icon={Coins} accent="neutral" step={7} />
+                <SectionHeader
+                    title={t("estimator.simulation.base_title")}
+                    detail={<p className="text-[11px] text-[var(--color-muted)] font-normal">{t("estimator.simulation.base_description")}</p>}
+                    icon={Coins}
+                    accent="neutral"
+                    step={7}
+                />
                 <CardContent className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
                     <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" hint="Your desired profit above break-even." />
                     <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" hint="Broker or agent share of the selling price." />
@@ -2478,17 +2516,60 @@ const ESTIMATOR_ISSUE_LABEL_MATCHERS: Array<{ matches: (field: string) => boolea
     { matches: field => field === 'yarnShortagePct', labels: ['default yarn waste'] },
 ]
 
-function findEstimatorIssueTarget(field: string): { element: HTMLElement; isYarnRow: boolean } | null {
+function findEstimatorIssueTarget(field: string): { element: HTMLElement; inputElement?: HTMLElement; isYarnRow: boolean } | null {
     if (typeof document === 'undefined') return null
 
     const normalizedField = field.toLowerCase()
+    if (normalizedField === 'qualitylabel' || normalizedField === 'fabricqualityname' || normalizedField === 'quality_label') {
+        const input = document.querySelector<HTMLElement>('input[placeholder*="quality" i], input[aria-label*="quality" i], input[id*="quality" i]')
+        if (input) return { element: input.parentElement ?? input, inputElement: input, isYarnRow: false }
+    }
+
     if (normalizedField.startsWith('warprows')) {
-        const element = document.querySelector<HTMLElement>('[data-testid^="yarn-component-indigo-"]')
-        return element ? { element, isYarnRow: true } : null
+        const match = normalizedField.match(/warprows\[?(\d+)\]?\.?(\w+)?/)
+        const rowIndex = match ? parseInt(match[1], 10) : 0
+        const prop = match ? match[2] : ''
+        const element = document.querySelector<HTMLElement>(`[data-testid="yarn-component-indigo-${rowIndex}"]`)
+            ?? document.querySelector<HTMLElement>('[data-testid^="yarn-component-indigo-"]')
+        if (element) {
+            let inputElement: HTMLElement | undefined
+            if (prop) {
+                const subMatcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(prop))
+                if (subMatcher) {
+                    const label = Array.from(element.querySelectorAll('label')).find(candidate => {
+                        const text = candidate.textContent?.trim().toLowerCase() ?? ''
+                        return subMatcher.labels.some(term => text.includes(term))
+                    })
+                    if (label) {
+                        inputElement = (label.parentElement?.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
+                    }
+                }
+            }
+            return { element, inputElement, isYarnRow: true }
+        }
     }
     if (normalizedField.startsWith('weftrows')) {
-        const element = document.querySelector<HTMLElement>('[data-testid^="yarn-component-emerald-"]')
-        return element ? { element, isYarnRow: true } : null
+        const match = normalizedField.match(/weftrows\[?(\d+)\]?\.?(\w+)?/)
+        const rowIndex = match ? parseInt(match[1], 10) : 0
+        const prop = match ? match[2] : ''
+        const element = document.querySelector<HTMLElement>(`[data-testid="yarn-component-emerald-${rowIndex}"]`)
+            ?? document.querySelector<HTMLElement>('[data-testid^="yarn-component-emerald-"]')
+        if (element) {
+            let inputElement: HTMLElement | undefined
+            if (prop) {
+                const subMatcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(prop))
+                if (subMatcher) {
+                    const label = Array.from(element.querySelectorAll('label')).find(candidate => {
+                        const text = candidate.textContent?.trim().toLowerCase() ?? ''
+                        return subMatcher.labels.some(term => text.includes(term))
+                    })
+                    if (label) {
+                        inputElement = (label.parentElement?.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
+                    }
+                }
+            }
+            return { element, inputElement, isYarnRow: true }
+        }
     }
 
     const matcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(field))
@@ -2498,13 +2579,20 @@ function findEstimatorIssueTarget(field: string): { element: HTMLElement; isYarn
         const text = candidate.textContent?.trim().toLowerCase() ?? ''
         return matcher.labels.some(term => text.includes(term))
     })
-    if (label?.parentElement) return { element: label.parentElement, isYarnRow: false }
+    if (label?.parentElement) {
+        const input = (label.parentElement.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
+        return { element: label.parentElement, inputElement: input, isYarnRow: false }
+    }
 
     const textElement = Array.from(document.querySelectorAll<HTMLElement>('p, h3, h4')).find(candidate => {
         const text = candidate.textContent?.trim().toLowerCase() ?? ''
         return matcher.labels.some(term => text.includes(term))
     })
-    return textElement?.parentElement ? { element: textElement.parentElement, isYarnRow: false } : null
+    if (textElement?.parentElement) {
+        const input = (textElement.parentElement.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
+        return { element: textElement.parentElement, inputElement: input, isYarnRow: false }
+    }
+    return null
 }
 
 function focusEstimatorIssueTarget(field: string) {
@@ -2521,11 +2609,10 @@ function focusEstimatorIssueTarget(field: string) {
     }
 
     element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    if (!target?.isYarnRow) {
-        window.setTimeout(() => {
-            element.querySelector<HTMLElement>('input, select, textarea, button')?.focus({ preventScroll: true })
-        }, 250)
-    }
+    window.setTimeout(() => {
+        const inputToFocus = target?.inputElement ?? element.querySelector<HTMLElement>('input, select, textarea, button')
+        inputToFocus?.focus({ preventScroll: true })
+    }, target?.isYarnRow ? 180 : 80)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2555,7 +2642,7 @@ export default function EstimatorClient({
     organizationName: string
     initialPartyNames: string[]
 }) {
-    const { t, tx } = useTranslation()
+    const { t, tx, language } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
     const prefersReducedMotion = useReducedMotion()
@@ -2624,8 +2711,11 @@ export default function EstimatorClient({
     const [sourceState, setSourceState] = useState<EstimateState | null>(null)
     const [sourceFactoryProfileUpdatedAt, setSourceFactoryProfileUpdatedAt] = useState<string | null>(null)
     const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
+    const [appliedTemplate,   setAppliedTemplate]   = useState<EstimatorTemplate | null>(null)
     const estimatorOpenedRef = useRef(false)
     const costingStartedRef = useRef(false)
+
+    const validResultTrackedRef = useRef(false)
 
     useEffect(() => {
         if (estimatorOpenedRef.current) return
@@ -2633,7 +2723,20 @@ export default function EstimatorClient({
         void trackPlanEvent('estimator_opened', {
             workspace: canUseProduction ? 'base_or_legacy' : 'lite_or_base',
         })
-    }, [canUseProduction])
+        if (appliedTemplate) {
+            void trackPlanEvent('saved_quality_start')
+        } else {
+            void trackPlanEvent('blank_start')
+        }
+    }, [appliedTemplate, canUseProduction])
+
+    useEffect(() => {
+        return initWebVitals({
+            route: '/owner/estimator',
+            language: (language === 'hi' || language === 'gu') ? language : 'en',
+            entitlement: canUseProduction ? 'base' : 'lite',
+        })
+    }, [canUseProduction, language])
     const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
     const versionInputChanges = useMemo(
         () => summarizeCostingInputChanges(sourceState, state),
@@ -2674,7 +2777,6 @@ export default function EstimatorClient({
     const [savingRates,      setSavingRates]      = useState(false)
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
     const [templateToArchive, setTemplateToArchive] = useState<EstimatorTemplate | null>(null)
-    const [appliedTemplate,   setAppliedTemplate]   = useState<EstimatorTemplate | null>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
     const [acknowledgedWarningKey, setAcknowledgedWarningKey] = useState<string | null>(null)
     const [showWarningAcknowledgement, setShowWarningAcknowledgement] = useState(false)
@@ -2921,6 +3023,7 @@ export default function EstimatorClient({
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
+        void trackPlanEvent('draft_restored')
         if (restored.sourceQuoteId) {
             void trackPlanEvent('costing_reopened', {
                 record_kind: restored.sourceRecordKind === 'quotation' ? 'quotation' : 'costing',
@@ -2947,6 +3050,14 @@ export default function EstimatorClient({
                 : 'Cost Estimate draft restored'))
         }
     }, [canUseProduction, restoreDraft, suppressAutosaveUntilChanged, templates, tx])
+
+    const draftDetectedTrackedRef = useRef(false)
+    useEffect(() => {
+        if (hasDraft && draft && !draftDetectedTrackedRef.current) {
+            draftDetectedTrackedRef.current = true
+            void trackPlanEvent('draft_detected')
+        }
+    }, [draft, hasDraft])
 
     useEffect(() => {
         if (!hasDraft || !draft || !shouldAutoRestoreEstimatorDraft(draft)) return
@@ -3163,6 +3274,16 @@ export default function EstimatorClient({
     const hasValidCostResult = costingReadiness.canDisplayMoney
     const canPersistCostResult = costingReadiness.canPersist
     const firstCostingReadinessMessage = costingReadiness.issues[0]?.message ?? firstEstimatorValidationMessage
+
+    useEffect(() => {
+        if (hasValidCostResult && !validResultTrackedRef.current) {
+            validResultTrackedRef.current = true
+            void trackPlanEvent('valid_result_reached', {
+                has_quantity: Boolean(state.orderQuantityM && state.orderQuantityM > 0),
+            })
+        }
+    }, [hasValidCostResult, state.orderQuantityM])
+
     const validationSummaryId = 'estimator-save-validation-summary'
     const exportModel = useMemo(() => canPersistCostResult
         ? createCostingExportModel({ qualityLabel, state, totals, result: costingResult })
@@ -3291,6 +3412,9 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
         setShowQualityLibrary(false)
+        void trackPlanEvent('saved_quality_selected', {
+            has_rates: Boolean(tpl.warp_rows?.[0]?.yarnRate),
+        })
         void trackPlanEvent('quality_reused', { source: 'estimator_quality_library' })
         toast.success(tx(`${t('estimator.quality.applied')} ${tpl.name}`))
     }, [dispatch, state, t, tx])
@@ -3650,6 +3774,7 @@ export default function EstimatorClient({
         setEditingTplName(tpl.name)
         setEditingWarpRates(warpRows.map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
         setEditingWeftRates(weftRows.map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+        void trackPlanEvent('rate_review_requested')
     }, [])
 
     /** Persist updated rates to template row AND apply to the estimator. */
@@ -3702,6 +3827,7 @@ export default function EstimatorClient({
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
         setShowQualityLibrary(false)
+        void trackPlanEvent('current_rate_applied')
         toast.success('noChange' in res && res.noChange
             ? t('estimator.sprint1.quality_no_change')
             : t('estimator.sprint1.rates_updated_no_snapshot'))
@@ -3725,6 +3851,7 @@ export default function EstimatorClient({
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
         setShowQualityLibrary(false)
+        void trackPlanEvent('current_rate_applied')
         toast.success(tx(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`))
     }
 
@@ -3913,33 +4040,66 @@ export default function EstimatorClient({
                     router.push(`/owner/market-runs/${res.marketRunId}`)
                 }
             } else {
-                const res = await saveEstimatorQuoteV3({
-                    clientRequestId:          clientRequestId!,
-                    partyName:               resolvedPartyName,
-                    qualityLabel:            qualityLabel.trim(),
-                    warpInstruction:         warpInstruction.trim() || undefined,
-                    weftInstruction:         weftInstruction.trim() || undefined,
-                    estimate:                state,
-                    quotePricePerM:          costingResult.suggestedSellingPricePerM,
-                    totalProductionCostPerM: costingResult.productionCostPerM,
-                    status:                  statusForSave,
-                    recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
-                    sourceQuoteId:           sourceQuoteId ?? undefined,
-                    expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
-                    templateId:              appliedTemplate?.id,
-                    expectedTemplateUpdatedAt: appliedTemplate?.updated_at,
-                    // Reopening a historical Cost Estimate keeps the
-                    // baseline provenance that belongs to its inputs. A
-                    // changed factory default is for future estimates; it
-                    // must not make an edited old estimate look as though
-                    // the new default supplied all of its numbers.
-                    factoryProfileUpdatedAt: (sourceQuoteId
-                        ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
-                        : factoryBaselineUpdatedAt) ?? undefined,
-                    updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
+                void trackPlanEvent('save_attempted', {
+                    record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                    is_new_version: Boolean(sourceQuoteId),
                 })
+                const mutationOutcome = await runMutationWithTimeout(async () => {
+                    const res = await saveEstimatorQuoteV3({
+                        clientRequestId:          clientRequestId!,
+                        partyName:               resolvedPartyName,
+                        qualityLabel:            qualityLabel.trim(),
+                        warpInstruction:         warpInstruction.trim() || undefined,
+                        weftInstruction:         weftInstruction.trim() || undefined,
+                        estimate:                state,
+                        quotePricePerM:          costingResult.suggestedSellingPricePerM,
+                        totalProductionCostPerM: costingResult.productionCostPerM,
+                        status:                  statusForSave,
+                        recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
+                        sourceQuoteId:           sourceQuoteId ?? undefined,
+                        expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
+                        templateId:              appliedTemplate?.id,
+                        expectedTemplateUpdatedAt: appliedTemplate?.updated_at,
+                        // Reopening a historical Cost Estimate keeps the
+                        // baseline provenance that belongs to its inputs. A
+                        // changed factory default is for future estimates; it
+                        // must not make an edited old estimate look as though
+                        // the new default supplied all of its numbers.
+                        factoryProfileUpdatedAt: (sourceQuoteId
+                            ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
+                            : factoryBaselineUpdatedAt) ?? undefined,
+                        updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
+                    })
+                    return res
+                }, 15_000)
+
+                if (mutationOutcome.status === 'unknown') {
+                    void trackPlanEvent('save_outcome_unknown', {
+                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                    })
+                    toast.error(tx('Save outcome unknown: check Saved Costings before retrying'), {
+                        description: tx('The network response was interrupted. Your entered numbers and retry identity remain saved on this device. Open Saved Costings to verify before submitting again.'),
+                        action: {
+                            label: tx('Check Saved Costings'),
+                            onClick: () => router.push('/owner/quotes'),
+                        },
+                        duration: 12000,
+                    })
+                    return
+                }
+
+                const res = mutationOutcome.value
                 if (res.success) {
                     const wasEditingCosting = Boolean(sourceQuoteId)
+                    void trackPlanEvent('save_succeeded', {
+                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                        is_new_version: wasEditingCosting,
+                    })
+                    if (wasEditingCosting) {
+                        void trackPlanEvent('new_version_created', {
+                            record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                        })
+                    }
                     void trackPlanEvent('costing_completed', {
                         record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
                         edited: wasEditingCosting,
@@ -3986,10 +4146,16 @@ export default function EstimatorClient({
                     )
                     router.push('/owner/quotes')
                 } else {
+                    void trackPlanEvent('save_failed', {
+                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                    })
                     toast.error(tx(userFacingError(res.error, 'The Customer Quotation could not be saved. Try again.')))
                 }
             }
         } catch (error) {
+            void trackPlanEvent('save_failed', {
+                record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+            })
             console.error('Failed to save estimator quote:', error)
             toast.error(tx(userFacingError(error, 'Failed to save the Cost Estimate. Try again.')), {
                 description: draftSavedBeforeSubmit
@@ -4449,9 +4615,9 @@ export default function EstimatorClient({
                                     </p>
                                 )}
                             </div>
-                            <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Estimator entry mode">
-                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                            <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label={entryMode === 'quick' ? tx('Essential construction inputs · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}>
+                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Essential construction inputs · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                             </div>
                         </div>
                     </div>
@@ -4878,9 +5044,9 @@ export default function EstimatorClient({
                                     Change quality
                                     <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                                 </Button>
-                                <div className="flex items-center rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label="Quick Costing · same calculation engine">
-                                    <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                                    <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                                <div className="flex items-center rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label={entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}>
+                                    <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Quick Costing · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                    <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                                 </div>
                             </div>
                         </div>
@@ -6289,7 +6455,13 @@ export default function EstimatorClient({
 
                 {/* 9. Quotation assumptions / Order simulation */}
                 <EstimatorCard accent="weft">
-                    <SectionHeader title={!canUseProduction ? t('estimator.simulation.base_title') : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
+                    <SectionHeader
+                        title={!canUseProduction ? t('estimator.simulation.base_title') : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')}
+                        detail={!canUseProduction ? <p className="text-[11px] text-[var(--color-muted)] font-normal">{t('estimator.simulation.base_description')}</p> : undefined}
+                        icon={Coins}
+                        accent="weft"
+                        step={9}
+                    />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                             <NumField
@@ -6715,7 +6887,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>{tx('Keep for later')}</Button>
-                        <Button variant="destructive" onClick={() => { dismissDraft(); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success(tx('Cost Estimate draft discarded')) }}>{tx('Discard draft')}</Button>
+                        <Button variant="destructive" onClick={() => { dismissDraft(); void trackPlanEvent('draft_discarded'); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success(tx('Cost Estimate draft discarded')) }}>{tx('Discard draft')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

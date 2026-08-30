@@ -40,6 +40,7 @@ import { toast, userFacingError } from '@/lib/app-notifications'
 import { downloadBlob } from '@/lib/browser-download'
 import { formatToSurat } from '@/lib/time'
 import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimator/actions'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 
 type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
 
@@ -134,6 +135,7 @@ export function CostingExportDialog({
     setMarkingSent(false)
     setMarkedSent(false)
     setLatestQuoteUpdatedAt(sourceQuoteUpdatedAt)
+    void trackPlanEvent('export_preview_opened', { mode: defaultMode })
   }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, model, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind])
 
   const options = useMemo(() => ({
@@ -230,10 +232,12 @@ export function CostingExportDialog({
       printWindow.print()
       setStatus('print-opened')
       setErrorMessage(null)
+      void trackPlanEvent('export_completed', { mode })
     } catch (error) {
       printWindow.close()
       console.error(error)
       setStatus('failed')
+      void trackPlanEvent('export_failed', { mode })
       const message = 'Print could not be opened. Try Download PDF instead.'
       setErrorMessage(message)
       toast.error(message)
@@ -283,10 +287,12 @@ export function CostingExportDialog({
       setGeneratedBlob(blob)
       setGeneratedFilename(filename)
       setStatus('download-started')
+      void trackPlanEvent('export_completed', { mode })
       toast.success('PDF ready', { description: `Download started: ${filename}` })
     } catch (error) {
       console.error(error)
       setStatus('failed')
+      void trackPlanEvent('export_failed', { mode })
       const message = 'PDF generation failed. Retry or use Print as a fallback.'
       setErrorMessage(message)
       toast.error(message)

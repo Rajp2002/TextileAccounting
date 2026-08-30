@@ -1,3 +1,5 @@
+import { BASE_PLAN_PHRASES } from "./base-plan-phrases"
+
 export type RuntimeLanguage = "en" | "hi" | "gu"
 
 type LocalLanguage = Exclude<RuntimeLanguage, "en">
@@ -1152,6 +1154,11 @@ export function translateFallbackUiText(
  */
 export function translateStrictBasePlanText(source: string, language: RuntimeLanguage): string | undefined {
   if (language === "en" || !source) return undefined
+
+  if (language === "hi" || language === "gu") {
+    const directPhrase = BASE_PLAN_PHRASES[language]?.[source]
+    if (directPhrase) return directPhrase
+  }
 
   const patternedSource = translateStrictBasePlanPattern(source, language) ?? source
   const dictionary = WORD_TRANSLATIONS[language]
