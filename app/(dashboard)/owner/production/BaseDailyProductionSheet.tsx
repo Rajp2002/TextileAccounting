@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { AlertTriangle, CheckCircle2, ClipboardList, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardList, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -108,6 +108,7 @@ export default function BaseDailyProductionSheet({
     const [isSaving, setIsSaving] = useState(false)
     const [unlockedBatchId, setUnlockedBatchId] = useState<string | null>(null)
     const [isUnlockDialogOpen, setIsUnlockDialogOpen] = useState(false)
+    const [isPayrollExpanded, setIsPayrollExpanded] = useState(false)
 
     const jobById = useMemo(
         () => new Map(initialData.jobs.map((job) => [job.id, job])),
@@ -418,23 +419,24 @@ export default function BaseDailyProductionSheet({
 
     const assignedMachineContexts = machineContexts.filter((context) => context.workerId)
     const unassignedMachines = machineContexts.filter((context) => !context.workerId)
+    const assignedWorkers = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length > 0)
     const unassignedWorkers = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length === 0)
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-bold text-ink">Daily machine production</h2>
-                    <p className="text-sm text-body">Enter metres once per machine. The assigned worker, costing, and pay rate are filled from the current shift setup.</p>
+                    <p className="mt-0.5 text-sm text-body">Enter metres once per machine. Worker, job, and rate stay in sync with Setup.</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={onAddWorker}>
+                <Button variant="outline" size="sm" className="hidden shrink-0 sm:inline-flex" onClick={onAddWorker}>
                     <Plus className="h-4 w-4" /> Add worker
                 </Button>
             </div>
 
             <Card className="border-saffron/20 bg-saffron-soft/25">
-                <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="grid gap-3 sm:grid-cols-2">
+                <CardContent className="flex flex-col gap-3 py-3 sm:flex-row sm:items-end sm:justify-between sm:py-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="base-daily-date">Date</Label>
                             <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} onChange={(event) => setProductionDate(event.target.value)} />
@@ -450,7 +452,7 @@ export default function BaseDailyProductionSheet({
                             </Select>
                         </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 text-sm sm:min-w-[360px]">
+                    <div className="grid grid-cols-3 divide-x divide-saffron/15 rounded-lg border border-saffron/15 bg-surface/65 px-1 py-2 text-sm sm:min-w-[360px] sm:border-0 sm:bg-transparent sm:p-0">
                         <Stat label="Machines" value={`${assignedMachineContexts.length}/${machineContexts.length}`} />
                         <Stat label="Workers" value={`${summary.entered_count}/${sheetWorkers.length}`} />
                         <Stat label="Total" value={formatMeters(summary.total_meters)} />
@@ -493,9 +495,9 @@ export default function BaseDailyProductionSheet({
             ) : (
                 <>
                     <Card>
-                        <CardHeader className="border-b border-hairline/70">
+                        <CardHeader className="border-b border-hairline/70 pb-3 sm:pb-5">
                             <CardTitle className="flex items-center gap-2 text-base"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
-                            <CardDescription>Each machine row is the source entry. Its assigned worker, production job, and weaver rate appear automatically; payroll rolls up to that worker.</CardDescription>
+                            <CardDescription className="hidden sm:block">Each machine row is the source entry. Worker pay is calculated automatically from the saved job rate.</CardDescription>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] gap-3 border-b border-hairline bg-surface-soft/50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground md:grid">
@@ -506,11 +508,11 @@ export default function BaseDailyProductionSheet({
                                     const row = getRow(context.workerId!)
                                     const value = row.machineMeters[contextKey(context)] ?? ''
                                     return (
-                                        <div key={context.machineId} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] md:items-center">
-                                            <div className="min-w-0"><p className="font-semibold text-ink">{context.machineLabel}</p><p className="text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}</p></div>
-                                            <div className="text-sm text-body"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</p></div>
-                                            <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'}>{context.jobLabel ?? 'Job not assigned'}</Badge>{context.jobId && <span className="text-xs font-semibold text-body">Weaver rate ₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
+                                        <div key={context.machineId} className="grid grid-cols-[minmax(0,1fr)_112px] gap-x-3 gap-y-2 px-3 py-3 [contain-intrinsic-size:104px] [content-visibility:auto] md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] md:items-center md:px-4 md:py-4">
+                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{context.machineLabel}</p><p className="truncate text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}<span className="md:hidden"> · {context.workerName}</span></p></div>
+                                            <div className="hidden text-sm text-body md:block"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</p></div>
+                                            <div className="min-w-0 md:col-auto">
+                                                <div className="flex min-w-0 items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'} className="max-w-full truncate">{context.jobLabel ?? 'Job not assigned'}</Badge>{context.jobId && <span className="hidden shrink-0 text-xs font-semibold text-body sm:inline">₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
                                                 {!context.jobId && <p className="mt-1 text-xs font-medium text-warning">Assign a production job before entering metres.</p>}
                                             </div>
                                             <Input
@@ -523,7 +525,7 @@ export default function BaseDailyProductionSheet({
                                                 value={value}
                                                 disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || !context.jobId}
                                                 onChange={(event) => handleMachineMetersChange(context, event.target.value)}
-                                                className="text-right font-semibold"
+                                                className="row-span-2 row-start-1 h-11 self-center text-right text-base font-semibold md:col-auto md:row-auto md:h-10 md:text-sm"
                                             />
                                         </div>
                                     )
@@ -540,12 +542,21 @@ export default function BaseDailyProductionSheet({
                     </Card>
 
                     <Card>
-                        <CardHeader className="border-b border-hairline/70">
-                            <CardTitle className="text-base">Worker payroll roll-up</CardTitle>
-                            <CardDescription>These totals are calculated from the machine metres above. Set zero or absent only when the worker has no production for this shift.</CardDescription>
+                        <CardHeader className="border-b border-hairline/70 pb-3 sm:pb-5">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <CardTitle className="text-base">Worker payroll roll-up</CardTitle>
+                                    <p className="mt-1 text-xs font-medium text-body md:hidden">{formatMeters(summary.total_meters)} · {summary.entered_count} recorded · {summary.outstanding_count} pending</p>
+                                </div>
+                                <Button type="button" variant="ghost" size="sm" className="md:hidden" aria-expanded={isPayrollExpanded} aria-controls="base-payroll-rollup" onClick={() => setIsPayrollExpanded((current) => !current)}>
+                                    {isPayrollExpanded ? 'Hide' : 'Review'}
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${isPayrollExpanded ? 'rotate-180' : ''}`} />
+                                </Button>
+                            </div>
+                            <CardDescription className="hidden md:block">Calculated from the machine metres above. Use zero or absent only when a worker has no production this shift.</CardDescription>
                         </CardHeader>
-                        <CardContent className="divide-y divide-hairline p-0">
-                            {sheetWorkers.map((worker) => {
+                        <CardContent id="base-payroll-rollup" className={`${isPayrollExpanded ? 'block' : 'hidden'} divide-y divide-hairline p-0 md:block`}>
+                            {assignedWorkers.map((worker) => {
                                 const row = getRow(worker.id)
                                 const contexts = contextsByWorker.get(worker.id) ?? []
                                 const rowTotal = getRowTotal(worker.id)
@@ -596,17 +607,18 @@ export default function BaseDailyProductionSheet({
             )}
 
             {sheetWorkers.length > 0 && (
-                <div className="sticky bottom-2 z-10 flex flex-col gap-3 rounded-xl border border-saffron/30 bg-surface/95 p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                <div className="sticky bottom-2 z-10 flex items-center justify-between gap-3 rounded-xl border border-saffron/30 bg-surface/95 p-2.5 shadow-[var(--shadow-panel)] backdrop-blur sm:p-3">
                     <div className="flex items-center gap-3 text-sm">
-                        <div className="rounded-lg bg-saffron-soft p-2 text-saffron-deep"><Save className="h-4 w-4" /></div>
+                        <div className="hidden rounded-lg bg-saffron-soft p-2 text-saffron-deep sm:block"><Save className="h-4 w-4" /></div>
                         <div>
-                            <p className="font-bold text-ink">{formatMeters(summary.total_meters)} across {summary.entered_count} workers</p>
-                            <p className="text-xs text-body">{summary.outstanding_count} not entered · {summary.zero_count} zero · {summary.absent_count} absent</p>
+                            <p className="whitespace-nowrap font-bold text-ink">{formatMeters(summary.total_meters)} · {summary.entered_count}/{sheetWorkers.length}</p>
+                            <p className="hidden text-xs text-body sm:block">{summary.outstanding_count} not entered · {summary.zero_count} zero · {summary.absent_count} absent</p>
                         </div>
                     </div>
-                    <Button onClick={handleSave} disabled={isSaving || areInputsDisabled || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="sm:min-w-[210px]">
+                    <Button onClick={handleSave} disabled={isSaving || areInputsDisabled || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="min-w-[132px] sm:min-w-[210px]">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {isSaving ? 'Saving machine sheet…' : currentBatch ? 'Save production correction' : 'Save machine production'}
+                        <span className="sm:hidden">{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
+                        <span className="hidden sm:inline">{isSaving ? 'Saving machine sheet…' : currentBatch ? 'Save production correction' : 'Save machine production'}</span>
                     </Button>
                 </div>
             )}
@@ -648,5 +660,5 @@ function toWorkerStatusLabel(status: BaseDailyProductionStatus) {
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
-    return <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-bold text-ink">{value}</p></div>
+    return <div className="px-2 text-center sm:px-0 sm:text-left"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-bold text-ink">{value}</p></div>
 }
