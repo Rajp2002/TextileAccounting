@@ -349,7 +349,7 @@ export async function saveBaseDailyProductionBatch(input: {
         }>
     }>
 }) {
-    await requireBaseProductionOwner()
+    const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(BaseDailyProductionSchema, input)
     if ('error' in parsed) return parsed
 
@@ -372,6 +372,25 @@ export async function saveBaseDailyProductionBatch(input: {
     })
 
     if (error) return databaseError(error, 'The daily production sheet could not be saved. Please try again.')
+
+    const startedJobIds = [...new Set(
+        parsed.data.entries.flatMap((entry) => entry.allocations
+            .filter((allocation) => allocation.meters > 0)
+            .map((allocation) => allocation.jobId)),
+    )]
+
+    if (startedJobIds.length > 0) {
+        const { error: statusError } = await supabase
+            .from('base_production_jobs')
+            .update({ status: 'active', updated_at: new Date().toISOString() })
+            .eq('org_id', profile.org_id)
+            .eq('status', 'planned')
+            .in('id', startedJobIds)
+
+        if (statusError) {
+            return databaseError(statusError, 'Production was saved, but the related job status could not be refreshed. Reload to continue.')
+        }
+    }
 
     revalidatePath('/owner/production')
     return { success: true, summary: data }

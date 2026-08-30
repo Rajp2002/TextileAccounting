@@ -495,11 +495,11 @@ export default function BaseDailyProductionSheet({
                     <Card>
                         <CardHeader className="border-b border-hairline/70">
                             <CardTitle className="flex items-center gap-2 text-base"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
-                            <CardDescription>Each machine row is the source entry. Its assigned worker, costing, and rate are shown automatically; payroll is rolled up to that worker.</CardDescription>
+                            <CardDescription>Each machine row is the source entry. Its assigned worker, production job, and weaver rate appear automatically; payroll rolls up to that worker.</CardDescription>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] gap-3 border-b border-hairline bg-surface-soft/50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground md:grid">
-                                <span>Machine</span><span>Assigned worker</span><span>Costing / rate</span><span className="text-right">Metres</span>
+                                <span>Machine</span><span>Assigned worker</span><span>Job / weaver rate</span><span className="text-right">Metres</span>
                             </div>
                             <div className="divide-y divide-hairline">
                                 {assignedMachineContexts.map((context) => {
@@ -510,8 +510,8 @@ export default function BaseDailyProductionSheet({
                                             <div className="min-w-0"><p className="font-semibold text-ink">{context.machineLabel}</p><p className="text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}</p></div>
                                             <div className="text-sm text-body"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</p></div>
                                             <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'}>{context.jobLabel ?? 'Costing not assigned'}</Badge>{context.jobId && <span className="text-xs font-semibold text-body">Costing ₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
-                                                {!context.jobId && <p className="mt-1 text-xs font-medium text-warning">Assign a costing/job before entering metres.</p>}
+                                                <div className="flex flex-wrap items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'}>{context.jobLabel ?? 'Job not assigned'}</Badge>{context.jobId && <span className="text-xs font-semibold text-body">Weaver rate ₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
+                                                {!context.jobId && <p className="mt-1 text-xs font-medium text-warning">Assign a production job before entering metres.</p>}
                                             </div>
                                             <Input
                                                 aria-label={`${context.machineLabel} ${context.workerName} metres`}
@@ -552,7 +552,7 @@ export default function BaseDailyProductionSheet({
                                 const rowGrossPay = getRowGrossPay(worker.id)
                                 return (
                                     <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · costing rates applied` : 'No current machine assignment'}</p></div>
+                                        <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p></div>
                                         <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline">{context.machineLabel}</Badge></span>) : <span className="text-warning">Unassigned worker entry</span>}</div>
                                         <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled}>
                                             <SelectTrigger className="w-full" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
@@ -572,8 +572,8 @@ export default function BaseDailyProductionSheet({
                                 const row = getRow(worker.id)
                                 return (
                                     <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-warning/5 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div><p className="font-semibold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no costing rate</p></div>
-                                        <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and costing before recording production so pay and job reporting are allocated correctly.</div>
+                                        <div><p className="font-semibold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no weaver rate</p></div>
+                                        <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and production job before recording output so pay and job reporting are allocated correctly.</div>
                                         <span className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
                                         <Input
                                             aria-label={`${worker.name} unassigned metres`}

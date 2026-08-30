@@ -64,14 +64,15 @@ import {
   buildSavedQualityRecipeState,
   filterAndSortSavedCostings,
   getSavedCostingIdentity,
-    getPreviousCostingVersion,
-    normalizeSavedWarpRows,
-    normalizeSavedWeftRows,
-    getSavedCostingMetrics,
-    type SavedQualityFactoryProfile,
-    type SavedQualityFixedWorker,
-    type SavedQualityRecipe,
-    type SavedCostingMarginFilter,
+  isSavedCostingArchived,
+  getPreviousCostingVersion,
+  normalizeSavedWarpRows,
+  normalizeSavedWeftRows,
+  getSavedCostingMetrics,
+  type SavedQualityFactoryProfile,
+  type SavedQualityFixedWorker,
+  type SavedQualityRecipe,
+  type SavedCostingMarginFilter,
   type SavedCostingSort,
   type SavedCostingDelta,
 } from '@/lib/saved-costings'
@@ -790,15 +791,6 @@ function SavedQualityLibraryView({
                                                                         <span className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-surface-soft px-2 py-0.5" title={contextLabel}>{contextLabel}</span>
                                                                         {costingStatus !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(costingStatus)} />}
                                                                     </div>
-                                                                    {canUseProductionPipeline && isStandaloneCosting(record.record_kind) && !record.is_archived && (
-                                                                        <Link
-                                                                            href={`/owner/production?costingId=${encodeURIComponent(record.id)}`}
-                                                                            onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_history' })}
-                                                                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-saffron-deep hover:underline"
-                                                                        >
-                                                                            <Factory className="h-3.5 w-3.5" /> Start Production
-                                                                        </Link>
-                                                                    )}
                                                                     <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                                                         <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
                                                                             <dt className="truncate text-[9px] font-bold uppercase tracking-wide text-subtle">Cost</dt>
@@ -898,16 +890,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const qualityGroups = useMemo(() => {
         const groups = new Map<string, SavedQualityGroup>()
         const labelIndex = new Map<string, string>()
+        const templateById = new Map(initialTemplates.map(template => [template.id, template]))
 
-        if (!showArchived && !showFavoritesOnly) {
-            for (const template of initialTemplates.filter(item => Boolean(item.is_active) === !showArchived)) {
+        if (!showFavoritesOnly) {
+            for (const template of initialTemplates.filter(item => (item.is_active === false) === showArchived)) {
                 const key = `template:${template.id}`
                 groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at, currentRecipeCostPerM: null })
                 labelIndex.set(normalizeQualityKey(template.name), key)
             }
         }
 
-        for (const record of quotes.filter(item => Boolean(item.is_archived) === showArchived && (!showFavoritesOnly || item.is_favorite === true))) {
+        for (const record of quotes.filter(item => {
+            if (showFavoritesOnly && item.is_favorite !== true) return false
+            const template = item.template_id ? templateById.get(item.template_id) : null
+            const belongsInArchive = isSavedCostingArchived(item, template)
+            return belongsInArchive === showArchived
+        })) {
             const normalizedLabel = normalizeQualityKey(record.quality_label)
             const explicitTemplateKey = record.template_id ? `template:${record.template_id}` : null
             const key = explicitTemplateKey && groups.has(explicitTemplateKey)
@@ -921,7 +919,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 groups.set(key, {
                     key,
                     name: record.quality_label || 'Untitled costing',
-                    template: initialTemplates.find(template => template.id === record.template_id) ?? null,
+                    template: record.template_id ? templateById.get(record.template_id) ?? null : null,
                     records: [record],
                     updatedAt: record.updated_at,
                     currentRecipeCostPerM: null,

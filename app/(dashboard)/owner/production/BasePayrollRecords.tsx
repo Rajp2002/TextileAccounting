@@ -205,7 +205,6 @@ export default function BasePayrollRecords({
                     </div>
                     <p className="mt-1 text-sm text-body">A permanent worker, machine, costing, advance, and payment record for every settled period.</p>
                 </div>
-                <Button variant="outline" onClick={onBack}>Back to current payroll</Button>
             </div>
 
             {periods.length === 0 ? (
@@ -252,9 +251,9 @@ export default function BasePayrollRecords({
 
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <SummaryMetric label="Total production" value={formatMeters(selectedPeriod.totalMeters)} detail={`${selectedPeriod.machines.length} machines`} />
-                        <SummaryMetric label="Gross earnings" value={formatINR(selectedPeriod.totalGrossPay)} detail={`${selectedPeriod.workers.length} workers settled`} />
+                        <SummaryMetric label="Gross earnings" value={formatINR(selectedPeriod.totalGrossPay)} detail={`${selectedPeriod.workers.length} ${selectedPeriod.workers.length === 1 ? 'worker' : 'workers'} settled`} />
                         <SummaryMetric label="Advances recovered" value={formatINR(selectedPeriod.totalAdvanceRecovered)} detail="Deducted in this period" />
-                        <SummaryMetric label="Net payroll" value={formatINR(selectedPeriod.totalNetPayout)} detail={`Paid by ${selectedPeriod.paymentModes.map(paymentModeLabel).join(', ')}`} />
+                        <SummaryMetric label="Net payroll" value={formatINR(selectedPeriod.totalNetPayout)} detail={`Paid by ${selectedPeriod.paymentModes.map(mode => mode === 'upi' ? 'UPI' : paymentModeLabel(mode).toLocaleLowerCase('en-IN')).join(', ')}`} />
                     </div>
 
                     <Tabs defaultValue="workers" className="space-y-4">
