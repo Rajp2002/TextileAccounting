@@ -333,6 +333,7 @@ type EstimatorTemplate = {
     loom_type?: LoomType | null
     loom_rpm?: number | string | null
     loom_power_kw?: number | string | null
+    warping_mode?: 'in_house' | 'outsourced' | null
     sizing_mode?: 'in_house' | 'outsourced' | null
     hours_per_shift?: number | string | null
     tape_length_m?: number | string | null
@@ -538,7 +539,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 loomPowerKw:           tpl.loom_power_kw != null ? Number(tpl.loom_power_kw) : null,
                 loomRpmIsCustomised:   false,
                 loomPowerKwIsCustomised: false,
-                warpingMode:            (tpl.warping_mode ?? (tpl.warping_rate_per_kg ? 'outsourced' : 'in_house')) as 'in_house' | 'outsourced',
+                warpingMode:            (tpl.warping_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 sizingMode:            (tpl.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 hoursPerShift:         tpl.hours_per_shift != null ? Number(tpl.hours_per_shift) : state.hoursPerShift,
             }

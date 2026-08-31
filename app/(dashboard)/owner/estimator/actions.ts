@@ -635,6 +635,7 @@ export async function saveAsFabricTemplate(data: {
     loomType?:        string | null
     loomRpm?:         number | null
     loomPowerKw?:     number | null
+    warpingMode?:     'in_house' | 'outsourced'
     sizingMode?:      'in_house' | 'outsourced'
     hoursPerShift?:   number | null
     estimate:          EstimateState
@@ -968,6 +969,7 @@ export async function updateFabricTemplate(data: {
     loomType?:        string | null
     loomRpm?:         number | null
     loomPowerKw?:     number | null
+    warpingMode?:     'in_house' | 'outsourced'
     sizingMode?:      'in_house' | 'outsourced'
     hoursPerShift?:   number | null
 }) {
@@ -1003,7 +1005,7 @@ export async function updateFabricTemplate(data: {
         loomType: current.loom_type,
         loomRpm: current.loom_rpm,
         loomPowerKw: current.loom_power_kw,
-        warpingMode: current.warping_mode,
+        warpingMode: (current as { warping_mode?: string | null }).warping_mode ?? null,
         sizingMode: current.sizing_mode,
         hoursPerShift: current.hours_per_shift,
     }) === templateRecipeSignature({

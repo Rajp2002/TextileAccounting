@@ -79,6 +79,7 @@ function createSampleState(): EstimateState {
     loomRpm: 650,
     loomPowerKw: 3.7,
     hoursPerShift: 12,
+    warpingMode: 'in_house',
     sizingMode: 'in_house',
     commissionPct: 1.5,
     transportPerM: 0.8,

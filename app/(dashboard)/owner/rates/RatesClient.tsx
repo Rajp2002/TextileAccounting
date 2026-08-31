@@ -6,6 +6,7 @@ import {
     AlertTriangle,
     Archive,
     ArchiveRestore,
+    BookOpen,
     CalendarClock,
     CheckCircle2,
     CircleDollarSign,
@@ -414,6 +415,138 @@ function ReviewBadge({ rate, compact = false }: { rate: CostRateRow; compact?: b
     return <div className={compact ? 'text-right' : undefined}><StatusBadge status="current" className={compact ? 'text-[10px]' : undefined} /><p className="mt-1 text-[11px] text-subtle">Next review {due}</p></div>
 }
 
+function RateReviewRailWidget({
+    dueReviewRates,
+    mostRecentReview,
+    defaultReviewIntervalDays,
+    onOpenModal,
+    onReviewRate,
+}: {
+    dueReviewRates: CostRateRow[]
+    mostRecentReview: string | null
+    defaultReviewIntervalDays: number
+    onOpenModal: () => void
+    onReviewRate: (rate: CostRateRow) => void
+}) {
+    const { tx } = useTranslation()
+    const dueCount = dueReviewRates.length
+    const hasDueRates = dueCount > 0
+
+    return (
+        <Card className={`overflow-hidden transition-all duration-200 ${hasDueRates ? 'border-warning/40 bg-gradient-to-b from-warning-soft/50 via-surface to-surface shadow-[0_4px_20px_rgba(217,119,6,0.08)]' : 'border-hairline bg-surface'}`}>
+            <CardContent className="p-5 space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${hasDueRates ? 'bg-warning-soft text-warning ring-2 ring-warning/20' : 'bg-success-soft text-success'}`}>
+                            <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                        </div>
+                        <div>
+                            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-subtle">{tx('Rate Review')}</p>
+                            <h3 className="text-sm font-bold text-ink">{hasDueRates ? tx(`${dueCount} ${dueCount === 1 ? 'Rate Needs' : 'Rates Need'} Review`) : tx('Rates Are Current')}</h3>
+                        </div>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${hasDueRates ? 'bg-warning/20 text-saffron-deep' : 'bg-success-soft text-success'}`}>
+                        {hasDueRates ? `${dueCount} ${dueCount === 1 ? 'due' : 'due'}` : tx('Up to date')}
+                    </span>
+                </div>
+
+                {hasDueRates ? (
+                    <>
+                        <p className="text-xs leading-relaxed text-body">
+                            {tx('Supplier prices or newly discovered rates require confirmation to keep future estimate costings accurate.')}
+                        </p>
+
+                        <div className="space-y-2 rounded-xl border border-hairline/80 bg-surface-soft/60 p-2.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-subtle px-1">{tx('Pending Rates')}</p>
+                            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                                {dueReviewRates.slice(0, 3).map(rate => (
+                                    <div
+                                        key={rate.id}
+                                        onClick={() => onReviewRate(rate)}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onReviewRate(rate) }}
+                                        className="group flex cursor-pointer items-center justify-between gap-2 rounded-lg border border-hairline/60 bg-surface px-2.5 py-2 transition-colors hover:border-warning/40 hover:bg-warning-soft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-xs font-bold text-ink group-hover:text-saffron-deep">{rate.name}</p>
+                                            <p className="text-[10px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} · <span className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</span></p>
+                                        </div>
+                                        <ReviewBadge rate={rate} compact />
+                                    </div>
+                                ))}
+                            </div>
+                            {dueCount > 3 && (
+                                <p className="text-center text-[11px] font-medium text-subtle pt-1">
+                                    {tx(`+ ${dueCount - 3} more ${dueCount - 3 === 1 ? 'rate' : 'rates'} waiting`)}
+                                </p>
+                            )}
+                        </div>
+
+                        <Button
+                            variant="saffron"
+                            onClick={onOpenModal}
+                            aria-haspopup="dialog"
+                            aria-label={tx(`Open ${dueCount} rates due for review`)}
+                            className="w-full h-10 font-bold shadow-sm justify-between"
+                        >
+                            <span className="flex items-center gap-2">
+                                <CalendarClock className="h-4 w-4" aria-hidden="true" />
+                                {tx(dueCount === 1 ? 'Review 1 Rate' : `Review ${dueCount} Rates`)}
+                            </span>
+                            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                        </Button>
+                    </>
+                ) : (
+                    <>
+                        <p className="text-xs leading-relaxed text-body">
+                            {tx('All active yarn rates are confirmed. Estimates and costings will use verified prices.')}
+                        </p>
+                        <div className="rounded-xl border border-hairline bg-surface-soft/40 p-3 space-y-2 text-xs">
+                            <div className="flex items-center justify-between text-subtle">
+                                <span>{tx('Last reviewed')}</span>
+                                <span className="font-semibold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-subtle">
+                                <span>{tx('Cadence')}</span>
+                                <span className="font-semibold text-ink">{tx(`Every ${defaultReviewIntervalDays} days`)}</span>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
+function RateBookReferenceCard() {
+    const { tx } = useTranslation()
+    return (
+        <Card className="border-hairline bg-surface/80">
+            <CardContent className="p-5 space-y-3.5">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-subtle">
+                    <BookOpen className="h-4 w-4 text-saffron" aria-hidden="true" />
+                    <span>{tx('Rate Book Principles')}</span>
+                </div>
+                <ul className="space-y-2.5 text-xs text-body leading-relaxed">
+                    <li className="flex items-start gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span><strong className="font-semibold text-ink">{tx('Future Estimates:')}</strong> {tx('Confirmed rates apply to all newly created quotes and costings automatically.')}</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span><strong className="font-semibold text-ink">{tx('Audit Integrity:')}</strong> {tx('Existing saved quality recipes and finalized costings stay strictly unchanged.')}</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span><strong className="font-semibold text-ink">{tx('Auto-Discovery:')}</strong> {tx('Imported qualities flag new yarn rates for review until explicitly confirmed.')}</span>
+                    </li>
+                </ul>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function RatesClient({
     initialRates,
     initialConflicts,
@@ -503,6 +636,8 @@ export default function RatesClient({
     )
     const resultMotionKey = `${category}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
     const selectedCategoryLabel = category === 'yarn_warp' ? 'Warp' : 'Weft'
+    const warpRatesCount = useMemo(() => activeYarnRates.filter(rate => rate.category === 'yarn_warp').length, [activeYarnRates])
+    const weftRatesCount = useMemo(() => activeYarnRates.filter(rate => rate.category === 'yarn_weft').length, [activeYarnRates])
     const dueReviewRates = useMemo(
         () => activeYarnRates
             .filter(rate => getRateReviewStatus(rate) !== 'current')
@@ -777,26 +912,23 @@ export default function RatesClient({
                 </div>
             )}
 
-            <Card className="premium-surface">
-                <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-5">
-                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
-                    <button
-                        type="button"
-                        onClick={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-                        disabled={dueReviewRates.length === 0}
-                        aria-haspopup="dialog"
-                        aria-label={dueReviewRates.length > 0 ? `Open ${dueReviewRates.length} rates due for review` : 'No rates due for review'}
-                        className="group inline-flex cursor-pointer items-center gap-2 rounded-lg px-0.5 py-1 text-left text-xs font-semibold text-body outline-none transition-colors hover:text-warning focus-visible:ring-2 focus-visible:ring-saffron/50 focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-70"
-                    >
-                        <CalendarClock className="h-4 w-4 text-warning" aria-hidden="true" />
-                        <span><span className="font-bold text-saffron-deep">{dueCount}</span> {tx(dueCount === 1 ? 'rate needs review' : 'rates need review')}</span>
-                        {dueReviewRates.length > 0 && <ChevronRight className="h-3.5 w-3.5 text-warning transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
-                    </button>
-                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
-                </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+                <div className="space-y-6 lg:col-span-8 min-w-0">
+                    <Card className="premium-surface">
+                        <CardContent className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-5">
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
+                                <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-subtle">
+                                <span><span className="font-semibold text-ink">{warpRatesCount}</span> {tx('Warp')}</span>
+                                <span className="text-hairline-strong">•</span>
+                                <span><span className="font-semibold text-ink">{weftRatesCount}</span> {tx('Weft')}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-            <Card className="gap-0 overflow-hidden p-0">
+                    <Card className="gap-0 overflow-hidden p-0">
                 <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
                     <div>
                         <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
@@ -1013,7 +1145,23 @@ export default function RatesClient({
                         </div>
                     </>
                 )}
-            </Card>
+                    </Card>
+                </div>
+
+                <aside className="space-y-4 lg:col-span-4 sticky top-6" aria-label={tx('Rate review and reference')}>
+                    <RateReviewRailWidget
+                        dueReviewRates={dueReviewRates}
+                        mostRecentReview={mostRecentReview}
+                        defaultReviewIntervalDays={defaultReviewIntervalDays}
+                        onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                        onReviewRate={rate => {
+                            setReviewError(null)
+                            setReviewRate(rate)
+                        }}
+                    />
+                    <RateBookReferenceCard />
+                </aside>
+            </div>
 
             <DueForReviewDialog
                 open={showDueReviews}

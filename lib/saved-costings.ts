@@ -479,7 +479,7 @@ export function buildSavedQualityRecipeState(
     loomPowerKw: nullableFiniteNumber(recipe.loom_power_kw, null),
     loomRpmIsCustomised: false,
     loomPowerKwIsCustomised: false,
-    warpingMode: recipe.warping_mode ?? (recipe.warping_rate_per_kg ? 'outsourced' : 'in_house'),
+    warpingMode: recipe.warping_mode ?? 'in_house',
     sizingMode: recipe.sizing_mode ?? 'in_house',
     hoursPerShift: nullableFiniteNumber(recipe.hours_per_shift, state.hoursPerShift),
   }

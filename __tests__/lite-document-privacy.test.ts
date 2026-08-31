@@ -68,6 +68,7 @@ function createCostingState(): EstimateState {
     loomRpm: 650,
     loomPowerKw: 3.7,
     hoursPerShift: 12,
+    warpingMode: 'in_house',
     sizingMode: 'in_house',
     commissionPct: 2.0,
     transportPerM: 1.0,
