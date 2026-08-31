@@ -890,7 +890,8 @@ export default function RatesClient({
                         : null
 
     return (
-        <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
+        <>
+            <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -1174,27 +1175,6 @@ export default function RatesClient({
                 )}
             </Card>
 
-            {/* Dedicated Right Rail on Wide Screens (positioned in blank right space) */}
-            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
-                <RateReviewRailWidget
-                    dueReviewRates={dueReviewRates}
-                    mostRecentReview={mostRecentReview}
-                    defaultReviewIntervalDays={defaultReviewIntervalDays}
-                    onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-                    onReviewRate={rate => {
-                        setReviewError(null)
-                        setReviewRate(rate)
-                    }}
-                />
-                <RateBookReferenceCard />
-            </aside>
-
-            {/* Floating Review Action on Narrower Screens (< 1540px) */}
-            <RateReviewFloatingButton
-                dueReviewRates={dueReviewRates}
-                onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-            />
-
             <DueForReviewDialog
                 open={showDueReviews}
                 rates={dueReviewRates}
@@ -1329,6 +1309,28 @@ export default function RatesClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+            </div>
+
+            {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
+            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
+                <RateReviewRailWidget
+                    dueReviewRates={dueReviewRates}
+                    mostRecentReview={mostRecentReview}
+                    defaultReviewIntervalDays={defaultReviewIntervalDays}
+                    onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                    onReviewRate={rate => {
+                        setReviewError(null)
+                        setReviewRate(rate)
+                    }}
+                />
+                <RateBookReferenceCard />
+            </aside>
+
+            {/* Floating Review Action on Narrower Screens (< 1540px) */}
+            <RateReviewFloatingButton
+                dueReviewRates={dueReviewRates}
+                onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+            />
+        </>
     )
 }

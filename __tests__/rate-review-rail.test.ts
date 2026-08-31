@@ -18,6 +18,18 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(styles).toContain('position: fixed')
     })
 
+    it('keeps viewport-positioned review controls outside the transformed route wrapper', () => {
+        const routeWrapperStart = rates.indexOf('<div className="premium-route-enter')
+        const viewportControlsStart = rates.indexOf('<aside className="rates-review-rail-desktop')
+        const floatingControlStart = rates.indexOf('<RateReviewFloatingButton')
+        const routeWrapperEnd = rates.indexOf('\n            </div>\n\n            {/* Keep viewport-positioned review controls')
+
+        expect(routeWrapperStart).toBeGreaterThanOrEqual(0)
+        expect(routeWrapperEnd).toBeGreaterThan(routeWrapperStart)
+        expect(viewportControlsStart).toBeGreaterThan(routeWrapperEnd)
+        expect(floatingControlStart).toBeGreaterThan(routeWrapperEnd)
+    })
+
     it('provides accessible modal triggers for rates due for review', () => {
         expect(rates).toContain('aria-haspopup="dialog"')
         expect(rates).toContain('dueReviewRates')

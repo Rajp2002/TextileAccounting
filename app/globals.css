@@ -494,7 +494,9 @@
     }
   }
 
-  /* Rate Book Right Rail - positioned in right viewport margin */
+  /* Rate Book Right Rail - positioned in right viewport margin. The rail is
+     rendered outside the animated route wrapper so fixed positioning remains
+     anchored to the viewport instead of the centered Rate Book content. */
   .rates-review-rail-desktop {
     display: none;
   }
