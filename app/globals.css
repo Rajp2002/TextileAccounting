@@ -492,7 +492,32 @@
       padding-bottom: 0.25rem;
       scrollbar-width: thin;
     }
+  }
 
+  /* Rate Book Right Rail - positioned in right viewport margin */
+  .rates-review-rail-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1540px) {
+    .rates-review-rail-desktop {
+      display: block;
+      position: fixed;
+      top: 6.5rem;
+      right: 1.25rem;
+      z-index: 30;
+      width: 17rem;
+      max-height: calc(100vh - 7.5rem);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .rates-review-rail-desktop {
+      right: 2.5rem;
+      width: 18.5rem;
+    }
   }
 
   @media (min-width: 768px) and (max-width: 1699.98px) {

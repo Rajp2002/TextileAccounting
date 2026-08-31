@@ -522,28 +522,57 @@ function RateReviewRailWidget({
 function RateBookReferenceCard() {
     const { tx } = useTranslation()
     return (
-        <Card className="border-hairline bg-surface/80">
-            <CardContent className="p-5 space-y-3.5">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-subtle">
+        <Card className="border-hairline bg-surface/90 shadow-sm backdrop-blur-xs">
+            <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-subtle">
                     <BookOpen className="h-4 w-4 text-saffron" aria-hidden="true" />
                     <span>{tx('Rate Book Principles')}</span>
                 </div>
-                <ul className="space-y-2.5 text-xs text-body leading-relaxed">
+                <ul className="space-y-2 text-xs text-body leading-relaxed">
                     <li className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span><strong className="font-semibold text-ink">{tx('Future Estimates:')}</strong> {tx('Confirmed rates apply to all newly created quotes and costings automatically.')}</span>
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span><strong className="font-semibold text-ink">{tx('Future Estimates:')}</strong> {tx('Confirmed rates apply to all newly created quotes automatically.')}</span>
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span><strong className="font-semibold text-ink">{tx('Audit Integrity:')}</strong> {tx('Existing saved quality recipes and finalized costings stay strictly unchanged.')}</span>
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span><strong className="font-semibold text-ink">{tx('Audit Integrity:')}</strong> {tx('Saved quality recipes and finalized costings stay unchanged.')}</span>
                     </li>
                     <li className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span><strong className="font-semibold text-ink">{tx('Auto-Discovery:')}</strong> {tx('Imported qualities flag new yarn rates for review until explicitly confirmed.')}</span>
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span><strong className="font-semibold text-ink">{tx('Auto-Discovery:')}</strong> {tx('Imported qualities flag new yarn rates for verification.')}</span>
                     </li>
                 </ul>
             </CardContent>
         </Card>
+    )
+}
+
+function RateReviewFloatingButton({
+    dueReviewRates,
+    onOpenModal,
+}: {
+    dueReviewRates: CostRateRow[]
+    onOpenModal: () => void
+}) {
+    const { tx } = useTranslation()
+    const dueCount = dueReviewRates.length
+
+    if (dueCount === 0) return null
+
+    return (
+        <button
+            type="button"
+            onClick={onOpenModal}
+            aria-haspopup="dialog"
+            aria-label={tx(`Open ${dueCount} rates due for review`)}
+            className="min-[1540px]:hidden fixed bottom-6 right-6 z-40 inline-flex items-center gap-2.5 rounded-full bg-saffron px-4 py-3 text-sm font-bold text-white shadow-[0_10px_30px_rgba(217,119,6,0.4)] transition-all hover:bg-saffron-deep hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2"
+        >
+            <CalendarClock className="h-5 w-5" aria-hidden="true" />
+            <span>{tx(dueCount === 1 ? '1 Rate Needs Review' : `${dueCount} Rates Need Review`)}</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-black text-saffron-deep">
+                {dueCount}
+            </span>
+        </button>
     )
 }
 
@@ -912,23 +941,21 @@ export default function RatesClient({
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
-                <div className="space-y-6 lg:col-span-8 min-w-0">
-                    <Card className="premium-surface">
-                        <CardContent className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-5">
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                                <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
-                                <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-subtle">
-                                <span><span className="font-semibold text-ink">{warpRatesCount}</span> {tx('Warp')}</span>
-                                <span className="text-hairline-strong">•</span>
-                                <span><span className="font-semibold text-ink">{weftRatesCount}</span> {tx('Weft')}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+            <Card className="premium-surface">
+                <CardContent className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-5">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
+                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-subtle">
+                        <span><span className="font-semibold text-ink">{warpRatesCount}</span> {tx('Warp')}</span>
+                        <span className="text-hairline-strong">•</span>
+                        <span><span className="font-semibold text-ink">{weftRatesCount}</span> {tx('Weft')}</span>
+                    </div>
+                </CardContent>
+            </Card>
 
-                    <Card className="gap-0 overflow-hidden p-0">
+            <Card className="gap-0 overflow-hidden p-0">
                 <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
                     <div>
                         <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
@@ -1145,23 +1172,28 @@ export default function RatesClient({
                         </div>
                     </>
                 )}
-                    </Card>
-                </div>
+            </Card>
 
-                <aside className="space-y-4 lg:col-span-4 sticky top-6" aria-label={tx('Rate review and reference')}>
-                    <RateReviewRailWidget
-                        dueReviewRates={dueReviewRates}
-                        mostRecentReview={mostRecentReview}
-                        defaultReviewIntervalDays={defaultReviewIntervalDays}
-                        onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-                        onReviewRate={rate => {
-                            setReviewError(null)
-                            setReviewRate(rate)
-                        }}
-                    />
-                    <RateBookReferenceCard />
-                </aside>
-            </div>
+            {/* Dedicated Right Rail on Wide Screens (positioned in blank right space) */}
+            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
+                <RateReviewRailWidget
+                    dueReviewRates={dueReviewRates}
+                    mostRecentReview={mostRecentReview}
+                    defaultReviewIntervalDays={defaultReviewIntervalDays}
+                    onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                    onReviewRate={rate => {
+                        setReviewError(null)
+                        setReviewRate(rate)
+                    }}
+                />
+                <RateBookReferenceCard />
+            </aside>
+
+            {/* Floating Review Action on Narrower Screens (< 1540px) */}
+            <RateReviewFloatingButton
+                dueReviewRates={dueReviewRates}
+                onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+            />
 
             <DueForReviewDialog
                 open={showDueReviews}

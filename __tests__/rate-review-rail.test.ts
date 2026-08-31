@@ -7,12 +7,15 @@ const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Rate Review Right Rail layout & interaction', () => {
     const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const styles = read('app/globals.css')
 
-    it('renders the Rate Review widget and reference card inside the dedicated right rail', () => {
+    it('renders the Rate Review widget and reference card inside the dedicated right rail utilizing blank right space', () => {
         expect(rates).toContain('RateReviewRailWidget')
         expect(rates).toContain('RateBookReferenceCard')
-        expect(rates).toContain('aside className="space-y-4 lg:col-span-4 sticky top-6"')
-        expect(rates).toContain('lg:col-span-8 min-w-0')
+        expect(rates).toContain('rates-review-rail-desktop')
+        expect(rates).toContain('RateReviewFloatingButton')
+        expect(styles).toContain('.rates-review-rail-desktop')
+        expect(styles).toContain('position: fixed')
     })
 
     it('provides accessible modal triggers for rates due for review', () => {
@@ -30,7 +33,7 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(rates).toContain('Auto-Discovery:')
     })
 
-    it('keeps category breakdown and clean summary in the main column', () => {
+    it('keeps category breakdown and clean summary in the full-width main column', () => {
         expect(rates).toContain('warpRatesCount')
         expect(rates).toContain('weftRatesCount')
         expect(rates).toContain('active yarn rates')
