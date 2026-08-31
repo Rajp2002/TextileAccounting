@@ -1,0 +1,7 @@
+import {useSyncExternalStore} from 'react';
+const subscribe=(fn)=>{addEventListener('popstate',fn);return()=>removeEventListener('popstate',fn)};
+const read=()=>location.pathname+location.search;
+export function useSearchParams(){const path=useSyncExternalStore(subscribe,read,read);return new URLSearchParams(path.split('?')[1]||'')}
+export function usePathname(){return useSyncExternalStore(subscribe,read,read).split('?')[0]}
+export function useRouter(){return {push:(url)=>{history.pushState(null,'',url);dispatchEvent(new Event('popstate'))},replace:(url)=>{history.replaceState(null,'',url);dispatchEvent(new Event('popstate'))},refresh:()=>dispatchEvent(new Event('popstate'))}}
+const originalReplace=history.replaceState.bind(history);history.replaceState=(...args)=>{originalReplace(...args);dispatchEvent(new Event('popstate'))};

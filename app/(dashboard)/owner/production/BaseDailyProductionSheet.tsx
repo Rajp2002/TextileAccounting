@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import Link from 'next/link'
+import { baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
+import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
+import { baseProductionAuditChanges } from '@/lib/base-production-audit'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useTranslation } from '@/lib/i18n/context'
 import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -96,14 +101,17 @@ export default function BaseDailyProductionSheet({
     initialData,
     onAddWorker,
     onAddMachine,
+    navigation = {},
 }: {
     initialData: BaseProductionInitialData
     onAddWorker: () => void
     onAddMachine: () => void
+    navigation?: BaseProductionNavigation
 }) {
     const router = useRouter()
-    const [productionDate, setProductionDate] = useState(initialData.today)
-    const [shift, setShift] = useState<'day' | 'night'>('day')
+    const { tx } = useTranslation()
+    const [productionDate, setProductionDate] = useState(navigation.date ?? initialData.today)
+    const [shift, setShift] = useState<'day' | 'night'>(navigation.shift ?? 'day')
     const [rows, setRows] = useState<Record<string, DraftRow>>({})
     const [requestId, setRequestId] = useState(newClientRequestId)
     const [isSaving, setIsSaving] = useState(false)
@@ -112,6 +120,44 @@ export default function BaseDailyProductionSheet({
     const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false)
     const [correctionReason, setCorrectionReason] = useState('')
     const [isPayrollExpanded, setIsPayrollExpanded] = useState(false)
+    const [draftStatus, setDraftStatus] = useState<'none' | 'local' | 'error' | 'conflict'>('none')
+    const [draftReset, setDraftReset] = useState(0)
+    const selectedEntry = initialData.entries.find((entry) => entry.id === navigation.entry)
+    const focusedWorker = selectedEntry?.worker_id ?? navigation.worker
+    const draftKey = initialData.actorId ? baseProductionDraftKey(initialData.orgId, initialData.actorId, productionDate, shift) : null
+
+    useEffect(() => {
+        const date = selectedEntry?.production_date ?? navigation.date
+        setProductionDate(date && date <= initialData.today ? date : initialData.today)
+        setShift(selectedEntry?.shift ?? navigation.shift ?? 'day')
+    }, [selectedEntry?.production_date, selectedEntry?.shift, navigation.date, navigation.shift, initialData.today])
+
+    useEffect(() => {
+        if (draftStatus !== 'error') return
+        const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
+        window.addEventListener('beforeunload', warn)
+        return () => window.removeEventListener('beforeunload', warn)
+    }, [draftStatus])
+
+    useEffect(() => {
+        const frame = requestAnimationFrame(() => document.querySelector('[data-base-highlight="true"]')?.scrollIntoView({ block: 'center' }))
+        return () => cancelAnimationFrame(frame)
+    }, [focusedWorker, navigation.job, productionDate, shift])
+
+    function changeSelection(date: string, nextShift: 'day' | 'night') {
+        if (!validBaseDate(date) || date > initialData.today || isSaving) return
+        if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
+        setProductionDate(date)
+        setShift(nextShift)
+        window.history.replaceState(null, '', baseProductionHref({ ...navigation, date, shift: nextShift, entry: undefined }))
+    }
+
+    function openSetup() {
+        if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
+        const params = new URLSearchParams({ shift, returnTo: baseProductionHref({ ...navigation, date: productionDate, shift }) })
+        if (focusedWorker) params.set('worker', focusedWorker)
+        router.push(`/owner/operations?${params}`)
+    }
 
     const jobById = useMemo(
         () => new Map(initialData.jobs.map((job) => [job.id, job])),
@@ -151,21 +197,20 @@ export default function BaseDailyProductionSheet({
     const settledWorkerIds = useMemo(
         () => new Set(
             initialData.settlements
-                .filter((settlement) => settlement.period_start <= productionDate && settlement.period_end >= productionDate)
+                .filter((settlement) => settlement.status !== 'reversed' && settlement.period_end >= productionDate)
                 .map((settlement) => settlement.worker_id),
         ),
         [initialData.settlements, productionDate],
     )
     const isCurrentBatchLocked = Boolean(
-        currentBatch?.status === 'finalized'
-        || currentBatchEntries.some((entry) => settledWorkerIds.has(entry.worker_id)),
+        sheetWorkers.length > 0 && sheetWorkers.every((worker) => settledWorkerIds.has(worker.id)),
     )
     const isSavedBatchProtected = Boolean(
         currentBatch
         && !isCurrentBatchLocked
         && unlockedBatchId !== currentBatch.id,
     )
-    const areInputsDisabled = isCurrentBatchLocked || isSavedBatchProtected
+    const areInputsDisabled = isSaving || isCurrentBatchLocked || isSavedBatchProtected || draftStatus === 'conflict'
 
     const allocationsByEntry = useMemo(() => {
         const map = new Map<string, typeof initialData.allocations>()
@@ -201,15 +246,30 @@ export default function BaseDailyProductionSheet({
             if (!existing || assignment.effective_from > existing.effective_from) currentAssignments.set(assignment.machine_id, assignment)
         }
 
-        const savedMachineIds = new Set(
-            initialData.allocations
-                .filter((allocation) => currentBatchEntries.some((entry) => entry.id === allocation.entry_id))
-                .map((allocation) => allocation.machine_id),
-        )
+        const batchEntryIds = new Set(currentBatchEntries.map(entry => entry.id))
+        const savedAllocationsByMachine = new Map(initialData.allocations
+            .filter(allocation => batchEntryIds.has(allocation.entry_id))
+            .map(allocation => [allocation.machine_id, allocation]))
+        const savedMachineIds = new Set(savedAllocationsByMachine.keys())
 
         return initialData.machines
             .filter((machine) => machine.is_active || savedMachineIds.has(machine.id))
             .map((machine): MachineContext => {
+                // A saved record must show its historical worker, job and rate,
+                // even after Setup is changed or the assignment is retired.
+                const saved = savedAllocationsByMachine.get(machine.id)
+                if (saved) return {
+                    machineId: machine.id,
+                    machineLabel: saved.machine_label,
+                    machineType: machine.machine_type,
+                    assignmentId: saved.assignment_id,
+                    workerId: saved.worker_id,
+                    workerName: workerById.get(saved.worker_id)?.name ?? 'Worker',
+                    jobId: saved.job_id,
+                    jobLabel: saved.job_label,
+                    ratePerMeter: saved.worker_rate_snapshot,
+                    rateSource: 'costing',
+                }
                 const assignment = currentAssignments.get(machine.id)
                 const worker = assignment ? workerById.get(assignment.worker_id) ?? null : null
                 const jobContext = currentJobContexts.get(machine.id)
@@ -243,7 +303,7 @@ export default function BaseDailyProductionSheet({
     useEffect(() => {
         const existingByWorker = new Map(currentBatchEntries.map((entry) => [entry.worker_id, entry]))
 
-        setRows(Object.fromEntries(sheetWorkers.map((worker) => {
+        const baseline = Object.fromEntries(sheetWorkers.map((worker) => {
             const existing = existingByWorker.get(worker.id)
             const contexts = contextsByWorker.get(worker.id) ?? []
             const existingAllocations = existing ? allocationsByEntry.get(existing.id) ?? [] : []
@@ -284,12 +344,27 @@ export default function BaseDailyProductionSheet({
                 machineMeters,
                 savedUnallocatedMeters: hasUnallocatedHistoricalTotal ? existing!.meters : null,
             }]
-        })))
-    }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers])
+        }))
+        setDraftStatus('none')
+        setCorrectionReason('')
+        try {
+            const draft = draftKey ? parseBaseProductionDraft(localStorage.getItem(draftKey)) : null
+            if (draft && currentBatch?.client_request_id === draft.requestId) {
+                localStorage.removeItem(draftKey!)
+            } else if (draft) {
+                setRows({ ...baseline, ...draft.rows })
+                setRequestId(draft.requestId)
+                setCorrectionReason(draft.reason)
+                setDraftStatus(draft.revision === (currentBatch?.updated_at ?? null) ? 'local' : 'conflict')
+                return
+            }
+        } catch { setDraftStatus('error') }
+        setRows(baseline)
+        setRequestId(newClientRequestId())
+    }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers, draftKey, currentBatch?.client_request_id, currentBatch?.updated_at, draftReset])
 
     useEffect(() => {
         setUnlockedBatchId(null)
-        setCorrectionReason('')
     }, [productionDate, shift])
 
     function getRow(workerId: string): DraftRow {
@@ -331,12 +406,24 @@ export default function BaseDailyProductionSheet({
                 return Boolean(enteredMeters) && !context.jobId
             })
         }).length
+    const unmatchedDraftMeters = Object.entries(rows).some(([workerId, row]) => {
+        if (row.status !== 'entered') return false
+        const contexts = contextsByWorker.get(workerId) ?? []
+        return (!sheetWorkers.some(worker => worker.id === workerId) && parseMeters(row.meters) > 0)
+            || Object.entries(row.machineMeters).some(([key, value]) => parseMeters(value) > 0 && !contexts.some(context => contextKey(context) === key))
+    })
 
     function updateRow(workerId: string, update: Partial<DraftRow>) {
-        setRows((current) => {
-            const previous = current[workerId] ?? { meters: '', status: 'blank' as const, machineMeters: {}, savedUnallocatedMeters: null }
-            return { ...current, [workerId]: { ...previous, ...update } }
-        })
+        const previous = rows[workerId] ?? { meters: '', status: 'blank' as const, machineMeters: {}, savedUnallocatedMeters: null }
+        const next = { ...rows, [workerId]: { ...previous, ...update } }
+        const nextRequestId = newClientRequestId()
+        setRows(next)
+        setRequestId(nextRequestId)
+        try {
+            if (!draftKey) throw new Error('Draft owner is unavailable')
+            localStorage.setItem(draftKey, JSON.stringify({ version: 1, revision: currentBatch?.updated_at ?? null, requestId: nextRequestId, reason: correctionReason, rows: next }))
+            setDraftStatus('local')
+        } catch { setDraftStatus('error') }
     }
 
     function handleUnassignedMetersChange(workerId: string, value: string) {
@@ -380,6 +467,10 @@ export default function BaseDailyProductionSheet({
 
     async function handleSave() {
         if (isSaving) return
+        if (draftStatus === 'conflict' || unmatchedDraftMeters) {
+            toast.error('Review the changed shift or assignments before saving. Your local draft is retained.')
+            return
+        }
         if (isCurrentBatchLocked) {
             toast.error('This production sheet is finalized and cannot be changed.')
             return
@@ -403,6 +494,7 @@ export default function BaseDailyProductionSheet({
                 productionDate,
                 shift,
                 clientRequestId: requestId,
+                expectedUpdatedAt: currentBatch?.updated_at ?? null,
                 correctionReason: currentBatch ? correctionReason : undefined,
                 entries: sheetWorkers.map((worker) => {
                     const row = getRow(worker.id)
@@ -410,6 +502,7 @@ export default function BaseDailyProductionSheet({
                     const totalMeters = getRowTotal(worker.id)
                     return {
                         workerId: worker.id,
+                        notes: currentBatchEntries.find(entry => entry.worker_id === worker.id)?.notes ?? undefined,
                         meters: row.status === 'blank' ? null : row.status === 'entered' ? Number(totalMeters.toFixed(2)) : 0,
                         status: row.status,
                         allocations: row.status === 'entered'
@@ -434,6 +527,10 @@ export default function BaseDailyProductionSheet({
             toast.success(summaryData?.idempotent ? 'This shift was already saved.' : `Shift saved · ${formatMeters(Number(summaryData?.total_meters ?? summary.total_meters))}`)
             setUnlockedBatchId(null)
             setCorrectionReason('')
+            if (draftKey) {
+                try { localStorage.removeItem(draftKey) } catch { /* The stored request ID is recognized on restore. */ }
+            }
+            setDraftStatus('none')
             setRequestId(newClientRequestId())
             router.refresh()
         } catch (error) {
@@ -448,8 +545,15 @@ export default function BaseDailyProductionSheet({
     const assignedWorkers = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length > 0)
     const unassignedWorkers = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length === 0)
 
+    if (navigation.entry && (!selectedEntry || !selectedEntry.batch_id)) {
+        return <Card><CardHeader><CardTitle>{selectedEntry ? 'Legacy production record' : 'Record not found'}</CardTitle><CardDescription>{selectedEntry ? 'This older worker total has no machine sheet. Its saved production and pay remain included.' : 'This record is unavailable in your workspace.'}</CardDescription></CardHeader><CardContent className="space-y-3">{selectedEntry && <p>{workerById.get(selectedEntry.worker_id)?.name ?? 'Worker'} · {formatDateOnly(selectedEntry.production_date)} · {formatMeters(selectedEntry.meters)} · saved rate ₹{selectedEntry.worker_rate_snapshot.toFixed(2)}/m</p>}<Button asChild variant="outline"><Link href="/owner/production">Open daily production</Link></Button></CardContent></Card>
+    }
+
     return (
         <div className="space-y-4">
+            {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Setup or discard the local draft before saving; no metres have been silently removed.</p>}
+            {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
+            {draftStatus !== 'none' && <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'local' ? 'Draft saved on this device. Save the shift to confirm production and pay.' : draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={() => { if (!window.confirm(tx('Discard this local draft and load the saved shift?'))) return; try { if (draftKey) localStorage.removeItem(draftKey); setDraftReset(value => value + 1) } catch { toast.error('The draft could not be cleared.') } }}>Discard local draft</Button></div>}
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-bold text-ink">Daily machine production</h2>
@@ -465,11 +569,11 @@ export default function BaseDailyProductionSheet({
                     <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="base-daily-date">Date</Label>
-                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} onChange={(event) => setProductionDate(event.target.value)} />
+                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} />
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="base-daily-shift">Shift</Label>
-                            <Select value={shift} onValueChange={(value) => setShift(value as 'day' | 'night')}>
+                            <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
                                 <SelectTrigger id="base-daily-shift"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="day">Day shift</SelectItem>
@@ -493,7 +597,7 @@ export default function BaseDailyProductionSheet({
                         <span>
                             {isCurrentBatchLocked ? 'Finalized' : 'Saved'} for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift.{' '}
                             {isCurrentBatchLocked
-                                ? 'Corrections are locked because the sheet is finalized or worker pay is settled.'
+                                ? 'All worker entries on this sheet are settled and protected.'
                                 : isSavedBatchProtected
                                     ? 'Editing is locked to prevent accidental changes.'
                                     : 'Correction mode is active. Review every changed value before saving.'}
@@ -541,12 +645,12 @@ export default function BaseDailyProductionSheet({
                                     const row = getRow(context.workerId!)
                                     const value = row.machineMeters[contextKey(context)] ?? ''
                                     return (
-                                        <div key={context.machineId} className="grid grid-cols-[minmax(0,1fr)_112px] gap-x-3 gap-y-2 px-3 py-3 [contain-intrinsic-size:104px] [content-visibility:auto] md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] md:items-center md:px-4 md:py-4">
-                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{context.machineLabel}</p><p className="truncate text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}<span className="md:hidden"> · {context.workerName}</span></p></div>
-                                            <div className="hidden text-sm text-body md:block"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</p></div>
+                                        <div key={context.machineId} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_112px] gap-x-3 gap-y-2 px-3 py-3 [contain-intrinsic-size:104px] [content-visibility:auto] md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.25fr)_150px] md:items-center md:px-4 md:py-4">
+                                            <div className="min-w-0"><p className="truncate font-semibold text-ink">{context.machineLabel}</p><p className="truncate text-xs text-muted-foreground">{context.machineType.replaceAll('_', ' ')}<span className="md:hidden"> · {context.workerName}{settledWorkerIds.has(context.workerId!) && <span className="block font-semibold">Paid · protected</span>}</span></p></div>
+                                            <div className="hidden text-sm text-body md:block"><span className="font-semibold text-ink">{context.workerName}</span><p className="text-xs text-muted-foreground">{settledWorkerIds.has(context.workerId!) ? 'Paid · protected' : toWorkerStatusLabel(row.status)}</p></div>
                                             <div className="min-w-0 md:col-auto">
                                                 <div className="flex min-w-0 items-center gap-2"><Badge variant={context.jobId ? 'secondary' : 'warning'} className="max-w-full truncate">{context.jobLabel ?? 'Job not assigned'}</Badge>{context.jobId && <span className="hidden shrink-0 text-xs font-semibold text-body sm:inline">₹{context.ratePerMeter.toFixed(2)}/m</span>}</div>
-                                                {!context.jobId && <p className="mt-1 text-xs font-medium text-warning">Assign a production job before entering metres.</p>}
+                                                    {!context.jobId && <Button variant="link" size="sm" onClick={openSetup}>Assign a production job</Button>}
                                             </div>
                                             <Input
                                                 aria-label={`${context.machineLabel} ${context.workerName} metres`}
@@ -557,7 +661,7 @@ export default function BaseDailyProductionSheet({
                                                 placeholder="Metres"
                                                 data-base-machine-meters
                                                 value={value}
-                                                disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || !context.jobId}
+                                                disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(context.workerId!) || !context.jobId}
                                                 onChange={(event) => handleMachineMetersChange(context, event.target.value)}
                                                 onKeyDown={handleMachineMetersKeyDown}
                                                 onFocus={(event) => event.currentTarget.select()}
@@ -569,7 +673,7 @@ export default function BaseDailyProductionSheet({
                                 {unassignedMachines.map((context) => (
                                     <div key={context.machineId} className="flex items-start gap-2 bg-warning/5 px-4 py-4 text-sm">
                                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-                                        <div><p className="font-semibold text-ink">{context.machineLabel} has no worker for this shift</p><p className="text-xs text-body">Assign a worker before entering production so the metres can flow into payroll.</p></div>
+                                        <div><p className="font-semibold text-ink">{context.machineLabel} has no worker for this shift</p><p className="text-xs text-body">Assign a worker before entering production so the metres can flow into payroll.</p><Button variant="outline" size="sm" className="mt-2" onClick={openSetup}>Assign worker in Setup</Button></div>
                                     </div>
                                 ))}
                                 {machineContexts.length === 0 && <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-sm text-body"><p>No active machines are available for this shift. Add a machine and assign a worker first.</p><Button variant="outline" size="sm" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>}
@@ -601,7 +705,7 @@ export default function BaseDailyProductionSheet({
                                     <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
                                         <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p></div>
                                         <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline">{context.machineLabel}</Badge></span>) : <span className="text-warning">Unassigned worker entry</span>}</div>
-                                        <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled}>
+                                        <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled || settledWorkerIds.has(worker.id)}>
                                             <SelectTrigger className="w-full" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="blank">Not entered</SelectItem>
@@ -630,7 +734,7 @@ export default function BaseDailyProductionSheet({
                                             inputMode="decimal"
                                             placeholder="Metres"
                                             value={row.meters}
-                                            disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled}
+                                            disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id)}
                                             onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
                                             className="text-right font-semibold"
                                         />
@@ -648,10 +752,10 @@ export default function BaseDailyProductionSheet({
                         <div className="hidden rounded-lg bg-saffron-soft p-2 text-saffron-deep sm:block"><Save className="h-4 w-4" /></div>
                         <div>
                             <p className="whitespace-nowrap font-bold text-ink">{formatMeters(summary.total_meters)} · {summary.entered_count}/{sheetWorkers.length}</p>
-                            <p className="hidden text-xs text-body sm:block">{summary.outstanding_count} not entered · {summary.zero_count} zero · {summary.absent_count} absent</p>
+                            <p className="text-xs text-body">{summary.outstanding_count} not entered · {summary.zero_count} zero · {summary.absent_count} absent</p>
                         </div>
                     </div>
-                    <Button onClick={handleSave} disabled={isSaving || areInputsDisabled || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="min-w-[132px] sm:min-w-[210px]">
+                    <Button onClick={handleSave} disabled={isSaving || areInputsDisabled || unmatchedDraftMeters || invalidEnteredCount > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="min-w-[132px] sm:min-w-[210px]">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         <span className="sm:hidden">{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
                         <span className="hidden sm:inline">{isSaving ? 'Saving machine sheet…' : currentBatch ? 'Save production correction' : 'Save machine production'}</span>
@@ -724,6 +828,8 @@ export default function BaseDailyProductionSheet({
                                         <Badge variant={revision.change_kind === 'created' ? 'secondary' : 'warning'}>{revision.change_kind === 'created' ? 'Original' : 'Corrected'}</Badge>
                                     </div>
                                     {revision.correction_reason && <p className="mt-3 text-sm leading-relaxed text-body">{revision.correction_reason}</p>}
+                                    <p className="mt-1 text-xs text-muted-foreground">Changed by {revision.changed_by === initialData.actorId ? 'you' : revision.changed_by ? `owner ${revision.changed_by.slice(0, 8)}` : 'an earlier owner'}</p>
+                                    {baseProductionAuditChanges(revision.before_snapshot, revision.after_snapshot).map(change => <div key={change.key} className="mt-2 rounded-md border border-hairline p-2 text-xs"><p className="font-semibold">{workerById.get(change.line.workerId)?.name ?? 'Worker'} · {change.line.machine}{change.line.job ? ` · ${change.line.job}` : ''}</p><p>Metres: {formatMeters(change.before?.meters ?? 0)} → {formatMeters(change.after?.meters ?? 0)}</p><p>Rate: ₹{(change.before?.rate ?? 0).toFixed(2)}/m → ₹{(change.after?.rate ?? 0).toFixed(2)}/m</p><p>Earnings: ₹{(change.before?.pay ?? 0).toFixed(2)} → ₹{(change.after?.pay ?? 0).toFixed(2)}</p><p>Status: {change.before?.status ?? 'Not recorded'} → {change.after?.status ?? 'Removed'}</p></div>)}
                                     <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-soft px-2.5 py-2 text-xs text-body">
                                         {beforeMeters === null
                                             ? <span><strong className="text-ink">{formatMeters(afterMeters)}</strong> recorded</span>

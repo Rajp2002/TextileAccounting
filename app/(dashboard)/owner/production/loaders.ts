@@ -1,5 +1,8 @@
 import 'server-only'
 
+import { readCompleteBaseRows } from '@/lib/base-complete-query'
+import { readBaseRevisionEntries } from '@/lib/base-production-audit'
+
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
     calculateBaseWorkerPayables,
@@ -26,6 +29,7 @@ import {
 
 export type BaseProductionInitialData = {
     orgId: string
+    actorId?: string
     factoryName?: string
     today: string
     payrollPeriod: { start: string; end: string }
@@ -84,6 +88,7 @@ function toRevisionSnapshot(value: unknown): BaseProductionRevisionSnapshot {
         zero_count: Math.max(0, Number(snapshot.zero_count) || 0),
         absent_count: Math.max(0, Number(snapshot.absent_count) || 0),
         worker_count: Math.max(0, Number(snapshot.worker_count) || 0),
+        entries: readBaseRevisionEntries(snapshot.entries),
     }
 }
 
@@ -113,85 +118,113 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .select('name')
             .eq('id', orgId)
             .maybeSingle(),
-        supabase
+        readCompleteBaseRows((from, to) => supabase
             .from('estimator_quotes')
-            .select('id, quality_label, costing_group_id, version_number, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m')
+            .select('id, quality_label, costing_group_id, version_number, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .eq('record_kind', 'costing')
             .eq('is_archived', false)
-            .order('updated_at', { ascending: false }),
-        supabase
+            .order('updated_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_production_jobs')
-            .select('id, costing_id, costing_group_id, costing_version, quality_label, target_meters, start_date, due_date, customer_reference, notes, status, worker_rate_per_meter, planned_cost_per_meter, planned_price_per_meter, created_at')
+            .select('id, costing_id, costing_group_id, costing_version, quality_label, target_meters, start_date, due_date, customer_reference, notes, status, worker_rate_per_meter, planned_cost_per_meter, planned_price_per_meter, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
-            .order('updated_at', { ascending: false }),
-        supabase
+            .order('updated_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_production_entries')
-            .select('id, job_id, worker_id, production_date, meters, worker_rate_snapshot, notes, created_at')
+            .select('id, job_id, worker_id, production_date, meters, worker_rate_snapshot, notes, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('production_date', { ascending: false })
-            .order('created_at', { ascending: false }),
-        supabase
+            .order('created_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_production_workers')
-            .select('id, name, rate_per_meter, shift_availability, is_active')
+            .select('id, name, rate_per_meter, shift_availability, is_active', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('is_active', { ascending: false })
-            .order('name'),
-        supabase
+            .order('name')
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_worker_advances')
-            .select('id, worker_id, amount, recovered_amount, description, status, created_at')
+            .select('id, worker_id, amount, recovered_amount, description, status, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
-            .order('created_at', { ascending: false }),
-        supabase
+            .order('created_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_payroll_settlements')
-            .select('id, worker_id, period_start, period_end, gross_pay, advance_deducted, net_payout, payment_mode, paid_at, worker_name_snapshot, advance_balance_before, remaining_advance_balance')
+            .select('id, worker_id, period_start, period_end, gross_pay, advance_deducted, net_payout, payment_mode, paid_at, worker_name_snapshot, advance_balance_before, remaining_advance_balance, status, recovery_receipt_complete, reversal:base_payroll_reversals(reason, created_at)', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
-            .order('period_end', { ascending: false }),
-        supabase
+            .order('period_end', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_payroll_settlement_lines')
-            .select('id, settlement_id, worker_id, production_date, shift, machine_id, machine_label, job_id, costing_label, meters, worker_rate_snapshot, gross_pay, source_kind')
+            .select('id, settlement_id, worker_id, production_date, shift, machine_id, machine_label, job_id, costing_label, meters, worker_rate_snapshot, gross_pay, source_kind', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('production_date')
-            .order('machine_label'),
-        supabase
+            .order('machine_label')
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_production_machines')
-            .select('id, name, machine_type, custom_label, is_active')
+            .select('id, name, machine_type, custom_label, is_active', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('is_active', { ascending: false })
-            .order('name'),
-        supabase
+            .order('name')
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_worker_machine_assignments')
-            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to')
+            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('active', { ascending: false })
-            .order('effective_from', { ascending: false }),
-        supabase
+            .order('effective_from', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_machine_job_contexts')
-            .select('id, machine_id, job_id, active, effective_from, effective_to')
+            .select('id, machine_id, job_id, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('active', { ascending: false })
-            .order('effective_from', { ascending: false }),
-        supabase
+            .order('effective_from', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_production_batches')
-            .select('id, production_date, shift, status, client_request_id, created_at, updated_at')
+            .select('id, production_date, shift, status, client_request_id, created_at, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('production_date', { ascending: false })
-            .order('shift'),
-        supabase
+            .order('shift')
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_production_batch_revisions')
-            .select('id, batch_id, revision_number, change_kind, correction_reason, before_snapshot, after_snapshot, changed_at')
+            .select('id, batch_id, revision_number, change_kind, correction_reason, before_snapshot, after_snapshot, changed_at, changed_by', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
-            .order('changed_at', { ascending: false }),
-        supabase
+            .order('changed_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_daily_production_entries')
-            .select('id, batch_id, worker_id, entry_status, meters, worker_rate_snapshot, machine_id, job_id, machine_label, job_label, assignment_snapshot, allocation_mode, notes, updated_at')
+            .select('id, batch_id, worker_id, entry_status, meters, worker_rate_snapshot, machine_id, job_id, machine_label, job_label, assignment_snapshot, allocation_mode, notes, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
-            .order('updated_at', { ascending: false }),
-        supabase
+            .order('updated_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
             .from('base_daily_production_allocations')
-            .select('id, entry_id, worker_id, assignment_id, machine_id, job_id, meters, worker_rate_snapshot, machine_label, job_label, assignment_snapshot, created_at')
+            .select('id, entry_id, worker_id, assignment_id, machine_id, job_id, meters, worker_rate_snapshot, machine_label, job_label, assignment_snapshot, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false })
+            .order('id')
+            .range(from, to)),
     ])
 
     if (organizationResult.error) {
@@ -274,20 +307,27 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         created_at: String(row.created_at || new Date(0).toISOString()),
     }))
 
-    const settlements: BasePayrollSettlement[] = rawSettlements.map((row) => ({
-        id: String(row.id),
-        worker_id: String(row.worker_id),
-        period_start: toDate(row.period_start, payrollPeriod.start),
-        period_end: toDate(row.period_end, today),
-        gross_pay: toBaseNumber(row.gross_pay),
-        advance_deducted: toBaseNumber(row.advance_deducted),
-        net_payout: toBaseNumber(row.net_payout),
-        payment_mode: toPaymentMode(row.payment_mode),
-        paid_at: String(row.paid_at || new Date(0).toISOString()),
-        worker_name_snapshot: String(row.worker_name_snapshot || 'Worker'),
-        advance_balance_before: toBaseNumber(row.advance_balance_before),
-        remaining_advance_balance: toBaseNumber(row.remaining_advance_balance),
-    }))
+    const settlements: BasePayrollSettlement[] = rawSettlements.map((row) => {
+        const reversal = Array.isArray(row.reversal) ? row.reversal[0] : row.reversal
+        return {
+            id: String(row.id),
+            worker_id: String(row.worker_id),
+            period_start: toDate(row.period_start, payrollPeriod.start),
+            period_end: toDate(row.period_end, today),
+            gross_pay: toBaseNumber(row.gross_pay),
+            advance_deducted: toBaseNumber(row.advance_deducted),
+            net_payout: toBaseNumber(row.net_payout),
+            payment_mode: toPaymentMode(row.payment_mode),
+            status: row.status === 'reversed' ? 'reversed' : 'paid',
+            recovery_receipt_complete: row.recovery_receipt_complete === true,
+            reversal_reason: toStringOrNull(reversal?.reason),
+            reversed_at: toStringOrNull(reversal?.created_at),
+            paid_at: String(row.paid_at || new Date(0).toISOString()),
+            worker_name_snapshot: String(row.worker_name_snapshot || 'Worker'),
+            advance_balance_before: toBaseNumber(row.advance_balance_before),
+            remaining_advance_balance: toBaseNumber(row.remaining_advance_balance),
+        }
+    })
 
     const settlementLines: BasePayrollSettlementLine[] = rawSettlementLines.map((row) => ({
         id: String(row.id),
@@ -353,11 +393,13 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         before_snapshot: row.before_snapshot ? toRevisionSnapshot(row.before_snapshot) : null,
         after_snapshot: toRevisionSnapshot(row.after_snapshot),
         changed_at: String(row.changed_at || new Date(0).toISOString()),
+        changed_by: toStringOrNull(row.changed_by),
     }))
 
     const batchById = new Map(dailyBatches.map((batch) => [batch.id, batch]))
     const dailyEntries: BaseProductionEntry[] = rawDailyEntries.map((row) => {
         const batch = batchById.get(String(row.batch_id))
+        if (!batch) throw new Error('Production history is incomplete. Reload before continuing.')
         const entryStatus = toDailyStatus(row.entry_status)
 
         return {

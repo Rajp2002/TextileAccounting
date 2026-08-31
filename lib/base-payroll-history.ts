@@ -15,6 +15,8 @@ export type BasePayrollHistoryEarning = {
 }
 
 export type BasePayrollHistoryWorker = {
+    status?: 'paid' | 'reversed'
+    reversalReason?: string | null
     settlementId: string
     workerId: string
     workerName: string
@@ -112,6 +114,8 @@ export function buildBasePayrollHistory(
 
             return {
                 settlementId: settlement.id,
+                status: settlement.status ?? 'paid',
+                reversalReason: settlement.reversal_reason,
                 workerId: settlement.worker_id,
                 workerName: settlement.worker_name_snapshot ?? 'Worker',
                 grossPay: settlement.gross_pay,
@@ -127,7 +131,7 @@ export function buildBasePayrollHistory(
         }).sort((a, b) => a.workerName.localeCompare(b.workerName))
 
         const machineGroups = new Map<string, BasePayrollHistoryMachine>()
-        for (const worker of workers) {
+        for (const worker of workers.filter(worker => worker.status !== 'reversed')) {
             for (const earning of worker.earnings) {
                 const machineKey = earning.machineId ?? earning.machineLabel
                 const current = machineGroups.get(machineKey) ?? {
@@ -163,26 +167,27 @@ export function buildBasePayrollHistory(
             end,
             workers,
             machines: [...machineGroups.values()].sort((a, b) => a.machineLabel.localeCompare(b.machineLabel)),
-            totalMeters: round(workers.reduce((sum, worker) => sum + worker.meters, 0)),
-            totalGrossPay: round(workers.reduce((sum, worker) => sum + worker.grossPay, 0)),
-            totalAdvanceRecovered: round(workers.reduce((sum, worker) => sum + worker.advanceRecovered, 0)),
-            totalNetPayout: round(workers.reduce((sum, worker) => sum + worker.netPayout, 0)),
-            paymentModes: [...new Set(workers.map((worker) => worker.paymentMode))],
+            totalMeters: round(workers.filter(worker => worker.status !== 'reversed').reduce((sum, worker) => sum + worker.meters, 0)),
+            totalGrossPay: round(workers.filter(worker => worker.status !== 'reversed').reduce((sum, worker) => sum + worker.grossPay, 0)),
+            totalAdvanceRecovered: round(workers.filter(worker => worker.status !== 'reversed').reduce((sum, worker) => sum + worker.advanceRecovered, 0)),
+            totalNetPayout: round(workers.filter(worker => worker.status !== 'reversed').reduce((sum, worker) => sum + worker.netPayout, 0)),
+            paymentModes: [...new Set(workers.filter(worker => worker.status !== 'reversed').map((worker) => worker.paymentMode))],
             latestPaidAt: workers.map((worker) => worker.paidAt).sort().at(-1) ?? '',
         }
     }).sort((a, b) => b.end.localeCompare(a.end) || b.start.localeCompare(a.start))
 }
 
 function csvCell(value: string | number) {
-    const text = String(value)
-    return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+    // Prevent spreadsheet formulas in owner-entered names and reversal reasons.
+    const text = typeof value === 'string' && /^[\s]*[=+@-]/.test(value) ? `'${value}` : String(value)
+    return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
 export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
     const headers = [
         'Period Start', 'Period End', 'Worker', 'Machine', 'Costing', 'Weaver Rate per Metre',
         'Metres', 'Line Gross Pay', 'Worker Gross Pay', 'Advance Balance Before',
-        'Advance Recovered', 'Remaining Advance Balance', 'Worker Net Pay', 'Payment Mode', 'Paid At',
+        'Advance Recovered', 'Remaining Advance Balance', 'Worker Net Pay', 'Payment Mode', 'Paid At', 'Record Status', 'Reversal Reason',
     ]
     const rows: Array<Array<string | number>> = []
 
@@ -195,7 +200,7 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
                 period.start, period.end, worker.workerName, earning.machineLabel, earning.costingLabel,
                 earning.rate, earning.meters, earning.grossPay, worker.grossPay,
                 worker.advanceBalanceBefore, worker.advanceRecovered, worker.remainingAdvanceBalance,
-                worker.netPayout, worker.paymentMode, worker.paidAt,
+                worker.netPayout, worker.paymentMode, worker.paidAt, worker.status ?? 'paid', worker.reversalReason ?? '',
             ])
         }
     }

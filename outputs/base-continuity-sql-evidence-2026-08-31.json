@@ -1,0 +1,16 @@
+{
+  "passed": 10,
+  "checks": [
+    "stale review rolls back settlement, history and advance recovery",
+    "first payment includes prior-month earnings and immutable lines",
+    "retry does not double-pay or recover an advance twice",
+    "later settlement continues across month boundary without double counting",
+    "reversal preserves original lines, restores exact advances, rejects dependent reversal and old payment replay",
+    "legacy payment without advance provenance cannot be reversed automatically",
+    "corrections require reason, reject stale revisions, and retain old request receipts without overwriting later edits",
+    "legacy production insert also rejects work hidden behind a paid period",
+    "unpaid coworker can be corrected while paid row identity, notes, earnings and receipt remain protected",
+    "unauthenticated request and anonymous execution rejected"
+  ],
+  "environment": "isolated PGlite; no remote writes"
+}

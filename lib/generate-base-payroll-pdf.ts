@@ -963,7 +963,9 @@ export async function generateBasePayrollPdf(
     filename: string
     blob: Blob
 }> {
-    const normalizedData = normalizePayrollPdfData(period, options.factoryName)
+    const activeWorkers = period.workers.filter(worker => worker.status !== 'reversed')
+    if (activeWorkers.length === 0) throw new Error('This period has no active payment records to export.')
+    const normalizedData = normalizePayrollPdfData({ ...period, workers: activeWorkers }, options.factoryName)
     const renderer = new BasePayrollPdfRenderer(normalizedData)
     const doc = renderer.render()
     const filename = buildBasePayrollPdfFilename(

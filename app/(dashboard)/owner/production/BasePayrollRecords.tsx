@@ -1,6 +1,7 @@
 'use client'
 
 import { useDeferredValue, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
     ChevronDown,
     ChevronRight,
@@ -16,13 +17,16 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { reverseBasePayrollSettlement } from './actions'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatINR } from '@/lib/finance'
 import {
     buildBasePayrollHistory,
     buildBasePayrollHistoryCsv,
-    type BasePayrollHistoryPeriod,
 } from '@/lib/base-payroll-history'
 import { generateBasePayrollPdf } from '@/lib/generate-base-payroll-pdf'
 import type { BasePayrollPaymentMode } from '@/lib/base-production-core'
@@ -89,6 +93,26 @@ export default function BasePayrollRecords({
     initialData: BaseProductionInitialData
     onBack: () => void
 }) {
+    const router = useRouter()
+    const [reversingId, setReversingId] = useState<string | null>(null)
+    const [reversalReason, setReversalReason] = useState('')
+    const [paymentNotMade, setPaymentNotMade] = useState(false)
+    const [reversing, setReversing] = useState(false)
+
+    const reversalTarget = initialData.settlements.find(settlement => settlement.id === reversingId)
+
+    async function confirmReversal() {
+        if (!reversingId || reversing || !paymentNotMade) return
+        setReversing(true)
+        try {
+            const result = await reverseBasePayrollSettlement({ settlementId: reversingId, reason: reversalReason, paymentNotMade })
+            if ('error' in result) { toast.error(result.error); return }
+            toast.success('Reversal recorded. The original payment record is preserved.')
+            setReversingId(null)
+            router.refresh()
+        } catch { toast.error('Reversal could not be confirmed. Reload records before trying again.') }
+        finally { setReversing(false) }
+    }
     const periods = useMemo(
         () => buildBasePayrollHistory(initialData.settlements, initialData.settlementLines),
         [initialData.settlementLines, initialData.settlements],
@@ -152,7 +176,7 @@ export default function BasePayrollRecords({
         if (!selectedPeriod || exportingPdf) return
         setExportingPdf(true)
         try {
-            await generateBasePayrollPdf(selectedPeriod, {
+            await generateBasePayrollPdf({ ...selectedPeriod, workers: selectedPeriod.workers.filter(worker => worker.status !== 'reversed') }, {
                 factoryName: initialData.factoryName,
                 autoSave: true,
             })
@@ -167,6 +191,14 @@ export default function BasePayrollRecords({
 
     return (
         <div className="space-y-5">
+            <Dialog open={Boolean(reversingId)} onOpenChange={open => { if (!open && !reversing) setReversingId(null) }}>
+                <DialogContent><DialogHeader><DialogTitle>Reverse a mistaken payment record?</DialogTitle><DialogDescription>This preserves the original receipt, restores its recorded advance recovery, and makes the earnings outstanding again. It does not reverse cash or a bank transfer. Use this only when payment was not actually made.</DialogDescription></DialogHeader>
+                    <p className="rounded-lg border border-hairline bg-surface-soft p-3 text-sm"><strong>{reversalTarget?.worker_name_snapshot}</strong> · {formatINR(reversalTarget?.net_payout ?? 0)}<br />{formatDateOnly(reversalTarget?.period_start)} – {formatDateOnly(reversalTarget?.period_end)}</p>
+                    <Label htmlFor="base-reversal-reason">Reason for reversal</Label><Textarea id="base-reversal-reason" value={reversalReason} onChange={event => setReversalReason(event.target.value)} maxLength={240} disabled={reversing} />
+                    <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={paymentNotMade} disabled={reversing} onChange={event => setPaymentNotMade(event.target.checked)} />I confirm this payment was not actually made.</label>
+                    <DialogFooter><Button variant="outline" disabled={reversing} onClick={() => setReversingId(null)}>Keep record</Button><Button disabled={reversing || !paymentNotMade || reversalReason.trim().length < 3} onClick={() => void confirmReversal()}>{reversing ? 'Recording reversal…' : 'Record reversal'}</Button></DialogFooter>
+                </DialogContent>
+            </Dialog>
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                 <div>
                     <div className="flex items-center gap-2">
@@ -198,7 +230,7 @@ export default function BasePayrollRecords({
                                         <SelectContent>
                                             {periods.map((period) => (
                                                 <SelectItem key={period.key} value={period.key}>
-                                                    {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {formatCount(period.workers.length, 'worker')}
+                                                    {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {formatCount(period.workers.length, 'record')}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -214,17 +246,18 @@ export default function BasePayrollRecords({
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <Button variant="outline" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> Export CSV</Button>
-                                <Button onClick={() => void exportPdf()} disabled={exportingPdf}><FileText className="h-4 w-4" /> {exportingPdf ? 'Preparing PDF…' : 'Export PDF'}</Button>
+                                <Button onClick={() => void exportPdf()} disabled={exportingPdf || selectedPeriod.workers.every(worker => worker.status === 'reversed')}><FileText className="h-4 w-4" /> {exportingPdf ? 'Preparing PDF…' : 'Export PDF'}</Button>
                             </div>
                         </CardContent>
                     </Card>
 
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <SummaryMetric label="Total production" value={formatMeters(selectedPeriod.totalMeters)} detail={formatCount(selectedPeriod.machines.length, 'machine')} />
-                        <SummaryMetric label="Gross earnings" value={formatINR(selectedPeriod.totalGrossPay)} detail={`${formatCount(selectedPeriod.workers.length, 'worker')} settled`} />
+                        <SummaryMetric label="Gross earnings" value={formatINR(selectedPeriod.totalGrossPay)} detail={`${formatCount(selectedPeriod.workers.filter(worker => worker.status !== 'reversed').length, 'worker')} settled`} />
                         <SummaryMetric label="Advances recovered" value={formatINR(selectedPeriod.totalAdvanceRecovered)} detail="Deducted in this period" />
                         <SummaryMetric label="Net payroll" value={formatINR(selectedPeriod.totalNetPayout)} detail={`Paid by ${selectedPeriod.paymentModes.map(mode => mode === 'upi' ? 'UPI' : paymentModeLabel(mode).toLocaleLowerCase('en-IN')).join(', ')}`} />
                     </div>
+                    {selectedPeriod.workers.some(worker => worker.status === 'reversed') && <p className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm">Reversed records remain below and in the CSV audit export. They are excluded from payment totals, machine totals, and the active-payment PDF.</p>}
 
                     <Tabs defaultValue="workers" className="space-y-4">
                         <TabsList className="grid h-auto w-full grid-cols-2 sm:w-[360px]">
@@ -234,6 +267,9 @@ export default function BasePayrollRecords({
 
                         <TabsContent value="workers" className="space-y-3">
                             {visibleWorkers.map((worker) => {
+                                const original = initialData.settlements.find(settlement => settlement.id === worker.settlementId)
+                                const hasLaterPayment = initialData.settlements.some(settlement => settlement.worker_id === worker.workerId && settlement.status !== 'reversed' && settlement.period_end > (original?.period_end ?? ''))
+                                const canReverse = original && worker.status !== 'reversed' && !hasLaterPayment && (original.advance_deducted === 0 || original.recovery_receipt_complete)
                                 const expanded = expandedWorkers.has(worker.settlementId)
                                 const machineCount = new Set(worker.earnings.map((earning) => earning.machineId ?? earning.machineLabel)).size
                                 return (
@@ -243,7 +279,7 @@ export default function BasePayrollRecords({
                                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                                     <div className="flex min-w-0 items-start gap-2">
                                                         {expanded ? <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
-                                                        <div><CardTitle className="text-base">{worker.workerName}</CardTitle><CardDescription>{formatCount(machineCount, 'machine')} · paid {formatDateOnly(worker.paidAt)}</CardDescription></div>
+                                                        <div><CardTitle className="text-base">{worker.workerName}{worker.status === 'reversed' ? ' · Reversed' : ''}</CardTitle><CardDescription>{formatCount(machineCount, 'machine')} · {worker.status === 'reversed' ? 'original record' : 'paid'} {formatDateOnly(worker.paidAt)}</CardDescription></div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
                                                         <div><p className="text-xs text-muted-foreground">Production</p><p className="font-bold text-ink">{formatMeters(worker.meters)}</p></div>
@@ -256,6 +292,7 @@ export default function BasePayrollRecords({
                                         </button>
                                         {expanded && (
                                             <CardContent className="space-y-4 border-t border-hairline pt-4">
+                                                {worker.status === 'reversed' ? <p className="rounded-lg bg-warning/10 p-3 text-sm">Reversed {formatDateOnly(original?.reversed_at)}: {worker.reversalReason}. The amounts below are the preserved original record.</p> : <div className="space-y-2"><Button variant="outline" size="sm" disabled={!canReverse} onClick={() => { setReversingId(worker.settlementId); setReversalReason(''); setPaymentNotMade(false) }}>Resolve mistaken payment record</Button>{!canReverse && <p className="text-xs text-body">{hasLaterPayment ? 'A later payment depends on this record. Resolve the latest settlement first.' : 'This older record lacks the per-advance receipt needed for a safe automatic reversal.'}</p>}</div>}
                                                 <div className="overflow-x-auto rounded-lg border border-hairline">
                                                     <table className="w-full min-w-[720px] text-sm">
                                                         <thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Machine</th><th className="px-3 py-2">Costing</th><th className="px-3 py-2 text-right">Weaver rate</th><th className="px-3 py-2 text-right">Production</th><th className="px-3 py-2 text-right">Earnings</th></tr></thead>

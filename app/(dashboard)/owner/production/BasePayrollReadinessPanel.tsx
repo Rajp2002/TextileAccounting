@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { BasePayrollReadiness } from '@/lib/base-payroll-readiness'
+import { baseProductionHref } from '@/lib/base-production-navigation'
 
 function formatDateOnly(value: string) {
     const [year, month, day] = value.split('-').map(Number)
@@ -65,7 +66,7 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                             {readiness.workers.flatMap((worker) => worker.issues).map((item) => (
                                 <div key={`${item.entryId}:${item.code}`} className="flex items-start justify-between gap-3 rounded-lg border border-warning/25 bg-surface px-3 py-2.5 text-xs">
                                     <div><p className="font-semibold text-ink">{item.message}</p><p className="mt-0.5 text-body">{formatDateOnly(item.productionDate)}{item.shift ? ` · ${item.shift} shift` : ''}</p></div>
-                                    <Button asChild variant="outline" size="xs" className="shrink-0"><Link href="/owner/production">Review</Link></Button>
+                                    <Button asChild variant="outline" size="xs" className="shrink-0"><Link href={baseProductionHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
                                 </div>
                             ))}
                         </div>
