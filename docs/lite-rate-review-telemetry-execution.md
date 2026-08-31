@@ -92,6 +92,18 @@ decreases, multiple yarns, incomplete/invalid recipes, journey sequencing,
 privacy boundaries, observer lifecycle, HTTP failure, authentication, tenant
 derivation, rate limits, metric precision, and migration/event-name parity.
 
+The isolated application commit `a1b21be` passes **1,141 tests, with 1 skipped and
+0 failures**. Targeted ESLint reports **0 errors and 0 warnings**; TypeScript
+and the optimized `next build --webpack` **pass**. The build required network
+access for existing Google Fonts and still reports an outdated Browserslist-data
+warning. Verification used a clean detached checkout because concurrent Base
+payroll changes were present in the shared workspace; those changes were not
+included in this increment.
+
+Package installation reported 12 dependency-tree audit findings (1 moderate,
+11 high). They were not triaged or automatically fixed in this UX increment;
+these results are not a security sign-off.
+
 Keep the increment as a separate commit atop the first trust-recovery increment.
 Reverting the application commit restores the prior UI. The additive telemetry
 schema can remain safely in place; do not narrow the event constraint while
