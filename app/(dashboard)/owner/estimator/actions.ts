@@ -102,6 +102,7 @@ type TemplateRecipeInput = {
     loomType?: string | null
     loomRpm?: number | null
     loomPowerKw?: number | null
+    warpingMode?: 'in_house' | 'outsourced'
     sizingMode?: 'in_house' | 'outsourced'
     hoursPerShift?: number | null
 }
@@ -125,6 +126,7 @@ function templateRecipeSignature(recipe: {
     loomType?: string | null
     loomRpm?: number | string | null
     loomPowerKw?: number | string | null
+    warpingMode?: string | null
     sizingMode?: string | null
     hoursPerShift?: number | string | null
 }) {
@@ -141,6 +143,7 @@ function templateRecipeSignature(recipe: {
         loomType: recipe.loomType ?? null,
         loomRpm: recipe.loomRpm == null ? null : Number(recipe.loomRpm),
         loomPowerKw: recipe.loomPowerKw == null ? null : Number(recipe.loomPowerKw),
+        warpingMode: recipe.warpingMode ?? null,
         sizingMode: recipe.sizingMode ?? null,
         hoursPerShift: recipe.hoursPerShift == null ? null : Number(recipe.hoursPerShift),
     })
@@ -217,6 +220,9 @@ function validateTemplateRecipe(data: TemplateRecipeInput): string | null {
     }))
     if (recipeError) return recipeError
 
+    if (data.warpingMode !== undefined && !['in_house', 'outsourced'].includes(data.warpingMode)) {
+        return 'Warping mode is invalid.'
+    }
     if (data.sizingMode !== undefined && !['in_house', 'outsourced'].includes(data.sizingMode)) {
         return 'Sizing mode is invalid.'
     }
@@ -997,6 +1003,7 @@ export async function updateFabricTemplate(data: {
         loomType: current.loom_type,
         loomRpm: current.loom_rpm,
         loomPowerKw: current.loom_power_kw,
+        warpingMode: current.warping_mode,
         sizingMode: current.sizing_mode,
         hoursPerShift: current.hours_per_shift,
     }) === templateRecipeSignature({
@@ -1010,6 +1017,7 @@ export async function updateFabricTemplate(data: {
         loomType: data.loomType,
         loomRpm: data.loomRpm,
         loomPowerKw: data.loomPowerKw,
+        warpingMode: data.warpingMode,
         sizingMode: data.sizingMode,
         hoursPerShift: data.hoursPerShift,
     })) {

@@ -316,7 +316,8 @@ export interface EstimateState {
   loomRpmIsCustomised:   boolean         // true when owner has manually overridden the default RPM
   loomPowerKwIsCustomised: boolean       // true when owner has manually overridden the default kW
   hoursPerShift:         number | null   // factory shift hours — drives daily output preview (default 12)
-  // ── Sizing Mode ─────────────────────────────────────────────────────────
+  // ── Warping & Sizing Mode ───────────────────────────────────────────────
+  warpingMode:           'in_house' | 'outsourced'  // explicit toggle; in_house = 0 cost
   sizingMode:            'in_house' | 'outsourced'  // explicit toggle; in_house = 0 cost
   // ── kept for backward-compat serialisation (computed, never user-edited) ─
   // Existing snapshots may still contain this legacy value. It is not a
@@ -1665,6 +1666,11 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weaveCostPerM = new Decimal(calcWeaveCostPerMeter(totalPicks, estimate.perPickCostPaisa))
 
   // ── Layer 4: Warping + Sizing ───────────────────────────────────────────
+  // warpingMode toggle: 'in_house' = warping is already in overhead (rate = 0)
+  //                     'outsourced' = real variable cash cost, use warpingRatePerKg
+  const effectiveWarpingRate = (estimate.warpingMode ?? (estimate.warpingRatePerKg > 0 ? 'outsourced' : 'in_house')) === 'outsourced'
+    ? estimate.warpingRatePerKg
+    : 0
   // sizingMode toggle: 'in_house' = sizing is already in overhead (rate = 0)
   //                    'outsourced' = real variable cash cost, use sizingRatePerKg
   const effectiveSizingRate = (estimate.sizingMode ?? 'in_house') === 'outsourced'
@@ -1672,7 +1678,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     : 0
   const warpingAndSizingPerM = new Decimal(calcWarpingCostPerMeter(
     totalWarpKgPer100m.toNumber(),
-    estimate.warpingRatePerKg,
+    effectiveWarpingRate,
     effectiveSizingRate
   ))
 
@@ -1909,7 +1915,8 @@ export function makeDefaultEstimateState(): EstimateState {
     loomRpmIsCustomised:   false,
     loomPowerKwIsCustomised: false,
     hoursPerShift:         12,     // 12h default; editable for 8h single-shift factories
-    // ── Sizing Mode ───────────────────────────────────────────────────────
+    // ── Warping & Sizing Mode ───────────────────────────────────────────────
+    warpingMode:           'in_house', // safe default: treated as factory overhead
     sizingMode:            'in_house', // safe default: no cost increase on existing estimates
     // ─────────────────────────────────────────────────────────────────────
     overheadPct:        0,   // legacy compatibility only

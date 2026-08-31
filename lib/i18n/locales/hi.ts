@@ -1036,6 +1036,8 @@ export const hi = {
     },
     warping_sizing: {
       title: "वार्पिंग और साइज़िंग",
+      warping: "वार्पिंग",
+      sizing: "साइज़िंग",
       warping_per_kg: "वार्पिंग / किलो",
       sizing_per_kg: "साइज़िंग / किलो",
       applied_on: "लागू होता है",

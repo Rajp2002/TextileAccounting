@@ -181,6 +181,7 @@ type QuoteRow = {
     estimator_rpm?: number | null
     estimator_power_kw?: number | null
     hours_per_shift?: number | null
+    warping_mode?: QuoteDraftState['warpingMode']
     sizing_mode?: QuoteDraftState['sizingMode']
     loom_count?: number | null
     monthly_working_days?: number | null
@@ -278,6 +279,7 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         loomRpmIsCustomised: snapshot.loomRpmIsCustomised ?? (quote.estimator_rpm != null),
         loomPowerKwIsCustomised: snapshot.loomPowerKwIsCustomised ?? (quote.estimator_power_kw != null),
         hoursPerShift: numberOr(snapshot.hoursPerShift ?? quote.hours_per_shift, base.hoursPerShift ?? 12),
+        warpingMode: snapshot.warpingMode ?? quote.warping_mode ?? (numberOr(snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg, 0) > 0 ? 'outsourced' : base.warpingMode),
         sizingMode: snapshot.sizingMode ?? quote.sizing_mode ?? base.sizingMode,
         loomCount: numberOr(snapshot.loomCount ?? quote.loom_count, base.loomCount),
         monthlyWorkingDays: numberOr(snapshot.monthlyWorkingDays ?? quote.monthly_working_days, base.monthlyWorkingDays),

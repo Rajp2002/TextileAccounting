@@ -57,6 +57,7 @@ export function buildCostingInputFingerprint(
     loomRpm: state.loomRpm,
     loomPowerKw: state.loomPowerKw,
     hoursPerShift: state.hoursPerShift,
+    warpingMode: state.warpingMode ?? 'in_house',
     sizingMode: state.sizingMode,
     commissionPct: state.commissionPct,
     transportPerM: state.transportPerM,
@@ -159,6 +160,8 @@ export function summarizeCostingInputChanges(
   if (rowFieldChanged(previousWarp, currentWarp, ['beamEnds', 'calculationMode', 'manualKgPer100m'])
     || rowFieldChanged(previousWeft, currentWeft, ['picks', 'calculationMode', 'manualKgPer100m'])
     || numberChanged(previous.perPickCostPaisa, current.perPickCostPaisa)
+    || previous.warpingMode !== current.warpingMode
+    || previous.sizingMode !== current.sizingMode
     || numberChanged(previous.warpingRatePerKg, current.warpingRatePerKg)
     || numberChanged(previous.sizingRatePerKg, current.sizingRatePerKg)
     || numberChanged(previous.windingRatePerKg, current.windingRatePerKg)

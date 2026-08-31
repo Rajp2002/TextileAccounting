@@ -447,7 +447,7 @@ export function validateEstimatorSnapshot(
     allowZero: options.requireTapeLength === false,
   })
   addNumberIssue(issues, warnings, 'perPickCostPaisa', 'Weaving rate', estimate.perPickCostPaisa, { max: MAX_PICK_COST })
-  addNumberIssue(issues, warnings, 'warpingRatePerKg', 'Warping rate', estimate.warpingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: true })
+  addNumberIssue(issues, warnings, 'warpingRatePerKg', 'Warping rate', estimate.warpingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.warpingMode !== 'outsourced', required: estimate.warpingMode === 'outsourced' })
   addNumberIssue(issues, warnings, 'sizingRatePerKg', 'Sizing rate', estimate.sizingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.sizingMode !== 'outsourced', required: estimate.sizingMode === 'outsourced' })
   const sections = estimate.enabledSections
   addNumberIssue(issues, warnings, 'windingRatePerKg', 'Winding rate', estimate.windingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: !sections?.winding, required: Boolean(sections?.winding) })

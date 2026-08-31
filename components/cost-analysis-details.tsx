@@ -78,6 +78,7 @@ function hydrateEstimateFromQuote(quote: QuoteSnapshot, targetMeters: number): E
         loomRpmIsCustomised: quote.estimator_rpm != null,
         loomPowerKwIsCustomised: quote.estimator_power_kw != null,
         hoursPerShift: quote.hours_per_shift == null ? base.hoursPerShift : num(quote.hours_per_shift),
+        warpingMode: (quote.warping_mode as EstimateState['warpingMode'] | null) ?? (num(quote.warping_rate_per_kg, 0) > 0 ? 'outsourced' : base.warpingMode),
         sizingMode: (quote.sizing_mode as EstimateState['sizingMode'] | null) ?? base.sizingMode,
         isConfigured: true,
     }

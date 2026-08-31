@@ -1041,6 +1041,8 @@ export const en = {
     },
     warping_sizing: {
       title: "Warping & Sizing",
+      warping: "Warping",
+      sizing: "Sizing",
       warping_per_kg: "Warping / kg",
       sizing_per_kg: "Sizing / kg",
       applied_on: "Applied on",

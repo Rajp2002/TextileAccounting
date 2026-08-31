@@ -32,6 +32,7 @@ function goldenEstimate(): EstimateState {
   state.tapeLengthM = 100
   state.perPickCostPaisa = 8 / 68
   state.warpingRatePerKg = 12
+  state.warpingMode = 'outsourced'
   state.sizingRatePerKg = 0
   state.sizingMode = 'in_house'
   state.yarnShortagePct = 10

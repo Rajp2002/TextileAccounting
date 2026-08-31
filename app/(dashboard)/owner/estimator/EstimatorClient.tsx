@@ -368,6 +368,7 @@ function recipeSignature(recipe: {
     loomType: string | null | undefined
     loomRpm: number | string | null | undefined
     loomPowerKw: number | string | null | undefined
+    warpingMode: string | null | undefined
     sizingMode: string | null | undefined
     hoursPerShift: number | string | null | undefined
 }) {
@@ -382,6 +383,7 @@ function recipeSignature(recipe: {
         loomType: recipe.loomType ?? null,
         loomRpm: recipe.loomRpm == null ? null : Number(recipe.loomRpm),
         loomPowerKw: recipe.loomPowerKw == null ? null : Number(recipe.loomPowerKw),
+        warpingMode: recipe.warpingMode ?? null,
         sizingMode: recipe.sizingMode ?? null,
         hoursPerShift: recipe.hoursPerShift == null ? null : Number(recipe.hoursPerShift),
     })
@@ -399,6 +401,7 @@ function hasSavedQualityRecipeChanges(template: EstimatorTemplate, state: Estima
         loomType: template.loom_type,
         loomRpm: template.loom_rpm,
         loomPowerKw: template.loom_power_kw,
+        warpingMode: template.warping_mode,
         sizingMode: template.sizing_mode,
         hoursPerShift: template.hours_per_shift,
     }) !== recipeSignature({
@@ -412,6 +415,7 @@ function hasSavedQualityRecipeChanges(template: EstimatorTemplate, state: Estima
         loomType: state.loomType,
         loomRpm: state.loomRpm,
         loomPowerKw: state.loomPowerKw,
+        warpingMode: state.warpingMode,
         sizingMode: state.sizingMode,
         hoursPerShift: state.hoursPerShift,
     })
@@ -534,6 +538,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 loomPowerKw:           tpl.loom_power_kw != null ? Number(tpl.loom_power_kw) : null,
                 loomRpmIsCustomised:   false,
                 loomPowerKwIsCustomised: false,
+                warpingMode:            (tpl.warping_mode ?? (tpl.warping_rate_per_kg ? 'outsourced' : 'in_house')) as 'in_house' | 'outsourced',
                 sizingMode:            (tpl.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 hoursPerShift:         tpl.hours_per_shift != null ? Number(tpl.hours_per_shift) : state.hoursPerShift,
             }
@@ -2587,49 +2592,114 @@ function QuickCostingView({
             <EstimatorCard accent="post">
                 <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
-                    <div className={`grid grid-cols-1 gap-4 ${state.sizingMode === 'outsourced' ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                        <NumField fieldKey="warpingRatePerKg" label="Warping rate" value={state.warpingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.1} placeholder="e.g. 8" />
-                        <div className="space-y-1.5 min-w-0">
-                            <div className="flex items-end justify-between h-8">
-                                <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
-                                    Sizing
-                                </Label>
-                                {state.sizingMode === 'in_house' && (
-                                    <span className="text-[10px] font-medium text-[var(--color-muted)]">
-                                        ₹0 · in overhead
-                                    </span>
-                                )}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {/* Warping Group */}
+                        <div className="space-y-3">
+                            <div className="space-y-1.5 min-w-0">
+                                <div className="flex items-end justify-between h-8">
+                                    <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                                        Warping
+                                    </Label>
+                                    {state.warpingMode === 'in_house' && (
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">
+                                            ₹0 · in overhead
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => dispatch({ type: 'SET', field: 'warpingMode', value: 'in_house' })}
+                                        aria-pressed={state.warpingMode === 'in_house'}
+                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                            state.warpingMode === 'in_house'
+                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        In-house
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => dispatch({ type: 'SET', field: 'warpingMode', value: 'outsourced' })}
+                                        aria-pressed={state.warpingMode === 'outsourced'}
+                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                            state.warpingMode === 'outsourced'
+                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        Outsourced
+                                    </button>
+                                </div>
                             </div>
-                            <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
-                                    aria-pressed={state.sizingMode === 'in_house'}
-                                    className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
-                                        state.sizingMode === 'in_house'
-                                            ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                                            : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                                    }`}
-                                >
-                                    In-house
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
-                                    aria-pressed={state.sizingMode === 'outsourced'}
-                                    className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
-                                        state.sizingMode === 'outsourced'
-                                            ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                                            : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                                    }`}
-                                >
-                                    Outsourced
-                                </button>
-                            </div>
+                            {state.warpingMode === 'outsourced' && (
+                                <NumField
+                                    fieldKey="warpingRatePerKg"
+                                    label="Warping rate"
+                                    value={state.warpingRatePerKg}
+                                    onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })}
+                                    unit="₹/kg"
+                                    step={0.1}
+                                    placeholder="e.g. 8"
+                                    attentionWhenEmpty
+                                />
+                            )}
                         </div>
-                        {state.sizingMode === 'outsourced' && (
-                            <NumField fieldKey="sizingRatePerKg" label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} placeholder="e.g. 10" attentionWhenEmpty />
-                        )}
+
+                        {/* Sizing Group */}
+                        <div className="space-y-3">
+                            <div className="space-y-1.5 min-w-0">
+                                <div className="flex items-end justify-between h-8">
+                                    <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                                        Sizing
+                                    </Label>
+                                    {state.sizingMode === 'in_house' && (
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">
+                                            ₹0 · in overhead
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
+                                        aria-pressed={state.sizingMode === 'in_house'}
+                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                            state.sizingMode === 'in_house'
+                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        In-house
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
+                                        aria-pressed={state.sizingMode === 'outsourced'}
+                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                            state.sizingMode === 'outsourced'
+                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        Outsourced
+                                    </button>
+                                </div>
+                            </div>
+                            {state.sizingMode === 'outsourced' && (
+                                <NumField
+                                    fieldKey="sizingRatePerKg"
+                                    label="Sizing rate"
+                                    value={state.sizingRatePerKg}
+                                    onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })}
+                                    unit="₹/kg"
+                                    step={0.5}
+                                    placeholder="e.g. 10"
+                                    attentionWhenEmpty
+                                />
+                            )}
+                        </div>
                     </div>
                 </CardContent>
             </EstimatorCard>
@@ -3869,6 +3939,7 @@ export default function EstimatorClient({
                 loomType:         state.loomType,
                 loomRpm:          state.loomRpm,
                 loomPowerKw:      state.loomPowerKw,
+                warpingMode:      state.warpingMode,
                 sizingMode:       state.sizingMode,
                 hoursPerShift:    state.hoursPerShift,
                 estimate:         { ...state, warpRows, weftRows },
@@ -3943,6 +4014,7 @@ export default function EstimatorClient({
             loomType:         state.loomType,
             loomRpm:          state.loomRpm,
             loomPowerKw:      state.loomPowerKw,
+            warpingMode:      state.warpingMode,
             sizingMode:       state.sizingMode,
             hoursPerShift:    state.hoursPerShift,
         })
@@ -6128,60 +6200,117 @@ export default function EstimatorClient({
                 <EstimatorCard accent="post">
                     <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-4">
-                        <div className={`grid grid-cols-1 gap-4 ${state.sizingMode === 'outsourced' ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                            <NumField fieldKey="warpingRatePerKg" label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} placeholder="e.g. 8" />
-                            <div className="space-y-1.5 min-w-0">
-                                <div className="flex items-end justify-between h-8">
-                                    <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
-                                        Sizing
-                                    </Label>
-                                    {state.sizingMode === 'in_house' && (
-                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">
-                                            ₹0 · in overhead
-                                        </span>
-                                    )}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {/* Warping Group */}
+                            <div className="space-y-3">
+                                <div className="space-y-1.5 min-w-0">
+                                    <div className="flex items-end justify-between h-8">
+                                        <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                                            {t('estimator.warping_sizing.warping')}
+                                        </Label>
+                                        {state.warpingMode === 'in_house' && (
+                                            <span className="text-[10px] font-medium text-[var(--color-muted)]">
+                                                ₹0 · in overhead
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                        <button
+                                            id="warping-mode-in-house"
+                                            type="button"
+                                            onClick={() => dispatch({ type: 'SET', field: 'warpingMode', value: 'in_house' })}
+                                            aria-pressed={state.warpingMode === 'in_house'}
+                                            className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                                state.warpingMode === 'in_house'
+                                                    ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                    : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                            }`}
+                                        >
+                                            In-house
+                                        </button>
+                                        <button
+                                            id="warping-mode-outsourced"
+                                            type="button"
+                                            onClick={() => dispatch({ type: 'SET', field: 'warpingMode', value: 'outsourced' })}
+                                            aria-pressed={state.warpingMode === 'outsourced'}
+                                            className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                                state.warpingMode === 'outsourced'
+                                                    ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                    : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                            }`}
+                                        >
+                                            Outsourced
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
-                                    <button
-                                        id="sizing-mode-in-house"
-                                        type="button"
-                                        onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
-                                        aria-pressed={state.sizingMode === 'in_house'}
-                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
-                                            state.sizingMode === 'in_house'
-                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                                        }`}
-                                    >
-                                        In-house
-                                    </button>
-                                    <button
-                                        id="sizing-mode-outsourced"
-                                        type="button"
-                                        onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
-                                        aria-pressed={state.sizingMode === 'outsourced'}
-                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
-                                            state.sizingMode === 'outsourced'
-                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                                        }`}
-                                    >
-                                        Outsourced
-                                    </button>
-                                </div>
+                                {state.warpingMode === 'outsourced' && (
+                                    <NumField
+                                        fieldKey="warpingRatePerKg"
+                                        label={t('estimator.warping_sizing.warping_per_kg')}
+                                        value={state.warpingRatePerKg}
+                                        onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })}
+                                        step={0.1}
+                                        placeholder="e.g. 8"
+                                        attentionWhenEmpty
+                                    />
+                                )}
                             </div>
-                            {state.sizingMode === 'outsourced' && (
-                                <NumField
-                                    fieldKey="sizingRatePerKg"
-                                    label={t('estimator.warping_sizing.sizing_per_kg')}
-                                    value={state.sizingRatePerKg}
-                                    onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
-                                    step={0.5}
-                                    placeholder="e.g. 10"
-                                    hint="Typical Surat outsourced sizing: ₹8–15/kg"
-                                    attentionWhenEmpty
-                                />
-                            )}
+
+                            {/* Sizing Group */}
+                            <div className="space-y-3">
+                                <div className="space-y-1.5 min-w-0">
+                                    <div className="flex items-end justify-between h-8">
+                                        <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                                            {t('estimator.warping_sizing.sizing')}
+                                        </Label>
+                                        {state.sizingMode === 'in_house' && (
+                                            <span className="text-[10px] font-medium text-[var(--color-muted)]">
+                                                ₹0 · in overhead
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                        <button
+                                            id="sizing-mode-in-house"
+                                            type="button"
+                                            onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
+                                            aria-pressed={state.sizingMode === 'in_house'}
+                                            className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                                state.sizingMode === 'in_house'
+                                                    ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                    : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                            }`}
+                                        >
+                                            In-house
+                                        </button>
+                                        <button
+                                            id="sizing-mode-outsourced"
+                                            type="button"
+                                            onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
+                                            aria-pressed={state.sizingMode === 'outsourced'}
+                                            className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                                state.sizingMode === 'outsourced'
+                                                    ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                    : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                            }`}
+                                        >
+                                            Outsourced
+                                        </button>
+                                    </div>
+                                </div>
+                                {state.sizingMode === 'outsourced' && (
+                                    <NumField
+                                        fieldKey="sizingRatePerKg"
+                                        label={t('estimator.warping_sizing.sizing_per_kg')}
+                                        value={state.sizingRatePerKg}
+                                        onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
+                                        step={0.5}
+                                        placeholder="e.g. 10"
+                                        hint="Typical Surat outsourced sizing: ₹8–15/kg"
+                                        attentionWhenEmpty
+                                    />
+                                )}
+                            </div>
                         </div>
 
                         <div className="text-[10px] font-medium text-slate-400 italic">

@@ -1038,6 +1038,8 @@ export const gu = {
     },
     warping_sizing: {
       title: "વૉર્પિંગ અને સાઈઝિંગ",
+      warping: "વૉર્પિંગ",
+      sizing: "સાઈઝિંગ",
       warping_per_kg: "વૉર્પિંગ / કિલો",
       sizing_per_kg: "સાઈઝિંગ / કિલો",
       applied_on: "લાગુ થાય છે",
