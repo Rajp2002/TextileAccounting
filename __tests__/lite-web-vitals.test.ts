@@ -3,8 +3,6 @@ import {
   classifyWebVital,
   getDeviceClass,
   sanitizeWebVitalPayload,
-  WEB_VITALS_THRESHOLDS,
-  type WebVitalMetric,
 } from '../lib/web-vitals'
 
 describe('LST-12 & LST-13: Web Vitals Instrumentation & Privacy Safety', () => {
@@ -49,7 +47,8 @@ describe('LST-12 & LST-13: Web Vitals Instrumentation & Privacy Safety', () => {
       route: '/owner/estimator',
       deviceClass: 'desktop',
       language: 'hi',
-      entitlement: 'lite',
+      metricId: 'v5-1788134400000-1234567890123',
+      scope: 'document',
     }
     expect(sanitizeWebVitalPayload(safePayload)).toBe(true)
 

@@ -139,6 +139,9 @@ import { createCostingExportModel } from '@/lib/estimator-export'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { initWebVitals } from '@/lib/web-vitals'
+import { calculateRateImpact } from '@/lib/estimator-rate-impact'
+import { RateImpactSummary } from '@/components/estimator/RateImpactSummary'
+import { nextCostingJourney, type CostingJourney, type CostingJourneySource } from '@/lib/costing-journey'
 import {
     getMatchingFactoryProfileId,
     hasMeaningfulFactoryCostBaseline,
@@ -2657,28 +2660,29 @@ export default function EstimatorClient({
     const estimatorOpenedRef = useRef(false)
     const costingStartedRef = useRef(false)
 
-    const validResultTrackedRef = useRef(false)
+    const [journey, setJourney] = useState<CostingJourney | null>(null)
+    const validResultTrackedRef = useRef<number | null>(null)
+    const startJourney = useCallback((source: CostingJourneySource) => {
+        setJourney(previous => nextCostingJourney(previous, source))
+        costingStartedRef.current = false
+        if (source === 'blank') void trackPlanEvent('blank_start')
+        if (source === 'saved_quality') void trackPlanEvent('saved_quality_start')
+    }, [])
 
     useEffect(() => {
         if (estimatorOpenedRef.current) return
         estimatorOpenedRef.current = true
         void trackPlanEvent('estimator_opened', {
-            workspace: canUseProduction ? 'base_or_legacy' : 'lite_or_base',
+            workspace: canUseProduction ? 'full_suite' : 'standalone_costing',
         })
-        if (appliedTemplate) {
-            void trackPlanEvent('saved_quality_start')
-        } else {
-            void trackPlanEvent('blank_start')
-        }
-    }, [appliedTemplate, canUseProduction])
+    }, [canUseProduction])
 
     useEffect(() => {
         return initWebVitals({
             route: '/owner/estimator',
             language: (language === 'hi' || language === 'gu') ? language : 'en',
-            entitlement: canUseProduction ? 'base' : 'lite',
         })
-    }, [canUseProduction, language])
+    }, [language])
     const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'
     const versionInputChanges = useMemo(
         () => summarizeCostingInputChanges(sourceState, state),
@@ -2692,6 +2696,7 @@ export default function EstimatorClient({
     const [checkingSave, setCheckingSave] = useState(false)
     const [saveCheckMessage, setSaveCheckMessage] = useState('')
     const pendingSaveRequestRef = useRef<Parameters<typeof saveEstimatorQuoteV3>[0] | null>(null)
+    const reportedSaveRequestsRef = useRef(new Set<string>())
     const [lastSavedCosting, setLastSavedCosting] = useState<{ id: string; version: number; savedAt: string; model: ReturnType<typeof createCostingExportModel> } | null>(null)
     const [exportSavedCosting, setExportSavedCosting] = useState(false)
     const [hasUnsavedEdits, setHasUnsavedEdits] = useState(false)
@@ -2722,10 +2727,15 @@ export default function EstimatorClient({
 
     // Template management — "edit rates" sheet
     const [editRatesTpl,     setEditRatesTpl]     = useState<EstimatorTemplate | null>(null)
-    const [editingTplName,   setEditingTplName]   = useState('')
     const [editingWarpRates, setEditingWarpRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
+    const savingRatesRef = useRef(false)
+    const rateImpact = useMemo(() => editRatesTpl ? calculateRateImpact(
+        estimateReducer(state, { type: 'APPLY_TEMPLATE', template: editRatesTpl }),
+        editingWarpRates.map(row => row.yarnRate),
+        editingWeftRates.map(row => row.yarnRate),
+    ) : null, [state, editRatesTpl, editingWarpRates, editingWeftRates])
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
     const [templateToArchive, setTemplateToArchive] = useState<EstimatorTemplate | null>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
@@ -2892,11 +2902,12 @@ export default function EstimatorClient({
     // several fields without those programmatic changes recreating a stale
     // local draft.
     const dispatch = useCallback((action: Action) => {
+        if (action.type === 'APPLY_TEMPLATE') startJourney('saved_quality')
         markUserEdit()
         setHasUnsavedEdits(true)
         setLastSavedCosting(null)
         rawDispatch(action)
-    }, [markUserEdit])
+    }, [markUserEdit, startJourney])
     const setPartyNameFromUser = useCallback((value: string) => {
         markUserEdit()
         setHasUnsavedEdits(true)
@@ -2962,6 +2973,7 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
 
+        startJourney(restored.sourceQuoteId ? 'saved_costing' : 'restored_draft')
         rawDispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
         setDirectWeavingRateInput(getDirectWeavingRateInput(
             restored.state.perPickCostPaisa,
@@ -3011,7 +3023,7 @@ export default function EstimatorClient({
                 ? restored.sourceRecordKind === 'costing' ? 'Costing specifications loaded' : 'Quotation specifications loaded'
                 : 'Cost Estimate draft restored'))
         }
-    }, [canUseProduction, restoreDraft, suppressAutosaveUntilChanged, templates, tx])
+    }, [canUseProduction, restoreDraft, suppressAutosaveUntilChanged, templates, tx, startJourney])
 
     const draftDetectedTrackedRef = useRef(false)
     useEffect(() => {
@@ -3238,19 +3250,28 @@ export default function EstimatorClient({
     const firstCostingReadinessMessage = costingReadiness.issues[0]?.message ?? firstEstimatorValidationMessage
 
     useEffect(() => {
-        if (hasValidCostResult && !validResultTrackedRef.current) {
-            validResultTrackedRef.current = true
+        if (hasValidCostResult && journey && validResultTrackedRef.current !== journey.sequence) {
+            validResultTrackedRef.current = journey.sequence
             void trackPlanEvent('valid_result_reached', {
                 has_quantity: Boolean(state.orderQuantityM && state.orderQuantityM > 0),
+                journey_source: journey.source,
             })
         }
-    }, [hasValidCostResult, state.orderQuantityM])
+    }, [hasValidCostResult, journey, state.orderQuantityM])
 
     const validationSummaryId = 'estimator-save-validation-summary'
     const exportModel = useMemo(() => canPersistCostResult
         ? createCostingExportModel({ qualityLabel, state, totals, result: costingResult })
         : null,
     [canPersistCostResult, costingResult, qualityLabel, state, totals])
+
+    const reportConfirmedSave = (request: Parameters<typeof saveEstimatorQuoteV3>[0] | null, savedId: string) => {
+        if (!request?.clientRequestId || reportedSaveRequestsRef.current.has(request.clientRequestId)) return
+        reportedSaveRequestsRef.current.add(request.clientRequestId)
+        const newVersion = Boolean(request.sourceQuoteId && request.sourceQuoteId !== savedId)
+        void trackPlanEvent('save_succeeded', { record_kind: request.recordKind ?? 'quotation', is_new_version: newVersion })
+        if (newVersion) void trackPlanEvent('new_version_created', { record_kind: request.recordKind ?? 'quotation' })
+    }
 
     const confirmSavedCosting = (receipt: { id: string; version_number: number; updated_at: string; created_at: string }) => {
         const submitted = pendingSaveRequestRef.current
@@ -3289,6 +3310,7 @@ export default function EstimatorClient({
         try {
             const outcome = await runMutationWithTimeout(() => getCostingSaveReceipt(requestId), 8_000)
             if (outcome.status === 'completed' && outcome.value.status === 'saved') {
+                reportConfirmedSave(pendingSaveRequestRef.current, outcome.value.receipt.id)
                 if (outcome.value.receipt.record_kind === 'costing') {
                     confirmSavedCosting(outcome.value.receipt)
                     await refreshSavedQualityTokens()
@@ -3313,6 +3335,7 @@ export default function EstimatorClient({
             const outcome = await runMutationWithTimeout(() => saveEstimatorQuoteV3(request))
             if (outcome.status === 'completed' && outcome.value.success && outcome.value.quoteId) {
                 const result = outcome.value
+                reportConfirmedSave(request, result.quoteId)
                 if (request.recordKind === 'costing') {
                     confirmSavedCosting({ id: result.quoteId, version_number: result.versionNumber ?? 1, updated_at: result.updatedAt, created_at: ('createdAt' in result && result.createdAt) || result.updatedAt })
                     await refreshSavedQualityTokens()
@@ -3749,6 +3772,7 @@ export default function EstimatorClient({
 
     const handleNewQualityConfirm = () => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        startJourney('blank')
         setLastSavedCosting(null)
         setQualityCheckpoint(null)
         setHasUnsavedEdits(false)
@@ -3795,7 +3819,6 @@ export default function EstimatorClient({
         setRenameValue('')
         setRenameError(null)
         setEditRatesTpl(null)
-        setEditingTplName('')
         setEditingWarpRates([])
         setEditingWeftRates([])
         setTemplateToArchive(null)
@@ -3824,7 +3847,6 @@ export default function EstimatorClient({
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
         const weftRows: WeftRow[] = tpl.weft_rows ?? []
         setEditRatesTpl(tpl)
-        setEditingTplName(tpl.name)
         setEditingWarpRates(warpRows.map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
         setEditingWeftRates(weftRows.map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
         void trackPlanEvent('rate_review_requested')
@@ -3832,7 +3854,7 @@ export default function EstimatorClient({
 
     /** Persist updated rates to template row AND apply to the estimator. */
     const handleSaveRatesAndApply = async (confirmed = false) => {
-        if (!editRatesTpl) return
+        if (!editRatesTpl || savingRatesRef.current) return
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
             setPendingQualityChange({ name: editRatesTpl.name, apply: () => void handleSaveRatesAndApply(true) })
@@ -3840,63 +3862,70 @@ export default function EstimatorClient({
         }
         setPendingQualityChange(null)
         setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
+        savingRatesRef.current = true
         setSavingRates(true)
-        const expectedUpdatedAt = editRatesTpl.updated_at
+        try {
+            const expectedUpdatedAt = editRatesTpl.updated_at
 
-        // Update rates only. The quality name is an identity and is not edited
-        // from this dialog; save a separate quality for a new construction.
-        const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
-            ...r,
-            yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
-        }))
-        const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
-            ...r,
-            yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
-        }))
-        
-        const res = await updateTemplateRates({
-            id: editRatesTpl.id,
-            expectedUpdatedAt,
-            warpRows: updatedWarp,
-            weftRows: updatedWeft,
-        })
-        setSavingRates(false)
-        if (res.error) { toast.error(tx(userFacingError(res.error, 'Saved Quality could not be updated. Try again.'))); return }
+            // Update rates only. The quality name is an identity and is not edited
+            // from this dialog; save a separate quality for a new construction.
+            const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
+                ...r,
+                yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+            }))
+            const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
+                ...r,
+                yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+            }))
 
-        // Success: refresh and apply
-        const tRes = await getEstimatorTemplates()
-        const refreshed = tRes.data?.find(template => template.id === editRatesTpl.id)
-        if (tRes.data) setTemplates(tRes.data)
-        
-        const applied = refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
-        setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
-        dispatch({
-            type: 'APPLY_TEMPLATE',
-            template: applied,
-        })
-        setAppliedTemplate(applied)
-        setQualityLabel(editRatesTpl.name)
-        setSourceQuoteId(null)
-        setSourceQuoteUpdatedAt(null)
-        setSourceQuoteVersionNumber(null)
-        setSourceQuoteCreatedAt(null)
-        setSourceQuoteStatus(null)
-        setSourceState(null)
-        setSourceFactoryProfileUpdatedAt(null)
-        setSourceRecordKind(null)
-        quoteRequestIdRef.current = null
-        setEditRatesTpl(null)
-        setShowQualityLibrary(false)
-        void trackPlanEvent('current_rate_applied')
-        setHasUnsavedEdits(false)
-        toast.success('noChange' in res && res.noChange
-            ? t('estimator.sprint1.quality_no_change')
-            : t('estimator.sprint1.rates_updated_no_snapshot'))
+            const res = await updateTemplateRates({
+                id: editRatesTpl.id,
+                expectedUpdatedAt,
+                warpRows: updatedWarp,
+                weftRows: updatedWeft,
+            })
+            if (res.error) { toast.error(tx(userFacingError(res.error, 'Saved Quality could not be updated. Try again.'))); return }
+
+            // Success: refresh and apply
+            const tRes = await getEstimatorTemplates().catch(() => ({ data: undefined }))
+            const refreshed = tRes.data?.find(template => template.id === editRatesTpl.id)
+            if (tRes.data) setTemplates(tRes.data)
+
+            const applied = refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
+            setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
+            dispatch({
+                type: 'APPLY_TEMPLATE',
+                template: applied,
+            })
+            setAppliedTemplate(applied)
+            setQualityLabel(editRatesTpl.name)
+            setSourceQuoteId(null)
+            setSourceQuoteUpdatedAt(null)
+            setSourceQuoteVersionNumber(null)
+            setSourceQuoteCreatedAt(null)
+            setSourceQuoteStatus(null)
+            setSourceState(null)
+            setSourceFactoryProfileUpdatedAt(null)
+            setSourceRecordKind(null)
+            quoteRequestIdRef.current = null
+            setEditRatesTpl(null)
+            setShowQualityLibrary(false)
+            void trackPlanEvent('current_rate_applied', { rate_source: 'proposed_recipe_rates' })
+            setHasUnsavedEdits(false)
+            toast.success('noChange' in res && res.noChange
+                ? t('estimator.sprint1.quality_no_change')
+                : t('estimator.sprint1.rates_updated_no_snapshot'))
+        } catch {
+            toast.error(tx('Rate update could not be confirmed. Reopen the quality to check its saved rates before trying again.'))
+        } finally {
+            savingRatesRef.current = false
+            setSavingRates(false)
+        }
     }
 
     /** Apply template directly (without editing rates). */
     const handleApplyCurrentRates = (confirmed = false) => {
-        if (!editRatesTpl) return
+        if (!editRatesTpl || savingRatesRef.current) return
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
             setPendingQualityChange({ name: editRatesTpl.name, apply: () => handleApplyCurrentRates(true) })
@@ -3919,7 +3948,7 @@ export default function EstimatorClient({
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
         setShowQualityLibrary(false)
-        void trackPlanEvent('current_rate_applied')
+        void trackPlanEvent('current_rate_applied', { rate_source: 'saved_recipe_rates' })
         setHasUnsavedEdits(false)
         toast.success(tx(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`))
     }
@@ -4156,15 +4185,7 @@ export default function EstimatorClient({
                 const res = mutationOutcome.value
                 if (res.success) {
                     const wasEditingCosting = Boolean(sourceQuoteId)
-                    void trackPlanEvent('save_succeeded', {
-                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                        is_new_version: wasEditingCosting,
-                    })
-                    if (wasEditingCosting) {
-                        void trackPlanEvent('new_version_created', {
-                            record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                        })
-                    }
+                    if (res.quoteId) reportConfirmedSave(saveRequest, res.quoteId)
                     void trackPlanEvent('costing_completed', {
                         record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
                         edited: wasEditingCosting,
@@ -4454,7 +4475,9 @@ export default function EstimatorClient({
                     </div>
                 </section>
             )}
-            <fieldset className="contents" disabled={savingQuote || Boolean(unconfirmedRequestId)} inert={savingQuote || Boolean(unconfirmedRequestId)}>
+            <fieldset className="contents" onChangeCapture={event => {
+                if (!journey && event.target instanceof HTMLElement && event.target.closest('[data-estimator-field]')) startJourney('blank')
+            }} disabled={savingQuote || Boolean(unconfirmedRequestId)} inert={savingQuote || Boolean(unconfirmedRequestId)}>
             {qualityCheckpoint && !hasUnsavedEdits && (
                 <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--color-hairline)] px-4 py-2 text-sm">
                     <span>{tx('Quality changed. Previous work is available until you edit or save.')}</span>
@@ -7034,7 +7057,7 @@ export default function EstimatorClient({
             />
 
             {/* Edit Quality Rates Dialog */}
-            <Dialog open={!!editRatesTpl} onOpenChange={open => { if (!open) setEditRatesTpl(null) }}>
+            <Dialog open={!!editRatesTpl} onOpenChange={open => { if (!open && !savingRatesRef.current) setEditRatesTpl(null) }}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -7043,21 +7066,12 @@ export default function EstimatorClient({
                         </DialogTitle>
                         <DialogDescription>{t('estimator.sprint1.edit_quality_rates')}</DialogDescription>
                     </DialogHeader>
-                    <div className="py-3 space-y-5">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-semibold uppercase text-[var(--color-muted)]">{t('estimator.quality.qualityNameLabel')}</Label>
-                            <Input
-                                value={editingTplName}
-                                readOnly
-                                aria-readonly="true"
-                                title={t('estimator.sprint1.saved_quality_name_stable')}
-                                className="h-11 rounded-xl border-[var(--color-hairline)] font-bold transition-all focus:border-[var(--color-yarn-orange)] focus:ring-4 focus:ring-[var(--color-yarn-orange)]/5"
-                            />
-                        </div>
+                    <fieldset disabled={savingRates} className="py-3 space-y-5 min-w-0">
                         <p className="text-xs leading-relaxed text-[var(--color-muted)]">
                             {t('estimator.quality.structureNotePrefix')} <span className="font-bold text-[var(--color-body)]">{t('estimator.quality.structureNoteAnd')}</span> {t('estimator.quality.structureNoteSuffix')}
                         </p>
 
+                        <p className="text-xs text-[var(--color-muted)]">{tx('Saved recipe rates are not a live market feed. Confirm them with your supplier.')}</p>
                         {/* Warp rates */}
                         {editingWarpRates.length > 0 && (
                             <div className="space-y-2">
@@ -7067,6 +7081,7 @@ export default function EstimatorClient({
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[12px] font-bold tracking-tight text-[var(--color-body)]">{row.label?.trim() || `Warp ${i + 1}`}</p>
                                             <p className="font-mono text-[10px] font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
+                                            <p className="text-xs tabular-nums text-[var(--color-muted)]">{tx('Saved rate')}: ₹{row.yarnRate.toFixed(2)}/kg</p>
                                         </div>
                                         <div className="relative shrink-0 w-36">
                                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
@@ -7075,6 +7090,8 @@ export default function EstimatorClient({
                                                 min={0}
                                                 step={1}
                                                 value={editingWarpRates.find(x => x.id === row.id)?.yarnRate ?? row.yarnRate}
+                                                aria-label={`${tx('Proposed warp rate')} ${i + 1} (₹/kg)`}
+                                                inputMode="decimal"
                                                 onChange={e => setEditingWarpRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: parseNonNegativeInput(e.target.value) ?? 0 } : x)
                                                 )}
@@ -7096,6 +7113,7 @@ export default function EstimatorClient({
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[12px] font-bold tracking-tight text-[var(--color-body)]">{row.label?.trim() || `Weft ${i + 1}`}</p>
                                             <p className="font-mono text-[10px] font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
+                                            <p className="text-xs tabular-nums text-[var(--color-muted)]">{tx('Saved rate')}: ₹{row.yarnRate.toFixed(2)}/kg</p>
                                         </div>
                                         <div className="relative shrink-0 w-36">
                                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
@@ -7104,6 +7122,8 @@ export default function EstimatorClient({
                                                 min={0}
                                                 step={1}
                                                 value={editingWeftRates.find(x => x.id === row.id)?.yarnRate ?? row.yarnRate}
+                                                aria-label={`${tx('Proposed weft rate')} ${i + 1} (₹/kg)`}
+                                                inputMode="decimal"
                                                 onChange={e => setEditingWeftRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: parseNonNegativeInput(e.target.value) ?? 0 } : x)
                                                 )}
@@ -7116,29 +7136,17 @@ export default function EstimatorClient({
                             </div>
                         )}
 
-                        {/* Delete zone */}
-                        <div className="flex flex-col items-center justify-between gap-2 border-t border-[var(--color-hairline)] pt-3 sm:flex-row">
-                            <button
-                                onClick={() => {
-                                    if (editRatesTpl) setTemplateToArchive(editRatesTpl)
-                                }}
-                                disabled={deletingTpl === editRatesTpl?.id}
-                                className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-bold text-[var(--color-risk-red)] transition-colors hover:bg-[var(--color-risk-red-soft)] hover:text-[var(--color-ink)]"
-                            >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                {tx('Archive quality')}
-                            </button>
-                            <p className="text-[10px] font-medium text-[var(--color-muted)]">{tx('Archived qualities remain in History and can be restored.')}</p>
-                        </div>
-                    </div>
+                        {rateImpact && <RateImpactSummary impact={rateImpact} hasSavedAssumptions={Boolean(editRatesTpl?.latest_costing_reuse)} tx={tx} />}
+                    </fieldset>
                     <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
                         <Button
                             variant="ghost" 
                             size="sm" 
                             onClick={() => handleApplyCurrentRates()}
+                            disabled={savingRates}
                             className="rounded-xl font-bold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                         >
-                            {t('estimator.quality.applyAsIs')}
+                            {tx('Use saved rates')}
                         </Button>
                         <Button 
                             className="bg-brand-accent text-white font-semibold rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 

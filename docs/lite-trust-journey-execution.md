@@ -72,11 +72,12 @@ components also serve other plans; their calculation behavior must remain intact
   test late generation, close/reopen, long content, and Hindi/Gujarati rendering.
 - Inspect phone layout, software keyboard, focus visibility, screen-reader
   announcements, zoom, and reduced motion. Review translations with speakers.
-- Complete rate-change provenance and before/after cost-impact presentation.
+- Rate-change provenance and before/after impact are implemented in
+  [increment 2](lite-rate-review-telemetry-execution.md); browser acceptance remains.
 - Finish broader action hierarchy, numeric-entry ergonomics, and export styling
   refinements where observed browser/owner evidence supports them.
-- Repair/verify the previously identified performance collector and analytics
-  event delivery/classification. This increment does not certify that telemetry.
+- Performance collection and event classification repairs are implemented in
+  increment 2. Database migration and deployed ingestion verification remain.
 - Establish a real-owner repeat-quality baseline and compare task completion,
   backtracking, re-entry, result comprehension, and save confidence.
 
