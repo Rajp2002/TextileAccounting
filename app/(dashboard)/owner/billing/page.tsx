@@ -643,6 +643,7 @@ export default async function BillingPage({
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
+        <>
         <div className="premium-route-enter mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
             <RouteMilestones route="/owner/billing" shellVisible primaryUsable />
             <PageHeader
@@ -716,8 +717,10 @@ export default async function BillingPage({
                 </div>
 
                 <aside className="space-y-6 lg:col-span-4">
-                    {/* Payment history and Download receipt actions live inside this compact rail dialog. */}
-                    <PaymentHistoryDialog entries={billingHistoryEntries} />
+                    <div className="min-[1540px]:hidden">
+                        {/* Payment history and Download receipt actions stay in the flow below wide desktop. */}
+                        <PaymentHistoryDialog entries={billingHistoryEntries} />
+                    </div>
                     <details className="group overflow-hidden rounded-xl border border-hairline bg-surface">
                         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
                             Referral rewards
@@ -746,5 +749,10 @@ export default async function BillingPage({
                 </aside>
             </div>
         </div>
+        {/* Keep the wide-desktop payment history rail outside the animated route wrapper. */}
+        <aside className="billing-payment-history-rail-desktop" aria-label="Payment history and receipts">
+            <PaymentHistoryDialog entries={billingHistoryEntries} />
+        </aside>
+        </>
     )
 }

@@ -545,6 +545,31 @@
     }
   }
 
+  /* Billing payment history uses the spare right viewport margin on wide
+     desktop. Keep the viewport-positioned rail outside the animated route
+     wrapper so its fixed position stays anchored to the browser window. */
+  .billing-payment-history-rail-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1540px) {
+    .billing-payment-history-rail-desktop {
+      display: block;
+      position: fixed;
+      top: clamp(18rem, 45vh, 31rem);
+      right: 1.25rem;
+      z-index: 30;
+      width: 17rem;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .billing-payment-history-rail-desktop {
+      right: 2.5rem;
+      width: 18.5rem;
+    }
+  }
+
   @media (min-width: 768px) and (max-width: 1699.98px) {
     .settings-page-frame {
       margin-left: var(--settings-sidebar-guard);
