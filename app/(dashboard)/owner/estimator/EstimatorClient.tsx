@@ -2587,16 +2587,49 @@ function QuickCostingView({
             <EstimatorCard accent="post">
                 <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className={`grid grid-cols-1 gap-4 ${state.sizingMode === 'outsourced' ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
                         <NumField fieldKey="warpingRatePerKg" label="Warping rate" value={state.warpingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.1} placeholder="e.g. 8" />
-                        <div className="space-y-2 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Sizing</p>
-                            <div className="flex flex-wrap gap-3 text-xs font-semibold text-[var(--color-body)]">
-                                <label className="flex items-center gap-1.5"><input type="radio" name="quick-sizing-mode" checked={state.sizingMode === 'in_house'} onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })} /> In-house</label>
-                                <label className="flex items-center gap-1.5"><input type="radio" name="quick-sizing-mode" checked={state.sizingMode === 'outsourced'} onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })} /> Outsourced</label>
+                        <div className="space-y-1.5 min-w-0">
+                            <div className="flex items-end justify-between h-8">
+                                <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                                    Sizing
+                                </Label>
+                                {state.sizingMode === 'in_house' && (
+                                    <span className="text-[10px] font-medium text-[var(--color-muted)]">
+                                        ₹0 · in overhead
+                                    </span>
+                                )}
                             </div>
-                            {state.sizingMode === 'outsourced' ? <NumField fieldKey="sizingRatePerKg" label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} placeholder="e.g. 10" /> : <p className="text-[10px] italic text-[var(--color-muted)]">In-house sizing is treated as factory overhead.</p>}
+                            <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
+                                    aria-pressed={state.sizingMode === 'in_house'}
+                                    className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                        state.sizingMode === 'in_house'
+                                            ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                            : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                    }`}
+                                >
+                                    In-house
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
+                                    aria-pressed={state.sizingMode === 'outsourced'}
+                                    className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                        state.sizingMode === 'outsourced'
+                                            ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                            : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                    }`}
+                                >
+                                    Outsourced
+                                </button>
+                            </div>
                         </div>
+                        {state.sizingMode === 'outsourced' && (
+                            <NumField fieldKey="sizingRatePerKg" label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} placeholder="e.g. 10" attentionWhenEmpty />
+                        )}
                     </div>
                 </CardContent>
             </EstimatorCard>
@@ -6094,58 +6127,60 @@ export default function EstimatorClient({
                 {/* 5. Warping & Sizing */}
                 <EstimatorCard accent="post">
                     <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
-                    <CardContent className="p-5 sm:p-6 space-y-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <CardContent className="p-5 sm:p-6 space-y-4">
+                        <div className={`grid grid-cols-1 gap-4 ${state.sizingMode === 'outsourced' ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
                             <NumField fieldKey="warpingRatePerKg" label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} placeholder="e.g. 8" />
-                        </div>
-
-                        {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
-                        <div className="space-y-3 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4">
-                            <p className="text-[11px] uppercase font-semibold text-[var(--color-warning-amber)] tracking-[0.06em]">Sizing</p>
-                            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
+                            <div className="space-y-1.5 min-w-0">
+                                <div className="flex items-end justify-between h-8">
+                                    <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                                        Sizing
+                                    </Label>
+                                    {state.sizingMode === 'in_house' && (
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">
+                                            ₹0 · in overhead
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                    <button
                                         id="sizing-mode-in-house"
-                                        type="radio"
-                                        name="sizing-mode"
-                                        value="in_house"
-                                        checked={state.sizingMode === 'in_house'}
-                                        onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
-                                        className="accent-[var(--color-yarn-orange)] h-3.5 w-3.5"
-                                    />
-                                    <span className="text-xs font-semibold text-[var(--color-body)] group-hover:text-[var(--color-ink)]">
-                                        In-house <span className="text-[10px] text-[var(--color-muted)] font-normal">(already in overhead)</span>
-                                    </span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
+                                        type="button"
+                                        onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
+                                        aria-pressed={state.sizingMode === 'in_house'}
+                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                            state.sizingMode === 'in_house'
+                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        In-house
+                                    </button>
+                                    <button
                                         id="sizing-mode-outsourced"
-                                        type="radio"
-                                        name="sizing-mode"
-                                        value="outsourced"
-                                        checked={state.sizingMode === 'outsourced'}
-                                        onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
-                                        className="accent-[var(--color-yarn-orange)] h-3.5 w-3.5"
-                                    />
-                                    <span className="text-xs font-semibold text-[var(--color-body)] group-hover:text-[var(--color-ink)]">Outsourced</span>
-                                </label>
+                                        type="button"
+                                        onClick={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
+                                        aria-pressed={state.sizingMode === 'outsourced'}
+                                        className={`h-full rounded-[7px] px-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] ${
+                                            state.sizingMode === 'outsourced'
+                                                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        Outsourced
+                                    </button>
+                                </div>
                             </div>
                             {state.sizingMode === 'outsourced' && (
-                                <div className="space-y-1.5 pt-1">
-                                    <NumField fieldKey="sizingRatePerKg"
-                                        label="Sizing Rate (₹/kg)"
-                                        value={state.sizingRatePerKg}
-                                        onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
-                                        step={0.5}
-                                        placeholder="e.g. 10"
-                                        hint="Typical Surat outsourced sizing: ₹8–15/kg"
-                                    />
-                                </div>
-                            )}
-                            {state.sizingMode === 'in_house' && (
-                                <p className="text-[11px] text-[var(--color-muted)] font-medium italic">
-                                    Sizing cost is ₹0 — treated as part of factory overhead above.
-                                </p>
+                                <NumField
+                                    fieldKey="sizingRatePerKg"
+                                    label={t('estimator.warping_sizing.sizing_per_kg')}
+                                    value={state.sizingRatePerKg}
+                                    onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
+                                    step={0.5}
+                                    placeholder="e.g. 10"
+                                    hint="Typical Surat outsourced sizing: ₹8–15/kg"
+                                    attentionWhenEmpty
+                                />
                             )}
                         </div>
 
