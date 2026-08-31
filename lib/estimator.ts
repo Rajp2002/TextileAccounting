@@ -148,6 +148,42 @@ export function getEffectiveYarnDenier(
     : Number(row.calcDenier ?? 0)
 }
 
+export function isWarpRowFilled(row: WarpRow | null | undefined): boolean {
+  if (!row) return false
+  const rate = Number(row.yarnRate)
+  if (!Number.isFinite(rate) || rate <= 0) return false
+
+  if (row.calculationMode === 'manual') {
+    const manualKg = Number(row.manualKgPer100m)
+    return Number.isFinite(manualKg) && manualKg > 0
+  }
+
+  const denier = getEffectiveYarnDenier(row)
+  const ends = Number(row.beamEnds)
+  return Number.isFinite(denier) && denier > 0 && Number.isFinite(ends) && ends > 0
+}
+
+export function isWeftRowFilled(row: WeftRow | null | undefined): boolean {
+  if (!row) return false
+  const rate = Number(row.yarnRate)
+  if (!Number.isFinite(rate) || rate <= 0) return false
+
+  if (row.calculationMode === 'manual') {
+    const manualKg = Number(row.manualKgPer100m)
+    const picks = Number(row.picks)
+    return Number.isFinite(manualKg) && manualKg > 0 && Number.isFinite(picks) && picks > 0
+  }
+
+  const picks = Number(row.picks)
+  const width = getEffectiveCostingWidthCm(row)
+  const denier = getEffectiveYarnDenier(row)
+  return (
+    Number.isFinite(picks) && picks > 0 &&
+    Number.isFinite(width) && width > 0 &&
+    Number.isFinite(denier) && denier > 0
+  )
+}
+
 export function normalizeCurrencySnapshot(value: unknown, scale = 2): number {
   try {
     const decimal = new Decimal(value as Decimal.Value)

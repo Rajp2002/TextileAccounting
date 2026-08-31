@@ -37,6 +37,7 @@ import {
     Info,
     Zap,
     Play,
+    Check,
     CheckCircle2,
     Minus,
     ReceiptText,
@@ -59,6 +60,8 @@ import {
     ensureOverheadIntegrity,
     getEffectiveYarnDenier,
     getEffectiveCostingWidthCm,
+    isWarpRowFilled,
+    isWeftRowFilled,
     getWidthWarnings,
     LOOM_TYPE_DEFAULTS,
     type LoomType,
@@ -94,7 +97,13 @@ import {
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
 import { toast, userFacingError } from '@/lib/app-notifications'
-import { handleEnterKeyNavigation } from '@/lib/form-navigation'
+import {
+    handleEnterKeyNavigation,
+    findNavigableFormInputs,
+    focusAndSelectInput,
+    DEFAULT_INPUT_SELECTOR,
+    isElementNavigable,
+} from '@/lib/form-navigation'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -1917,10 +1926,35 @@ function formatWasteProvenance(
 }
 
 function RowCard({
-    title, index, componentName, ratePerKg, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, adjustmentDetail, showCalculatedValues = true, children, accent = 'indigo'
+    title,
+    index,
+    componentName,
+    ratePerKg,
+    onRemove,
+    canRemove,
+    kgPer100m,
+    costPer100m,
+    adjustmentPct,
+    adjustmentDetail,
+    showCalculatedValues = true,
+    children,
+    accent = 'indigo',
+    isComplete = false,
 }: {
-    title: string; index: number; componentName?: string; ratePerKg?: number; onRemove: () => void; canRemove: boolean
-    kgPer100m: number; costPer100m: number; adjustmentPct?: number; adjustmentDetail?: string; showCalculatedValues?: boolean; children: React.ReactNode; accent?: 'indigo' | 'emerald'
+    title: string
+    index: number
+    componentName?: string
+    ratePerKg?: number
+    onRemove: () => void
+    canRemove: boolean
+    kgPer100m: number
+    costPer100m: number
+    adjustmentPct?: number
+    adjustmentDetail?: string
+    showCalculatedValues?: boolean
+    children: React.ReactNode
+    accent?: 'indigo' | 'emerald'
+    isComplete?: boolean
 }) {
     const colors = {
         indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]' },
@@ -1929,6 +1963,7 @@ function RowCard({
     const c = colors[accent]
     const [expanded, setExpanded] = useState(false)
     const expandedManuallyRef = useRef(false)
+    const cardRef = useRef<HTMLDivElement | null>(null)
     const detailsId = `yarn-component-${accent}-${index}-details`
     const displayName = componentName?.trim() || `${title} ${index + 1}`
     const costPerM = costPer100m / 100
@@ -1943,8 +1978,110 @@ function RowCard({
         return () => mediaQuery.removeEventListener?.('change', syncToViewport)
     }, [])
 
+    useEffect(() => {
+        const el = cardRef.current
+        if (!el) return
+        const handleExpand = (e: Event) => {
+            const customEvent = e as CustomEvent<{ focusFirst?: boolean }>
+            expandedManuallyRef.current = true
+            setExpanded(true)
+            if (customEvent.detail?.focusFirst) {
+                setTimeout(() => {
+                    if (!cardRef.current) return
+                    const inputs = findNavigableFormInputs(cardRef.current)
+                    if (inputs.length > 0) {
+                        focusAndSelectInput(inputs[0])
+                    }
+                }, 50)
+            }
+        }
+        el.addEventListener('expand-row', handleExpand)
+        return () => el.removeEventListener('expand-row', handleExpand)
+    }, [])
+
+    const handleRowKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key !== 'Enter' || event.shiftKey) return
+        const isComposing = Boolean((event as any).isComposing || (event.nativeEvent as any)?.isComposing)
+        if (isComposing) return
+        if (event.defaultPrevented) return
+
+        const target = event.target as HTMLElement | null
+        if (!target || !cardRef.current) return
+        if (target.tagName?.toUpperCase() === 'BUTTON') return
+
+        const inputs = findNavigableFormInputs(cardRef.current)
+        if (inputs.length === 0) return
+
+        const currentIndex = inputs.indexOf(target)
+        if (currentIndex === -1) return
+
+        // If this is the last navigable input inside this card
+        if (currentIndex === inputs.length - 1) {
+            if (isComplete) {
+                event.preventDefault()
+                event.stopPropagation()
+
+                // Minimize current card
+                expandedManuallyRef.current = true
+                setExpanded(false)
+
+                // Advance to next row card or next form field
+                const allRowCards = Array.from(document.querySelectorAll<HTMLElement>('[data-estimator-row]'))
+                const currentCardIndex = allRowCards.indexOf(cardRef.current)
+
+                if (currentCardIndex !== -1 && currentCardIndex < allRowCards.length - 1) {
+                    const nextCard = allRowCards[currentCardIndex + 1]
+                    nextCard.dispatchEvent(new CustomEvent('expand-row', {
+                        bubbles: true,
+                        detail: { focusFirst: true }
+                    }))
+                } else {
+                    const container = cardRef.current.closest<HTMLElement>('[data-enter-navigate-container]') || document.body
+                    const containerInputs = Array.from(container.querySelectorAll<HTMLElement>(DEFAULT_INPUT_SELECTOR))
+                    const cardInputSet = new Set(inputs)
+                    const targetIndexInContainer = containerInputs.indexOf(target)
+                    let nextInput: HTMLElement | null = null
+
+                    for (let i = targetIndexInContainer + 1; i < containerInputs.length; i++) {
+                        const candidate = containerInputs[i]
+                        if (!cardInputSet.has(candidate) && isElementNavigable(candidate)) {
+                            nextInput = candidate
+                            break
+                        }
+                    }
+
+                    if (nextInput) {
+                        setTimeout(() => {
+                            focusAndSelectInput(nextInput!)
+                        }, 50)
+                    }
+                }
+            } else {
+                // Find first incomplete input in this card
+                const firstIncomplete = inputs.find(input => {
+                    const inputEl = input as HTMLInputElement
+                    const val = Number(inputEl.value)
+                    return inputEl.value === '' || (Number.isFinite(val) && val <= 0)
+                })
+                if (firstIncomplete && firstIncomplete !== target) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    focusAndSelectInput(firstIncomplete)
+                }
+            }
+        }
+    }
+
     return (
-        <div data-estimator-row={`${accent === 'indigo' ? 'warpRows' : 'weftRows'}.${index}`} data-testid={`yarn-component-${accent}-${index}`} className="group overflow-hidden rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)]">
+        <div
+            ref={cardRef}
+            data-estimator-row={`${accent === 'indigo' ? 'warpRows' : 'weftRows'}.${index}`}
+            data-testid={`yarn-component-${accent}-${index}`}
+            onKeyDown={handleRowKeyDown}
+            className={`group overflow-hidden rounded-[12px] border transition-colors bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)] ${
+                isComplete ? 'border-emerald-200/90' : 'border-[var(--color-hairline)]'
+            }`}
+        >
             <div className={`flex min-w-0 items-stretch gap-1 border-b border-[var(--color-hairline)] ${c.strip}`}>
                 <button
                     type="button"
@@ -1957,13 +2094,31 @@ function RowCard({
                     }}
                     className="estimator-touch-target flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left outline-none transition-colors hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-yarn-orange)] sm:px-4"
                 >
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] border text-[10px] font-semibold uppercase tracking-[0.05em] ${c.badge}`}>
-                        {index + 1}
+                    <span
+                        aria-label={isComplete ? `${displayName} complete` : `Step ${index + 1}`}
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] border font-semibold transition-colors duration-200 ${
+                            isComplete
+                                ? 'border-[#A3E0B5] bg-[#E8F8EE] text-[var(--color-factory-green)] shadow-sm'
+                                : `${c.badge} text-[10px] uppercase tracking-[0.05em]`
+                        }`}
+                    >
+                        {isComplete ? (
+                            <Check className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+                        ) : (
+                            index + 1
+                        )}
                     </span>
                     <span className="min-w-0 flex-1">
-                        <span className="block break-words text-[13px] font-semibold leading-4 text-[var(--color-ink)]">{displayName}</span>
+                        <span className="flex items-center gap-1.5 flex-wrap">
+                            <span className="block break-words text-[13px] font-semibold leading-4 text-[var(--color-ink)]">{displayName}</span>
+                            {isComplete && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    <Check className="h-2.5 w-2.5 stroke-[2.5]" /> Done
+                                </span>
+                            )}
+                        </span>
                         <span className="mt-0.5 block break-words text-[10px] font-medium leading-4 text-[var(--color-muted)]">
-                            {title} · {showCalculatedValues ? `Base weight ${kgPer100m.toFixed(3)} kg/100m` : 'Complete inputs'}
+                            {title} · {showCalculatedValues ? `Base weight ${kgPer100m.toFixed(3)} kg/100m` : (isComplete ? 'Complete' : 'Complete inputs')}
                             {ratePerKg != null && ratePerKg > 0 ? ` · ₹${ratePerKg.toFixed(2)}/kg` : ''}
                         </span>
                     </span>
@@ -2353,6 +2508,7 @@ function QuickCostingView({
                                 totals.warpRows[index]?.totalAdjustmentPct ?? 0,
                             )}
                             showCalculatedValues={hasValidCostResult}
+                            isComplete={isWarpRowFilled(row)}
                         >
                             <CalculationModeField
                                 value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -2390,7 +2546,7 @@ function QuickCostingView({
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         return (
-                            <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.baseKgPer100mUsed ?? 0} costPer100m={totals.weftRows[index]?.baseCostPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
+                            <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.baseKgPer100mUsed ?? 0} costPer100m={totals.weftRows[index]?.baseCostPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult} isComplete={isWeftRowFilled(row)}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
                                 <NumField fieldKey="picks" label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
@@ -5608,6 +5764,7 @@ export default function EstimatorClient({
                                         totals.warpRows[i]?.totalAdjustmentPct ?? 0,
                                     )}
                                     showCalculatedValues={hasValidCostResult}
+                                    isComplete={isWarpRowFilled(row)}
                                 >
                                     <CalculationModeField
                                         value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -5838,6 +5995,7 @@ export default function EstimatorClient({
                                             totals.weftRows[i]?.totalAdjustmentPct ?? 0,
                                         )}
                                         showCalculatedValues={hasValidCostResult}
+                                        isComplete={isWeftRowFilled(row)}
                                     >
                                         <CalculationModeField
                                             value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
