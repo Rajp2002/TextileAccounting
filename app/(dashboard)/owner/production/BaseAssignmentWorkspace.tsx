@@ -60,14 +60,18 @@ export default function BaseAssignmentWorkspace({
     initialData,
     onEditWorker,
     onEditMachine,
+    focusWorkerId,
+    initialShift,
 }: {
     initialData: BaseProductionInitialData
     onEditWorker: (worker: BaseProductionWorker) => void
     onEditMachine: (machine: BaseProductionMachine) => void
+    focusWorkerId?: string
+    initialShift?: BaseProductionShift
 }) {
     const router = useRouter()
-    const [shift, setShift] = useState<BaseProductionShift>('day')
-    const [workerSearch, setWorkerSearch] = useState('')
+    const [shift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
+    const [workerSearch, setWorkerSearch] = useState(() => initialData.workers.find(worker => worker.id === focusWorkerId)?.name ?? '')
     const [selectedMachineTypes, setSelectedMachineTypes] = useState<string[]>([])
     const [showInactive, setShowInactive] = useState(false)
     const [draggingWorkerId, setDraggingWorkerId] = useState<string | null>(null)

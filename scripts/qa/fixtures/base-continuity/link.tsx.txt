@@ -1,0 +1,1 @@
+import React from 'react';import {useRouter} from './navigation';export default function Link({href,children,...rest}){const router=useRouter();return <a {...rest} href={href} onClick={e=>{e.preventDefault();router.push(href)}}>{children}</a>}

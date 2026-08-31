@@ -1,0 +1,13 @@
+export async function createBaseProductionJob() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function createBaseProductionMachine() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function createBaseProductionWorker() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function createBaseWorkerAdvance() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function settleBaseWorkerPayroll() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function updateBaseProductionJobStatus() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function updateBaseProductionMachine() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function updateBaseProductionWorker() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function saveBaseDailyProductionBatch() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function removeBaseWorkerMachineAssignment() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function upsertBaseWorkerMachineAssignment() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function setBaseMachineJobContext() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}
+export async function reverseBasePayrollSettlement() {return {error:'Isolated test: server writes are disabled. Your draft is retained.'}}

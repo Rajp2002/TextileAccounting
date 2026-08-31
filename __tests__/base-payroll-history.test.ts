@@ -81,6 +81,21 @@ describe('Base payroll records', () => {
         expect(csv).toContain('Ramesh,Loom #1,Cotton Navy,6.75,200,1350')
     })
 
+    it('retains reversed receipts for audit without inflating active totals or machine pay', () => {
+        const reversed = { ...settlements[0], status: 'reversed' as const, reversal_reason: '=unsafe spreadsheet formula' }
+        const [period] = buildBasePayrollHistory([reversed, settlements[1]], lines)
+        expect(period.workers).toHaveLength(2)
+        expect(period.totalGrossPay).toBe(500)
+        expect(period.totalNetPayout).toBe(500)
+        expect(period.totalAdvanceRecovered).toBe(0)
+        expect(period.machines[0].grossPay).toBe(500)
+        expect(period.paymentModes).toEqual(['upi'])
+        const csv = buildBasePayrollHistoryCsv(period)
+        expect(csv).toContain('Record Status,Reversal Reason')
+        expect(csv).toContain("reversed,'=unsafe spreadsheet formula")
+        expect(period.workers.find(worker => worker.status === 'reversed')?.grossPay).toBe(1350)
+    })
+
     it('places a comprehensive records control on Base payroll', () => {
         const root = process.cwd()
         const client = readFileSync(join(root, 'app/(dashboard)/owner/production/BaseProductionClient.tsx'), 'utf8')

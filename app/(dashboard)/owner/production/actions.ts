@@ -60,6 +60,15 @@ const BaseAdvanceSchema = z.object({
 const BaseSettlementSchema = z.object({
     workerId: UuidSchema,
     paymentMode: z.enum(['cash', 'bank_transfer', 'upi', 'cheque']),
+    periodEnd: DateSchema,
+    expected: z.object({
+        client_request_id: UuidSchema,
+        period_start: DateSchema,
+        gross_pay: z.number().finite().nonnegative(),
+        advance_deducted: z.number().finite().nonnegative(),
+        net_payout: z.number().finite().nonnegative(),
+        advance_balance_before: z.number().finite().nonnegative(),
+    }),
 })
 
 const BaseMachineTypeSchema = z.enum(['jacquard', 'power_loom', 'rapier', 'water_jet', 'air_jet', 'circular', 'other'])
@@ -123,6 +132,7 @@ const BaseDailyProductionSchema = z.object({
     productionDate: DateSchema,
     shift: z.enum(['day', 'night']),
     clientRequestId: UuidSchema,
+    expectedUpdatedAt: z.string().datetime({ offset: true }).nullable(),
     entries: z.array(BaseDailyProductionRowSchema).min(1, 'Add at least one worker row.').max(500),
 }).superRefine((input, context) => {
     const workerIds = input.entries.map((entry) => entry.workerId)
@@ -202,6 +212,8 @@ export async function createBaseProductionMachine(input: {
 
         if (!error && data) {
             revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
             return { success: true, machineId: data.id }
         }
         if (error?.code !== '23505' || requestedName) {
@@ -241,6 +253,8 @@ export async function updateBaseProductionMachine(input: {
     if (error) return databaseError(error, 'Machine could not be updated. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
@@ -304,6 +318,8 @@ export async function upsertBaseWorkerMachineAssignment(input: {
     }
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return {
         success: true,
         assignmentId: result?.assignment_id ?? null,
@@ -325,6 +341,8 @@ export async function removeBaseWorkerMachineAssignment(input: { assignmentId: s
     if (error) return databaseError(error, 'Assignment could not be removed. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     const result = data as { removed?: boolean; deleted?: boolean } | null
     return { success: true, removed: Boolean(result?.removed ?? result?.deleted) }
 }
@@ -348,6 +366,8 @@ export async function setBaseMachineJobContext(input: {
     if (error) return databaseError(error, 'Machine job context could not be saved. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true, context: data }
 }
 
@@ -355,6 +375,7 @@ export async function saveBaseDailyProductionBatch(input: {
     productionDate: string
     shift: 'day' | 'night'
     clientRequestId: string
+    expectedUpdatedAt: string | null
     correctionReason?: string
     entries: Array<{
         workerId: string
@@ -377,11 +398,12 @@ export async function saveBaseDailyProductionBatch(input: {
     if (correctionReason && 'error' in correctionReason) return correctionReason
 
     const supabase = await createServerClient()
-    const { data, error } = await supabase.rpc('save_base_daily_production_with_reason', {
+    const { data, error } = await supabase.rpc('save_base_daily_production_reviewed', {
         p_production_date: parsed.data.productionDate,
         p_shift: parsed.data.shift,
         p_client_request_id: parsed.data.clientRequestId,
         p_correction_reason: correctionReason?.data ?? null,
+        p_expected_updated_at: parsed.data.expectedUpdatedAt,
         p_entries: parsed.data.entries.map((entry) => ({
             worker_id: entry.workerId,
             meters: entry.meters,
@@ -395,7 +417,7 @@ export async function saveBaseDailyProductionBatch(input: {
         })),
     })
 
-    if (error) return databaseError(error, 'The daily production sheet could not be saved. Please try again.')
+    if (error) return databaseError(error, error.code === '40001' ? 'This shift changed in another session. Reload the saved version before correcting it; your local draft is retained.' : error.code === '23503' ? 'The worker, machine, or job no longer matches the dated Setup. Review Setup before saving this correction; your local draft is retained.' : 'The daily production sheet could not be saved. Please try again.')
 
     const startedJobIds = [...new Set(
         parsed.data.entries.flatMap((entry) => entry.allocations
@@ -417,6 +439,8 @@ export async function saveBaseDailyProductionBatch(input: {
     }
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true, summary: data }
 }
 
@@ -454,6 +478,8 @@ export async function createBaseProductionWorker(input: {
     if (error) return databaseError(error, 'Worker could not be added. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
@@ -483,6 +509,8 @@ export async function updateBaseProductionWorker(input: {
     if (error) return databaseError(error, 'Worker could not be updated. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
@@ -538,6 +566,8 @@ export async function createBaseProductionJob(input: {
     if (error) return databaseError(error, 'Production job could not be created. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
@@ -562,6 +592,8 @@ export async function updateBaseProductionJobStatus(input: {
     if (error) return databaseError(error, 'Job status could not be updated. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
@@ -646,6 +678,8 @@ export async function recordBaseProduction(input: {
     }
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
@@ -682,26 +716,46 @@ export async function createBaseWorkerAdvance(input: {
     if (error) return databaseError(error, 'Advance could not be recorded. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true }
 }
 
 export async function settleBaseWorkerPayroll(input: {
     workerId: string
     paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque'
+    periodEnd: string
+    expected: { client_request_id: string; period_start: string; gross_pay: number; advance_deducted: number; net_payout: number; advance_balance_before: number }
 }) {
     await requireBaseProductionOwner()
     const parsed = safeParse(BaseSettlementSchema, input)
     if ('error' in parsed) return parsed
 
     const supabase = await createServerClient()
-    const { data, error } = await supabase.rpc('settle_base_worker_payroll', {
+    const { data, error } = await supabase.rpc('settle_base_worker_payroll_reviewed', {
         p_worker_id: parsed.data.workerId,
-        p_period_end: getSuratTodayString(),
+        p_period_end: parsed.data.periodEnd,
         p_payment_mode: parsed.data.paymentMode,
+        p_expected: parsed.data.expected,
     })
 
     if (error) return databaseError(error, error.message || 'Payroll could not be settled. Please try again.')
 
     revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
     return { success: true, settlement: data }
+}
+
+export async function reverseBasePayrollSettlement(input: { settlementId: string; reason: string; paymentNotMade: boolean }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(z.object({ settlementId: UuidSchema, reason: BaseCorrectionReasonSchema, paymentNotMade: z.literal(true) }), input)
+    if ('error' in parsed) return parsed
+    const supabase = await createServerClient()
+    const { error } = await supabase.rpc('reverse_base_payroll_settlement', { p_settlement_id: parsed.data.settlementId, p_reason: parsed.data.reason, p_payment_not_made: true })
+    if (error) return databaseError(error, error.message || 'Settlement could not be reversed.')
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    return { success: true }
 }

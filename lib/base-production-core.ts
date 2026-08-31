@@ -53,6 +53,13 @@ export type BaseProductionRevisionSnapshot = {
     zero_count: number
     absent_count: number
     worker_count: number
+    entries?: Array<{
+        worker_id: string
+        entry_status: BaseDailyProductionStatus
+        meters: number
+        worker_rate_snapshot: number
+        allocations: Array<{ machine_id: string; machine_label: string; job_id: string; job_label: string; meters: number; worker_rate_snapshot: number }>
+    }>
 }
 
 export type BaseProductionBatchRevision = {
@@ -64,6 +71,7 @@ export type BaseProductionBatchRevision = {
     before_snapshot: BaseProductionRevisionSnapshot | null
     after_snapshot: BaseProductionRevisionSnapshot
     changed_at: string
+    changed_by?: string | null
 }
 
 export type BaseProductionWorker = {
@@ -171,6 +179,10 @@ export type BasePayrollSettlement = {
     net_payout: number
     payment_mode: BasePayrollPaymentMode
     paid_at: string
+    status?: 'paid' | 'reversed'
+    reversal_reason?: string | null
+    reversed_at?: string | null
+    recovery_receipt_complete?: boolean
     worker_name_snapshot?: string
     advance_balance_before?: number
     remaining_advance_balance?: number
@@ -350,6 +362,7 @@ function getWorkerPeriodStart(
     workerId: string,
     settlements: BasePayrollSettlement[],
     periodEnd: string,
+    entries: BaseProductionEntry[],
 ) {
     const monthStart = getBasePayrollPeriod(periodEnd).start
     const latestEnd = settlements
@@ -358,9 +371,14 @@ function getWorkerPeriodStart(
         .sort()
         .at(-1)
 
-    if (!latestEnd) return monthStart
-    const nextPeriodStart = addOneDay(latestEnd)
-    return nextPeriodStart > monthStart ? nextPeriodStart : monthStart
+    if (latestEnd) return addOneDay(latestEnd)
+    // A first payment can happen months after the work. Never drop unpaid
+    // production merely because the owner did not settle before month end.
+    const firstProduction = entries
+        .filter((entry) => entry.worker_id === workerId && entry.production_date <= periodEnd && entry.meters > 0)
+        .map((entry) => entry.production_date)
+        .sort()[0]
+    return firstProduction && firstProduction < monthStart ? firstProduction : monthStart
 }
 
 export function calculateBaseWorkerPayables({
@@ -378,6 +396,7 @@ export function calculateBaseWorkerPayables({
     settlements: BasePayrollSettlement[]
     periodEnd: string
 }): BaseWorkerPayable[] {
+    const activeSettlements = settlements.filter(settlement => settlement.status !== 'reversed')
     const allocationsByEntry = new Map<string, BaseProductionAllocation[]>()
     for (const allocation of allocations) {
         const current = allocationsByEntry.get(allocation.entry_id) ?? []
@@ -386,7 +405,7 @@ export function calculateBaseWorkerPayables({
     }
 
     return workers.map((worker) => {
-        const periodStart = getWorkerPeriodStart(worker.id, settlements, periodEnd)
+        const periodStart = getWorkerPeriodStart(worker.id, activeSettlements, periodEnd, entries)
         const periodEntries = entries.filter((entry) => (
             entry.worker_id === worker.id
             && entry.production_date >= periodStart
@@ -409,7 +428,7 @@ export function calculateBaseWorkerPayables({
                 (total, advance) => total.plus(Decimal.max(0, toDecimal(advance.amount).minus(toDecimal(advance.recovered_amount)))),
                 new Decimal(0),
             )
-        const settlement = settlements
+        const settlement = activeSettlements
             .filter((candidate) => candidate.worker_id === worker.id && candidate.period_end === periodEnd)
             .sort((a, b) => b.paid_at.localeCompare(a.paid_at))
             .at(0)

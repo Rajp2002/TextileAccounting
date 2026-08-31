@@ -14,12 +14,12 @@ export default async function PayrollPage({
     searchParams: Promise<{ cycle?: string | string[] }>
 }) {
     const perf = createPerfTimer('/owner/payroll')
-    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
+    const { user, profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
     const planAccess = await getCachedOrgPlanAccess(profile.org_id)
 
     if (!hasCapability(planAccess.effectiveTier, 'legacy_full_suite')) {
         const initialData = await loadBaseProductionInitialData(profile.org_id, getSuratTodayString())
-        return <BaseProductionClient initialData={initialData} view="payroll" />
+        return <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} view="payroll" />
     }
 
     const params = await searchParams
