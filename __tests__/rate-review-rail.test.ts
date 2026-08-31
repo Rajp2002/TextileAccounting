@@ -45,6 +45,14 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(rates).toContain('Auto-Discovery:')
     })
 
+    it('summarizes pending rates without rendering individual rail rows', () => {
+        expect(rates).toContain("tx('Pending Rates')")
+        expect(rates).toContain("tx('Awaiting review')")
+        expect(rates).toContain('aria-label={tx(`${dueCount} pending ${dueCount === 1 ? \'rate\' : \'rates\'}`)}')
+        expect(rates).not.toContain('dueReviewRates.slice(0, 3)')
+        expect(rates).not.toContain('onReviewRate')
+    })
+
     it('keeps category breakdown and clean summary in the full-width main column', () => {
         expect(rates).toContain('warpRatesCount')
         expect(rates).toContain('weftRatesCount')

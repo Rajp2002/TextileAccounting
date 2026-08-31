@@ -420,13 +420,11 @@ function RateReviewRailWidget({
     mostRecentReview,
     defaultReviewIntervalDays,
     onOpenModal,
-    onReviewRate,
 }: {
     dueReviewRates: CostRateRow[]
     mostRecentReview: string | null
     defaultReviewIntervalDays: number
     onOpenModal: () => void
-    onReviewRate: (rate: CostRateRow) => void
 }) {
     const { tx } = useTranslation()
     const dueCount = dueReviewRates.length
@@ -456,31 +454,17 @@ function RateReviewRailWidget({
                             {tx('Supplier prices or newly discovered rates require confirmation to keep future estimate costings accurate.')}
                         </p>
 
-                        <div className="space-y-2 rounded-xl border border-hairline/80 bg-surface-soft/60 p-2.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-subtle px-1">{tx('Pending Rates')}</p>
-                            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
-                                {dueReviewRates.slice(0, 3).map(rate => (
-                                    <div
-                                        key={rate.id}
-                                        onClick={() => onReviewRate(rate)}
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onReviewRate(rate) }}
-                                        className="group flex cursor-pointer items-center justify-between gap-2 rounded-lg border border-hairline/60 bg-surface px-2.5 py-2 transition-colors hover:border-warning/40 hover:bg-warning-soft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                                    >
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-xs font-bold text-ink group-hover:text-saffron-deep">{rate.name}</p>
-                                            <p className="text-[10px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} · <span className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</span></p>
-                                        </div>
-                                        <ReviewBadge rate={rate} compact />
-                                    </div>
-                                ))}
+                        <div
+                            className="flex items-center justify-between gap-3 rounded-xl border border-hairline/80 bg-surface-soft/60 px-3 py-2.5"
+                            aria-label={tx(`${dueCount} pending ${dueCount === 1 ? 'rate' : 'rates'}`)}
+                        >
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-subtle">{tx('Pending Rates')}</p>
+                                <p className="mt-0.5 text-xs font-semibold text-ink">{tx('Awaiting review')}</p>
                             </div>
-                            {dueCount > 3 && (
-                                <p className="text-center text-[11px] font-medium text-subtle pt-1">
-                                    {tx(`+ ${dueCount - 3} more ${dueCount - 3 === 1 ? 'rate' : 'rates'} waiting`)}
-                                </p>
-                            )}
+                            <span className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-full bg-warning/20 px-2.5 text-sm font-black text-saffron-deep">
+                                {dueCount}
+                            </span>
                         </div>
 
                         <Button
@@ -1318,10 +1302,6 @@ export default function RatesClient({
                     mostRecentReview={mostRecentReview}
                     defaultReviewIntervalDays={defaultReviewIntervalDays}
                     onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-                    onReviewRate={rate => {
-                        setReviewError(null)
-                        setReviewRate(rate)
-                    }}
                 />
                 <RateBookReferenceCard />
             </aside>
