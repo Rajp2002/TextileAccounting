@@ -522,6 +522,29 @@
     }
   }
 
+  /* Keep the Rate Book archive policy at the bottom edge of the desktop rail. */
+  .rates-archive-policy-rail-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1540px) {
+    .rates-archive-policy-rail-desktop {
+      display: block;
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 30;
+      width: 17rem;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .rates-archive-policy-rail-desktop {
+      right: 2.5rem;
+      width: 18.5rem;
+    }
+  }
+
   @media (min-width: 768px) and (max-width: 1699.98px) {
     .settings-page-frame {
       margin-left: var(--settings-sidebar-guard);

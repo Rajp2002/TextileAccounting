@@ -1297,8 +1297,8 @@ export default function RatesClient({
             </Dialog>
             </div>
 
-            {/* Keep viewport-positioned review controls outside the animated route wrapper. Archive policy remains at the bottom of the rail. */}
-            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review, reference, and archive policy')}>
+            {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
+            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
                 <RateReviewRailWidget
                     dueReviewRates={dueReviewRates}
                     mostRecentReview={mostRecentReview}
@@ -1306,6 +1306,10 @@ export default function RatesClient({
                     onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
                 />
                 <RateBookReferenceCard />
+            </aside>
+
+            {/* Pin the archive policy to the bottom edge of the desktop rail. */}
+            <aside className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
                 <ArchivePolicyNotice />
             </aside>
 
