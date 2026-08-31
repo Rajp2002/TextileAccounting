@@ -34,7 +34,7 @@ describe('Batch 24D EST-017 estimator double-submit guard', () => {
         expect(saveHandler).toContain('if (saveQuoteLockRef.current || savingQuote) return')
         expect(saveHandler).toContain('saveQuoteLockRef.current = true')
         expect(saveHandler.indexOf('saveQuoteLockRef.current = true')).toBeLessThan(saveHandler.indexOf('createMarketRunFromEstimator({'))
-        expect(saveHandler.indexOf('saveQuoteLockRef.current = true')).toBeLessThan(saveHandler.indexOf('saveEstimatorQuoteV3({'))
+        expect(saveHandler.indexOf('saveQuoteLockRef.current = true')).toBeLessThan(saveHandler.indexOf('saveEstimatorQuoteV3(saveRequest)'))
     })
 
     it('releases the submit lock after success or failure so a later normal submit still works', () => {
@@ -51,7 +51,7 @@ describe('Batch 24D EST-017 estimator double-submit guard', () => {
         expect(saveHandler).toContain('fabricLabel:             resolvedPartyName')
         expect(saveHandler).toContain('router.push(`/owner/market-runs/${res.marketRunId}`)')
 
-        expect(saveHandler).toContain('const res = await saveEstimatorQuoteV3({')
+        expect(saveHandler).toContain('runMutationWithTimeout(() => saveEstimatorQuoteV3(saveRequest)')
         expect(saveHandler).toContain('partyName:               resolvedPartyName')
         expect(saveHandler).toContain('status:                  status')
         expect(saveHandler).toContain("router.push('/owner/quotes')")

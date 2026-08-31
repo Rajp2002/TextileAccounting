@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useReducer, useEffect, useMemo, useCallback, useState, useRef } from 'react'
+import { useReducer, useEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,7 +15,6 @@ import {
     Loader2,
     Sparkles,
     BookmarkPlus,
-    Archive,
     Layers,
     Plus,
     Trash2,
@@ -42,7 +41,6 @@ import {
     Minus,
     ReceiptText,
     FileDown,
-    Pencil,
     MoreHorizontal,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -83,6 +81,7 @@ import {
     getEstimatorTemplates,
     saveAsFabricTemplate,
     saveEstimatorQuoteV3,
+    getCostingSaveReceipt,
     updateTemplateRates,
     updateFabricTemplate,
     getLastQuoteForParty,
@@ -131,6 +130,7 @@ import type { EstimatorDraftInput, EstimatorQuoteStatus } from '@/lib/estimator-
 import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { runMutationWithTimeout } from '@/lib/mutation-outcome'
+import { getEstimatorFieldTarget } from '@/lib/estimator-field-target'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { RouteMilestones } from '@/components/performance/route-milestones'
@@ -839,12 +839,13 @@ function StepperField({
 }
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false, ghostValue,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false, ghostValue, fieldKey,
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
-    unit?: string; step?: number; min?: number; hint?: string; warning?: string
+    unit?: string; step?: number; min?: number; hint?: string; warning?: string; fieldKey?: string
     onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean; ghostValue?: number
 }) {
+    const inputId = useId()
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     // Estimator defaults are stored as numeric zero for calculations, but an
     // empty control with a zero placeholder is a better editing experience:
@@ -856,10 +857,14 @@ function NumField({
         ? (placeholder ?? (ghostValue !== undefined ? String(ghostValue) : '0'))
         : placeholder
     return (
-        <div className="space-y-1.5 min-w-0">
-            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
+        <div className="space-y-1.5 min-w-0" data-estimator-field={fieldKey}>
+            <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
             <div className="relative group">
                 <Input
+                    id={inputId}
+                    inputMode="decimal"
+                    aria-invalid={isEmpty || undefined}
+                    aria-describedby={isEmpty || warning || hint ? `${inputId}-help` : undefined}
                     type="number"
                     step={step}
                     min={min}
@@ -879,12 +884,12 @@ function NumField({
                     </span>
                 )}
             </div>
-            {isEmpty && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
+            {isEmpty && <p id={`${inputId}-help`} className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
             {warning ? (
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-[var(--color-warning-amber)] shrink-0" />
-                        <p className="text-[10px] font-medium leading-tight text-[var(--color-warning-amber)]">{warning}</p>
+                        <p id={!isEmpty ? `${inputId}-help` : undefined} className="text-[10px] font-medium leading-tight text-[var(--color-warning-amber)]">{warning}</p>
                     </div>
                     {onDismissWarning && (
                         <button
@@ -897,7 +902,7 @@ function NumField({
                     )}
                 </div>
             ) : hint && !isEmpty ? (
-                <p className="text-[11px] text-[var(--color-muted)] font-medium leading-tight mt-1">{hint}</p>
+                <p id={`${inputId}-help`} className="text-[11px] text-[var(--color-muted)] font-medium leading-tight mt-1">{hint}</p>
             ) : null}
         </div>
     )
@@ -918,6 +923,7 @@ function YarnDensityFields({
 
     return (
         <NumField
+            fieldKey="calcDenier"
             label="Denier — REQUIRED"
             value={effectiveDenier}
             onChange={value => {
@@ -989,12 +995,13 @@ function WidthField({
     }, [value, unit])
 
     return (
-        <div className="space-y-1.5 min-w-0">
+        <div data-estimator-field="effectiveCostingWidthCm" className="space-y-1.5 min-w-0">
             <Label className={`flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>
                 {label}
             </Label>
             <div className="relative group">
                 <Input
+                    aria-label={label}
                     type="number"
                     step={unit === 'cm' ? 1 : 0.1}
                     min={0}
@@ -1829,11 +1836,12 @@ function LayerNameField({
     const isGhostValue = Boolean(value?.trim()) && value.trim() === ghostText.trim()
     const inputValue = isGhostValue ? '' : value
     return (
-        <div className="space-y-1.5 min-w-0">
+        <div data-estimator-field="label" className="space-y-1.5 min-w-0">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 {label}
             </Label>
             <Input
+                    aria-label={label}
                 value={inputValue}
                 placeholder={isGhostValue ? ghostText : placeholder}
                 onChange={e => onChange(e.target.value)}
@@ -1932,7 +1940,7 @@ function RowCard({
     }, [])
 
     return (
-        <div data-testid={`yarn-component-${accent}-${index}`} className="group overflow-hidden rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)]">
+        <div data-estimator-row={`${accent === 'indigo' ? 'warpRows' : 'weftRows'}.${index}`} data-testid={`yarn-component-${accent}-${index}`} className="group overflow-hidden rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)]">
             <div className={`flex min-w-0 items-stretch gap-1 border-b border-[var(--color-hairline)] ${c.strip}`}>
                 <button
                     type="button"
@@ -2107,6 +2115,7 @@ function WeavingRateFields({
                     <div className="relative">
                         <Input
                             id={rateInputId}
+                            data-estimator-field="perPickCostPaisa"
                             aria-label={inputMode === 'perMeter' ? 'Weaving rate in rupees per metre' : 'Paisa per pick'}
                             type="number"
                             min={0}
@@ -2261,6 +2270,8 @@ function QuickCostingView({
                     <div className="space-y-1.5 sm:col-span-2">
                         <Label className="text-[10px] font-bold uppercase text-slate-500">Fabric quality name — REQUIRED</Label>
                         <Input
+                            data-estimator-field="qualityLabel"
+                            aria-label="Fabric quality name"
                             value={qualityLabel}
                             readOnly={qualityLocked}
                             onChange={event => setQualityLabel(event.target.value)}
@@ -2269,7 +2280,7 @@ function QuickCostingView({
                         />
                         <p className="text-[10px] font-medium leading-normal text-slate-400">Use the name your staff and repeat customers will recognise.</p>
                     </div>
-                    <NumField
+                    <NumField fieldKey="warpCrimpPct"
                         label="Warp crimp (take-up)"
                         value={state.warpCrimpPct}
                         onChange={value => dispatch({ type: 'SET', field: 'warpCrimpPct', value: value ?? 0 })}
@@ -2279,7 +2290,7 @@ function QuickCostingView({
                         placeholder={String(DEFAULT_WARP_CRIMP_PCT)}
                         hint="Applied to warp consumption and beam planning."
                     />
-                    <NumField
+                    <NumField fieldKey="yarnShortagePct"
                         label="Default yarn waste"
                         value={state.yarnShortagePct}
                         onChange={value => dispatch({ type: 'SET', field: 'yarnShortagePct', value: value ?? 0 })}
@@ -2291,7 +2302,7 @@ function QuickCostingView({
                         hint="Used when a yarn row has no row-specific waste."
                     />
                     {canUseProduction && (
-                        <NumField
+                        <NumField fieldKey="tapeLengthM"
                             label="Tape length per beam"
                             value={state.tapeLengthM}
                             onChange={value => dispatch({ type: 'SET', field: 'tapeLengthM', value: value ?? 0 })}
@@ -2341,16 +2352,16 @@ function QuickCostingView({
                             />
                             <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Warp ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })} />
                             {row.calculationMode === 'manual' ? (
-                                <NumField label="Warp consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 3.25" attentionWhenEmpty />
+                                <NumField fieldKey="manualKgPer100m" label="Warp consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 3.25" attentionWhenEmpty />
                             ) : (
                                 <>
                                     <YarnDensityFields row={row} onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })} />
-                                    <NumField label="Beam ends — REQUIRED" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
+                                    <NumField fieldKey="beamEnds" label="Beam ends — REQUIRED" value={row.beamEnds} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: value ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
                                 </>
                             )}
-                            <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
-                            <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} placeholder="e.g. 110" attentionWhenEmpty />
-                            <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
+                            <NumField fieldKey="shortagePct" label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
+                            <NumField fieldKey="yarnRate" label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} placeholder="e.g. 110" attentionWhenEmpty />
+                            <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
                         </RowCard>
                     ))}
                     <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-[10px] border-dashed border-[#C6D9EA] bg-[#F7FBFD] text-[var(--color-info-blue)]" onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}>
@@ -2374,16 +2385,16 @@ function QuickCostingView({
                             <RowCard key={row.id} title="Weft yarn" index={index} componentName={row.label} ratePerKg={row.yarnRate} accent="emerald" canRemove={state.weftRows.length > 1} onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })} kgPer100m={totals.weftRows[index]?.baseKgPer100mUsed ?? 0} costPer100m={totals.weftRows[index]?.baseCostPer100m ?? 0} adjustmentPct={totals.weftRows[index]?.totalAdjustmentPct ?? 0} adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)} showCalculatedValues={hasValidCostResult}>
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField label="Yarn component name" value={row.label ?? ''} placeholder={`Weft ${index + 1}`} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })} />
-                                <NumField label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
+                                <NumField fieldKey="picks" label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
                                 <WidthField label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`} value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} attentionWhenEmpty={row.calculationMode !== 'manual'} />
                                 {row.calculationMode === 'manual' ? (
-                                    <NumField label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 2.75" attentionWhenEmpty />
+                                    <NumField fieldKey="manualKgPer100m" label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 2.75" attentionWhenEmpty />
                                 ) : (
                                     <YarnDensityFields row={row} onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })} />
                                 )}
-                                <NumField label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
-                            <NumField label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} placeholder="e.g. 110" attentionWhenEmpty />
-                                <NumField label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
+                                <NumField fieldKey="shortagePct" label="Waste" value={row.shortagePct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct ?? 0}% default; 0 overrides`} />
+                            <NumField fieldKey="yarnRate" label={`${t('common.current_yarn_rate')} — REQUIRED`} value={row.yarnRate} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })} unit="₹/kg" step={1} placeholder="e.g. 110" attentionWhenEmpty />
+                                <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
                             </RowCard>
                         )
                     })}
@@ -2413,14 +2424,14 @@ function QuickCostingView({
                 <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <NumField label="Warping rate" value={state.warpingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.1} placeholder="e.g. 8" />
+                        <NumField fieldKey="warpingRatePerKg" label="Warping rate" value={state.warpingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.1} placeholder="e.g. 8" />
                         <div className="space-y-2 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3">
                             <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Sizing</p>
                             <div className="flex flex-wrap gap-3 text-xs font-semibold text-[var(--color-body)]">
                                 <label className="flex items-center gap-1.5"><input type="radio" name="quick-sizing-mode" checked={state.sizingMode === 'in_house'} onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })} /> In-house</label>
                                 <label className="flex items-center gap-1.5"><input type="radio" name="quick-sizing-mode" checked={state.sizingMode === 'outsourced'} onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })} /> Outsourced</label>
                             </div>
-                            {state.sizingMode === 'outsourced' ? <NumField label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} placeholder="e.g. 10" /> : <p className="text-[10px] italic text-[var(--color-muted)]">In-house sizing is treated as factory overhead.</p>}
+                            {state.sizingMode === 'outsourced' ? <NumField fieldKey="sizingRatePerKg" label="Sizing rate" value={state.sizingRatePerKg} onChange={value => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: value ?? 0 })} unit="₹/kg" step={0.5} placeholder="e.g. 10" /> : <p className="text-[10px] italic text-[var(--color-muted)]">In-house sizing is treated as factory overhead.</p>}
                         </div>
                     </div>
                 </CardContent>
@@ -2440,10 +2451,10 @@ function QuickCostingView({
                         </button>
                     </div>
                     {state.overheadMode === 'direct' ? (
-                        <NumField label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} placeholder="e.g. 12.50" attentionWhenEmpty />
+                        <NumField fieldKey="overheadOverridePerM" label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} placeholder="e.g. 12.50" attentionWhenEmpty />
                     ) : (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                            <NumField label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} placeholder="e.g. 10,000" attentionWhenEmpty hint="Metres actually produced each month; saved expenses are divided by this." />
+                            <NumField fieldKey="monthlyOutputM" label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} placeholder="e.g. 10,000" attentionWhenEmpty hint="Metres actually produced each month; saved expenses are divided by this." />
                             <Button type="button" variant="outline" className="h-11 gap-1.5" onClick={onOpenOverheadDetails}><Calculator className="h-3.5 w-3.5" /> Edit expenses</Button>
                         </div>
                     )}
@@ -2471,10 +2482,10 @@ function QuickCostingView({
                     step={7}
                 />
                 <CardContent className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
-                    <NumField label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" hint="Your desired profit above break-even." />
-                    <NumField label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" hint="Broker or agent share of the selling price." />
-                    <NumField label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} placeholder="e.g. 1.50" hint="Delivery cost added per metre." />
-                    <NumField label="Costing quantity" value={state.orderQuantityM} onChange={value => dispatch({ type: 'SET', field: 'orderQuantityM', value })} unit="m" step={100} placeholder="Optional" hint="Needed for order-level profit and quotations." />
+                    <NumField fieldKey="profitPct" label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" hint="Your desired profit above break-even." />
+                    <NumField fieldKey="commissionPct" label="Broker commission" value={state.commissionPct} onChange={value => dispatch({ type: 'SET', field: 'commissionPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" hint="Broker or agent share of the selling price." />
+                    <NumField fieldKey="transportPerM" label="Transport charge" value={state.transportPerM} onChange={value => dispatch({ type: 'SET', field: 'transportPerM', value: value ?? 0 })} unit="₹/m" step={0.1} placeholder="e.g. 1.50" hint="Delivery cost added per metre." />
+                    <NumField fieldKey="orderQuantityM" label="Costing quantity" value={state.orderQuantityM} onChange={value => dispatch({ type: 'SET', field: 'orderQuantityM', value })} unit="m" step={100} placeholder="Optional" hint="Needed for order-level profit and quotations." />
                 </CardContent>
             </EstimatorCard>
         </div>
@@ -2518,106 +2529,37 @@ const ESTIMATOR_ISSUE_LABEL_MATCHERS: Array<{ matches: (field: string) => boolea
 
 function findEstimatorIssueTarget(field: string): { element: HTMLElement; inputElement?: HTMLElement; isYarnRow: boolean } | null {
     if (typeof document === 'undefined') return null
-
-    const normalizedField = field.toLowerCase()
-    if (normalizedField === 'qualitylabel' || normalizedField === 'fabricqualityname' || normalizedField === 'quality_label') {
-        const input = document.querySelector<HTMLElement>('input[placeholder*="quality" i], input[aria-label*="quality" i], input[id*="quality" i]')
-        if (input) return { element: input.parentElement ?? input, inputElement: input, isYarnRow: false }
+    const target = getEstimatorFieldTarget(field)
+    const row = target.row ? document.querySelector<HTMLElement>(`[data-estimator-row="${target.row}"]`) : null
+    if (target.row && !row) return null
+    const scope = row ?? document
+    const control = target.field ? Array.from(scope.querySelectorAll<HTMLElement>('[data-estimator-field]')).find(element => element.dataset.estimatorField?.toLowerCase() === target.field?.toLowerCase()) : null
+    if (control) {
+        const input = control.matches('input, select, textarea') ? control : control.querySelector<HTMLElement>('input, select, textarea')
+        return { element: row ?? control, inputElement: input ?? undefined, isYarnRow: Boolean(row) }
     }
-
-    if (normalizedField.startsWith('warprows')) {
-        const match = normalizedField.match(/warprows\[?(\d+)\]?\.?(\w+)?/)
-        const rowIndex = match ? parseInt(match[1], 10) : 0
-        const prop = match ? match[2] : ''
-        const element = document.querySelector<HTMLElement>(`[data-testid="yarn-component-indigo-${rowIndex}"]`)
-            ?? document.querySelector<HTMLElement>('[data-testid^="yarn-component-indigo-"]')
-        if (element) {
-            let inputElement: HTMLElement | undefined
-            if (prop) {
-                const subMatcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(prop))
-                if (subMatcher) {
-                    const label = Array.from(element.querySelectorAll('label')).find(candidate => {
-                        const text = candidate.textContent?.trim().toLowerCase() ?? ''
-                        return subMatcher.labels.some(term => text.includes(term))
-                    })
-                    if (label) {
-                        inputElement = (label.parentElement?.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
-                    }
-                }
-            }
-            return { element, inputElement, isYarnRow: true }
-        }
-    }
-    if (normalizedField.startsWith('weftrows')) {
-        const match = normalizedField.match(/weftrows\[?(\d+)\]?\.?(\w+)?/)
-        const rowIndex = match ? parseInt(match[1], 10) : 0
-        const prop = match ? match[2] : ''
-        const element = document.querySelector<HTMLElement>(`[data-testid="yarn-component-emerald-${rowIndex}"]`)
-            ?? document.querySelector<HTMLElement>('[data-testid^="yarn-component-emerald-"]')
-        if (element) {
-            let inputElement: HTMLElement | undefined
-            if (prop) {
-                const subMatcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(prop))
-                if (subMatcher) {
-                    const label = Array.from(element.querySelectorAll('label')).find(candidate => {
-                        const text = candidate.textContent?.trim().toLowerCase() ?? ''
-                        return subMatcher.labels.some(term => text.includes(term))
-                    })
-                    if (label) {
-                        inputElement = (label.parentElement?.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
-                    }
-                }
-            }
-            return { element, inputElement, isYarnRow: true }
-        }
-    }
-
+    if (row) return { element: row, isYarnRow: true }
     const matcher = ESTIMATOR_ISSUE_LABEL_MATCHERS.find(candidate => candidate.matches(field))
-    if (!matcher) return null
-
-    const label = Array.from(document.querySelectorAll('label')).find(candidate => {
-        const text = candidate.textContent?.trim().toLowerCase() ?? ''
-        return matcher.labels.some(term => text.includes(term))
-    })
-    if (label?.parentElement) {
-        const input = (label.parentElement.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
-        return { element: label.parentElement, inputElement: input, isYarnRow: false }
-    }
-
-    const textElement = Array.from(document.querySelectorAll<HTMLElement>('p, h3, h4')).find(candidate => {
-        const text = candidate.textContent?.trim().toLowerCase() ?? ''
-        return matcher.labels.some(term => text.includes(term))
-    })
-    if (textElement?.parentElement) {
-        const input = (textElement.parentElement.querySelector('input, select, textarea, button') as HTMLElement) ?? undefined
-        return { element: textElement.parentElement, inputElement: input, isYarnRow: false }
-    }
-    return null
+    const label = matcher && Array.from(document.querySelectorAll('label')).find(candidate => matcher.labels.some(term => candidate.textContent?.trim().toLowerCase().includes(term)))
+    return label?.parentElement ? { element: label.parentElement, isYarnRow: false } : null
 }
 
 function focusEstimatorIssueTarget(field: string) {
     const target = findEstimatorIssueTarget(field)
-    const fallback = typeof document === 'undefined'
-        ? null
-        : document.querySelector<HTMLElement>('[id="estimator-save-validation-summary"]')
+    const fallback = typeof document === 'undefined' ? null : document.getElementById('estimator-save-validation-summary')
     const element = target?.element ?? fallback
     if (!element) return
-
-    if (target?.isYarnRow) {
-        const collapsedToggle = element.querySelector<HTMLButtonElement>('button[aria-expanded="false"]')
-        collapsedToggle?.click()
-    }
-
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (target?.isYarnRow) element.querySelector<HTMLButtonElement>('button[aria-expanded="false"]')?.click()
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    element.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' })
     window.setTimeout(() => {
-        const inputToFocus = target?.inputElement ?? element.querySelector<HTMLElement>('input, select, textarea, button')
-        inputToFocus?.focus({ preventScroll: true })
-    }, target?.isYarnRow ? 180 : 80)
+        // Fields may mount only after opening the collapsed yarn component.
+        const opened = findEstimatorIssueTarget(field)
+        const input = opened?.inputElement ?? opened?.element.querySelector<HTMLElement>('input, select, textarea')
+        if (input) input.focus({ preventScroll: true })
+        else { element.tabIndex = -1; element.focus({ preventScroll: true }) }
+    }, target?.isYarnRow ? 180 : 0)
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN PAGE
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function EstimatorClient({
     initialProfile,
@@ -2746,6 +2688,15 @@ export default function EstimatorClient({
         ? versionInputChanges.join(', ')
         : null
     const quoteRequestIdRef = useRef<string | null>(null)
+    const [unconfirmedRequestId, setUnconfirmedRequestId] = useState<string | null>(null)
+    const [checkingSave, setCheckingSave] = useState(false)
+    const [saveCheckMessage, setSaveCheckMessage] = useState('')
+    const pendingSaveRequestRef = useRef<Parameters<typeof saveEstimatorQuoteV3>[0] | null>(null)
+    const [lastSavedCosting, setLastSavedCosting] = useState<{ id: string; version: number; savedAt: string; model: ReturnType<typeof createCostingExportModel> } | null>(null)
+    const [exportSavedCosting, setExportSavedCosting] = useState(false)
+    const [hasUnsavedEdits, setHasUnsavedEdits] = useState(false)
+    const [pendingQualityChange, setPendingQualityChange] = useState<{ name: string; apply: () => void } | null>(null)
+    const [qualityCheckpoint, setQualityCheckpoint] = useState<{ draft: EstimatorDraftInput<EstimateState>; template: EstimatorTemplate | null } | null>(null)
     const autoRestoredDraftSavedAtRef = useRef<number | null>(null)
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
@@ -2942,22 +2893,28 @@ export default function EstimatorClient({
     // local draft.
     const dispatch = useCallback((action: Action) => {
         markUserEdit()
+        setHasUnsavedEdits(true)
+        setLastSavedCosting(null)
         rawDispatch(action)
     }, [markUserEdit])
     const setPartyNameFromUser = useCallback((value: string) => {
         markUserEdit()
+        setHasUnsavedEdits(true)
         setPartyName(value)
     }, [markUserEdit])
     const setQualityLabelFromUser = useCallback((value: string) => {
         markUserEdit()
+        setHasUnsavedEdits(true)
         setQualityLabel(value)
     }, [markUserEdit])
     const setWarpInstructionFromUser = useCallback((value: string) => {
         markUserEdit()
+        setHasUnsavedEdits(true)
         setWarpInstruction(value)
     }, [markUserEdit])
     const setWeftInstructionFromUser = useCallback((value: string) => {
         markUserEdit()
+        setHasUnsavedEdits(true)
         setWeftInstruction(value)
     }, [markUserEdit])
 
@@ -2970,6 +2927,7 @@ export default function EstimatorClient({
         qualityLabel,
         warpInstruction,
         weftInstruction,
+        pendingSaveRequest: pendingSaveRequestRef.current ?? undefined,
         sourceQuoteId: sourceQuoteId ?? undefined,
         sourceQuoteUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
         sourceQuoteVersionNumber: sourceQuoteVersionNumber ?? undefined,
@@ -2997,8 +2955,8 @@ export default function EstimatorClient({
         weftInstruction,
     ])
 
-    const applyEstimatorDraft = useCallback(() => {
-        const restored = restoreDraft()
+    const applyEstimatorDraft = useCallback((checkpoint?: EstimatorDraftInput<EstimateState>) => {
+        const restored = checkpoint ?? restoreDraft()
         if (!restored) return
         suppressAutosaveUntilChanged()
         lastGeneratedWarp.current = null
@@ -3023,6 +2981,10 @@ export default function EstimatorClient({
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
+        pendingSaveRequestRef.current = restored.pendingSaveRequest ?? null
+        setUnconfirmedRequestId(restored.pendingSaveRequest ? restored.clientRequestId ?? null : null)
+        setHasUnsavedEdits(!restored.sourceState || JSON.stringify(restored.sourceState) !== JSON.stringify(restored.state))
+        setLastSavedCosting(null)
         void trackPlanEvent('draft_restored')
         if (restored.sourceQuoteId) {
             void trackPlanEvent('costing_reopened', {
@@ -3289,6 +3251,84 @@ export default function EstimatorClient({
         ? createCostingExportModel({ qualityLabel, state, totals, result: costingResult })
         : null,
     [canPersistCostResult, costingResult, qualityLabel, state, totals])
+
+    const confirmSavedCosting = (receipt: { id: string; version_number: number; updated_at: string; created_at: string }) => {
+        const submitted = pendingSaveRequestRef.current
+        const savedState = submitted?.estimate ?? state
+        const savedTotals = calcFullTotals(savedState)
+        const savedModel = createCostingExportModel({ qualityLabel: submitted?.qualityLabel ?? qualityLabel, state: savedState, totals: savedTotals, result: buildCostingResult(savedState, savedTotals), createdAt: receipt.created_at })
+        setUnconfirmedRequestId(null)
+        setSaveCheckMessage('')
+        pendingSaveRequestRef.current = null
+        quoteRequestIdRef.current = null
+        clearDraft()
+        suppressAutosaveUntilChanged()
+        setHasUnsavedEdits(false)
+        setQualityCheckpoint(null)
+        setSourceQuoteId(receipt.id)
+        setSourceQuoteUpdatedAt(receipt.updated_at)
+        setSourceQuoteCreatedAt(receipt.created_at)
+        setSourceQuoteVersionNumber(receipt.version_number)
+        setSourceRecordKind('costing')
+        setSourceState(savedState)
+        setSourceFactoryProfileUpdatedAt(submitted?.factoryProfileUpdatedAt ?? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt)
+        setLastSavedCosting({ id: receipt.id, version: receipt.version_number, savedAt: receipt.created_at, model: savedModel })
+    }
+
+    const refreshSavedQualityTokens = async () => {
+        const refreshed = await getEstimatorTemplates().catch(() => null)
+        if (refreshed?.data) {
+            setTemplates(refreshed.data)
+            setAppliedTemplate(current => current ? refreshed.data.find(template => template.id === current.id) ?? current : current)
+        }
+    }
+
+    const checkUnconfirmedSave = async (requestId: string) => {
+        setCheckingSave(true)
+        setSaveCheckMessage('')
+        try {
+            const outcome = await runMutationWithTimeout(() => getCostingSaveReceipt(requestId), 8_000)
+            if (outcome.status === 'completed' && outcome.value.status === 'saved') {
+                if (outcome.value.receipt.record_kind === 'costing') {
+                    confirmSavedCosting(outcome.value.receipt)
+                    await refreshSavedQualityTokens()
+                }
+                else router.push('/owner/quotes')
+            } else {
+                setSaveCheckMessage(tx('The save is not confirmed yet. Your original inputs and request identity are preserved.'))
+            }
+        } catch {
+            setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
+        } finally {
+            setCheckingSave(false)
+        }
+    }
+
+    const retrySubmittedSave = async () => {
+        const request = pendingSaveRequestRef.current
+        if (!request || checkingSave || savingQuote || saveQuoteLockRef.current) return
+        saveQuoteLockRef.current = true
+        setCheckingSave(true)
+        try {
+            const outcome = await runMutationWithTimeout(() => saveEstimatorQuoteV3(request))
+            if (outcome.status === 'completed' && outcome.value.success && outcome.value.quoteId) {
+                const result = outcome.value
+                if (request.recordKind === 'costing') {
+                    confirmSavedCosting({ id: result.quoteId, version_number: result.versionNumber ?? 1, updated_at: result.updatedAt, created_at: ('createdAt' in result && result.createdAt) || result.updatedAt })
+                    await refreshSavedQualityTokens()
+                } else router.push('/owner/quotes')
+            } else if (outcome.status === 'completed') {
+                // A definite server rejection releases editing, but preserves the entered draft.
+                setUnconfirmedRequestId(null)
+                pendingSaveRequestRef.current = null
+                quoteRequestIdRef.current = null
+                saveDraftNow(buildCurrentDraft(null))
+                toast.error(tx(userFacingError(outcome.value.error, 'The costing could not be saved. Review the inputs and retry.')))
+            } else setSaveCheckMessage(tx('The save is not confirmed yet. Your original inputs and request identity are preserved.'))
+        } catch {
+            setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
+        } finally { setCheckingSave(false); saveQuoteLockRef.current = false }
+    }
     const scenarios = useMemo(() => runScenarios(state, totals), [state, totals])
     const breakEvenScenario = useMemo(
         () => scenarios.find(scenario => scenario.id === 'break-even'),
@@ -3390,7 +3430,13 @@ export default function EstimatorClient({
         }
     }
 
-    const applyTemplate = useCallback((tpl: EstimatorTemplate) => {
+    const applyTemplate = useCallback((tpl: EstimatorTemplate, confirmed = false) => {
+        if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
+            setPendingQualityChange({ name: tpl.name, apply: () => applyTemplate(tpl, true) })
+            return
+        }
+        setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(tpl, state))
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setAppliedTemplate(tpl)
@@ -3412,12 +3458,15 @@ export default function EstimatorClient({
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
         setShowQualityLibrary(false)
+        setPendingQualityChange(null)
+        setHasUnsavedEdits(false)
+        setLastSavedCosting(null)
         void trackPlanEvent('saved_quality_selected', {
             has_rates: Boolean(tpl.warp_rows?.[0]?.yarnRate),
         })
         void trackPlanEvent('quality_reused', { source: 'estimator_quality_library' })
         toast.success(tx(`${t('estimator.quality.applied')} ${tpl.name}`))
-    }, [dispatch, state, t, tx])
+    }, [dispatch, state, t, tx, appliedTemplate, buildCurrentDraft, hasUnsavedEdits, shouldPersistEstimatorDraft, unconfirmedRequestId])
 
     const openSaveTemplateDialog = useCallback(() => {
         setTemplateName(
@@ -3699,6 +3748,10 @@ export default function EstimatorClient({
     }
 
     const handleNewQualityConfirm = () => {
+        if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        setLastSavedCosting(null)
+        setQualityCheckpoint(null)
+        setHasUnsavedEdits(false)
         rawDispatch({
             type: 'RESET',
             data: {
@@ -3778,8 +3831,15 @@ export default function EstimatorClient({
     }, [])
 
     /** Persist updated rates to template row AND apply to the estimator. */
-    const handleSaveRatesAndApply = async () => {
+    const handleSaveRatesAndApply = async (confirmed = false) => {
         if (!editRatesTpl) return
+        if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
+            setPendingQualityChange({ name: editRatesTpl.name, apply: () => void handleSaveRatesAndApply(true) })
+            return
+        }
+        setPendingQualityChange(null)
+        setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         setSavingRates(true)
         const expectedUpdatedAt = editRatesTpl.updated_at
 
@@ -3828,14 +3888,22 @@ export default function EstimatorClient({
         setEditRatesTpl(null)
         setShowQualityLibrary(false)
         void trackPlanEvent('current_rate_applied')
+        setHasUnsavedEdits(false)
         toast.success('noChange' in res && res.noChange
             ? t('estimator.sprint1.quality_no_change')
             : t('estimator.sprint1.rates_updated_no_snapshot'))
     }
 
     /** Apply template directly (without editing rates). */
-    const handleApplyCurrentRates = () => {
+    const handleApplyCurrentRates = (confirmed = false) => {
         if (!editRatesTpl) return
+        if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
+            setPendingQualityChange({ name: editRatesTpl.name, apply: () => handleApplyCurrentRates(true) })
+            return
+        }
+        setPendingQualityChange(null)
+        setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(editRatesTpl, state))
         dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
         setAppliedTemplate(editRatesTpl)
@@ -3852,6 +3920,7 @@ export default function EstimatorClient({
         setEditRatesTpl(null)
         setShowQualityLibrary(false)
         void trackPlanEvent('current_rate_applied')
+        setHasUnsavedEdits(false)
         toast.success(tx(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`))
     }
 
@@ -3914,6 +3983,7 @@ export default function EstimatorClient({
         warningAlreadyReviewed = false,
     ) => {
         if (saveQuoteLockRef.current || savingQuote) return
+        if (unconfirmedRequestId) return
         setShowValidation(true)
         const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
         const effectiveTargetMode = saveAsStandaloneCosting ? 'quote' : targetMode
@@ -4044,8 +4114,7 @@ export default function EstimatorClient({
                     record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
                     is_new_version: Boolean(sourceQuoteId),
                 })
-                const mutationOutcome = await runMutationWithTimeout(async () => {
-                    const res = await saveEstimatorQuoteV3({
+                const saveRequest: Parameters<typeof saveEstimatorQuoteV3>[0] = {
                         clientRequestId:          clientRequestId!,
                         partyName:               resolvedPartyName,
                         qualityLabel:            qualityLabel.trim(),
@@ -4069,22 +4138,18 @@ export default function EstimatorClient({
                             ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
                             : factoryBaselineUpdatedAt) ?? undefined,
                         updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
-                    })
-                    return res
-                }, 15_000)
+                }
+                pendingSaveRequestRef.current = saveRequest
+                saveDraftNow({ ...buildCurrentDraft(clientRequestId, saveRequest.recordKind), pendingSaveRequest: saveRequest })
+                const mutationOutcome = await runMutationWithTimeout(() => saveEstimatorQuoteV3(saveRequest), 15_000)
 
                 if (mutationOutcome.status === 'unknown') {
+                    setUnconfirmedRequestId(clientRequestId)
                     void trackPlanEvent('save_outcome_unknown', {
                         record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
                     })
-                    toast.error(tx('Save outcome unknown: check Saved Costings before retrying'), {
-                        description: tx('The network response was interrupted. Your entered numbers and retry identity remain saved on this device. Open Saved Costings to verify before submitting again.'),
-                        action: {
-                            label: tx('Check Saved Costings'),
-                            onClick: () => router.push('/owner/quotes'),
-                        },
-                        duration: 12000,
-                    })
+                    // The persistent recovery panel is the single source of save status.
+                    if (clientRequestId) await checkUnconfirmedSave(clientRequestId)
                     return
                 }
 
@@ -4144,8 +4209,16 @@ export default function EstimatorClient({
                             description: tx(`${!saveAsStandaloneCosting ? 'Quotation' : 'Costing snapshot'} v${savedVersion} · ${formatSuratDateTime(savedAt)} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status preserved as ${sourceQuoteStatus}` : ''}.`),
                         },
                     )
-                    router.push('/owner/quotes')
+                    if (saveAsStandaloneCosting && res.quoteId) {
+                        confirmSavedCosting({ id: res.quoteId, version_number: savedVersion, updated_at: savedAt, created_at: ('createdAt' in res && res.createdAt) || savedAt })
+                        // Saving may also update the reusable recipe's concurrency token.
+                        await refreshSavedQualityTokens()
+                    } else router.push('/owner/quotes')
                 } else {
+                    setUnconfirmedRequestId(null)
+                    pendingSaveRequestRef.current = null
+                    quoteRequestIdRef.current = null
+                    saveDraftNow(buildCurrentDraft(null))
                     void trackPlanEvent('save_failed', {
                         record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
                     })
@@ -4153,6 +4226,11 @@ export default function EstimatorClient({
                 }
             }
         } catch (error) {
+            if (effectiveTargetMode === 'quote' && clientRequestId) {
+                setUnconfirmedRequestId(clientRequestId)
+                await checkUnconfirmedSave(clientRequestId)
+                return
+            }
             void trackPlanEvent('save_failed', {
                 record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
             })
@@ -4352,6 +4430,42 @@ export default function EstimatorClient({
                     </Button>
                 )}
             />
+            {unconfirmedRequestId && (
+                <section role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                    <h2 className="font-semibold">{tx('Save not yet confirmed')}</h2>
+                    <p className="mt-1">{saveCheckMessage || tx('Checking the original save. Keep this page open; editing is paused to protect your submitted costing.')}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <Button variant="outline" disabled={checkingSave || savingQuote} onClick={() => void checkUnconfirmedSave(unconfirmedRequestId)}>
+                            {checkingSave && <Loader2 className="h-4 w-4 animate-spin" />}{tx('Check save status')}
+                        </Button>
+                        {pendingSaveRequestRef.current && <Button disabled={checkingSave || savingQuote} onClick={() => void retrySubmittedSave()}>{tx('Retry original save')}</Button>}
+                        <Button variant="ghost" onClick={() => router.push('/owner/quotes')}>{tx('Check Saved Costings')}</Button>
+                    </div>
+                </section>
+            )}
+            {lastSavedCosting && !unconfirmedRequestId && (
+                <section role="status" className="rounded-xl border border-[var(--color-factory-green)]/25 bg-[var(--color-factory-green-soft)] p-4">
+                    <h2 className="font-semibold">{tx('Saved to factory')} · {lastSavedCosting.model.qualityLabel} · v{lastSavedCosting.version}</h2>
+                    <p className="mt-1 text-xs text-[var(--color-muted)]">{formatSuratDateTime(lastSavedCosting.savedAt)}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <Button onClick={() => { setExportSavedCosting(true); setShowExportDialog(true) }}>{tx('Create customer quotation')}</Button>
+                        <Button variant="outline" onClick={() => router.push('/owner/quotes')}>{tx('View saved costings')}</Button>
+                        <Button variant="ghost" onClick={() => setShowConfirmNewQuality(true)}>{tx('Start another quality')}</Button>
+                    </div>
+                </section>
+            )}
+            <fieldset className="contents" disabled={savingQuote || Boolean(unconfirmedRequestId)} inert={savingQuote || Boolean(unconfirmedRequestId)}>
+            {qualityCheckpoint && !hasUnsavedEdits && (
+                <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--color-hairline)] px-4 py-2 text-sm">
+                    <span>{tx('Quality changed. Previous work is available until you edit or save.')}</span>
+                    <Button variant="ghost" onClick={() => {
+                        applyEstimatorDraft(qualityCheckpoint.draft)
+                        setAppliedTemplate(templates.find(template => template.id === qualityCheckpoint.template?.id) ?? qualityCheckpoint.template)
+                        saveDraftNow(qualityCheckpoint.draft)
+                        setQualityCheckpoint(null)
+                    }}>{tx('Undo quality change')}</Button>
+                </div>
+            )}
             {!state.isConfigured && (
                 <FactoryCostWizard 
                     initialState={state}
@@ -4444,7 +4558,7 @@ export default function EstimatorClient({
                         </p>
                         <button
                             type="button"
-                            onClick={applyEstimatorDraft}
+                            onClick={() => applyEstimatorDraft()}
                             aria-label="Restore draft"
                             className="min-h-11 shrink-0 rounded-lg px-2 text-xs font-bold text-[var(--color-warning-amber)] underline underline-offset-2 hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-ink)]"
                         >
@@ -5030,10 +5144,12 @@ export default function EstimatorClient({
                                     )}
                                 </div>
                                 <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--color-muted)]">
-                                    {appliedTemplate ? 'Saved recipe loaded' : 'Manual costing'} · enter the costing inputs below
+                                    {tx(appliedTemplate ? 'Saved recipe loaded. Review rates before saving.' : 'New construction. Enter the required inputs below.')}
+                                    <span className="mt-1 block">{tx('Quick and Detailed use the same calculation. Detailed shows additional assumptions.')}</span>
                                 </p>
                             </div>
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                {(!templatesLoaded || templates.length === 0) && (
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -5044,6 +5160,7 @@ export default function EstimatorClient({
                                     Change quality
                                     <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                                 </Button>
+                                )}
                                 <div className="flex items-center rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label={entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}>
                                     <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Quick Costing · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
                                     <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
@@ -5168,7 +5285,7 @@ export default function EstimatorClient({
                                     <p className="text-[10px] font-medium text-[var(--color-muted)]">{t('estimator.quality.hint')}</p>
                                 </div>
                                 <div className={filteredTemplates.length > 1 ? 'flex min-w-0 items-center gap-2' : 'min-w-0'}>
-                                    {filteredTemplates.length > 1 && (
+                                    {canUseProduction && filteredTemplates.length > 1 && (
                                         <button
                                             type="button"
                                             onClick={() => scrollSavedQualities('left')}
@@ -5185,7 +5302,7 @@ export default function EstimatorClient({
                                     <div
                                         id="saved-quality-rail"
                                         ref={savedQualitiesRailRef}
-                                        className="mobile-scroll-x flex min-w-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto pb-3 pt-1 scroll-smooth no-scrollbar"
+                                        className={canUseProduction ? "mobile-scroll-x flex min-w-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto pb-3 pt-1 scroll-smooth no-scrollbar" : "grid min-w-0 flex-1 gap-2 sm:grid-cols-2"}
                                         role="list"
                                         aria-label={t('estimator.quality.savedRecipesLabel')}
                                     >
@@ -5196,7 +5313,7 @@ export default function EstimatorClient({
                                                 key={tpl.id}
                                                 data-saved-quality-card
                                                 role="listitem"
-                                                className={`group flex w-full max-w-[340px] shrink-0 snap-start items-stretch overflow-hidden rounded-[12px] border transition-colors ${
+                                                className={`group flex w-full ${canUseProduction ? 'max-w-[340px] shrink-0 snap-start' : 'min-w-0'} items-stretch overflow-hidden rounded-[12px] border transition-colors ${
                                                     isActive
                                                         ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]/70 shadow-[0_3px_10px_rgba(217,107,28,0.10)]'
                                                         : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)] hover:shadow-[0_3px_10px_rgba(30,37,40,0.05)]'
@@ -5228,32 +5345,19 @@ export default function EstimatorClient({
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                     </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={e => { e.stopPropagation(); setRenameTpl(tpl); setRenameValue(tpl.name); setRenameError(null) }}
-                                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-yarn-orange-dark)]"
-                                                        title={tx('Rename quality')}
-                                                        aria-label={tx(`Rename quality: ${tpl.name}`)}
-                                                    >
-                                                        <Pencil className="h-3.5 w-3.5" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={e => { e.stopPropagation(); setTemplateToArchive(tpl) }}
-                                                        disabled={deletingTpl === tpl.id}
-                                                        aria-busy={deletingTpl === tpl.id}
-                                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
-                                                        title={tx('Archive quality')}
-                                                        aria-label={tx(`Archive quality: ${tpl.name}`)}
-                                                    >
-                                                        {deletingTpl === tpl.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
-                                                    </button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={tx('Quality actions')}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onSelect={() => { setRenameTpl(tpl); setRenameValue(tpl.name); setRenameError(null) }}>{tx('Rename quality')}</DropdownMenuItem>
+                                                            <DropdownMenuItem disabled={deletingTpl === tpl.id} onSelect={() => setTemplateToArchive(tpl)}>{tx('Archive quality')}</DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </div>
                                         );
                                     })}
                                     </div>
-                                    {filteredTemplates.length > 1 && (
+                                    {canUseProduction && filteredTemplates.length > 1 && (
                                         <button
                                             type="button"
                                             onClick={() => scrollSavedQualities('right')}
@@ -5353,6 +5457,8 @@ export default function EstimatorClient({
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
                                 <Input
+                                    data-estimator-field="qualityLabel"
+                                    aria-label="Fabric quality name"
                                     value={qualityLabel}
                                     readOnly={Boolean(appliedTemplate)}
                                     aria-readonly={appliedTemplate ? 'true' : undefined}
@@ -5482,17 +5588,17 @@ export default function EstimatorClient({
                                             onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
                                         />
                                     {row.calculationMode === 'manual' ? (
-                                        <NumField label="Warp Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} placeholder="e.g. 3.25" hint="Kilograms of Warp Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
+                                        <NumField fieldKey="manualKgPer100m" label="Warp Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} placeholder="e.g. 3.25" hint="Kilograms of Warp Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
                                     ) : (
                                         <>
                                             <YarnDensityFields
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })}
                                             />
-                                            <NumField label={`${t('estimator.field_labels.beam_ends')} — REQUIRED`} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
+                                            <NumField fieldKey="beamEnds" label={`${t('estimator.field_labels.beam_ends')} — REQUIRED`} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
                                         </>
                                     )}
-                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                    <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -5501,7 +5607,7 @@ export default function EstimatorClient({
                                         const warningId = `warp-${row.id}-rate`
                                         const isDismissed = dismissedWarnings.includes(warningId)
                                         return (
-                                            <NumField 
+                                            <NumField fieldKey="yarnRate"
                                                 label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                                 value={row.yarnRate} 
                                                 onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
@@ -5513,7 +5619,7 @@ export default function EstimatorClient({
                                             />
                                         )
                                     })()}
-                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
+                                    <NumField fieldKey="gstPct" label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
                                 </RowCard>
                             ))}
                         </div>
@@ -5537,7 +5643,7 @@ export default function EstimatorClient({
                                     {/* Row 1: Tape Length input + Cloth/Beam display */}
                                     <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)] md:items-end">
                                         <div>
-                                            <NumField
+                                            <NumField fieldKey="tapeLengthM"
                                                 label={t('estimator.warp.tape_len')}
                                                 value={state.tapeLengthM}
                                                 onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v ?? 0 })}
@@ -5711,7 +5817,7 @@ export default function EstimatorClient({
                                             ghostValue={`Weft ${i + 1}`}
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
-                                        <NumField label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" attentionWhenEmpty />
+                                        <NumField fieldKey="picks" label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" attentionWhenEmpty />
                                         <WidthField
                                             label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`}
                                             value={effectiveCostingWidthCm}
@@ -5734,14 +5840,14 @@ export default function EstimatorClient({
                                                 : undefined}
                                         />
                                         {row.calculationMode === 'manual' ? (
-                                            <NumField label="Weft Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} placeholder="e.g. 2.75" hint="Kilograms of Weft Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
+                                            <NumField fieldKey="manualKgPer100m" label="Weft Yarn consumption (kg/100m)" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} placeholder="e.g. 2.75" hint="Kilograms of Weft Yarn needed for 100 metres; not m/kg yield." attentionWhenEmpty />
                                         ) : (
                                             <YarnDensityFields
                                                 row={row}
                                                 onChange={(field, value) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })}
                                             />
                                         )}
-                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
                                             const isUnusuallyLow = templateRate !== null
@@ -5750,7 +5856,7 @@ export default function EstimatorClient({
                                             const warningId = `weft-${row.id}-rate`
                                             const isDismissed = dismissedWarnings.includes(warningId)
                                             return (
-                                                <NumField
+                                                <NumField fieldKey="yarnRate"
                                                     label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                                     value={row.yarnRate}
                                                     onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })}
@@ -5761,7 +5867,7 @@ export default function EstimatorClient({
                                                 />
                                             )
                                         })()}
-                                        <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
+                                        <NumField fieldKey="gstPct" label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
                                     </RowCard>
                                 )
                             })}
@@ -5799,7 +5905,7 @@ export default function EstimatorClient({
                     <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} placeholder="e.g. 8" />
+                            <NumField fieldKey="warpingRatePerKg" label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} placeholder="e.g. 8" />
                         </div>
 
                         {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
@@ -5835,7 +5941,7 @@ export default function EstimatorClient({
                             </div>
                             {state.sizingMode === 'outsourced' && (
                                 <div className="space-y-1.5 pt-1">
-                                    <NumField
+                                    <NumField fieldKey="sizingRatePerKg"
                                         label="Sizing Rate (₹/kg)"
                                         value={state.sizingRatePerKg}
                                         onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
@@ -6308,17 +6414,17 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
-                                <NumField label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" />
+                                <NumField fieldKey="windingRatePerKg" label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}
                             {state.enabledSections.processing ? (
-                                <NumField label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 2" />
+                                <NumField fieldKey="processingRatePerM" label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 2" />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
                             )}
                             {state.enabledSections.finishing ? (
-                                <NumField label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 1.50" />
+                                <NumField fieldKey="finishingRatePerM" label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 1.50" />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
                             )}
@@ -6464,7 +6570,7 @@ export default function EstimatorClient({
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            <NumField
+                            <NumField fieldKey="orderQuantityM"
                                 label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
                                 value={state.orderQuantityM}
                                 onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })}
@@ -6474,9 +6580,9 @@ export default function EstimatorClient({
                                 attentionWhenEmpty={requiresCommercialContext}
                                 hint={requiresCommercialContext ? t('estimator.simulation.quantity_hint') : 'Optional for a saved costing; enter it when you want order-level profit.'}
                             />
-                            <NumField label="Target margin" value={state.profitPct} onChange={v => dispatch({ type: 'SET', field: 'profitPct', value: v ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" />
-                            <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" />
-                            <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} placeholder="e.g. 1.50" />
+                            <NumField fieldKey="profitPct" label="Target margin" value={state.profitPct} onChange={v => dispatch({ type: 'SET', field: 'profitPct', value: v ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" />
+                            <NumField fieldKey="commissionPct" label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v ?? 0 })} unit="%" step={0.5} placeholder="e.g. 2" />
+                            <NumField fieldKey="transportPerM" label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v ?? 0 })} unit="₹/m" step={0.1} placeholder="e.g. 1.50" />
                         </div>
                     </CardContent>
                 </EstimatorCard>
@@ -6566,7 +6672,22 @@ export default function EstimatorClient({
                 )}
             />
 
+            </fieldset>
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
+
+            <Dialog open={Boolean(pendingQualityChange)} onOpenChange={open => { if (!open) setPendingQualityChange(null) }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{tx('Switch quality with unfinished changes?')}</DialogTitle>
+                        <DialogDescription>{tx('Your current inputs will be replaced. You can undo the switch before editing or saving the next quality.')}</DialogDescription>
+                    </DialogHeader>
+                    <p className="font-semibold">{pendingQualityChange?.name}</p>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setPendingQualityChange(null)}>{tx('Keep working')}</Button>
+                        <Button onClick={() => pendingQualityChange?.apply()}>{tx('Switch quality')}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <ContextualMachineDialog
                 open={showMachineSetup}
@@ -6577,11 +6698,14 @@ export default function EstimatorClient({
             {showExportDialog && (
                 <CostingExportDialog
                     open
-                    onOpenChange={setShowExportDialog}
-                    model={exportModel}
+                    onOpenChange={open => { setShowExportDialog(open); if (!open) setExportSavedCosting(false) }}
+                    model={exportSavedCosting && lastSavedCosting ? lastSavedCosting.model : exportModel}
                     defaultCustomerName={showPartyField ? partyName : ''}
                     defaultBusinessName={organizationName}
-                    defaultMode={isStandaloneCostingSession ? 'internal' : 'customer'}
+                    defaultMode={exportSavedCosting ? 'customer' : isStandaloneCostingSession ? 'internal' : 'customer'}
+                    sourceQuoteId={exportSavedCosting ? lastSavedCosting?.id : undefined}
+                    sourceRecordKind={exportSavedCosting ? 'costing' : undefined}
+                    documentReference={exportSavedCosting && lastSavedCosting ? `${lastSavedCosting.model.qualityLabel} · v${lastSavedCosting.version}` : undefined}
                 />
             )}
 
@@ -7011,14 +7135,14 @@ export default function EstimatorClient({
                         <Button
                             variant="ghost" 
                             size="sm" 
-                            onClick={handleApplyCurrentRates} 
+                            onClick={() => handleApplyCurrentRates()}
                             className="rounded-xl font-bold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                         >
                             {t('estimator.quality.applyAsIs')}
                         </Button>
                         <Button 
                             className="bg-brand-accent text-white font-semibold rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
-                            onClick={handleSaveRatesAndApply} 
+                            onClick={() => void handleSaveRatesAndApply()}
                             disabled={savingRates}
                             aria-busy={savingRates}
                         >
