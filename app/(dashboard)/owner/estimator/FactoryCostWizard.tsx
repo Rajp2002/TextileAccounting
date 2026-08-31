@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { nanoid } from 'nanoid'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { FACTORY_COST_PRESETS, type FactoryProfileId } from '@/lib/factory-cost-profiles'
+import { handleEnterKeyNavigation } from '@/lib/form-navigation'
 
 type FactoryCostWizardData = Partial<EstimateState> & {
     yarnReviewIntervalDays: number
@@ -300,7 +301,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             />
                         </div>
 
-                        <CardContent className="p-8">
+                        <CardContent
+                            className="p-8"
+                            data-enter-navigate-container="true"
+                            onKeyDown={handleEnterKeyNavigation}
+                        >
                             {step === 'intro' && (
                                 <div className="space-y-6 text-center">
                                     <div className="mx-auto w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center">

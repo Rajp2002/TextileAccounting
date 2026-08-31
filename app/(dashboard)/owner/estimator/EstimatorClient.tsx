@@ -94,6 +94,7 @@ import {
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
 import { toast, userFacingError } from '@/lib/app-notifications'
+import { handleEnterKeyNavigation } from '@/lib/form-navigation'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -2243,7 +2244,11 @@ function QuickCostingView({
     const directRateMissing = state.overheadMode === 'direct' && (!state.overheadOverridePerM || state.overheadOverridePerM <= 0)
 
     return (
-        <div className="space-y-3">
+        <div
+            className="space-y-3"
+            data-enter-navigate-container="true"
+            onKeyDown={handleEnterKeyNavigation}
+        >
             <EstimatorCard accent="neutral">
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
@@ -5437,7 +5442,12 @@ export default function EstimatorClient({
                     />
                     </div>
                 ) : (
-                <div key="detailed" className="premium-content-swap space-y-7">
+                <div
+                    key="detailed"
+                    className="premium-content-swap space-y-7"
+                    data-enter-navigate-container="true"
+                    onKeyDown={handleEnterKeyNavigation}
+                >
                 {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
                     <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
