@@ -884,7 +884,9 @@ export default function RatesClient({
                 primaryUsable
                 secondaryReady={!usageLoading}
             />
-            <ArchivePolicyNotice />
+            <div className="min-[1540px]:hidden">
+                <ArchivePolicyNotice />
+            </div>
             <PageHeader
                 icon={Tags}
                 title={t('common.yarn_rate_book')}
@@ -1295,8 +1297,8 @@ export default function RatesClient({
             </Dialog>
             </div>
 
-            {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
-            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
+            {/* Keep viewport-positioned review controls outside the animated route wrapper. Archive policy remains at the bottom of the rail. */}
+            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review, reference, and archive policy')}>
                 <RateReviewRailWidget
                     dueReviewRates={dueReviewRates}
                     mostRecentReview={mostRecentReview}
@@ -1304,6 +1306,7 @@ export default function RatesClient({
                     onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
                 />
                 <RateBookReferenceCard />
+                <ArchivePolicyNotice />
             </aside>
 
             {/* Floating Review Action on Narrower Screens (< 1540px) */}

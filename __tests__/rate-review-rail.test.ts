@@ -30,6 +30,21 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(floatingControlStart).toBeGreaterThan(routeWrapperEnd)
     })
 
+    it('places the archive policy at the bottom of the desktop rail and keeps it reachable on narrow screens', () => {
+        const routeArchiveStart = rates.indexOf('<ArchivePolicyNotice />')
+        const railStart = rates.indexOf('<aside className="rates-review-rail-desktop')
+        const referenceStart = rates.indexOf('<RateBookReferenceCard />', railStart)
+        const railArchiveStart = rates.indexOf('<ArchivePolicyNotice />', railStart)
+        const railEnd = rates.indexOf('</aside>', railStart)
+
+        expect(rates).toContain('<div className="min-[1540px]:hidden">')
+        expect(routeArchiveStart).toBeGreaterThanOrEqual(0)
+        expect(railStart).toBeGreaterThan(routeArchiveStart)
+        expect(referenceStart).toBeGreaterThan(railStart)
+        expect(railArchiveStart).toBeGreaterThan(referenceStart)
+        expect(railArchiveStart).toBeLessThan(railEnd)
+    })
+
     it('provides accessible modal triggers for rates due for review', () => {
         expect(rates).toContain('aria-haspopup="dialog"')
         expect(rates).toContain('dueReviewRates')
