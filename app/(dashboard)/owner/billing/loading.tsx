@@ -13,9 +13,11 @@ export default function Loading() {
                     <div className="space-y-4">
                         <div className="h-16 animate-pulse rounded-2xl border border-hairline bg-surface" />
                         <div className="h-48 animate-pulse rounded-2xl border border-hairline bg-surface" />
-                        <div className="h-28 animate-pulse rounded-2xl border border-hairline bg-surface" />
                     </div>
-                    <div className="h-64 animate-pulse rounded-2xl border border-hairline bg-surface" />
+                    <div className="space-y-4">
+                        <div className="h-20 animate-pulse rounded-2xl border border-hairline bg-surface" />
+                        <div className="h-64 animate-pulse rounded-2xl border border-hairline bg-surface" />
+                    </div>
                 </div>
             </div>
         </BaseRouteLoading>

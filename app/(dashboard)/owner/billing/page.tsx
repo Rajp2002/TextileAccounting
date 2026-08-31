@@ -4,11 +4,12 @@ import { getCachedOrgPlanAccess, getSubscriptionDetail } from '@/lib/subscriptio
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
+import { PaymentHistoryDialog, type BillingHistoryEntry, type BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
-    CheckCircle2, AlertCircle, ChevronDown, Clock, Download, XCircle,
-    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, CreditCard, Calculator,
+    CheckCircle2, AlertCircle, ChevronDown, Clock, XCircle,
+    ShieldCheck, Star, Zap, Timer, Lock, CreditCard, Calculator,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
@@ -55,22 +56,6 @@ type BillingAttemptHistoryRow = BillingAttemptRow & {
     total_amount_paise?: number | null
 }
 
-type BillingHistoryStatus = 'captured' | 'failed' | 'incomplete' | 'refunded'
-
-type BillingHistoryEntry = {
-    id: string
-    kind: 'payment' | 'attempt'
-    date: string | null
-    planTier: string | null
-    purchaseType: string | null
-    amountPaise: number | null
-    method: string | null
-    paymentId: string | null
-    orderId: string | null
-    receiptPaymentId: string | null
-    status: BillingHistoryStatus
-}
-
 function formatDate(iso: string | null): string {
     if (!iso) return '—'
     return `${new Date(iso).toLocaleDateString('en-IN', {
@@ -89,19 +74,6 @@ function formatShortDate(iso: string | null): string {
 
 function formatAmount(paise: number): string {
     return `₹${(paise / 100).toLocaleString('en-IN')}`
-}
-
-function getBillingPlanName(planTier: string | null | undefined): string {
-    if (planTier === 'lite') return 'Weavly Lite'
-    if (planTier === 'base') return 'Weavly Base'
-    if (planTier === 'premium') return 'Weavly legacy operations'
-    return 'Weavly payment'
-}
-
-function getPurchaseTypeLabel(purchaseType: string | null | undefined): string {
-    if (purchaseType === 'renewal') return 'Annual renewal'
-    if (purchaseType === 'initial_purchase') return 'First-year payment'
-    return 'Subscription payment'
 }
 
 function normalizePaymentHistoryStatus(status: string): BillingHistoryStatus {
@@ -177,132 +149,6 @@ function buildBillingHistoryEntries(
     return [...paymentEntries, ...attemptEntries].sort((left, right) => (
         new Date(right.date ?? 0).getTime() - new Date(left.date ?? 0).getTime()
     ))
-}
-
-function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
-    const statusPresentation = {
-        captured: {
-            label: 'Captured',
-            status: 'success',
-            icon: CheckCircle2,
-            className: 'border-success/25 bg-success-soft text-success',
-        },
-        failed: {
-            label: 'Failed',
-            status: 'failed',
-            icon: XCircle,
-            className: 'border-risk/25 bg-risk-soft text-risk',
-        },
-        incomplete: {
-            label: 'Incomplete',
-            status: 'pending',
-            icon: Clock,
-            className: 'border-warning/25 bg-warning-soft text-warning',
-        },
-        refunded: {
-            label: 'Refunded',
-            status: 'cancelled',
-            icon: XCircle,
-            className: 'border-hairline bg-surface-soft text-subtle',
-        },
-    }[entry.status]
-    const Icon = statusPresentation.icon
-
-    return (
-        <div className="flex flex-col gap-3 p-4 transition-colors hover:bg-surface-soft sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${statusPresentation.className}`}>
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold tracking-tight text-ink">{getBillingPlanName(entry.planTier)}</p>
-                        <StatusBadge status={statusPresentation.status} label={statusPresentation.label} />
-                        {entry.receiptPaymentId && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">
-                                <ReceiptText className="h-3 w-3" aria-hidden="true" /> Receipt available
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-subtle">
-                        <span>{formatShortDate(entry.date)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{getPurchaseTypeLabel(entry.purchaseType)}</span>
-                        {entry.method && (
-                            <>
-                                <span aria-hidden="true">·</span>
-                                <span className="capitalize">{entry.method.replaceAll('_', ' ')}</span>
-                            </>
-                        )}
-                        {entry.paymentId && (
-                            <>
-                                <span aria-hidden="true">·</span>
-                                <span>Ref. {entry.paymentId.slice(-8)}</span>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </div>
-            <div className="flex items-center justify-between gap-4 pl-14 sm:block sm:pl-0 sm:text-right">
-                <p className={`text-lg font-bold tracking-tight ${entry.status === 'captured' ? 'text-ink' : 'text-body'}`}>
-                    {entry.amountPaise !== null ? formatAmount(entry.amountPaise) : '—'}
-                </p>
-                {entry.receiptPaymentId ? (
-                    <Link
-                        href={`/api/billing/receipt/${entry.receiptPaymentId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-saffron-deep hover:underline"
-                    >
-                        Download receipt <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
-                ) : (
-                    <p className="text-[11px] text-subtle">
-                        {entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
-                    </p>
-                )}
-            </div>
-        </div>
-    )
-}
-
-function PaymentHistory({ entries }: { entries: BillingHistoryEntry[] }) {
-    const latest = entries[0] ?? null
-    const older = entries.slice(1)
-
-    return (
-        <section className="space-y-4">
-            <SectionHeader
-                icon={ReceiptText}
-                title="Latest payment"
-                description="Your latest billing activity is shown first. Older attempts remain available under Payment history."
-            />
-            {latest ? (
-                <Card className="gap-0 overflow-hidden p-0">
-                    <BillingHistoryRow entry={latest} />
-                </Card>
-            ) : (
-                <Card className="border-dashed p-5">
-                    <p className="text-sm font-semibold text-ink">No payment history yet.</p>
-                    <p className="mt-1 text-sm leading-relaxed text-subtle">Successful payments and downloadable receipts will appear here.</p>
-                </Card>
-            )}
-            {older.length > 0 && (
-                <details className="group overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 outline-none transition-colors hover:bg-surface-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 sm:px-5 [&::-webkit-details-marker]:hidden">
-                        <span>
-                            <span className="block text-sm font-semibold text-ink">Payment history</span>
-                            <span className="mt-0.5 block text-xs text-subtle">{older.length} older {older.length === 1 ? 'record' : 'records'}</span>
-                        </span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-subtle transition-transform group-open:rotate-180" aria-hidden="true" />
-                    </summary>
-                    <div className="divide-y divide-hairline border-t border-hairline">
-                        {older.map((entry) => <BillingHistoryRow key={entry.id} entry={entry} />)}
-                    </div>
-                </details>
-            )}
-        </section>
-    )
 }
 
 function WorkspaceCard({
@@ -805,7 +651,7 @@ export default async function BillingPage({
                 title="Billing & Plan"
                 description={(
                     <>
-                        <span>See which workspace is enabled, what subscription funds it, when it renews, and where to get the latest receipt.</span>
+                        <span>See which workspace is enabled, what subscription funds it, when it renews, and review your payment history.</span>
                         {requestedFeature && tier === 'none' && (
                             <span className="mt-2 block font-semibold text-saffron-deep">
                                 You arrived here from {requestedFeature}. Choose a plan to unlock it.
@@ -867,10 +713,11 @@ export default async function BillingPage({
                             resumePendingCheckout={isPending}
                         />
                     )}
-                    <PaymentHistory entries={billingHistoryEntries} />
                 </div>
 
                 <aside className="space-y-6 lg:col-span-4">
+                    {/* Payment history and Download receipt actions live inside this compact rail dialog. */}
+                    <PaymentHistoryDialog entries={billingHistoryEntries} />
                     <details className="group overflow-hidden rounded-xl border border-hairline bg-surface">
                         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
                             Referral rewards
