@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { handleEnterKeyNavigation, type EnterKeyNavigationOptions } from '@/lib/form-navigation'
 
 /**
@@ -11,17 +11,15 @@ export function useEnterKeyNavigation<T extends HTMLElement = HTMLDivElement>(
     options: EnterKeyNavigationOptions = {}
 ) {
     const containerRef = useRef<T>(null)
-    const optionsRef = useRef(options)
-    optionsRef.current = options
 
     const onKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLElement>) => {
             handleEnterKeyNavigation(event, {
                 container: containerRef.current,
-                ...optionsRef.current,
+                ...options,
             })
         },
-        []
+        [options]
     )
 
     return {

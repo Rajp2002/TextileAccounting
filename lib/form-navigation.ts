@@ -199,7 +199,10 @@ export function handleEnterKeyNavigation(
     if (!event || event.key !== 'Enter') return false
 
     // Ignore composition events (e.g. IME language input)
-    if (event.isComposing || (event as any).nativeEvent?.isComposing) return false
+    const isComposing =
+        Boolean((event as any).nativeEvent?.isComposing) ||
+        Boolean((event as any).isComposing)
+    if (isComposing) return false
 
     // Ignore if default already prevented
     if (event.defaultPrevented) return false

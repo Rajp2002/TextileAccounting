@@ -58,7 +58,7 @@ function createMockElement(options: MockInputOptions = {}) {
 function createMockContainer(children: any[]) {
     const container: any = {
         tagName: 'DIV',
-        querySelectorAll: vi.fn((selector: string) => {
+        querySelectorAll: vi.fn(() => {
             return children.filter(child => {
                 if (child.tagName !== 'INPUT' && child.tagName !== 'SELECT' && child.tagName !== 'TEXTAREA') return false
                 if (child.type === 'hidden') return false
@@ -93,6 +93,10 @@ describe('Form Enter-Key Navigation Engine', () => {
         const inCheckbox = createMockElement({ id: 'in-checkbox', type: 'checkbox' })
         const btn = createMockElement({ id: 'btn', tagName: 'BUTTON' })
         const in3 = createMockElement({ id: 'in3', type: 'number' })
+
+        expect(isElementNavigable(in1 as any)).toBe(true)
+        expect(isElementNavigable(inDisabled as any)).toBe(false)
+        expect(isElementNavigable(inReadonly as any)).toBe(false)
 
         const container = createMockContainer([in1, in2, inDisabled, inReadonly, inHidden, inCheckbox, btn, in3])
 
