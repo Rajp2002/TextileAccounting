@@ -29,14 +29,14 @@ describe('Estimator Construction Auto-fill', () => {
     })
 
     it('resets refs and instruction states in applyTemplate', () => {
-        expect(estimatorClient).toContain('const applyTemplate = useCallback((tpl: EstimatorTemplate) => {')
+        expect(estimatorClient).toContain('const applyTemplate = useCallback((tpl: EstimatorTemplate, confirmed = false) => {')
         expect(estimatorClient).toContain('setWarpInstruction(\'\')')
         expect(estimatorClient).toContain('setWeftInstruction(\'\')')
     })
 
     it('resets refs in applyEstimatorDraft and handleNewQualityConfirm', () => {
         // applyEstimatorDraft
-        expect(estimatorClient).toContain('const applyEstimatorDraft = useCallback(() => {')
+        expect(estimatorClient).toContain('const applyEstimatorDraft = useCallback((checkpoint?: EstimatorDraftInput<EstimateState>) => {')
         
         // handleNewQualityConfirm
         expect(estimatorClient).toContain('const handleNewQualityConfirm = () => {')

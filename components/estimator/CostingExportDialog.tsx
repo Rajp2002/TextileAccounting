@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { addDays, format } from 'date-fns'
 import {
   AlertTriangle,
@@ -41,6 +41,8 @@ import { downloadBlob } from '@/lib/browser-download'
 import { formatToSurat } from '@/lib/time'
 import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimator/actions'
 import { trackPlanEvent } from '@/lib/plan-analytics'
+import { createDocumentGenerationGuard } from '@/lib/document-generation'
+import { useTranslation } from '@/lib/i18n/context'
 
 type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
 
@@ -98,6 +100,8 @@ export function CostingExportDialog({
   onQuoteUpdated?: (data: { updated_at: string; quotation_reference?: string | null; quotation_valid_until?: string | null; customer_terms?: string | null }) => void
   onMarkAsSent?: () => Promise<boolean> | boolean
 }) {
+  const { tx } = useTranslation()
+  const generationGuard = useRef(createDocumentGenerationGuard())
   const [mode, setMode] = useState<CostingExportMode>(defaultMode)
   const [businessName, setBusinessName] = useState(defaultBusinessName)
   const [customerName, setCustomerName] = useState(defaultCustomerName)
@@ -109,6 +113,7 @@ export function CostingExportDialog({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null)
   const [generatedFilename, setGeneratedFilename] = useState('')
+  const [generatedDocumentKey, setGeneratedDocumentKey] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const [markingSent, setMarkingSent] = useState(false)
   const [markedSent, setMarkedSent] = useState(false)
@@ -130,6 +135,7 @@ export function CostingExportDialog({
     setStatus('idle')
     setErrorMessage(null)
     setGeneratedBlob(null)
+    setGeneratedDocumentKey(null)
     setGeneratedFilename('')
     setSharing(false)
     setMarkingSent(false)
@@ -150,6 +156,14 @@ export function CostingExportDialog({
   }), [businessName, customerName, customerTerms, defaultValidUntil, documentReference, internalNotes, lockedQuotation, mode, showGstNote, validUntil])
 
   const previewHtml = useMemo(() => model ? buildCostingPrintHtml(model, options) : '', [model, options])
+  const documentKey = model ? JSON.stringify([previewHtml, getCostingExportFilename(model, options)]) : ''
+  const generatedFileIsCurrent = Boolean(generatedBlob && generatedDocumentKey === documentKey)
+  const documentChanged = Boolean(generatedBlob && !generatedFileIsCurrent)
+  useLayoutEffect(() => {
+    const guard = generationGuard.current
+    guard.update(open ? documentKey : null)
+    return () => guard.update(null)
+  }, [documentKey, open])
   const validationErrors = useMemo(() => validateCostingExportInput(model, options), [model, options])
   const canGenerate = validationErrors.length === 0 && status !== 'saving' && status !== 'generating'
   const isBusy = status === 'saving' || status === 'generating' || sharing || markingSent
@@ -211,6 +225,7 @@ export function CostingExportDialog({
       return
     }
 
+    const isCurrentGeneration = generationGuard.current.begin(documentKey)
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
       const message = 'Allow pop-ups to print the document.'
@@ -222,6 +237,10 @@ export function CostingExportDialog({
 
     try {
       if (!(await persistCustomerMetadata())) {
+        printWindow.close()
+        return
+      }
+      if (!isCurrentGeneration()) {
         printWindow.close()
         return
       }
@@ -252,6 +271,7 @@ export function CostingExportDialog({
       return
     }
 
+    const isCurrentGeneration = generationGuard.current.begin(documentKey)
     setStatus('generating')
     setErrorMessage(null)
     try {
@@ -283,9 +303,14 @@ export function CostingExportDialog({
 
       const filename = getCostingExportFilename(model, options)
       const blob = pdf.output('blob')
+      if (!isCurrentGeneration()) {
+        setStatus('idle')
+        return
+      }
       downloadBlob(blob, filename)
       setGeneratedBlob(blob)
       setGeneratedFilename(filename)
+      setGeneratedDocumentKey(documentKey)
       setStatus('download-started')
       void trackPlanEvent('export_completed', { mode })
       toast.success('PDF ready', { description: `Download started: ${filename}` })
@@ -300,7 +325,7 @@ export function CostingExportDialog({
   }
 
   const handleShare = async () => {
-    if (!generatedBlob || !model) {
+    if (!generatedBlob || !model || !generatedFileIsCurrent) {
       const message = 'Generate the PDF before sharing it.'
       setErrorMessage(message)
       toast.error(message)
@@ -391,7 +416,7 @@ export function CostingExportDialog({
                 <p className="text-xs font-black uppercase tracking-widest text-slate-500">Live preview</p>
                 <p className="mt-1 text-xs text-slate-500">The PDF uses this same document layout.</p>
               </div>
-              {status !== 'idle' && (
+              {status !== 'idle' && !documentChanged && (
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${status === 'failed' ? 'bg-red-100 text-red-700' : status.includes('started') || status.includes('opened') || status === 'generated' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                   {statusLabel(status)}
                 </span>
@@ -410,6 +435,7 @@ export function CostingExportDialog({
               <button
                 type="button"
                 onClick={() => switchMode('internal')}
+                disabled={isBusy}
                 className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <FileText className="mb-3 h-5 w-5 text-blue-600" />
@@ -419,6 +445,7 @@ export function CostingExportDialog({
               <button
                 type="button"
                 onClick={() => switchMode('customer')}
+                disabled={isBusy}
                 className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <ReceiptText className="mb-3 h-5 w-5 text-emerald-600" />
@@ -430,17 +457,17 @@ export function CostingExportDialog({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               <div className="space-y-1.5">
                 <Label htmlFor="export-business-name">Business name</Label>
-                <Input id="export-business-name" value={businessName} onChange={event => setBusinessName(event.target.value)} placeholder="Your weaving business" />
+                <Input id="export-business-name" value={businessName} onChange={event => setBusinessName(event.target.value)} placeholder="Your weaving business" disabled={isBusy} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="export-customer-name">Party / customer {mode === 'customer' ? '' : '(optional)'}</Label>
-                <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" disabled={savedQuotation} aria-describedby={savedQuotation ? 'export-customer-name-help' : undefined} />
+                <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" disabled={savedQuotation || isBusy} aria-describedby={savedQuotation ? 'export-customer-name-help' : undefined} />
                 {savedQuotation && <p id="export-customer-name-help" className="text-xs text-slate-500">This customer name is locked because the quotation has already been saved.</p>}
               </div>
               {mode === 'customer' && (
                 <div className="space-y-1.5">
                   <Label htmlFor="export-valid-until">Valid until</Label>
-                  <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={lockedQuotation} aria-describedby={lockedQuotation ? 'export-valid-until-help' : undefined} />
+                  <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={lockedQuotation || isBusy} aria-describedby={lockedQuotation ? 'export-valid-until-help' : undefined} />
                   {lockedQuotation && <p id="export-valid-until-help" className="text-xs text-slate-500">Accepted quotations keep their original validity date.</p>}
                 </div>
               )}
@@ -452,7 +479,7 @@ export function CostingExportDialog({
                   onChange={event => mode === 'customer' ? setCustomerTerms(event.target.value) : setInternalNotes(event.target.value)}
                   placeholder={mode === 'customer' ? 'Payment, delivery, quality, or transport terms' : 'Internal review notes - never shown to the customer'}
                   className="min-h-24"
-                  disabled={lockedQuotation && mode === 'customer'}
+                  disabled={isBusy || (lockedQuotation && mode === 'customer')}
                   aria-describedby={lockedQuotation && mode === 'customer' ? 'export-terms-help' : undefined}
                 />
                 {lockedQuotation && mode === 'customer' && <p id="export-terms-help" className="text-xs text-slate-500">Accepted quotations keep their original customer terms.</p>}
@@ -463,7 +490,7 @@ export function CostingExportDialog({
                     <Label htmlFor="export-gst-note">Show GST detail note</Label>
                     <p className="text-xs text-slate-500">The quotation-only, not-a-tax-invoice disclaimer is always shown.</p>
                   </div>
-                  <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} />
+                  <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} disabled={isBusy} />
                 </div>
               )}
             </div>
@@ -471,7 +498,7 @@ export function CostingExportDialog({
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Filename</p>
               <p className="mt-1 break-all font-mono text-xs font-semibold text-slate-800">
-                {generatedFilename || (model ? getCostingExportFilename(model, options) : 'Ready after preview')}
+                {(generatedFileIsCurrent && generatedFilename) || (model ? getCostingExportFilename(model, options) : 'Ready after preview')}
               </p>
               {documentReference && <p className="mt-1 text-xs text-slate-500">Reference: {documentReference}</p>}
             </div>
@@ -490,7 +517,8 @@ export function CostingExportDialog({
               </div>
             )}
 
-            {status === 'download-started' && (
+            {documentChanged && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{tx('Document details changed. Download a fresh PDF before sharing.')}</p>}
+            {status === 'download-started' && generatedFileIsCurrent && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -521,7 +549,7 @@ export function CostingExportDialog({
             <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0} aria-describedby={exportActionHint ? 'export-action-help' : undefined}>
               <Printer className="h-4 w-4" /> Print
             </Button>
-            {generatedBlob && mode === 'customer' && (
+            {generatedFileIsCurrent && mode === 'customer' && (
               <Button type="button" variant="outline" onClick={() => void handleShare()} disabled={isBusy}>
                 {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
                 Share PDF
@@ -533,13 +561,13 @@ export function CostingExportDialog({
                 Mark as sent
               </Button>
             )}
-            {status === 'share-opened' && <span className="flex items-center gap-1 text-xs font-semibold text-slate-500"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
+            {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-slate-500"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
             <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-blue-600 text-white hover:bg-blue-700">
               {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {status === 'download-started' ? 'Download PDF again' : 'Download PDF'}
+              {documentChanged ? tx('Download updated PDF') : status === 'download-started' ? 'Download PDF again' : 'Download PDF'}
             </Button>
           </div>
         </DialogFooter>

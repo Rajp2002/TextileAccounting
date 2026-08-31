@@ -17,6 +17,7 @@ import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
 import { getRateReviewStatus } from '@/lib/cost-rates'
+import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -1200,6 +1201,16 @@ export async function deleteTemplate(id: string, expectedUpdatedAt?: string) {
 
 // ─── Save Quote (V3) ──────────────────────────────────────────────────────────
 
+export async function getCostingSaveReceipt(clientRequestId: string) {
+    const { profile } = await requireRole(['owner'])
+    if (validateClientRequestId(clientRequestId)) return { status: 'unavailable' as const }
+    const client = await createServerClient()
+    const { data, error } = await findCostingSaveReceipt(client, profile.org_id, clientRequestId)
+    if (error) return { status: 'unavailable' as const }
+    if (!data) return { status: 'unconfirmed' as const }
+    return { status: 'saved' as const, receipt: data }
+}
+
 export async function saveEstimatorQuoteV3(params: {
     clientRequestId:    string
     partyName?:         string | null
@@ -1242,13 +1253,13 @@ export async function saveEstimatorQuoteV3(params: {
     // client request returns the original row instead of creating a duplicate.
     const { data: replay, error: replayError } = await supabase
         .from('estimator_quotes')
-        .select('id, updated_at, quotation_reference')
+        .select('id, updated_at, created_at, version_number, quotation_reference')
         .eq('org_id', profile.org_id)
         .eq('client_request_id', params.clientRequestId)
         .maybeSingle()
     if (replayError) return { error: replayError.message }
     if (replay) {
-        return { success: true, quoteId: replay.id, updatedAt: replay.updated_at, quotationReference: replay.quotation_reference, idempotentReplay: true }
+        return { success: true, quoteId: replay.id, updatedAt: replay.updated_at, createdAt: replay.created_at, versionNumber: replay.version_number, quotationReference: replay.quotation_reference, idempotentReplay: true }
     }
 
     const { estimate } = params

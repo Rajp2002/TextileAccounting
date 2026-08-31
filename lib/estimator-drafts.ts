@@ -1,6 +1,7 @@
 'use client'
 
 import type { CostingRecordKind } from '@/lib/costing-workspace'
+import type { saveEstimatorQuoteV3 } from '@/app/(dashboard)/owner/estimator/actions'
 import { COSTING_CALCULATION_VERSION } from './estimator'
 
 export type EstimatorQuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
@@ -51,6 +52,8 @@ export interface EstimatorAutosaveData<TState = unknown> {
    * response was lost before the browser received it.
    */
   clientRequestId?: string
+  /** Exact submitted payload for safe recovery after a reload; never rebuilt from edited inputs. */
+  pendingSaveRequest?: Parameters<typeof saveEstimatorQuoteV3>[0]
   /**
    * Marks a draft written by an explicit Saved Cost Estimate action.
    * Generic background autosaves stay opt-in so they still require the
@@ -233,6 +236,14 @@ export function parseEstimatorDraft<TState = unknown>(
           ? parsed.clientRequestId
           : undefined,
       restoreOnEstimatorEntry: parsed.restoreOnEstimatorEntry === true ? true : undefined,
+      pendingSaveRequest: isRecord(parsed.pendingSaveRequest)
+        && typeof parsed.clientRequestId === 'string'
+        && ESTIMATOR_CLIENT_REQUEST_ID_PATTERN.test(parsed.clientRequestId)
+        && parsed.pendingSaveRequest.clientRequestId === parsed.clientRequestId
+        && typeof parsed.pendingSaveRequest.qualityLabel === 'string'
+        && isRecord(parsed.pendingSaveRequest.estimate)
+        ? parsed.pendingSaveRequest as unknown as Parameters<typeof saveEstimatorQuoteV3>[0]
+        : undefined,
     }
   } catch {
     return null

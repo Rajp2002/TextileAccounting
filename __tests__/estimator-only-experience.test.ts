@@ -82,7 +82,7 @@ describe('Estimator-only product presentation', () => {
         expect(quotes).toContain("t('common.open_and_save_new_version')")
         expect(quotes).toContain("tx('Duplicate')")
         expect(quotes).toContain('Costing loaded as a starting point')
-        expect(estimator).toContain('saveEstimatorQuoteV3({')
+        expect(estimator).toContain('saveEstimatorQuoteV3(saveRequest)')
     })
 
     it('does not mount legacy operations settings for the Lite costing workspace', () => {

@@ -2,18 +2,9 @@ import { NextResponse } from 'next/server'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { getCachedSession } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isPlanAnalyticsEvent, type PlanAnalyticsProperties } from '@/lib/plan-analytics'
+import { isPlanAnalyticsEvent, isPlanAnalyticsProperties } from '@/lib/plan-analytics'
 
 export const dynamic = 'force-dynamic'
-
-function isProperties(value: unknown): value is PlanAnalyticsProperties {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
-  return Object.entries(value).every(([key, item]) => (
-    key.length > 0
-    && key.length <= 64
-    && (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean' || item === null)
-  ))
-}
 
 export async function POST(request: Request) {
   const session = await getCachedSession()
@@ -21,7 +12,7 @@ export async function POST(request: Request) {
   if (session.profile.role !== 'owner') return NextResponse.json({ error: 'Owner access required' }, { status: 403 })
 
   const body = await request.json().catch(() => null) as { eventName?: unknown; properties?: unknown } | null
-  if (!isPlanAnalyticsEvent(body?.eventName) || !isProperties(body?.properties ?? {})) {
+  if (!isPlanAnalyticsEvent(body?.eventName) || !isPlanAnalyticsProperties(body.eventName, body?.properties ?? {})) {
     return NextResponse.json({ error: 'Invalid analytics event.' }, { status: 400 })
   }
 

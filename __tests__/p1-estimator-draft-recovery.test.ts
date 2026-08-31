@@ -113,7 +113,8 @@ describe('P1 estimator recovery integration guards', () => {
 
     expect(autosave).not.toContain('saveEstimatorQuoteV3')
     expect(autosave).not.toContain('.from(\'estimator_quotes\')')
-    expect(estimator).toContain('saveEstimatorQuoteV3({')
+    expect(estimator).toContain('saveEstimatorQuoteV3(saveRequest)')
+    expect(estimator).toContain('pendingSaveRequest: saveRequest')
     expect(estimator).toContain('clearDraft()')
     expect(quotes).toContain('createEstimatorDraft<QuoteDraftState>')
   })
