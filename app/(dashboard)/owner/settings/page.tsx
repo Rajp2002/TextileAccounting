@@ -193,9 +193,10 @@ function SettingsCategory({
     )
 }
 
-function SettingsPanel({ className, children }: { className?: string; children: ReactNode }) {
+function SettingsPanel({ id, className, children }: { id?: string; className?: string; children: ReactNode }) {
     return (
         <div
+            id={id}
             className={cn(
                 'premium-disclosure-card rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]',
                 className
@@ -440,15 +441,15 @@ export default function SettingsPage() {
                     )}
                 />
 
-                <div className="mt-6 max-w-5xl space-y-8">
+                <div className="mt-6 max-w-5xl space-y-6">
                     <SettingsCategory
                         title="Cost Estimate Setup"
                         description="Set this up once, then return only when yarn rates, monthly expenses, or your pricing approach changes."
                         icon={Calculator}
                     >
-                        <SettingsSection id="cost-profile" title="Default costing inputs" icon={Calculator}>
+                        <div id="cost-profile" className="scroll-mt-6">
                             <FactoryCostProfile standaloneEstimator />
-                        </SettingsSection>
+                        </div>
                         <SettingsPanel className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                             <div>
                                 <p className="font-semibold text-ink">Saved qualities</p>
@@ -465,48 +466,35 @@ export default function SettingsPage() {
                         description="Used on documents generated after this change. Saved costing values, versions, and history are unchanged."
                         icon={Factory}
                     >
-                        <SettingsSection id="factory-identity" title="Business name" icon={Factory}>
-                            <SettingsPanel className="p-5 sm:p-6">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between gap-3">
-                                        <Label>Business name</Label>
-                                        {currentFactoryName !== org?.name && !isEditingName && (
-                                            <Button
-                                                variant="link"
-                                                size="sm"
-                                                className="h-auto p-0 font-semibold"
-                                                onClick={() => updateNameMutation.mutate(currentFactoryName)}
-                                                disabled={updateNameMutation.isPending}
-                                            >
-                                                {updateNameMutation.isPending ? 'Saving...' : 'Save changes'}
-                                            </Button>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            value={currentFactoryName}
-                                            onChange={(event) => {
-                                                setIsEditingName(true)
-                                                setFactoryName(event.target.value)
-                                            }}
-                                            className="flex-1 border-hairline bg-canvas/80"
-                                            placeholder="Enter business name"
-                                            disabled={updateNameMutation.isPending}
-                                        />
-                                        {currentFactoryName !== org?.name && (
-                                            <Button
-                                                variant="saffron"
-                                                size="sm"
-                                                onClick={() => updateNameMutation.mutate(currentFactoryName)}
-                                                disabled={updateNameMutation.isPending}
-                                            >
-                                                {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
-                                            </Button>
-                                        )}
-                                    </div>
+                        <SettingsPanel id="factory-identity" className="scroll-mt-6 p-4 sm:p-5">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                <div className="min-w-0 flex-1 space-y-2">
+                                    <Label htmlFor="business-name">Business name</Label>
+                                    <Input
+                                        id="business-name"
+                                        value={currentFactoryName}
+                                        onChange={(event) => {
+                                            setIsEditingName(true)
+                                            setFactoryName(event.target.value)
+                                        }}
+                                        className="border-hairline bg-canvas/80"
+                                        placeholder="Enter business name"
+                                        disabled={updateNameMutation.isPending}
+                                    />
                                 </div>
-                            </SettingsPanel>
-                        </SettingsSection>
+                                {currentFactoryName !== org?.name && (
+                                    <Button
+                                        variant="saffron"
+                                        size="sm"
+                                        className="w-full sm:w-auto"
+                                        onClick={() => updateNameMutation.mutate(currentFactoryName)}
+                                        disabled={updateNameMutation.isPending}
+                                    >
+                                        {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                                    </Button>
+                                )}
+                            </div>
+                        </SettingsPanel>
                     </SettingsCategory>
 
                     <details id="account-data" className="premium-disclosure-card group overflow-hidden rounded-xl border border-hairline bg-surface/80">
@@ -521,14 +509,19 @@ export default function SettingsPage() {
                             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                         </summary>
 
-                        <div className="premium-disclosure-content space-y-5 border-t border-hairline/70 px-4 pb-5 pt-5 sm:px-5">
+                        <div className="premium-disclosure-content space-y-4 border-t border-hairline/70 px-4 pb-4 pt-4 sm:px-5">
                             <SettingsPanel className="p-5 sm:p-6">
-                                <PanelHeading
-                                    icon={User}
-                                    title="Owner account"
-                                    description="Your registered profile is read-only here and is used for account ownership and support context."
-                                />
-                                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+                                <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <div>
+                                        <p className="font-semibold text-ink">Owner account</p>
+                                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Registered profile used for account ownership and support context.</p>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-success/20 bg-success-soft px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-success">
+                                        <ShieldCheck className="h-3.5 w-3.5" />
+                                        Role: {userProfile.role}
+                                    </span>
+                                </div>
+                                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label>Full name</Label>
                                         <Input value={userProfile.full_name || ''} readOnly className="border-hairline bg-surface-soft/55" />
@@ -536,12 +529,6 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label>Phone number</Label>
                                         <Input value={userProfile.phone || ''} readOnly className="border-hairline bg-surface-soft/55" />
-                                    </div>
-                                    <div className="flex items-end">
-                                        <div className="flex w-full items-center gap-2 rounded-lg border border-success/20 bg-success-soft px-3 py-2.5 text-success">
-                                            <ShieldCheck className="h-4 w-4" />
-                                            <span className="text-xs font-bold uppercase tracking-wide">Role: {userProfile.role}</span>
-                                        </div>
                                     </div>
                                 </div>
                                 <Button asChild variant="outline" size="sm" className="mt-4 gap-2">
@@ -552,28 +539,26 @@ export default function SettingsPage() {
                                 </Button>
                             </SettingsPanel>
 
-                            <SettingsSection id="privacy-data" title="Export & privacy" icon={Download}>
-                                <SettingsPanel className="p-5 sm:p-6">
-                                    <PanelHeading
-                                        icon={Download}
-                                        title="Download your organization data"
-                                        description="Create a structured export of the factory records your account is allowed to access. Sensitive authentication fields are excluded or redacted."
-                                    />
-                                    <div className="mt-5">
-                                        <OrganizationDataExportButton />
-                                        <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:text-saffron">
-                                            View export history
-                                        </Link>
-                                        <Link href="/privacy-request" className="mt-3 block text-xs font-semibold text-saffron-deep hover:text-saffron">
-                                            Make a privacy or grievance request
-                                        </Link>
-                                    </div>
-                                </SettingsPanel>
-                            </SettingsSection>
+                            <SettingsPanel id="privacy-data" className="scroll-mt-6 p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={Download}
+                                    title="Download your organization data"
+                                    description="Create a structured export of the factory records your account is allowed to access. Sensitive authentication fields are excluded or redacted."
+                                />
+                                <div className="mt-4">
+                                    <OrganizationDataExportButton />
+                                    <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:text-saffron">
+                                        View export history
+                                    </Link>
+                                    <Link href="/privacy-request" className="mt-3 block text-xs font-semibold text-saffron-deep hover:text-saffron">
+                                        Make a privacy or grievance request
+                                    </Link>
+                                </div>
+                            </SettingsPanel>
 
-                            <SettingsSection id="account-deletion" title="Delete workspace" icon={AlertTriangle}>
+                            <div id="account-deletion" className="scroll-mt-6">
                                 <DeleteAccountCard organizationName={org?.name || ''} />
-                            </SettingsSection>
+                            </div>
                         </div>
                     </details>
 

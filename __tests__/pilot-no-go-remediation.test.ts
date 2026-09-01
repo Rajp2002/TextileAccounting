@@ -6,7 +6,7 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(`${root}/${path}`, 'utf8')
 
 describe('pilot no-go remediation', () => {
-  it('blocks zero-capacity factory baselines at both UI and server boundaries', () => {
+  it('keeps the estimator wizard strict while allowing Lite Settings to save without capacity reference data', () => {
     const wizard = read('app/(dashboard)/owner/estimator/FactoryCostWizard.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
@@ -14,6 +14,8 @@ describe('pilot no-go remediation', () => {
     expect(wizard).toContain('Enter at least one loom before continuing.')
     expect(wizard).toContain('Enter the actual monthly output used for costing before continuing.')
     expect(wizard).toContain('Enter actual monthly output before reviewing cost')
+    expect(actions).toContain('The first-run estimator wizard and production-capable workflows')
+    expect(actions).toContain('requireCapacity !== false')
     expect(actions).toContain('Enter at least one loom before saving the monthly factory baseline.')
     expect(actions).toContain('Enter positive working days before saving the monthly factory baseline.')
     expect(actions).toContain('Enter positive daily output per loom before saving the monthly factory baseline.')

@@ -423,6 +423,7 @@ export async function upsertFactoryCostProfile(data: {
     yarn_shortage_pct?:      number
     warp_crimp_pct?:         number
     is_configured?:          boolean
+    requireCapacity?:        boolean
     expectedUpdatedAt?:       string
 }) {
     if (data.factory_profile_key && !['unselected', 'grey_weaver', 'job_weaver', 'processed_fabric', 'full_mill', 'custom'].includes(data.factory_profile_key)) {
@@ -437,9 +438,13 @@ export async function upsertFactoryCostProfile(data: {
         const monthlyExpenses = Array.isArray(data.overhead_items)
             ? data.overhead_items.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
             : 0
-        if (!Number.isFinite(loomCount) || loomCount <= 0) return { error: 'Enter at least one loom before saving the monthly factory baseline.' }
-        if (!Number.isFinite(workingDays) || workingDays <= 0) return { error: 'Enter positive working days before saving the monthly factory baseline.' }
-        if (!Number.isFinite(avgOutput) || avgOutput <= 0) return { error: 'Enter positive daily output per loom before saving the monthly factory baseline.' }
+        // The first-run estimator wizard and production-capable workflows
+        // still require a complete capacity reference. Lite Settings is the
+        // one intentional exception: it can save a costing baseline from
+        // actual monthly output and expenses without production metadata.
+        if (data.requireCapacity !== false && (!Number.isFinite(loomCount) || loomCount <= 0)) return { error: 'Enter at least one loom before saving the monthly factory baseline.' }
+        if (data.requireCapacity !== false && (!Number.isFinite(workingDays) || workingDays <= 0)) return { error: 'Enter positive working days before saving the monthly factory baseline.' }
+        if (data.requireCapacity !== false && (!Number.isFinite(avgOutput) || avgOutput <= 0)) return { error: 'Enter positive daily output per loom before saving the monthly factory baseline.' }
         if (monthlyOutput <= 0) return { error: 'Enter the actual monthly output used to divide factory expenses.' }
         if (monthlyExpenses <= 0) return { error: 'Enter at least one monthly factory expense before saving these defaults.' }
     }
@@ -457,6 +462,7 @@ export async function upsertFactoryCostProfile(data: {
 
     const nextUpdatedAt = new Date().toISOString()
     const { expectedUpdatedAt, ...profileData } = data
+    delete profileData.requireCapacity
     const normalizedProfileData = {
         ...profileData,
         // A successful save from Settings or the Estimator completes the

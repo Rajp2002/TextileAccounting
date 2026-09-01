@@ -4781,6 +4781,7 @@ export default function EstimatorClient({
                                 enabled_sections:        data.enabledSections ?? state.enabledSections,
                                 yarn_shortage_pct:       data.yarnShortagePct ?? state.yarnShortagePct,
                                 warp_crimp_pct:          data.warpCrimpPct ?? state.warpCrimpPct,
+                                requireCapacity:         true,
                                 // Overridden by wizard data
                                 overhead_items:          data.overheadItems ?? state.overheadItems,
                                 monthly_output_m:        data.monthlyOutputM ?? state.monthlyOutputM,

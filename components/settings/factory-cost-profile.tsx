@@ -174,7 +174,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
     const [hasMeaningfulBaseline, setHasMeaningfulBaseline] = useState(false)
     const [coreOpen, setCoreOpen] = useState(true)
-    const [capacityOpen, setCapacityOpen] = useState(true)
+    const [capacityOpen, setCapacityOpen] = useState(!standaloneEstimator)
+    const [optionalGroupOpen, setOptionalGroupOpen] = useState(false)
     const [optionalOpen, setOptionalOpen] = useState<Record<OptionalSectionKey, boolean>>(DEFAULT_OPTIONAL_OPEN)
 
     const [rates, setRates] = useState({
@@ -242,14 +243,16 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 ? 'direct'
                 : 'monthly_expenses'
             setOverheadMode(loadedMode)
-            setCapacityOpen(
-                loadedMode === 'monthly_expenses'
-                && (
+            // Capacity is useful decision support, but it is not part of the
+            // monthly overhead basis. Keep Lite compact and let the owner open
+            // it only when they want capacity warnings/utilisation context.
+            setCapacityOpen(standaloneEstimator
+                ? false
+                : loadedMode === 'monthly_expenses' && (
                     Number(d.loom_count ?? 0) <= 0
                     || Number(d.monthly_working_days ?? 0) <= 0
                     || Number(d.avg_output_per_loom_per_day ?? 0) <= 0
-                ),
-            )
+                ))
             setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
             setOverheadItems(ensureOverheadIntegrity(
                 Array.isArray(d.overhead_items) && d.overhead_items.length > 0
@@ -289,7 +292,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         } finally {
             setLoading(false)
         }
-    }, [])
+    }, [standaloneEstimator])
 
     useEffect(() => {
         void loadProfile()
@@ -339,13 +342,6 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
 
     const getSaveValidation = () => {
         const payload = buildSavePayload()
-        const capacityIssues: EstimatorValidationIssue[] = overheadMode === 'monthly_expenses'
-            ? [
-                loomCount <= 0 ? { field: 'loom_count', message: 'Enter at least one loom before saving the monthly factory baseline.' } : null,
-                monthlyWorkingDays <= 0 ? { field: 'monthly_working_days', message: 'Enter positive working days before saving the monthly factory baseline.' } : null,
-                avgOutputPerLoomPerDay <= 0 ? { field: 'avg_output_per_loom_per_day', message: 'Enter positive daily output per loom before saving the monthly factory baseline.' } : null,
-            ].filter((issue): issue is EstimatorValidationIssue => issue !== null)
-            : []
         const expenseIssues: EstimatorValidationIssue[] = overheadMode === 'monthly_expenses'
             && overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0) <= 0
             ? [{ field: 'overhead_items', message: 'Enter at least one monthly factory expense before saving these defaults.' }]
@@ -355,7 +351,10 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         return {
             payload,
             validation,
-            issues: [...capacityIssues, ...validationIssues, ...expenseIssues],
+            // Monthly overhead only needs actual output and monthly expenses.
+            // Capacity fields remain validated when supplied, but do not block
+            // a valid Lite costing baseline.
+            issues: [...validationIssues, ...expenseIssues],
         }
     }
 
@@ -455,7 +454,11 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         setSaveError(null)
         setSaving(true)
         try {
-            const res = await upsertFactoryCostProfile({ ...payload, expectedUpdatedAt: lastSavedAt ?? undefined })
+            const res = await upsertFactoryCostProfile({
+                ...payload,
+                requireCapacity: false,
+                expectedUpdatedAt: lastSavedAt ?? undefined,
+            })
             if (res.success) {
                 setLastSavedAt(res.updatedAt ?? lastSavedAt)
                 setDirty(false)
@@ -516,6 +519,10 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const expenseBasisSummary = overheadMode === 'monthly_expenses'
         ? `₹${monthlyExpenseTotal.toLocaleString('en-IN')}/mo`
         : 'Direct ₹/m rate'
+    const capacityReferenceConfigured = loomCount > 0 && monthlyWorkingDays > 0 && avgOutputPerLoomPerDay > 0
+    const capacitySummary = capacityReferenceConfigured
+        ? `${loomCount} looms · ${monthlyWorkingDays} days/mo · ${avgOutputPerLoomPerDay} m/loom/day`
+        : 'Optional · used only for capacity warnings'
     const activeOptionalSummary = [
         sections.winding ? `Winding ₹${rates.winding_rate_per_kg.toFixed(2)}/kg` : null,
         sections.processing ? `Processing ₹${rates.default_processing_rate_per_m.toFixed(2)}/m` : null,
@@ -563,7 +570,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     <CardTitle className="text-base">{tx(standaloneEstimator ? 'Cost Estimate Defaults' : 'Factory Cost Profile')}</CardTitle>
                 </div>
                 <CardDescription>
-                    {tx('Set the defaults used when you create a new cost estimate. Changing these defaults does not update saved costings or previous versions. Existing saved costings keep the numbers captured when they were saved.')}
+                    {tx(standaloneEstimator
+                        ? 'Defaults apply only to new Cost Estimates. Saved Costings keep the rates and assumptions captured when they were saved.'
+                        : 'Set the defaults used when you create a new cost estimate. Changing these defaults does not update saved costings or previous versions. Existing saved costings keep the numbers captured when they were saved.')}
                 </CardDescription>
             </CardHeader>
 
@@ -644,9 +653,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
                                 <Zap className="h-4 w-4 text-warning" />
-                                <Label className="text-sm font-semibold text-body">Pre-Weaving Rates</Label>
+                                <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Warp preparation' : 'Pre-Weaving Rates'}</Label>
                             </div>
-                            <p className="text-xs text-muted-foreground">Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.</p>
+                            <p className="text-xs text-muted-foreground">{standaloneEstimator ? 'Warping and outsourced sizing charges per kg of warp yarn. The estimator converts them to ₹/m from total warp kg.' : 'Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.'}</p>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                 <RateInput
                                     id="factory-warping-rate"
@@ -800,7 +809,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                         className="premium-disclosure-card group rounded-lg border border-hairline bg-surface px-3 py-2.5"
                                     >
                                         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-body outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
-                                            Capacity reference <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
+                                            <span className="min-w-0">
+                                                <span className="flex items-center gap-2">
+                                                    <span>Capacity reference</span>
+                                                    {standaloneEstimator && <span className="rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Optional</span>}
+                                                </span>
+                                                {standaloneEstimator && <span className="mt-1 block text-[11px] font-normal leading-relaxed text-muted-foreground">{capacitySummary}</span>}
+                                            </span>
+                                            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
                                         </summary>
                                         <div className="premium-disclosure-content mt-3 grid grid-cols-1 gap-4 border-t border-hairline/70 pt-3 sm:grid-cols-3">
                                             <RateInput
@@ -847,7 +863,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <RateInput
                                     id="factory-target-margin"
                                     field="default_margin_pct"
-                                    label="Target Margin"
+                                    label={standaloneEstimator ? 'Target margin (% of selling price)' : 'Target Margin'}
                                     value={rates.default_margin_pct}
                                     onChange={updateRate('default_margin_pct')}
                                     unit="%"
@@ -860,19 +876,54 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     </div>
                 </details>
 
-                <div className="space-y-2 rounded-lg border border-hairline bg-canvas/35 p-3">
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
-                            <p className="text-sm font-semibold text-ink">Optional costing assumptions</p>
-                            <p className="text-xs leading-relaxed text-muted-foreground">Enable only the charges your factory uses. Each assumption opens its own focused disclosure.</p>
+                <details
+                    open={standaloneEstimator ? optionalGroupOpen : true}
+                    onToggle={event => {
+                        if (standaloneEstimator) setOptionalGroupOpen(event.currentTarget.open)
+                    }}
+                    className={cn(standaloneEstimator && 'premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-canvas/35')}
+                >
+                    <summary className={cn(
+                        'flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden',
+                        !standaloneEstimator && 'hidden',
+                    )}>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-ink">Optional costing assumptions</span>
+                                <span className="shrink-0 rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                                    {enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}
+                                </span>
+                            </div>
+                            <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
+                                {activeOptionalSummary.length > 0
+                                    ? `Active: ${activeOptionalSummary.join(' · ')}`
+                                    : 'Add winding, processing, finishing, commission, or transport only when it applies.'}
+                            </p>
                         </div>
-                        <span className="shrink-0 text-xs font-semibold text-muted-foreground">{enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}</span>
-                    </div>
-                    {activeOptionalSummary.length > 0 && (
-                        <p className="text-xs leading-relaxed text-body">Active: {activeOptionalSummary.join(' · ')}</p>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+                    </summary>
+                    <div className={cn(
+                        standaloneEstimator
+                            ? 'premium-disclosure-content border-t border-hairline/70 px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4'
+                            : 'space-y-4',
+                    )}>
+                    {!standaloneEstimator && (
+                        <div className="space-y-2 rounded-lg border border-hairline bg-canvas/35 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-semibold text-ink">Optional costing assumptions</p>
+                                    <p className="text-xs leading-relaxed text-muted-foreground">Enable only the charges your factory uses. Each assumption opens its own focused disclosure.</p>
+                                </div>
+                                <span className="shrink-0 text-xs font-semibold text-muted-foreground">{enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}</span>
+                            </div>
+                            {activeOptionalSummary.length > 0 && (
+                                <p className="text-xs leading-relaxed text-body">Active: {activeOptionalSummary.join(' · ')}</p>
+                            )}
+                        </div>
                     )}
-                </div>
-
+                    <div className={cn(
+                        standaloneEstimator ? 'grid grid-cols-1 gap-3 md:grid-cols-2' : 'space-y-4',
+                    )}>
                 <OptionalAssumptionDisclosure
                     title="Winding"
                     summary={`₹${rates.winding_rate_per_kg.toFixed(2)}/kg · applies to total yarn`}
@@ -982,7 +1033,10 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 <details
                     open={optionalOpen.review}
                     onToggle={event => setOptionalOpen(current => ({ ...current, review: event.currentTarget.open }))}
-                    className="premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-surface/95"
+                    className={cn(
+                        'premium-disclosure-card group overflow-hidden rounded-lg border border-hairline bg-surface/95',
+                        standaloneEstimator && 'md:col-span-2',
+                    )}
                 >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
                         <div className="min-w-0">
@@ -1009,6 +1063,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             </select>
                             <p className="text-[11px] text-muted-foreground">This cadence applies to all active yarns. The Yarn Rate Book will flag rates as they approach review.</p>
                         </div>
+                    </div>
+                </details>
+                    </div>
                     </div>
                 </details>
 
