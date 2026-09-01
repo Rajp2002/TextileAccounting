@@ -1425,9 +1425,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     }
 
     return (
-        <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
+        <>
+            <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
-            <ArchivePolicyNotice />
+            <div className="min-[1540px]:hidden">
+                <ArchivePolicyNotice />
+            </div>
             {detailLoadingId && <p role="status" aria-live="polite" className="premium-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
                 icon={History}
@@ -1938,6 +1941,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </div>
             )}
 
+            </div>
+
+            {/* Keep the archive policy in the unused right margin on wide screens. */}
+            <aside className="saved-costings-archive-rail-desktop" aria-label={tx('Saved Costings archive policy')}>
+                <ArchivePolicyNotice />
+            </aside>
+
             <Dialog open={Boolean(quoteHistoryFor)} onOpenChange={open => {
                 if (!open) {
                     setQuoteHistoryFor(null)
@@ -2295,6 +2305,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </DialogContent>
             </Dialog>
 
-        </div>
+        </>
     )
 }

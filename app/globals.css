@@ -545,6 +545,31 @@
     }
   }
 
+  /* Saved Costings uses the spare right margin for its archive policy. Keep
+     the policy at the bottom of the desktop rail without transforming it with
+     the route entrance wrapper. */
+  .saved-costings-archive-rail-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1540px) {
+    .saved-costings-archive-rail-desktop {
+      display: block;
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 30;
+      width: 17rem;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .saved-costings-archive-rail-desktop {
+      right: 2.5rem;
+      width: 18.5rem;
+    }
+  }
+
   /* Billing payment history uses the spare right viewport margin on wide
      desktop. Keep the viewport-positioned rail outside the animated route
      wrapper so its fixed position stays anchored to the browser window. */
