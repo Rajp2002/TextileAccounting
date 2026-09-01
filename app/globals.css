@@ -581,7 +581,7 @@
     .billing-payment-history-rail-desktop {
       display: block;
       position: fixed;
-      top: clamp(18rem, 45vh, 31rem);
+      top: 6.5rem;
       right: 1.25rem;
       z-index: 30;
       width: 17rem;
