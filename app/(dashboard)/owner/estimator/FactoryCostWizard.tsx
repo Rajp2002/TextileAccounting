@@ -112,7 +112,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         if (!Number.isFinite(loomCount) || loomCount <= 0) return 'Enter at least one loom before continuing.'
         if (!Number.isFinite(workingDays) || workingDays <= 0) return 'Enter positive working days before continuing.'
         if (!Number.isFinite(avgOutput) || avgOutput <= 0) return 'Enter positive daily output per loom before continuing.'
-        if (!Number.isFinite(monthlyOutput) || monthlyOutput <= 0) return 'Enter the actual monthly output used for costing before continuing.'
+        if (!Number.isFinite(monthlyOutput) || monthlyOutput <= 0) return 'Enter the standard monthly production used for costing before continuing.'
         return null
     }
 
@@ -236,7 +236,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             }
         }
         if (setupPath === 'monthly_expenses' && monthlyOutput <= 0) {
-            setValidationError('Enter the actual monthly output used to divide factory expenses.')
+            setValidationError('Enter the standard monthly production used to divide factory expenses.')
             setStep('detailed')
             return
         }
@@ -518,7 +518,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                         </div>
                                         <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Monthly output used for costing</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Standard monthly production</Label>
                                             <div className="relative">
                                                 <Input
                                                     type="number"
@@ -531,7 +531,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 />
                                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/mo</span>
                                             </div>
-                                            <p className="text-[10px] leading-relaxed text-slate-500">Use realistic actual output, not maximum rated capacity, when dividing monthly expenses.</p>
+                                            <p className="text-[10px] leading-relaxed text-slate-500">Use a normal representative production level, not maximum rated capacity, when dividing monthly expenses.</p>
                                         </div>
                                     </div>
                                     {validationError && (
@@ -548,7 +548,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         Next: Monthly Expenses
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
-                                    {!capacityInputsReady && <p id="factory-capacity-hint" className="text-center text-[11px] font-semibold leading-relaxed text-amber-700">Enter positive loom count, working days, daily productivity, and actual monthly output to continue.</p>}
+                                    {!capacityInputsReady && <p id="factory-capacity-hint" className="text-center text-[11px] font-semibold leading-relaxed text-amber-700">Enter positive loom count, working days, daily productivity, and standard monthly production to continue.</p>}
                                 </div>
                             )}
 
@@ -630,7 +630,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <div className={`text-xs ${monthlyExpensesReady ? 'text-emerald-500' : 'text-amber-700'}`}>
                                                     {monthlyOutput > 0
                                                         ? `₹${monthlyExpenseTotal.toLocaleString()} per month ÷ ${monthlyOutput.toLocaleString()} m output`
-                                                        : 'Enter actual monthly output before reviewing cost'}
+                                                        : 'Enter standard monthly production before reviewing cost'}
                                                 </div>
                                             </div>
                                             {monthlyExpensesReady ? (

@@ -406,7 +406,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
       <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Base kg / 100m</th><th class="num">Rate</th><th class="num">Base cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
     </section>
     <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
-      <div class="commercial"><div><span>Broker commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport charge</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Monthly output</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
+      <div class="commercial"><div><span>Broker commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport charge</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Standard monthly production</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
     </section>`
 
   return `<!doctype html>

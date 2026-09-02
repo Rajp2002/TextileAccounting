@@ -89,7 +89,7 @@ describe('Sprint 0 canonical costing truth', () => {
     ]))
   })
 
-  it('uses monthly expenses only when monthly overhead mode is selected', () => {
+  it('uses the canonical applied rate while retaining monthly derivation provenance', () => {
     const state = goldenEstimate()
     state.overheadMode = 'monthly_expenses'
     state.overheadOverridePerM = 99
@@ -106,8 +106,10 @@ describe('Sprint 0 canonical costing truth', () => {
     const result = buildCostingResult(state, calcFullTotals(state))
     const warnings = validateEstimatorSnapshot(state).warnings ?? []
 
-    expect(result.overheadPerM).toBe(10)
-    expect(warnings.map(warning => warning.message)).toContain('Monthly overhead mode is selected, so the direct ₹/m overhead value will not be used.')
+    expect(result.overheadPerM).toBe(99)
+    expect(result.overheadMode).toBe('monthly_expenses')
+    expect(result.assumptions?.overhead.monthlyExpenseTotal).toBe(1000)
+    expect(warnings.map(warning => warning.message)).not.toContain('Monthly overhead mode is selected, so the direct ₹/m overhead value will not be used.')
   })
 
   it('classifies verified, mismatched, and incomplete historical snapshots conservatively', () => {

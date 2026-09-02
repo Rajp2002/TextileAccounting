@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Calculator, Building2, Plus, Trash2, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle, RefreshCw, ChevronDown } from 'lucide-react'
-import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
+import { Loader2, Save, Zap, Calculator, TrendingUp, Truck, Users2, Wind, Sparkles, CheckCircle2, AlertCircle, RefreshCw, ChevronDown } from 'lucide-react'
+import { applyMonthlyDerivedOverhead, getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from '@/lib/app-notifications'
 import { DEFAULT_FACTORY_SECTIONS, DEFAULT_OVERHEAD_ITEMS, ensureOverheadIntegrity, type FactorySections, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { cn } from '@/lib/utils'
@@ -22,7 +22,10 @@ import {
 } from '@/lib/factory-cost-profiles'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { useTranslation } from '@/lib/i18n/context'
-import { validateFactoryCostProfile, type EstimatorValidationIssue } from '@/lib/estimator-validation'
+import { validateFactoryCostProfile } from '@/lib/estimator-validation'
+import { MonthlyOverheadCalculator } from '@/components/settings/monthly-overhead-calculator'
+import { deriveCostingOverheadPerMetre, ensureMonthlyOverheadPresetCoverage } from '@/lib/monthly-overhead'
+import { trackPlanEvent } from '@/lib/plan-analytics'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
 
@@ -170,8 +173,10 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
     const [presetToReplace, setPresetToReplace] = useState<(typeof FACTORY_COST_PRESETS)[number] | null>(null)
     const [dirty, setDirty] = useState(false)
+    const [nonOverheadDirty, setNonOverheadDirty] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+    const [lastSavedOverheadMode, setLastSavedOverheadMode] = useState<OverheadMode>('monthly_expenses')
     const [hasMeaningfulBaseline, setHasMeaningfulBaseline] = useState(false)
     const [coreOpen, setCoreOpen] = useState(true)
     const [capacityOpen, setCapacityOpen] = useState(!standaloneEstimator)
@@ -203,6 +208,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     ))
     const [monthlyOutputM, setMonthlyOutputM] = useState(0)
+    const [monthlyCalculatorOpen, setMonthlyCalculatorOpen] = useState(false)
     const [loomCount, setLoomCount] = useState(0)
     const [monthlyWorkingDays, setMonthlyWorkingDays] = useState(26)
     const [avgOutputPerLoomPerDay, setAvgOutputPerLoomPerDay] = useState(50)
@@ -243,6 +249,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 ? 'direct'
                 : 'monthly_expenses'
             setOverheadMode(loadedMode)
+            setLastSavedOverheadMode(loadedMode)
             // Capacity is useful decision support, but it is not part of the
             // monthly overhead basis. Keep Lite compact and let the owner open
             // it only when they want capacity warnings/utilisation context.
@@ -254,11 +261,11 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     || Number(d.avg_output_per_loom_per_day ?? 0) <= 0
                 ))
             setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
-            setOverheadItems(ensureOverheadIntegrity(
+            setOverheadItems(ensureMonthlyOverheadPresetCoverage(ensureOverheadIntegrity(
                 Array.isArray(d.overhead_items) && d.overhead_items.length > 0
                     ? d.overhead_items
                     : DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
-            ))
+            )))
             // Persisted values are authoritative even for profiles created by an
             // older release that did not set is_configured after the first save.
             setMonthlyOutputM(Number(d.monthly_output_m ?? 0))
@@ -298,8 +305,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         void loadProfile()
     }, [loadProfile])
 
-    const markDirty = () => {
+    const markDirty = (scope: 'overhead' | 'other' = 'other') => {
         setDirty(true)
+        if (scope === 'other') setNonOverheadDirty(true)
         setSaveError(null)
     }
 
@@ -326,7 +334,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         enabled_sections: sections,
         overhead_items: overheadItems,
         monthly_output_m: monthlyOutputM,
-        overhead_override_per_m: overheadMode === 'direct' ? directOverheadPerM : null,
+        overhead_override_per_m: overheadMode === 'direct' ? directOverheadPerM : derivedOverheadPerM,
         loom_count: loomCount,
         monthly_working_days: monthlyWorkingDays,
         avg_output_per_loom_per_day: avgOutputPerLoomPerDay,
@@ -342,19 +350,15 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
 
     const getSaveValidation = () => {
         const payload = buildSavePayload()
-        const expenseIssues: EstimatorValidationIssue[] = overheadMode === 'monthly_expenses'
-            && overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0) <= 0
-            ? [{ field: 'overhead_items', message: 'Enter at least one monthly factory expense before saving these defaults.' }]
-            : []
         const validation = validateFactoryCostProfile(payload)
         const validationIssues = validation.valid ? [] : validation.issues
         return {
             payload,
             validation,
-            // Monthly overhead only needs actual output and monthly expenses.
+            // Monthly overhead only needs standard production and monthly expenses.
             // Capacity fields remain validated when supplied, but do not block
             // a valid Lite costing baseline.
-            issues: [...validationIssues, ...expenseIssues],
+            issues: validationIssues,
         }
     }
 
@@ -461,7 +465,14 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             })
             if (res.success) {
                 setLastSavedAt(res.updatedAt ?? lastSavedAt)
+                if (lastSavedOverheadMode !== overheadMode) {
+                    void trackPlanEvent(overheadMode === 'direct'
+                        ? 'overhead_source_changed_to_manual'
+                        : 'overhead_source_changed_to_monthly')
+                }
+                setLastSavedOverheadMode(overheadMode)
                 setDirty(false)
+                setNonOverheadDirty(false)
                 setHasMeaningfulBaseline(true)
                 toast.success('Saved for new cost estimates')
             } else {
@@ -488,31 +499,59 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
         if (v) setOptionalOpen(current => ({ ...current, [field]: true }))
     }
 
-    const updateOverheadItem = (id: string, field: 'label' | 'monthlyAmount', value: string | number) => {
-        markDirty()
-        setOverheadItems(items => items.map(item => item.id === id ? { ...item, [field]: value } : item))
-    }
+    const handleApplyMonthlyOverhead = async ({
+        expenses,
+        standardMonthlyProductionMetres,
+    }: {
+        expenses: OverheadItem[]
+        standardMonthlyProductionMetres: number
+        derivedOverheadPerMetre: number
+    }): Promise<{ success: true } | { success: false; error: string }> => {
+        if (!lastSavedAt) {
+            return { success: false, error: tx('The factory baseline is not ready. Refresh and try again.') }
+        }
 
-    const addOverheadItem = () => {
-        markDirty()
-        setOverheadItems(items => [...items, {
-            id: nanoid(),
-            label: 'New monthly expense',
-            monthlyAmount: 0,
-            source: 'manual',
-            category: 'custom',
-            isPreset: false,
-            isLocked: false,
-        }])
+        try {
+            const res = await applyMonthlyDerivedOverhead({
+                expenses,
+                standardMonthlyProductionMetres,
+                expectedUpdatedAt: lastSavedAt,
+            })
+            if (!res.success) {
+                return { success: false, error: userFacingError(res.error, 'The overhead could not be applied. Try again.') }
+            }
+
+            const sourceChanged = lastSavedOverheadMode !== 'monthly_expenses'
+            setOverheadItems(expenses)
+            setMonthlyOutputM(standardMonthlyProductionMetres)
+            setOverheadMode('monthly_expenses')
+            setLastSavedOverheadMode('monthly_expenses')
+            setLastSavedAt(res.updatedAt ?? lastSavedAt)
+            setHasMeaningfulBaseline(true)
+            setDirty(nonOverheadDirty)
+            setSaveError(null)
+            void trackPlanEvent('monthly_overhead_config_saved')
+            void trackPlanEvent('derived_overhead_applied')
+            if (sourceChanged) void trackPlanEvent('overhead_source_changed_to_monthly')
+            toast.success(tx('Recommended overhead applied to new and repriced costings'))
+            return { success: true }
+        } catch (error) {
+            return { success: false, error: userFacingError(error, 'The overhead could not be applied. Try again.') }
+        }
     }
 
     const selectedPreset = FACTORY_COST_PRESETS.find(preset => preset.id === activePreset)
         ?? FACTORY_COST_PRESETS.find(preset => preset.id === 'custom')
     const monthlyExpenseTotal = overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
+    const derivedOverheadPerM = deriveCostingOverheadPerMetre(overheadItems, monthlyOutputM)
+    const currentOverheadPerM = overheadMode === 'monthly_expenses'
+        ? derivedOverheadPerM ?? 0
+        : directOverheadPerM
+    const hasSavedMonthlyConfiguration = monthlyOutputM > 0 && derivedOverheadPerM != null
     const enabledOptionalSections = (Object.values(sections) as boolean[]).filter(Boolean).length
     const overheadSummary = overheadMode === 'direct'
         ? `Direct factory cost · ₹${directOverheadPerM.toFixed(2)}/m`
-        : `Monthly expenses ÷ output · ${monthlyOutputM.toLocaleString('en-IN')} m/mo`
+        : `Monthly expenses ÷ standard production · ${monthlyOutputM.toLocaleString('en-IN')} m/mo`
     const outputBasisSummary = overheadMode === 'monthly_expenses'
         ? `${monthlyOutputM.toLocaleString('en-IN')} m/mo`
         : 'Not used with direct overhead'
@@ -679,178 +718,102 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             </div>
                         </div>
 
-                        {/* ── Overhead ── */}
+                        {/* ── Current Costing Overhead ── */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
                                 <Calculator className="h-4 w-4 text-info" />
-                                <Label className="text-sm font-semibold text-body">Factory Expenses</Label>
+                                <Label className="text-sm font-semibold text-body">{tx('Current Costing Overhead')}</Label>
                             </div>
-                            <p className="text-xs leading-relaxed text-muted-foreground">
-                                Choose how your unit recovers fixed costs. This default applies to new estimates; a single estimate can still be edited without changing this setup.
-                            </p>
-
-                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                <button
-                                    type="button"
-                                    aria-pressed={overheadMode === 'direct'}
-                                    onClick={() => { markDirty(); setOverheadMode('direct') }}
-                                    className={cn(
-                                        'rounded-lg border px-4 py-3 text-left transition-colors',
-                                        overheadMode === 'direct'
-                                            ? 'border-saffron bg-saffron-soft/55 ring-2 ring-saffron/15'
-                                            : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
-                                    )}
-                                >
-                                    <div className="text-sm font-semibold text-ink">I already know my factory cost per metre</div>
-                                    <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Use a ₹/m rate you already trust; no monthly expense breakdown is needed.</div>
-                                </button>
-                                <button
-                                    type="button"
-                                    aria-pressed={overheadMode === 'monthly_expenses'}
-                                    onClick={() => { markDirty(); setOverheadMode('monthly_expenses') }}
-                                    className={cn(
-                                        'rounded-lg border px-4 py-3 text-left transition-colors',
-                                        overheadMode === 'monthly_expenses'
-                                            ? 'border-saffron bg-saffron-soft/55 ring-2 ring-saffron/15'
-                                            : 'border-hairline bg-canvas/55 hover:border-hairline-strong',
-                                    )}
-                                >
-                                    <div className="flex items-center gap-2 text-sm font-semibold text-ink"><span>Calculate from monthly expenses</span><span className="rounded-full bg-saffron-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-saffron-deep">Recommended</span></div>
-                                    <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Weavly divides rent, power, salaries, and other monthly costs by your actual output.</div>
-                                </button>
-                            </div>
-                            <p className="rounded-lg border border-info/20 bg-info-soft/55 px-3 py-2 text-xs leading-relaxed text-info">
-                                {overheadMode === 'monthly_expenses'
-                                    ? 'Recommended for most factories: enter real monthly expenses and output so the per-metre cost is easy to explain.'
-                                    : 'Use direct ₹/m when your factory already maintains a trusted per-metre overhead rate.'}
-                            </p>
-
-                            {overheadMode === 'direct' ? (
-                                <div className="rounded-lg border border-saffron/30 bg-saffron-soft/30 p-4">
-                                    <RateInput
-                                        id="factory-direct-overhead"
-                                        field="overhead_override_per_m"
-                                        label="Direct factory cost per metre"
-                                        value={directOverheadPerM}
-                                        onChange={value => { markDirty(); setDirectOverheadPerM(value) }}
-                                        unit="₹/m"
-                                        step={0.1}
-                                        hint="Required when direct factory cost per metre is selected."
-                                        icon={Calculator}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="space-y-4 rounded-lg border border-hairline bg-canvas/45 p-4">
-                                    <RateInput
-                                        id="factory-monthly-output"
-                                        field="monthly_output_m"
-                                        label="Actual monthly output"
-                                        value={monthlyOutputM}
-                                        onChange={value => { markDirty(); setMonthlyOutputM(value) }}
-                                        unit="m/mo"
-                                        step={100}
-                                        hint="Used to divide monthly expenses."
-                                    />
-                                    <div className="space-y-2">
-                                        <div className="flex flex-wrap items-center justify-between gap-3">
-                                            <div>
-                                                <p className="text-sm font-semibold text-ink">Monthly expenses</p>
-                                                <p className="text-xs text-muted-foreground">Enter the unit&apos;s recurring factory costs. Current total: ₹{monthlyExpenseTotal.toLocaleString('en-IN')}/mo.</p>
-                                            </div>
-                                            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addOverheadItem}>
-                                                <Plus className="h-3.5 w-3.5" /> Add expense
-                                            </Button>
-                                        </div>
-                                        <div className="divide-y divide-hairline rounded-lg border border-hairline bg-surface">
-                                            {overheadItems.map(item => (
-                                                <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_96px_auto] items-center gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_120px_auto] sm:gap-3">
-                                                    <div className="flex min-w-0 items-center gap-2">
-                                                        {item.category === 'rent' ? <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <Calculator className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-                                                        <Input
-                                                            aria-label={`${item.label} expense name`}
-                                                            value={item.isPreset ? tx(item.label) : item.label}
-                                                            disabled={item.isPreset}
-                                                            onChange={event => updateOverheadItem(item.id, 'label', event.target.value)}
-                                                            className="h-8 min-w-0 border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:ring-0"
-                                                        />
-                                                    </div>
-                                                    <div className="relative">
-                                                        <Input
-                                                            aria-label={`${item.label} monthly amount`}
-                                                            id={`factory-overhead-${item.id}-monthly-amount`}
-                                                            data-factory-field={`overhead_items.${overheadItems.indexOf(item)}.monthlyAmount`}
-                                                            type="number"
-                                                            min={0}
-                                                            step={100}
-                                                            value={item.monthlyAmount}
-                                                            disabled={item.isLocked}
-                                                            onChange={event => updateOverheadItem(item.id, 'monthlyAmount', parseNonNegativeInput(event.target.value) ?? 0)}
-                                                            className="h-8 pr-12 text-right font-mono text-xs"
-                                                        />
-                                                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">₹/mo</span>
-                                                    </div>
-                                                    {!item.isPreset && (
-                                                        <button
-                                                            type="button"
-                                                            aria-label={`${tx('Remove')} ${item.label}`}
-                                                            onClick={() => { markDirty(); setOverheadItems(items => items.filter(candidate => candidate.id !== item.id)) }}
-                                                            className="rounded p-1 text-muted-foreground hover:bg-rose-50 hover:text-rose-600"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+                            <div className="rounded-xl border border-hairline bg-canvas/45 p-4">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                                    <div className="min-w-0 flex-1">
+                                        <RateInput
+                                            id="factory-direct-overhead"
+                                            field="overhead_override_per_m"
+                                            label="Manual Overhead"
+                                            value={currentOverheadPerM}
+                                            onChange={value => {
+                                                markDirty('overhead')
+                                                setDirectOverheadPerM(value)
+                                                setOverheadMode('direct')
+                                            }}
+                                            unit="₹/m"
+                                            step={0.01}
+                                            hint={overheadMode === 'monthly_expenses'
+                                                ? 'Derived from monthly expenses. Editing this value switches the source to Manual.'
+                                                : 'Enter the working overhead rate to use in new and repriced costings.'}
+                                            icon={Calculator}
+                                        />
                                     </div>
-                                    <details
-                                        open={capacityOpen}
-                                        onToggle={event => setCapacityOpen(event.currentTarget.open)}
-                                        className="premium-disclosure-card group rounded-lg border border-hairline bg-surface px-3 py-2.5"
-                                    >
-                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-body outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
-                                            <span className="min-w-0">
-                                                <span className="flex items-center gap-2">
-                                                    <span>Capacity reference</span>
-                                                    {standaloneEstimator && <span className="rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Optional</span>}
-                                                </span>
-                                                {standaloneEstimator && <span className="mt-1 block text-[11px] font-normal leading-relaxed text-muted-foreground">{capacitySummary}</span>}
-                                            </span>
-                                            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
-                                        </summary>
-                                        <div className="premium-disclosure-content mt-3 grid grid-cols-1 gap-4 border-t border-hairline/70 pt-3 sm:grid-cols-3">
-                                            <RateInput
-                                                id="factory-loom-count"
-                                                field="loom_count"
-                                                label="Active looms"
-                                                value={loomCount}
-                                                onChange={value => { markDirty(); setLoomCount(value) }}
-                                                unit="looms"
-                                                step={1}
-                                            />
-                                            <RateInput
-                                                id="factory-working-days"
-                                                field="monthly_working_days"
-                                                label="Working days"
-                                                value={monthlyWorkingDays}
-                                                onChange={value => { markDirty(); setMonthlyWorkingDays(value) }}
-                                                unit="days/mo"
-                                                step={1}
-                                            />
-                                            <RateInput
-                                                id="factory-output-per-loom"
-                                                field="avg_output_per_loom_per_day"
-                                                label="Average output per loom"
-                                                value={avgOutputPerLoomPerDay}
-                                                onChange={value => { markDirty(); setAvgOutputPerLoomPerDay(value) }}
-                                                unit="m/day"
-                                                step={1}
-                                                hint="Reference for capacity warnings; actual monthly output above is used for costing."
-                                            />
-                                        </div>
-                                    </details>
+                                    <span className={cn(
+                                        'w-fit rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]',
+                                        overheadMode === 'monthly_expenses'
+                                            ? 'bg-info-soft text-info'
+                                            : 'bg-surface text-muted-foreground',
+                                    )}>
+                                        {tx(overheadMode === 'monthly_expenses' ? 'Derived from monthly expenses' : 'Manual')}
+                                    </span>
                                 </div>
-                            )}
+                                {overheadMode === 'monthly_expenses' && (
+                                    <p className="mt-3 text-xs text-body">
+                                        {`₹${monthlyExpenseTotal.toLocaleString('en-IN')} ${tx('monthly overhead')} / ${monthlyOutputM.toLocaleString('en-IN')}m ${tx('standard production')}`}
+                                    </p>
+                                )}
+                                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2"
+                                        onClick={() => {
+                                            setMonthlyCalculatorOpen(true)
+                                            void trackPlanEvent('monthly_overhead_modal_opened')
+                                        }}
+                                    >
+                                        <Calculator className="h-4 w-4" /> {tx(overheadMode === 'monthly_expenses'
+                                            ? 'Edit Monthly Overhead'
+                                            : hasSavedMonthlyConfiguration
+                                                ? 'Use Monthly Overhead'
+                                                : 'Calculate from Monthly Overhead')}
+                                    </Button>
+                                    {overheadMode === 'monthly_expenses' && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                markDirty('overhead')
+                                                setDirectOverheadPerM(currentOverheadPerM)
+                                                setOverheadMode('direct')
+                                            }}
+                                        >
+                                            {tx('Switch to Manual Overhead')}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <details
+                                open={capacityOpen}
+                                onToggle={event => setCapacityOpen(event.currentTarget.open)}
+                                className="premium-disclosure-card group rounded-lg border border-hairline bg-surface px-3 py-2.5"
+                            >
+                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-body outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
+                                    <span className="min-w-0">
+                                        <span className="flex items-center gap-2">
+                                            <span>Capacity reference</span>
+                                            {standaloneEstimator && <span className="rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Optional</span>}
+                                        </span>
+                                        {standaloneEstimator && <span className="mt-1 block text-[11px] font-normal leading-relaxed text-muted-foreground">{capacitySummary}</span>}
+                                    </span>
+                                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
+                                </summary>
+                                <div className="premium-disclosure-content mt-3 grid grid-cols-1 gap-4 border-t border-hairline/70 pt-3 sm:grid-cols-3">
+                                    <RateInput id="factory-loom-count" field="loom_count" label="Active looms" value={loomCount} onChange={value => { markDirty(); setLoomCount(value) }} unit="looms" step={1} />
+                                    <RateInput id="factory-working-days" field="monthly_working_days" label="Working days" value={monthlyWorkingDays} onChange={value => { markDirty(); setMonthlyWorkingDays(value) }} unit="days/mo" step={1} />
+                                    <RateInput id="factory-output-per-loom" field="avg_output_per_loom_per_day" label="Average output per loom" value={avgOutputPerLoomPerDay} onChange={value => { markDirty(); setAvgOutputPerLoomPerDay(value) }} unit="m/day" step={1} hint="Reference for capacity warnings only; standard monthly production is the costing denominator." />
+                                </div>
+                            </details>
                         </div>
 
                         {/* ── Selling Defaults ── */}
@@ -1095,6 +1058,17 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 </div>
             </CardContent>
         </Card>
+        {monthlyCalculatorOpen && (
+            <MonthlyOverheadCalculator
+                open
+                onOpenChange={setMonthlyCalculatorOpen}
+                savedItems={overheadItems}
+                savedStandardProductionMetres={monthlyOutputM}
+                currentOverheadPerMetre={currentOverheadPerM}
+                initialView={overheadMode === 'direct' && hasSavedMonthlyConfiguration ? 'summary' : 'edit'}
+                onApply={handleApplyMonthlyOverhead}
+            />
+        )}
         <ConfirmActionDialog
             open={Boolean(presetToReplace)}
             onOpenChange={open => { if (!open) setPresetToReplace(null) }}

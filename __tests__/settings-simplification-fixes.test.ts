@@ -55,7 +55,7 @@ describe('Settings simplification fixes', () => {
         expect(profile).toContain('focusInvalidField(field)')
         expect(profile).toContain('Optional · used only for capacity warnings')
         expect(profile).toContain('open={standaloneEstimator ? optionalGroupOpen : true}')
-        expect(profile).toContain('Monthly overhead only needs actual output and monthly expenses.')
+        expect(profile).toContain('Monthly overhead only needs standard production and monthly expenses.')
         expect(profile).toContain('requireCapacity: false')
         expect(profile).toContain('Saving…')
         expect(profile).toContain('Changes not saved')

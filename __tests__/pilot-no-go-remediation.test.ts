@@ -12,8 +12,8 @@ describe('pilot no-go remediation', () => {
 
     expect(wizard).toContain('disabled={!capacityInputsReady}')
     expect(wizard).toContain('Enter at least one loom before continuing.')
-    expect(wizard).toContain('Enter the actual monthly output used for costing before continuing.')
-    expect(wizard).toContain('Enter actual monthly output before reviewing cost')
+    expect(wizard).toContain('Enter the standard monthly production used for costing before continuing.')
+    expect(wizard).toContain('Enter standard monthly production before reviewing cost')
     expect(actions).toContain('The first-run estimator wizard and production-capable workflows')
     expect(actions).toContain('requireCapacity !== false')
     expect(actions).toContain('Enter at least one loom before saving the monthly factory baseline.')

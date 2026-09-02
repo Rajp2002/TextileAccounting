@@ -41,7 +41,8 @@ describe('Web Vitals lifecycle and privacy', () => {
 describe('migration contract', () => {
   it('allows every client event without removing existing events', () => {
     const sql = readFileSync(new URL('../supabase/migrations/20260901110001_lite_telemetry_contract.sql', import.meta.url), 'utf8')
-    const constraint = sql.split('CREATE TABLE')[0]
+    const overheadSql = readFileSync(new URL('../supabase/migrations/20260902135923_monthly_overhead_analytics_events.sql', import.meta.url), 'utf8')
+    const constraint = `${sql.split('CREATE TABLE')[0]}\n${overheadSql}`
     for (const name of PLAN_ANALYTICS_EVENTS) expect(constraint).toContain(`'${name}'`)
     expect(sql).toContain('ENABLE ROW LEVEL SECURITY')
     expect(sql).toContain('REVOKE ALL ON public.web_vital_samples FROM PUBLIC, anon, authenticated')

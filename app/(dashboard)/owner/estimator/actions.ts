@@ -4,7 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
+import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, ensureOverheadIntegrity, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { getFirstEstimatorValidationMessage, requiresFactoryCapacity, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
@@ -18,6 +18,7 @@ import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
+import { deriveCostingOverheadPerMetre } from '@/lib/monthly-overhead'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -435,18 +436,14 @@ export async function upsertFactoryCostProfile(data: {
         const loomCount = Number(data.loom_count ?? 0)
         const workingDays = Number(data.monthly_working_days ?? 0)
         const avgOutput = Number(data.avg_output_per_loom_per_day ?? 0)
-        const monthlyExpenses = Array.isArray(data.overhead_items)
-            ? data.overhead_items.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
-            : 0
         // The first-run estimator wizard and production-capable workflows
         // still require a complete capacity reference. Lite Settings is the
         // one intentional exception: it can save a costing baseline from
-        // actual monthly output and expenses without production metadata.
+        // standard monthly production and expenses without production metadata.
         if (data.requireCapacity !== false && (!Number.isFinite(loomCount) || loomCount <= 0)) return { error: 'Enter at least one loom before saving the monthly factory baseline.' }
         if (data.requireCapacity !== false && (!Number.isFinite(workingDays) || workingDays <= 0)) return { error: 'Enter positive working days before saving the monthly factory baseline.' }
         if (data.requireCapacity !== false && (!Number.isFinite(avgOutput) || avgOutput <= 0)) return { error: 'Enter positive daily output per loom before saving the monthly factory baseline.' }
-        if (monthlyOutput <= 0) return { error: 'Enter the actual monthly output used to divide factory expenses.' }
-        if (monthlyExpenses <= 0) return { error: 'Enter at least one monthly factory expense before saving these defaults.' }
+        if (monthlyOutput <= 0) return { error: 'Enter the standard monthly production used to divide factory expenses.' }
     }
 
     const validationError = getFirstEstimatorValidationMessage(validateFactoryCostProfile(data))
@@ -511,6 +508,67 @@ export async function upsertFactoryCostProfile(data: {
     revalidatePath('/owner/settings')
     revalidatePath('/owner', 'layout')
     return { success: true, updatedAt }
+}
+
+export async function applyMonthlyDerivedOverhead(data: {
+    expenses: OverheadItem[]
+    standardMonthlyProductionMetres: number
+    expectedUpdatedAt: string
+}) {
+    if (!Array.isArray(data.expenses) || data.expenses.length === 0 || data.expenses.length > 500) {
+        return { error: 'Enter at least one valid monthly factory expense.' }
+    }
+
+    const expenses = ensureOverheadIntegrity(data.expenses)
+    for (const item of expenses) {
+        if (!item.label.trim() || item.label.trim().length > 120) {
+            return { error: 'Each monthly expense needs a description of 120 characters or fewer.' }
+        }
+        const amount = Number(item.monthlyAmount)
+        if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000_000) {
+            return { error: 'Monthly expense amounts must be valid non-negative values.' }
+        }
+    }
+
+    const productionMetres = Number(data.standardMonthlyProductionMetres)
+    const derivedOverheadPerMetre = deriveCostingOverheadPerMetre(expenses, productionMetres)
+    if (derivedOverheadPerMetre == null || productionMetres > 1_000_000_000) {
+        return { error: 'Enter standard monthly production greater than zero.' }
+    }
+    const timestampError = validateExpectedTimestamp(data.expectedUpdatedAt, 'The factory baseline')
+    if (timestampError) return { error: timestampError }
+
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Non-fatal: authenticated writes still fall back to auth.uid().
+    }
+
+    const nextUpdatedAt = new Date().toISOString()
+    const { data: updated, error } = await supabase
+        .from('factory_cost_profile')
+        .update({
+            overhead_mode: 'monthly_expenses',
+            overhead_items: expenses,
+            monthly_output_m: productionMetres,
+            overhead_override_per_m: derivedOverheadPerMetre,
+            is_configured: true,
+            updated_at: nextUpdatedAt,
+        })
+        .eq('factory_id', profile.org_id)
+        .eq('updated_at', data.expectedUpdatedAt)
+        .select('updated_at')
+        .maybeSingle()
+
+    if (error) return { error: error.message }
+    if (!updated) return { error: 'The factory baseline changed in another tab. Refresh it before applying overhead.' }
+
+    revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner', 'layout')
+    return { success: true as const, updatedAt: updated.updated_at, derivedOverheadPerMetre }
 }
 
 // ─── Estimator Templates ──────────────────────────────────────────────────────

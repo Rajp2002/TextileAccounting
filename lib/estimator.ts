@@ -1708,14 +1708,12 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     estimate.monthlyOutputM,
     estimate.loomCount
   )
-  // Direct mode uses the explicit ₹/m input. Older callers may still provide
-  // an override without the new mode field, so preserve that compatibility
-  // path. An explicit monthly mode always uses monthly expenses; retaining a
-  // stale direct override there would make the visible method contradict the
-  // amount used in the costing.
-  const isDirectOverhead = getEffectiveOverheadMode(estimate) === 'direct'
-  const overheadPerM = isDirectOverhead
-    ? new Decimal(estimate.overheadOverridePerM ?? 0)
+  // Every estimate consumes one canonical ₹/m value. Monthly mode retains the
+  // derivation inputs as provenance, while newly applied configurations also
+  // snapshot the derived rate. Legacy monthly snapshots without that canonical
+  // value continue to derive it from their immutable expense assumptions.
+  const overheadPerM = estimate.overheadOverridePerM != null
+    ? new Decimal(estimate.overheadOverridePerM)
     : new Decimal(calculatedOverheadPerM)
   // ── Capacity Dynamics ─────────────────────────────────────
   const workingDays = estimate.monthlyWorkingDays || 26
@@ -1882,10 +1880,13 @@ export const DEFAULT_WARP_CRIMP_PCT = 0
 
 /** Default overhead items — shown before fixed workers are loaded from DB */
 export const DEFAULT_OVERHEAD_ITEMS: Omit<OverheadItem, 'id'>[] = [
-  { label: 'Rent / Lease',         monthlyAmount: 0, source: 'manual', category: 'rent', isPreset: true, isLocked: false },
-  { label: 'Electricity',           monthlyAmount: 0, source: 'manual', category: 'electricity', isPreset: true, isLocked: false },
-  { label: 'Water & Maintenance',   monthlyAmount: 0,  source: 'manual', category: 'water', isPreset: true, isLocked: false },
-  { label: 'Factory Consumables',   monthlyAmount: 0,  source: 'manual', category: 'custom', isPreset: true, isLocked: false },
+  { label: 'Electricity / Utilities', monthlyAmount: 0, source: 'manual', category: 'electricity', isPreset: true, isLocked: false },
+  { label: 'Maintenance & Repairs', monthlyAmount: 0, source: 'manual', category: 'spares_repairs', isPreset: true, isLocked: false },
+  { label: 'Fixed Salary Factory Staff', monthlyAmount: 0, source: 'manual', category: 'admin', isPreset: true, isLocked: false },
+  { label: 'Rent / Facility Cost', monthlyAmount: 0, source: 'manual', category: 'rent', isPreset: true, isLocked: false },
+  { label: 'Insurance / Depreciation', monthlyAmount: 0, source: 'manual', category: 'depreciation', isPreset: true, isLocked: false },
+  { label: 'Indirect Labour / Indirect Materials', monthlyAmount: 0, source: 'manual', category: 'custom', isPreset: true, isLocked: false },
+  { label: 'Other', monthlyAmount: 0, source: 'manual', category: 'custom', isPreset: true, isLocked: false },
 ]
 
 export function makeDefaultEstimateState(): EstimateState {

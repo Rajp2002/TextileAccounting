@@ -39,6 +39,12 @@ export const PLAN_ANALYTICS_EVENTS = [
   'production_completed',
   'production_viewed',
   'production_activity',
+  'monthly_overhead_modal_opened',
+  'monthly_overhead_config_saved',
+  'monthly_overhead_custom_expense_added',
+  'derived_overhead_applied',
+  'overhead_source_changed_to_manual',
+  'overhead_source_changed_to_monthly',
 ] as const
 
 export type PlanAnalyticsEventName = typeof PLAN_ANALYTICS_EVENTS[number]

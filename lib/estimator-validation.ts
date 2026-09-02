@@ -252,7 +252,7 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
     })
   }
   if (overheadMode === 'monthly_expenses') {
-    addNumberIssue(issues, warnings, 'monthly_output_m', 'Monthly output', input.monthly_output_m, { max: MAX_TARGET_METERS, required: true })
+    addNumberIssue(issues, warnings, 'monthly_output_m', 'Standard monthly production', input.monthly_output_m, { max: MAX_TARGET_METERS, required: true })
   }
   if (input.loom_count != null) addNumberIssue(issues, warnings, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })
   if (input.monthly_working_days != null) addNumberIssue(issues, warnings, 'monthly_working_days', 'Monthly working days', input.monthly_working_days, { max: 31 })
@@ -468,12 +468,12 @@ export function validateEstimatorSnapshot(
     })
   }
   if (overheadMode === 'monthly_expenses' && estimate.overheadOverridePerM != null) {
-    warnings.push({
-      field: 'overheadOverridePerM',
-      message: 'Monthly overhead mode is selected, so the direct ₹/m overhead value will not be used.',
+    addNumberIssue(issues, warnings, 'overheadOverridePerM', 'Current costing overhead', estimate.overheadOverridePerM, {
+      max: MAX_COST_PER_M,
+      allowZero: true,
     })
   }
-  addNumberIssue(issues, warnings, 'monthlyOutputM', 'Monthly output', estimate.monthlyOutputM, {
+  addNumberIssue(issues, warnings, 'monthlyOutputM', 'Standard monthly production', estimate.monthlyOutputM, {
     max: MAX_TARGET_METERS,
     allowZero: !requireCapacity && overheadMode === 'direct',
     required: requireCapacity || overheadMode === 'monthly_expenses',

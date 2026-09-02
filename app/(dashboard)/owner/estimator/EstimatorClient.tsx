@@ -2715,14 +2715,14 @@ function QuickCostingView({
                         </button>
                         <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => onOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
                             <p className="text-[12px] font-semibold text-[var(--color-ink)]">Monthly expenses ÷ output</p>
-                            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use saved monthly expenses ÷ actual output.</p>
+                            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use saved monthly expenses ÷ standard production.</p>
                         </button>
                     </div>
                     {state.overheadMode === 'direct' ? (
                         <NumField fieldKey="overheadOverridePerM" label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} placeholder="e.g. 12.50" attentionWhenEmpty />
                     ) : (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                            <NumField fieldKey="monthlyOutputM" label="Actual monthly output" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} placeholder="e.g. 10,000" attentionWhenEmpty hint="Metres actually produced each month; saved expenses are divided by this." />
+                            <NumField fieldKey="monthlyOutputM" label="Standard monthly production" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} placeholder="e.g. 90,000" attentionWhenEmpty hint="Normal monthly running metres used as the costing denominator." />
                             <Button type="button" variant="outline" className="h-11 gap-1.5" onClick={onOpenOverheadDetails}><Calculator className="h-3.5 w-3.5" /> Edit expenses</Button>
                         </div>
                     )}
@@ -2786,7 +2786,7 @@ const ESTIMATOR_ISSUE_LABEL_MATCHERS: Array<{ matches: (field: string) => boolea
     { matches: field => field === 'processingRatePerM', labels: ['processing rate', 'processing'] },
     { matches: field => field === 'finishingRatePerM', labels: ['finishing rate', 'finishing'] },
     { matches: field => field === 'overheadOverridePerM', labels: ['direct factory overhead', 'direct overhead rate'] },
-    { matches: field => field === 'monthlyOutputM', labels: ['actual monthly output', 'monthly output'] },
+    { matches: field => field === 'monthlyOutputM', labels: ['standard monthly production', 'monthly production'] },
     { matches: field => field === 'commissionPct', labels: ['broker commission', 'commission %'] },
     { matches: field => field === 'profitPct', labels: ['target margin', 'profit margin'] },
     { matches: field => field === 'transportPerM', labels: ['transport charge', 'transport per meter'] },
@@ -6349,7 +6349,7 @@ export default function EstimatorClient({
                                 </button>
                                 <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => handleOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
                                     <p className="text-[12px] font-semibold text-[var(--color-ink)]">Calculate from monthly expenses</p>
-                                    <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Use saved expenses and actual monthly output.</p>
+                                    <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Use saved expenses and standard monthly production.</p>
                                 </button>
                             </div>
 
@@ -6394,7 +6394,7 @@ export default function EstimatorClient({
                             ) : (
                                 <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3.5 py-3">
                                     <p className="text-[12px] font-medium text-[var(--color-ink)]">Monthly expenses are active</p>
-                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Saved rent, power, salaries, and other expenses are divided by actual monthly output. Expand the section below to edit them.</p>
+                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Saved rent, power, salaries, and other expenses are divided by standard monthly production. Expand the section below to review them.</p>
                                     <p className="mt-2 text-[11px] font-semibold text-[var(--color-factory-green)]">Current calculated overhead: {formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</p>
                                 </div>
                             )}
@@ -6646,7 +6646,7 @@ export default function EstimatorClient({
                                                         <div className="space-y-3">
                                                             <div className="space-y-1.5">
                                                                 <div className="flex items-center justify-between">
-                                                                    <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Actual monthly output (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
+                                                                    <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Standard monthly production (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
                                                                     {canUseProduction && state.overheadMode === 'monthly_expenses' && (
                                                                         <Button
                                                                             variant="ghost"
