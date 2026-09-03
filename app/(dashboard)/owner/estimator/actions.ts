@@ -18,7 +18,11 @@ import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
-import { deriveCostingOverheadPerMetre } from '@/lib/monthly-overhead'
+import {
+    deriveCostingOverheadPerMetre,
+    MAX_MONTHLY_OVERHEAD_AMOUNT,
+    MAX_STANDARD_MONTHLY_PRODUCTION_METRES,
+} from '@/lib/monthly-overhead'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -525,14 +529,23 @@ export async function applyMonthlyDerivedOverhead(data: {
             return { error: 'Each monthly expense needs a description of 120 characters or fewer.' }
         }
         const amount = Number(item.monthlyAmount)
-        if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000_000) {
+        if (!Number.isFinite(amount) || amount < 0) {
             return { error: 'Monthly expense amounts must be valid non-negative values.' }
+        }
+        if (amount > MAX_MONTHLY_OVERHEAD_AMOUNT) {
+            return { error: 'Monthly expense amount exceeds the supported limit.' }
         }
     }
 
     const productionMetres = Number(data.standardMonthlyProductionMetres)
+    if (!Number.isFinite(productionMetres) || productionMetres <= 0) {
+        return { error: 'Enter standard monthly production greater than zero.' }
+    }
+    if (productionMetres > MAX_STANDARD_MONTHLY_PRODUCTION_METRES) {
+        return { error: 'Standard monthly production exceeds the supported limit.' }
+    }
     const derivedOverheadPerMetre = deriveCostingOverheadPerMetre(expenses, productionMetres)
-    if (derivedOverheadPerMetre == null || productionMetres > 1_000_000_000) {
+    if (derivedOverheadPerMetre == null) {
         return { error: 'Enter standard monthly production greater than zero.' }
     }
     const timestampError = validateExpectedTimestamp(data.expectedUpdatedAt, 'The factory baseline')

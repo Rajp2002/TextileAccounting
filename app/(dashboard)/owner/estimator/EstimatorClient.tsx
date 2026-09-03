@@ -1022,7 +1022,11 @@ function WidthField({
                 <Input
                     aria-label={label}
                     type="number"
-                    step={unit === 'cm' ? 1 : 0.1}
+                    // Finished width is routinely fractional (for example,
+                    // 121.92 cm = 48 inches). Keep the native number input's
+                    // validity rules aligned with the values the estimator
+                    // already accepts and persists.
+                    step={0.01}
                     min={0}
                     placeholder={placeholder}
                     value={displayValue}

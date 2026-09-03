@@ -24,7 +24,7 @@ import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { useTranslation } from '@/lib/i18n/context'
 import { validateFactoryCostProfile } from '@/lib/estimator-validation'
 import { MonthlyOverheadCalculator } from '@/components/settings/monthly-overhead-calculator'
-import { deriveCostingOverheadPerMetre, ensureMonthlyOverheadPresetCoverage } from '@/lib/monthly-overhead'
+import { deriveCostingOverheadPerMetre, ensureMonthlyOverheadPresetCoverage, formatIndianMoney, getMonthlyOverheadTotal } from '@/lib/monthly-overhead'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 
 // ─── NumericInput helper ──────────────────────────────────────────────────────
@@ -34,6 +34,7 @@ function RateInput({
     field,
     label,
     value,
+    displayValue,
     onChange,
     unit,
     hint,
@@ -44,6 +45,7 @@ function RateInput({
     field?:    string
     label:    string
     value:    number
+    displayValue?: number
     onChange: (v: number) => void
     unit?:    string
     hint?:    string
@@ -67,7 +69,7 @@ function RateInput({
                     type="number"
                     step={step}
                     min={0}
-                    value={value}
+                    value={displayValue ?? value}
                     onChange={e => onChange(parseNonNegativeInput(e.target.value) ?? 0)}
                     className="h-10 border-hairline bg-canvas/80 pr-12 font-mono text-sm focus-visible:border-saffron"
                 />
@@ -542,7 +544,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
 
     const selectedPreset = FACTORY_COST_PRESETS.find(preset => preset.id === activePreset)
         ?? FACTORY_COST_PRESETS.find(preset => preset.id === 'custom')
-    const monthlyExpenseTotal = overheadItems.reduce((total, item) => total + Math.max(0, Number(item.monthlyAmount) || 0), 0)
+    const monthlyExpenseTotal = getMonthlyOverheadTotal(overheadItems)
     const derivedOverheadPerM = deriveCostingOverheadPerMetre(overheadItems, monthlyOutputM)
     const currentOverheadPerM = overheadMode === 'monthly_expenses'
         ? derivedOverheadPerM ?? 0
@@ -550,24 +552,24 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
     const hasSavedMonthlyConfiguration = monthlyOutputM > 0 && derivedOverheadPerM != null
     const enabledOptionalSections = (Object.values(sections) as boolean[]).filter(Boolean).length
     const overheadSummary = overheadMode === 'direct'
-        ? `Direct factory cost · ₹${directOverheadPerM.toFixed(2)}/m`
-        : `Monthly expenses ÷ standard production · ${monthlyOutputM.toLocaleString('en-IN')} m/mo`
+        ? `${tx('Direct factory cost')} · ${formatIndianMoney(directOverheadPerM, 2)}/${tx('m')}`
+        : `${tx('Monthly expenses')} ÷ ${tx('standard production')} · ${monthlyOutputM.toLocaleString('en-IN')} ${tx('m/mo')}`
     const outputBasisSummary = overheadMode === 'monthly_expenses'
-        ? `${monthlyOutputM.toLocaleString('en-IN')} m/mo`
-        : 'Not used with direct overhead'
+        ? `${monthlyOutputM.toLocaleString('en-IN')} ${tx('m/mo')}`
+        : tx('Not used with direct overhead')
     const expenseBasisSummary = overheadMode === 'monthly_expenses'
-        ? `₹${monthlyExpenseTotal.toLocaleString('en-IN')}/mo`
-        : 'Direct ₹/m rate'
+        ? `${formatIndianMoney(monthlyExpenseTotal)}/${tx('mo')}`
+        : tx('Direct ₹/m rate')
     const capacityReferenceConfigured = loomCount > 0 && monthlyWorkingDays > 0 && avgOutputPerLoomPerDay > 0
     const capacitySummary = capacityReferenceConfigured
-        ? `${loomCount} looms · ${monthlyWorkingDays} days/mo · ${avgOutputPerLoomPerDay} m/loom/day`
-        : 'Optional · used only for capacity warnings'
+        ? `${loomCount} ${tx('looms')} · ${monthlyWorkingDays} ${tx('days/mo')} · ${avgOutputPerLoomPerDay} ${tx('m/day')}`
+        : tx('Optional · used only for capacity warnings')
     const activeOptionalSummary = [
-        sections.winding ? `Winding ₹${rates.winding_rate_per_kg.toFixed(2)}/kg` : null,
-        sections.processing ? `Processing ₹${rates.default_processing_rate_per_m.toFixed(2)}/m` : null,
-        sections.finishing ? `Finishing ₹${rates.default_finishing_rate_per_m.toFixed(2)}/m` : null,
-        sections.commission ? `Commission ${rates.default_commission_pct.toFixed(2)}%` : null,
-        sections.transport ? `Transport ₹${rates.default_transport_per_m.toFixed(2)}/m` : null,
+        sections.winding ? `${tx('Winding')} ₹${rates.winding_rate_per_kg.toFixed(2)}/kg` : null,
+        sections.processing ? `${tx('Processing')} ₹${rates.default_processing_rate_per_m.toFixed(2)}/${tx('m')}` : null,
+        sections.finishing ? `${tx('Finishing')} ₹${rates.default_finishing_rate_per_m.toFixed(2)}/${tx('m')}` : null,
+        sections.commission ? `${tx('Commission')} ${rates.default_commission_pct.toFixed(2)}%` : null,
+        sections.transport ? `${tx('Transport')} ₹${rates.default_transport_per_m.toFixed(2)}/${tx('m')}` : null,
     ].filter((value): value is string => Boolean(value))
 
     if (loading) {
@@ -621,7 +623,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     <div className="rounded-lg border border-hairline bg-canvas/45 p-4">
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-end">
                             <div className="space-y-1.5">
-                                <Label htmlFor="factory-setup" className="text-sm font-semibold text-body">Factory setup</Label>
+                                <Label htmlFor="factory-setup" className="text-sm font-semibold text-body">{tx('Factory setup')}</Label>
                                 <select
                                     id="factory-setup"
                                     value={activePreset ?? 'custom'}
@@ -639,7 +641,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 </select>
                             </div>
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Starting point only</p>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tx('Starting point only')}</p>
                                 <p className="mt-1 text-sm leading-relaxed text-body">{tx(selectedPreset?.description ?? 'Choose the optional charges your factory uses. You can change the amounts below.')}</p>
                             </div>
                         </div>
@@ -658,21 +660,21 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">
                                 <Calculator className="h-4 w-4 text-saffron" />
-                                <h3 className="text-sm font-semibold text-ink">Core costing defaults</h3>
+                                <h3 className="text-sm font-semibold text-ink">{tx('Core costing defaults')}</h3>
                             </div>
-                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">The few inputs that make a new estimate trustworthy: yarn preparation, factory expenses, and target margin.</p>
+                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{tx('The few inputs that make a new estimate trustworthy: yarn preparation, factory expenses, and target margin.')}</p>
                             <div className="mt-3 grid grid-cols-2 gap-2 border-t border-hairline/60 pt-3 text-left sm:grid-cols-4">
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Output basis</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{tx('Output basis')}</p>
                                     <p className="mt-0.5 truncate text-xs font-semibold text-ink">{outputBasisSummary}</p>
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Expense basis</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{tx('Expense basis')}</p>
                                     <p className="mt-0.5 truncate text-xs font-semibold text-ink">{expenseBasisSummary}</p>
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Overhead</p>
-                                    <p className="mt-0.5 truncate text-xs font-semibold text-ink">{overheadMode === 'direct' ? `₹${directOverheadPerM.toFixed(2)}/m` : 'Monthly expenses'}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{tx('Overhead')}</p>
+                                    <p className="mt-0.5 truncate text-xs font-semibold text-ink">{overheadMode === 'direct' ? `${formatIndianMoney(directOverheadPerM, 2)}/${tx('m')}` : tx('Monthly expenses')}</p>
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Target margin</p>
@@ -681,7 +683,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                             </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-2 text-right">
-                            <span className="text-xs font-semibold text-saffron-deep">{hasMeaningfulBaseline ? 'Edit defaults' : 'Set up defaults'}</span>
+                            <span className="text-xs font-semibold text-saffron-deep">{hasMeaningfulBaseline ? tx('Edit defaults') : tx('Set up defaults')}</span>
                             <span className="hidden text-xs font-medium text-muted-foreground sm:inline">{overheadSummary}</span>
                             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
                         </div>
@@ -692,9 +694,9 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
                                 <Zap className="h-4 w-4 text-warning" />
-                                <Label className="text-sm font-semibold text-body">{standaloneEstimator ? 'Warp preparation' : 'Pre-Weaving Rates'}</Label>
+                                <Label className="text-sm font-semibold text-body">{tx(standaloneEstimator ? 'Warp preparation' : 'Pre-Weaving Rates')}</Label>
                             </div>
-                            <p className="text-xs text-muted-foreground">{standaloneEstimator ? 'Warping and outsourced sizing charges per kg of warp yarn. The estimator converts them to ₹/m from total warp kg.' : 'Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.'}</p>
+                            <p className="text-xs text-muted-foreground">{tx(standaloneEstimator ? 'Warping and outsourced sizing charges per kg of warp yarn. The estimator converts them to ₹/m from total warp kg.' : 'Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.')}</p>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                 <RateInput
                                     id="factory-warping-rate"
@@ -732,6 +734,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                             field="overhead_override_per_m"
                                             label="Manual Overhead"
                                             value={currentOverheadPerM}
+                                            displayValue={overheadMode === 'monthly_expenses' ? Number(currentOverheadPerM.toFixed(2)) : undefined}
                                             onChange={value => {
                                                 markDirty('overhead')
                                                 setDirectOverheadPerM(value)
@@ -756,7 +759,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 </div>
                                 {overheadMode === 'monthly_expenses' && (
                                     <p className="mt-3 text-xs text-body">
-                                        {`₹${monthlyExpenseTotal.toLocaleString('en-IN')} ${tx('monthly overhead')} / ${monthlyOutputM.toLocaleString('en-IN')}m ${tx('standard production')}`}
+                                        {`${formatIndianMoney(monthlyExpenseTotal)} ${tx('monthly overhead')} / ${monthlyOutputM.toLocaleString('en-IN')} ${tx('m')} ${tx('standard production')}`}
                                     </p>
                                 )}
                                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
@@ -801,8 +804,8 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-body outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 [&::-webkit-details-marker]:hidden">
                                     <span className="min-w-0">
                                         <span className="flex items-center gap-2">
-                                            <span>Capacity reference</span>
-                                            {standaloneEstimator && <span className="rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Optional</span>}
+                                            <span>{tx('Capacity reference')}</span>
+                                            {standaloneEstimator && <span className="rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{tx('Optional')}</span>}
                                         </span>
                                         {standaloneEstimator && <span className="mt-1 block text-[11px] font-normal leading-relaxed text-muted-foreground">{capacitySummary}</span>}
                                     </span>
@@ -820,7 +823,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <div className="space-y-3 rounded-lg border border-hairline bg-canvas/45 p-4">
                             <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
                                 <TrendingUp className="h-4 w-4 text-success" />
-                                <Label className="text-sm font-semibold text-body">Pricing default</Label>
+                                <Label className="text-sm font-semibold text-body">{tx('Pricing default')}</Label>
                             </div>
                             <div className="max-w-xs">
                                 <RateInput
@@ -852,15 +855,15 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     )}>
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-ink">Optional costing assumptions</span>
+                                <span className="text-sm font-semibold text-ink">{tx('Optional costing assumptions')}</span>
                                 <span className="shrink-0 rounded-full bg-canvas px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                                    {enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}
+                                    {enabledOptionalSections ? `${enabledOptionalSections} ${tx('enabled')}` : tx('None enabled')}
                                 </span>
                             </div>
                             <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
                                 {activeOptionalSummary.length > 0
-                                    ? `Active: ${activeOptionalSummary.join(' · ')}`
-                                    : 'Add winding, processing, finishing, commission, or transport only when it applies.'}
+                                    ? `${tx('Active:')} ${activeOptionalSummary.join(' · ')}`
+                                    : tx('Add winding, processing, finishing, commission, or transport only when it applies.')}
                             </p>
                         </div>
                         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
@@ -874,13 +877,13 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                         <div className="space-y-2 rounded-lg border border-hairline bg-canvas/35 p-3">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-sm font-semibold text-ink">Optional costing assumptions</p>
-                                    <p className="text-xs leading-relaxed text-muted-foreground">Enable only the charges your factory uses. Each assumption opens its own focused disclosure.</p>
+                            <p className="text-sm font-semibold text-ink">{tx('Optional costing assumptions')}</p>
+                            <p className="text-xs leading-relaxed text-muted-foreground">{tx('Enable only the charges your factory uses. Each assumption opens its own focused disclosure.')}</p>
                                 </div>
-                                <span className="shrink-0 text-xs font-semibold text-muted-foreground">{enabledOptionalSections ? `${enabledOptionalSections} enabled` : 'None enabled'}</span>
+                                <span className="shrink-0 text-xs font-semibold text-muted-foreground">{enabledOptionalSections ? `${enabledOptionalSections} ${tx('enabled')}` : tx('None enabled')}</span>
                             </div>
                             {activeOptionalSummary.length > 0 && (
-                                <p className="text-xs leading-relaxed text-body">Active: {activeOptionalSummary.join(' · ')}</p>
+                                <p className="text-xs leading-relaxed text-body">{tx('Active:')} {activeOptionalSummary.join(' · ')}</p>
                             )}
                         </div>
                     )}

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { calcFullTotals, getWidthWarnings, makeDefaultEstimateState } from '../lib/estimator'
 
 // Helper function that mirrors the UI's secondaryReadout logic
@@ -173,6 +174,13 @@ describe('4. WidthField state persistence', () => {
         // Clean up globals
         Reflect.deleteProperty(globalThis, 'window')
         Reflect.deleteProperty(globalThis, 'localStorage')
+    })
+})
+
+describe('4b. WidthField native input validity', () => {
+    it('allows persisted fractional finished widths without a step-mismatch', () => {
+        const source = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
+        expect(source).toContain('step={0.01}')
     })
 })
 

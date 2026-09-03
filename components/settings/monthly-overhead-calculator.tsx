@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Calculator, HelpCircle, Loader2, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 
@@ -10,7 +10,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { OverheadItem } from '@/lib/estimator'
 import { useTranslation } from '@/lib/i18n/context'
-import { deriveCostingOverheadPerMetre, getMonthlyOverheadTotal, getOverheadDifferencePerMetre } from '@/lib/monthly-overhead'
+import {
+    deriveCostingOverheadPerMetre,
+    formatIndianMoney,
+    getMonthlyOverheadTotal,
+    getOverheadDifferencePerMetre,
+    MAX_MONTHLY_OVERHEAD_AMOUNT,
+    MAX_STANDARD_MONTHLY_PRODUCTION_METRES,
+} from '@/lib/monthly-overhead'
 import { parseNonNegativeInput } from '@/lib/numeric-input'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { cn } from '@/lib/utils'
@@ -31,8 +38,8 @@ type MonthlyOverheadCalculatorProps = {
     }) => Promise<{ success: true } | { success: false; error: string }>
 }
 
-function formatMoney(value: number, digits = 0) {
-    return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`
+function formatMoney(value: number, digits?: number) {
+    return formatIndianMoney(value, digits)
 }
 
 function formatSignedMoney(value: number, digits = 2) {
@@ -59,11 +66,24 @@ export function MonthlyOverheadCalculator({
     const [view, setView] = useState<CalculatorView>(initialView)
     const [applying, setApplying] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [invalidAmountIds, setInvalidAmountIds] = useState<string[]>([])
+    const [invalidProduction, setInvalidProduction] = useState(false)
+    const [amountDrafts, setAmountDrafts] = useState<Record<string, string>>({})
+    const [productionDraft, setProductionDraft] = useState<string | null>(null)
+    const errorRef = useRef<HTMLParagraphElement>(null)
+
+    useEffect(() => {
+        if (!error) return
+        errorRef.current?.focus({ preventScroll: true })
+        errorRef.current?.scrollIntoView({ block: 'nearest' })
+    }, [error])
 
     const total = useMemo(() => getMonthlyOverheadTotal(items), [items])
     const recommended = useMemo(
-        () => deriveCostingOverheadPerMetre(items, productionMetres),
-        [items, productionMetres],
+        () => invalidAmountIds.length > 0 || invalidProduction
+            ? null
+            : deriveCostingOverheadPerMetre(items, productionMetres),
+        [invalidAmountIds.length, invalidProduction, items, productionMetres],
     )
     const difference = getOverheadDifferencePerMetre(recommended, currentOverheadPerMetre)
 
@@ -72,10 +92,66 @@ export function MonthlyOverheadCalculator({
         setProductionMetres(savedStandardProductionMetres)
         setView('edit')
         setError(null)
+        setInvalidAmountIds([])
+        setInvalidProduction(false)
+        setAmountDrafts({})
+        setProductionDraft(null)
     }
 
     const updateItem = (id: string, field: 'label' | 'monthlyAmount', value: string | number) => {
         setItems(current => current.map(item => item.id === id ? { ...item, [field]: value } : item))
+        setError(null)
+    }
+
+    const updateAmount = (id: string, raw: string) => {
+        const parsed = parseNonNegativeInput(raw)
+        if (raw.trim() === '') {
+            setAmountDrafts(current => {
+                const next = { ...current }
+                delete next[id]
+                return next
+            })
+            setInvalidAmountIds(current => current.filter(candidate => candidate !== id))
+            updateItem(id, 'monthlyAmount', 0)
+            return
+        }
+        if (parsed == null || parsed > MAX_MONTHLY_OVERHEAD_AMOUNT) {
+            setAmountDrafts(current => ({ ...current, [id]: raw }))
+            setInvalidAmountIds(current => current.includes(id) ? current : [...current, id])
+            setError(parsed != null
+                ? tx('Monthly expense amount exceeds the supported limit.')
+                : tx('Enter a valid non-negative monthly amount.'))
+            return
+        }
+        setAmountDrafts(current => {
+            const next = { ...current }
+            delete next[id]
+            return next
+        })
+        setInvalidAmountIds(current => current.filter(candidate => candidate !== id))
+        updateItem(id, 'monthlyAmount', parsed)
+    }
+
+    const updateProduction = (raw: string) => {
+        const parsed = parseNonNegativeInput(raw)
+        if (raw.trim() === '') {
+            setProductionDraft(raw)
+            setInvalidProduction(true)
+            setProductionMetres(0)
+            setError(tx('Enter a valid positive standard monthly production.'))
+            return
+        }
+        if (parsed == null || parsed <= 0 || parsed > MAX_STANDARD_MONTHLY_PRODUCTION_METRES) {
+            setProductionDraft(raw)
+            setInvalidProduction(true)
+            setError(parsed != null && parsed > MAX_STANDARD_MONTHLY_PRODUCTION_METRES
+                ? tx('Standard monthly production exceeds the supported limit.')
+                : tx('Enter a valid positive standard monthly production.'))
+            return
+        }
+        setProductionDraft(null)
+        setInvalidProduction(false)
+        setProductionMetres(parsed)
         setError(null)
     }
 
@@ -111,7 +187,7 @@ export function MonthlyOverheadCalculator({
         setApplying(false)
         if (!result.success) {
             if (view === 'confirm') setView('edit')
-            setError(result.error)
+            setError(tx(result.error))
             return
         }
         onOpenChange(false)
@@ -152,17 +228,17 @@ export function MonthlyOverheadCalculator({
                             </div>
                             <div className="flex items-center justify-between gap-4 px-4 py-3">
                                 <span className="text-sm text-body">{tx('Standard monthly production')}</span>
-                                <span className="font-mono text-sm font-black text-ink">{productionMetres.toLocaleString('en-IN')} m</span>
+                                <span className="font-mono text-sm font-black text-ink">{productionMetres.toLocaleString('en-IN')} {tx('m')}</span>
                             </div>
                             <div className="flex items-center justify-between gap-4 bg-saffron-soft/45 px-4 py-4">
                                 <span className="text-sm font-bold text-saffron-deep">{tx('Derived costing overhead')}</span>
-                                <span className="font-mono text-xl font-black text-ink">{formatMoney(recommended, 2)}/m</span>
+                                <span className="font-mono text-xl font-black text-ink">{formatMoney(recommended, 2)}/{tx('m')}</span>
                             </div>
                         </div>
                         <p className="text-xs leading-relaxed text-muted-foreground">
                             {tx('Use the saved result now, or edit the monthly expense details before applying it.')}
                         </p>
-                        {error && <p role="alert" className="rounded-lg border border-risk/25 bg-risk/5 px-3 py-2 text-sm text-risk">{error}</p>}
+                        {error && <p ref={errorRef} tabIndex={-1} role="alert" className="rounded-lg border border-risk/25 bg-risk/5 px-3 py-2 text-sm text-risk">{error}</p>}
                     </div>
                 ) : view === 'confirm' && recommended != null ? (
                     <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6 sm:px-6">
@@ -199,11 +275,12 @@ export function MonthlyOverheadCalculator({
                                             <Input
                                                 aria-label={`${tx(item.label || 'Other expense')} ${tx('monthly amount')}`}
                                                 inputMode="decimal"
-                                                type="number"
+                                                type="text"
                                                 min={0}
                                                 step="0.01"
-                                                value={item.monthlyAmount}
-                                                onChange={event => updateItem(item.id, 'monthlyAmount', parseNonNegativeInput(event.target.value) ?? 0)}
+                                                value={amountDrafts[item.id] ?? item.monthlyAmount}
+                                                aria-invalid={invalidAmountIds.includes(item.id) || undefined}
+                                                onChange={event => updateAmount(item.id, event.target.value)}
                                                 className="h-10 pl-7 pr-12 text-right font-mono"
                                             />
                                             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">/{tx('mo')}</span>
@@ -212,7 +289,15 @@ export function MonthlyOverheadCalculator({
                                             <button
                                                 type="button"
                                                 aria-label={`${tx('Remove')} ${item.label || tx('other expense')}`}
-                                                onClick={() => setItems(current => current.filter(candidate => candidate.id !== item.id))}
+                                                onClick={() => {
+                                                    setItems(current => current.filter(candidate => candidate.id !== item.id))
+                                                    setInvalidAmountIds(current => current.filter(candidate => candidate !== item.id))
+                                                    setAmountDrafts(current => {
+                                                        const next = { ...current }
+                                                        delete next[item.id]
+                                                        return next
+                                                    })
+                                                }}
                                                 className="justify-self-end rounded-md p-2 text-muted-foreground hover:bg-risk/5 hover:text-risk sm:justify-self-auto"
                                             >
                                                 <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -249,11 +334,12 @@ export function MonthlyOverheadCalculator({
                                 <Input
                                     id="standard-monthly-production"
                                     inputMode="decimal"
-                                    type="number"
+                                    type="text"
                                     min={0}
                                     step="1"
-                                    value={productionMetres}
-                                    onChange={event => { setProductionMetres(parseNonNegativeInput(event.target.value) ?? 0); setError(null) }}
+                                    value={productionDraft ?? productionMetres}
+                                    aria-invalid={invalidProduction || undefined}
+                                    onChange={event => updateProduction(event.target.value)}
                                     className="h-12 pr-12 text-right font-mono text-lg font-bold"
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">m</span>
@@ -271,23 +357,23 @@ export function MonthlyOverheadCalculator({
                             ) : (
                                 <>
                                     <p className="mt-2 font-mono text-3xl font-black text-ink">{formatMoney(recommended, 2)}<span className="text-sm font-bold text-body"> / {tx('metre')}</span></p>
-                                    <p className="mt-2 text-xs text-body">{tx('Based on')}: {formatMoney(total)} {tx('monthly overhead')} / {productionMetres.toLocaleString('en-IN')}m {tx('standard production')}</p>
+                                    <p className="mt-2 text-xs text-body">{tx('Based on')}: {formatMoney(total)} {tx('monthly overhead')} / {productionMetres.toLocaleString('en-IN')} {tx('m')} {tx('standard production')}</p>
                                     <div className="mt-4 grid grid-cols-3 gap-2 border-t border-saffron/20 pt-3 text-xs">
-                                        <div><p className="text-muted-foreground">{tx('Current')}</p><p className="mt-1 font-mono font-bold text-ink">{formatMoney(currentOverheadPerMetre, 2)}/m</p></div>
-                                        <div><p className="text-muted-foreground">{tx('Newly Derived')}</p><p className="mt-1 font-mono font-bold text-ink">{formatMoney(recommended, 2)}/m</p></div>
-                                        <div><p className="text-muted-foreground">{tx('Difference')}</p><p className="mt-1 font-mono font-bold text-ink">{difference == null ? '—' : `${formatSignedMoney(difference)}/m`}</p></div>
+                                        <div><p className="text-muted-foreground">{tx('Current')}</p><p className="mt-1 font-mono font-bold text-ink">{formatMoney(currentOverheadPerMetre, 2)}/{tx('m')}</p></div>
+                                        <div><p className="text-muted-foreground">{tx('Newly Derived')}</p><p className="mt-1 font-mono font-bold text-ink">{formatMoney(recommended, 2)}/{tx('m')}</p></div>
+                                        <div><p className="text-muted-foreground">{tx('Difference')}</p><p className="mt-1 font-mono font-bold text-ink">{difference == null ? '—' : `${formatSignedMoney(difference)}/${tx('m')}`}</p></div>
                                     </div>
                                 </>
                             )}
                         </section>
 
-                        {error && <p role="alert" className="rounded-lg border border-risk/25 bg-risk/5 px-3 py-2 text-sm text-risk">{error}</p>}
+                        {error && <p ref={errorRef} tabIndex={-1} role="alert" className="rounded-lg border border-risk/25 bg-risk/5 px-3 py-2 text-sm text-risk">{error}</p>}
                     </div>
                 )}
 
                 <DialogFooter className={cn(
                     'sticky bottom-0 gap-2 border-t border-hairline bg-surface px-4 py-4 sm:px-6',
-                    view === 'summary' ? 'grid grid-cols-2 sm:flex sm:flex-row' : 'flex-row',
+                    view === 'summary' || view === 'edit' ? 'grid grid-cols-2 sm:flex sm:flex-row' : 'flex-row',
                 )}>
                     {view === 'summary' ? (
                         <>
@@ -295,7 +381,7 @@ export function MonthlyOverheadCalculator({
                             <Button type="button" variant="ghost" onClick={() => { setView('edit'); setError(null) }} disabled={applying}>{tx('Edit details')}</Button>
                             <Button type="button" variant="saffron" className="col-span-2 sm:order-none" onClick={() => void apply()} disabled={applying || recommended == null}>
                                 {applying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {recommended == null ? tx('Use saved overhead') : `${tx('Use')} ${formatMoney(recommended, 2)}/m`}
+                                {recommended == null ? tx('Use saved overhead') : `${tx('Use')} ${formatMoney(recommended, 2)}/${tx('m')}`}
                             </Button>
                         </>
                     ) : view === 'confirm' ? (
@@ -307,12 +393,12 @@ export function MonthlyOverheadCalculator({
                         </>
                     ) : (
                         <>
-                            <Button type="button" variant="ghost" size="sm" className="mr-auto gap-2" onClick={reset}>
+                            <Button type="button" variant="ghost" size="sm" className="col-span-2 mr-0 justify-self-start gap-2 sm:col-span-1 sm:mr-auto" onClick={reset}>
                                 <RotateCcw className="h-4 w-4" /> {tx('Reset Changes')}
                             </Button>
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{tx('Cancel')}</Button>
                             <Button type="button" variant="saffron" onClick={() => setView('confirm')} disabled={recommended == null}>
-                                {recommended == null ? tx('Use recommended overhead') : `${tx('Use')} ${formatMoney(recommended, 2)}/m`}
+                                {recommended == null ? tx('Use recommended overhead') : `${tx('Use')} ${formatMoney(recommended, 2)}/${tx('m')}`}
                             </Button>
                         </>
                     )}
