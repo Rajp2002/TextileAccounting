@@ -145,6 +145,8 @@ describe('LST-06 & P0 Invariant: Historical Costing Immutability', () => {
     expect(reopenedStateA.weftRows[0].yarnRate).toBe(115)
     expect(reopenedStateA.overheadOverridePerM).toBe(2.5)
     expect(reopenedStateA.perPickCostPaisa).toBe(0.28)
+    expect(reopenedStateA.overheadOverridePerM).not.toBe(activeFactoryDefaults.overheadOverridePerM)
+    expect(reopenedStateA.perPickCostPaisa).not.toBe(activeFactoryDefaults.perPickCostPaisa)
     expect(reopenedResultA.productionCostPerM).toBe(historicalRecordA.production_cost_per_meter)
     expect(reopenedResultA.suggestedSellingPricePerM).toBe(historicalRecordA.quote_price_per_meter)
     expect(reopenedFingerprintA).toBe(historicalRecordA.fingerprint)

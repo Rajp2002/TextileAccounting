@@ -7,7 +7,7 @@
     "prebuild": "npm run test",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
     "qa:provisioning-smoke": "node --env-file=.env.qa.local scripts/qa/provisioning-smoke.mjs --expected-project-ref=eutycrtzzxmlkcpipgod",
     "qa:batch7-release-runtime": "node scripts/qa/batch7-release-runtime-evidence.mjs",
     "test": "vitest run"
@@ -78,7 +78,7 @@
   "overrides": {
     "brace-expansion": "5.0.9",
     "dompurify": "3.4.13",
-    "fast-uri": "3.1.5",
+    "fast-uri": "3.1.6",
     "sharp": "0.35.3",
     "next": {
       "postcss": "$postcss",
@@ -103,7 +103,7 @@
       "serialize-javascript": "7.0.5"
     },
     "minimatch@3.1.5": {
-      "brace-expansion": "1.1.17"
+      "brace-expansion": "1.1.18"
     }
   }
 }

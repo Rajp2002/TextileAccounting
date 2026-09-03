@@ -2011,7 +2011,7 @@ function RowCard({
 
     const handleRowKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
         if (event.key !== 'Enter' || event.shiftKey) return
-        const isComposing = Boolean((event as any).isComposing || (event.nativeEvent as any)?.isComposing)
+        const isComposing = event.nativeEvent.isComposing
         if (isComposing) return
         if (event.defaultPrevented) return
 
@@ -6775,7 +6775,7 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
-                                <NumField fieldKey="windingRatePerKg" label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" />
+                                <NumField fieldKey="windingRatePerKg" label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" hint={t('estimator.post_processing.winding_scope').replace('{kg}', totals.totalAllYarnKgPer100m.toFixed(2))} />
                             ) : (
                                 <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}

@@ -1042,8 +1042,8 @@ export const gu = {
       sizing: "સાઈઝિંગ",
       warping_per_kg: "વૉર્પિંગ / કિલો",
       sizing_per_kg: "સાઈઝિંગ / કિલો",
-      applied_on: "લાગુ થાય છે",
-      warp_consumption: "કિલો તાણો સૂત વપરાશ પર."
+      applied_on: "વાર્પિંગ અને સાઇઝિંગ લાગુ પડે છે",
+      warp_consumption: "કિલો તાણાના સૂત પર, દર 100 મીટર કાપડ માટે."
     },
     overhead: {
       title: "ફેક્ટરી ઓવરહેડ",
@@ -1068,6 +1068,7 @@ export const gu = {
       of_direct_cost: "માસિક ખર્ચ ÷ ઉત્પાદન"
     },
     post_processing: {
+      winding_scope: "વાઇન્ડિંગ દર 100 મીટર કાપડ માટે {kg} કિલો કુલ સૂત (તાણો + વાણો) પર લાગુ પડે છે.",
       title: "પોસ્ટ-પ્રોસેસિંગ અને લોજિસ્ટિક્સ",
       winding: "વાઇન્ડિંગ",
       processing: "પ્રોસેસિંગ",

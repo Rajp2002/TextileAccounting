@@ -3,7 +3,6 @@ import {
     buildBasePayrollPdfFilename,
     derivePayrollSettlementState,
     formatPdfDate,
-    formatPdfDateTime,
     formatPdfINR,
     formatPdfMeters,
     formatPdfRate,
@@ -13,7 +12,6 @@ import {
     paymentModeLabel,
     PDF_THEME,
     sanitizeFilenamePart,
-    sanitizePdfText,
 } from '../lib/generate-base-payroll-pdf'
 import type { BasePayrollHistoryPeriod } from '../lib/base-payroll-history'
 
@@ -280,7 +278,7 @@ describe('Base Payroll PDF Generator', () => {
                     },
                 ],
             }
-            expect(derivePayrollSettlementState(explicitSettled as any)).toBe('settled')
+            expect(derivePayrollSettlementState(explicitSettled)).toBe('settled')
 
             const explicitDraft: BasePayrollHistoryPeriod & { status: string } = {
                 ...samplePeriod,
@@ -293,7 +291,7 @@ describe('Base Payroll PDF Generator', () => {
                     },
                 ],
             }
-            expect(derivePayrollSettlementState(explicitDraft as any)).toBe('draft')
+            expect(derivePayrollSettlementState(explicitDraft)).toBe('draft')
         })
     })
 
@@ -335,7 +333,7 @@ describe('Base Payroll PDF Generator', () => {
 
         it('handles multi-worker datasets spanning multiple pages with repeating table headers and footers', async () => {
             // Stress test: 12 workers each with multiple earnings rows
-            const manyWorkers = Array.from({ length: 12 }, (_, i) => ({
+            const manyWorkers: BasePayrollHistoryPeriod['workers'] = Array.from({ length: 12 }, (_, i) => ({
                 settlementId: `settlement-${i + 1}`,
                 workerId: `worker-${i + 1}`,
                 workerName: `Worker Name ${i + 1} Long Testing Surname`,
@@ -344,7 +342,7 @@ describe('Base Payroll PDF Generator', () => {
                 advanceRecovered: 500,
                 remainingAdvanceBalance: 500,
                 netPayout: 4500 + i * 500,
-                paymentMode: (i % 2 === 0 ? 'bank_transfer' : 'upi') as any,
+                paymentMode: i % 2 === 0 ? 'bank_transfer' : 'upi',
                 paidAt: '2026-08-30T10:00:00.000Z',
                 meters: 800 + i * 50,
                 earnings: [
@@ -372,12 +370,11 @@ describe('Base Payroll PDF Generator', () => {
             const multiWorkerPeriod: BasePayrollHistoryPeriod = {
                 ...samplePeriod,
                 workers: manyWorkers,
-                totalWorkers: 12,
                 totalMeters: manyWorkers.reduce((acc, w) => acc + w.meters, 0),
                 totalGrossPay: manyWorkers.reduce((acc, w) => acc + w.grossPay, 0),
                 totalAdvanceRecovered: manyWorkers.reduce((acc, w) => acc + w.advanceRecovered, 0),
                 totalNetPayout: manyWorkers.reduce((acc, w) => acc + w.netPayout, 0),
-            } as any
+            }
 
             const result = await generateBasePayrollPdf(multiWorkerPeriod, {
                 factoryName: 'MODERN WEAVING MILLS PVT LTD',

@@ -1040,8 +1040,8 @@ export const hi = {
       sizing: "साइज़िंग",
       warping_per_kg: "वार्पिंग / किलो",
       sizing_per_kg: "साइज़िंग / किलो",
-      applied_on: "लागू होता है",
-      warp_consumption: "किलो ताना सूत खपत पर।"
+      applied_on: "वार्पिंग और साइजिंग लागू हैं",
+      warp_consumption: "किलो ताना सूत पर, प्रति 100 मीटर कपड़ा।"
     },
     overhead: {
       title: "फैक्ट्री ओवरहेड",
@@ -1066,6 +1066,7 @@ export const hi = {
       of_direct_cost: "मासिक खर्च ÷ उत्पादन"
     },
     post_processing: {
+      winding_scope: "वाइंडिंग प्रति 100 मीटर कपड़े के लिए {kg} किलो कुल सूत (ताना + बाना) पर लागू है।",
       title: "पोस्ट-प्रोसेसिंग और लॉजिस्टिक्स",
       winding: "वाइंडिंग",
       processing: "प्रोसेसिंग",

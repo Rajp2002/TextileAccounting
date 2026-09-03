@@ -80,7 +80,7 @@ async function run() {
         ],
     }
 
-    const { doc, filename } = await generateBasePayrollPdf(largeValuePeriod, {
+    const { doc } = await generateBasePayrollPdf(largeValuePeriod, {
         factoryName: 'SRI BALAJI WEAVING & INDUSTRIAL TEXTILE MEGA-COMPLEX PVT LTD',
     })
     const arrayBuffer = doc.output('arraybuffer')
