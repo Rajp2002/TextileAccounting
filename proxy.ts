@@ -344,8 +344,8 @@ export async function updateSession(request: NextRequest) {
     // A stale installed PWA can repeatedly request /login from an obsolete
     // client-side auth guard while the current server redirects it home. On
     // the second request, render the current login boundary once instead of
-    // continuing the 307 loop. That boundary activates a waiting worker and
-    // performs a full-document navigation to the verified role destination.
+    // continuing the 307 loop. That boundary shows a visible recovery action
+    // and leaves the login form usable without another automatic navigation.
     if (user && pathname === '/login' && roleDestination !== '/login') {
         const previousRedirect = request.cookies.get(PWA_LOGIN_RECOVERY_COOKIE)?.value
 

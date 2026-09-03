@@ -40,13 +40,13 @@ export function PwaUpdateNotice() {
     useEffect(() => {
         if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
+        // Login is a full-document authentication boundary. Do not run
+        // service-worker update checks or activation here: an embedded browser
+        // can otherwise reload this route while it is establishing its session.
+        if (window.location.pathname === '/login') return
+
         let disposed = false
         let updateActivationStarted = false
-
-        // Password AutoFill populates the login controls before the worker is
-        // ready. Login is still a safe update boundary: credentials remain in
-        // the password manager and no authenticated business draft is open.
-        const isLoginRefreshBoundary = () => window.location.pathname === '/login'
 
         const activateWaitingWorker = (registration: ServiceWorkerRegistration) => {
             const waitingWorker = registration.waiting
@@ -69,12 +69,6 @@ export function PwaUpdateNotice() {
 
         const showUpdateToast = (registration: ServiceWorkerRegistration) => {
             if (disposed) return
-
-            // The login page has no draft state to protect. Activate a waiting
-            // worker before credentials cross the auth boundary; otherwise an
-            // old login bundle can navigate into a newer RSC/loading boundary
-            // and leave a PWA stuck on its spinner.
-            if (isLoginRefreshBoundary() && activateWaitingWorker(registration)) return
 
             const versionKey = `${UPDATE_TOAST_SHOWN_FLAG}${encodeURIComponent(getUpdateVersionKey(registration))}`
             if (readSessionFlag(versionKey)) return
@@ -122,10 +116,6 @@ export function PwaUpdateNotice() {
 
         navigator.serviceWorker.ready.then((registration) => {
             if (disposed) return
-
-            if (registration.waiting && isLoginRefreshBoundary()) {
-                activateWaitingWorker(registration)
-            }
 
             // Watch workers that start installing while this tab is open. A
             // worker that is already waiting is handled below without forcing

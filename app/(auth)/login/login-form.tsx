@@ -19,60 +19,20 @@ function createTraceId() {
     return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
 }
 
-async function activateWaitingPwaWorker() {
-    if (!('serviceWorker' in navigator)) return
-
-    const registration = await navigator.serviceWorker.getRegistration()
-    const waitingWorker = registration?.waiting
-    if (!waitingWorker) return
-
-    await new Promise<void>((resolve) => {
-        let completed = false
-        const complete = () => {
-            if (completed) return
-            completed = true
-            window.clearTimeout(timeoutId)
-            navigator.serviceWorker.removeEventListener('controllerchange', complete)
-            resolve()
-        }
-        const timeoutId = window.setTimeout(complete, 3000)
-
-        navigator.serviceWorker.addEventListener('controllerchange', complete)
-        waitingWorker.postMessage({ type: 'SKIP_WAITING' })
-    })
-}
-
 export default function LoginForm({ recoveryDestination }: { recoveryDestination?: string | null }) {
     const [loading, setLoading]             = useState(false)
-    const [isRedirecting, setIsRedirecting] = useState(Boolean(recoveryDestination))
+    const [isRedirecting, setIsRedirecting] = useState(false)
     const [email, setEmail]                 = useState('')
     const [password, setPassword]           = useState('')
     const [showPassword, setShowPassword]   = useState(false)
 
     useEffect(() => {
-        if (recoveryDestination) {
-            let cancelled = false
-
-            void activateWaitingPwaWorker()
-                .catch(() => {
-                    // Recovery navigation must continue even if the browser's
-                    // service-worker API is unavailable or rejects the update.
-                })
-                .finally(() => {
-                    if (!cancelled) window.location.replace(recoveryDestination)
-                })
-
-            return () => {
-                cancelled = true
-            }
-        }
-
         const params = new URLSearchParams(window.location.search)
         if (params.get('message') === 'password-updated') {
             toast.success('Password updated. Please sign in with your new password.')
             window.history.replaceState(null, '', window.location.pathname)
         }
-    }, [recoveryDestination])
+    }, [])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -123,6 +83,22 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             title="Welcome back"
             subtitle="Sign in to your Weavly account"
         >
+            {recoveryDestination && (
+                <div
+                    role="status"
+                    aria-live="polite"
+                    className="mb-5 rounded-lg border border-saffron/30 bg-saffron-soft/40 p-4"
+                >
+                    <p className="font-semibold text-ink">Your session is already active.</p>
+                    <p className="mt-1 text-sm text-body">
+                        The sign-in page was reopened while your workspace was loading. Continue to your workspace,
+                        or sign in below with a different account.
+                    </p>
+                    <Button asChild variant="outline" className="mt-3 w-full">
+                        <a href={recoveryDestination}>Continue to your workspace</a>
+                    </Button>
+                </div>
+            )}
             <form onSubmit={handleLogin} className="space-y-5" noValidate>
                 {/* Email */}
                 <div className="space-y-1.5">
@@ -211,7 +187,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 </div>
             </form>
             <LoadingModal
-                isOpen={isRedirecting || Boolean(recoveryDestination)}
+                isOpen={isRedirecting}
                 message="Setting up your dashboard..."
             />
         </AuthLayout>
