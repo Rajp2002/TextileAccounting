@@ -530,10 +530,6 @@ export function filterAndSortSavedCostings<T extends SavedCostingListItem>(
 export function compareSavedCostings(left: SavedCostingListItem, right: SavedCostingListItem) {
   const leftMetrics = getSavedCostingMetrics(left)
   const rightMetrics = getSavedCostingMetrics(right)
-  const numericOrNull = (value: unknown) => {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
-  }
   const delta = (leftValue: unknown, rightValue: unknown) => {
     const leftNumber = numericOrNull(leftValue)
     const rightNumber = numericOrNull(rightValue)
@@ -715,6 +711,9 @@ type SavedCostingAuditLayer = {
 }
 
 function numericOrNull(value: unknown): number | null {
+  // Missing snapshot evidence is not a zero-valued financial input.
+  if (typeof value !== 'number' && typeof value !== 'string') return null
+  if (typeof value === 'string' && value.trim() === '') return null
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
 }

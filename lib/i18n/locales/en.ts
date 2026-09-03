@@ -1045,8 +1045,8 @@ export const en = {
       sizing: "Sizing",
       warping_per_kg: "Warping / kg",
       sizing_per_kg: "Sizing / kg",
-      applied_on: "Applied on",
-      warp_consumption: "kg warp yarn consumption."
+      applied_on: "Warping and sizing apply to",
+      warp_consumption: "kg warp yarn per 100 m of fabric."
     },
     overhead: {
       title: "Factory Expenses",
@@ -1071,6 +1071,7 @@ export const en = {
       of_direct_cost: "monthly expenses ÷ actual output"
     },
     post_processing: {
+      winding_scope: "Winding applies to {kg} kg total yarn (warp + weft) per 100 m of fabric.",
       title: "Post-Processing & Logistics",
       winding: "Winding",
       processing: "Processing",

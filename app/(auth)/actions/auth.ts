@@ -216,6 +216,7 @@ export async function createOrganization(input: CreateOrganizationInput) {
             join_code: joinCode,
             join_code_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             owner_id: userId,
+            product_experience: 'base',
             onboarding_complete: false,
         })
         .select('id')
@@ -232,6 +233,7 @@ export async function createOrganization(input: CreateOrganizationInput) {
                     join_code: joinCode,
                     join_code_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                     owner_id: userId,
+                    product_experience: 'base',
                     onboarding_complete: false,
                 })
                 .select('id')

@@ -30,7 +30,7 @@ function createMockElement(options: MockInputOptions = {}) {
         value = '',
     } = options
 
-    const element: any = {
+    const element = {
         id,
         tagName: tagName.toUpperCase(),
         type,
@@ -52,11 +52,11 @@ function createMockElement(options: MockInputOptions = {}) {
         scrollIntoView: vi.fn(),
         closest: vi.fn(),
     }
-    return element
+    return element as unknown as HTMLInputElement
 }
 
-function createMockContainer(children: any[]) {
-    const container: any = {
+function createMockContainer(children: HTMLInputElement[]) {
+    const container = {
         tagName: 'DIV',
         querySelectorAll: vi.fn(() => {
             return children.filter(child => {
@@ -75,12 +75,12 @@ function createMockContainer(children: any[]) {
 
     children.forEach(child => {
         child.closest = (sel: string) => {
-            if (sel.includes('data-enter-navigate-container')) return container
+            if (sel.includes('data-enter-navigate-container')) return container as unknown as HTMLElement
             return null
         }
     })
 
-    return container
+    return container as unknown as HTMLElement
 }
 
 describe('Form Enter-Key Navigation Engine', () => {
@@ -94,14 +94,14 @@ describe('Form Enter-Key Navigation Engine', () => {
         const btn = createMockElement({ id: 'btn', tagName: 'BUTTON' })
         const in3 = createMockElement({ id: 'in3', type: 'number' })
 
-        expect(isElementNavigable(in1 as any)).toBe(true)
-        expect(isElementNavigable(inDisabled as any)).toBe(false)
-        expect(isElementNavigable(inReadonly as any)).toBe(false)
+        expect(isElementNavigable(in1)).toBe(true)
+        expect(isElementNavigable(inDisabled)).toBe(false)
+        expect(isElementNavigable(inReadonly)).toBe(false)
 
         const container = createMockContainer([in1, in2, inDisabled, inReadonly, inHidden, inCheckbox, btn, in3])
 
-        const navigable = findNavigableFormInputs(container as any)
-        const ids = navigable.map(el => (el as any).id)
+        const navigable = findNavigableFormInputs(container)
+        const ids = navigable.map(el => el.id)
 
         expect(ids).toEqual(['in1', 'in2', 'in3'])
     })
@@ -113,7 +113,7 @@ describe('Form Enter-Key Navigation Engine', () => {
 
         const container = createMockContainer([fieldQuality, fieldCrimp, fieldWaste])
 
-        const enterEvent: any = {
+        const enterEvent = {
             key: 'Enter',
             target: fieldQuality,
             currentTarget: container,
@@ -122,7 +122,7 @@ describe('Form Enter-Key Navigation Engine', () => {
             isComposing: false,
         }
 
-        const handled1 = handleEnterKeyNavigation(enterEvent, { container: container as any })
+        const handled1 = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container })
 
         expect(handled1).toBe(true)
         expect(enterEvent.preventDefault).toHaveBeenCalled()
@@ -131,7 +131,7 @@ describe('Form Enter-Key Navigation Engine', () => {
         expect(fieldCrimp.scrollIntoView).toHaveBeenCalled()
 
         // Press Enter on crimp -> goes to waste
-        const enterEvent2: any = {
+        const enterEvent2 = {
             key: 'Enter',
             target: fieldCrimp,
             currentTarget: container,
@@ -139,7 +139,7 @@ describe('Form Enter-Key Navigation Engine', () => {
             defaultPrevented: false,
             isComposing: false,
         }
-        const handled2 = handleEnterKeyNavigation(enterEvent2, { container: container as any })
+        const handled2 = handleEnterKeyNavigation(enterEvent2 as unknown as KeyboardEvent, { container: container })
         expect(handled2).toBe(true)
         expect(fieldWaste.focus).toHaveBeenCalled()
         expect(fieldWaste.select).toHaveBeenCalled()
@@ -152,7 +152,7 @@ describe('Form Enter-Key Navigation Engine', () => {
 
         const container = createMockContainer([step1, step2, step3])
 
-        const shiftEnterEvent: any = {
+        const shiftEnterEvent = {
             key: 'Enter',
             shiftKey: true,
             target: step2,
@@ -162,7 +162,7 @@ describe('Form Enter-Key Navigation Engine', () => {
             isComposing: false,
         }
 
-        const handled = handleEnterKeyNavigation(shiftEnterEvent, { container: container as any })
+        const handled = handleEnterKeyNavigation(shiftEnterEvent as unknown as KeyboardEvent, { container: container })
         expect(handled).toBe(true)
         expect(step1.focus).toHaveBeenCalled()
         expect(step1.select).toHaveBeenCalled()
@@ -174,7 +174,7 @@ describe('Form Enter-Key Navigation Engine', () => {
 
         const container = createMockContainer([textarea, nextInput])
 
-        const enterEvent: any = {
+        const enterEvent = {
             key: 'Enter',
             target: textarea,
             currentTarget: container,
@@ -183,7 +183,7 @@ describe('Form Enter-Key Navigation Engine', () => {
             isComposing: false,
         }
 
-        const handled = handleEnterKeyNavigation(enterEvent, { container: container as any })
+        const handled = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container })
         expect(handled).toBe(false)
         expect(enterEvent.preventDefault).not.toHaveBeenCalled()
         expect(nextInput.focus).not.toHaveBeenCalled()
@@ -193,7 +193,7 @@ describe('Form Enter-Key Navigation Engine', () => {
         const single = createMockElement({ id: 'single', type: 'text', value: 'Only one' })
         const container = createMockContainer([single])
 
-        const enterEvent: any = {
+        const enterEvent = {
             key: 'Enter',
             target: single,
             currentTarget: container,
@@ -202,10 +202,10 @@ describe('Form Enter-Key Navigation Engine', () => {
             isComposing: false,
         }
 
-        const handledLast = handleEnterKeyNavigation(enterEvent, { container: container as any, loop: false })
+        const handledLast = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container, loop: false })
         expect(handledLast).toBe(false)
 
-        const shiftEnterEvent: any = {
+        const shiftEnterEvent = {
             key: 'Enter',
             shiftKey: true,
             target: single,
@@ -214,7 +214,7 @@ describe('Form Enter-Key Navigation Engine', () => {
             defaultPrevented: false,
             isComposing: false,
         }
-        const handledFirst = handleEnterKeyNavigation(shiftEnterEvent, { container: container as any, loop: false })
+        const handledFirst = handleEnterKeyNavigation(shiftEnterEvent as unknown as KeyboardEvent, { container: container, loop: false })
         expect(handledFirst).toBe(false)
     })
 
@@ -223,7 +223,7 @@ describe('Form Enter-Key Navigation Engine', () => {
         const f2 = createMockElement({ id: 'f2', type: 'text', value: 'B' })
         const container = createMockContainer([f1, f2])
 
-        const enterEvent: any = {
+        const enterEvent = {
             key: 'Enter',
             target: f2,
             currentTarget: container,
@@ -232,7 +232,7 @@ describe('Form Enter-Key Navigation Engine', () => {
             isComposing: false,
         }
 
-        const handled = handleEnterKeyNavigation(enterEvent, { container: container as any, loop: true })
+        const handled = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container, loop: true })
         expect(handled).toBe(true)
         expect(f1.focus).toHaveBeenCalled()
     })
@@ -243,7 +243,7 @@ describe('Form Enter-Key Navigation Engine', () => {
         const children = [w1Rate, w1Gst]
         const container = createMockContainer(children)
 
-        const enterEvent: any = {
+        const enterEvent = {
             key: 'Enter',
             target: w1Gst,
             currentTarget: container,
@@ -251,14 +251,14 @@ describe('Form Enter-Key Navigation Engine', () => {
             defaultPrevented: false,
             isComposing: false,
         }
-        expect(handleEnterKeyNavigation(enterEvent, { container: container as any })).toBe(false)
+        expect(handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container })).toBe(false)
 
         // Dynamically append Warp row 2
         const w2Rate = createMockElement({ id: 'w2-rate', type: 'number', value: '120' })
         children.push(w2Rate)
 
         // Hitting Enter on w1-gst now advances to w2-rate
-        const handledNew = handleEnterKeyNavigation(enterEvent, { container: container as any })
+        const handledNew = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container })
         expect(handledNew).toBe(true)
         expect(w2Rate.focus).toHaveBeenCalled()
     })

@@ -51,7 +51,7 @@ function isHtmlElement(el: unknown): el is HTMLElement {
     if (typeof HTMLElement !== 'undefined') {
         return el instanceof HTMLElement
     }
-    return Boolean((el as any).tagName)
+    return 'tagName' in el && typeof el.tagName === 'string'
 }
 
 function isInputElement(el: unknown): el is HTMLInputElement {
@@ -59,7 +59,7 @@ function isInputElement(el: unknown): el is HTMLInputElement {
     if (typeof HTMLInputElement !== 'undefined') {
         return el instanceof HTMLInputElement
     }
-    return (el as any).tagName?.toUpperCase() === 'INPUT'
+    return isHtmlElement(el) && el.tagName.toUpperCase() === 'INPUT'
 }
 
 function isTextAreaElement(el: unknown): el is HTMLTextAreaElement {
@@ -67,7 +67,7 @@ function isTextAreaElement(el: unknown): el is HTMLTextAreaElement {
     if (typeof HTMLTextAreaElement !== 'undefined') {
         return el instanceof HTMLTextAreaElement
     }
-    return (el as any).tagName?.toUpperCase() === 'TEXTAREA'
+    return isHtmlElement(el) && el.tagName.toUpperCase() === 'TEXTAREA'
 }
 
 /**
@@ -114,7 +114,7 @@ export function isElementNavigable(el: Element): el is HTMLElement {
  * Finds all navigable inputs within a root element in DOM order.
  */
 export function findNavigableFormInputs(
-    root: HTMLElement | Document = typeof document !== 'undefined' ? document : (null as any),
+    root: HTMLElement | Document | null = typeof document !== 'undefined' ? document : null,
     selector = DEFAULT_INPUT_SELECTOR
 ): HTMLElement[] {
     if (!root || typeof root.querySelectorAll !== 'function') return []
@@ -200,8 +200,8 @@ export function handleEnterKeyNavigation(
 
     // Ignore composition events (e.g. IME language input)
     const isComposing =
-        Boolean((event as any).nativeEvent?.isComposing) ||
-        Boolean((event as any).isComposing)
+        ('nativeEvent' in event && event.nativeEvent.isComposing) ||
+        ('isComposing' in event && event.isComposing)
     if (isComposing) return false
 
     // Ignore if default already prevented

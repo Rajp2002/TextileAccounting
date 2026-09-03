@@ -17,7 +17,7 @@ async function run() {
         advanceRecovered: 1500,
         remainingAdvanceBalance: 1500,
         netPayout: 12500 + i * 1200,
-        paymentMode: (['bank_transfer', 'upi', 'cash', 'cheque'][i % 4]) as any,
+        paymentMode: (['bank_transfer', 'upi', 'cash', 'cheque'] as const)[i % 4],
         paidAt: '2026-08-30T10:00:00.000Z',
         meters: 2200 + i * 150,
         earnings: [
@@ -56,7 +56,7 @@ async function run() {
         workers: manyWorkers,
     }
 
-    const { doc, filename } = await generateBasePayrollPdf(multiPeriod, {
+    const { doc } = await generateBasePayrollPdf(multiPeriod, {
         factoryName: 'ASHOK WEAVING & TEXTILE MILLS',
     })
     const arrayBuffer = doc.output('arraybuffer')

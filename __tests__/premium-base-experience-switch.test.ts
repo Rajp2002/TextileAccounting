@@ -7,6 +7,19 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Full Suite to Base Plan experience switch', () => {
+  it.each(['lite', 'base'] as const)('normalizes %s metadata without changing entitlement', (tier) => {
+    expect(resolveOrgPlanAccess(tier, 'full_suite')).toEqual({
+      subscriptionTier: tier, effectiveTier: tier, productExperience: 'base', canSwitchExperience: false,
+    })
+    expect(resolveOrgPlanAccess('none', 'full_suite', true)).toMatchObject({ effectiveTier: 'lite', productExperience: 'base' })
+  })
+
+  it('marks both new-signup paths as the shared Lite/Base workspace', () => {
+    const auth = read('app/(auth)/actions/auth.ts')
+    const inserts = [...auth.matchAll(/\.from\('organizations'\)\s*\.insert\(\{([\s\S]*?)\}\)/g)]
+    expect(inserts).toHaveLength(2)
+    for (const [, fields] of inserts) expect(fields).toContain("product_experience: 'base'")
+  })
   it('reduces the active product tier without changing the paid tier', () => {
     expect(resolveOrgPlanAccess('premium', 'base')).toEqual({
       subscriptionTier: 'premium',

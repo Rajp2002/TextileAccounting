@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
 import {
   compareSavedCostingSnapshots,
+  compareSavedCostings,
   filterAndSortSavedCostings,
   getSavedCostingIdentity,
 } from '../lib/saved-costings'
@@ -80,6 +81,59 @@ describe('Sprint 10 saved costing identity and comparison', () => {
     expect(comparison.overhead.changed).toBe(true)
     expect(comparison.margin.changed).toBe(true)
     expect(comparison.price.changed).toBe(true)
+  })
+
+  it.each(['warpRows', 'weftRows'] as const)('keeps a multi-layer %s rate unavailable, never zero', (key) => {
+    const single = makeDefaultEstimateState()
+    single.warpRows[0] = { ...single.warpRows[0], calcDenier: 75, beamEnds: 3200, yarnRate: 180 }
+    single.weftRows[0] = { ...single.weftRows[0], calcDenier: 75, picks: 68, effectiveCostingWidthCm: 112, yarnRate: 180 }
+    single[key][0].yarnRate = 180
+    const multi = structuredClone(single)
+    if (key === 'warpRows') multi.warpRows.push({ ...multi.warpRows[0], id: 'second-layer', yarnRate: 240 })
+    else multi.weftRows.push({ ...multi.weftRows[0], id: 'second-layer', yarnRate: 240 })
+    const side = key === 'warpRows' ? 'warp' : 'weft'
+    const comparison = compareSavedCostingSnapshots(savedSnapshot('left', single), savedSnapshot('right', multi))
+    expect(comparison.yarn[side].ratePerKg).toEqual({ left: 180, right: null, delta: null })
+    expect(comparison.yarn[side].right.map(layer => layer.ratePerKg)).toEqual([180, 240])
+    const reversed = compareSavedCostingSnapshots(savedSnapshot('left', multi), savedSnapshot('right', single))
+    expect(reversed.yarn[side].ratePerKg).toEqual({ left: null, right: 180, delta: null })
+  })
+
+  it.each([null, undefined, '', '  ', false, [], {}, Infinity, 'invalid'])('does not invent a rate from missing or invalid legacy evidence (%j)', (rate) => {
+    const left = { ...savedSnapshot('left', makeDefaultEstimateState()), costing_result_snapshot: null, warp_rows: [{ yarnRate: rate }] }
+    const right = { ...left, id: 'right', warp_rows: [{ yarnRate: 180 }] }
+    expect(compareSavedCostingSnapshots(left, right).yarn.warp.ratePerKg).toEqual({ left: null, right: 180, delta: null })
+  })
+
+  it('preserves an explicit zero and numeric-string legacy rate', () => {
+    const left = { ...savedSnapshot('left', makeDefaultEstimateState()), costing_result_snapshot: null, warp_rows: [{ yarnRate: 0 }] }
+    const right = { ...left, id: 'right', warp_rows: [{ yarnRate: '180' }] }
+    expect(compareSavedCostingSnapshots(left, right).yarn.warp.ratePerKg).toEqual({ left: 0, right: 180, delta: 180 })
+  })
+
+  it('does not invent order-total deltas when a saved quantity is unavailable', () => {
+    const state = makeDefaultEstimateState()
+    const left = savedSnapshot('left', state)
+    const right = savedSnapshot('right', { ...state, orderQuantityM: 100 })
+    expect(compareSavedCostings(left, right).expectedProfitDelta).toBeNull()
+  })
+
+  it.each(['warp', 'weft'] as const)('rejects missing or coerced canonical %s rates before comparison', (side) => {
+    const state = makeDefaultEstimateState()
+    state.warpRows[0] = { ...state.warpRows[0], calcDenier: 75, beamEnds: 3200, yarnRate: 180 }
+    state.weftRows[0] = { ...state.weftRows[0], calcDenier: 75, picks: 68, effectiveCostingWidthCm: 112, yarnRate: 180 }
+    const right = savedSnapshot('right', state)
+    for (const rate of [null, undefined, '', ' ', false, [], {}]) {
+      const left = savedSnapshot('left', state)
+      Object.assign(left.costing_result_snapshot.audit![side].layers[0], { ratePerKg: rate })
+      const comparison = compareSavedCostingSnapshots(left, right)
+      expect(comparison.yarn[side].ratePerKg).toEqual({ left: null, right: 180, delta: null })
+    }
+    for (const rate of [0, '0', 180, '180']) {
+      const left = savedSnapshot('left', state)
+      Object.assign(left.costing_result_snapshot.audit![side].layers[0], { ratePerKg: rate })
+      expect(compareSavedCostingSnapshots(left, right).yarn[side].ratePerKg.left).toBe(Number(rate))
+    }
   })
 
   it('separates direct-overhead monthly context from monthly-expense cost drivers', () => {

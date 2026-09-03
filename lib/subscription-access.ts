@@ -1,5 +1,6 @@
 /** Pure subscription access resolution shared by server code and unit tests. */
 export type SubscriptionTier = 'none' | 'trial' | 'lite' | 'base' | 'premium'
+// `base` is the shared Lite/Base workspace, not a production entitlement.
 export type ProductExperience = 'base' | 'full_suite'
 
 /**
@@ -113,9 +114,11 @@ export function resolveOrgPlanAccess(
   productExperienceValue: unknown,
   retainLiteAfterBaseExpiry = false,
 ): OrgPlanAccess {
-  const productExperience = normalizeProductExperience(productExperienceValue)
   const hasFullSuiteEntitlement = tierSatisfies(subscriptionTier, 'premium')
   const fallbackTier = retainLiteAfterBaseExpiry && subscriptionTier === 'none' ? 'lite' : subscriptionTier
+  const productExperience = fallbackTier === 'lite' || fallbackTier === 'base'
+    ? 'base'
+    : normalizeProductExperience(productExperienceValue)
 
   return {
     subscriptionTier,

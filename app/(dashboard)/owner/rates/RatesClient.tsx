@@ -661,7 +661,6 @@ export default function RatesClient({
             }),
         [activeYarnRates],
     )
-    const dueCount = dueReviewRates.length
     const mostRecentReview = activeYarnRates.length
         ? activeYarnRates.reduce((latest, rate) => rate.last_reviewed_at > latest ? rate.last_reviewed_at : latest, activeYarnRates[0].last_reviewed_at)
         : null

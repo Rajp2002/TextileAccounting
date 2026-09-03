@@ -1144,13 +1144,14 @@ function parseCostingAuditLayer(value: unknown, fallbackId: string): EstimatorYa
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return null
   const raw = value as Record<string, unknown>
   const readRequiredNumber = (key: string) => {
-    const parsed = Number(raw[key])
+    const value = raw[key]
+    if (typeof value !== 'number' && typeof value !== 'string') return null
+    if (typeof value === 'string' && value.trim() === '') return null
+    const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : null
   }
   const readNullableNumber = (key: string) => {
-    if (raw[key] === null || raw[key] === undefined) return null
-    const parsed = Number(raw[key])
-    return Number.isFinite(parsed) ? parsed : null
+    return readRequiredNumber(key)
   }
   const requiredNumbers = [
     'calcDenier',
