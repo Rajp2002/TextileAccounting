@@ -3,6 +3,22 @@ import { nanoid } from 'nanoid'
 
 import { DEFAULT_OVERHEAD_ITEMS, type OverheadItem } from './estimator'
 
+export const MAX_MONTHLY_OVERHEAD_AMOUNT = 1_000_000_000
+export const MAX_STANDARD_MONTHLY_PRODUCTION_METRES = 1_000_000_000
+
+/**
+ * Format rupee values without hiding paise when a monthly assumption contains
+ * a fractional amount. Whole-rupee totals remain compact for the common case.
+ */
+export function formatIndianMoney(value: number, digits?: number): string {
+  const safeValue = Number.isFinite(value) ? value : 0
+  const resolvedDigits = digits ?? (Number.isInteger(safeValue) ? 0 : 2)
+  return `₹${safeValue.toLocaleString('en-IN', {
+    minimumFractionDigits: resolvedDigits,
+    maximumFractionDigits: resolvedDigits,
+  })}`
+}
+
 function matchesPreset(item: OverheadItem, preset: Omit<OverheadItem, 'id'>) {
   if (!item.isPreset) return false
   if (preset.label === 'Maintenance & Repairs') {
