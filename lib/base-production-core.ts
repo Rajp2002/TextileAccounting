@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js'
+import type { BaseMachineRecord } from './base-machine-register'
 
 import { calculateAdvanceRecovery } from './finance'
 
@@ -38,6 +39,7 @@ export type BaseMachineJobContext = {
 }
 
 export type BaseProductionBatch = {
+    machine_records?: BaseMachineRecord[]
     id: string
     production_date: string
     shift: BaseProductionShift
@@ -48,6 +50,7 @@ export type BaseProductionBatch = {
 }
 
 export type BaseProductionRevisionSnapshot = {
+    machine_records?: BaseMachineRecord[]
     total_meters: number
     entered_count: number
     zero_count: number

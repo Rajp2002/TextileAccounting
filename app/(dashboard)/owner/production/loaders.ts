@@ -2,6 +2,7 @@ import 'server-only'
 
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { readBaseRevisionEntries } from '@/lib/base-production-audit'
+import { readMachineRecords } from '@/lib/base-machine-register'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
@@ -83,6 +84,7 @@ function toDailyStatus(value: unknown): BaseDailyProductionStatus {
 function toRevisionSnapshot(value: unknown): BaseProductionRevisionSnapshot {
     const snapshot = value && typeof value === 'object' ? value as Record<string, unknown> : {}
     return {
+        machine_records: readMachineRecords(snapshot.machine_records),
         total_meters: toBaseNumber(typeof snapshot.total_meters === 'string' || typeof snapshot.total_meters === 'number' ? snapshot.total_meters : 0),
         entered_count: Math.max(0, Number(snapshot.entered_count) || 0),
         zero_count: Math.max(0, Number(snapshot.zero_count) || 0),
@@ -198,7 +200,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_production_batches')
-            .select('id, production_date, shift, status, client_request_id, created_at, updated_at', from === 0 ? { count: 'exact' } : {})
+            .select('id, production_date, shift, status, client_request_id, created_at, updated_at, machine_records', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('production_date', { ascending: false })
             .order('shift')
@@ -375,6 +377,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     }))
 
     const dailyBatches: BaseProductionBatch[] = rawBatches.map((row) => ({
+        machine_records: readMachineRecords(row.machine_records),
         id: String(row.id),
         production_date: toDate(row.production_date, today),
         shift: toShift(row.shift),

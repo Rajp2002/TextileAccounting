@@ -22,6 +22,11 @@ function lines(snapshot: BaseProductionRevisionSnapshot | null) {
             result.set(key, { workerId: entry.worker_id, machine: allocation.machine_label, job: allocation.job_label, meters: allocation.meters, rate: allocation.worker_rate_snapshot, pay: Number((allocation.meters * allocation.worker_rate_snapshot).toFixed(2)), status: entry.entry_status })
         }
     }
+    for (const record of snapshot?.machine_records ?? []) {
+        if (record.state === 'entered') continue // Financial detail comes from allocations above.
+        const key = `${record.worker_id}:${record.machine_id}:${record.job_id ?? ''}`
+        result.set(key, { workerId: record.worker_id, machine: record.machine_label, job: record.job_label ?? '', meters: 0, rate: 0, pay: 0, status: record.state })
+    }
     return result
 }
 
