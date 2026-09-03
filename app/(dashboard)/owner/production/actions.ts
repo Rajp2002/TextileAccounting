@@ -103,6 +103,10 @@ const BaseDailyProductionRowSchema = z.object({
     workerId: UuidSchema,
     meters: z.number().finite().nonnegative().max(100_000, 'Metres are too high').nullable().transform((value) => value === null ? null : Number(value.toFixed(2))),
     status: z.enum(['blank', 'entered', 'zero', 'absent']),
+    machineRecords: z.array(z.object({
+        machineId: UuidSchema,
+        state: z.enum(['entered', 'pending', 'not_running', 'absent']),
+    })).max(100).optional(),
     notes: z.string().trim().max(500, 'Notes are too long').optional().or(z.literal('')),
     allocations: z.array(z.object({
         machineId: UuidSchema,
@@ -381,6 +385,7 @@ export async function saveBaseDailyProductionBatch(input: {
         workerId: string
         meters: number | null
         status: 'blank' | 'entered' | 'zero' | 'absent'
+        machineRecords?: Array<{ machineId: string; state: 'entered' | 'pending' | 'not_running' | 'absent' }>
         notes?: string
         allocations: Array<{
             machineId: string
@@ -408,6 +413,7 @@ export async function saveBaseDailyProductionBatch(input: {
             worker_id: entry.workerId,
             meters: entry.meters,
             entry_status: entry.status,
+            ...(entry.machineRecords ? { machine_records: entry.machineRecords.map(record => ({ machine_id: record.machineId, state: record.state })) } : {}),
             notes: entry.notes || null,
             allocations: entry.allocations.map((allocation) => ({
                 machine_id: allocation.machineId,
