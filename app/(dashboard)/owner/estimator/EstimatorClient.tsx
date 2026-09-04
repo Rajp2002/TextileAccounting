@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
 import { useReducer, useEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
@@ -3220,7 +3221,7 @@ export default function EstimatorClient({
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
     const [mobileCostingShortcutVisible] = useState(true)
-    const [mobileKeyboardVisible, setMobileKeyboardVisible] = useState(false)
+    const mobileKeyboardVisible = useMobileKeyboard()
 
     useEffect(() => {
         try {
@@ -3260,23 +3261,6 @@ export default function EstimatorClient({
         setAssumptionsExpanded(current => !current)
     }, [])
 
-    useEffect(() => {
-        const viewport = window.visualViewport
-        if (!viewport) return
-
-        const initialHeight = viewport.height
-        const syncKeyboard = () => {
-            setMobileKeyboardVisible(initialHeight - viewport.height > 150)
-        }
-
-        syncKeyboard()
-        viewport.addEventListener('resize', syncKeyboard)
-        viewport.addEventListener('scroll', syncKeyboard)
-        return () => {
-            viewport.removeEventListener('resize', syncKeyboard)
-            viewport.removeEventListener('scroll', syncKeyboard)
-        }
-    }, [])
 
     // Party rate memory — debounced with 800ms + 3-char min
     const [partyHint, setPartyHint] = useState<{

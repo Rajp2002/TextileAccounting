@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useMobileKeyboard } from "@/hooks/use-mobile-keyboard"
 import {
     ClipboardList,
     Users,
@@ -156,6 +157,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
 // ─── Main exported sidebar (replaces layout's header/SupervisorNav) ───────────
 
 export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarProps) {
+    const mobileKeyboardVisible = useMobileKeyboard()
     const [isOpen, setIsOpen] = useState(false)
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
     const [isStandalone] = useState(() => {
@@ -253,7 +255,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
              *   min-w-0 on each tab prevents text overflow on very narrow screens
              *   (Galaxy Fold folded ≈ 280 px).
              */}
-            <div className={cn(
+            <div style={mobileKeyboardVisible ? { display: 'none' } : undefined} className={cn(
                 "md:hidden fixed bottom-0 left-0 right-0 z-50",
                 "bg-canvas/92 backdrop-blur-xl border-t border-border",
                 "grid auto-cols-fr grid-flow-col items-stretch",

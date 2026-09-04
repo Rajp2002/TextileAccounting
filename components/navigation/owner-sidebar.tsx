@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useMobileKeyboard } from "@/hooks/use-mobile-keyboard"
 import {
     BarChart3,
     Server,
@@ -254,6 +255,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
 }
 
 export function OwnerSidebar({ factoryName, userName, productionMode, subscriptionTier = 'none', yarnReviewDueCount = 0 }: OwnerSidebarProps) {
+    const mobileKeyboardVisible = useMobileKeyboard()
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
     const { t } = useTranslation()
@@ -297,7 +299,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
             </Sheet>
 
             {/* Mobile Bottom Navigation Form Factor */}
-            <div className={cn(
+            <div style={mobileKeyboardVisible ? { display: 'none' } : undefined} className={cn(
                 "md:hidden fixed bottom-0 left-0 right-0 z-50",
                 "bg-canvas/92 backdrop-blur-xl border-t border-border",
                 "grid auto-cols-fr grid-flow-col items-stretch",
