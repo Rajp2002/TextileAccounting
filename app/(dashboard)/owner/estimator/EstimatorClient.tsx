@@ -32,10 +32,8 @@ import {
     X,
     AlertTriangle,
     RotateCcw,
-    Lock,
     AlertCircle,
     Info,
-    Zap,
     Play,
     Check,
     CheckCircle2,
@@ -44,7 +42,6 @@ import {
     FileDown,
     MoreHorizontal,
 } from 'lucide-react'
-import { motion, useReducedMotion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
@@ -58,6 +55,7 @@ import {
     DEFAULT_FACTORY_SECTIONS,
     DEFAULT_WARP_CRIMP_PCT,
     ensureOverheadIntegrity,
+    resolveOverheadItemAmount,
     getEffectiveYarnDenier,
     getEffectiveCostingWidthCm,
     isWarpRowFilled,
@@ -72,8 +70,6 @@ import {
     type WeftRow,
     type OverheadItem,
     type OverheadMode,
-    type ElectricityMeta,
-    type DepreciationMeta,
     type FactorySections,
     type EstimatorV3Totals,
     type CostingResultSnapshot,
@@ -88,7 +84,6 @@ import {
     updateTemplateRates,
     updateFabricTemplate,
     getLastQuoteForParty,
-    getMonthlyOutputSuggestion,
     upsertFactoryCostProfile,
     createMarketRunFromEstimator,
     startPartyOrderFromEstimator,
@@ -214,6 +209,21 @@ function profileHasSavedBaseline(profile?: FactoryCostProfile) {
     return hasMeaningfulFactoryCostBaseline(profile)
 }
 
+/**
+ * Older profiles could derive electricity or depreciation from machine count.
+ * The simplified expense model preserves the last resolved rupee amount, then
+ * treats every row as an owner-entered monthly expense from that point onward.
+ */
+function makeExpenseItemsManual(items: unknown[], loomCount: number): OverheadItem[] {
+    return ensureOverheadIntegrity(items).map(item => ({
+        ...item,
+        monthlyAmount: resolveOverheadItemAmount(item, loomCount),
+        source: item.source === 'fixed_worker_derived' ? item.source : 'manual',
+        isLocked: false,
+        meta: undefined,
+    }))
+}
+
 type SaveAsNewQualityRollback = {
     appliedTemplate: EstimatorTemplate | null
     templateName: string
@@ -294,7 +304,7 @@ function buildEstimatorBaseline(
     }
 
     if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
-        next = { ...next, overheadItems: ensureOverheadIntegrity(profile.overhead_items) }
+        next = { ...next, overheadItems: makeExpenseItemsManual(profile.overhead_items, next.loomCount) }
     } else if (workers.length > 0) {
         const fixedItems: OverheadItem[] = workers.map(worker => ({
             id: `fw-${worker.id}`,
@@ -427,27 +437,6 @@ type EstimateStateValue = EstimateState[keyof EstimateState]
 type WarpRowValue = WarpRow[keyof WarpRow]
 type WeftRowValue = WeftRow[keyof WeftRow]
 type OverheadItemValue = OverheadItem['label'] | OverheadItem['monthlyAmount'] | OverheadItem['isLocked']
-type OverheadMetaPatch =
-    | ({ type: 'electricity' } & Partial<Omit<ElectricityMeta, 'type'>>)
-    | ({ type: 'depreciation' } & Partial<Omit<DepreciationMeta, 'type'>>)
-
-function mergeOverheadMeta(current: OverheadItem['meta'], patch: OverheadMetaPatch): OverheadItem['meta'] {
-    if (patch.type === 'electricity') {
-        const base: ElectricityMeta = current?.type === 'electricity'
-            ? current
-            : { type: 'electricity', mode: patch.mode ?? 'manual' }
-        return { ...base, ...patch }
-    }
-
-    const base: DepreciationMeta = current?.type === 'depreciation'
-        ? current
-        : {
-            type: 'depreciation',
-            avgCostPerLoom: patch.avgCostPerLoom ?? 0,
-            usefulLifeYears: patch.usefulLifeYears ?? 10,
-        }
-    return { ...base, ...patch }
-}
 
 type Action =
     | { type: 'INIT_FROM_PROFILE'; data: { profile: FactoryCostProfile; sections: FactorySections } }
@@ -466,7 +455,6 @@ type Action =
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
     | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount' | 'isLocked'; value: OverheadItemValue }
-    | { type: 'UPDATE_OVERHEAD_ITEM_META'; id: string; meta: OverheadMetaPatch }
     | { type: 'REMOVE_OVERHEAD_ITEM'; id: string }
     | { type: 'RESTORE_DRAFT'; draftState: EstimateState }
     | { type: 'RESET'; data: { profile?: FactoryCostProfile; sections: FactorySections; workers: FixedWorkerOverhead[] } }
@@ -489,7 +477,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 weftRows:           state.weftRows.map((row, index) => index === 0 ? { ...row, label: profile.default_weft_yarn_name || row.label, yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
                 processingRatePerM: Number(profile.default_processing_rate_per_m ?? state.processingRatePerM),
                 finishingRatePerM:  Number(profile.default_finishing_rate_per_m ?? state.finishingRatePerM),
-                overheadItems:      ensureOverheadIntegrity(savedItems ?? state.overheadItems),
+                overheadItems:      makeExpenseItemsManual(savedItems ?? state.overheadItems, Number(profile.loom_count ?? state.loomCount)),
                 monthlyOutputM:     Number(profile.monthly_output_m ?? 0),
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadMode:        resolveOverheadMode(profile),
@@ -650,13 +638,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     item.id === action.id ? { ...item, [action.field]: action.value } : item
                 ),
             }
-        case 'UPDATE_OVERHEAD_ITEM_META':
-            return {
-                ...state,
-                overheadItems: state.overheadItems.map(item =>
-                    item.id === action.id ? { ...item, meta: mergeOverheadMeta(item.meta, action.meta) } : item
-                ),
-            }
         case 'REMOVE_OVERHEAD_ITEM':
             return {
                 ...state,
@@ -676,7 +657,10 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             )
         }
         case 'RESTORE_DRAFT':
-            return action.draftState
+            return {
+                ...action.draftState,
+                overheadItems: makeExpenseItemsManual(action.draftState.overheadItems, action.draftState.loomCount),
+            }
         default:
             return state
     }
@@ -1803,36 +1787,6 @@ function EstimatorLiveCostActions({
     )
 }
 
-function CapacityMetricField({
-    label, value, unit, onChange, hint, ghostValue, placeholder,
-}: {
-    label: string
-    value: number | null
-    unit: string
-    onChange: (value: number | null) => void
-    hint?: string
-    ghostValue?: number
-    placeholder?: string
-}) {
-    const isGhostValue = ghostValue !== undefined && value === ghostValue
-    return (
-        <div className="rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
-            <Label className="text-[10px] font-medium uppercase tracking-[0.05em] text-[var(--color-muted)]">{label}</Label>
-            <div className="mt-1 flex items-end gap-1">
-                <Input
-                    type="number"
-                    value={isGhostValue ? '' : (value ?? '')}
-                    placeholder={isGhostValue ? (placeholder ?? String(ghostValue)) : placeholder}
-                    onChange={e => onChange(parseNonNegativeInput(e.target.value))}
-                    className="h-7 border-0 bg-transparent p-0 text-lg font-semibold text-[var(--color-ink)] placeholder:text-[var(--color-muted)] shadow-none focus-visible:ring-0"
-                />
-                <span className="pb-0.5 text-[11px] font-medium text-[var(--color-muted)]">{unit}</span>
-            </div>
-            {hint && <p className="mt-1 text-[10px] text-[var(--color-muted)]">{hint}</p>}
-        </div>
-    )
-}
-
 function InlineInputWarning({ show, children }: { show: boolean; children: React.ReactNode }) {
     if (!show) return null
     return <p className="text-[10px] text-[var(--color-warning-amber)]">{children}</p>
@@ -2856,8 +2810,6 @@ export default function EstimatorClient({
     const { t, tx, language } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
-    const prefersReducedMotion = useReducedMotion()
-
     const estimatorWorkflow = getEstimatorWorkflowConfig(productionMode, searchParams.get('mode'))
     const [mode, setMode] = useState<EstimatorWorkflowMode>(
         canUseProduction ? estimatorWorkflow.initialMode : 'quote'
@@ -2898,8 +2850,6 @@ export default function EstimatorClient({
     const [templatesLoaded, setTemplatesLoaded] = useState(initialTemplates !== undefined)
     const [secondaryError, setSecondaryError] = useState<string | null>(null)
     const secondaryDataRequestRef = useRef<ReturnType<typeof getEstimatorSecondaryData> | null>(null)
-    const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
-    const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
 
     // The direct ₹/m entry is the default; the per-pick mode remains available
     // for factories that already keep their rate book in paise per pick.
@@ -3677,22 +3627,6 @@ export default function EstimatorClient({
         rail.scrollTo({ left: nextScrollLeft, behavior: 'smooth' })
     }, [])
 
-    const handleAutoSuggestOutput = async () => {
-        setIsSuggestingOutput(true)
-        try {
-            const res = await getMonthlyOutputSuggestion()
-            if (res.error) {
-                toast.error(tx('Failed to get suggestion'))
-            } else if (res.data) {
-                setOutputSuggestion(res.data)
-            }
-        } catch {
-            toast.error(tx('Error fetching suggestion'))
-        } finally {
-            setIsSuggestingOutput(false)
-        }
-    }
-
     const applyTemplate = useCallback((tpl: EstimatorTemplate, confirmed = false) => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
@@ -4030,7 +3964,6 @@ export default function EstimatorClient({
         setEntryMode('quick')
         assumptionsManuallyToggledRef.current = false
         setAssumptionsExpanded(false)
-        setOutputSuggestion(null)
         setWeavingRateInputMode('perMeter')
         setDirectWeavingRateInput('')
         setAppliedTemplate(null)
@@ -6388,12 +6321,12 @@ export default function EstimatorClient({
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <Calculator className="h-3.5 w-3.5 text-[var(--color-yarn-orange)]" />
-                                                    <span>Monthly expenses & capacity</span>
+                                                    <span>Monthly expenses</span>
                                                 </span>
                                                 <div className="flex items-center gap-2">
                                                     {totals.overheadTotalMonthly > 0 && (
                                                         <span className="text-[10px] font-mono text-[var(--color-muted)] font-normal mr-2">
-                                                            Total: {hasValidCostResult ? `₹${totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo` : '—'}
+                                                            Total: ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo
                                                         </span>
                                                     )}
                                                     <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -6401,79 +6334,25 @@ export default function EstimatorClient({
                                             </button>
                                         </div>
 
-                                        {/* Advanced Capacity & Fixed Cost Dialog */}
+                                        {/* Owner-entered monthly expense dialog */}
                                         <Dialog open={showAdvancedOverhead} onOpenChange={setShowAdvancedOverhead}>
                                             <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl">
                                                 <DialogHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-14 text-left sm:px-6">
                                                     <DialogTitle className="flex items-center gap-2 text-[17px]">
                                                         <Calculator className="h-4 w-4 text-[var(--color-yarn-orange)]" />
-                                                        Monthly expenses &amp; capacity
+                                                        Monthly expenses
                                                     </DialogTitle>
                                                     <DialogDescription className="text-[12px]">
-                                                        Review the factory costs and standard production used to derive monthly overhead.
+                                                        Enter your typical monthly expenses and a rough estimate of total monthly production. These two figures determine the overhead per metre.
                                                     </DialogDescription>
                                                 </DialogHeader>
                                                 <div id="estimator-monthly-expenses" className="min-h-0 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
-                                                {/* A. Factory Capacity Section */}
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <Zap className="h-3.5 w-3.5 text-[var(--color-yarn-orange)]" />
-                                                            <h4 className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)] leading-none">Factory Capacity Configuration</h4>
-                                                        </div>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-6 px-2 text-[11px] font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
-                                                            onClick={() => void handleSaveProfile()}
-                                                            disabled={saving}
-                                                        >
-                                                            {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
-                                                            {t('estimator.sprint1.save_baseline')}
-                                                        </Button>
-                                                    </div>
-                                                    <p className="text-[10px] leading-relaxed text-[var(--color-muted)]">
-                                                        {t('estimator.sprint1.baseline_future_only')}
-                                                    </p>
-                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                                        <CapacityMetricField
-                                                            label="Machine Count"
-                                                            value={state.loomCount} 
-                                                            onChange={v => dispatch({ type: 'SET', field: 'loomCount', value: v ?? 0 })} 
-                                                            unit="machines"
-                                                            ghostValue={0}
-                                                            placeholder="e.g. 24"
-                                                        />
-                                                        <CapacityMetricField
-                                                            label="Avg Daily Output" 
-                                                            value={state.avgOutputPerLoomPerDay} 
-                                                            onChange={v => dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: v ?? 0 })} 
-                                                            unit="m/day" 
-                                                            ghostValue={50}
-                                                            placeholder="50"
-                                                        />
-                                                        <CapacityMetricField
-                                                            label="Working Days" 
-                                                            value={state.monthlyWorkingDays} 
-                                                            onChange={v => dispatch({ type: 'SET', field: 'monthlyWorkingDays', value: v ?? 0 })} 
-                                                            unit="days" 
-                                                            ghostValue={26}
-                                                            placeholder="26"
-                                                            hint="Standard 26-day month"
-                                                        />
-                                                    </div>
-                                                    {state.loomCount > 0 && state.avgOutputPerLoomPerDay > 0 && (
-                                                        <div className="flex items-center justify-between border-t border-[var(--color-hairline)] pt-2">
-                                                            <span className="text-[10px] font-medium text-[var(--color-muted)]">Monthly Rated Capacity:</span>
-                                                            <span className="text-xs font-mono font-medium text-[var(--color-ink)]">{totals.ratedCapacityM.toLocaleString()} metres</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* B. Itemized Overhead Rows */}
                                                 <div className="space-y-2">
-                                                    <div className="mt-4 mb-2 flex items-center justify-between">
-                                                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Monthly Fixed Costs</p>
+                                                    <div className="mb-2 flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Monthly expenses</p>
+                                                            <p className="mt-1 text-[10px] text-[var(--color-muted)]">Enter the rupee amount you expect to pay in a typical month.</p>
+                                                        </div>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
@@ -6487,16 +6366,11 @@ export default function EstimatorClient({
                                                     <div className="divide-y divide-[var(--color-hairline)]">
                                                         {totals.resolvedItems.map(item => {
                                                             const isPreset = item.isPreset
-                                                            const isLocked = item.isLocked
-                                                            const isElectricity = item.category === 'electricity'
-                                                            const isDepreciation = item.category === 'depreciation'
 
                                                             return (
-                                                                <div key={item.id} className={`group relative flex flex-col gap-2 py-2.5 ${isLocked ? 'opacity-50' : ''}`}>
+                                                                <div key={item.id} className="group relative py-2.5">
                                                                     <div className="flex items-center gap-3">
-                                                                        {/* Label / Preset Indicator */}
-                                                                        <div className="flex-1 flex items-center gap-2">
-                                                                            {isLocked && <Lock className="h-3 w-3 text-[var(--color-muted)] shrink-0" />}
+                                                                        <div className="flex-1">
                                                                             <Input
                                                                                 value={!isPreset && item.label === 'New Item' ? '' : item.label}
                                                                                 placeholder={!isPreset && item.label === 'New Item' ? 'Item name' : undefined}
@@ -6504,18 +6378,14 @@ export default function EstimatorClient({
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
                                                                                 className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium placeholder:text-[var(--color-muted)] focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
                                                                             />
-                                                                            {isLocked && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">auto-calc</span>}
-                                                                            {isElectricity && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">per machine helper</span>}
                                                                         </div>
 
-                                                                        {/* Amount Display/Input */}
                                                                         <div className="relative shrink-0 w-32">
                                                                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">₹</span>
                                                                             <Input
                                                                                 type="number"
                                                                                 value={item.monthlyAmount === 0 ? '' : item.monthlyAmount}
                                                                                 placeholder="e.g. 25,000"
-                                                                                disabled={isLocked}
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                                 className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                             />
@@ -6532,190 +6402,55 @@ export default function EstimatorClient({
                                                                             </button>
                                                                         )}
                                                                     </div>
-
-                                                                    {/* Specialized Config Panels */}
-                                                                    {isElectricity && item.meta && (
-                                                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1 pt-2 border-t border-indigo-100/50">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <input 
-                                                                                    type="checkbox" 
-                                                                                    checked={(item.meta as ElectricityMeta)?.mode === 'per_loom'} 
-                                                                                    onChange={e => dispatch({
-                                                                                        type: 'UPDATE_OVERHEAD_ITEM',
-                                                                                        id: item.id,
-                                                                                        field: 'isLocked',
-                                                                                        value: e.target.checked
-                                                                                    })}
-                                                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3 w-3"
-                                                                                />
-                                                                                <span className="text-[9.5px] font-bold text-slate-500">Per Machine Helper</span>
-                                                                            </div>
-                                                                            {item.isLocked && (
-                                                                                <>
-                                                                                    <div className="flex flex-col gap-0.5">
-                                                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Units/Machine</span>
-                                                                                        <Input 
-                                                                                            type="number" 
-                                                                                            value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth || ''}
-                                                                                            placeholder="e.g. 500"
-                                                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { unitsPerLoomPerMonth: parseNonNegativeInput(e.target.value) ?? 0, type: 'electricity', mode: 'per_loom' } })}
-                                                                                            className="h-6 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] px-1.5"
-                                                                                        />
-                                                                                    </div>
-                                                                                    <div className="flex flex-col gap-0.5">
-                                                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Rate/Unit</span>
-                                                                                        <Input 
-                                                                                            type="number" 
-                                                                                            value={(item.meta as ElectricityMeta)?.ratePerUnit || ''}
-                                                                                            placeholder="e.g. 8"
-                                                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { ratePerUnit: parseNonNegativeInput(e.target.value) ?? 0, type: 'electricity', mode: 'per_loom' } })}
-                                                                                            className="h-6 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] px-1.5"
-                                                                                        />
-                                                                                    </div>
-                                                                                </>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {isDepreciation && item.meta && (
-                                                                        <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-indigo-100/50">
-                                                                            <div className="flex flex-col gap-1">
-                                                                                <span className="text-[8px] uppercase font-semibold text-slate-400">Machine Value (average/machine)</span>
-                                                                                <div className="relative">
-                                                                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
-                                                                                    <Input 
-                                                                                        type="number" 
-                                                                                        value={(item.meta as DepreciationMeta)?.avgCostPerLoom || ''}
-                                                                                        placeholder="e.g. 10,00,000"
-                                                                                        onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { avgCostPerLoom: parseNonNegativeInput(e.target.value) ?? 0, type: 'depreciation' } })}
-                                                                                        className="h-7 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] pl-4 pr-1.5"
-                                                                                    />
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="flex flex-col gap-1">
-                                                                                <span className="text-[8px] uppercase font-semibold text-slate-400">Lifespan (Years)</span>
-                                                                                <Input 
-                                                                                    type="number" 
-                                                                                    value={(item.meta as DepreciationMeta)?.usefulLifeYears === 10 ? '' : ((item.meta as DepreciationMeta)?.usefulLifeYears ?? '')}
-                                                                                    placeholder="10"
-                                                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { usefulLifeYears: parseNumericInput(e.target.value, { min: 1 }) ?? 1, type: 'depreciation' } })}
-                                                                                    className="h-7 text-[10px] font-mono font-bold placeholder:text-[var(--color-muted)] px-2"
-                                                                                />
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             )
                                                         })}
                                                     </div>
                                                 </div>
 
-                                                {/* C. Denominator & Summary Block */}
                                                 <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
-                                                    <div className="space-y-2">
-                                                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Output used for monthly overhead</p>
-                                                        {/* Monthly Output & Suggestions */}
-                                                        <div className="space-y-3">
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex items-center justify-between">
-                                                                    <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Standard monthly production (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
-                                                                    {canUseProduction && state.overheadMode === 'monthly_expenses' && (
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            onClick={handleAutoSuggestOutput}
-                                                                            disabled={isSuggestingOutput}
-                                                                            aria-busy={isSuggestingOutput}
-                                                                            className="h-5 px-2 text-[10px] font-medium text-[var(--color-yarn-orange)] hover:bg-[var(--color-surface-soft)]"
-                                                                        >
-                                                                            {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                                                                            Suggest from history
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                                <div className="relative">
-                                                                    <Input
-                                                                        type="number"
-                                                                        value={state.monthlyOutputM || ''}
-                                                                        placeholder="e.g. 10,000"
-                                                                        onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                        aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
-                                                                        className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
-                                                                    />
-                                                                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m</span>
-                                                                </div>
-                                                                {state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) && (
-                                                                    <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required for monthly-expense overhead.</p>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Output Suggestion Panel */}
-                                                            {outputSuggestion && (
-                                                                <motion.div 
-                                                                    initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
-                                                                    animate={{ opacity: 1, y: 0 }}
-                                                                    className="space-y-2 rounded-xl border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)]/70 p-3"
-                                                                >
-                                                                    <p className="flex items-center gap-1.5 text-[9.5px] font-bold text-[var(--color-info-blue)]">
-                                                                        <History className="h-3 w-3" /> Historical Output Scaling (to 26 days)
-                                                                    </p>
-                                                                    <div className="grid grid-cols-2 gap-2">
-                                                                        <button 
-                                                                            type="button"
-                                                                            onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg30Days }); setOutputSuggestion(null); }}
-                                                                            className="group rounded-lg border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] p-2 text-left transition-colors hover:border-[var(--color-info-blue)]"
-                                                                        >
-                                                                            <p className="text-[8px] font-semibold uppercase text-[var(--color-muted)]">Last 30 Days</p>
-                                                                            <p className="font-mono text-xs font-bold text-[var(--color-info-blue)]">{outputSuggestion.avg30Days.toLocaleString()}m</p>
-                                                                        </button>
-                                                                        <button 
-                                                                            type="button"
-                                                                            onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg90Days }); setOutputSuggestion(null); }}
-                                                                            className="group rounded-lg border border-[var(--color-info-blue)]/25 bg-[var(--color-surface)] p-2 text-left transition-colors hover:border-[var(--color-info-blue)]"
-                                                                        >
-                                                                            <p className="text-[8px] font-semibold uppercase text-[var(--color-muted)]">Last 90 Days</p>
-                                                                            <p className="font-mono text-xs font-bold text-[var(--color-info-blue)]">{outputSuggestion.avg90Days.toLocaleString()}m</p>
-                                                                        </button>
-                                                                    </div>
-                                                                </motion.div>
-                                                            )}
+                                                    <div className="space-y-1.5">
+                                                        <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
+                                                        <div className="relative">
+                                                            <Input
+                                                                type="number"
+                                                                value={state.monthlyOutputM || ''}
+                                                                placeholder="e.g. 90,000"
+                                                                onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
+                                                                aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
+                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                                                            />
+                                                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m/mo</span>
                                                         </div>
+                                                        <p className="text-[10px] leading-relaxed text-[var(--color-muted)]">Use a normal, representative month. This is an owner estimate, not a machine-capacity calculation.</p>
+                                                        {state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) && (
+                                                            <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required for monthly-expense overhead.</p>
+                                                        )}
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
-                                                            <p className="text-[10px] text-[var(--color-muted)]">Total monthly cost</p>
+                                                            <p className="text-[10px] text-[var(--color-muted)]">Total monthly expenses</p>
                                                             <p className={`text-base font-semibold ${totals.overheadTotalMonthly <= 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-ink)]'}`}>
-                                                                {hasValidCostResult ? `₹${totals.overheadTotalMonthly.toLocaleString('en-IN')}` : '—'}
+                                                                ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}
                                                             </p>
                                                         </div>
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
-                                                                <p className="text-[10px] text-[var(--color-muted)]">{state.overheadMode === 'direct' ? 'Monthly-expense reference' : 'Rated capacity cost'}</p>
-                                                            <p className="text-base font-semibold text-[var(--color-ink)]">{formatCalculatedMoney(state.overheadMode === 'direct' ? monthlyOverheadReference : totals.overheadPerMAtCapacity, hasValidCostResult, '/m')}</p>
-                                                        </div>
-                                                        <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
-                                                            <p className="text-[10px] text-[var(--color-muted)]">Your actual cost</p>
-                                                            <p className={`text-base font-semibold ${costingResult.overheadPerM > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</p>
+                                                            <p className="text-[10px] text-[var(--color-muted)]">Expense-derived overhead</p>
+                                                            <p className={`text-base font-semibold ${monthlyOverheadReference > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>{formatCalculatedMoney(monthlyOverheadReference, state.monthlyOutputM > 0, '/m')}</p>
                                                         </div>
                                                     </div>
                                                     {isZeroConfig && (
                                                         <p className="text-[11px] text-[var(--color-warning-amber)]">Factory expense items total is zero. Estimates may miss fixed cost recovery.</p>
                                                     )}
-
-                                                    <div className="space-y-2">
-                                                        {hasValidCostResult && totals.costOfIdleCapacityMonthly > 500 && (
-                                                            <div className="flex items-center gap-3 rounded-[10px] border border-[var(--color-risk-red-soft)] bg-[var(--color-risk-red-soft)] p-3">
-                                                                <AlertCircle className="h-4 w-4 text-[var(--color-risk-red)] shrink-0" />
-                                                                <div>
-                                                                    <p className="text-[11px] font-semibold text-[var(--color-risk-red)]">Cost of Idle Capacity: ₹{totals.costOfIdleCapacityMonthly.toLocaleString('en-IN')}/mo</p>
-                                                                    <p className="text-[9.5px] font-medium text-[var(--color-risk-red)] leading-tight">Your factory is running at {totals.capacityUtilisationPct.toFixed(1)}% capacity. You are effectively losing money on unrecovered fixed costs.</p>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
                                                 </div>
                                                 </div>
-                                                <DialogFooter className="border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-5 py-3 sm:px-6" showCloseButton />
+                                                <DialogFooter className="border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-5 py-3 sm:px-6" showCloseButton>
+                                                    <Button type="button" onClick={() => void handleSaveProfile()} disabled={saving}>
+                                                        {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
+                                                        {t('estimator.sprint1.save_baseline')}
+                                                    </Button>
+                                                </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
 
