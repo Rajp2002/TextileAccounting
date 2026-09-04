@@ -440,6 +440,7 @@ type WeftRowValue = WeftRow[keyof WeftRow]
 type OverheadItemValue = OverheadItem['label'] | OverheadItem['monthlyAmount'] | OverheadItem['isLocked']
 
 const MAX_YARN_COMPONENTS = 20
+const DEFAULT_YARN_COMPONENT_COUNT = 1
 
 function normalizeYarnComponentCount(value: number) {
     const count = Math.floor(Number(value))
@@ -804,6 +805,11 @@ function ComponentCountField({
     const parsedDraftValue = parseNumericInput(draftValue, { min: 1 })
     const hasInvalidDraft = draftValue.trim() !== ''
         && (parsedDraftValue === null || !Number.isInteger(parsedDraftValue))
+    const isGhostValue = value === DEFAULT_YARN_COMPONENT_COUNT && draftValue === String(value)
+    const displayValue = isGhostValue ? '' : draftValue
+    const displayPlaceholder = isGhostValue
+        ? formatEstimatorPlaceholder(DEFAULT_YARN_COMPONENT_COUNT)
+        : undefined
 
     return (
         <div className="min-w-0 space-y-1.5">
@@ -822,8 +828,18 @@ function ComponentCountField({
                     min={1}
                     max={MAX_YARN_COMPONENTS}
                     step={1}
-                    value={draftValue}
+                    value={displayValue}
                     onFocus={event => event.currentTarget.select()}
+                    onPointerDown={event => {
+                        // A pointer press after focus can collapse the selection
+                        // made above. Preserve it so typing replaces the current
+                        // value instead of appending to it (1 + 2 => 12).
+                        if (event.currentTarget === document.activeElement) return
+                        event.preventDefault()
+                        event.currentTarget.focus()
+                        event.currentTarget.select()
+                    }}
+                    placeholder={displayPlaceholder}
                     onChange={event => {
                         const rawValue = event.target.value
                         setDraftValue(rawValue)
