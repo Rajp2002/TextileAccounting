@@ -22,6 +22,7 @@ import { nanoid } from 'nanoid'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { FACTORY_COST_PRESETS, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { handleEnterKeyNavigation } from '@/lib/form-navigation'
+import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
 
 type FactoryCostWizardData = Partial<EstimateState> & {
     yarnReviewIntervalDays: number
@@ -431,7 +432,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Input 
                                                     type="number"
                                                     value={overheadPerM === (initialState.overheadOverridePerM ?? null) ? '' : (overheadPerM ?? '')}
-                                                    placeholder={initialState.overheadOverridePerM != null ? String(initialState.overheadOverridePerM) : 'Enter your rate'}
+                                                    placeholder={initialState.overheadOverridePerM != null ? formatEstimatorPlaceholder(initialState.overheadOverridePerM) : 'Enter your rate'}
                                                     onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value))}
                                                     className="h-14 text-2xl font-black text-indigo-600 pl-8 pr-12 rounded-xl border-slate-200 focus:ring-indigo-500/20"
                                                 />
@@ -489,7 +490,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     min={1}
                                                     step={1}
                                                     value={workingDays === (initialState.monthlyWorkingDays || 26) ? '' : workingDays}
-                                                    placeholder={String(initialState.monthlyWorkingDays || 26)}
+                                                    placeholder={formatEstimatorPlaceholder(initialState.monthlyWorkingDays || 26)}
                                                     onChange={e => setWorkingDays(parseNumericInput(e.target.value, { min: 1 }) ?? 0)}
                                                     aria-invalid={workingDays <= 0}
                                                     className="h-10 font-bold"
@@ -502,7 +503,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     min={0.01}
                                                     step={0.01}
                                                     value={avgOutput === (initialState.avgOutputPerLoomPerDay || 50) ? '' : avgOutput}
-                                                    placeholder={String(initialState.avgOutputPerLoomPerDay || 50)}
+                                                    placeholder={formatEstimatorPlaceholder(initialState.avgOutputPerLoomPerDay || 50)}
                                                     onChange={e => setAvgOutput(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     aria-invalid={avgOutput <= 0}
                                                     className="h-10 font-bold"
@@ -695,6 +696,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         ).map(([label, value, setter, unit, inputStep]) => {
                                             const ghostValue = getFactoryDefaultValue(String(label), initialState)
                                             const isGhostValue = Number(value) === ghostValue
+                                            const placeholderKind: EstimatorPlaceholderKind = label === 'Default yarn waste' ? 'applied-default' : 'example'
                                             return (
                                                 <div key={String(label)} className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
                                                     <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">{String(label)}</Label>
@@ -705,9 +707,9 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                             max={label === 'Broker commission' || label === 'Target margin' ? 99.99 : undefined}
                                                             step={Number(inputStep)}
                                                             value={isGhostValue ? '' : Number(value)}
-                                                            placeholder={isGhostValue ? String(ghostValue) : undefined}
+                                                            placeholder={isGhostValue ? formatEstimatorPlaceholder(ghostValue, placeholderKind) : undefined}
                                                             onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}
-                                                            className="h-11 pr-14 font-mono font-bold placeholder:text-slate-400"
+                                                            className={`h-11 pr-14 font-mono font-bold ${placeholderKind === 'applied-default' ? 'text-orange-600 placeholder:text-orange-600' : 'placeholder:text-slate-400'}`}
                                                         />
                                                         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{String(unit)}</span>
                                                     </div>

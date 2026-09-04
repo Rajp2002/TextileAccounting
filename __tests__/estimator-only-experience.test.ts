@@ -58,7 +58,7 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain("t('estimator.price_helpers.suggested_selling_price')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("!canUseProduction ? t('estimator.simulation.base_title')")
-        expect(estimator).toContain('placeholder="5000"')
+        expect(estimator).toContain('placeholder="e.g. 5000"')
         expect(estimator).toContain('hasValidCostResult && costingResult.quoteIsValid')
     })
 

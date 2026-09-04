@@ -31,7 +31,7 @@ describe('Base P1 pilot remediation', () => {
     expect(client).toContain("const resolvedPartyName = effectiveTargetMode === 'market'")
     expect(client).toContain("if (!saveAsStandaloneCosting && !resolvedPartyName)")
     expect(client).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
-    expect(client).toContain('placeholder="5000"')
+    expect(client).toContain('placeholder="e.g. 5000"')
     expect(actions).toContain('party_name:           params.partyName?.trim() || null')
     expect(actions).toContain("if (newRecordKind === 'quotation' && !params.partyName?.trim())")
     expect(actions).toContain('order_quantity_m:     authoritative.result.quantityM')
