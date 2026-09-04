@@ -2137,6 +2137,19 @@ function RowCard({
     const cardRef = useRef<HTMLDivElement | null>(null)
     const detailsId = `yarn-component-${accent}-${index}-details`
     const displayName = componentName?.trim() || `${title} ${index + 1}`
+    const [tutorialExpanded, setTutorialExpanded] = useState(false)
+    const isExpanded = expanded || tutorialExpanded
+
+    useEffect(() => {
+        const el = cardRef.current
+        if (!el) return
+        const handleTutorial = (event: Event) => {
+            setTutorialExpanded((event as CustomEvent<boolean>).detail)
+        }
+        el.addEventListener('tutorial-expand-row', handleTutorial)
+        return () => el.removeEventListener('tutorial-expand-row', handleTutorial)
+    }, [])
+
     const costPerM = costPer100m / 100
 
     useEffect(() => {
@@ -2257,9 +2270,9 @@ function RowCard({
             <div className={`flex min-w-0 items-stretch gap-1 border-b border-[var(--color-hairline)] ${c.strip}`}>
                 <button
                     type="button"
-                    aria-expanded={expanded}
+                    aria-expanded={isExpanded}
                     aria-controls={detailsId}
-                    aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayName} details`}
+                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${displayName} details`}
                     onClick={() => {
                         expandedManuallyRef.current = true
                         setExpanded(value => !value)
@@ -2304,7 +2317,7 @@ function RowCard({
                             </span>
                         )}
                     </span>
-                    <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--color-muted)] transition-transform duration-200 motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--color-muted)] transition-transform duration-200 motion-reduce:transition-none ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
                 {canRemove && (
                     <button
@@ -2318,7 +2331,7 @@ function RowCard({
                     </button>
                 )}
             </div>
-            {expanded && (
+            {isExpanded && (
                 <div id={detailsId} className="border-t border-[var(--color-hairline)]/70 bg-white">
                     {adjustmentDetail && showCalculatedValues && (
                         <p className="border-b border-[var(--color-hairline)]/70 px-4 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
@@ -2415,7 +2428,7 @@ function WeavingRateFields({
                     <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
                     <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Weaving rate input</p>
                 </div>
-                <div className="flex items-center gap-2" role="group" aria-label="Weaving rate input mode">
+                <div data-estimator-field="weavingRateMode" className="flex items-center gap-2" role="group" aria-label="Weaving rate input mode">
                     <span className="text-[10px] font-medium text-[var(--color-muted)]">Enter as</span>
                     <div className="inline-flex rounded-[8px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] p-0.5">
                         <button
@@ -2778,7 +2791,7 @@ function QuickCostingView({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {/* Warping Group */}
                         <div className="space-y-3">
-                            <div className="space-y-1.5 min-w-0">
+                            <div data-estimator-field="warpingMode" className="space-y-1.5 min-w-0">
                                 <div className="flex items-end justify-between h-8">
                                     <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                                         Warping
@@ -2832,7 +2845,7 @@ function QuickCostingView({
 
                         {/* Sizing Group */}
                         <div className="space-y-3">
-                            <div className="space-y-1.5 min-w-0">
+                            <div data-estimator-field="sizingMode" className="space-y-1.5 min-w-0">
                                 <div className="flex items-end justify-between h-8">
                                     <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                                         Sizing
@@ -2890,12 +2903,12 @@ function QuickCostingView({
             <EstimatorCard accent="overhead">
                 <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
-                    <div data-estimator-field="overheadMode" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <button data-estimator-field="directOverheadMethod" type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
                             <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
                             <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Enter the rate used in this costing; it is never inferred.</p>
                         </button>
-                        <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => onOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
+                        <button data-estimator-field="monthlyOverheadMethod" type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => onOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
                             <p className="text-[12px] font-semibold text-[var(--color-ink)]">Monthly expenses ÷ output</p>
                             <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Use saved monthly expenses ÷ standard production.</p>
                         </button>
