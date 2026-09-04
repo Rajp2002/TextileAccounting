@@ -645,7 +645,7 @@ function SavedQualityLibraryView({
                                                         <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
                                                         {canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
                                                             <Link
-                                                                href={`/owner/production?costingId=${encodeURIComponent(targetRecord.id)}`}
+                                                                href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(targetRecord.id)}`}
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >
@@ -660,7 +660,7 @@ function SavedQualityLibraryView({
                                                     </>}
                                                     {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
                                                         <Link
-                                                            href={`/owner/production?costingId=${encodeURIComponent(targetRecord.id)}`}
+                                                            href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(targetRecord.id)}`}
                                                             onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                         >
@@ -691,7 +691,7 @@ function SavedQualityLibraryView({
                                                         </>}
                                                         {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
                                                             <Link
-                                                                href={`/owner/production?costingId=${encodeURIComponent(activeRecord.id)}`}
+                                                                href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(activeRecord.id)}`}
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >

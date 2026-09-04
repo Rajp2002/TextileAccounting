@@ -122,7 +122,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .maybeSingle(),
         readCompleteBaseRows((from, to) => supabase
             .from('estimator_quotes')
-            .select('id, quality_label, costing_group_id, version_number, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m', from === 0 ? { count: 'exact' } : {})
+            .select('id, quality_label, costing_group_id, version_number, order_quantity_m, production_cost_per_meter, landed_cost_per_meter, quote_price_per_meter, worker_rate_per_m', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .eq('record_kind', 'costing')
             .eq('is_archived', false)
@@ -252,6 +252,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         quality_label: String(row.quality_label || 'Unnamed costing'),
         costing_group_id: toStringOrNull(row.costing_group_id),
         version_number: Math.max(1, Number(row.version_number) || 1),
+        order_quantity_m: row.order_quantity_m === null || row.order_quantity_m === undefined ? null : toBaseNumber(row.order_quantity_m),
         production_cost_per_meter: toBaseNumber(row.production_cost_per_meter),
         landed_cost_per_meter: toBaseNumber(row.landed_cost_per_meter),
         quote_price_per_meter: toBaseNumber(row.quote_price_per_meter),

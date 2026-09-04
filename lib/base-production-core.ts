@@ -90,6 +90,7 @@ export type BaseProductionCosting = {
     quality_label: string
     costing_group_id: string | null
     version_number: number
+    order_quantity_m?: number | null
     production_cost_per_meter: number
     landed_cost_per_meter: number
     quote_price_per_meter: number

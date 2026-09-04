@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -12,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import type { BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
+import type { BaseProductionJob, BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
 import {
     removeBaseWorkerMachineAssignment,
     setBaseMachineJobContext,
@@ -36,6 +37,15 @@ function isEffectiveOnDate(effectiveFrom: string, effectiveTo: string | null, da
 
 function machineLabel(machine: BaseProductionMachine) {
     return machine.custom_label || machine.name
+}
+
+function jobLabel(job: BaseProductionJob) {
+    const version = job.costing_version ? ` · v${job.costing_version}` : ''
+    return `${job.quality_label}${version} · ${formatMeters(job.target_meters)} target`
+}
+
+function formatMeters(value: number) {
+    return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)} m`
 }
 
 function formatWorkerShift(value: BaseProductionWorker['shift_availability']) {
@@ -95,6 +105,18 @@ export default function BaseAssignmentWorkspace({
         () => initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active'),
         [initialData.jobs],
     )
+    const createJobHref = useMemo(() => {
+        if (initialData.costings.length === 0) {
+            const params = new URLSearchParams({ returnTo: '/owner/operations' })
+            return `/owner/estimator?${params}`
+        }
+        const params = new URLSearchParams({
+            tab: 'jobs',
+            costingId: initialData.costings[0].id,
+            returnTo: '/owner/operations',
+        })
+        return `/owner/production?${params}`
+    }, [initialData.costings])
     const activeJobIds = useMemo(() => new Set(activeJobs.map((job) => job.id)), [activeJobs])
     const currentJobByMachine = useMemo(() => {
         const result = new Map<string, string>()
@@ -227,7 +249,7 @@ export default function BaseAssignmentWorkspace({
 
     async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
         if (!currentJobByMachine.has(machineId)) {
-            toast.error('This machine does not have an active costing. Assign an active costing before assigning a worker.')
+            toast.error('This machine has no active production job. Create or select one before assigning a worker.')
             return
         }
         const key = `assign-${workerId}-${machineId}`
@@ -367,6 +389,18 @@ export default function BaseAssignmentWorkspace({
                 <p className="text-sm text-body">Set the current context once. Daily production will show it automatically.</p>
             </div>
 
+            {activeJobs.length === 0 && (
+                <Card className="border-saffron/30 bg-saffron-soft/25">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base">Production job required</CardTitle>
+                        <CardDescription>Saved costings are reusable estimates. Create a production job from one before assigning a worker or recording machine metres.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        <Button asChild size="sm"><Link href={createJobHref}>{initialData.costings.length > 0 ? 'Create production job' : 'Save a costing'}</Link></Button>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card className="border-saffron/20 bg-saffron-soft/20">
                 <CardContent className="flex items-center justify-between gap-3 py-3 sm:py-4">
                     <div>
@@ -444,8 +478,8 @@ export default function BaseAssignmentWorkspace({
                                                             ? 'border-saffron/60 bg-saffron-soft text-saffron-deep'
                                                             : 'border-hairline/80 bg-surface-soft text-muted-foreground/50 cursor-not-allowed'
                                                 }`}
-                                                title={!machine.is_active ? 'Inactive machines cannot be assigned' : !hasActiveJob ? 'Assign a costing before linking a worker' : 'Drop a worker here'}
-                                                aria-label={!machine.is_active ? `${machineLabel(machine)} is inactive` : !hasActiveJob ? `${machineLabel(machine)} has no active costing` : `Drop a worker on ${machineLabel(machine)}`}
+                                                title={!machine.is_active ? 'Inactive machines cannot be assigned' : !hasActiveJob ? 'Create a production job before linking a worker' : 'Drop a worker here'}
+                                                aria-label={!machine.is_active ? `${machineLabel(machine)} is inactive` : !hasActiveJob ? `${machineLabel(machine)} has no active production job` : `Drop a worker on ${machineLabel(machine)}`}
                                             >
                                                 <Link2 className="h-3.5 w-3.5" />
                                             </span>
@@ -457,7 +491,7 @@ export default function BaseAssignmentWorkspace({
                                                 {worker ? (
                                                     <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge>
                                                 ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No costing</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No production job</Badge>
                                                 ) : (
                                                     <Badge variant="warning">Unassigned</Badge>
                                                 )}
@@ -474,7 +508,7 @@ export default function BaseAssignmentWorkspace({
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="none">No active job</SelectItem>
-                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}
+                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{jobLabel(job)}</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
                                             {assignment && (
@@ -533,7 +567,7 @@ export default function BaseAssignmentWorkspace({
                                                 {worker ? (
                                                     <Badge variant="success"><Check className="h-3 w-3" /> {worker.name}</Badge>
                                                 ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No costing</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No production job</Badge>
                                                 ) : (
                                                     <Badge variant="warning">Unassigned</Badge>
                                                 )}
@@ -550,7 +584,7 @@ export default function BaseAssignmentWorkspace({
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="none">No active job</SelectItem>
-                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.quality_label}</SelectItem>)}
+                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{jobLabel(job)}</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
                                             {pending ? <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" /> : null}
@@ -588,7 +622,7 @@ export default function BaseAssignmentWorkspace({
                                         <span className="mt-0.5 block text-xs text-muted-foreground">
                                             {formatMachineType(machine.machine_type)}
                                             {!hasActiveJob
-                                                ? ' · No active costing'
+                                                ? ' · No active production job'
                                                 : assignedWorker && !isCurrent
                                                     ? ` · ${assignedWorker.name} currently assigned`
                                                     : ''}
@@ -599,7 +633,7 @@ export default function BaseAssignmentWorkspace({
                                     ) : isCurrent ? (
                                         <Badge variant="success"><Check className="h-3 w-3" /> Current</Badge>
                                     ) : !hasActiveJob ? (
-                                        <span className="text-xs font-semibold text-muted-foreground">No costing</span>
+                                        <span className="text-xs font-semibold text-muted-foreground">No production job</span>
                                     ) : (
                                         <span className="text-xs font-bold text-saffron-deep">Choose</span>
                                     )}
