@@ -2676,10 +2676,10 @@ function QuickCostingView({
                     {state.overheadMode === 'direct' ? (
                         <NumField fieldKey="overheadOverridePerM" label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} placeholder="e.g. 12.50" attentionWhenEmpty />
                     ) : (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                            <NumField fieldKey="monthlyOutputM" label="Standard monthly production" value={state.monthlyOutputM} onChange={value => dispatch({ type: 'SET', field: 'monthlyOutputM', value: value ?? 0 })} unit="m/mo" step={100} placeholder="e.g. 90,000" attentionWhenEmpty hint="Normal monthly running metres used as the costing denominator." />
-                            <Button type="button" variant="outline" className="h-11 gap-1.5" onClick={onOpenOverheadDetails}><Calculator className="h-3.5 w-3.5" /> Edit expenses</Button>
-                        </div>
+                        <Button type="button" variant="outline" className="h-11 w-full justify-between gap-2" onClick={onOpenOverheadDetails}>
+                            <span className="flex items-center gap-1.5"><Calculator className="h-3.5 w-3.5" /> Edit monthly overhead details</span>
+                            {state.monthlyOutputM > 0 && <span className="font-mono text-[10px] font-normal text-[var(--color-muted)]">{state.monthlyOutputM.toLocaleString('en-IN')} m/mo</span>}
+                        </Button>
                     )}
                     {directRateMissing && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Enter a direct rate greater than ₹0/m before saving.</p>}
                     <div className="flex items-center justify-between rounded-[10px] bg-[var(--color-surface-soft)] px-3 py-2.5">
@@ -3793,9 +3793,10 @@ export default function EstimatorClient({
                 overhead_items:          state.overheadItems,
                 monthly_output_m:        state.monthlyOutputM,
                 overhead_override_per_m: state.overheadMode === 'direct' ? state.overheadOverridePerM : null,
-                loom_count:              state.loomCount,
-                monthly_working_days:    state.monthlyWorkingDays,
-                avg_output_per_loom_per_day: state.avgOutputPerLoomPerDay,
+                // Expense-based defaults need only the monthly expense total
+                // and the owner's representative monthly production estimate.
+                // Capacity is not exposed in Lite and must not block this save.
+                requireCapacity:         false,
                 yarn_shortage_pct:       state.yarnShortagePct,
                 warp_crimp_pct:          state.warpCrimpPct,
                 expectedUpdatedAt:       factoryBaselineUpdatedAt ?? undefined,
