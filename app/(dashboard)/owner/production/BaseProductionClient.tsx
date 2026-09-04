@@ -47,6 +47,7 @@ import {
     calculateBaseJobSummary,
     calculateBaseEntryGrossPay,
     type BasePayrollPaymentMode,
+    type BaseProductionCosting,
     type BaseProductionMachine,
     type BaseProductionJobStatus,
     type BaseProductionWorker,
@@ -150,10 +151,14 @@ function emptyMachineDraft(): MachineDraft {
     return { name: '', machineType: 'other', customLabel: '', isActive: true }
 }
 
-function emptyJobDraft(today: string, costingId = ''): JobDraft {
+function costingTargetMeters(costing: BaseProductionCosting | undefined) {
+    return costing?.order_quantity_m && costing.order_quantity_m > 0 ? String(costing.order_quantity_m) : ''
+}
+
+function emptyJobDraft(today: string, costingId = '', targetMeters = ''): JobDraft {
     return {
         costingId,
-        targetMeters: '',
+        targetMeters,
         startDate: today,
         dueDate: '',
         customerReference: '',
@@ -330,7 +335,8 @@ export default function BaseProductionClient({
     }
 
     function openNewJob() {
-        setJobDraft(emptyJobDraft(initialData.today, initialCostingId ?? ''))
+        const costing = initialData.costings.find((item) => item.id === initialCostingId)
+        setJobDraft(emptyJobDraft(initialData.today, initialCostingId ?? '', costingTargetMeters(costing)))
         setDialog('job')
     }
 
@@ -441,6 +447,10 @@ export default function BaseProductionClient({
             'Production job created.',
             () => {
                 closeDialog()
+                if (navigation.returnTo) {
+                    router.push(navigation.returnTo)
+                    return
+                }
                 if (initialData.machines.length === 0) openOperations()
             },
         )
@@ -794,8 +804,8 @@ export default function BaseProductionClient({
                 <DialogContent>
                     <DialogHeader><DialogTitle>New production job</DialogTitle><DialogDescription>Start with an active saved costing. This creates a Base production job, not a formal party order.</DialogDescription></DialogHeader>
                     <form className="space-y-4" onSubmit={handleJobSubmit}>
-                        <div className="space-y-2"><Label htmlFor="base-job-costing">Saved costing</Label><Select value={jobDraft.costingId} onValueChange={(value) => setJobDraft((current) => ({ ...current, costingId: value }))}><SelectTrigger id="base-job-costing" className="w-full"><SelectValue placeholder="Select a saved costing" /></SelectTrigger><SelectContent>{initialData.costings.map((costing) => <SelectItem key={costing.id} value={costing.id}>{costing.quality_label} · v{costing.version_number} · {formatINR(costing.production_cost_per_meter)}/m cost</SelectItem>)}</SelectContent></Select></div>
-                        <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="base-job-target">Target metres</Label><Input id="base-job-target" type="number" min="0.01" step="0.01" inputMode="decimal" value={jobDraft.targetMeters} onChange={(event) => setJobDraft((current) => ({ ...current, targetMeters: event.target.value }))} placeholder="1000" /></div><div className="space-y-2"><Label htmlFor="base-job-start">Start date</Label><Input id="base-job-start" type="date" value={jobDraft.startDate} onChange={(event) => setJobDraft((current) => ({ ...current, startDate: event.target.value }))} /></div></div>
+                        <div className="space-y-2"><Label htmlFor="base-job-costing">Saved costing</Label><Select value={jobDraft.costingId} onValueChange={(value) => setJobDraft((current) => ({ ...current, costingId: value, targetMeters: costingTargetMeters(initialData.costings.find((costing) => costing.id === value)) }))}><SelectTrigger id="base-job-costing" className="w-full"><SelectValue placeholder="Select a saved costing" /></SelectTrigger><SelectContent>{initialData.costings.map((costing) => <SelectItem key={costing.id} value={costing.id}>{costing.quality_label} · v{costing.version_number} · {formatINR(costing.production_cost_per_meter)}/m cost</SelectItem>)}</SelectContent></Select></div>
+                        <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="base-job-target">Target metres</Label><Input id="base-job-target" type="number" min="0.01" step="0.01" inputMode="decimal" value={jobDraft.targetMeters} onChange={(event) => setJobDraft((current) => ({ ...current, targetMeters: event.target.value }))} placeholder="1000" /><p className="text-xs text-muted-foreground">Prefilled from the costing quantity when available; adjust for this production run.</p></div><div className="space-y-2"><Label htmlFor="base-job-start">Start date</Label><Input id="base-job-start" type="date" value={jobDraft.startDate} onChange={(event) => setJobDraft((current) => ({ ...current, startDate: event.target.value }))} /></div></div>
                         <div className="space-y-2"><Label htmlFor="base-job-due">Due date <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-job-due" type="date" min={jobDraft.startDate} value={jobDraft.dueDate} onChange={(event) => setJobDraft((current) => ({ ...current, dueDate: event.target.value }))} /></div>
                         <div className="space-y-2"><Label htmlFor="base-job-reference">Customer / internal reference <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-job-reference" value={jobDraft.customerReference} onChange={(event) => setJobDraft((current) => ({ ...current, customerReference: event.target.value }))} placeholder="e.g. Patel Traders · grey fabric" /></div>
                         <div className="space-y-2"><Label htmlFor="base-job-notes">Notes <span className="font-normal text-muted-foreground">(optional)</span></Label><Textarea id="base-job-notes" rows={2} value={jobDraft.notes} onChange={(event) => setJobDraft((current) => ({ ...current, notes: event.target.value }))} placeholder="Short job note" /></div>

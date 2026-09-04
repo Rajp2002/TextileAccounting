@@ -114,6 +114,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { ContextualMachineDialog } from '@/components/onboarding/contextual-machine-dialog'
+import { safeBaseReturnPath } from '@/lib/base-production-navigation'
 const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
     loading: () => null,
@@ -3015,6 +3016,7 @@ export default function EstimatorClient({
     userId,
     orgId,
     canUseProduction,
+    canUseProductionPipeline,
     productionMode,
     staleDefaultRateNames,
     organizationName,
@@ -3026,6 +3028,7 @@ export default function EstimatorClient({
     userId: string
     orgId: string
     canUseProduction: boolean
+    canUseProductionPipeline: boolean
     productionMode: ProductionMode
     staleDefaultRateNames: string[]
     organizationName: string
@@ -3034,6 +3037,7 @@ export default function EstimatorClient({
     const { t, tx, language } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
+    const productionReturnTo = safeBaseReturnPath(searchParams.get('returnTo'))
     const estimatorWorkflow = getEstimatorWorkflowConfig(productionMode, searchParams.get('mode'))
     const [mode, setMode] = useState<EstimatorWorkflowMode>(
         canUseProduction ? estimatorWorkflow.initialMode : 'quote'
@@ -3138,6 +3142,13 @@ export default function EstimatorClient({
     const pendingSaveRequestRef = useRef<Parameters<typeof saveEstimatorQuoteV3>[0] | null>(null)
     const reportedSaveRequestsRef = useRef(new Set<string>())
     const [lastSavedCosting, setLastSavedCosting] = useState<{ id: string; version: number; savedAt: string; model: ReturnType<typeof createCostingExportModel> } | null>(null)
+
+    function openProductionFromCosting(costingId: string) {
+        const params = new URLSearchParams({ tab: 'jobs', costingId })
+        if (productionReturnTo) params.set('returnTo', productionReturnTo)
+        void trackPlanEvent('production_cta_clicked', { source: 'estimator_save_confirmation' })
+        router.push(`/owner/production?${params}`)
+    }
     const [exportSavedCosting, setExportSavedCosting] = useState(false)
     const [hasUnsavedEdits, setHasUnsavedEdits] = useState(false)
     const [pendingQualityChange, setPendingQualityChange] = useState<{ name: string; apply: () => void } | null>(null)
@@ -4871,6 +4882,7 @@ export default function EstimatorClient({
                     <p className="mt-1 text-xs text-[var(--color-muted)]">{formatSuratDateTime(lastSavedCosting.savedAt)}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                         <Button onClick={() => { setExportSavedCosting(true); setShowExportDialog(true) }}>{tx('Create customer quotation')}</Button>
+                        {canUseProductionPipeline && <Button variant="outline" onClick={() => openProductionFromCosting(lastSavedCosting.id)}><Play className="h-3.5 w-3.5" /> {tx('Start Production')}</Button>}
                         <Button variant="outline" onClick={() => router.push('/owner/quotes')}>{tx('View saved costings')}</Button>
                         <Button variant="ghost" onClick={() => setShowConfirmNewQuality(true)}>{tx('Start another quality')}</Button>
                     </div>

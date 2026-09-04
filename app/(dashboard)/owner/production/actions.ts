@@ -298,9 +298,9 @@ export async function upsertBaseWorkerMachineAssignment(input: {
         .in('base_production_jobs.status', ['planned', 'active'])
         .maybeSingle()
 
-    if (contextError) return databaseError(contextError, 'Machine costing context could not be verified. Please try again.')
+    if (contextError) return databaseError(contextError, 'Production job context could not be verified. Please try again.')
     if (!machineContext) {
-        return { error: 'This machine does not have an active costing. Assign an active costing before assigning a worker.' }
+        return { error: 'This machine has no active production job. Create or select one before assigning a worker.' }
     }
 
     const { data, error } = await supabase.rpc('upsert_base_worker_machine_assignment', {

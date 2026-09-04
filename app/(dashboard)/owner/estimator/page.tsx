@@ -2,6 +2,7 @@ import { getFactoryCostProfile } from './actions'
 import EstimatorClient from './EstimatorClient'
 import { requireRole } from '@/lib/auth'
 import { getCachedOrgPlanAccess, tierSatisfies } from '@/lib/subscription'
+import { hasCapability } from '@/lib/subscription-access'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
@@ -13,6 +14,7 @@ export default async function EstimatorPage() {
     const planAccess = await getCachedOrgPlanAccess(profile.org_id)
     const subscriptionTier = planAccess.effectiveTier
     const canUseProduction = tierSatisfies(subscriptionTier, 'premium')
+    const canUseProductionPipeline = hasCapability(subscriptionTier, 'production')
 
     const [profileRes, organizationRes] = await Promise.all([
         getFactoryCostProfile({ createIfMissing: false }),
@@ -30,6 +32,7 @@ export default async function EstimatorPage() {
         userId={user.id}
         orgId={profile.org_id}
         canUseProduction={canUseProduction}
+        canUseProductionPipeline={canUseProductionPipeline}
         productionMode={normalizeProductionMode(organizationRes.data?.production_mode)}
         staleDefaultRateNames={[]}
         organizationName={organizationRes.data?.name ?? ''}
