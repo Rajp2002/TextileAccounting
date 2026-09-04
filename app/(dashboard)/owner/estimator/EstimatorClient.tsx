@@ -438,6 +438,32 @@ type WarpRowValue = WarpRow[keyof WarpRow]
 type WeftRowValue = WeftRow[keyof WeftRow]
 type OverheadItemValue = OverheadItem['label'] | OverheadItem['monthlyAmount'] | OverheadItem['isLocked']
 
+const MAX_YARN_COMPONENTS = 20
+
+function normalizeYarnComponentCount(value: number) {
+    const count = Math.floor(Number(value))
+    if (!Number.isFinite(count)) return 1
+    return Math.min(MAX_YARN_COMPONENTS, Math.max(1, count))
+}
+
+function makeNewWarpRow(): WarpRow {
+    return { id: nanoid(), ...DEFAULT_WARP_ROW, label: '' }
+}
+
+function makeNewWeftRow(): WeftRow {
+    return { id: nanoid(), ...DEFAULT_WEFT_ROW, label: '' }
+}
+
+function resizeYarnRows<T>(rows: T[], requestedCount: number, makeRow: () => T) {
+    const count = normalizeYarnComponentCount(requestedCount)
+    if (count <= rows.length) return rows.slice(0, count)
+
+    return [
+        ...rows,
+        ...Array.from({ length: count - rows.length }, () => makeRow()),
+    ]
+}
+
 type Action =
     | { type: 'INIT_FROM_PROFILE'; data: { profile: FactoryCostProfile; sections: FactorySections } }
     | { type: 'MERGE_FIXED_WORKERS'; workers: FixedWorkerOverhead[] }
@@ -447,9 +473,11 @@ type Action =
     | { type: 'SET_LOOM_RPM'; rpm: number | null }
     | { type: 'SET_LOOM_POWER_KW'; kw: number | null }
     | { type: 'ADD_WARP_ROW' }
+    | { type: 'SET_WARP_COMPONENT_COUNT'; count: number }
     | { type: 'UPDATE_WARP_ROW'; id: string; field: keyof WarpRow; value: WarpRowValue }
     | { type: 'REMOVE_WARP_ROW'; id: string }
     | { type: 'ADD_WEFT_ROW' }
+    | { type: 'SET_WEFT_COMPONENT_COUNT'; count: number }
     | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: WeftRowValue }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
@@ -595,7 +623,9 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         case 'SET_LOOM_POWER_KW':
             return { ...state, loomPowerKw: action.kw, loomPowerKwIsCustomised: true }
         case 'ADD_WARP_ROW':
-            return { ...state, warpRows: [...state.warpRows, { id: nanoid(), ...DEFAULT_WARP_ROW, label: '' }] }
+            return { ...state, warpRows: [...state.warpRows, makeNewWarpRow()] }
+        case 'SET_WARP_COMPONENT_COUNT':
+            return { ...state, warpRows: resizeYarnRows(state.warpRows, action.count, makeNewWarpRow) }
         case 'UPDATE_WARP_ROW':
             return {
                 ...state,
@@ -607,7 +637,9 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             if (state.warpRows.length <= 1) return state
             return { ...state, warpRows: state.warpRows.filter(r => r.id !== action.id) }
         case 'ADD_WEFT_ROW':
-            return { ...state, weftRows: [...state.weftRows, { id: nanoid(), ...DEFAULT_WEFT_ROW, label: '' }] }
+            return { ...state, weftRows: [...state.weftRows, makeNewWeftRow()] }
+        case 'SET_WEFT_COMPONENT_COUNT':
+            return { ...state, weftRows: resizeYarnRows(state.weftRows, action.count, makeNewWeftRow) }
         case 'UPDATE_WEFT_ROW':
             return {
                 ...state,
@@ -731,6 +763,146 @@ function getAccentStyles(accent: EstimatorAccent = 'neutral') {
         },
     }
     return styles[accent]
+}
+
+function ComponentCountField({
+    label,
+    value,
+    onChange,
+    accent,
+    hint,
+    unit,
+}: {
+    label: string
+    value: number
+    onChange: (value: number) => void
+    accent: 'warp' | 'weft'
+    hint: string
+    unit: string
+}) {
+    const inputId = useId()
+    const [draftValue, setDraftValue] = useState(String(value))
+    const accentStyles = getAccentStyles(accent)
+
+    useEffect(() => {
+        setDraftValue(String(value))
+    }, [value])
+
+    const commitValue = (rawValue: string) => {
+        const parsed = parseNumericInput(rawValue, { min: 1 })
+        if (parsed === null) {
+            setDraftValue(String(value))
+            return
+        }
+
+        const nextValue = normalizeYarnComponentCount(parsed)
+        setDraftValue(String(nextValue))
+        onChange(nextValue)
+    }
+
+    const parsedDraftValue = parseNumericInput(draftValue, { min: 1 })
+    const hasInvalidDraft = draftValue.trim() !== ''
+        && (parsedDraftValue === null || !Number.isInteger(parsedDraftValue))
+
+    return (
+        <div className="min-w-0 space-y-1.5">
+            <Label htmlFor={inputId} className={`flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] ${accentStyles.text}`}>
+                {label}
+            </Label>
+            <div className="relative">
+                <Input
+                    id={inputId}
+                    data-estimator-field={`${accent}ComponentCount`}
+                    data-testid={`${accent}-component-count`}
+                    aria-describedby={`${inputId}-help`}
+                    aria-invalid={hasInvalidDraft || undefined}
+                    inputMode="numeric"
+                    type="number"
+                    min={1}
+                    max={MAX_YARN_COMPONENTS}
+                    step={1}
+                    value={draftValue}
+                    onFocus={event => event.currentTarget.select()}
+                    onChange={event => {
+                        const rawValue = event.target.value
+                        setDraftValue(rawValue)
+                        const parsed = parseNumericInput(rawValue, { min: 1 })
+                        if (parsed !== null && Number.isInteger(parsed)) {
+                            onChange(normalizeYarnComponentCount(parsed))
+                        }
+                    }}
+                    onBlur={() => commitValue(draftValue)}
+                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] pr-24 text-center text-xs font-semibold text-[var(--color-ink)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
+                />
+                <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[var(--color-muted)]">
+                    {unit}
+                </span>
+            </div>
+            <p id={`${inputId}-help`} className="text-[11px] font-medium leading-tight text-[var(--color-muted)]">
+                {hint}
+            </p>
+        </div>
+    )
+}
+
+function expandYarnComponentRows(accent: 'warp' | 'weft', count: number) {
+    if (typeof window === 'undefined') return
+
+    window.setTimeout(() => {
+        const rowPrefix = accent === 'warp' ? 'warpRows' : 'weftRows'
+        for (let index = 0; index < count; index += 1) {
+            const row = document.querySelector<HTMLElement>(`[data-estimator-row="${rowPrefix}.${index}"]`)
+            row?.dispatchEvent(new CustomEvent('expand-row', { bubbles: true }))
+        }
+    }, 0)
+}
+
+function YarnComponentCountFields({
+    warpCount,
+    weftCount,
+    dispatch,
+}: {
+    warpCount: number
+    weftCount: number
+    dispatch: React.Dispatch<Action>
+}) {
+    const { t } = useTranslation()
+
+    const changeCount = (accent: 'warp' | 'weft', requestedCount: number) => {
+        const currentCount = accent === 'warp' ? warpCount : weftCount
+        const nextCount = normalizeYarnComponentCount(requestedCount)
+        if (nextCount === currentCount) return
+
+        dispatch({
+            type: accent === 'warp' ? 'SET_WARP_COMPONENT_COUNT' : 'SET_WEFT_COMPONENT_COUNT',
+            count: nextCount,
+        })
+
+        if (nextCount > currentCount) {
+            expandYarnComponentRows(accent, nextCount)
+        }
+    }
+
+    return (
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4">
+            <ComponentCountField
+                label={t('estimator.quality.warpComponents')}
+                value={warpCount}
+                onChange={count => changeCount('warp', count)}
+                accent="warp"
+                hint={t('estimator.quality.componentCountHint')}
+                unit={t('estimator.quality.componentsSuffix')}
+            />
+            <ComponentCountField
+                label={t('estimator.quality.weftComponents')}
+                value={weftCount}
+                onChange={count => changeCount('weft', count)}
+                accent="weft"
+                hint={t('estimator.quality.componentCountHint')}
+                unit={t('estimator.quality.componentsSuffix')}
+            />
+        </div>
+    )
 }
 
 function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step }: {
@@ -2408,6 +2580,13 @@ function QuickCostingView({
                             className="h-11 border-slate-200 font-bold"
                         />
                         <p className="text-[10px] font-medium leading-normal text-slate-400">Use the name your staff and repeat customers will recognise.</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                        <YarnComponentCountFields
+                            warpCount={state.warpRows.length}
+                            weftCount={state.weftRows.length}
+                            dispatch={dispatch}
+                        />
                     </div>
                     <NumField fieldKey="warpCrimpPct"
                         label="Warp crimp (take-up)"
