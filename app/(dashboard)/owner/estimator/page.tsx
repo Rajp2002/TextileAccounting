@@ -29,6 +29,7 @@ export default async function EstimatorPage() {
         initialProfile={profileRes.data}
         initialTemplates={undefined}
         initialWorkers={undefined}
+        tutorialDismissed={user.user_metadata?.cost_estimate_tutorial_dismissed === true}
         userId={user.id}
         orgId={profile.org_id}
         canUseProduction={canUseProduction}

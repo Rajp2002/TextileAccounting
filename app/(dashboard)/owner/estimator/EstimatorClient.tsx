@@ -7,6 +7,7 @@ import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CostEstimateTutorial } from '@/components/estimator/CostEstimateTutorial'
 import { Label } from '@/components/ui/label'
 import {
     Calculator,
@@ -933,7 +934,7 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
 }) {
     const colorClass = getAccentStyles(accent)
     return (
-        <div className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div data-tutorial-section={step} className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
                 {step != null && (
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border text-[12px] font-semibold ${colorClass.marker}`}>
@@ -2044,7 +2045,7 @@ function CalculationModeField({
     onChange: (value: YarnCalculationMode) => void
 }) {
     return (
-        <div className="space-y-1.5 min-w-[140px]">
+        <div data-estimator-field="calculationMode" className="space-y-1.5 min-w-[140px]">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 Mode
             </Label>
@@ -2576,6 +2577,7 @@ function QuickCostingView({
     return (
         <div
             className="space-y-3"
+            data-costing-tutorial-root="true"
             data-enter-navigate-container="true"
             onKeyDown={handleEnterKeyNavigation}
         >
@@ -2586,6 +2588,8 @@ function QuickCostingView({
                         <div className="space-y-1.5 sm:col-span-2">
                             <Label className="text-[10px] font-bold uppercase text-slate-500">Party / Customer</Label>
                             <Input
+                                data-estimator-field="partyName"
+                                aria-label="Party / Customer"
                                 list="quick-estimator-party-options"
                                 value={partyName}
                                 onChange={event => setPartyName(event.target.value)}
@@ -2885,7 +2889,7 @@ function QuickCostingView({
             <EstimatorCard accent="overhead">
                 <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div data-estimator-field="overheadMode" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
                             <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
                             <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Enter the rate used in this costing; it is never inferred.</p>
@@ -2898,7 +2902,7 @@ function QuickCostingView({
                     {state.overheadMode === 'direct' ? (
                         <NumField fieldKey="overheadOverridePerM" label="Direct factory overhead — REQUIRED" value={state.overheadOverridePerM} onChange={value => dispatch({ type: 'SET', field: 'overheadOverridePerM', value })} unit="₹/m" step={0.1} placeholder="e.g. 12.50" attentionWhenEmpty />
                     ) : (
-                        <Button type="button" variant="outline" className="h-11 w-full justify-between gap-2" onClick={onOpenOverheadDetails}>
+                        <Button data-estimator-field="monthlyOverhead" type="button" variant="outline" className="h-11 w-full justify-between gap-2" onClick={onOpenOverheadDetails}>
                             <span className="flex items-center gap-1.5"><Calculator className="h-3.5 w-3.5" /> Edit monthly overhead details</span>
                             {state.monthlyOutputM > 0 && <span className="font-mono text-[10px] font-normal text-[var(--color-muted)]">{state.monthlyOutputM.toLocaleString('en-IN')} m/mo</span>}
                         </Button>
@@ -3021,7 +3025,9 @@ export default function EstimatorClient({
     staleDefaultRateNames,
     organizationName,
     initialPartyNames,
+    tutorialDismissed,
 }: {
+    tutorialDismissed: boolean
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
     initialWorkers?: FixedWorkerOverhead[]
@@ -3209,6 +3215,7 @@ export default function EstimatorClient({
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
+    const prepareTutorial = useCallback(() => { setEntryMode('quick'); setShowAdvancedOverhead(false) }, [])
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
@@ -4961,6 +4968,8 @@ export default function EstimatorClient({
                     }}
                 />
             )}
+
+            <CostEstimateTutorial accountDismissed={tutorialDismissed} enabled={state.isConfigured && !saving} orgId={orgId} userId={userId} onPrepare={prepareTutorial} />
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (
