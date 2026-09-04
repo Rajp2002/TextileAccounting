@@ -5649,7 +5649,7 @@ export default function EstimatorClient({
                     </SheetContent>
                 </Sheet>
 
-                {entryMode === 'quick' ? (
+                {entryMode === 'quick' && !showAdvancedOverhead ? (
                     <div key="quick" className="premium-content-swap">
                     <QuickCostingView
                         state={state}
@@ -5668,10 +5668,7 @@ export default function EstimatorClient({
                         canUseProduction={canUseProduction}
                         widthUnit={widthUnit}
                         onWidthUnitChange={setWidthUnit}
-                        onOpenOverheadDetails={() => {
-                            handleEntryModeChange('detailed')
-                            setShowAdvancedOverhead(true)
-                        }}
+                        onOpenOverheadDetails={() => setShowAdvancedOverhead(true)}
                         onOverheadModeChange={handleOverheadModeChange}
                         weavingRateInputMode={weavingRateInputMode}
                         onWeavingRateInputModeChange={setWeavingRateInputMode}
@@ -6369,7 +6366,7 @@ export default function EstimatorClient({
                             ) : (
                                 <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3.5 py-3">
                                     <p className="text-[12px] font-medium text-[var(--color-ink)]">Monthly expenses are active</p>
-                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Saved rent, power, salaries, and other expenses are divided by standard monthly production. Expand the section below to review them.</p>
+                                    <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">Saved rent, power, salaries, and other expenses are divided by standard monthly production. Open the expense editor to review them.</p>
                                     <p className="mt-2 text-[11px] font-semibold text-[var(--color-factory-green)]">Current calculated overhead: {formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</p>
                                 </div>
                             )}
@@ -6377,17 +6374,16 @@ export default function EstimatorClient({
 
                         {state.overheadMode === 'direct' && (
                             <p className="rounded-md bg-[var(--color-surface-soft)] px-2.5 py-2 text-[10px] leading-relaxed text-[var(--color-muted)]">
-                                The direct ₹/m rate is active for this costing. Monthly expenses below stay saved as a reference and will be used when you switch back to monthly-expense mode.
+                                The direct ₹/m rate is active for this costing. Monthly expenses stay saved as a reference and will be used when you switch back to monthly-expense mode.
                             </p>
                         )}
 
-                        {/* Advanced Settings Collapsible Toggle */}
+                        {/* Monthly expense editor trigger */}
                                         <div className="border-t border-[var(--color-hairline)] pt-4">
                                             <button
                                                 type="button"
-                                                onClick={() => setShowAdvancedOverhead(!showAdvancedOverhead)}
-                                                aria-expanded={showAdvancedOverhead}
-                                                aria-controls="estimator-monthly-expenses"
+                                                onClick={() => setShowAdvancedOverhead(true)}
+                                                aria-haspopup="dialog"
                                                 className="flex items-center justify-between w-full rounded-lg bg-[var(--color-surface-soft)] px-3 py-2 text-xs font-bold text-[var(--color-body)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] transition-all"
                                             >
                                                 <span className="flex items-center gap-2">
@@ -6395,28 +6391,29 @@ export default function EstimatorClient({
                                                     <span>Monthly expenses & capacity</span>
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    {!showAdvancedOverhead && totals.overheadTotalMonthly > 0 && (
+                                                    {totals.overheadTotalMonthly > 0 && (
                                                         <span className="text-[10px] font-mono text-[var(--color-muted)] font-normal mr-2">
                                                             Total: {hasValidCostResult ? `₹${totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo` : '—'}
                                                         </span>
                                                     )}
-                                                    {showAdvancedOverhead ? (
-                                                        <ChevronUp className="h-4 w-4 text-slate-400" />
-                                                    ) : (
-                                                        <ChevronDown className="h-4 w-4 text-slate-400" />
-                                                    )}
+                                                    <ChevronRight className="h-4 w-4 text-slate-400" />
                                                 </div>
                                             </button>
                                         </div>
 
-                                        {/* Advanced Capacity & Fixed Cost Section (Collapsible) */}
-                                        {showAdvancedOverhead && (
-                                            <motion.div
-                                                id="estimator-monthly-expenses"
-                                                initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="space-y-6 pt-2"
-                                            >
+                                        {/* Advanced Capacity & Fixed Cost Dialog */}
+                                        <Dialog open={showAdvancedOverhead} onOpenChange={setShowAdvancedOverhead}>
+                                            <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl">
+                                                <DialogHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-14 text-left sm:px-6">
+                                                    <DialogTitle className="flex items-center gap-2 text-[17px]">
+                                                        <Calculator className="h-4 w-4 text-[var(--color-yarn-orange)]" />
+                                                        Monthly expenses &amp; capacity
+                                                    </DialogTitle>
+                                                    <DialogDescription className="text-[12px]">
+                                                        Review the factory costs and standard production used to derive monthly overhead.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div id="estimator-monthly-expenses" className="min-h-0 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
                                                 {/* A. Factory Capacity Section */}
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between gap-2 mb-1">
@@ -6717,8 +6714,10 @@ export default function EstimatorClient({
                                                         )}
                                                     </div>
                                                 </div>
-                                            </motion.div>
-                                        )}
+                                                </div>
+                                                <DialogFooter className="border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-5 py-3 sm:px-6" showCloseButton />
+                                            </DialogContent>
+                                        </Dialog>
 
                                         {/* Live Summary */}
                                         <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
