@@ -5,19 +5,24 @@ import { createPortal } from 'react-dom'
 import { dismissCostEstimateTutorial } from '@/app/(dashboard)/owner/estimator/tutorial-actions'
 import { Button } from '@/components/ui/button'
 
-const sections = [
-    ['Quality basics', 'Name this fabric quality and describe its yarn components. Factory defaults are starting values; review them for this fabric.'],
-    ['Warp yarn', 'Warp threads run along the length of the fabric. Each component has its own construction and purchase rate. Repeat these inputs for every warp component.'],
-    ['Weft yarn', 'Weft threads run across the fabric. Repeat these inputs for every weft component.'],
-    ['Weaving cost', 'Choose rupees per metre or paisa per pick, then enter your weaving charge in that unit. Picks from the weft section are used for conversion.'],
-    ['Warping and sizing', 'Choose in-house or outsourced for each process. Outsourced rates are rupees per kilogram of warp yarn. In-house costs belong in your factory expenses.'],
-    ['Factory overhead', 'Direct rate uses your overhead in rupees per metre. Monthly expenses divides saved factory expenses by typical monthly production. Use Edit monthly overhead details to review expenses and output after this tour.'],
-    ['Selling price and quantity', 'Review your margin, commission and delivery costs to calculate a selling price. Quantity adds order-level totals.'],
-] as const
+const sections = ['Quality basics', 'Warp yarn', 'Weft yarn', 'Weaving cost', 'Warping and sizing', 'Factory overhead', 'Selling price and quantity']
+
+const fieldTitles: Record<string, string> = {
+    warpingMode: 'Warping: in-house or outsourced',
+    sizingMode: 'Sizing: in-house or outsourced',
+    directOverheadMethod: 'Direct overhead',
+    monthlyOverheadMethod: 'Monthly overhead',
+    monthlyOverhead: 'Monthly expenses and output',
+    weavingRateMode: 'Weaving rate unit',
+}
 
 const guidance: Record<string, string> = {
     partyName: 'Enter the customer or party name for this quotation or party order.',
-    overheadMode: 'Choose a direct overhead rate per metre, or calculate it from monthly expenses divided by standard monthly production.',
+    warpingMode: 'Is your warping done in-house or outsourced? Choose In-house if you do it at your factory and include its expenses in factory overhead. Choose Outsourced if someone else does it; then enter their warping charge in ₹/kg in the rate field that appears.',
+    sizingMode: 'Is your sizing done in-house or outsourced? Choose In-house if you do it at your factory and include its expenses in factory overhead. Choose Outsourced if someone else does it; then enter their sizing charge in ₹/kg in the rate field that appears.',
+    directOverheadMethod: 'Already know your factory overhead cost per metre? Choose Direct overhead rate, then enter that amount in ₹/m in the field below. Use this method when you already have a calculated overhead rate.',
+    monthlyOverheadMethod: 'Want help calculating overhead? Choose Monthly expenses ÷ output, then open Edit monthly overhead details. Enter your monthly factory expenses and typical monthly production in metres; we divide the total expenses by that output to calculate overhead per metre.',
+    weavingRateMode: 'Choose the unit for your weaving charge: rupees per metre or paisa per pick. Then enter the charge in the next field using that unit.',
     monthlyOverhead: 'After the tour, open these details to review each monthly expense and your typical production in metres. Total monthly expenses divided by production gives overhead per metre.',
     qualityLabel: 'Enter a recognisable name for this fabric quality, such as 60g Georgette or Japan Satin. This is how you will find it again.',
     warpComponentCount: 'Enter how many different warp yarn components this quality uses. Each component gets its own row; this is not the number of individual threads.',
@@ -55,6 +60,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const [requested, setRequested] = useState(false)
     const [rects, setRects] = useState<{ field: DOMRect; card: DOMRect } | null>(null)
     const panel = useRef<HTMLDivElement>(null)
+    const tutorialRows = useRef<HTMLElement[]>([])
     const key = `weavly:cost-estimate-tutorial:v1:${orgId}:${userId}`
     const active = steps[index]
     const dismissed = useRef(accountDismissed)
@@ -103,36 +109,51 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     }, [syncFailed, syncDismissal])
 
     useEffect(() => {
+        return () => {
+            tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
+        }
+    }, [])
+
+    useEffect(() => {
         if (!requested || !enabled) return
         onPrepare()
-        // Allow the Quick view to render before resolving its targets.
+        let observer: MutationObserver | undefined
+        // Quick view can change on replay. Wait for its commit, then expand rows
+        // and observe their actual DOM mount rather than guessing a render delay.
         const timer = window.setTimeout(() => {
             const root = document.querySelector('[data-costing-tutorial-root]')
-            if (!root) return
-            const next: Step[] = []
-            root.querySelectorAll<HTMLElement>('[data-tutorial-section]').forEach(header => {
-                const section = Number(header.dataset.tutorialSection) - 1
-                const card = header.closest<HTMLElement>('[data-slot="card"]')
-                if (!card || !sections[section]) return
-                const [title, description] = sections[section]
-                next.push({ section, card, target: header, title, description })
-                const seen = new Set<string>()
-                card.querySelectorAll<HTMLElement>('[data-estimator-field]').forEach(target => {
-                    const field = target.dataset.estimatorField!
-                    if (seen.has(field) || !guidance[field] || !target.getClientRects().length) return
-                    seen.add(field)
-                    const label = ({ overheadMode: 'Overhead method', monthlyOverhead: 'Monthly expenses and output' } as Record<string, string>)[field] || target.querySelector('label')?.textContent || target.getAttribute('aria-label') || target.closest('div.space-y-1\\.5')?.querySelector('label')?.textContent || field
-                    next.push({ section, card, target, title: label.replace(/ — REQUIRED/g, ''), description: guidance[field] })
+            if (!root) { setRequested(false); return }
+            tutorialRows.current = Array.from(root.querySelectorAll<HTMLElement>('[data-estimator-row]'))
+            const collect = () => {
+                if (tutorialRows.current.some(row => row.querySelector('[aria-expanded]')?.getAttribute('aria-expanded') !== 'true')) return
+                const next: Step[] = []
+                root.querySelectorAll<HTMLElement>('[data-tutorial-section]').forEach(header => {
+                    const section = Number(header.dataset.tutorialSection) - 1
+                    const card = header.closest<HTMLElement>('[data-slot="card"]')
+                    if (!card || !sections[section]) return
+                    card.querySelectorAll<HTMLElement>('[data-estimator-field]').forEach(target => {
+                        const field = target.dataset.estimatorField!
+                        if (!guidance[field] || !target.getClientRects().length) return
+                        const label = fieldTitles[field] || target.querySelector('label')?.textContent || target.getAttribute('aria-label') || target.closest('div.space-y-1\\.5')?.querySelector('label')?.textContent || field
+                        next.push({ section, card, target, title: label.replace(/ — REQUIRED/g, ''), description: guidance[field] })
+                    })
                 })
-            })
-            setIndex(0)
-            setSteps(next)
-            setRequested(false)
+                observer?.disconnect()
+                setIndex(0)
+                setSteps(next)
+                setRequested(false)
+            }
+            observer = new MutationObserver(collect)
+            observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-expanded'] })
+            tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: true })))
+            collect()
         }, 150)
-        return () => window.clearTimeout(timer)
+        return () => { window.clearTimeout(timer); observer?.disconnect() }
     }, [requested, enabled, onPrepare])
 
     function close() {
+        tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
+        tutorialRows.current = []
         dismissed.current = true
         // Only a retry marker: the account flag is the source of truth.
         try { localStorage.setItem(key, 'done') } catch { /* Still allow dismissal. */ }
@@ -189,7 +210,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                     }
                 }}>
                 <div aria-live="polite">
-                    <p className="text-xs font-semibold text-orange-600">Section {active.section + 1} of 7 · {sections[active.section][0]}</p>
+                    <p className="text-xs font-semibold text-orange-600">Section {active.section + 1} of 7 · {sections[active.section]}</p>
                     <h2 id="cost-tour-title" className="mt-2 text-lg font-semibold">{active.title}</h2>
                     <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed">{active.description}</p>
                 </div>
