@@ -127,11 +127,25 @@ export function findNavigableFormInputs(
  */
 export function scrollInputIntoComfortableView(
     element: HTMLElement,
-    scrollOptions: ScrollIntoViewOptions = { behavior: 'smooth', block: 'nearest', inline: 'nearest' }
+    scrollOptions?: ScrollIntoViewOptions
 ) {
-    if (!element || typeof element.scrollIntoView !== 'function') return
+    if (!element) return
 
-    element.scrollIntoView(scrollOptions)
+    const sectionTarget = typeof element.closest === 'function'
+        ? element.closest<HTMLElement>('[data-enter-scroll-target]')
+        : null
+    const scrollTarget = sectionTarget ?? element
+    if (typeof scrollTarget.scrollIntoView !== 'function') return
+
+    const resolvedScrollOptions: ScrollIntoViewOptions = sectionTarget
+        ? { behavior: 'smooth', block: 'center', inline: 'nearest', ...scrollOptions }
+        : { behavior: 'smooth', block: 'nearest', inline: 'nearest', ...scrollOptions }
+
+    scrollTarget.scrollIntoView(resolvedScrollOptions)
+
+    // A marked section is intentionally centered as a whole so its surrounding
+    // context and lower fields remain visible after keyboard navigation.
+    if (sectionTarget) return
 
     // Check if element is too close to sticky navigation headers on desktop / mobile
     if (typeof window !== 'undefined' && typeof element.getBoundingClientRect === 'function') {
@@ -145,12 +159,12 @@ export function scrollInputIntoComfortableView(
                 if (rect.top < topMargin) {
                     window.scrollBy({
                         top: rect.top - topMargin,
-                        behavior: scrollOptions.behavior ?? 'smooth',
+                        behavior: resolvedScrollOptions.behavior ?? 'smooth',
                     })
                 } else if (rect.bottom > viewportHeight - bottomMargin) {
                     window.scrollBy({
                         top: rect.bottom - (viewportHeight - bottomMargin),
-                        behavior: scrollOptions.behavior ?? 'smooth',
+                        behavior: resolvedScrollOptions.behavior ?? 'smooth',
                     })
                 }
             }

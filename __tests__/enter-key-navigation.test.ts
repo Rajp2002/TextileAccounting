@@ -3,6 +3,7 @@ import {
     findNavigableFormInputs,
     handleEnterKeyNavigation,
     isElementNavigable,
+    scrollInputIntoComfortableView,
 } from '../lib/form-navigation'
 
 interface MockInputOptions {
@@ -143,6 +144,57 @@ describe('Form Enter-Key Navigation Engine', () => {
         expect(handled2).toBe(true)
         expect(fieldWaste.focus).toHaveBeenCalled()
         expect(fieldWaste.select).toHaveBeenCalled()
+    })
+
+    it('centers a marked section when navigating into one of its inputs', () => {
+        const previousField = createMockElement({ id: 'default-waste', type: 'number', value: '10' })
+        const componentName = createMockElement({ id: 'warp-component-name', value: 'Warp 1' })
+        const container = createMockContainer([previousField, componentName])
+        const rowCard = {
+            tagName: 'DIV',
+            scrollIntoView: vi.fn(),
+        } as unknown as HTMLElement
+
+        componentName.closest = ((selector: string) => {
+            if (selector === '[data-enter-scroll-target]') return rowCard
+            if (selector.includes('data-enter-navigate-container')) return container
+            return null
+        }) as typeof componentName.closest
+
+        const enterEvent = {
+            key: 'Enter',
+            target: previousField,
+            currentTarget: container,
+            preventDefault: vi.fn(),
+            defaultPrevented: false,
+            isComposing: false,
+        }
+
+        expect(handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container })).toBe(true)
+        expect(componentName.focus).toHaveBeenCalled()
+        expect(rowCard.scrollIntoView).toHaveBeenCalledWith({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+        })
+        expect(componentName.scrollIntoView).not.toHaveBeenCalled()
+    })
+
+    it('allows explicit scroll options to override marked-section defaults', () => {
+        const input = createMockElement()
+        const rowCard = {
+            tagName: 'DIV',
+            scrollIntoView: vi.fn(),
+        } as unknown as HTMLElement
+        input.closest = ((selector: string) => selector === '[data-enter-scroll-target]' ? rowCard : null) as typeof input.closest
+
+        scrollInputIntoComfortableView(input, { behavior: 'auto', block: 'start' })
+
+        expect(rowCard.scrollIntoView).toHaveBeenCalledWith({
+            behavior: 'auto',
+            block: 'start',
+            inline: 'nearest',
+        })
     })
 
     it('navigates to previous field on Shift+Enter', () => {

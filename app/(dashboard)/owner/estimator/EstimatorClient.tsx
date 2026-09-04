@@ -2086,6 +2086,7 @@ function RowCard({
         <div
             ref={cardRef}
             data-estimator-row={`${accent === 'indigo' ? 'warpRows' : 'weftRows'}.${index}`}
+            data-enter-scroll-target="true"
             data-testid={`yarn-component-${accent}-${index}`}
             onKeyDown={handleRowKeyDown}
             className={`group overflow-hidden rounded-[12px] border transition-colors bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)] ${
