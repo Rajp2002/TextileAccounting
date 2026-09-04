@@ -39,4 +39,12 @@ describe('monthly overhead expense editor', () => {
         expect(estimator).not.toContain('monthly_working_days:    state.monthlyWorkingDays')
         expect(estimator).not.toContain('avg_output_per_loom_per_day: state.avgOutputPerLoomPerDay')
     })
+
+    it('shows a valid overhead without waiting for the entire costing to be complete', () => {
+        expect(estimator).toContain('const overheadReady =')
+        expect(estimator).toContain('totals.overheadTotalMonthly > 0')
+        expect(estimator).toContain('valid={overheadReady}')
+        expect(estimator).toContain('formatCalculatedMoney(costingResult.overheadPerM, overheadReady, \'/m\')')
+        expect(estimator).toContain('Included in the production cost as the active factory-overhead rate.')
+    })
 })

@@ -2358,6 +2358,11 @@ function QuickCostingView({
 }) {
     const { t } = useTranslation()
     const directRateMissing = state.overheadMode === 'direct' && (!state.overheadOverridePerM || state.overheadOverridePerM <= 0)
+    // Overhead can be valid before the rest of the costing is complete. Do not
+    // hide this active rate behind unrelated construction-field validation.
+    const overheadReady = state.overheadMode === 'direct'
+        ? !directRateMissing
+        : state.monthlyOutputM > 0 && totals.overheadTotalMonthly > 0
 
     return (
         <div
@@ -2661,7 +2666,7 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="overhead">
-                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={hasValidCostResult} />} />
+                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
@@ -2683,8 +2688,11 @@ function QuickCostingView({
                     )}
                     {directRateMissing && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Enter a direct rate greater than ₹0/m before saving.</p>}
                     <div className="flex items-center justify-between rounded-[10px] bg-[var(--color-surface-soft)] px-3 py-2.5">
-                        <span className="text-[11px] font-medium text-[var(--color-muted)]">Used in this costing</span>
-                        <span className="font-mono text-base font-semibold text-[var(--color-risk-red)]">{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult, '/m')}</span>
+                        <div>
+                            <p className="text-[11px] font-medium text-[var(--color-muted)]">Used in this costing</p>
+                            {overheadReady && <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Included in the production cost as the active factory-overhead rate.</p>}
+                        </div>
+                        <span className={`font-mono text-base font-semibold ${overheadReady ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-warning-amber)]'}`}>{formatCalculatedMoney(costingResult.overheadPerM, overheadReady, '/m')}</span>
                     </div>
                     <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 py-2 text-[10px] text-[var(--color-muted)]">
                         <span className="font-semibold text-[var(--color-body)]">Source:</span> {assumptionSourceLabel(costingResult.overheadSource)}
