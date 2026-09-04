@@ -1116,7 +1116,6 @@ function assumptionSourceLabel(source: string): string {
 function MobileLiveEstimateShortcut({
     visible,
     keyboardVisible,
-    expanded,
     activeName,
     versionLabel,
     validityLabel,
@@ -1140,7 +1139,6 @@ function MobileLiveEstimateShortcut({
 }: {
     visible: boolean
     keyboardVisible: boolean
-    expanded: boolean
     activeName: string
     versionLabel?: string
     validityLabel: string
@@ -1203,16 +1201,14 @@ function MobileLiveEstimateShortcut({
                         aria-expanded={open}
                         aria-controls="mobile-live-estimate-panel"
                         onClick={() => setOpen(true)}
-                        className={`group flex items-center justify-end gap-2 rounded-full border border-[var(--color-yarn-orange)]/20 bg-[var(--color-canvas-white)]/95 p-1.5 text-left shadow-[0_8px_24px_rgba(30,37,40,0.16)] backdrop-blur-xl transition-[width,transform,box-shadow] duration-200 motion-reduce:transition-none hover:shadow-[0_10px_28px_rgba(30,37,40,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2 ${expanded ? 'pl-3' : ''}`}
+                        className="group flex items-center justify-end gap-2 rounded-full border border-[var(--color-yarn-orange)]/20 bg-[var(--color-canvas-white)]/95 p-1.5 pl-3 text-left shadow-[0_8px_24px_rgba(30,37,40,0.16)] backdrop-blur-xl transition-[transform,box-shadow] duration-200 motion-reduce:transition-none hover:shadow-[0_10px_28px_rgba(30,37,40,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
                     >
-                        {expanded && (
-                            <span className="min-w-0 max-w-[10.5rem] pr-1">
-                                <span className="block text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Live cost</span>
-                                <span className="mt-0.5 block truncate text-[12px] font-semibold text-[var(--color-ink)]">
-                                    {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}/m` : 'Complete inputs'}
-                                </span>
+                        <span className="min-w-0 max-w-[10.5rem] pr-1">
+                            <span className="block text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Live cost</span>
+                            <span className="mt-0.5 block truncate text-[12px] font-semibold text-[var(--color-ink)]">
+                                {hasValidCostResult ? 'View costing' : 'Complete inputs'}
                             </span>
-                        )}
+                        </span>
                         <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
                             <Calculator className="h-5 w-5" aria-hidden="true" />
                             <span
@@ -3031,10 +3027,7 @@ export default function EstimatorClient({
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
-    const mobileShortcutSeenRef = useRef(false)
-    const mobileShortcutLabelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [mobileCostingShortcutVisible] = useState(true)
-    const [mobileCostingShortcutExpanded, setMobileCostingShortcutExpanded] = useState(false)
     const [mobileKeyboardVisible, setMobileKeyboardVisible] = useState(false)
 
     useEffect(() => {
@@ -3074,29 +3067,6 @@ export default function EstimatorClient({
         assumptionsManuallyToggledRef.current = true
         setAssumptionsExpanded(current => !current)
     }, [])
-
-    useEffect(() => {
-        if (mobileKeyboardVisible) {
-            setMobileCostingShortcutExpanded(false)
-            return
-        }
-        if (!mobileCostingShortcutVisible || mobileShortcutSeenRef.current) return
-
-        mobileShortcutSeenRef.current = true
-        setMobileCostingShortcutExpanded(true)
-        if (mobileShortcutLabelTimerRef.current) clearTimeout(mobileShortcutLabelTimerRef.current)
-        mobileShortcutLabelTimerRef.current = setTimeout(() => {
-            setMobileCostingShortcutExpanded(false)
-            mobileShortcutLabelTimerRef.current = null
-        }, 3200)
-
-        return () => {
-            if (mobileShortcutLabelTimerRef.current) {
-                clearTimeout(mobileShortcutLabelTimerRef.current)
-                mobileShortcutLabelTimerRef.current = null
-            }
-        }
-    }, [mobileCostingShortcutVisible, mobileKeyboardVisible])
 
     useEffect(() => {
         const viewport = window.visualViewport
@@ -6965,7 +6935,6 @@ export default function EstimatorClient({
             <MobileLiveEstimateShortcut
                 visible={mobileCostingShortcutVisible}
                 keyboardVisible={mobileKeyboardVisible}
-                expanded={mobileCostingShortcutExpanded}
                 activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                 versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
                     ? `Costing v${sourceQuoteVersionNumber ?? 1}`

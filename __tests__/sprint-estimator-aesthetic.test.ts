@@ -47,6 +47,11 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('shrink-0 items-center whitespace-nowrap rounded-full')
   })
 
+  it('keeps the live-cost shortcut labelled in both readiness states', () => {
+    expect(client).toContain("{hasValidCostResult ? 'View costing' : 'Complete inputs'}")
+    expect(client).not.toContain('mobileCostingShortcutExpanded')
+  })
+
   it('does not restart deferred quality hydration during rerenders', () => {
     expect(client).toContain('const secondaryDataRequestRef = useRef<ReturnType<typeof getEstimatorSecondaryData> | null>(null)')
     expect(client).toContain('secondaryDataRequestRef.current = getEstimatorSecondaryData()')
