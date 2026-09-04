@@ -1805,6 +1805,7 @@ function EstimatorLiveCostActions({
     onNewQuality: () => void
     onDismiss: () => void
 }) {
+    const { t } = useTranslation()
     const requiresCommercialContext = !isStandaloneCostingSession
     const saveCostingDisabled = savingQuote
         || !canPersistCostResult
@@ -1964,19 +1965,25 @@ function EstimatorLiveCostActions({
                 )}
                 <Button
                     type="button"
+                    id="save-quality-and-costing"
                     data-testid="save-as-new-quality"
                     size="sm"
                     variant="outline"
                     onClick={() => runAction(onSaveAsNewQuality)}
-                    className="h-10 min-w-0 flex-1 rounded-[9px] border-[var(--color-hairline)] bg-white px-3 text-[12px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)] sm:flex-none"
+                    className="h-10 min-w-0 flex-1 rounded-[9px] border-[var(--color-yarn-orange)]/35 bg-white px-3 text-[12px] font-semibold text-[var(--color-yarn-orange-dark)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] sm:flex-none"
+                    title={t('estimator.quality.saveQualityAndCostingHint')}
+                    aria-label={t('estimator.quality.saveQualityAndCosting')}
                 >
                     <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">Save as Quality</span>
+                    <span className="truncate">{t('estimator.quality.saveQualityAndCosting')}</span>
                 </Button>
                 {appliedTemplate && !hasActiveQualityRecipeChanges && (
                     <span className="text-[10px] font-medium text-[var(--color-muted)]">{qualitySaveLabel}</span>
                 )}
             </div>
+            <p className="px-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
+                {t('estimator.quality.saveQualityAndCostingHint')}
+            </p>
 
             {actionReadinessMessage && (
                 <p id={actionReadinessId} role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-800">
@@ -4098,7 +4105,7 @@ export default function EstimatorClient({
                 suppressAutosaveUntilChanged()
                 void trackPlanEvent('quality_created', { source: 'estimator' })
                 toast.success(t('estimator.quality.saved'), {
-                    description: tx(`Recipe saved for reuse. Costing snapshot v${res.versionNumber ?? 1} · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you intentionally want another costing version.`),
+                    description: tx(`Quality and costing snapshot v${res.versionNumber ?? 1} saved together · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you intentionally want another costing version.`),
                 })
             } else {
                 const message = res.error ?? t('estimator.quality.saveFailed')
@@ -7202,8 +7209,8 @@ export default function EstimatorClient({
             >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>{tx('Save as separate quality')}</DialogTitle>
-                        <DialogDescription>{tx('Create a separate reusable quality. To change the open quality, close this dialog and use Update.')}</DialogDescription>
+                        <DialogTitle>{t('estimator.quality.saveQualityAndCostingTitle')}</DialogTitle>
+                        <DialogDescription>{t('estimator.quality.saveQualityAndCostingDescription')}</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
@@ -7229,7 +7236,7 @@ export default function EstimatorClient({
                         </div>
                         <div className="space-y-1 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-3.5 text-xs font-medium leading-relaxed text-[var(--color-body)]">
                             <p>{t('estimator.quality.savesNotePrefix')} {state.warpRows.length} {t('estimator.quality.savesNoteWarp')} {state.weftRows.length} {t('estimator.quality.savesNoteWeft')}</p>
-                            <p className="text-[var(--color-muted)]">{t('estimator.quality.rateNote')} Current yarn rates are saved in the recipe; the first costing snapshot also records the full costing context.</p>
+                            <p className="text-[var(--color-muted)]">{t('estimator.quality.rateNote')} {t('estimator.quality.saveQualityAndCostingHint')}</p>
                         </div>
                         <CostingSaveReview
                             state={state}
@@ -7244,9 +7251,9 @@ export default function EstimatorClient({
                             setShowSaveTemplate(false)
                             setTemplateSaveError(null)
                         }}>{t('estimator.quality.cancel')}</Button>
-                        <Button className="bg-brand-accent text-white" onClick={() => void handleSaveTemplate()} disabled={savingTemplate} aria-busy={savingTemplate}>
+                        <Button data-testid="save-quality-and-costing-confirm" className="bg-brand-accent text-white" onClick={() => void handleSaveTemplate()} disabled={savingTemplate} aria-busy={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            {t('estimator.quality.confirmSave')}
+                            {t('estimator.quality.saveQualityAndCosting')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

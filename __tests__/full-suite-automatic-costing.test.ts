@@ -9,6 +9,7 @@ describe('Full Suite automatic costing snapshots', () => {
   const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
   const actions = read('app/(dashboard)/owner/estimator/actions.ts')
   const savedCostings = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+  const english = read('lib/i18n/locales/en.ts')
 
   it('keeps the standalone Base costing action but removes redundant Full Suite costing actions', () => {
     expect(estimator).toContain("'Save New Version' : 'Save Costing'")
@@ -22,6 +23,16 @@ describe('Full Suite automatic costing snapshots', () => {
     expect(actions).toContain(".from('estimator_quotes')")
     expect(estimator).toContain('Party order started and costing saved')
     expect(estimator).toContain('Market Run started and costing saved')
+  })
+
+  it('makes the new-quality combined save path explicit', () => {
+    expect(english).toContain('saveQualityAndCosting: "Save Quality & Create Costing"')
+    expect(estimator).toContain('id="save-quality-and-costing"')
+    expect(estimator).toContain('data-testid="save-quality-and-costing-confirm"')
+    expect(estimator).toContain("t('estimator.quality.saveQualityAndCosting')")
+    expect(estimator).toContain("t('estimator.quality.saveQualityAndCostingHint')")
+    expect(actions).toContain('create_saved_quality_with_initial_costing_v1')
+    expect(estimator).toContain('Quality and costing snapshot v${res.versionNumber ?? 1} saved together')
   })
 
   it('shows market-run costing snapshots in the shared Full Suite library', () => {
