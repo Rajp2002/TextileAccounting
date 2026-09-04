@@ -20,7 +20,7 @@ interface UseAutosaveOptions<TState = unknown> {
   orgId: string
   userId: string
   debounceMs?: number
-  maxAgeMs?: number  // max age before draft is considered stale (default 24h)
+  maxAgeMs?: number  // max age before draft is considered stale (default 7 days)
   /** Do not create a draft for an untouched/default estimator screen. */
   shouldPersist?: (data: EstimatorDraftInput<unknown>) => boolean
   /** Reject malformed state before it reaches the estimator reducer. */
@@ -84,7 +84,7 @@ function makeWriterId() {
  * - Detects existing drafts on mount and from other tabs
  * - Keeps the first-created timestamp stable across edits
  * - Clears drafts on successful save/convert or explicit discard
- * - Drafts expire after 24 hours and carry schema/calculation versions
+ * - Drafts expire after 7 days and carry schema/calculation versions
  */
 export function useAutosave<TState = unknown>({
   orgId,
@@ -297,26 +297,23 @@ export function useAutosave<TState = unknown>({
       : current
     if (!selected) return null
 
-    // Do not remove a newer write that arrived between the mount read and the
-    // user's click. The helper also keeps the recovery choice visible when
-    // browser storage is temporarily unavailable.
-    if (!removeDraftIfCurrent(selected)) return null
-
     writeGenerationRef.current += 1
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     draftDecisionPendingRef.current = false
     suppressUntilChangeRef.current = true
     latestInputRef.current = null
-    latestPersistedDraftRef.current = null
-    // Remove the recovery item immediately after the version check. A
-    // meaningful restored edit can be written again; a blank or invalid
-    // restored item cannot resurrect the banner.
+    // Resume is not a destructive decision. Keep the last durable copy until
+    // a confirmed save, explicit discard, or confirmed reset removes it. This
+    // protects a restored form from a second refresh before the next edit has
+    // had time to autosave.
+    latestPersistedDraftRef.current = selected
+    localWriteSequenceRef.current = Math.max(localWriteSequenceRef.current, selected.writeSequence)
     setHasDraft(false)
     setDraft(null)
     setDraftConflict(null)
     return selected
-  }, [draft, readStoredDraft, removeDraftIfCurrent])
+  }, [draft, readStoredDraft])
 
   const dismissDraft = useCallback(() => {
     if (!removeDraftIfCurrent()) return

@@ -84,7 +84,8 @@ describe('Sprint 3 profile selection and draft recovery', () => {
     expect(estimator).toContain('Unsaved Cost Estimate')
     expect(estimator).toContain('Cost Estimate draft discarded')
     expect(autosave).toContain('suppressAutosaveUntilChanged')
-    expect(autosave).toContain('Remove the recovery item immediately')
+    expect(autosave).toContain('Resume is not a destructive decision')
+    expect(autosave).toContain('latestPersistedDraftRef.current = selected')
   })
 
   it('persists only profile metadata in the Sprint 3 migration', () => {

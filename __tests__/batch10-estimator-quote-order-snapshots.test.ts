@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+    ESTIMATOR_DRAFT_MAX_AGE_MS,
     getEstimatorDraftStorageKey,
     parseEstimatorDraft,
     shouldWarnBeforeQuoteRestore,
@@ -71,7 +72,7 @@ describe('Batch 10 quote restore draft collision', () => {
         expect(parsed?.sourceQuoteUpdatedAt).toBe('2026-07-10T11:00:00.000Z')
         expect(shouldWarnBeforeQuoteRestore(parsed, 'quote-b')).toBe(true)
         expect(shouldWarnBeforeQuoteRestore(parsed, 'quote-a')).toBe(false)
-        expect(parseEstimatorDraft(raw, nowMs + 25 * 60 * 60 * 1000)).toBeNull()
+        expect(parseEstimatorDraft(raw, nowMs + ESTIMATOR_DRAFT_MAX_AGE_MS + 1)).toBeNull()
         expect(parseEstimatorDraft('not-json', nowMs)).toBeNull()
     })
 

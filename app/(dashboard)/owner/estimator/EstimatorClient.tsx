@@ -3060,19 +3060,20 @@ export default function EstimatorClient({
     }, [])
 
     const shouldPersistEstimatorDraft = useCallback((data: EstimatorDraftInput<EstimateState>) => {
-        const hasWarpInput = data.state.warpRows.some(row => Number(row.calcDenier) > 0 || Number(row.beamEnds) > 0 || Number(row.yarnRate) > 0 || Number(row.manualKgPer100m) > 0)
-        const hasWeftInput = data.state.weftRows.some(row => Number(row.calcDenier) > 0 || Number(row.picks) > 0 || Number(row.yarnRate) > 0 || Number(row.manualKgPer100m) > 0)
         return Boolean(
             data.sourceQuoteId
             || data.qualityLabel.trim()
             || data.partyName.trim()
-            || hasWarpInput
-            || hasWeftInput
-            || ((hasWarpInput || hasWeftInput) && (data.warpInstruction.trim() || data.weftInstruction.trim()))
-            || Number(data.state.perPickCostPaisa) > 0
-            || data.state.orderQuantityM != null,
+            || data.warpInstruction.trim()
+            || data.weftInstruction.trim()
+            // The hook separately requires an explicit user edit before its
+            // background autosave runs. Comparing the complete estimator state
+            // here ensures less-common inputs (overhead, widths, toggles, loom
+            // settings, etc.) are not lost merely because no yarn row or
+            // quantity has been entered yet.
+            || JSON.stringify(data.state) !== JSON.stringify(initialState),
         )
-    }, [])
+    }, [initialState])
 
     const {
         hasDraft,

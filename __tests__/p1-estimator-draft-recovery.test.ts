@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   compareEstimatorDrafts,
   createEstimatorDraft,
+  ESTIMATOR_DRAFT_MAX_AGE_MS,
   ESTIMATOR_DRAFT_ESTIMATOR_VERSION,
   ESTIMATOR_DRAFT_SCHEMA_VERSION,
   parseEstimatorDraft,
@@ -56,8 +57,8 @@ describe('P1 estimator draft recovery contract', () => {
     expect(parseEstimatorDraft(JSON.stringify({ ...valid, state: null }), 10_000)).toBeNull()
     expect(parseEstimatorDraft(JSON.stringify({ ...valid, schemaVersion: 0 }), 10_000)).toBeNull()
     expect(parseEstimatorDraft(JSON.stringify({ ...valid, estimatorVersion: 'estimator_v2' }), 10_000)).toBeNull()
-    expect(parseEstimatorDraft(JSON.stringify({ ...valid, savedAt: 1 }), 10_000)).toBeNull()
-    expect(parseEstimatorDraft(JSON.stringify({ ...valid, savedAt: 10_000 + 24 * 60 * 60 * 1000 + 1 }), 10_000)).toBeNull()
+    expect(parseEstimatorDraft(JSON.stringify({ ...valid, savedAt: 1 }), ESTIMATOR_DRAFT_MAX_AGE_MS + 2)).toBeNull()
+    expect(parseEstimatorDraft(JSON.stringify({ ...valid, savedAt: 10_000 + ESTIMATOR_DRAFT_MAX_AGE_MS + 1 }), 10_000)).toBeNull()
     expect(parseEstimatorDraft('not-json', 10_000)).toBeNull()
   })
 
@@ -104,6 +105,19 @@ describe('P1 estimator recovery integration guards', () => {
     expect(estimator).toContain('Discard draft')
     expect(estimator).not.toContain('aria-label="Start fresh"')
     expect(estimator).toContain('draft.createdAt')
+  })
+
+  it('keeps the durable browser copy after Resume until an explicit terminal action', () => {
+    const autosave = read('hooks/useAutosave.ts')
+    const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+    const restoreStart = autosave.indexOf('const restoreDraft = useCallback')
+    const restoreEnd = autosave.indexOf('const dismissDraft = useCallback', restoreStart)
+    const restoreImplementation = autosave.slice(restoreStart, restoreEnd)
+
+    expect(restoreImplementation).toContain('latestPersistedDraftRef.current = selected')
+    expect(restoreImplementation).not.toContain('removeDraftIfCurrent(selected)')
+    expect(restoreImplementation).not.toContain('latestPersistedDraftRef.current = null')
+    expect(estimator).toContain('JSON.stringify(data.state) !== JSON.stringify(initialState)')
   })
 
   it('keeps autosave browser-only and leaves saved-costing writes explicit', () => {

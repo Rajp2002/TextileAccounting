@@ -6,7 +6,7 @@ import { COSTING_CALCULATION_VERSION } from './estimator'
 
 export type EstimatorQuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 
-export const ESTIMATOR_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000
+export const ESTIMATOR_DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 export const ESTIMATOR_DRAFT_SCHEMA_VERSION = 1
 export const ESTIMATOR_DRAFT_ESTIMATOR_VERSION = COSTING_CALCULATION_VERSION
 export const ESTIMATOR_DRAFT_DIAGNOSTIC_EVENT = 'weavly:estimator-draft-diagnostic'
