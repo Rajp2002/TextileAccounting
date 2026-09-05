@@ -20,7 +20,7 @@ import {
     upsertBaseWorkerMachineAssignment,
 } from './actions'
 import type { BaseProductionInitialData } from './loaders'
-import { buildWorkerColorMap, DEFAULT_PALETTE, type WorkerPalette } from './worker-colors'
+import { buildWorkerColorMap, DEFAULT_PALETTE } from './worker-colors'
 
 function formatMachineType(value: string) {
     return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())

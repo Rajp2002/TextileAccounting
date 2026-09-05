@@ -36,4 +36,24 @@ describe('CostEstimateTutorial Section Transitions', () => {
         expect(tutorialSource).toContain('isSectionTransition')
         expect(tutorialSource).toContain('border-orange-500/60 shadow-[0_0_0_1px_rgba(249,115,22,0.4),0_0_50px_rgba(249,115,22,0.32)]')
     })
+
+    it('does not re-center the card when moving between fields in the same section (deltaY = 0 when field is in view)', () => {
+        // Prevents jumping up a section and returning when navigating between fields within Section 7
+        expect(tutorialSource).toContain('else if (active.card.offsetHeight <= viewportHeight)')
+        expect(tutorialSource).toContain('never re-center the card; move directly from one field to the next without scrolling')
+        expect(tutorialSource).toContain('deltaY = 0')
+    })
+
+    it('clamps deltaY to actual document scrollable bounds so phantom scroll offsets are never applied at page boundaries', () => {
+        expect(tutorialSource).toContain('maxScrollY')
+        expect(tutorialSource).toContain('maxDeltaDown')
+        expect(tutorialSource).toContain('maxDeltaUp')
+        expect(tutorialSource).toContain('deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))')
+    })
+
+    it('provides temporary bottom scroll padding on data-costing-tutorial-root while tutorial is active', () => {
+        expect(tutorialSource).toContain('data-costing-tutorial-root')
+        expect(tutorialSource).toContain("root.style.paddingBottom = '40vh'")
+    })
 })
+

@@ -76,6 +76,18 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         }
     }, [])
 
+    const isTutorialActive = Boolean(active)
+    useEffect(() => {
+        if (!isTutorialActive) return
+        const root = document.querySelector<HTMLElement>('[data-costing-tutorial-root]')
+        if (!root) return
+        const originalPaddingBottom = root.style.paddingBottom
+        root.style.paddingBottom = '40vh'
+        return () => {
+            root.style.paddingBottom = originalPaddingBottom
+        }
+    }, [isTutorialActive])
+
     useEffect(() => {
         if (!requested || !enabled || languageStatus === 'loading') return
         onPrepare()
@@ -221,15 +233,22 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         if (isNewSection) {
             setIsSectionTransition(true)
             // When entering a new section, frame the top of the card cleanly so the header and initial controls are visible
+            const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
             const targetCardTop = active.card.offsetHeight <= viewportHeight
-                ? Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
+                ? Math.max(centeredTop, minAllowedTop)
                 : minAllowedTop
             deltaY = cardRect.top - targetCardTop
         } else if (active.card.offsetHeight <= viewportHeight) {
-            // Card fits in viewport. Compute default centered top position.
-            const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
-            const targetCardTop = Math.max(centeredTop, minAllowedTop)
-            deltaY = cardRect.top - targetCardTop
+            // Card fits in viewport. When navigating between fields in the same section,
+            // never re-center the card; move directly from one field to the next without scrolling.
+            const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+            if (targetRect.top < minAllowedTargetTop) {
+                deltaY = targetRect.top - minAllowedTargetTop
+            } else if (targetRect.bottom > viewportHeight - 20) {
+                deltaY = targetRect.bottom - (viewportHeight - 20)
+            } else {
+                deltaY = 0
+            }
         } else {
             // Card is taller than viewport. Ensure active field clears modal and remains visible in viewport.
             const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
@@ -239,6 +258,15 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 deltaY = targetRect.bottom - (viewportHeight - 20)
             }
         }
+
+        // Clamp deltaY to the document's actual scrollable limits so we never subtract a phantom scroll distance
+        const maxScrollY = typeof document !== 'undefined'
+            ? Math.max(0, document.documentElement.scrollHeight - viewportHeight)
+            : 0
+        const currentScrollY = typeof window !== 'undefined' ? window.scrollY || window.pageYOffset || 0 : 0
+        const maxDeltaDown = Math.max(0, maxScrollY - currentScrollY)
+        const maxDeltaUp = -currentScrollY
+        deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))
 
         const update = () => {
             setRects({
