@@ -394,7 +394,42 @@ export async function getFactoryCostProfile(options?: { createIfMissing?: boolea
             return { data: withStaff(created) }
     }
 
-    return { data: data ? withStaff(data) : null }
+    let profileData = data
+    if (profileData && !profileData.is_configured) {
+        // If the account has already dismissed the wizard, or already has entries in
+        // the rate book or saved qualities, treat it as configured and heal the database.
+        const wizardDismissed = user.user_metadata?.factory_cost_wizard_dismissed === true
+            || user.user_metadata?.factory_cost_configured === true
+        let shouldMarkConfigured = wizardDismissed
+
+        if (!shouldMarkConfigured) {
+            const { count: rateCount } = await supabase
+                .from('cost_rate_book')
+                .select('id', { count: 'exact', head: true })
+                .eq('org_id', profile.org_id)
+            if ((rateCount ?? 0) > 0) {
+                shouldMarkConfigured = true
+            } else {
+                const { count: templateCount } = await supabase
+                    .from('estimator_templates')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('org_id', profile.org_id)
+                if ((templateCount ?? 0) > 0) {
+                    shouldMarkConfigured = true
+                }
+            }
+        }
+
+        if (shouldMarkConfigured) {
+            profileData = { ...profileData, is_configured: true }
+            void supabase
+                .from('factory_cost_profile')
+                .update({ is_configured: true })
+                .eq('factory_id', profile.org_id)
+        }
+    }
+
+    return { data: profileData ? withStaff(profileData) : null }
 }
 
 // ─── Fixed Workers for Overhead ───────────────────────────────────────────────
@@ -529,10 +564,52 @@ export async function upsertFactoryCostProfile(data: {
         updatedAt = saved.updated_at
     }
 
+    if (user.user_metadata?.factory_cost_wizard_dismissed !== true) {
+        try {
+            await supabase.auth.updateUser({
+                data: { factory_cost_wizard_dismissed: true },
+            })
+        } catch {
+            // Non-fatal: database row is already saved
+        }
+    }
+
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
     revalidatePath('/owner', 'layout')
     return { success: true, updatedAt }
+}
+
+/**
+ * Persists factory cost wizard dismissal at the account level (user_metadata)
+ * and marks the database factory_cost_profile configured so the onboarding
+ * modal never re-appears.
+ */
+export async function dismissFactoryCostWizard(): Promise<{ success: boolean }> {
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (user.user_metadata?.factory_cost_wizard_dismissed !== true) {
+        const { error } = await supabase.auth.updateUser({
+            data: { factory_cost_wizard_dismissed: true },
+        })
+        if (error) return { success: false }
+    }
+
+    try {
+        await supabase
+            .from('factory_cost_profile')
+            .upsert({
+                factory_id: profile.org_id,
+                is_configured: true,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: 'factory_id' })
+    } catch {
+        // Non-fatal: user_metadata already persists dismissal
+    }
+
+    revalidatePath('/owner/estimator')
+    return { success: true }
 }
 
 export async function applyMonthlyDerivedOverhead(data: {

@@ -87,6 +87,7 @@ import {
     updateFabricTemplate,
     getLastQuoteForParty,
     upsertFactoryCostProfile,
+    dismissFactoryCostWizard,
     createMarketRunFromEstimator,
     startPartyOrderFromEstimator,
     archiveTemplate,
@@ -686,16 +687,23 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             // Reset must use the same baseline builder as the first render. Keeping
             // one builder prevents a New Quality action from retaining stale rows,
             // rates, overhead items, or profile defaults from the previous recipe.
-            return buildEstimatorBaseline(
+            const next = buildEstimatorBaseline(
                 profile
                     ? { ...profile, enabled_sections: profile.enabled_sections ?? sections }
                     : { enabled_sections: sections },
                 workers,
             )
+            return {
+                ...next,
+                // Retain configured status if the account was already configured
+                isConfigured: state.isConfigured || next.isConfigured,
+            }
         }
         case 'RESTORE_DRAFT':
             return {
                 ...action.draftState,
+                // A restored draft should never downgrade an already configured account.
+                isConfigured: state.isConfigured || Boolean(action.draftState.isConfigured),
                 overheadItems: makeExpenseItemsManual(action.draftState.overheadItems, action.draftState.loomCount),
             }
         default:
@@ -3056,8 +3064,10 @@ export default function EstimatorClient({
     organizationName,
     initialPartyNames,
     tutorialDismissed,
+    wizardDismissed = false,
 }: {
     tutorialDismissed: boolean
+    wizardDismissed?: boolean
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
     initialWorkers?: FixedWorkerOverhead[]
@@ -3098,11 +3108,16 @@ export default function EstimatorClient({
 
     // Build the initial state synchronously from server-provided data (no loading flash)
     const initialState = useMemo(() => {
-        return buildEstimatorBaseline(initialProfile, initialWorkers ?? [])
+        const effectiveProfile = initialProfile ? {
+            ...initialProfile,
+            is_configured: Boolean(initialProfile.is_configured || wizardDismissed),
+        } : (wizardDismissed ? ({ is_configured: true } as unknown as FactoryCostProfile) : undefined)
+        return buildEstimatorBaseline(effectiveProfile, initialWorkers ?? [])
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []) // Run once — initialProfile is stable
 
     const [state, rawDispatch] = useReducer(estimateReducer, initialState)
+    const currentProfileRef = useRef<FactoryCostProfile | null | undefined>(initialProfile)
     const [loading,   setLoading]   = useState(false)
     const [saving,    setSaving]    = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
@@ -3499,6 +3514,7 @@ export default function EstimatorClient({
             setLoading(true)
             const pRes = await getFactoryCostProfile({ createIfMissing: false })
             if (pRes.data) {
+                currentProfileRef.current = pRes.data
                 setFactoryBaselineUpdatedAt(pRes.data.updated_at ?? null)
                 rawDispatch({
                     type: 'INIT_FROM_PROFILE',
@@ -4212,8 +4228,8 @@ export default function EstimatorClient({
         rawDispatch({
             type: 'RESET',
             data: {
-                profile: initialProfile,
-                sections: initialProfile?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
+                profile: currentProfileRef.current ?? initialProfile,
+                sections: (currentProfileRef.current ?? initialProfile)?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
                 workers: initialWorkers || [],
             },
         })
@@ -4922,12 +4938,24 @@ export default function EstimatorClient({
                     }}>{tx('Undo quality change')}</Button>
                 </div>
             )}
-            {!state.isConfigured && (
+            {!state.isConfigured && !wizardDismissed && (
                 <FactoryCostWizard 
                     initialState={state}
                     initialYarnReviewIntervalDays={Number(initialProfile?.yarn_review_interval_days ?? 90)}
                     canUseFactoryProfiles={canUseProduction}
                     saving={saving}
+                    onDismiss={async () => {
+                        rawDispatch({ type: 'SET', field: 'isConfigured', value: true })
+                        if (currentProfileRef.current) {
+                            currentProfileRef.current = { ...currentProfileRef.current, is_configured: true }
+                        }
+                        try {
+                            await dismissFactoryCostWizard()
+                        } catch {
+                            // Non-fatal
+                        }
+                        toast.info(tx('Factory setup dismissed. You can configure defaults anytime in Settings.'))
+                    }}
                     onComplete={async (data) => {
                         setSaving(true)
                         try {
@@ -4963,6 +4991,14 @@ export default function EstimatorClient({
                                 expectedUpdatedAt:       factoryBaselineUpdatedAt ?? undefined,
                             })
                             if (res.success) {
+                                if (currentProfileRef.current) {
+                                    currentProfileRef.current = {
+                                        ...currentProfileRef.current,
+                                        ...data,
+                                        is_configured: true,
+                                    } as FactoryCostProfile
+                                }
+                                void dismissFactoryCostWizard()
                                 // Update local state and close wizard.
                                 Object.entries(data).filter(([key]) => key !== 'yarnReviewIntervalDays' && key !== 'factoryProfileKey').forEach(([key, val]) => {
                                     rawDispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
