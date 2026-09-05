@@ -808,11 +808,6 @@ function ComponentCountField({
     const parsedDraftValue = parseNumericInput(draftValue, { min: 1 })
     const hasInvalidDraft = draftValue.trim() !== ''
         && (parsedDraftValue === null || !Number.isInteger(parsedDraftValue))
-    const isGhostValue = value === DEFAULT_YARN_COMPONENT_COUNT && draftValue === String(value)
-    const displayValue = isGhostValue ? '' : draftValue
-    const displayPlaceholder = isGhostValue
-        ? formatEstimatorPlaceholder(DEFAULT_YARN_COMPONENT_COUNT)
-        : undefined
 
     return (
         <div className="min-w-0 space-y-1.5">
@@ -831,7 +826,7 @@ function ComponentCountField({
                     min={1}
                     max={MAX_YARN_COMPONENTS}
                     step={1}
-                    value={displayValue}
+                    value={draftValue}
                     onFocus={event => event.currentTarget.select()}
                     onPointerDown={event => {
                         // A pointer press after focus can collapse the selection
@@ -842,7 +837,7 @@ function ComponentCountField({
                         event.currentTarget.focus()
                         event.currentTarget.select()
                     }}
-                    placeholder={displayPlaceholder}
+                    placeholder={String(DEFAULT_YARN_COMPONENT_COUNT)}
                     onChange={event => {
                         const rawValue = event.target.value
                         setDraftValue(rawValue)

@@ -27,13 +27,13 @@ describe('Estimator placeholder clarity', () => {
         expect(estimator).toContain('placeholder="e.g. 5000"')
     })
 
-    it('replaces the default component-count ghost instead of appending to it', () => {
+    it('shows real component count and selects it on focus instead of ghosting 1', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(estimator).toContain('const DEFAULT_YARN_COMPONENT_COUNT = 1')
-        expect(estimator).toContain('const isGhostValue = value === DEFAULT_YARN_COMPONENT_COUNT && draftValue === String(value)')
-        expect(estimator).toContain('value={displayValue}')
-        expect(estimator).toContain('placeholder={displayPlaceholder}')
+        expect(estimator).not.toContain('const isGhostValue = value === DEFAULT_YARN_COMPONENT_COUNT')
+        expect(estimator).toContain('value={draftValue}')
+        expect(estimator).toContain('placeholder={String(DEFAULT_YARN_COMPONENT_COUNT)}')
         expect(estimator).toContain('onPointerDown={event => {')
         expect(estimator).toContain('event.preventDefault()')
     })
