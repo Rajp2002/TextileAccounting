@@ -136,12 +136,16 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     useEffect(() => {
         if (!active) return
         const update = () => setRects({ field: active.target.getBoundingClientRect(), card: active.card.getBoundingClientRect() })
-        active.target.scrollIntoView({ block: 'center', behavior: 'instant' })
-        const target = active.target.getBoundingClientRect()
-        window.scrollBy({ top: target.top - 100, behavior: 'instant' })
+        const viewportHeight = window.innerHeight
+        if (active.card.offsetHeight <= viewportHeight) {
+            active.card.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' })
+        } else {
+            active.target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' })
+        }
         update()
         const observer = new ResizeObserver(update)
         observer.observe(active.card)
+        observer.observe(active.target)
         window.addEventListener('scroll', update, true)
         window.addEventListener('resize', update)
         return () => { observer.disconnect(); window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update) }
@@ -157,7 +161,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" style={rects ? { clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)` } : undefined} />
             {rects && <div className="pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/25" style={{ left: rects.field.left - 4, top: rects.field.top - 4, width: rects.field.width + 8, height: rects.field.height + 8 }} />}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="cost-tour-title" aria-describedby="cost-tour-description" tabIndex={-1}
-                className="absolute bottom-4 left-4 right-4 mx-auto max-h-[45dvh] max-w-xl overflow-y-auto rounded-2xl border border-orange-200 bg-[var(--color-surface)] p-5 text-[var(--color-ink)] shadow-2xl outline-none"
+                className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-5 text-[var(--color-ink)] shadow-2xl outline-none"
                 onKeyDown={event => {
                     if (event.key === 'Escape') { event.preventDefault(); close() }
                     if (event.key === 'Tab') {
@@ -168,16 +172,19 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                     }
                 }}>
                 <div aria-live="polite">
-                    <p className="text-xs font-semibold text-orange-600">{copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))} · {copy.sections[active.section]}</p>
-                    <h2 id="cost-tour-title" className="mt-2 text-lg font-semibold">{copy.fields[active.field].title}</h2>
-                    <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed">{copy.fields[active.field].description}</p>
+                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400">{copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))} · {copy.sections[active.section]}</p>
+                    <h2 id="cost-tour-title" className="mt-2 text-lg font-semibold text-[var(--color-ink)]">{copy.fields[active.field].title}</h2>
+                    <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
                 </div>
                 <p className="mt-3 text-xs text-[var(--color-muted)]">{copy.hint}</p>
-                <progress className="mt-4 h-1 w-full accent-orange-500" max={steps.length} value={index + 1} aria-label={copy.progress} />
-                <div className="mt-3 flex items-center justify-between gap-2">
-                    <Button variant="ghost" onClick={close}>{copy.skip}</Button>
-                    <span className="text-xs text-[var(--color-muted)]">{index + 1}/{steps.length}</span>
-                    <div className="flex gap-2"><Button variant="outline" disabled={index === 0} onClick={() => setIndex(index - 1)}>{copy.back}</Button><Button onClick={() => index === steps.length - 1 ? close() : setIndex(index + 1)}>{index === steps.length - 1 ? copy.finish : copy.next}</Button></div>
+                <progress className="mt-4 h-1.5 w-full accent-orange-500" max={steps.length} value={index + 1} aria-label={copy.progress} />
+                <div className="mt-4 flex items-center justify-between gap-2">
+                    <Button variant="ghost" size="sm" onClick={close}>{copy.skip}</Button>
+                    <span className="text-xs font-medium text-[var(--color-muted)]">{index + 1}/{steps.length}</span>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" disabled={index === 0} onClick={() => setIndex(index - 1)}>{copy.back}</Button>
+                        <Button size="sm" onClick={() => index === steps.length - 1 ? close() : setIndex(index + 1)}>{index === steps.length - 1 ? copy.finish : copy.next}</Button>
+                    </div>
                 </div>
             </div>
         </div>, document.body)}
