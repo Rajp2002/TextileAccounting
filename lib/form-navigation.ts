@@ -185,7 +185,7 @@ export function focusAndSelectInput(
     if (!element) return
 
     if (typeof element.focus === 'function') {
-        element.focus()
+        element.focus({ preventScroll: true })
     }
 
     if (autoSelect && (isInputElement(element) || isTextAreaElement(element))) {

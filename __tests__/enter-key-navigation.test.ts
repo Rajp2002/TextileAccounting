@@ -312,6 +312,24 @@ describe('Form Enter-Key Navigation Engine', () => {
         // Hitting Enter on w1-gst now advances to w2-rate
         const handledNew = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container: container })
         expect(handledNew).toBe(true)
-        expect(w2Rate.focus).toHaveBeenCalled()
+        expect(w2Rate.focus).toHaveBeenCalledWith({ preventScroll: true })
+    })
+
+    it('focuses next element with preventScroll: true to avoid abrupt browser snapping', () => {
+        const input1 = createMockElement({ id: 'input-1' })
+        const input2 = createMockElement({ id: 'input-2' })
+        const container = createMockContainer([input1, input2])
+
+        const enterEvent = {
+            key: 'Enter',
+            target: input1,
+            currentTarget: container,
+            preventDefault: vi.fn(),
+            defaultPrevented: false,
+            isComposing: false,
+        }
+        const handled = handleEnterKeyNavigation(enterEvent as unknown as KeyboardEvent, { container })
+        expect(handled).toBe(true)
+        expect(input2.focus).toHaveBeenCalledWith({ preventScroll: true })
     })
 })

@@ -26,6 +26,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const syncing = useRef(false)
     const autoStarted = useRef(false)
     const [syncFailed, setSyncFailed] = useState(false)
+    const prevSectionRef = useRef<number | null>(null)
+    const [isSectionTransition, setIsSectionTransition] = useState(false)
+    const isScrollingRef = useRef(false)
 
     const syncDismissal = useCallback(async () => {
         if (syncing.current) return
@@ -116,6 +119,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         // Only a retry marker: the account flag is the source of truth.
         try { localStorage.setItem(key, 'done') } catch { /* Still allow dismissal. */ }
         void syncDismissal()
+        prevSectionRef.current = null
+        setIsSectionTransition(false)
         setSteps([])
         setRects(null)
     }, [key, syncDismissal])
@@ -193,7 +198,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
     useEffect(() => {
         if (!active) return
-        const update = () => setRects({ field: active.target.getBoundingClientRect(), card: active.card.getBoundingClientRect() })
+
         const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
         const scrollBehavior = prefersReducedMotion ? 'instant' : 'smooth'
         const viewportHeight = window.innerHeight
@@ -207,51 +212,115 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         const cardRect = active.card.getBoundingClientRect()
         const targetRect = active.target.getBoundingClientRect()
         const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
+        const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
 
-        if (active.card.offsetHeight <= viewportHeight) {
+        const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
+        prevSectionRef.current = active.section
+
+        let deltaY = 0
+        if (isNewSection) {
+            setIsSectionTransition(true)
+            // When entering a new section, frame the top of the card cleanly so the header and initial controls are visible
+            const targetCardTop = active.card.offsetHeight <= viewportHeight
+                ? Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
+                : minAllowedTop
+            deltaY = cardRect.top - targetCardTop
+        } else if (active.card.offsetHeight <= viewportHeight) {
             // Card fits in viewport. Compute default centered top position.
             const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
-            // If the card shares horizontal space with the top-right modal, ensure it clears modalBottom by fixedPadding.
-            const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
             const targetCardTop = Math.max(centeredTop, minAllowedTop)
-            const deltaY = cardRect.top - targetCardTop
-
-            if (Math.abs(deltaY) > 2) {
-                window.scrollBy({ top: deltaY, behavior: scrollBehavior })
-            }
+            deltaY = cardRect.top - targetCardTop
         } else {
             // Card is taller than viewport. Ensure active field clears modal and remains visible in viewport.
             const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
             if (targetRect.top < minAllowedTargetTop) {
-                window.scrollBy({ top: targetRect.top - minAllowedTargetTop, behavior: scrollBehavior })
+                deltaY = targetRect.top - minAllowedTargetTop
             } else if (targetRect.bottom > viewportHeight - 20) {
-                window.scrollBy({ top: targetRect.bottom - (viewportHeight - 20), behavior: scrollBehavior })
+                deltaY = targetRect.bottom - (viewportHeight - 20)
             }
         }
 
-        update()
+        const update = () => {
+            setRects({
+                field: active.target.getBoundingClientRect(),
+                card: active.card.getBoundingClientRect(),
+            })
+        }
 
-        // Sync spotlight cutout continuously during smooth scroll animation
-        let rafId: number
-        const startTime = performance.now()
-        const syncLoop = (now: number) => {
+        if (Math.abs(deltaY) > 2 && scrollBehavior === 'smooth') {
+            isScrollingRef.current = true
+            window.scrollBy({ top: deltaY, behavior: 'smooth' })
+
+            // Set target rects immediately to the expected post-scroll viewport position.
+            // This allows CSS transitions (duration-500) to smoothly morph from the old position
+            // to the new section position without any pre-scroll snap down the screen.
+            const targetCardRect = {
+                left: cardRect.left,
+                right: cardRect.right,
+                width: cardRect.width,
+                height: cardRect.height,
+                top: cardRect.top - deltaY,
+                bottom: cardRect.bottom - deltaY,
+                x: cardRect.x,
+                y: cardRect.y - deltaY,
+                toJSON: () => ({}),
+            } as DOMRect
+
+            const targetFieldRect = {
+                left: targetRect.left,
+                right: targetRect.right,
+                width: targetRect.width,
+                height: targetRect.height,
+                top: targetRect.top - deltaY,
+                bottom: targetRect.bottom - deltaY,
+                x: targetRect.x,
+                y: targetRect.y - deltaY,
+                toJSON: () => ({}),
+            } as DOMRect
+
+            setRects({ field: targetFieldRect, card: targetCardRect })
+
+            const settleTimer = window.setTimeout(() => {
+                isScrollingRef.current = false
+                update()
+                setIsSectionTransition(false)
+            }, isNewSection ? 550 : 350)
+
+            return () => {
+                window.clearTimeout(settleTimer)
+            }
+        } else {
+            if (Math.abs(deltaY) > 2) {
+                window.scrollBy({ top: deltaY, behavior: 'auto' })
+            }
             update()
-            if (now - startTime < 750) {
-                rafId = requestAnimationFrame(syncLoop)
+            if (isNewSection) {
+                setIsSectionTransition(true)
+                const transitionTimer = window.setTimeout(() => setIsSectionTransition(false), 500)
+                return () => window.clearTimeout(transitionTimer)
             }
         }
-        rafId = requestAnimationFrame(syncLoop)
+    }, [active])
 
-        const observer = new ResizeObserver(update)
+    useEffect(() => {
+        if (!active) return
+        const handleManualScrollOrResize = () => {
+            if (!isScrollingRef.current) {
+                setRects({
+                    field: active.target.getBoundingClientRect(),
+                    card: active.card.getBoundingClientRect(),
+                })
+            }
+        }
+        window.addEventListener('scroll', handleManualScrollOrResize, true)
+        window.addEventListener('resize', handleManualScrollOrResize)
+        const observer = new ResizeObserver(handleManualScrollOrResize)
         observer.observe(active.card)
         observer.observe(active.target)
-        window.addEventListener('scroll', update, true)
-        window.addEventListener('resize', update)
         return () => {
-            cancelAnimationFrame(rafId)
+            window.removeEventListener('scroll', handleManualScrollOrResize, true)
+            window.removeEventListener('resize', handleManualScrollOrResize)
             observer.disconnect()
-            window.removeEventListener('scroll', update, true)
-            window.removeEventListener('resize', update)
         }
     }, [active])
 
@@ -262,11 +331,22 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         </div>}
         {enabled && <Button data-i18n-skip="true" lang={language} type="button" variant="ghost" onClick={() => setRequested(true)} disabled={languageStatus === 'loading'}>{copy.replay}</Button>}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300" style={rects ? { clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)` } : undefined} />
+            <div
+                className="absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300"
+                style={{
+                    transition: 'clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
+                    ...(rects ? {
+                        clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)`
+                    } : {})
+                }}
+            />
             {rects && (
                 <div
-                    key={`section-glow-${active.section}`}
-                    className="pointer-events-none fixed rounded-[18px] border-2 border-orange-500/35 shadow-[0_0_0_1px_rgba(249,115,22,0.25),0_0_35px_rgba(249,115,22,0.2)] animate-in fade-in-0 zoom-in-[0.99] duration-500"
+                    className={`pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
+                        isSectionTransition
+                            ? 'border-orange-500/60 shadow-[0_0_0_1px_rgba(249,115,22,0.4),0_0_50px_rgba(249,115,22,0.32)] ring-2 ring-orange-400/25'
+                            : 'border-orange-500/35 shadow-[0_0_0_1px_rgba(249,115,22,0.25),0_0_35px_rgba(249,115,22,0.2)]'
+                    }`}
                     style={{
                         left: rects.card.left - 4,
                         top: rects.card.top - 4,
@@ -277,7 +357,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             )}
             {rects && (
                 <div
-                    className="pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/30 transition-all duration-300 ease-out"
+                    className={`pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/30 transition-all ${
+                        isSectionTransition ? 'duration-500 ease-out' : 'duration-300 ease-out'
+                    }`}
                     style={{
                         left: rects.field.left - 4,
                         top: rects.field.top - 4,
@@ -290,7 +372,11 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none">
                 <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center rounded-md bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold text-orange-600 dark:text-orange-400 ring-1 ring-inset ring-orange-500/25">
+                        <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
+                            isSectionTransition
+                                ? 'bg-orange-500 text-white ring-orange-500 shadow-sm scale-105'
+                                : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 ring-orange-500/25'
+                        }`}>
                             {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
                         </span>
                         <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
