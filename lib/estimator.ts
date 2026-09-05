@@ -273,7 +273,7 @@ export interface OverheadItem {
   isPreset:     boolean
   isLocked:     boolean
   meta?:        OverheadItemMeta
-  source:       'manual' | 'fixed_worker_derived'
+  source:       'manual' | 'fixed_worker_derived' | 'base_salary_derived'
   workerId?:    number        // fixed_workers.id — present only for derived items
 }
 

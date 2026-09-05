@@ -150,6 +150,7 @@ export default function BaseAssignmentWorkspace({
     )
 
     const visibleWorkers = useMemo(() => initialData.workers.filter((worker) => {
+        if (worker.pay_type === 'fixed_monthly') return false
         if (!showInactive && !worker.is_active) return false
         const isAvailable = worker.shift_availability === 'both' || worker.shift_availability === shift
         if (!isAvailable && !assignmentByWorker.has(worker.id)) return false

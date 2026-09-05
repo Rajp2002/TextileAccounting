@@ -211,7 +211,7 @@ export default function BaseDailyProductionSheet({
     const sheetWorkers = useMemo(() => {
         const savedWorkerIds = new Set([...currentBatchEntries.map((entry) => entry.worker_id), ...(currentBatch?.machine_records ?? []).map(record => record.worker_id)])
         return initialData.workers.filter((worker) => (
-            (worker.is_active && (worker.shift_availability === 'both' || worker.shift_availability === shift))
+            (worker.pay_type !== 'fixed_monthly' && worker.is_active && (worker.shift_availability === 'both' || worker.shift_availability === shift))
             || savedWorkerIds.has(worker.id)
             || assignedWorkerIds.has(worker.id)
         ))

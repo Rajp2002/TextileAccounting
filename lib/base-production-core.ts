@@ -2,6 +2,7 @@ import Decimal from 'decimal.js'
 import type { BaseMachineRecord } from './base-machine-register'
 
 import { calculateAdvanceRecovery } from './finance'
+import { calculateBaseSalaryLines, type BaseSalaryRate, type BaseSalaryLine } from './base-salary'
 
 export const BASE_PAYROLL_DEDUCTION_PERCENT = 50
 
@@ -78,6 +79,14 @@ export type BaseProductionBatchRevision = {
 }
 
 export type BaseProductionWorker = {
+    updated_at?: string
+    pay_type?: 'piece_rate' | 'fixed_monthly'
+    role?: string
+    monthly_salary?: number
+    salary_effective_from?: string | null
+    salary_history?: BaseSalaryRate[]
+    start_date?: string | null
+    end_date?: string | null
     id: string
     name: string
     rate_per_meter: number
@@ -205,18 +214,21 @@ export type BasePayrollSettlementLine = {
     meters: number
     worker_rate_snapshot: number
     gross_pay: number
-    source_kind: 'legacy_entry' | 'worker_total' | 'machine_allocation'
+    source_kind: 'legacy_entry' | 'worker_total' | 'machine_allocation' | 'fixed_salary'
 }
 
 export type BaseJobSummary = {
     produced_meters: number
     remaining_meters: number
+    excess_meters: number
     progress_percent: number
     planned_cost_total: number
     planned_value_total: number
 }
 
 export type BaseWorkerPayable = {
+    pay_type?: 'piece_rate' | 'fixed_monthly'
+    salary_lines?: BaseSalaryLine[]
     worker_id: string
     worker_name: string
     period_start: string
@@ -286,6 +298,7 @@ export function calculateBaseJobSummary(
         )
     const target = Decimal.max(0, toDecimal(job.target_meters))
     const remaining = Decimal.max(0, target.minus(produced))
+    const excess = Decimal.max(0, produced.minus(target))
     const progress = target.gt(0)
         ? Decimal.min(100, produced.div(target).times(100))
         : new Decimal(0)
@@ -293,6 +306,7 @@ export function calculateBaseJobSummary(
     return {
         produced_meters: toRoundedNumber(produced),
         remaining_meters: toRoundedNumber(remaining),
+        excess_meters: toRoundedNumber(excess),
         progress_percent: toRoundedNumber(progress),
         planned_cost_total: toRoundedNumber(target.times(toDecimal(job.planned_cost_per_meter))),
         planned_value_total: toRoundedNumber(target.times(toDecimal(job.planned_price_per_meter))),
@@ -409,13 +423,17 @@ export function calculateBaseWorkerPayables({
     }
 
     return workers.map((worker) => {
-        const periodStart = getWorkerPeriodStart(worker.id, activeSettlements, periodEnd, entries)
+        const lastPaid = activeSettlements.filter(item => item.worker_id === worker.id && item.period_end < periodEnd).sort((a, b) => b.period_end.localeCompare(a.period_end))[0]
+        const periodStart = worker.pay_type === 'fixed_monthly'
+            ? lastPaid ? new Date(new Date(`${lastPaid.period_end}T00:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10) : worker.start_date ?? periodEnd
+            : getWorkerPeriodStart(worker.id, activeSettlements, periodEnd, entries)
+        const salaryLines = calculateBaseSalaryLines(worker, periodStart, periodEnd)
         const periodEntries = entries.filter((entry) => (
             entry.worker_id === worker.id
             && entry.production_date >= periodStart
             && entry.production_date <= periodEnd
         ))
-        const gross = periodEntries.reduce(
+        const gross = worker.pay_type === 'fixed_monthly' ? salaryLines.reduce((total, line) => total.plus(line.grossPay), new Decimal(0)) : periodEntries.reduce(
             (total, entry) => total.plus(
                 entry.allocation_mode === 'machine_breakdown'
                     ? calculateBaseEntryGrossDecimal(entry, allocationsByEntry.get(entry.id) ?? [])
@@ -448,6 +466,8 @@ export function calculateBaseWorkerPayables({
         const netPayout = paidSettlement ? toBaseNumber(paidSettlement.net_payout) : toRoundedNumber(Decimal.max(0, gross.minus(advanceRecovery)))
 
         return {
+            pay_type: worker.pay_type ?? 'piece_rate',
+            salary_lines: salaryLines,
             worker_id: worker.id,
             worker_name: worker.name,
             period_start: paidSettlement?.period_start ?? periodStart,

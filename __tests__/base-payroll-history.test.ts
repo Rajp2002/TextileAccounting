@@ -76,7 +76,8 @@ describe('Base payroll records', () => {
     it('exports detailed machine and advance columns', () => {
         const csv = buildBasePayrollHistoryCsv(buildBasePayrollHistory(settlements, lines)[0])
 
-        expect(csv).toContain('Weaver Rate per Metre')
+        expect(csv).toContain('Rate Unit')
+        expect(csv).toContain('per metre')
         expect(csv).toContain('Advance Balance Before')
         expect(csv).toContain('Ramesh,Loom #1,Cotton Navy,6.75,200,1350')
     })

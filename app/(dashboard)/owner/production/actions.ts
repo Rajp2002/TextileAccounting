@@ -19,6 +19,12 @@ function revalidatePath(path: string) {
 }
 
 const BaseWorkerSchema = z.object({
+    payType: z.enum(['piece_rate', 'fixed_monthly']).default('piece_rate'),
+    role: z.string().trim().max(80).default(''),
+    monthlySalary: z.number().finite().min(0).max(10_000_000).default(0),
+    startDate: DateSchema.optional().or(z.literal('')),
+    endDate: DateSchema.optional().or(z.literal('')),
+    salaryEffectiveFrom: DateSchema.optional().or(z.literal('')),
     name: z.string().trim().min(1, 'Worker name is required').max(120, 'Worker name is too long'),
     shiftAvailability: z.enum(['day', 'night', 'both']),
     isActive: z.boolean().default(true),
@@ -26,7 +32,25 @@ const BaseWorkerSchema = z.object({
 
 const UpdateWorkerSchema = BaseWorkerSchema.extend({
     workerId: UuidSchema,
+    expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
 })
+
+type BaseWorkerCompensationInput = {
+    payType?: 'piece_rate' | 'fixed_monthly'
+    role?: string
+    monthlySalary?: number
+    startDate?: string
+    endDate?: string
+    salaryEffectiveFrom?: string
+}
+
+function validateWorkerCompensation(data: z.infer<typeof BaseWorkerSchema>) {
+    if (data.payType !== 'fixed_monthly') return null
+    if (!data.startDate || data.monthlySalary <= 0) return 'Enter a joining date and a positive monthly salary.'
+    if (data.endDate && data.endDate < data.startDate) return 'Last working day cannot be before joining date.'
+    if (!data.isActive && !data.endDate) return 'Enter the last working day before making salaried staff inactive.'
+    return null
+}
 
 const BaseJobSchema = z.object({
     costingId: UuidSchema,
@@ -422,8 +446,15 @@ export async function saveBaseDailyProductionBatch(input: {
             })),
         })),
     })
-
-    if (error) return databaseError(error, error.code === '40001' ? 'This shift changed in another session. Reload the saved version before correcting it; your local draft is retained.' : error.code === '23503' ? 'The worker, machine, or job no longer matches the dated Setup. Review Setup before saving this correction; your local draft is retained.' : 'The daily production sheet could not be saved. Please try again.')
+    if (error) {
+        if (error.code === '40001') {
+            return databaseError(error, 'This shift changed in another session. Reload the saved version before correcting it; your local draft is retained.')
+        }
+        if (error.code === '23503') {
+            return databaseError(error, 'The worker, machine, or job no longer matches the dated Setup. Review Setup before saving this correction; your local draft is retained.')
+        }
+        return databaseError(error, error.message || 'The daily production sheet could not be saved. Please try again.')
+    }
 
     const startedJobIds = [...new Set(
         parsed.data.entries.flatMap((entry) => entry.allocations
@@ -450,13 +481,15 @@ export async function saveBaseDailyProductionBatch(input: {
     return { success: true, summary: data }
 }
 
-export async function createBaseProductionWorker(input: {
+export async function createBaseProductionWorker(input: BaseWorkerCompensationInput & {
     name: string
     shiftAvailability: 'day' | 'night' | 'both'
 }) {
     const { user, profile } = await requireBaseProductionOwner()
     const parsed = safeParse(BaseWorkerSchema, { ...input, isActive: true })
     if ('error' in parsed) return parsed
+    const compensationError = validateWorkerCompensation(parsed.data)
+    if (compensationError) return { error: compensationError }
 
     const supabase = await createServerClient()
     const { data: duplicate, error: duplicateError } = await supabase
@@ -475,6 +508,11 @@ export async function createBaseProductionWorker(input: {
             org_id: profile.org_id,
             name: parsed.data.name,
             rate_per_meter: 0,
+            pay_type: parsed.data.payType,
+            role: parsed.data.role,
+            monthly_salary: parsed.data.monthlySalary,
+            start_date: parsed.data.startDate || null,
+            salary_effective_from: parsed.data.startDate || null,
             shift_availability: parsed.data.shiftAvailability,
             is_active: true,
             created_by: user.id,
@@ -486,10 +524,13 @@ export async function createBaseProductionWorker(input: {
     revalidatePath('/owner/production')
     revalidatePath('/owner/payroll')
     revalidatePath('/owner/operations')
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner/estimator')
     return { success: true }
 }
 
-export async function updateBaseProductionWorker(input: {
+export async function updateBaseProductionWorker(input: BaseWorkerCompensationInput & {
+    expectedUpdatedAt?: string
     workerId: string
     name: string
     shiftAvailability: 'day' | 'night' | 'both'
@@ -498,25 +539,41 @@ export async function updateBaseProductionWorker(input: {
     const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(UpdateWorkerSchema, input)
     if ('error' in parsed) return parsed
+    const compensationError = validateWorkerCompensation(parsed.data)
+    if (compensationError) return { error: compensationError }
 
     const supabase = await createServerClient()
-    const { error } = await supabase
+    if (parsed.data.payType === 'fixed_monthly' && !parsed.data.expectedUpdatedAt) return { error: 'Reload staff before updating salary details.' }
+    let update = supabase
         .from('base_production_workers')
         .update({
             name: parsed.data.name,
             shift_availability: parsed.data.shiftAvailability,
+            pay_type: parsed.data.payType,
+            role: parsed.data.role,
+            monthly_salary: parsed.data.monthlySalary,
+            start_date: parsed.data.startDate || null,
+            end_date: parsed.data.endDate || null,
+            salary_effective_from: parsed.data.salaryEffectiveFrom || null,
             is_active: parsed.data.isActive,
             updated_at: new Date().toISOString(),
         })
         .eq('org_id', profile.org_id)
         .eq('id', parsed.data.workerId)
 
+    if (parsed.data.expectedUpdatedAt) update = update.eq('updated_at', parsed.data.expectedUpdatedAt)
+    const { data: updated, error } = await update.select('id').maybeSingle()
+
     if (error?.code === '23505') return { error: 'A worker with this name already exists.' }
+    if (error?.code === '22023' || error?.code === '23514') return { error: error.message }
     if (error) return databaseError(error, 'Worker could not be updated. Please try again.')
+    if (!updated) return { error: 'Worker details changed in another tab. Reload before saving.' }
 
     revalidatePath('/owner/production')
     revalidatePath('/owner/payroll')
     revalidatePath('/owner/operations')
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner/estimator')
     return { success: true }
 }
 

@@ -1,0 +1,5 @@
+BASELINE: []
+POST-EXPORT: []
+FINAL: []
+Network-request failure enumeration: not exposed by the available in-app Browser API.
+Screenshot capture: unavailable; Browser reported inability to capture screenshots.

@@ -1,0 +1,35 @@
+{
+  "run_id": "BASEQA-20260823-R01",
+  "target": "https://textile-accounting.vercel.app",
+  "viewports": {
+    "390x844": {
+      "routes_checked": [
+        "/owner/estimator",
+        "/owner/rates",
+        "/owner/quotes",
+        "/owner/settings",
+        "/owner/billing",
+        "/owner/data-export"
+      ],
+      "document_width": 390,
+      "body_width": 390,
+      "horizontal_overflow": false,
+      "saved_costing_dialog_width": 360,
+      "saved_costing_dialog_overflow": false,
+      "version_breakdown_loaded": true,
+      "base_navigation_visible": true,
+      "console_errors_or_warnings": []
+    },
+    "320x844": {
+      "routes_checked": ["/owner/estimator"],
+      "document_width": 320,
+      "body_width": 320,
+      "horizontal_overflow": false,
+      "navigation_dialog_width": 271,
+      "navigation_dialog_overflow": false,
+      "destructive_action_completed": false
+    }
+  },
+  "result": "PASS",
+  "viewport_reset_after_test": true
+}

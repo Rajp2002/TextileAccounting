@@ -7,6 +7,10 @@ import { revalidatePath } from 'next/cache'
 import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, ensureOverheadIntegrity, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { getFirstEstimatorValidationMessage, requiresFactoryCapacity, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
 import crypto from 'crypto'
+import { readCompleteBaseRows } from '@/lib/base-complete-query'
+import { currentBaseMonthlySalary, mergeBaseSalaryOverhead, readBaseSalaryHistory } from '@/lib/base-salary'
+import type { BaseProductionWorker } from '@/lib/base-production-core'
+import { getSuratTodayString } from '@/lib/time'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { getCachedOrgTier, getOrgTier, tierSatisfies } from '@/lib/subscription'
@@ -330,6 +334,23 @@ export async function getFactoryCostProfile(options?: { createIfMissing?: boolea
 
     if (error) return { error: error.message }
 
+    const staffResult = await readCompleteBaseRows((from, to) => supabase.from('base_production_workers')
+        .select('id, name, role, pay_type, is_active, monthly_salary, start_date, end_date, salary_history', from === 0 ? { count: 'exact' } : {})
+        .eq('org_id', profile.org_id).eq('pay_type', 'fixed_monthly').order('id').range(from, to))
+    if (staffResult.error) return { error: 'Staff salary overhead could not be loaded. Please refresh and try again.' }
+    const staff: BaseProductionWorker[] = (staffResult.data ?? []).map(row => ({ ...row,
+        pay_type: 'fixed_monthly', rate_per_meter: 0, shift_availability: 'both', salary_history: readBaseSalaryHistory(row.salary_history),
+    }))
+    const withStaff = (costProfile: NonNullable<typeof data>) => {
+        const today = getSuratTodayString()
+        const items = mergeBaseSalaryOverhead(ensureOverheadIntegrity(costProfile.overhead_items ?? []), staff, today)
+        return { ...costProfile, overhead_items: items,
+            overhead_override_per_m: staff.length && costProfile.overhead_mode === 'monthly_expenses'
+                ? deriveCostingOverheadPerMetre(items, Number(costProfile.monthly_output_m)) : costProfile.overhead_override_per_m,
+            base_salary_staff: staff.filter(worker => currentBaseMonthlySalary(worker, today) > 0).map(worker => ({ id: worker.id, name: worker.name, monthlySalary: currentBaseMonthlySalary(worker, today) })),
+        }
+    }
+
     // Page reads may opt out of the legacy first-visit bootstrap write. This
     // keeps a GET/read path read-only while settings' explicit profile editor
     // can retain the compatibility behavior when it intentionally requests it.
@@ -370,10 +391,10 @@ export async function getFactoryCostProfile(options?: { createIfMissing?: boolea
             .single()
 
             if (createError) return { error: createError.message }
-            return { data: created }
+            return { data: withStaff(created) }
     }
 
-    return { data }
+    return { data: data ? withStaff(data) : null }
 }
 
 // ─── Fixed Workers for Overhead ───────────────────────────────────────────────
@@ -572,7 +593,7 @@ export async function applyMonthlyDerivedOverhead(data: {
         })
         .eq('factory_id', profile.org_id)
         .eq('updated_at', data.expectedUpdatedAt)
-        .select('updated_at')
+        .select('updated_at, overhead_items, overhead_override_per_m')
         .maybeSingle()
 
     if (error) return { error: error.message }
@@ -581,7 +602,7 @@ export async function applyMonthlyDerivedOverhead(data: {
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
     revalidatePath('/owner', 'layout')
-    return { success: true as const, updatedAt: updated.updated_at, derivedOverheadPerMetre }
+    return { success: true as const, updatedAt: updated.updated_at, expenses: updated.overhead_items as OverheadItem[], derivedOverheadPerMetre: Number(updated.overhead_override_per_m) }
 }
 
 // ─── Estimator Templates ──────────────────────────────────────────────────────

@@ -57,3 +57,5 @@ next-env.d.ts
 scripts/sql/
 supabase/.temp/
 scratch/
+.playwright-cli/
+tmp/

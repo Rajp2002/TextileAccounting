@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 type CalculatorView = 'summary' | 'edit' | 'confirm'
 
 type MonthlyOverheadCalculatorProps = {
+    salaryStaff?: Array<{ id: string; name: string; monthlySalary: number }>
     open: boolean
     onOpenChange: (open: boolean) => void
     savedItems: OverheadItem[]
@@ -52,6 +53,7 @@ function cloneItems(items: OverheadItem[]) {
 }
 
 export function MonthlyOverheadCalculator({
+    salaryStaff = [],
     open,
     onOpenChange,
     savedItems,
@@ -99,7 +101,7 @@ export function MonthlyOverheadCalculator({
     }
 
     const updateItem = (id: string, field: 'label' | 'monthlyAmount', value: string | number) => {
-        setItems(current => current.map(item => item.id === id ? { ...item, [field]: value } : item))
+        setItems(current => current.map(item => item.id === id && item.source !== 'base_salary_derived' ? { ...item, [field]: value } : item))
         setError(null)
     }
 
@@ -280,6 +282,7 @@ export function MonthlyOverheadCalculator({
                                                 step="0.01"
                                                 value={amountDrafts[item.id] ?? item.monthlyAmount}
                                                 aria-invalid={invalidAmountIds.includes(item.id) || undefined}
+                                                readOnly={item.source === 'base_salary_derived'}
                                                 onChange={event => updateAmount(item.id, event.target.value)}
                                                 className="h-10 pl-7 pr-12 text-right font-mono"
                                             />
@@ -307,6 +310,11 @@ export function MonthlyOverheadCalculator({
                                 ))}
                             </div>
 
+                            {items.some(item => item.source === 'base_salary_derived') && <details className="rounded-lg border border-hairline bg-canvas p-3 text-sm">
+                                <summary className="cursor-pointer font-semibold">Fixed staff salaries · automatically linked ({salaryStaff.length})</summary>
+                                <p className="mt-2 text-xs text-body">This replaces the manual staff-salary row. Edit salaries in Setup. Do not repeat these salaries under Other Expenses. Advance recovery does not reduce this monthly budget.</p>
+                                <ul className="mt-2 space-y-1">{salaryStaff.map(worker => <li key={worker.id} className="flex justify-between gap-3"><span>{worker.name}</span><span>{formatMoney(worker.monthlySalary)}/month</span></li>)}</ul>
+                            </details>}
                             <Button type="button" variant="outline" size="sm" className="gap-2" onClick={addOtherExpense}>
                                 <Plus className="h-4 w-4" aria-hidden="true" /> {tx('Add Other Expense')}
                             </Button>

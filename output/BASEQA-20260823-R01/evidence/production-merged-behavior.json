@@ -1,0 +1,11 @@
+{
+  "run_id": "BASEQA-20260823-R01",
+  "canonical_url": "https://textile-accounting.vercel.app",
+  "merged_repository_head": "2f89ecc08f3cc15402c788650263c9896ea1122a",
+  "live_behavior_signals": {
+    "p1_draft_recovery": "Recovery banner appeared after refresh and restored the disposable draft.",
+    "p2_version_selection": "Canonical Saved Costings UI showed clarified multi-version copy and View breakdown actions for v1 and v2.",
+    "console_errors_or_warnings_during_mobile_run": []
+  },
+  "exact_vercel_deployment_id_to_commit_mapping": "UNVERIFIED: public alias and available workspace tooling did not expose the current commit identity."
+}

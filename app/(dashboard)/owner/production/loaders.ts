@@ -3,6 +3,7 @@ import 'server-only'
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { readBaseRevisionEntries } from '@/lib/base-production-audit'
 import { readMachineRecords } from '@/lib/base-machine-register'
+import { readBaseSalaryHistory } from '@/lib/base-salary'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
@@ -146,7 +147,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_production_workers')
-            .select('id, name, rate_per_meter, shift_availability, is_active', from === 0 ? { count: 'exact' } : {})
+            .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('is_active', { ascending: false })
             .order('name')
@@ -291,6 +292,14 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     }))
 
     const workers: BaseProductionWorker[] = rawWorkers.map((row) => ({
+        updated_at: String(row.updated_at),
+        pay_type: row.pay_type === 'fixed_monthly' ? 'fixed_monthly' : 'piece_rate',
+        role: String(row.role ?? ''),
+        monthly_salary: toBaseNumber(row.monthly_salary),
+        salary_effective_from: toStringOrNull(row.salary_effective_from),
+        salary_history: readBaseSalaryHistory(row.salary_history),
+        start_date: toStringOrNull(row.start_date),
+        end_date: toStringOrNull(row.end_date),
         id: String(row.id),
         name: String(row.name || 'Unnamed worker'),
         rate_per_meter: toBaseNumber(row.rate_per_meter),
@@ -345,7 +354,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         meters: toBaseNumber(row.meters),
         worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
         gross_pay: toBaseNumber(row.gross_pay),
-        source_kind: row.source_kind === 'machine_allocation' || row.source_kind === 'worker_total'
+        source_kind: row.source_kind === 'machine_allocation' || row.source_kind === 'worker_total' || row.source_kind === 'fixed_salary'
             ? row.source_kind
             : 'legacy_entry',
     }))

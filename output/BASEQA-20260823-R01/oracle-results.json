@@ -1,0 +1,23 @@
+{
+  "run_id": "BASEQA-20260823-R01",
+  "status": "INSUFFICIENT_EVIDENCE",
+  "approved_tolerance": "±0.15",
+  "approval_basis": "Product-owner attestation that formula/costing logic was tested across multiple qualities and remained within the approved tolerance.",
+  "truth_sheet_artifact_attached": false,
+  "application_runtime_observations": {
+    "weft_rate_movement": {
+      "old_rate_inr_per_kg": 250,
+      "new_rate_inr_per_kg": 260,
+      "recorded_cost_delta_inr_per_m": 0.57,
+      "recorded_price_delta_inr_per_m": 0.64
+    },
+    "monthly_output_movement": {
+      "old_output_m": 54000,
+      "new_output_m": 60000,
+      "recorded_overhead_delta_inr_per_m": -1.15,
+      "recorded_production_cost_delta_inr_per_m": -1.14,
+      "recorded_price_delta_inr_per_m": -1.28
+    }
+  },
+  "interpretation": "The product-owner attestation and runtime/database observations support the stated tolerance, but the handoff requires an independently approved truth-sheet artifact. The underlying truth-sheet artifact was not attached, so formula validation remains INSUFFICIENT_EVIDENCE."
+}

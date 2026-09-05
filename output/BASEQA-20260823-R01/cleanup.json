@@ -1,0 +1,47 @@
+{
+  "run_id": "BASEQA-20260823-R01",
+  "status": "COMPLETED_WITH_RETAINED_ARCHIVE_EVIDENCE",
+  "restored_settings": {
+    "monthly_output_m": 54000,
+    "default_margin_percent": 10,
+    "overhead_mode": "monthly_expenses"
+  },
+  "archived_disposable_records": {
+    "rates": [
+      "BASEQA-20260823-R01-WARP",
+      "BASEQA-20260823-R01-WEFT"
+    ],
+    "costing_snapshots": [1, 2, 3],
+    "follow_up_diagnostic_snapshot": {
+      "quality_label": "BASEQA-20260823-R01-P2-SINGLE",
+      "snapshot_id": "1071d966-e5d7-4607-aca0-56eb76c890c9",
+      "is_archived": true,
+      "quality_removed_from_active_lists": true
+    },
+    "favorite_state_removed": true
+  },
+  "post_cleanup_counts": {
+    "run_rates_active": 0,
+    "run_snapshots_active": 0,
+    "run_snapshots_archived": 4,
+    "main_run_snapshots_archived": 3,
+    "follow_up_diagnostic_snapshots_archived": 1,
+    "run_rate_history_rows_retained": 8,
+    "active_subscriptions": 1,
+    "captured_payments": 1,
+    "captured_amount_inr": 8260,
+    "organization_export_runs": 4
+  },
+  "residuals": [
+    "Archived disposable rate and costing history remains by product retention design.",
+    "Active Saved Costings shows a derived run-prefixed saved-recipe tile with zero active snapshots; Archived view contains the retained three-snapshot card."
+  ],
+  "safety_confirmations": {
+    "new_account_created": false,
+    "new_organization_created": false,
+    "real_payment_created": false,
+    "real_notification_sent": false,
+    "subscription_changed": false,
+    "credentials_changed": false
+  }
+}

@@ -311,7 +311,7 @@ export class BasePayrollPdfRenderer {
     private setDocumentProperties() {
         this.doc.setProperties({
             title: `${this.data.factoryName} — Payroll Settlement Register (${this.data.periodRangeLabel})`,
-            subject: 'Official piece-rate earning snapshots and payroll settlement ledger',
+            subject: 'Official earning snapshots and payroll settlement ledger',
             author: this.data.factoryName,
             creator: 'Weavly (Operational Factory OS)',
         })
@@ -416,7 +416,7 @@ export class BasePayrollPdfRenderer {
         this.doc.setFont('helvetica', 'normal')
         this.doc.setFontSize(8)
         this.doc.setTextColor(...PDF_THEME.colors.textMutedRgb)
-        this.doc.text('Piece-rate earning snapshots & settlement ledger', this.left, y)
+        this.doc.text('Earning snapshots & settlement ledger', this.left, y)
 
         // Generated timestamp
         this.doc.text(`Generated: ${this.data.generatedAtLabel}`, this.right, y, { align: 'right' })
@@ -554,7 +554,7 @@ export class BasePayrollPdfRenderer {
     }
 
     /** Earnings Table Column Header Row */
-    private drawEarningsTableHeader(y: number) {
+    private drawEarningsTableHeader(y: number, isSalary = false) {
         const h = 16
         this.doc.setFillColor(...PDF_THEME.colors.surfaceMutedRgb)
         this.doc.rect(this.left, y, this.contentWidth, h, 'F')
@@ -574,10 +574,10 @@ export class BasePayrollPdfRenderer {
         // Col 3: Production (x: left + 320, right aligned)
         // Col 4: Rate (x: left + 410, right aligned)
         // Col 5: Gross (x: right - 8, right aligned)
-        this.doc.text('MACHINE / LOOM', this.left + 8, y + 11)
-        this.doc.text('FABRIC QUALITY / COSTING', this.left + 105, y + 11)
+        this.doc.text(isSalary ? 'PAY BASIS' : 'MACHINE / LOOM', this.left + 8, y + 11)
+        this.doc.text(isSalary ? 'SALARY PERIOD' : 'FABRIC QUALITY / COSTING', this.left + 105, y + 11)
         this.doc.text('PRODUCTION', this.left + 320, y + 11, { align: 'right' })
-        this.doc.text('WEAVER RATE', this.left + 410, y + 11, { align: 'right' })
+        this.doc.text('PAY RATE', this.left + 410, y + 11, { align: 'right' })
         this.doc.text('GROSS EARNINGS', this.right - 8, y + 11, { align: 'right' })
 
         return y + h
@@ -585,6 +585,7 @@ export class BasePayrollPdfRenderer {
 
     /** Worker Settlement Block */
     private drawWorkerSection(worker: BasePayrollHistoryWorker, index: number) {
+        const isSalary = worker.earnings.some(earning => earning.payType === 'fixed_monthly')
         const workerName = sanitizePdfText(worker.workerName, `Worker #${index + 1}`)
 
         // Worker Orphan Rule:
@@ -654,13 +655,14 @@ export class BasePayrollPdfRenderer {
         this.currentY = y
 
         // 2. Earnings Table Header
-        y = this.drawEarningsTableHeader(y)
+        y = this.drawEarningsTableHeader(y, isSalary)
         this.currentY = y
 
         // 3. Earning Rows (with continuation support)
         const earnings = worker.earnings.length > 0 ? worker.earnings : [
             {
                 machineId: null,
+                payType: 'piece_rate' as const,
                 machineLabel: 'General',
                 costingLabel: 'Weaving Wages',
                 rate: 0,
@@ -687,7 +689,7 @@ export class BasePayrollPdfRenderer {
                 this.doc.setTextColor(...PDF_THEME.colors.navyRgb)
                 this.doc.text(`${workerName} (Continued)`, this.left, this.currentY + 10)
                 this.currentY += 16
-                this.currentY = this.drawEarningsTableHeader(this.currentY)
+                this.currentY = this.drawEarningsTableHeader(this.currentY, isSalary)
             })
 
             y = this.currentY
@@ -714,8 +716,8 @@ export class BasePayrollPdfRenderer {
             this.doc.text(costingLines, this.left + 105, y + 11)
 
             // Right-aligned numbers (tabular)
-            this.doc.text(formatPdfMeters(earning.meters), this.left + 320, y + 11, { align: 'right' })
-            this.doc.text(formatPdfRate(earning.rate), this.left + 410, y + 11, { align: 'right' })
+            this.doc.text(earning.payType === 'fixed_monthly' ? '-' : formatPdfMeters(earning.meters), this.left + 320, y + 11, { align: 'right' })
+            this.doc.text(earning.payType === 'fixed_monthly' ? `${formatPdfINR(earning.rate)}/mo` : formatPdfRate(earning.rate), this.left + 410, y + 11, { align: 'right' })
 
             this.doc.setFont('helvetica', 'bold')
             this.doc.setTextColor(...PDF_THEME.colors.navyRgb)
@@ -738,10 +740,10 @@ export class BasePayrollPdfRenderer {
         this.doc.setFont('helvetica', 'bold')
         this.doc.setFontSize(7.5)
         this.doc.setTextColor(...PDF_THEME.colors.textMutedRgb)
-        this.doc.text('Cumulative worker production', this.left + 8, y + 11)
+        this.doc.text(isSalary ? 'Total salary earnings' : 'Cumulative worker production', this.left + 8, y + 11)
 
         this.doc.setTextColor(...PDF_THEME.colors.navyRgb)
-        this.doc.text(formatPdfMeters(worker.meters), this.left + 320, y + 11, { align: 'right' })
+        this.doc.text(isSalary ? '-' : formatPdfMeters(worker.meters), this.left + 320, y + 11, { align: 'right' })
 
         this.doc.setFontSize(7.5)
         this.doc.setTextColor(...PDF_THEME.colors.textMutedRgb)

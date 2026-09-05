@@ -69,6 +69,7 @@ describe('Base Production Core calculations', () => {
 
         expect(summary.produced_meters).toBe(115)
         expect(summary.remaining_meters).toBe(0)
+        expect(summary.excess_meters).toBe(15)
         expect(summary.progress_percent).toBe(100)
         expect(summary.planned_cost_total).toBe(2000)
         expect(summary.planned_value_total).toBe(3000)
@@ -257,12 +258,17 @@ describe('Base Production Core calculations', () => {
             { id: 'job-a', target_meters: 160, planned_cost_per_meter: 10, planned_price_per_meter: 12 },
             [dailyEntry],
             allocations,
-        )).toMatchObject({ produced_meters: 160, remaining_meters: 0, progress_percent: 100 })
+        )).toMatchObject({ produced_meters: 160, remaining_meters: 0, excess_meters: 0, progress_percent: 100 })
+        expect(calculateBaseJobSummary(
+            { id: 'job-a', target_meters: 100, planned_cost_per_meter: 10, planned_price_per_meter: 12 },
+            [dailyEntry],
+            allocations,
+        )).toMatchObject({ produced_meters: 160, remaining_meters: 0, excess_meters: 60, progress_percent: 100 })
         expect(calculateBaseJobSummary(
             { id: 'job-b', target_meters: 320, planned_cost_per_meter: 10, planned_price_per_meter: 12 },
             [dailyEntry],
             allocations,
-        )).toMatchObject({ produced_meters: 160, remaining_meters: 160, progress_percent: 50 })
+        )).toMatchObject({ produced_meters: 160, remaining_meters: 160, excess_meters: 0, progress_percent: 50 })
     })
 
     it('starts a new payable period after a prior settlement', () => {
@@ -330,7 +336,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(hardeningMigration).toContain('CREATE SCHEMA IF NOT EXISTS private')
         expect(hardeningMigration).toContain('private.base_production_core_access')
         expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION public.base_production_core_access(uuid)')
-        expect(client).toContain('Pay uses each machine allocation’s saved weaver rate.')
+        expect(client).toContain('Piece-rate pay uses saved machine rates.')
         expect(client).not.toContain('outside the current Lite and Base catalog')
         expect(client).toContain('No advance to recover. Full gross pay is due this period.')
         expect(client).not.toContain('Up to {formatINR(payable.max_advance_recovery')
