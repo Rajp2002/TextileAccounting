@@ -847,7 +847,7 @@ function ComponentCountField({
                         }
                     }}
                     onBlur={() => commitValue(draftValue)}
-                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] pr-24 text-center text-xs font-semibold text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
+                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] pr-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
                 />
                 <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[var(--color-muted)]">
                     {unit}
