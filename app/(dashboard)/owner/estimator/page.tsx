@@ -25,11 +25,15 @@ export default async function EstimatorPage() {
     // initialPartyNames={partiesRes.data ?? []} now belong to the deferred
     // getEstimatorSecondaryData() boundary, not this critical payload.
 
+    const wizardDismissed = user.user_metadata?.factory_cost_wizard_dismissed === true
+        || user.user_metadata?.factory_cost_configured === true
+
     return <EstimatorClient
         initialProfile={profileRes.data}
         initialTemplates={undefined}
         initialWorkers={undefined}
         tutorialDismissed={user.user_metadata?.cost_estimate_tutorial_dismissed === true}
+        wizardDismissed={wizardDismissed}
         userId={user.id}
         orgId={profile.org_id}
         canUseProduction={canUseProduction}

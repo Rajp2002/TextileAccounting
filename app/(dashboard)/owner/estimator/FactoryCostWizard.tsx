@@ -9,7 +9,8 @@ import {
     CheckCircle2, 
     Settings2,
     Building2,
-    Briefcase
+    Briefcase,
+    X
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,7 @@ interface FactoryCostWizardProps {
     initialYarnReviewIntervalDays: number
     canUseFactoryProfiles: boolean
     onComplete: (data: FactoryCostWizardData) => Promise<void>
+    onDismiss?: () => void
     saving: boolean
 }
 
@@ -53,7 +55,7 @@ function getFactoryDefaultValue(label: string, initialState: EstimateState): num
     }
 }
 
-export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, canUseFactoryProfiles, onComplete, saving }: FactoryCostWizardProps) {
+export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, canUseFactoryProfiles, onComplete, onDismiss, saving }: FactoryCostWizardProps) {
     const [step, setStep] = useState<'intro' | 'profile' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
     const [validationError, setValidationError] = useState<string | null>(null)
@@ -286,7 +288,17 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                     exit="exit"
                     className="w-full max-w-lg"
                 >
-                    <Card className="border-none shadow-2xl overflow-hidden bg-white/95 backdrop-blur-xl">
+                    <Card className="border-none shadow-2xl overflow-hidden bg-white/95 backdrop-blur-xl relative">
+                        {onDismiss && (
+                            <button
+                                type="button"
+                                onClick={onDismiss}
+                                aria-label="Close setup wizard"
+                                className="absolute top-3.5 right-3.5 z-20 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        )}
                         {/* Progress Bar */}
                         <div className="h-1.5 w-full bg-slate-100 flex">
                             <div 
@@ -322,13 +334,24 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 : 'Weavly is set up for grey fabric weaving. Enter your actual factory expenses and rates to calculate a trustworthy ₹/m cost.'}
                                         </p>
                                     </div>
-                                    <Button 
-                                        onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')}
-                                        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all shadow-lg shadow-indigo-200"
-                                    >
-                                        Get Started
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
+                                    <div className="space-y-2">
+                                        <Button 
+                                            onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')}
+                                            className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all shadow-lg shadow-indigo-200"
+                                        >
+                                            Get Started
+                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Button>
+                                        {onDismiss && (
+                                            <button
+                                                type="button"
+                                                onClick={onDismiss}
+                                                className="w-full text-center text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors pt-1"
+                                            >
+                                                Skip for now · I&apos;ve already set this up
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
