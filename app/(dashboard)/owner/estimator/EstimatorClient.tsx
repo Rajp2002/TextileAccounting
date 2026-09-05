@@ -847,7 +847,7 @@ function ComponentCountField({
                         }
                     }}
                     onBlur={() => commitValue(draftValue)}
-                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] pr-24 text-center text-xs font-semibold text-[var(--color-ink)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
+                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] pr-24 text-center text-xs font-semibold text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
                 />
                 <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[var(--color-muted)]">
                     {unit}
@@ -987,12 +987,8 @@ function StepperField({
     const decrement = () => onChange(Math.max(0, Number((value - step).toFixed(2))))
     const increment = () => onChange(Number((value + step).toFixed(2)))
     const isGhostValue = ghostValue !== undefined && value === ghostValue
-    const placeholderClass = placeholderKind === 'applied-default'
-        ? 'placeholder:text-[var(--color-yarn-orange)]'
-        : 'placeholder:text-[var(--color-muted)]'
-    const valueClass = placeholderKind === 'applied-default'
-        ? 'text-[var(--color-yarn-orange)]'
-        : 'text-[var(--color-ink)]'
+    const placeholderClass = 'placeholder:text-[var(--color-muted)]'
+    const valueClass = 'text-[var(--color-yarn-orange)]'
     return (
         <div className="min-w-0 space-y-2">
             <Label className={`block text-[11px] font-semibold uppercase tracking-[0.05em] ${accentStyles.text}`}>
@@ -1013,6 +1009,13 @@ function StepperField({
                     placeholder={isGhostValue ? formatEstimatorPlaceholder(ghostPlaceholder ?? ghostValue, placeholderKind) : undefined}
                     step={step}
                     min={0}
+                    onFocus={event => event.currentTarget.select()}
+                    onPointerDown={event => {
+                        if (event.currentTarget === document.activeElement) return
+                        event.preventDefault()
+                        event.currentTarget.focus()
+                        event.currentTarget.select()
+                    }}
                     onChange={e => {
                         const next = parseNonNegativeInput(e.target.value)
                         if (next !== null) onChange(next)
@@ -1044,19 +1047,20 @@ function NumField({
     onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean; ghostValue?: number; placeholderKind?: EstimatorPlaceholderKind
 }) {
     const inputId = useId()
+    const [focused, setFocused] = useState(false)
+    const [draftText, setDraftText] = useState<string | null>(null)
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     // Estimator defaults are stored as numeric zero for calculations, but an
     // empty control with a zero placeholder is a better editing experience:
     // the first digit typed replaces the visual default instead of appending
     // to it (for example, entering 55 must never appear as 055).
     const isGhostValue = ghostValue !== undefined && value === ghostValue
-    const displayValue = isGhostValue || (value === 0 && !preserveZero) ? '' : (value ?? '')
+    const calculatedDisplayValue = isGhostValue || (value === 0 && !preserveZero) ? '' : (value ?? '')
+    const displayValue = focused && draftText !== null ? draftText : calculatedDisplayValue
     const displayPlaceholder = isGhostValue || (value === 0 && !preserveZero)
         ? formatEstimatorPlaceholder(placeholder ?? (ghostValue !== undefined ? String(ghostValue) : '0'), placeholderKind)
         : placeholder
-    const placeholderClass = placeholderKind === 'applied-default'
-        ? 'placeholder:text-[var(--color-yarn-orange)]'
-        : 'placeholder:text-[var(--color-muted)]'
+    const placeholderClass = 'placeholder:text-[var(--color-muted)]'
     return (
         <div className="space-y-1.5 min-w-0" data-estimator-field={fieldKey}>
             <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
@@ -1071,8 +1075,25 @@ function NumField({
                     min={min}
                     placeholder={displayPlaceholder}
                     value={displayValue}
+                    onFocus={event => {
+                        setFocused(true)
+                        setDraftText(null)
+                        event.currentTarget.select()
+                    }}
+                    onPointerDown={event => {
+                        if (event.currentTarget === document.activeElement) return
+                        event.preventDefault()
+                        event.currentTarget.focus()
+                        event.currentTarget.select()
+                    }}
+                    onBlur={() => {
+                        setFocused(false)
+                        setDraftText(null)
+                    }}
                     onChange={e => {
-                        const val = parseNumericInput(e.target.value, { min })
+                        const raw = e.target.value
+                        setDraftText(raw)
+                        const val = parseNumericInput(raw, { min })
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-10 sm:pr-14 border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
@@ -2025,7 +2046,7 @@ function LayerNameField({
                 placeholder={displayPlaceholder}
                 onChange={e => onChange(e.target.value)}
                 className={`h-11 rounded-[9px] border font-semibold placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
-                    value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
+                    value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
                 }`}
             />
             {!value?.trim() && <p className="text-[10px] text-[var(--color-warning-amber)]">Required</p>}
@@ -2491,7 +2512,7 @@ function WeavingRateFields({
                                 if (inputMode === 'perMeter') event.currentTarget.select()
                             }}
                             aria-invalid={isRateEmpty || undefined}
-                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold text-[var(--color-warning-amber)] placeholder:text-[var(--color-muted)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                            className={`h-11 rounded-[9px] border pr-16 text-center text-xs font-semibold placeholder:text-[var(--color-muted)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                         />
                         <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
                             {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
@@ -2644,7 +2665,7 @@ function QuickCostingView({
                         onChange={value => dispatch({ type: 'SET', field: 'warpCrimpPct', value: value ?? 0 })}
                         unit="%"
                         step={0.5}
-                        ghostValue={DEFAULT_WARP_CRIMP_PCT}
+                        preserveZero
                         placeholder={String(DEFAULT_WARP_CRIMP_PCT)}
                         hint="Applied to warp consumption and beam planning."
                     />
@@ -5961,8 +5982,6 @@ export default function EstimatorClient({
                                     label="Warp Crimp (Take-up)"
                                     value={state.warpCrimpPct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })}
-                                    ghostValue={DEFAULT_WARP_CRIMP_PCT}
-                                    ghostPlaceholder={String(DEFAULT_WARP_CRIMP_PCT)}
                                     hint="Beam shrink relative to tape length"
                                     accent="warp"
                                 />
@@ -6517,7 +6536,7 @@ export default function EstimatorClient({
                                                         onChange={e => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: parseNonNegativeInput(e.target.value) })}
                                                         aria-label="Direct factory overhead per metre"
                                                         aria-invalid={state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 || undefined}
-                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                                                     />
                                                 </div>
                                             </div>
@@ -6627,7 +6646,7 @@ export default function EstimatorClient({
                                                                                 value={item.monthlyAmount === 0 ? '' : item.monthlyAmount}
                                                                                 placeholder="e.g. 25,000"
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium text-[var(--color-yarn-orange)] placeholder:text-[var(--color-muted)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                             />
                                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--color-muted)] font-medium pointer-events-none">/mo</span>
                                                                         </div>
@@ -6658,7 +6677,7 @@ export default function EstimatorClient({
                                                                 placeholder="e.g. 90,000"
                                                                 onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                 aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
-                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                                                             />
                                                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m/mo</span>
                                                         </div>
