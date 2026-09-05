@@ -109,7 +109,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         return () => { window.clearTimeout(timer); observer?.disconnect() }
     }, [requested, enabled, onPrepare, languageStatus])
 
-    function close() {
+    const close = useCallback(() => {
         tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
         tutorialRows.current = []
         dismissed.current = true
@@ -118,7 +118,20 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         void syncDismissal()
         setSteps([])
         setRects(null)
-    }
+    }, [key, syncDismissal])
+
+    const handleNext = useCallback(() => {
+        if (!steps.length) return
+        if (index === steps.length - 1) {
+            close()
+        } else {
+            setIndex(i => Math.min(steps.length - 1, i + 1))
+        }
+    }, [close, index, steps.length])
+
+    const handleBack = useCallback(() => {
+        setIndex(i => Math.max(0, i - 1))
+    }, [])
 
     useEffect(() => {
         if (!active) return
@@ -135,20 +148,111 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
     useEffect(() => {
         if (!active) return
-        const update = () => setRects({ field: active.target.getBoundingClientRect(), card: active.card.getBoundingClientRect() })
-        const viewportHeight = window.innerHeight
-        if (active.card.offsetHeight <= viewportHeight) {
-            active.card.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' })
-        } else {
-            active.target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' })
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                event.preventDefault()
+                close()
+                return
+            }
+            if (event.key === 'Enter') {
+                const activeEl = document.activeElement
+                // If focus is specifically on a non-next control (e.g. Back or Skip button), let native click handle it
+                if (activeEl instanceof HTMLButtonElement && activeEl.dataset.tourControl !== 'next') {
+                    return
+                }
+                event.preventDefault()
+                handleNext()
+                return
+            }
+            if (event.key === 'ArrowRight') {
+                event.preventDefault()
+                handleNext()
+                return
+            }
+            if (event.key === 'ArrowLeft') {
+                event.preventDefault()
+                handleBack()
+                return
+            }
+            if (event.key === 'Tab') {
+                const buttons = Array.from(panel.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+                if (!buttons.length) return
+                const first = buttons[0], last = buttons[buttons.length - 1]
+                if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
+                    event.preventDefault()
+                    last.focus()
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault()
+                    first.focus()
+                }
+            }
         }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [active, handleNext, handleBack, close])
+
+    useEffect(() => {
+        if (!active) return
+        const update = () => setRects({ field: active.target.getBoundingClientRect(), card: active.card.getBoundingClientRect() })
+        const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        const scrollBehavior = prefersReducedMotion ? 'instant' : 'smooth'
+        const viewportHeight = window.innerHeight
+        const fixedPadding = 20
+
+        // Measure explainer modal boundaries to adaptively prevent overlap
+        const panelRect = panel.current?.getBoundingClientRect()
+        const modalBottom = panelRect ? panelRect.bottom : 220
+        const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
+
+        const cardRect = active.card.getBoundingClientRect()
+        const targetRect = active.target.getBoundingClientRect()
+        const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
+
+        if (active.card.offsetHeight <= viewportHeight) {
+            // Card fits in viewport. Compute default centered top position.
+            const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
+            // If the card shares horizontal space with the top-right modal, ensure it clears modalBottom by fixedPadding.
+            const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+            const targetCardTop = Math.max(centeredTop, minAllowedTop)
+            const deltaY = cardRect.top - targetCardTop
+
+            if (Math.abs(deltaY) > 2) {
+                window.scrollBy({ top: deltaY, behavior: scrollBehavior })
+            }
+        } else {
+            // Card is taller than viewport. Ensure active field clears modal and remains visible in viewport.
+            const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+            if (targetRect.top < minAllowedTargetTop) {
+                window.scrollBy({ top: targetRect.top - minAllowedTargetTop, behavior: scrollBehavior })
+            } else if (targetRect.bottom > viewportHeight - 20) {
+                window.scrollBy({ top: targetRect.bottom - (viewportHeight - 20), behavior: scrollBehavior })
+            }
+        }
+
         update()
+
+        // Sync spotlight cutout continuously during smooth scroll animation
+        let rafId: number
+        const startTime = performance.now()
+        const syncLoop = (now: number) => {
+            update()
+            if (now - startTime < 750) {
+                rafId = requestAnimationFrame(syncLoop)
+            }
+        }
+        rafId = requestAnimationFrame(syncLoop)
+
         const observer = new ResizeObserver(update)
         observer.observe(active.card)
         observer.observe(active.target)
         window.addEventListener('scroll', update, true)
         window.addEventListener('resize', update)
-        return () => { observer.disconnect(); window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update) }
+        return () => {
+            cancelAnimationFrame(rafId)
+            observer.disconnect()
+            window.removeEventListener('scroll', update, true)
+            window.removeEventListener('resize', update)
+        }
     }, [active])
 
     return <>
@@ -158,32 +262,58 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         </div>}
         {enabled && <Button data-i18n-skip="true" lang={language} type="button" variant="ghost" onClick={() => setRequested(true)} disabled={languageStatus === 'loading'}>{copy.replay}</Button>}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" style={rects ? { clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)` } : undefined} />
-            {rects && <div className="pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/25" style={{ left: rects.field.left - 4, top: rects.field.top - 4, width: rects.field.width + 8, height: rects.field.height + 8 }} />}
+            <div className="absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300" style={rects ? { clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)` } : undefined} />
+            {rects && (
+                <div
+                    key={`section-glow-${active.section}`}
+                    className="pointer-events-none fixed rounded-[18px] border-2 border-orange-500/35 shadow-[0_0_0_1px_rgba(249,115,22,0.25),0_0_35px_rgba(249,115,22,0.2)] animate-in fade-in-0 zoom-in-[0.99] duration-500"
+                    style={{
+                        left: rects.card.left - 4,
+                        top: rects.card.top - 4,
+                        width: rects.card.width + 8,
+                        height: rects.card.height + 8,
+                    }}
+                />
+            )}
+            {rects && (
+                <div
+                    className="pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/30 transition-all duration-300 ease-out"
+                    style={{
+                        left: rects.field.left - 4,
+                        top: rects.field.top - 4,
+                        width: rects.field.width + 8,
+                        height: rects.field.height + 8,
+                    }}
+                />
+            )}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="cost-tour-title" aria-describedby="cost-tour-description" tabIndex={-1}
-                className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-5 text-[var(--color-ink)] shadow-2xl outline-none"
-                onKeyDown={event => {
-                    if (event.key === 'Escape') { event.preventDefault(); close() }
-                    if (event.key === 'Tab') {
-                        const buttons = Array.from(panel.current!.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'))
-                        const first = buttons[0], last = buttons[buttons.length - 1]
-                        if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { event.preventDefault(); last.focus() }
-                        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
-                    }
-                }}>
-                <div aria-live="polite">
-                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400">{copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))} · {copy.sections[active.section]}</p>
-                    <h2 id="cost-tour-title" className="mt-2 text-lg font-semibold text-[var(--color-ink)]">{copy.fields[active.field].title}</h2>
-                    <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
+                className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none">
+                <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
+                    <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center rounded-md bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold text-orange-600 dark:text-orange-400 ring-1 ring-inset ring-orange-500/25">
+                            {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
+                        </span>
+                        <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
+                    </div>
+                    <h2 id="cost-tour-title" className="mt-1.5 text-base sm:text-lg font-semibold text-[var(--color-ink)]">{copy.fields[active.field].title}</h2>
+                    <p id="cost-tour-description" className="mt-1 text-sm leading-relaxed text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
                 </div>
-                <p className="mt-3 text-xs text-[var(--color-muted)]">{copy.hint}</p>
-                <progress className="mt-4 h-1.5 w-full accent-orange-500" max={steps.length} value={index + 1} aria-label={copy.progress} />
-                <div className="mt-4 flex items-center justify-between gap-2">
-                    <Button variant="ghost" size="sm" onClick={close}>{copy.skip}</Button>
+                <p className="mt-2.5 text-xs text-[var(--color-muted)]">{copy.hint}</p>
+                <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
+                    <div
+                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300 ease-out"
+                        style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
+                    />
+                </div>
+                <div className="mt-3.5 flex items-center justify-between gap-2">
+                    <Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>{copy.skip}</Button>
                     <span className="text-xs font-medium text-[var(--color-muted)]">{index + 1}/{steps.length}</span>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" disabled={index === 0} onClick={() => setIndex(index - 1)}>{copy.back}</Button>
-                        <Button size="sm" onClick={() => index === steps.length - 1 ? close() : setIndex(index + 1)}>{index === steps.length - 1 ? copy.finish : copy.next}</Button>
+                        <Button variant="outline" size="sm" data-tour-control="back" disabled={index === 0} onClick={handleBack}>{copy.back}</Button>
+                        <Button size="sm" data-tour-control="next" onClick={handleNext} className="group gap-1.5 font-medium shadow-sm transition-all">
+                            <span>{index === steps.length - 1 ? copy.finish : copy.next}</span>
+                            <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/25 bg-white/20 px-1 text-[10px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
+                        </Button>
                     </div>
                 </div>
             </div>
