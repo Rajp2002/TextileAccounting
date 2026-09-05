@@ -417,54 +417,32 @@ export function getWorkerPalette(index: number): WorkerPalette {
     return WORKER_PALETTES[index % WORKER_PALETTES.length]
 }
 
-function hashString(str: string): number {
-    let hash = 0x811c9dc5
-    for (let i = 0; i < str.length; i++) {
-        hash ^= str.charCodeAt(i)
-        hash = Math.imul(hash, 0x01000193)
-    }
-    return hash >>> 0
-}
-
-function mulberry32(seed: number) {
-    return function () {
-        let t = (seed += 0x6d2b79f5)
-        t = Math.imul(t ^ (t >>> 15), t | 1)
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-    }
-}
-
 /**
- * Assigns each worker a unique random color from the 50 matte palettes.
- * Guarantees that no two workers share the same color (drawing without replacement).
- * Uses a deterministic PRNG seeded by worker IDs so color assignments remain stable
- * across re-renders, searches, and shift changes with zero hydration mismatches.
+ * Assigns each worker a unique, high-contrast color from the 50 matte palettes.
+ * Guarantees that no two workers share the same color.
+ * The palette is strictly ordered to maximize perceptual hue distance between workers:
+ * - Worker 0: Dusty Saffron (Warm Orange)
+ * - Worker 1: Slate Denim (Cool Ocean Blue)
+ * - Worker 2: Muted Sage (Factory Green)
+ * - Worker 3: Heather Mulberry (Mulberry Purple)
+ * - Worker 4: Golden Ochre (Warm Gold)
+ * - Worker 5: Mineral Celadon (Slate Teal)
+ * - Worker 6: Dusty Rose (Crimson Rose)
+ * - Worker 7: Steel Slate (Loom Slate)
+ * - Worker 8: Muted Rust (Burnt Sienna)
+ * - Worker 9: Warm Bark (Flax Taupe)
+ * This guarantees that small sets of workers (e.g. 2, 3, 4, 5...) never receive similar
+ * hues (preventing two purples or two greens on the same board).
  */
 export function buildWorkerColorMap(workers: { id: string }[]): Map<string, WorkerPalette> {
     const map = new Map<string, WorkerPalette>()
     if (workers.length === 0) return map
 
-    // Deterministic pseudo-random seed from worker IDs
-    const seed = hashString('weavly-worker-palettes:' + workers.map((w) => w.id).sort().join(':'))
-    const rng = mulberry32(seed)
-
-    // Create a random permutation of the 50 palette indices (Fisher-Yates shuffle)
-    const deck = Array.from({ length: WORKER_PALETTES.length }, (_, i) => i)
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1))
-        const temp = deck[i]
-        deck[i] = deck[j]
-        deck[j] = temp
-    }
-
-    // Sort workers by ID so assignment order is deterministic regardless of query order
-    const sortedWorkers = [...workers].sort((a, b) => a.id.localeCompare(b.id))
-    sortedWorkers.forEach((worker, index) => {
-        const paletteIndex = deck[index % deck.length]
-        map.set(worker.id, WORKER_PALETTES[paletteIndex])
+    workers.forEach((worker, index) => {
+        map.set(worker.id, getWorkerPalette(index))
     })
 
     return map
 }
+
 

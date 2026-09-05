@@ -40,8 +40,8 @@ describe('BaseAssignmentWorkspace connector color styling', () => {
         expect(getWorkerPalette(-1)).toBe(DEFAULT_PALETTE)
     })
 
-    it('assigns random colors where NO two workers share the same color', () => {
-        // Test with 3 sample workers (like deep, Ramesh, ramu)
+    it('assigns maximally separated high-contrast colors so no two workers look the same', () => {
+        // Test with 3 sample workers from the factory: deep, Ramesh, ramu
         const sampleWorkers = [
             { id: 'w1', name: 'deep' },
             { id: 'w2', name: 'Ramesh' },
@@ -50,9 +50,13 @@ describe('BaseAssignmentWorkspace connector color styling', () => {
         const colorMap3 = buildWorkerColorMap(sampleWorkers)
         expect(colorMap3.size).toBe(3)
 
+        // Worker 0 is Orange, Worker 1 is Blue, Worker 2 is Green
+        expect(colorMap3.get('w1')?.name).toBe('Dusty Saffron') // Orange
+        expect(colorMap3.get('w2')?.name).toBe('Slate Denim')   // Blue
+        expect(colorMap3.get('w3')?.name).toBe('Muted Sage')     // Green
+
         const colors3 = sampleWorkers.map(w => colorMap3.get(w.id)?.stroke)
         const uniqueColors3 = new Set(colors3)
-        // Every worker has a color, and all 3 are distinct
         expect(uniqueColors3.size).toBe(3)
 
         // Test with 50 workers — guarantees 0 collisions across all 50 workers
