@@ -1,0 +1,145 @@
+{
+  "run_id": "BASEQA-20260823-R01",
+  "scope": "Existing supplied paid Base owner account only",
+  "deployment": {
+    "canonical_url": "https://textile-accounting.vercel.app",
+    "supplied_deployment_id": "dpl_GhgzwmYnBr4p4CLKMZw2nzERidLg",
+    "supplied_commit": "a00d7b70832dcde92fabe54cc47f7ad2c1077f90",
+    "local_head_matched_supplied_commit": true,
+    "canonical_alias_reachable": true,
+    "unique_deployment_url_directly_verifiable": false,
+    "unique_url_limitation": "Vercel SSO protected"
+  },
+  "baseline": {
+    "role": "owner",
+    "organization_display_name": "Base pilot testing",
+    "product_experience": "base",
+    "onboarding_complete": true,
+    "subscription_plan_tier": "base",
+    "subscription_status": "active",
+    "paid_through_ist": "2027-08-03",
+    "active_subscription_count": 1,
+    "captured_payment_count": 1,
+    "captured_payment_amount_inr": 8260,
+    "rate_book_total": 9,
+    "rate_book_active": 5,
+    "rate_book_archived": 4,
+    "rate_history_total": 16,
+    "estimator_quotes_total": 12,
+    "estimator_quotes_active": 10,
+    "estimator_quotes_archived": 2,
+    "costing_group_count": 5,
+    "export_run_count": 3,
+    "monthly_output_m": 54000,
+    "monthly_expenses_inr": 620000,
+    "default_margin_percent": 10,
+    "browser_default_viewport": "1280x720",
+    "browser_console_baseline": []
+  },
+  "runtime_records": {
+    "rates": [
+      {
+        "name": "BASEQA-20260823-R01-WARP",
+        "id": "ac416631-dbb1-4e61-ae10-5ff43aafd1af",
+        "initial_value_inr_per_kg": 230,
+        "final_value_inr_per_kg": 230,
+        "final_is_active": false
+      },
+      {
+        "name": "BASEQA-20260823-R01-WEFT",
+        "id": "67e140d4-cb2d-4b90-bcce-10a9634b7e2f",
+        "initial_value_inr_per_kg": 245,
+        "movement_values_inr_per_kg": [250, 260],
+        "final_value_inr_per_kg": 260,
+        "final_is_active": false
+      }
+    ],
+    "costing_lineage": {
+      "quality_label": "BASEQA-20260823-R01-GREY-150D",
+      "costing_group_id": "9fa872cc-1a32-4b15-bcf6-dc6aecd3e4fa",
+      "versions": [
+        {
+          "version": 1,
+          "id": "c69306c6-e14d-4e8f-957e-5e9681e7d636",
+          "production_cost_inr_per_m": 49.15,
+          "suggested_price_inr_per_m": 54.61,
+          "monthly_output_m": 54000,
+          "is_archived": true,
+          "is_favorite": false
+        },
+        {
+          "version": 2,
+          "id": "8f14fd01-a050-410f-b2b8-449333b55637",
+          "production_cost_inr_per_m": 49.72,
+          "suggested_price_inr_per_m": 55.25,
+          "monthly_output_m": 54000,
+          "is_archived": true,
+          "is_favorite": false
+        },
+        {
+          "version": 3,
+          "id": "b45cd2f7-41d7-4e76-b1ad-0a335020fca4",
+          "production_cost_inr_per_m": 48.58,
+          "suggested_price_inr_per_m": 53.97,
+          "monthly_output_m": 60000,
+          "is_archived": true,
+          "is_favorite": false
+        }
+      ]
+    }
+  },
+  "organization_export": {
+    "artifact": "exports/weavly-org-export-20260822215739932.json",
+    "database_status": "generated",
+    "database_export_run_count_after": 4,
+    "organization_reference_count": 1,
+    "non_redacted_exact_sensitive_values": 0,
+    "redacted_field_count_declared": 17,
+    "console_errors_or_warnings_after_export": []
+  },
+  "follow_up_version_selection_check": {
+    "single_version_quality": {
+      "quality_label": "BASEQA-20260823-R01-P2-SINGLE",
+      "snapshot_id": "1071d966-e5d7-4607-aca0-56eb76c890c9",
+      "single_version_auto_displayed_breakdown": true,
+      "final_is_archived": true
+    },
+    "multi_version_quality": {
+      "quality_label": "BASEE2E-20260811-0030-GV01-GREY-150D",
+      "snapshot_count": 2,
+      "initial_history_dialog_required_version_selection": true,
+      "explicit_open_v1_loaded_full_breakdown": true,
+      "explicit_open_v2_loaded_full_breakdown": true,
+      "archive_restore_used": false,
+      "classification": "Engineered version-selection behavior; misleading copy reclassified as P3 UX improvement"
+    }
+  },
+  "billing_after_cleanup": {
+    "active_subscription_count": 1,
+    "captured_payment_count": 1,
+    "captured_payment_amount_inr": 8260,
+    "new_payment_created": false,
+    "subscription_changed": false
+  },
+  "cleanup": {
+    "factory_monthly_output_restored_m": 54000,
+    "run_rate_history_rows_retained": 8,
+    "run_rates_active_after_cleanup": 0,
+    "run_snapshots_active_after_cleanup": 0,
+    "run_snapshots_archived_after_cleanup": 4,
+    "main_run_snapshots_archived_after_cleanup": 3,
+    "follow_up_diagnostic_snapshots_archived_after_cleanup": 1,
+    "permanent_delete_supported_by_ui": false,
+    "retained_archived_evidence": true,
+    "new_account_created": false,
+    "real_payment_created": false,
+    "real_notification_sent": false
+  },
+  "limitations": [
+    "Formula PASS is based on product-owner attestation of multi-quality validation within ±0.15; truth-sheet artifact not attached",
+    "390x844 and 320x844 viewport override did not apply",
+    "Exact browser version and service-worker state not exposed",
+    "Browser screenshot capture unavailable",
+    "Fresh-account, second-role, cross-tenant, referral-conversion, destructive-account, and live-payment boundaries blocked by authorization"
+  ]
+}

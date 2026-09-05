@@ -18,7 +18,7 @@ function formatDateOnly(value: string) {
 }
 
 export default function BasePayrollReadinessPanel({ readiness }: { readiness: BasePayrollReadiness }) {
-    const hasProduction = readiness.verifiedLineCount > 0 || readiness.issueCount > 0
+    const hasProduction = readiness.verifiedLineCount > 0 || readiness.issueCount > 0 || readiness.salaryLineCount > 0
     const hasIssues = readiness.issueCount > 0
 
     return (
@@ -35,7 +35,7 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                                 {hasIssues
                                     ? `${readiness.issueCount} production ${readiness.issueCount === 1 ? 'issue needs' : 'issues need'} attention before payment.`
                                     : hasProduction
-                                        ? 'Every current production line is included in worker pay.'
+                                        ? readiness.salaryLineCount > 0 ? 'Dated staff salaries and saved production are included in worker pay.' : 'Every current production line is included in worker pay.'
                                         : 'No production has been recorded since the latest settlement.'}
                             </CardDescription>
                         </div>
@@ -49,10 +49,12 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
             {hasProduction && (
                 <CardContent className="space-y-3 border-t border-current/10 pt-4">
                     <div className="grid grid-cols-3 divide-x divide-hairline rounded-lg border border-hairline bg-surface/75 py-2 text-center">
-                        <Metric label="Verified" value={readiness.verifiedLineCount} />
+                        <Metric label="Verified earnings" value={readiness.verifiedLineCount + readiness.salaryLineCount} />
                         <Metric label="Machine lines" value={readiness.machineLineCount} />
                         <Metric label="Ready workers" value={readiness.readyWorkerCount} />
                     </div>
+
+                    {readiness.salaryLineCount > 0 && <p className="text-xs text-body">{readiness.salaryLineCount} salary {readiness.salaryLineCount === 1 ? 'segment' : 'segments'} included. Fixed staff do not need production entries.</p>}
 
                     {readiness.legacyLineCount > 0 && (
                         <div className="flex items-start gap-2 rounded-lg border border-hairline bg-surface/70 px-3 py-2.5 text-xs text-body">

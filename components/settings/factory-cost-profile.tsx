@@ -170,6 +170,7 @@ const DEFAULT_OPTIONAL_OPEN: Record<OptionalSectionKey, boolean> = {
 export function FactoryCostProfile({ className, standaloneEstimator = false }: { className?: string; standaloneEstimator?: boolean }) {
     const { tx } = useTranslation()
     const [loading, setLoading]   = useState(true)
+    const [salaryStaff, setSalaryStaff] = useState<Array<{ id: string; name: string; monthlySalary: number }>>([])
     const [loadError, setLoadError] = useState<string | null>(null)
     const [saving, setSaving]     = useState(false)
     const [activePreset, setActivePreset] = useState<FactoryProfileId | null>(null)
@@ -263,6 +264,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                     || Number(d.avg_output_per_loom_per_day ?? 0) <= 0
                 ))
             setDirectOverheadPerM(Number(d.overhead_override_per_m ?? 0))
+            setSalaryStaff(d.base_salary_staff ?? [])
             setOverheadItems(ensureMonthlyOverheadPresetCoverage(ensureOverheadIntegrity(
                 Array.isArray(d.overhead_items) && d.overhead_items.length > 0
                     ? d.overhead_items
@@ -524,7 +526,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
             }
 
             const sourceChanged = lastSavedOverheadMode !== 'monthly_expenses'
-            setOverheadItems(expenses)
+            setOverheadItems(res.expenses ?? expenses)
             setMonthlyOutputM(standardMonthlyProductionMetres)
             setOverheadMode('monthly_expenses')
             setLastSavedOverheadMode('monthly_expenses')
@@ -1066,6 +1068,7 @@ export function FactoryCostProfile({ className, standaloneEstimator = false }: {
                 open
                 onOpenChange={setMonthlyCalculatorOpen}
                 savedItems={overheadItems}
+                salaryStaff={salaryStaff}
                 savedStandardProductionMetres={monthlyOutputM}
                 currentOverheadPerMetre={currentOverheadPerM}
                 initialView={overheadMode === 'direct' && hasSavedMonthlyConfiguration ? 'summary' : 'edit'}

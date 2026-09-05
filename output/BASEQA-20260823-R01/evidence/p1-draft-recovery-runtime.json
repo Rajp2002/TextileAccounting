@@ -1,0 +1,17 @@
+{
+  "run_id": "BASEQA-20260823-R01",
+  "target": "https://textile-accounting.vercel.app/owner/estimator",
+  "source_commit_under_verification": "2f89ecc08f3cc15402c788650263c9896ea1122a",
+  "disposable_input": "BASEQA-20260823-R01-DRAFT-FIX2",
+  "steps": [
+    "Entered the disposable quality name and allowed local autosave to settle.",
+    "Refreshed the production estimator.",
+    "Observed the Unsaved Cost Estimate recovery region with Restore draft, Rename, Discard, and Start fresh.",
+    "Restored the draft and confirmed the disposable quality returned to the estimator.",
+    "Refreshed again and confirmed the recovery item was cleared.",
+    "Logged out and re-authenticated the same supplied account; no draft name or recovery banner leaked into the new session."
+  ],
+  "result": "PASS",
+  "server_saved_costing_created": false,
+  "console_errors_or_warnings": []
+}

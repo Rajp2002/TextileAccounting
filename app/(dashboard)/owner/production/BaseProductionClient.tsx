@@ -41,6 +41,7 @@ import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
 import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
 import { basePayrollReview } from '@/lib/base-payroll-review'
+import { currentBaseMonthlySalary } from '@/lib/base-salary'
 import { baseProductionHref, readBaseProductionNavigation } from '@/lib/base-production-navigation'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
@@ -73,6 +74,12 @@ import type { BaseProductionInitialData } from './loaders'
 type DialogName = 'worker' | 'machine' | 'job' | 'advance' | null
 
 type WorkerDraft = {
+    payType: 'piece_rate' | 'fixed_monthly'
+    role: string
+    monthlySalary: string
+    startDate: string
+    endDate: string
+    salaryEffectiveFrom: string
     name: string
     shiftAvailability: BaseWorkerShiftAvailability
     isActive: boolean
@@ -144,7 +151,7 @@ function getActionError(result: unknown) {
 }
 
 function emptyWorkerDraft(): WorkerDraft {
-    return { name: '', shiftAvailability: 'both', isActive: true }
+    return { name: '', shiftAvailability: 'both', isActive: true, payType: 'piece_rate', role: '', monthlySalary: '', startDate: '', endDate: '', salaryEffectiveFrom: '' }
 }
 
 function emptyMachineDraft(): MachineDraft {
@@ -327,6 +334,12 @@ export default function BaseProductionClient({
     function openEditWorker(worker: BaseProductionWorker) {
         setEditingWorkerId(worker.id)
         setWorkerDraft({
+            payType: worker.pay_type ?? 'piece_rate',
+            role: worker.role ?? '',
+            monthlySalary: String(worker.monthly_salary ?? 0),
+            startDate: worker.start_date ?? '',
+            endDate: worker.end_date ?? '',
+            salaryEffectiveFrom: initialData.today,
             name: worker.name,
             shiftAvailability: worker.shift_availability,
             isActive: worker.is_active,
@@ -377,6 +390,9 @@ export default function BaseProductionClient({
             void runAction(
                 'worker-update',
                 () => updateBaseProductionWorker({
+                    expectedUpdatedAt: workerById.get(editingWorkerId)?.updated_at,
+                    ...workerDraft,
+                    monthlySalary: Number(workerDraft.monthlySalary),
                     workerId: editingWorkerId,
                     name: workerDraft.name,
                     shiftAvailability: workerDraft.shiftAvailability,
@@ -390,7 +406,7 @@ export default function BaseProductionClient({
 
         void runAction(
             'worker-create',
-            () => createBaseProductionWorker({ name: workerDraft.name, shiftAvailability: workerDraft.shiftAvailability }),
+            () => createBaseProductionWorker({ ...workerDraft, monthlySalary: Number(workerDraft.monthlySalary) }),
             'Worker added.',
             closeDialog,
         )
@@ -511,7 +527,7 @@ export default function BaseProductionClient({
                         {view === 'operations'
                             ? 'Set up machines, workers, and their current shift assignments.'
                             : view === 'payroll'
-                                ? 'Review piece-rate earnings, worker advances, and settle the current pay period.'
+                                ? 'Review piece-rate earnings, staff salaries, worker advances, and settle the current pay period.'
                                 : 'Create production jobs from saved costings and record daily machine metres.'}
                     </p>
                 </div>
@@ -620,9 +636,11 @@ export default function BaseProductionClient({
                                                 aria-valuemax={100}
                                                 aria-valuenow={summary.progress_percent}
                                             >
-                                                <div className="h-full rounded-full bg-saffron transition-all" style={{ width: `${summary.progress_percent}%` }} />
+                                                <div className="h-full rounded-full bg-saffron transition-all" style={{ width: `${Math.min(100, summary.progress_percent)}%` }} />
                                             </div>
-                                            <p className="mt-1 text-xs text-muted-foreground">{summary.progress_percent.toFixed(0)}% complete · {formatMeters(summary.remaining_meters)} remaining</p>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {summary.progress_percent.toFixed(0)}% complete · {summary.excess_meters > 0 ? `${formatMeters(summary.excess_meters)} excess` : `${formatMeters(summary.remaining_meters)} remaining`}
+                                            </p>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 rounded-lg bg-surface-soft/70 p-3 text-sm">
@@ -695,6 +713,18 @@ export default function BaseProductionClient({
                 </TabsContent>}
 
                 {view === 'operations' && <TabsContent value="assignments" className="space-y-4">
+                    <Card>
+                        <CardHeader><div className="flex items-center justify-between gap-3"><CardTitle className="text-base">Fixed-salary staff</CardTitle><Button size="sm" variant="outline" onClick={() => { openNewWorker(); setWorkerDraft({ ...emptyWorkerDraft(), payType: 'fixed_monthly', startDate: initialData.today }) }}><Plus className="h-4 w-4" /> Add staff</Button></div><CardDescription>Monthly salaries appear in payroll and automatically populate factory staff overhead. Staff do not need machine assignments.</CardDescription></CardHeader>
+                        <CardContent className="space-y-2">
+                            {initialData.workers.filter(worker => worker.pay_type === 'fixed_monthly').map(worker => (
+                                <div key={worker.id} className="flex items-center justify-between gap-3 rounded-lg border border-hairline p-3">
+                                    <div><p className="font-semibold">{worker.name} {!worker.is_active && <Badge variant="secondary">Inactive</Badge>}</p><p className="text-xs text-body">{worker.role || 'Staff'} · {formatINR(currentBaseMonthlySalary(worker, initialData.today))}/month currently in overhead</p></div>
+                                    <Button variant="outline" size="sm" onClick={() => openEditWorker(worker)}>Edit staff</Button>
+                                </div>
+                            ))}
+                            {!initialData.workers.some(worker => worker.pay_type === 'fixed_monthly') && <p className="text-sm text-body">Add supervisors, office staff, helpers, or other monthly-salaried staff here.</p>}
+                        </CardContent>
+                    </Card>
                     <BaseAssignmentWorkspace key={`${navigation.worker ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={navigation.worker} initialShift={navigation.shift} onEditWorker={openEditWorker} onEditMachine={openEditMachine} />
                 </TabsContent>}
 
@@ -722,7 +752,7 @@ export default function BaseProductionClient({
                     <Card className="border-hairline bg-surface-soft/45">
                         <CardContent className="flex items-start gap-3 py-4 text-sm">
                             <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" />
-                            <p className="leading-relaxed text-body">Pay uses each machine allocation’s saved weaver rate. Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward.</p>
+                            <p className="leading-relaxed text-body">Piece-rate pay uses saved machine rates. Fixed salaries accrue by calendar day, including joining/leaving dates and effective-dated salary changes. Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward.</p>
                         </CardContent>
                     </Card>
 
@@ -740,19 +770,20 @@ export default function BaseProductionClient({
                                     <Card key={payable.worker_id} className={!worker?.is_active ? 'opacity-75' : undefined}>
                                         <CardHeader className="border-b border-hairline/70">
                                             <div className="flex items-start justify-between gap-3">
-                                                <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.is_active ? `${worker.shift_availability === 'both' ? 'Day & night' : worker.shift_availability === 'day' ? 'Day' : 'Night'} shift · weaver rate applied per machine` : 'Inactive worker'}</CardDescription></div>
+                                                <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.pay_type === 'fixed_monthly' ? `${worker.role || 'Staff'} · Fixed monthly salary${worker.is_active ? '' : ' · Inactive'}` : worker?.is_active ? `${worker.shift_availability === 'both' ? 'Day & night' : worker.shift_availability === 'day' ? 'Day' : 'Night'} shift · weaver rate applied per machine` : 'Inactive worker'}</CardDescription></div>
                                                 <div className="flex items-center gap-2">{workerReadiness?.issueCount ? <Badge variant="warning">Review</Badge> : null}<Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Setup`} onClick={() => openOperations(payable.worker_id)}><Settings2 className="h-3.5 w-3.5" /></Button></div>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="space-y-4 pt-0">
                                             <p className="text-xs text-body">{formatDateOnly(payable.period_start)} – {formatDateOnly(payable.period_end)}</p>
                                             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-                                                <Metric label="Metres" value={formatMeters(payable.meters)} />
+                                                <Metric label={payable.pay_type === 'fixed_monthly' ? 'Pay basis' : 'Metres'} value={payable.pay_type === 'fixed_monthly' ? 'Monthly salary' : formatMeters(payable.meters)} />
                                                 <Metric label="Gross" value={formatINR(payable.gross_pay, { hideDecimals: true })} />
                                                 <Metric label="Recovery" value={formatINR(payable.advance_recovery, { hideDecimals: true })} />
                                                 <Metric label="Net pay" value={formatINR(payable.net_payout, { hideDecimals: true })} emphasis />
                                             </div>
                                             <div className="rounded-lg bg-surface-soft/70 p-3 text-xs text-body">
+                                                {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}</div>}
                                                 {payable.status === 'paid'
                                                     ? <>Paid on {formatDateOnly(payable.paid_at)} · {formatINR(payable.advance_recovery, { hideDecimals: true })} advance recovered.</>
                                                     : payable.pending_advance > 0
@@ -789,11 +820,21 @@ export default function BaseProductionClient({
             </Dialog>
 
             <Dialog open={dialog === 'worker'} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent>
-                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : 'Add worker'}</DialogTitle><DialogDescription>Pay rates come from the costing assigned to each machine. Choose when this worker is available.</DialogDescription></DialogHeader>
+                <DialogContent className="max-h-[90dvh] overflow-y-auto">
+                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : 'Add worker'}</DialogTitle><DialogDescription>Piece-rate workers use machine costing rates. Fixed-salary staff use a monthly salary linked to overhead. Pay type is protected after creation.</DialogDescription></DialogHeader>
                     <form className="space-y-4" onSubmit={handleWorkerSubmit}>
-                        <div className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
-                        <div className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>
+                        <div className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus required maxLength={120} value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
+                        <div className="space-y-2"><Label htmlFor="base-worker-pay-type">Pay type</Label><Select disabled={Boolean(editingWorkerId)} value={workerDraft.payType} onValueChange={value => setWorkerDraft(current => ({ ...current, payType: value as WorkerDraft['payType'], startDate: current.startDate || initialData.today }))}><SelectTrigger id="base-worker-pay-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="piece_rate">Piece rate (per metre)</SelectItem><SelectItem value="fixed_monthly">Fixed monthly salary</SelectItem></SelectContent></Select></div>
+                        {workerDraft.payType === 'fixed_monthly' && <>
+                            <div className="space-y-2"><Label htmlFor="base-staff-role">Role</Label><Input id="base-staff-role" value={workerDraft.role} maxLength={80} onChange={event => setWorkerDraft(current => ({ ...current, role: event.target.value }))} placeholder="e.g. Supervisor" /></div>
+                            <div className="space-y-2"><Label htmlFor="base-staff-salary">Monthly salary (₹)</Label><Input id="base-staff-salary" type="number" min="0.01" max="10000000" step="0.01" required value={workerDraft.monthlySalary} onChange={event => setWorkerDraft(current => ({ ...current, monthlySalary: event.target.value }))} /></div>
+                            <div className="space-y-2"><Label htmlFor="base-staff-start">Joining date</Label><Input id="base-staff-start" type="date" required disabled={Boolean(editingWorkerId)} value={workerDraft.startDate} onChange={event => setWorkerDraft(current => ({ ...current, startDate: event.target.value }))} /></div>
+                            {editingWorkerId && <>
+                                <div className="space-y-2"><Label htmlFor="base-staff-effective">Salary change effective from</Label><Input id="base-staff-effective" type="date" min={initialData.today} value={workerDraft.salaryEffectiveFrom} onChange={event => setWorkerDraft(current => ({ ...current, salaryEffectiveFrom: event.target.value }))} /><p className="text-xs text-body">Used only when changing salary. Earlier earnings and paid records stay unchanged.</p></div>
+                                <div className="space-y-2"><Label htmlFor="base-staff-end">Last working day (optional)</Label><Input id="base-staff-end" type="date" min={workerDraft.startDate} value={workerDraft.endDate} onChange={event => setWorkerDraft(current => ({ ...current, endDate: event.target.value }))} /><p className="text-xs text-body">Salary accrues through this date. Required when deactivating staff.</p></div>
+                            </>}
+                        </>}
+                        {workerDraft.payType === 'piece_rate' && <div className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>}
                         {editingWorkerId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={workerDraft.isActive} onChange={(event) => setWorkerDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Active worker</label>}
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === 'worker-create' || pendingAction === 'worker-update'}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{editingWorkerId ? 'Save changes' : 'Add worker'}</Button></DialogFooter>
                     </form>

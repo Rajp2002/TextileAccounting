@@ -5,6 +5,7 @@ import type {
 } from './base-production-core'
 
 export type BasePayrollHistoryEarning = {
+    payType?: 'piece_rate' | 'fixed_monthly'
     machineId: string | null
     machineLabel: string
     costingLabel: string
@@ -92,6 +93,7 @@ export function buildBasePayrollHistory(
             for (const line of linesBySettlement.get(settlement.id) ?? []) {
                 const earningKey = `${line.machine_id ?? line.machine_label}:${line.costing_label}:${line.worker_rate_snapshot}`
                 const current = earningGroups.get(earningKey) ?? {
+                    payType: line.source_kind === 'fixed_salary' ? 'fixed_monthly' as const : 'piece_rate' as const,
                     machineId: line.machine_id,
                     machineLabel: line.machine_label,
                     costingLabel: line.costing_label,
@@ -133,6 +135,7 @@ export function buildBasePayrollHistory(
         const machineGroups = new Map<string, BasePayrollHistoryMachine>()
         for (const worker of workers.filter(worker => worker.status !== 'reversed')) {
             for (const earning of worker.earnings) {
+                if (earning.payType === 'fixed_monthly') continue
                 const machineKey = earning.machineId ?? earning.machineLabel
                 const current = machineGroups.get(machineKey) ?? {
                     machineId: earning.machineId,
@@ -185,14 +188,15 @@ function csvCell(value: string | number) {
 
 export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
     const headers = [
-        'Period Start', 'Period End', 'Worker', 'Machine', 'Costing', 'Weaver Rate per Metre',
+        'Period Start', 'Period End', 'Worker', 'Machine / Pay Basis', 'Costing / Salary Period', 'Rate',
         'Metres', 'Line Gross Pay', 'Worker Gross Pay', 'Advance Balance Before',
-        'Advance Recovered', 'Remaining Advance Balance', 'Worker Net Pay', 'Payment Mode', 'Paid At', 'Record Status', 'Reversal Reason',
+        'Advance Recovered', 'Remaining Advance Balance', 'Worker Net Pay', 'Payment Mode', 'Paid At', 'Record Status', 'Reversal Reason', 'Rate Unit',
     ]
     const rows: Array<Array<string | number>> = []
 
     for (const worker of period.workers) {
         const earnings = worker.earnings.length > 0 ? worker.earnings : [{
+            payType: 'piece_rate' as const,
             machineLabel: '', costingLabel: '', rate: 0, meters: 0, grossPay: 0,
         }]
         for (const earning of earnings) {
@@ -201,6 +205,7 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
                 earning.rate, earning.meters, earning.grossPay, worker.grossPay,
                 worker.advanceBalanceBefore, worker.advanceRecovered, worker.remainingAdvanceBalance,
                 worker.netPayout, worker.paymentMode, worker.paidAt, worker.status ?? 'paid', worker.reversalReason ?? '',
+                earning.payType === 'fixed_monthly' ? 'per month' : 'per metre',
             ])
         }
     }

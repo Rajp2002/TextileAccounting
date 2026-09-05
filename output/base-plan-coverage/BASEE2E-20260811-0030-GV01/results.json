@@ -1,0 +1,873 @@
+{
+  "runId": "BASEE2E-20260811-0030-GV01",
+  "baseUrl": "https://textile-accounting.vercel.app",
+  "guide": "/Users/rajpatel/Projects/textile Saas/output/base-plan-coverage/BASEPLAN-COVERAGE-20260731/REPORT.md",
+  "initializedAt": "2026-08-10T19:00:19.523Z",
+  "items": [
+    {
+      "id": "AUTH-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Valid owner login",
+      "expected": "Session opens Base estimator and loads the correct tenant | Retest pass | P0",
+      "status": "pass",
+      "actual": "Valid Base owner credentials opened /owner/estimator for Base pilot testing.",
+      "evidence": [
+        "Browser production login and estimator tenant header"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.320Z"
+    },
+    {
+      "id": "AUTH-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Invalid login",
+      "expected": "Neutral error; no session or tenant data leak | Retest pass | P0",
+      "status": "pass",
+      "actual": "Invalid credentials returned the neutral message 'Incorrect email or password' and created no session.",
+      "evidence": [
+        "Browser production invalid-login attempt"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "AUTH-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Password reset entry",
+      "expected": "Neutral confirmation; no account enumeration | Retest pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "AUTH-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Logout and protected-route reload",
+      "expected": "Session is revoked; protected pages return to login | Retest pass | P0",
+      "status": "pass",
+      "actual": "Logout redirected to /login and protected-route reload did not reopen the owner session.",
+      "evidence": [
+        "Browser logout and protected reload"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "AUTH-005",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Cross-tab logout",
+      "expected": "Second tab cannot continue using stale session | Retest pass | P0",
+      "status": "pass",
+      "actual": "After logout in tab one, reloading /owner/settings in tab two redirected it to /login.",
+      "evidence": [
+        "Browser two-tab session propagation: both tabs ended at /login"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "NAV-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Base navigation",
+      "expected": "Only estimator, rate book, saved costings, settings, billing are exposed | Current pass | P0",
+      "status": "pass",
+      "actual": "Base navigation exposed Cost Estimate, Yarn Rate Book, Saved Costings, Settings, and Billing only.",
+      "evidence": [
+        "Browser authenticated sidebar DOM"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "NAV-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "`/owner/today` deep link",
+      "expected": "Safe redirect to estimator | Current pass | P1",
+      "status": "pass",
+      "actual": "/owner/today redirected safely to /owner/estimator.",
+      "evidence": [
+        "Browser deep-link check"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "NAV-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Premium route `/owner/orders`",
+      "expected": "Upgrade wall; no premium data or actions | Current pass | P0",
+      "status": "pass",
+      "actual": "/owner/orders, /owner/production, and /owner/payroll redirected to the Base estimator without exposing Full Suite data or actions.",
+      "evidence": [
+        "Browser protected premium-route checks"
+      ],
+      "notes": "Safe boundary passed, although current behavior is a redirect rather than the matrix's expected upgrade wall.",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "NAV-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Wrong/legacy deep link",
+      "expected": "Either canonical redirect or intentional 404 with no data leak | Observed 404 for `/owner/production/today`; confirm advertised links | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "BILL-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Active Base billing view",
+      "expected": "Shows current plan, dates, renewal, upgrade option | Current pass | P0",
+      "status": "pass",
+      "actual": "Billing showed active Base access through 3 Aug 2027 IST, manual renewal at INR 2,360, a 30-day renewal window, and no automatic charge.",
+      "evidence": [
+        "Browser /owner/billing",
+        "Supabase org_subscriptions and subscription_payments reconciliation"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "BILL-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "First-year successful activation",
+      "expected": "Captured INR 8,260 and exactly one active Base entitlement | **Pass - user-provided visual evidence** | P0",
+      "status": "pass",
+      "actual": "The QA organization has one active Base entitlement backed by a captured INR 8,260 Netbanking payment.",
+      "evidence": [
+        "Browser payment history",
+        "Supabase captured payment amount=826000 paise and active Base subscription"
+      ],
+      "notes": "This verifies the existing paid state; no new live charge was created during this run.",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "BILL-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Failed first purchase",
+      "expected": "No entitlement; failed payment truthfully shown | Retest pass | P0",
+      "status": "code_verified",
+      "actual": "Focused billing tests preserve first-purchase pricing after failed payment history and require paid proof for renewal eligibility.",
+      "evidence": [
+        "Vitest __tests__/p1-billing-orders.test.ts; 37/37 focused tests passed"
+      ],
+      "notes": "No destructive live failed-payment mutation was performed.",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "BILL-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Retry after failed first purchase",
+      "expected": "Still first-year INR 8,260, not renewal INR 2,360 | **Retest pass - fix closeout** | P0",
+      "status": "code_verified",
+      "actual": "Focused billing tests keep failed first-purchase retries on first-year pricing rather than renewal pricing.",
+      "evidence": [
+        "Vitest __tests__/p1-billing-orders.test.ts"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "BILL-005",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Cancelled/abandoned checkout retry",
+      "expected": "Same first-purchase pricing and no entitlement | Retest pass - billing closeout | P0",
+      "status": "code_verified",
+      "actual": "Focused billing tests distinguish cancelled/halted history from proven captured payment when choosing renewal pricing.",
+      "evidence": [
+        "Vitest __tests__/p1-billing-orders.test.ts"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "BILL-006",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Duplicate webhook/retry",
+      "expected": "Idempotent payment and entitlement rows | Retest pass - release suite and B17 proof | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Add valid warp rate",
+      "expected": "One active row with source, review cadence, and audit metadata | Current pass | P0",
+      "status": "pass",
+      "actual": "Saving the QA quality discovered one tenant-scoped active warp rate at INR 224/kg with review metadata and history.",
+      "evidence": [
+        "Browser Rate Book",
+        "Supabase yarn_rates d542787b and rate history"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "RATE-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Add valid weft rate",
+      "expected": "One active row available for weft layers | Retest pass | P0",
+      "status": "pass",
+      "actual": "Saving the QA quality discovered one active weft rate, later updated from INR 236/kg to INR 244/kg.",
+      "evidence": [
+        "Browser Rate Book",
+        "Supabase yarn_rates b0b84232"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "RATE-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Blank name",
+      "expected": "Client/server validation; no row | Next gate | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Zero/negative/NaN rate",
+      "expected": "Reject; no row and no partial history | Current pass - runtime + server guard | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-005",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Duplicate name same category",
+      "expected": "Clear conflict policy; no silent duplicate | Current pass - unique constraint + inline feedback | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-006",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Duplicate name across warp/weft",
+      "expected": "Conflict resolution is explicit and tenant-scoped | Next gate | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-007",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Update current rate",
+      "expected": "Previous value preserved and current value updated | Current pass | P0",
+      "status": "pass",
+      "actual": "Changing the QA weft rate from INR 236 to INR 244 updated the current value and preserved the previous value.",
+      "evidence": [
+        "Browser change-rate success toast",
+        "Supabase current_value=244 previous_value=236"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "RATE-008",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Rate history",
+      "expected": "Every reviewed value is visible in order with date/source/notes | Current pass | P0",
+      "status": "pass",
+      "actual": "The Rate Book and database retained ordered reviewed/changed history for the QA warp and weft rates.",
+      "evidence": [
+        "Browser Rate Book history",
+        "Supabase yarn_rate_history reconciliation"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "RATE-009",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Rename linked yarn",
+      "expected": "Either supported migration or clear locked-name product rule | Current pass: locked | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-010",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Archive yarn",
+      "expected": "Inactive after refresh; historical snapshots remain readable | Current pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-011",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Cancel archive",
+      "expected": "Active row remains unchanged | Current pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RATE-012",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Review-status boundary",
+      "expected": "Current, due soon, overdue filters match dates and cadence | Retest pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "QUAL-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Save blank/incomplete quality",
+      "expected": "Required layer validation; no partial write | Current pass | P0",
+      "status": "pass",
+      "actual": "Blank quality name and invalid negative yarn cost prevented a save and produced clear validation.",
+      "evidence": [
+        "Browser Save dialog validation and Costing not ready state"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "QUAL-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Save valid quality",
+      "expected": "One active reusable template with all layer data | Current pass | P0",
+      "status": "pass",
+      "actual": "The complete QA grey-fabric quality saved as an active reusable template with warp, weft, and commercial assumptions.",
+      "evidence": [
+        "Browser saved-quality success toast",
+        "Supabase saved quality template bd51d8ea"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "QUAL-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Blank/duplicate quality name",
+      "expected": "Reject or apply explicit duplicate policy | Current pass - save disabled/no duplicate | P1",
+      "status": "pass",
+      "actual": "A duplicate save attempt returned a clear duplicate-quality error and did not create a second template.",
+      "evidence": [
+        "Browser duplicate-quality error",
+        "Supabase single QA template"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "QUAL-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Update quality name",
+      "expected": "New label persists; referenced snapshots retain original context | Current pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "QUAL-005",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Update quality rates",
+      "expected": "Template defaults change without rewriting old costing snapshots | Current pass | P0",
+      "status": "pass",
+      "actual": "Rate Book update changed the reusable quality's current weft rate to INR 244 while v1 remained frozen at INR 236.",
+      "evidence": [
+        "Browser current-rate reuse banner and compare dialog",
+        "Supabase v1/v2 snapshots"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "QUAL-006",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Concurrent stale update",
+      "expected": "Reject stale timestamp; do not overwrite the other tab | Production guard deployed; focused test pass; browser two-tab proof harness-limited | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "QUAL-007",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Delete quality cancel",
+      "expected": "No mutation | Current pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "QUAL-008",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Delete quality confirm",
+      "expected": "Inactive soft-delete; historical quotes stay readable | Current pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "QUAL-009",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Start From quality",
+      "expected": "New template/lineage independent from source | Retest pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "QUAL-010",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Quality reload and re-open",
+      "expected": "Same layers, rates, and label after refresh | Retest pass | P0",
+      "status": "pass",
+      "actual": "After refresh the QA quality remained listed and reopened with the same layer structure and current Rate Book values.",
+      "evidence": [
+        "Browser refresh/reopen",
+        "Supabase template and yarn reconciliation"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Valid single warp/weft costing",
+      "expected": "Independent oracle agrees with UI and snapshot | Retest pass | P0",
+      "status": "pass",
+      "actual": "The single-warp/single-weft estimate produced INR 45.20/m cost and INR 53.07/m selling price; persisted v1 matched the UI, and the updated v2 matched INR 45.67/m and INR 53.60/m.",
+      "evidence": [
+        "Browser estimator totals",
+        "Supabase v1 2157e6d4 and v2 ac0f92c8 reconciliation"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Blank required fields",
+      "expected": "Save/export disabled or clear validation; no partial quote | Current pass | P0",
+      "status": "pass",
+      "actual": "Invalid required values produced a Costing not ready state and the final save dialog refused the write.",
+      "evidence": [
+        "Browser negative-rate and blank-name validation"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Negative and extreme inputs",
+      "expected": "Reject unsafe values; no NaN/Infinity or overflow | Current pass - runtime + server guard | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Waste/crimp boundary",
+      "expected": "0 means explicit zero; blank uses default; percentages bounded | Retest pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-005",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Blend component add/remove",
+      "expected": "Totals update; removing last component leaves valid state | Current run pass; focused tests pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-006",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Loom/wage boundary",
+      "expected": "Formula and manual modes agree; missing wage is guarded | Retest pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-007",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Sizing in-house vs outsourced",
+      "expected": "Only intended cost changes; no hidden duplicate charge | Retest pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-008",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Overhead override",
+      "expected": "Direct override is visible and included exactly once | Retest pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-009",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Post-processing toggles",
+      "expected": "Winding, processing, finishing are included only when enabled | Retest pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-010",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Party and quality context",
+      "expected": "Named context persists through save/reopen/export | Current pass | P0",
+      "status": "pass",
+      "actual": "Quality and customer context persisted into the saved costing and customer quotation preview.",
+      "evidence": [
+        "Browser saved costing and Mahavir Traders quotation preview"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-011",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Save costing",
+      "expected": "Version 1 created once; duplicate clicks do not double-write | Current pass | P0",
+      "status": "pass",
+      "actual": "Version 1 was created once; a duplicate-quality attempt did not double-write the costing lineage.",
+      "evidence": [
+        "Browser save and duplicate error",
+        "Supabase one v1 row in costing group bc286610"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-012",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Reopen/update costing",
+      "expected": "New immutable version; old version unchanged | Current pass | P0",
+      "status": "pass",
+      "actual": "Reopening with current Rate Book values and saving created immutable v2; v1 remained unchanged.",
+      "evidence": [
+        "Browser Save costing snapshot flow",
+        "Supabase v1/v2 snapshots in group bc286610"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-013",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Compare snapshots",
+      "expected": "Selected versions show accurate commercial deltas | Current pass | P1",
+      "status": "pass",
+      "actual": "Compare showed cost 45.20 to 45.67, price 53.07 to 53.60, quantity 5,000 to 6,000, and selling-price delta +0.53/m.",
+      "evidence": [
+        "Browser canonical comparison dialog"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EST-014",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Start From costing",
+      "expected": "Copy enters save mode and creates independent lineage only on save | Current pass | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-015",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Refresh/draft recovery",
+      "expected": "Local draft is explicit; restore/keep/overwrite choices are clear | Current pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EST-016",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Delete/archive saved costing",
+      "expected": "Retention policy and UI action are explicit; no accidental history loss | Live gap reproduced; local archive/restore controls added, not deployed | P1",
+      "status": "pass",
+      "actual": "Archive required confirmation, removed v1 from the active library, and Restore returned it without deleting history.",
+      "evidence": [
+        "Browser archive and restore dialogs",
+        "Supabase v1 restored with archived=false"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EXP-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Internal cost sheet",
+      "expected": "Detailed costs, assumptions, margin, break-even, profit included | Current pass | P0",
+      "status": "pass",
+      "actual": "Internal Cost Estimate generation completed and the app reported that the PDF download started.",
+      "evidence": [
+        "Browser internal export dialog and success state"
+      ],
+      "notes": "The browser harness could not verify the device save location after the application generated the file.",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EXP-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Customer quotation",
+      "expected": "Internal cost and margin hidden; final commercial data correct | Current pass | P0",
+      "status": "pass",
+      "actual": "Customer Quotation preview showed party, quality, quantity, price, value, validity, and not-a-tax-invoice notice while omitting cost, margin, profit, yarn rates, and overhead.",
+      "evidence": [
+        "Browser sandboxed customer quotation preview"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "EXP-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Export refresh boundary",
+      "expected": "Latest fixes/data used after refresh; no stale service-worker export | Retest pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "EXP-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Organization data export",
+      "expected": "Tenant-only data; secrets/join codes excluded or redacted | Current pass | P0",
+      "status": "fail",
+      "actual": "Organization data export ended at Retry export with 'No export was generated'. The latest database export run is failed/incomplete.",
+      "evidence": [
+        "Browser Settings organization export failure",
+        "Supabase organization_export_runs e21ce262 failed"
+      ],
+      "notes": "This breaks the product's data-portability promise and is a launch blocker.",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "SET-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Business name edit/restore",
+      "expected": "Save is explicit and value persists across reload | Current pass | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "SET-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Cost default edit/restore",
+      "expected": "Target margin/rates/toggles persist and apply to new costing | Current pass for margin | P0",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "SET-003",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Optional section toggles",
+      "expected": "Toggle changes are reversible and do not corrupt saved snapshots | Current run pass: enabled, saved, estimator-verified, restored | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "SET-004",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Saved quality manager",
+      "expected": "List, update, delete, and reload agree with estimator surface | Current pass via estimator; settings list observed | P1",
+      "status": "not_run",
+      "actual": "",
+      "evidence": [],
+      "notes": "",
+      "severity": "",
+      "updatedAt": null
+    },
+    {
+      "id": "RESP-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "390px mobile estimator",
+      "expected": "No horizontal overflow; critical actions remain usable | Retest pass | P1",
+      "status": "pass",
+      "actual": "At 390x844 the estimator had no horizontal overflow and critical calculate/save/export navigation remained reachable.",
+      "evidence": [
+        "Browser 390px estimator viewport inspection"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "RESP-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Mobile rate book/settings",
+      "expected": "Forms and dialogs remain operable at 390px | Settings pass; live rate Archive gap locally fixed, not deployed | P1",
+      "status": "pass",
+      "actual": "At 390x844 the Rate Book and Settings had no horizontal overflow and primary controls remained visible.",
+      "evidence": [
+        "Browser 390px Rate Book and Settings viewport inspections"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "OBS-001",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Console errors/warnings",
+      "expected": "No new errors or warning bursts during core flows | Current pass | P1",
+      "status": "pass",
+      "actual": "No application error or warning bursts appeared during the exercised core flows.",
+      "evidence": [
+        "Browser production console inspection across auth, estimator, rates, exports, settings, billing, and logout"
+      ],
+      "notes": "",
+      "severity": "P1",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    },
+    {
+      "id": "OBS-002",
+      "section": "Full Base-plan stress matrix",
+      "scenario": "Tenant database reconciliation",
+      "expected": "Browser state, persisted rows, versions, and entitlement agree | Current pass | P0",
+      "status": "pass",
+      "actual": "Tenant-scoped subscription, payment, rate, template, and v1/v2 snapshot records agreed with the browser.",
+      "evidence": [
+        "Supabase production reconciliation for organization 12b58c71"
+      ],
+      "notes": "",
+      "severity": "P0",
+      "updatedAt": "2026-08-12T10:12:34.321Z"
+    }
+  ]
+}

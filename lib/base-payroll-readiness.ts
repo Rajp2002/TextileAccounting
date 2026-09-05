@@ -29,6 +29,7 @@ export type BaseWorkerPayrollReadiness = {
 }
 
 export type BasePayrollReadiness = {
+    salaryLineCount: number
     verifiedLineCount: number
     machineLineCount: number
     legacyLineCount: number
@@ -126,6 +127,7 @@ export function buildBasePayrollReadiness({
     })
 
     const summary: BasePayrollReadiness = {
+        salaryLineCount: payables.filter(payable => payable.pay_type === 'fixed_monthly' && payable.status !== 'paid').reduce((total, payable) => total + (payable.salary_lines?.length ?? 0), 0),
         verifiedLineCount: 0,
         machineLineCount: 0,
         legacyLineCount: 0,

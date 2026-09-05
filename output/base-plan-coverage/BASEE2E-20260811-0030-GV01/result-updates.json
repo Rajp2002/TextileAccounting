@@ -1,0 +1,252 @@
+[
+  {
+    "id": "AUTH-001",
+    "status": "pass",
+    "actual": "Valid Base owner credentials opened /owner/estimator for Base pilot testing.",
+    "evidence": ["Browser production login and estimator tenant header"],
+    "severity": "P0"
+  },
+  {
+    "id": "AUTH-002",
+    "status": "pass",
+    "actual": "Invalid credentials returned the neutral message 'Incorrect email or password' and created no session.",
+    "evidence": ["Browser production invalid-login attempt"],
+    "severity": "P0"
+  },
+  {
+    "id": "AUTH-004",
+    "status": "pass",
+    "actual": "Logout redirected to /login and protected-route reload did not reopen the owner session.",
+    "evidence": ["Browser logout and protected reload"],
+    "severity": "P0"
+  },
+  {
+    "id": "AUTH-005",
+    "status": "pass",
+    "actual": "After logout in tab one, reloading /owner/settings in tab two redirected it to /login.",
+    "evidence": ["Browser two-tab session propagation: both tabs ended at /login"],
+    "severity": "P0"
+  },
+  {
+    "id": "NAV-001",
+    "status": "pass",
+    "actual": "Base navigation exposed Cost Estimate, Yarn Rate Book, Saved Costings, Settings, and Billing only.",
+    "evidence": ["Browser authenticated sidebar DOM"],
+    "severity": "P0"
+  },
+  {
+    "id": "NAV-002",
+    "status": "pass",
+    "actual": "/owner/today redirected safely to /owner/estimator.",
+    "evidence": ["Browser deep-link check"],
+    "severity": "P1"
+  },
+  {
+    "id": "NAV-003",
+    "status": "pass",
+    "actual": "/owner/orders, /owner/production, and /owner/payroll redirected to the Base estimator without exposing Full Suite data or actions.",
+    "evidence": ["Browser protected premium-route checks"],
+    "notes": "Safe boundary passed, although current behavior is a redirect rather than the matrix's expected upgrade wall.",
+    "severity": "P0"
+  },
+  {
+    "id": "BILL-001",
+    "status": "pass",
+    "actual": "Billing showed active Base access through 3 Aug 2027 IST, manual renewal at INR 2,360, a 30-day renewal window, and no automatic charge.",
+    "evidence": ["Browser /owner/billing", "Supabase org_subscriptions and subscription_payments reconciliation"],
+    "severity": "P0"
+  },
+  {
+    "id": "BILL-002",
+    "status": "pass",
+    "actual": "The QA organization has one active Base entitlement backed by a captured INR 8,260 Netbanking payment.",
+    "evidence": ["Browser payment history", "Supabase captured payment amount=826000 paise and active Base subscription"],
+    "notes": "This verifies the existing paid state; no new live charge was created during this run.",
+    "severity": "P0"
+  },
+  {
+    "id": "BILL-003",
+    "status": "code_verified",
+    "actual": "Focused billing tests preserve first-purchase pricing after failed payment history and require paid proof for renewal eligibility.",
+    "evidence": ["Vitest __tests__/p1-billing-orders.test.ts; 37/37 focused tests passed"],
+    "notes": "No destructive live failed-payment mutation was performed.",
+    "severity": "P0"
+  },
+  {
+    "id": "BILL-004",
+    "status": "code_verified",
+    "actual": "Focused billing tests keep failed first-purchase retries on first-year pricing rather than renewal pricing.",
+    "evidence": ["Vitest __tests__/p1-billing-orders.test.ts"],
+    "severity": "P0"
+  },
+  {
+    "id": "BILL-005",
+    "status": "code_verified",
+    "actual": "Focused billing tests distinguish cancelled/halted history from proven captured payment when choosing renewal pricing.",
+    "evidence": ["Vitest __tests__/p1-billing-orders.test.ts"],
+    "severity": "P0"
+  },
+  {
+    "id": "RATE-001",
+    "status": "pass",
+    "actual": "Saving the QA quality discovered one tenant-scoped active warp rate at INR 224/kg with review metadata and history.",
+    "evidence": ["Browser Rate Book", "Supabase yarn_rates d542787b and rate history"],
+    "severity": "P0"
+  },
+  {
+    "id": "RATE-002",
+    "status": "pass",
+    "actual": "Saving the QA quality discovered one active weft rate, later updated from INR 236/kg to INR 244/kg.",
+    "evidence": ["Browser Rate Book", "Supabase yarn_rates b0b84232"],
+    "severity": "P0"
+  },
+  {
+    "id": "RATE-007",
+    "status": "pass",
+    "actual": "Changing the QA weft rate from INR 236 to INR 244 updated the current value and preserved the previous value.",
+    "evidence": ["Browser change-rate success toast", "Supabase current_value=244 previous_value=236"],
+    "severity": "P0"
+  },
+  {
+    "id": "RATE-008",
+    "status": "pass",
+    "actual": "The Rate Book and database retained ordered reviewed/changed history for the QA warp and weft rates.",
+    "evidence": ["Browser Rate Book history", "Supabase yarn_rate_history reconciliation"],
+    "severity": "P0"
+  },
+  {
+    "id": "QUAL-001",
+    "status": "pass",
+    "actual": "Blank quality name and invalid negative yarn cost prevented a save and produced clear validation.",
+    "evidence": ["Browser Save dialog validation and Costing not ready state"],
+    "severity": "P0"
+  },
+  {
+    "id": "QUAL-002",
+    "status": "pass",
+    "actual": "The complete QA grey-fabric quality saved as an active reusable template with warp, weft, and commercial assumptions.",
+    "evidence": ["Browser saved-quality success toast", "Supabase saved quality template bd51d8ea"],
+    "severity": "P0"
+  },
+  {
+    "id": "QUAL-003",
+    "status": "pass",
+    "actual": "A duplicate save attempt returned a clear duplicate-quality error and did not create a second template.",
+    "evidence": ["Browser duplicate-quality error", "Supabase single QA template"],
+    "severity": "P1"
+  },
+  {
+    "id": "QUAL-005",
+    "status": "pass",
+    "actual": "Rate Book update changed the reusable quality's current weft rate to INR 244 while v1 remained frozen at INR 236.",
+    "evidence": ["Browser current-rate reuse banner and compare dialog", "Supabase v1/v2 snapshots"],
+    "severity": "P0"
+  },
+  {
+    "id": "QUAL-010",
+    "status": "pass",
+    "actual": "After refresh the QA quality remained listed and reopened with the same layer structure and current Rate Book values.",
+    "evidence": ["Browser refresh/reopen", "Supabase template and yarn reconciliation"],
+    "severity": "P0"
+  },
+  {
+    "id": "EST-001",
+    "status": "pass",
+    "actual": "The single-warp/single-weft estimate produced INR 45.20/m cost and INR 53.07/m selling price; persisted v1 matched the UI, and the updated v2 matched INR 45.67/m and INR 53.60/m.",
+    "evidence": ["Browser estimator totals", "Supabase v1 2157e6d4 and v2 ac0f92c8 reconciliation"],
+    "severity": "P0"
+  },
+  {
+    "id": "EST-002",
+    "status": "pass",
+    "actual": "Invalid required values produced a Costing not ready state and the final save dialog refused the write.",
+    "evidence": ["Browser negative-rate and blank-name validation"],
+    "severity": "P0"
+  },
+  {
+    "id": "EST-010",
+    "status": "pass",
+    "actual": "Quality and customer context persisted into the saved costing and customer quotation preview.",
+    "evidence": ["Browser saved costing and Mahavir Traders quotation preview"],
+    "severity": "P0"
+  },
+  {
+    "id": "EST-011",
+    "status": "pass",
+    "actual": "Version 1 was created once; a duplicate-quality attempt did not double-write the costing lineage.",
+    "evidence": ["Browser save and duplicate error", "Supabase one v1 row in costing group bc286610"],
+    "severity": "P0"
+  },
+  {
+    "id": "EST-012",
+    "status": "pass",
+    "actual": "Reopening with current Rate Book values and saving created immutable v2; v1 remained unchanged.",
+    "evidence": ["Browser Save costing snapshot flow", "Supabase v1/v2 snapshots in group bc286610"],
+    "severity": "P0"
+  },
+  {
+    "id": "EST-013",
+    "status": "pass",
+    "actual": "Compare showed cost 45.20 to 45.67, price 53.07 to 53.60, quantity 5,000 to 6,000, and selling-price delta +0.53/m.",
+    "evidence": ["Browser canonical comparison dialog"],
+    "severity": "P1"
+  },
+  {
+    "id": "EST-016",
+    "status": "pass",
+    "actual": "Archive required confirmation, removed v1 from the active library, and Restore returned it without deleting history.",
+    "evidence": ["Browser archive and restore dialogs", "Supabase v1 restored with archived=false"],
+    "severity": "P1"
+  },
+  {
+    "id": "EXP-001",
+    "status": "pass",
+    "actual": "Internal Cost Estimate generation completed and the app reported that the PDF download started.",
+    "evidence": ["Browser internal export dialog and success state"],
+    "notes": "The browser harness could not verify the device save location after the application generated the file.",
+    "severity": "P0"
+  },
+  {
+    "id": "EXP-002",
+    "status": "pass",
+    "actual": "Customer Quotation preview showed party, quality, quantity, price, value, validity, and not-a-tax-invoice notice while omitting cost, margin, profit, yarn rates, and overhead.",
+    "evidence": ["Browser sandboxed customer quotation preview"],
+    "severity": "P0"
+  },
+  {
+    "id": "EXP-004",
+    "status": "fail",
+    "actual": "Organization data export ended at Retry export with 'No export was generated'. The latest database export run is failed/incomplete.",
+    "evidence": ["Browser Settings organization export failure", "Supabase organization_export_runs e21ce262 failed"],
+    "notes": "This breaks the product's data-portability promise and is a launch blocker.",
+    "severity": "P0"
+  },
+  {
+    "id": "RESP-001",
+    "status": "pass",
+    "actual": "At 390x844 the estimator had no horizontal overflow and critical calculate/save/export navigation remained reachable.",
+    "evidence": ["Browser 390px estimator viewport inspection"],
+    "severity": "P1"
+  },
+  {
+    "id": "RESP-002",
+    "status": "pass",
+    "actual": "At 390x844 the Rate Book and Settings had no horizontal overflow and primary controls remained visible.",
+    "evidence": ["Browser 390px Rate Book and Settings viewport inspections"],
+    "severity": "P1"
+  },
+  {
+    "id": "OBS-001",
+    "status": "pass",
+    "actual": "No application error or warning bursts appeared during the exercised core flows.",
+    "evidence": ["Browser production console inspection across auth, estimator, rates, exports, settings, billing, and logout"],
+    "severity": "P1"
+  },
+  {
+    "id": "OBS-002",
+    "status": "pass",
+    "actual": "Tenant-scoped subscription, payment, rate, template, and v1/v2 snapshot records agreed with the browser.",
+    "evidence": ["Supabase production reconciliation for organization 12b58c71"],
+    "severity": "P0"
+  }
+]

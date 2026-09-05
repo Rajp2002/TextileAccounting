@@ -271,7 +271,8 @@ export default function BasePayrollRecords({
                                 const hasLaterPayment = initialData.settlements.some(settlement => settlement.worker_id === worker.workerId && settlement.status !== 'reversed' && settlement.period_end > (original?.period_end ?? ''))
                                 const canReverse = original && worker.status !== 'reversed' && !hasLaterPayment && (original.advance_deducted === 0 || original.recovery_receipt_complete)
                                 const expanded = expandedWorkers.has(worker.settlementId)
-                                const machineCount = new Set(worker.earnings.map((earning) => earning.machineId ?? earning.machineLabel)).size
+                                const isSalary = worker.earnings.some(earning => earning.payType === 'fixed_monthly')
+                                const machineCount = new Set(worker.earnings.filter(earning => earning.payType !== 'fixed_monthly').map((earning) => earning.machineId ?? earning.machineLabel)).size
                                 return (
                                     <Card key={worker.settlementId} className="[contain-intrinsic-size:140px] [content-visibility:auto]">
                                         <button type="button" className="w-full text-left" onClick={() => toggleWorker(worker.settlementId)} aria-expanded={expanded}>
@@ -279,10 +280,10 @@ export default function BasePayrollRecords({
                                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                                     <div className="flex min-w-0 items-start gap-2">
                                                         {expanded ? <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
-                                                        <div><CardTitle className="text-base">{worker.workerName}{worker.status === 'reversed' ? ' · Reversed' : ''}</CardTitle><CardDescription>{formatCount(machineCount, 'machine')} · {worker.status === 'reversed' ? 'original record' : 'paid'} {formatDateOnly(worker.paidAt)}</CardDescription></div>
+                                                        <div><CardTitle className="text-base">{worker.workerName}{worker.status === 'reversed' ? ' · Reversed' : ''}</CardTitle><CardDescription>{isSalary ? 'Fixed monthly salary' : formatCount(machineCount, 'machine')} · {worker.status === 'reversed' ? 'original record' : 'paid'} {formatDateOnly(worker.paidAt)}</CardDescription></div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-                                                        <div><p className="text-xs text-muted-foreground">Production</p><p className="font-bold text-ink">{formatMeters(worker.meters)}</p></div>
+                                                        <div><p className="text-xs text-muted-foreground">{isSalary ? 'Pay basis' : 'Production'}</p><p className="font-bold text-ink">{isSalary ? 'Monthly salary' : formatMeters(worker.meters)}</p></div>
                                                         <div><p className="text-xs text-muted-foreground">Gross</p><p className="font-bold text-ink">{formatINR(worker.grossPay)}</p></div>
                                                         <div><p className="text-xs text-muted-foreground">Recovered</p><p className="font-bold text-ink">{formatINR(worker.advanceRecovered)}</p></div>
                                                         <div><p className="text-xs text-muted-foreground">Net paid</p><p className="font-black text-saffron-deep">{formatINR(worker.netPayout)}</p></div>
@@ -295,14 +296,14 @@ export default function BasePayrollRecords({
                                                 {worker.status === 'reversed' ? <p className="rounded-lg bg-warning/10 p-3 text-sm">Reversed {formatDateOnly(original?.reversed_at)}: {worker.reversalReason}. The amounts below are the preserved original record.</p> : <div className="space-y-2"><Button variant="outline" size="sm" disabled={!canReverse} onClick={() => { setReversingId(worker.settlementId); setReversalReason(''); setPaymentNotMade(false) }}>Resolve mistaken payment record</Button>{!canReverse && <p className="text-xs text-body">{hasLaterPayment ? 'A later payment depends on this record. Resolve the latest settlement first.' : 'This older record lacks the per-advance receipt needed for a safe automatic reversal.'}</p>}</div>}
                                                 <div className="overflow-x-auto rounded-lg border border-hairline">
                                                     <table className="w-full min-w-[720px] text-sm">
-                                                        <thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Machine</th><th className="px-3 py-2">Costing</th><th className="px-3 py-2 text-right">Weaver rate</th><th className="px-3 py-2 text-right">Production</th><th className="px-3 py-2 text-right">Earnings</th></tr></thead>
+                                                        <thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">{isSalary ? 'Pay basis' : 'Machine'}</th><th className="px-3 py-2">{isSalary ? 'Salary period' : 'Costing'}</th><th className="px-3 py-2 text-right">Rate</th><th className="px-3 py-2 text-right">Production</th><th className="px-3 py-2 text-right">Earnings</th></tr></thead>
                                                         <tbody className="divide-y divide-hairline">
                                                             {worker.earnings.map((earning) => (
                                                                 <tr key={`${earning.machineId ?? earning.machineLabel}:${earning.costingLabel}:${earning.rate}`}>
                                                                     <td className="px-3 py-3 font-semibold text-ink">{earning.machineLabel}</td>
                                                                     <td className="px-3 py-3 text-body">{earning.costingLabel}</td>
-                                                                    <td className="px-3 py-3 text-right text-body">{formatINR(earning.rate)}/m</td>
-                                                                    <td className="px-3 py-3 text-right font-semibold text-ink">{formatMeters(earning.meters)}</td>
+                                                                    <td className="px-3 py-3 text-right text-body">{formatINR(earning.rate)}/{earning.payType === 'fixed_monthly' ? 'month' : 'm'}</td>
+                                                                    <td className="px-3 py-3 text-right font-semibold text-ink">{earning.payType === 'fixed_monthly' ? '—' : formatMeters(earning.meters)}</td>
                                                                     <td className="px-3 py-3 text-right font-bold text-ink">{formatINR(earning.grossPay)}</td>
                                                                 </tr>
                                                             ))}
