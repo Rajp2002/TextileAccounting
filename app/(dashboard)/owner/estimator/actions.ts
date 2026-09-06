@@ -27,6 +27,7 @@ import {
     MAX_MONTHLY_OVERHEAD_AMOUNT,
     MAX_STANDARD_MONTHLY_PRODUCTION_METRES,
 } from '@/lib/monthly-overhead'
+import { detectTemplateYarnRenames } from '@/lib/yarn-rate-reconciliation'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -1002,6 +1003,7 @@ export async function saveAsFabricTemplate(data: {
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
     revalidatePath('/owner/quotes')
+    revalidatePath('/owner/rates')
     return {
         success: true,
         templateId: atomicResult.templateId,
@@ -1063,6 +1065,74 @@ export async function ensureCostingSnapshotsForSavedQualities() {
     return { success: true, created }
 }
 
+async function syncTemplateYarnRenames(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    templateId: string,
+    oldWarpRows?: WarpRow[] | null,
+    oldWeftRows?: WeftRow[] | null,
+    newWarpRows?: WarpRow[] | null,
+    newWeftRows?: WeftRow[] | null,
+) {
+    try {
+        const [otherTemplatesRes, costingsRes, existingRatesRes] = await Promise.all([
+            supabase
+                .from('estimator_templates')
+                .select('warp_rows, weft_rows')
+                .eq('org_id', orgId)
+                .eq('is_active', true)
+                .neq('id', templateId),
+            supabase
+                .from('estimator_quotes')
+                .select('warp_rows, weft_rows')
+                .eq('org_id', orgId)
+                .eq('record_kind', 'costing')
+                .eq('is_archived', false),
+            supabase
+                .from('cost_rate_book')
+                .select('name, category')
+                .eq('org_id', orgId)
+                .in('category', ['yarn_warp', 'yarn_weft']),
+        ])
+
+        const renameActions = detectTemplateYarnRenames({
+            oldWarpRows,
+            oldWeftRows,
+            newWarpRows,
+            newWeftRows,
+            otherTemplates: otherTemplatesRes.data ?? [],
+            savedCostings: costingsRes.data ?? [],
+            existingRates: existingRatesRes.data ?? [],
+        })
+
+        for (const action of renameActions) {
+            if (action.kind === 'rename') {
+                await supabase
+                    .from('cost_rate_book')
+                    .update({
+                        name: action.newName,
+                        current_value: action.newRate,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('org_id', orgId)
+                    .eq('category', action.category)
+                    .ilike('name', action.oldNormalizedName)
+            } else if (action.kind === 'delete_orphan') {
+                await supabase
+                    .from('cost_rate_book')
+                    .delete()
+                    .eq('org_id', orgId)
+                    .eq('category', action.category)
+                    .eq('apply_as_default', false)
+                    .in('source', ['Saved quality', 'Saved costing'])
+                    .ilike('name', action.oldNormalizedName)
+            }
+        }
+    } catch {
+        // Trigger provides primary DB-level guarantee; non-blocking fallback
+    }
+}
+
 /**
  * Update an existing template's yarn rates (warp + weft rows).
  * Used when market rates change — owner wants to keep fabric structure
@@ -1120,8 +1190,11 @@ export async function updateTemplateRates(data: {
     if (error) return { error: error.message }
     if (!updated) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
 
+    await syncTemplateYarnRenames(supabase, profile.org_id, data.id, current.warp_rows, current.weft_rows, data.warpRows, data.weftRows)
+
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
+    revalidatePath('/owner/rates')
     return { success: true, updatedAt: updated.updated_at }
 }
 
@@ -1240,8 +1313,11 @@ export async function updateFabricTemplate(data: {
     if (error) return { error: templateWriteError(error) }
     if (!updated) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
 
+    await syncTemplateYarnRenames(supabase, profile.org_id, data.id, current.warp_rows, current.weft_rows, data.warpRows, data.weftRows)
+
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
+    revalidatePath('/owner/rates')
     return { success: true, updatedAt: updated.updated_at }
 }
 
@@ -1299,6 +1375,7 @@ export async function renameTemplate(id: string, name: string, expectedUpdatedAt
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
+    revalidatePath('/owner/rates')
     return { success: true, updatedAt: updated.updated_at }
 }
 
@@ -1337,6 +1414,7 @@ export async function archiveTemplate(id: string, expectedUpdatedAt?: string) {
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
+    revalidatePath('/owner/rates')
     return { success: true, updatedAt: deleted.updated_at }
 }
 
@@ -1376,6 +1454,7 @@ export async function restoreTemplate(id: string, expectedUpdatedAt?: string) {
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
     revalidatePath('/owner/quotes')
+    revalidatePath('/owner/rates')
     return { success: true, data: restored, updatedAt: restored.updated_at }
 }
 

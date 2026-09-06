@@ -3,8 +3,10 @@ import type { WarpRow, WeftRow } from '../lib/estimator'
 import {
     applyYarnRateToTemplate,
     collectYarnRateCandidates,
+    detectTemplateYarnRenames,
     formatYarnRateUsageNotes,
     getMissingYarnRateCandidates,
+    getOrphanedYarnRateIds,
     getYarnRateConflicts,
     normalizeYarnName,
 } from '../lib/yarn-rate-reconciliation'
@@ -135,5 +137,140 @@ describe('saved-quality yarn rate reconciliation', () => {
         expect(updated.changed).toBe(true)
         expect(updated.warpRows.map(row => row.yarnRate)).toEqual([330, 110])
         expect(updated.weftRows[0].yarnRate).toBe(330)
+    })
+
+    describe('yarn rename reconciliation on template update', () => {
+        it('emits rename action when a yarn in a saved quality is renamed and not used elsewhere', () => {
+            const oldWarpRows = [warp('row-1', 'warp yarn', 107)]
+            const newWarpRows = [warp('row-1', '75 D jury', 115)]
+
+            const actions = detectTemplateYarnRenames({
+                oldWarpRows,
+                newWarpRows,
+                otherTemplates: [],
+                savedCostings: [],
+                existingRates: [{ name: 'warp yarn', category: 'yarn_warp' }],
+            })
+
+            expect(actions).toEqual([
+                {
+                    kind: 'rename',
+                    category: 'yarn_warp',
+                    oldNormalizedName: 'warp yarn',
+                    newName: '75 D jury',
+                    newNormalizedName: '75 d jury',
+                    newRate: 115,
+                },
+            ])
+        })
+
+        it('does not rename old yarn if it is still used in another active template', () => {
+            const oldWarpRows = [warp('row-1', 'warp yarn', 107)]
+            const newWarpRows = [warp('row-1', '75 D jury', 115)]
+
+            const actions = detectTemplateYarnRenames({
+                oldWarpRows,
+                newWarpRows,
+                otherTemplates: [
+                    { warp_rows: [warp('other-row', 'warp yarn', 107)] },
+                ],
+                savedCostings: [],
+                existingRates: [{ name: 'warp yarn', category: 'yarn_warp' }],
+            })
+
+            expect(actions).toEqual([])
+        })
+
+        it('does not rename old yarn if it is still used in a saved costing snapshot', () => {
+            const oldWarpRows = [warp('row-1', 'warp yarn', 107)]
+            const newWarpRows = [warp('row-1', '75 D jury', 115)]
+
+            const actions = detectTemplateYarnRenames({
+                oldWarpRows,
+                newWarpRows,
+                otherTemplates: [],
+                savedCostings: [
+                    { warp_rows: [warp('costing-row', 'warp yarn', 107)] },
+                ],
+                existingRates: [{ name: 'warp yarn', category: 'yarn_warp' }],
+            })
+
+            expect(actions).toEqual([])
+        })
+
+        it('emits delete_orphan when new yarn already exists in Rate Book and old yarn is unused', () => {
+            const oldWarpRows = [warp('row-1', 'warp yarn', 107)]
+            const newWarpRows = [warp('row-1', '75 D jury', 115)]
+
+            const actions = detectTemplateYarnRenames({
+                oldWarpRows,
+                newWarpRows,
+                otherTemplates: [],
+                savedCostings: [],
+                existingRates: [
+                    { name: 'warp yarn', category: 'yarn_warp' },
+                    { name: '75 D jury', category: 'yarn_warp' },
+                ],
+            })
+
+            expect(actions).toEqual([
+                {
+                    kind: 'delete_orphan',
+                    category: 'yarn_warp',
+                    oldNormalizedName: 'warp yarn',
+                },
+            ])
+        })
+
+        it('emits delete_orphan when a yarn row is removed from the quality and used nowhere else', () => {
+            const oldWeftRows = [weft('row-1', '150D Roto', 120), weft('row-2', 'Zari Gold', 450)]
+            const newWeftRows = [weft('row-1', '150D Roto', 120)]
+
+            const actions = detectTemplateYarnRenames({
+                oldWeftRows,
+                newWeftRows,
+                otherTemplates: [],
+                savedCostings: [],
+                existingRates: [
+                    { name: '150D Roto', category: 'yarn_weft' },
+                    { name: 'Zari Gold', category: 'yarn_weft' },
+                ],
+            })
+
+            expect(actions).toEqual([
+                {
+                    kind: 'delete_orphan',
+                    category: 'yarn_weft',
+                    oldNormalizedName: 'zari gold',
+                },
+            ])
+        })
+    })
+
+    describe('orphaned yarn rate detection', () => {
+        it('identifies unreviewed auto-discovered rates with zero usages', () => {
+            const rates = [
+                { id: 'rate-1', name: 'warp yarn', category: 'yarn_warp', source: 'Saved quality', apply_as_default: false },
+                { id: 'rate-2', name: '75 D jury', category: 'yarn_warp', source: 'Saved quality', apply_as_default: false },
+                { id: 'rate-3', name: 'Cotton 40s', category: 'yarn_warp', source: 'Supplier A', apply_as_default: false },
+                { id: 'rate-4', name: 'Default Warp', category: 'yarn_warp', source: 'Saved quality', apply_as_default: true },
+            ]
+            const activeTemplates = [
+                {
+                    id: 'tpl-1',
+                    name: 'Fabric 1',
+                    warp_rows: [warp('w-1', '75 D jury', 115)],
+                },
+            ]
+
+            const orphanIds = getOrphanedYarnRateIds({
+                rates,
+                templates: activeTemplates,
+                costings: [],
+            })
+
+            // Only rate-1 is an orphaned Saved Quality rate
+            expect(orphanIds).toEqual(['rate-1'])
+        })
     })
 })

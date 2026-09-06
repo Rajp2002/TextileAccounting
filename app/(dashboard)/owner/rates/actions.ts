@@ -11,6 +11,7 @@ import {
     getYarnRateDiscoverySource,
     getYarnRateConflicts,
     isYarnRateDiscoverySource,
+    normalizeYarnName,
     type YarnRateTemplate,
 } from '@/lib/yarn-rate-reconciliation'
 
@@ -243,6 +244,30 @@ export async function reconcileLegacyYarnRates() {
         attempted += 1
     }
 
+    // Clean up orphaned auto-discovered rates with zero active usages
+    const { data: existingYarnRates } = await supabase
+        .from('cost_rate_book')
+        .select('id, name, category, source, apply_as_default')
+        .eq('org_id', profile.org_id)
+        .in('category', ['yarn_warp', 'yarn_weft'])
+        .eq('source', 'Saved quality')
+        .eq('apply_as_default', false)
+
+    const activeKeys = new Set(
+        (usage.data ?? []).map(c => `${c.category}:${c.normalizedName}`),
+    )
+    const orphanIds = (existingYarnRates ?? [])
+        .filter(r => !activeKeys.has(`${r.category}:${normalizeYarnName(r.name)}`))
+        .map(r => r.id)
+
+    if (orphanIds.length > 0) {
+        await supabase
+            .from('cost_rate_book')
+            .delete()
+            .eq('org_id', profile.org_id)
+            .in('id', orphanIds)
+    }
+
     revalidatePath('/owner/rates')
     return { data: { attempted, conflictCount: usage.conflicts?.length ?? 0 } }
 }
@@ -371,3 +396,43 @@ export async function archiveCostRate(rateId: string, expectedUpdatedAt?: string
 export async function restoreCostRate(rateId: string, expectedUpdatedAt?: string) {
     return setCostRateActive(rateId, expectedUpdatedAt, true)
 }
+
+export async function deleteCostRate(rateId: string) {
+    if (!UUID_PATTERN.test(rateId)) return { error: 'Rate identifier is invalid.' }
+    const { profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+    const supabase = await createServerClient()
+
+    const { data: targetRate, error: targetError } = await supabase
+        .from('cost_rate_book')
+        .select('id, name, category, source, apply_as_default')
+        .eq('id', rateId)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+    if (targetError) return { error: targetError.message }
+    if (!targetRate) return { error: 'Rate no longer exists.' }
+    if (targetRate.apply_as_default) return { error: 'Default rates cannot be deleted. You can edit them or clear the default flag.' }
+
+    const usage = await getCostRateUsage()
+    if (usage.error) return { error: usage.error }
+
+    const isUsed = (usage.data ?? []).some(
+        c => c.category === targetRate.category && c.normalizedName === normalizeYarnName(targetRate.name),
+    )
+    if (isUsed) {
+        return { error: 'This rate is currently used by a saved quality or costing. Change or archive that quality before deleting this rate.' }
+    }
+
+    const { error: deleteError } = await supabase
+        .from('cost_rate_book')
+        .delete()
+        .eq('id', rateId)
+        .eq('org_id', profile.org_id)
+    if (deleteError) return { error: deleteError.message }
+
+    revalidatePath('/owner/rates')
+    revalidatePath('/owner', 'layout')
+    return { success: true }
+}
+

@@ -19,6 +19,7 @@ import {
     Pencil,
     Plus,
     Tags,
+    Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,6 +33,7 @@ import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import {
     archiveCostRate,
     confirmCostRateReview,
+    deleteCostRate,
     getCostRateUsage,
     getCostRateHistory,
     restoreCostRate,
@@ -79,7 +81,7 @@ type RateHistoryRow = {
 
 type PendingRateAction = {
     id: string
-    kind: 'save' | 'review' | 'archive' | 'restore'
+    kind: 'save' | 'review' | 'archive' | 'restore' | 'delete'
 }
 
 const YARN_CATEGORIES: YarnRateCategory[] = ['yarn_warp', 'yarn_weft']
@@ -584,6 +586,8 @@ export default function RatesClient({
     const [reviewError, setReviewError] = useState<string | null>(null)
     const [archiveRate, setArchiveRate] = useState<CostRateRow | null>(null)
     const [archiveError, setArchiveError] = useState<string | null>(null)
+    const [deleteRate, setDeleteRate] = useState<CostRateRow | null>(null)
+    const [deleteError, setDeleteError] = useState<string | null>(null)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [conflicts, setConflicts] = useState(initialConflicts)
     const [showConflicts, setShowConflicts] = useState(initialConflicts.length > 0)
@@ -851,6 +855,33 @@ export default function RatesClient({
         })
     }
 
+    const handleDelete = () => {
+        if (!deleteRate) return
+        const target = deleteRate
+        setDeleteError(null)
+        setPendingAction({ id: target.id, kind: 'delete' })
+        startTransition(async () => {
+            try {
+                const result = await deleteCostRate(target.id)
+                if (result.error) {
+                    const message = tx(userFacingError(result.error, 'The yarn rate could not be deleted. Try again.'))
+                    setDeleteError(message)
+                    toast.error(message)
+                    return
+                }
+                setRates(current => current.filter(rate => rate.id !== target.id))
+                toast.success(tx('Unused yarn rate removed from Rate Book.'))
+                setDeleteRate(null)
+            } catch (error) {
+                const message = tx(userFacingError(error, 'Rate could not be deleted. Try again.'))
+                setDeleteError(message)
+                toast.error(message)
+            } finally {
+                setPendingAction(null)
+            }
+        })
+    }
+
     const pendingRateName = pendingAction
         ? rates.find(rate => rate.id === pendingAction.id)?.name
             ?? (archiveRate?.id === pendingAction.id ? archiveRate.name : null)
@@ -1040,6 +1071,11 @@ export default function RatesClient({
                                                                 <DropdownMenuItem onSelect={() => { setArchiveError(null); setArchiveRate(rate) }} className={archived ? '' : 'text-risk focus:text-risk'}>
                                                                     {archived ? <ArchiveRestore /> : <Archive />} {tx(archived ? 'Restore rate' : 'Archive rate')}
                                                                 </DropdownMenuItem>
+                                                                {(!rate.fabric_names?.length && rate.saved_quality_count === 0 && !rate.apply_as_default) && (
+                                                                    <DropdownMenuItem onSelect={() => { setDeleteError(null); setDeleteRate(rate) }} className="text-destructive focus:text-destructive">
+                                                                        <Trash2 /> {tx('Delete unused rate')}
+                                                                    </DropdownMenuItem>
+                                                                )}
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
                                                     </div>
@@ -1148,6 +1184,14 @@ export default function RatesClient({
                                                             {actionKind === 'archive' || actionKind === 'restore' ? <Loader2 className="animate-spin" /> : archived ? <ArchiveRestore /> : <Archive />}
                                                             {tx(actionKind === 'archive' ? `Archiving ${rate.name}…` : actionKind === 'restore' ? `Restoring ${rate.name}…` : archived ? 'Restore rate' : 'Archive rate')}
                                                         </DropdownMenuItem>
+                                                        {(!rate.fabric_names?.length && rate.saved_quality_count === 0 && !rate.apply_as_default) && (
+                                                            <DropdownMenuItem
+                                                                onSelect={() => { setDeleteError(null); setDeleteRate(rate) }}
+                                                                className="text-destructive focus:text-destructive"
+                                                            >
+                                                                <Trash2 /> {tx('Delete unused rate')}
+                                                            </DropdownMenuItem>
+                                                        )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </div>
@@ -1291,6 +1335,20 @@ export default function RatesClient({
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setArchiveRate(null); setArchiveError(null) }} disabled={isPending}>{tx('Cancel')}</Button>
                         <Button variant={archiveRate?.is_active === false ? 'default' : 'destructive'} onClick={handleArchive} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {tx(isPending ? archiveRate?.is_active === false ? `Restoring ${archiveRate?.name ?? 'rate'}…` : `Archiving ${archiveRate?.name ?? 'rate'}…` : archiveRate?.is_active === false ? 'Restore rate' : 'Archive rate')}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={Boolean(deleteRate)} onOpenChange={open => { if (!open && !isPending) { setDeleteRate(null); setDeleteError(null) } }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{tx(`Delete ${deleteRate?.name ?? 'rate'} from Rate Book?`)}</DialogTitle>
+                        <DialogDescription>{tx('This removes the unused yarn rate from your Rate Book. Since it is not used in any active quality or costing, it will not affect any calculations.')}</DialogDescription>
+                    </DialogHeader>
+                    {deleteError && <p role="alert" className="text-sm font-medium text-destructive">{deleteError}</p>}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setDeleteRate(null); setDeleteError(null) }} disabled={isPending}>{tx('Cancel')}</Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {tx(isPending ? `Deleting ${deleteRate?.name ?? 'rate'}…` : 'Delete rate')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
