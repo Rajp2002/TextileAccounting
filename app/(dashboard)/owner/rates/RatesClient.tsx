@@ -1450,12 +1450,12 @@ export default function RatesClient({
             <div className="min-[1540px]:hidden">
                 <ArchivePolicyNotice />
             </div>
-            <div data-ratebook-section={1} data-ratebook-field="overview" className="space-y-1">
+            <div className="space-y-1">
                 <PageHeader
                     icon={Tags}
                     title={t('common.yarn_rate_book')}
                     description={(
-                        <span data-ratebook-field="immutabilityNotice">
+                        <span>
                             {tx('Keep current yarn rates for future estimates. Saved costing snapshots stay unchanged.')}
                         </span>
                     )}
@@ -1510,11 +1510,11 @@ export default function RatesClient({
                 </div>
             )}
 
-            <Card className="premium-surface" data-ratebook-section={2} data-ratebook-section-card="true">
+            <Card className="premium-surface">
                 <CardContent className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-5">
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                        <div data-ratebook-field="activeRatesCount" className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
-                        <div data-ratebook-field="lastReviewedDate" className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
+                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
+                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-subtle">
                         <span><span className="font-semibold text-ink">{warpRatesCount}</span> {tx('Warp')}</span>
@@ -1524,18 +1524,18 @@ export default function RatesClient({
                 </CardContent>
             </Card>
 
-            <Card className="gap-0 overflow-hidden p-0" data-ratebook-section={4} data-ratebook-section-card="true" data-ratebook-field="rateTableCard">
+            <Card className="gap-0 overflow-hidden p-0" data-ratebook-section={2} data-ratebook-section-card="true" data-ratebook-field="rateTableCard">
                 <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
                     <div>
                         <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
                         <p className="mt-1 hidden text-xs leading-relaxed text-body sm:block">{tx('Discovered rates stay marked for review until you confirm the displayed value.')}</p>
                     </div>
-                    <Button data-ratebook-field="archivedToggle" variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-xs text-subtle hover:text-ink">
+                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-xs text-subtle hover:text-ink">
                         {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}
                     </Button>
                 </div>
 
-                <Toolbar data-ratebook-section={3} data-ratebook-section-card="true" className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
+                <Toolbar data-ratebook-section={1} data-ratebook-section-card="true" className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-1 flex-wrap items-center gap-3">
                         <div data-ratebook-field="yarnSearch" className="relative min-w-0 flex-1 sm:max-w-xs md:max-w-sm">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
@@ -1728,13 +1728,17 @@ export default function RatesClient({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-hairline">
-                                    {visibleRates.map(rate => {
+                                    {visibleRates.map((rate, index) => {
                                         const reviewState = getRateReviewStatus(rate)
                                         const archived = rate.is_active === false
                                         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
                                         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
                                         return (
-                                            <tr key={rate.id} className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}>
+                                            <tr
+                                                key={rate.id}
+                                                data-ratebook-field="yarnRow"
+                                                className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}
+                                            >
                                                 <td data-ratebook-field="yarnNameCell" className="px-3 py-3 align-top">
                                                     <p className="font-semibold text-ink">{rate.name}</p>
                                                     <p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
@@ -1858,7 +1862,7 @@ export default function RatesClient({
                             </table>
                         </div>
                         <div key={`cards-${resultMotionKey}`} className="premium-content-swap space-y-3 p-3 lg:hidden">
-                            {visibleRates.map(rate => {
+                            {visibleRates.map((rate, index) => {
                                 const reviewState = getRateReviewStatus(rate)
                                 const archived = rate.is_active === false
                                 const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
@@ -1874,7 +1878,11 @@ export default function RatesClient({
                                                 ? 'border-l-info'
                                                 : 'border-l-hairline-strong'
                                 return (
-                                    <Card key={rate.id} className={`premium-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}>
+                                    <Card
+                                        key={rate.id}
+                                        data-ratebook-field="yarnRow"
+                                        className={`premium-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}
+                                    >
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div data-ratebook-field="yarnNameCell" className="min-w-0">
@@ -2162,7 +2170,7 @@ export default function RatesClient({
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
             <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
-                <div data-ratebook-section={7} data-ratebook-field="reviewRailWidget">
+                <div data-ratebook-section={6} data-ratebook-field="reviewRailWidget">
                     <RateReviewRailWidget
                         dueReviewRates={dueReviewRates}
                         mostRecentReview={mostRecentReview}
@@ -2176,7 +2184,7 @@ export default function RatesClient({
             </aside>
 
             {/* Pin the archive policy to the bottom edge of the desktop rail. */}
-            <aside className="rates-archive-policy-rail-desktop" data-ratebook-section={8} data-ratebook-field="activityAndArchive" aria-label={tx('Rate Book archive policy')}>
+            <aside className="rates-archive-policy-rail-desktop" data-ratebook-section={6} data-ratebook-field="activityAndArchive" aria-label={tx('Rate Book archive policy')}>
                 <ArchivePolicyNotice />
             </aside>
 

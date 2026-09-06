@@ -3,14 +3,12 @@ import type { Language } from './context'
 // Explicit copy: never infer a tutorial title from potentially untranslated DOM labels.
 const en = {
   "sections": [
-    "Rate book overview",
-    "Summary & health",
     "Search & filters",
-    "Rate table & trends",
+    "Yarn rate row",
+    "Rate details & trends",
     "Fast inline actions",
     "Full rate editor",
-    "Review rail & bulk actions",
-    "Audit history & archive"
+    "Review rail & audit"
   ],
   "sectionProgress": "Section {current} of {total}",
   "replay": "How Rate Book works · Guided tour",
@@ -51,9 +49,17 @@ const en = {
       "title": "Needs Review Filter",
       "description": "Instantly filters to yarns where the review interval has lapsed or newly discovered rates were imported from fabric recipes."
     },
+    "confirmAll": {
+      "title": "Confirm All as Current",
+      "description": "When multiple rates are due for verification, click Confirm All to instantly verify every pending price in a single click without opening individual forms."
+    },
     "archivedToggle": {
       "title": "Active vs Archived Rates",
       "description": "Toggle between active manufacturing rates and archived yarns. Archived rates remain accessible for historical reference and can be restored anytime."
+    },
+    "yarnRow": {
+      "title": "Yarn Catalog Entry",
+      "description": "Each row represents an active yarn monitored in your mill. It combines current price, market trend, review urgency, and linked fabric recipes into a single scannable line."
     },
     "yarnNameCell": {
       "title": "Yarn Identity & Defaults",
@@ -95,10 +101,6 @@ const en = {
       "title": "Proactive Review Monitor",
       "description": "The review rail keeps pending rate reviews visible and provides quick access to the batch review workflow whenever supplier prices change."
     },
-    "confirmAll": {
-      "title": "Bulk Review & Batch Dialog",
-      "description": "When multiple rates are due for verification, confirm all of them as current in a single click or step through them in the batch review dialog."
-    },
     "activityAndArchive": {
       "title": "Audit History & Soft Archival",
       "description": "Inspect complete price change logs with Surat timestamps and user attribution. Inactive rates can be soft-archived to protect quotation integrity."
@@ -108,14 +110,12 @@ const en = {
 
 const hi: typeof en = {
   "sections": [
-    "रेट बुक परिचय",
-    "सारांश और स्थिति",
     "खोज और फ़िल्टर",
-    "रेट टेबल और रुझान",
+    "यार्न रेट पंक्ति",
+    "रेट विवरण और रुझान",
     "त्वरित इनलाइन कार्य",
     "विस्तृत रेट संपादक",
-    "रिव्यू रेल और थोक कार्य",
-    "ऑडिट इतिहास और आर्काइव"
+    "रिव्यू रेल और ऑडिट"
   ],
   "sectionProgress": "अनुभाग {current} का {total}",
   "replay": "रेट बुक कैसे काम करता है · गाइडेड टूर",
@@ -156,9 +156,17 @@ const hi: typeof en = {
       "title": "समीक्षा योग्य (Needs Review) फ़िल्टर",
       "description": "उन धागों को तुरंत अलग करें जिनकी समीक्षा की तारीख बीत चुकी है या जो नई फैब्रिक क्वालिटी से सिस्टम में आए हैं।"
     },
+    "confirmAll": {
+      "title": "सभी की वर्तमान के रूप में पुष्टि करें",
+      "description": "जब कई रेट्स की समीक्षा बाकी हो, तो अलग-अलग फॉर्म खोले बिना एक ही क्लिक में सभी लंबित भावों की एक साथ पुष्टि करने के लिए Confirm All दबाएं।"
+    },
     "archivedToggle": {
       "title": "सक्रिय बनाम आर्काइव रेट्स",
       "description": "सक्रिय धागों और आर्काइव किए गए रेट्स के बीच स्विच करें। आर्काइव रेट्स ऑडिट के लिए सुरक्षित रहते हैं और कभी भी रीस्टोर हो सकते हैं।"
+    },
+    "yarnRow": {
+      "title": "यार्न कैटलॉग पंक्ति",
+      "description": "प्रत्येक पंक्ति आपकी मिल में ट्रैक किए जा रहे एक धागे का प्रतिनिधित्व करती है। यह वर्तमान भाव, बाज़ार रुझान, समीक्षा स्थिति और जुड़े कपड़ों की जानकारी एक साथ दिखाती है।"
     },
     "yarnNameCell": {
       "title": "धागे का विवरण और डिफ़ॉल्ट",
@@ -200,10 +208,6 @@ const hi: typeof en = {
       "title": "सक्रिय समीक्षा मॉनिटर",
       "description": "रिव्यू रेल लंबित समीक्षाओं पर नज़र रखता है और बाज़ार भाव बदलने पर बैच रिव्यू की त्वरित सुविधा देता है।"
     },
-    "confirmAll": {
-      "title": "थोक समीक्षा और बैच संवाद",
-      "description": "जब कई रेट्स की समीक्षा बाकी हो, तो एक ही क्लिक में सभी की पुष्टि करें या बैच संवाद में एक-एक करके देखें।"
-    },
     "activityAndArchive": {
       "title": "ऑडिट इतिहास और सुरक्षित आर्काइव",
       "description": "सूरत टाइमस्टैम्प और उपयोगकर्ता विवरण के साथ मूल्य परिवर्तन का पूरा इतिहास देखें। अप्रयुक्त धागों को सुरक्षित रूप से आर्काइव करें।"
@@ -213,14 +217,12 @@ const hi: typeof en = {
 
 const gu: typeof en = {
   "sections": [
-    "રેટ બુક પરિચય",
-    "સારાંશ અને સ્થિતિ",
     "શોધ અને ફિલ્ટર્સ",
-    "રેટ ટેબલ અને વલણો",
+    "યાર્ન રેટ પંક્તિ",
+    "રેટ વિગતો અને વલણો",
     "ઝડપી ઇનલાઇન ક્રિયાઓ",
     "વિગતવાર રેટ સંપાદક",
-    "રિવ્યૂ રેલ અને જથ્થાબંધ ક્રિયાઓ",
-    "ઓડિટ ઇતિહાસ અને આર્કાઇવ"
+    "રિવ્યૂ રેલ અને ઓડિટ"
   ],
   "sectionProgress": "વિભાગ {current} / {total}",
   "replay": "રેટ બુક કેવી રીતે કાર્ય કરે છે · ગાઇડેડ ટૂર",
@@ -261,9 +263,17 @@ const gu: typeof en = {
       "title": "સમીક્ષા લાયક (Needs Review) ફિલ્ટર",
       "description": "જે દોરાઓની સમીક્ષાની તારીખ વીતી ગઈ હોય અથવા નવી ક્વોલિટીમાંથી ઉમેરાયા હોય તેમને તરત અલગ તારવો."
     },
+    "confirmAll": {
+      "title": "બધાને વર્તમાન તરીકે પુષ્ટિ કરો",
+      "description": "જ્યારે ઘણા રેટ્સની સમીક્ષા બાકી હોય, ત્યારે અલગ-અલગ ફોર્મ ખોલ્યા વિના એક જ ક્લિકમાં તમામ બાકી ભાવોની એકસાથે પુષ્ટિ કરવા માટે Confirm All દબાવો."
+    },
     "archivedToggle": {
       "title": "સક્રિય વિરુદ્ધ આર્કાઇવ રેટ્સ",
       "description": "સક્રિય દોરાઓ અને આર્કાઇવ કરેલા રેટ્સ વચ્ચે સ્વિચ કરો. આર્કાઇવ રેટ્સ ઓડિટ માટે સચવાયેલા રહે છે અને ગમે ત્યારે પુનઃસ્થાપિત કરી શકાય છે."
+    },
+    "yarnRow": {
+      "title": "યાર્ન કેટલોગ પંક્તિ",
+      "description": "દરેક પંક્તિ તમારી મિલમાં ટ્રેક થતાં એક દોરાનું પ્રતિનિધિત્વ કરે છે. તે વર્તમાન ભાવ, બજાર વલણ, સમીક્ષા સ્થિતિ અને જોડાયેલા કાપડની માહિતી એકસાથે દર્શાવે છે."
     },
     "yarnNameCell": {
       "title": "દોરાની વિગત અને ડિફોલ્ટ",
@@ -304,10 +314,6 @@ const gu: typeof en = {
     "reviewRailWidget": {
       "title": "સક્રિય સમીક્ષા મોનિટર",
       "description": "રિવ્યૂ રેલ બાકી સમીક્ષાઓ પર નજર રાખે છે અને બજાર ભાવ બદલાય ત્યારે બેચ રિવ્યૂની ઝડપી સુવિધા આપે છે."
-    },
-    "confirmAll": {
-      "title": "જથ્થાબંધ સમીક્ષા અને બેચ સંવાદ",
-      "description": "જ્યારે ઘણા રેટ્સની સમીક્ષા બાકી હોય, ત્યારે એક જ ક્લિકમાં બધાની પુષ્ટિ કરો અથવા બેચ સંવાદમાં ક્રમશઃ તપાસો."
     },
     "activityAndArchive": {
       "title": "ઓડિટ ઇતિહાસ અને સુરક્ષિત આર્કાઇવ",

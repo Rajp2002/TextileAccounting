@@ -30,10 +30,10 @@ beforeEach(() => {
 })
 
 describe('Rate Book Guided Tour i18n & Integrity', () => {
-    it('provides exactly 8 sections for en, hi, and gu', () => {
+    it('provides exactly 6 sections for en, hi, and gu', () => {
         for (const lang of ['en', 'hi', 'gu'] as const) {
             const copy = rateBookTutorialCopy[lang]
-            expect(copy.sections).toHaveLength(8)
+            expect(copy.sections).toHaveLength(6)
             expect(copy.replay).toBeTruthy()
             expect(copy.skip).toBeTruthy()
             expect(copy.next).toBeTruthy()
@@ -53,8 +53,9 @@ describe('Rate Book Guided Tour i18n & Integrity', () => {
     })
 
     it('validates fields with isRatebookTutorialField', () => {
-        expect(isRatebookTutorialField('overview')).toBe(true)
+        expect(isRatebookTutorialField('yarnRow')).toBe(true)
         expect(isRatebookTutorialField('yarnSearch')).toBe(true)
+        expect(isRatebookTutorialField('confirmAll')).toBe(true)
         expect(isRatebookTutorialField('quickEditPopover')).toBe(true)
         expect(isRatebookTutorialField('nonExistentField')).toBe(false)
     })
@@ -85,14 +86,11 @@ describe('RatesClient Integration & Overlay Stability', () => {
 
     it('tags core sections and interactive fields with data-ratebook attributes', () => {
         const expectedFields = [
-            'overview',
-            'immutabilityNotice',
-            'activeRatesCount',
-            'lastReviewedDate',
             'yarnSearch',
             'directionFilter',
             'needsReviewFilter',
-            'archivedToggle',
+            'confirmAll',
+            'yarnRow',
             'yarnNameCell',
             'rateAndTrend',
             'reviewStatusBadge',
@@ -103,7 +101,6 @@ describe('RatesClient Integration & Overlay Stability', () => {
             'addRateAction',
             'rateDrawerFields',
             'reviewRailWidget',
-            'confirmAll',
             'activityAndArchive',
         ]
 

@@ -18,34 +18,33 @@ export type RatebookStep = {
 }
 
 const ORDERED_STEPS: { section: number; field: RatebookTutorialField; inSheet?: boolean; inPopover?: boolean }[] = [
-    // Section 0: Rate book overview
-    { section: 0, field: 'overview' },
-    { section: 0, field: 'immutabilityNotice' },
-    // Section 1: Summary & health
-    { section: 1, field: 'activeRatesCount' },
-    { section: 1, field: 'lastReviewedDate' },
-    // Section 2: Search & filters
-    { section: 2, field: 'yarnSearch' },
-    { section: 2, field: 'directionFilter' },
-    { section: 2, field: 'needsReviewFilter' },
-    { section: 2, field: 'archivedToggle' },
-    // Section 3: Rate table & trends
-    { section: 3, field: 'yarnNameCell' },
-    { section: 3, field: 'rateAndTrend' },
-    { section: 3, field: 'reviewStatusBadge' },
-    { section: 3, field: 'linkedQualitiesPopover' },
-    // Section 4: Fast inline actions
-    { section: 4, field: 'quickReviewAction' },
-    { section: 4, field: 'quickEditAction' },
-    { section: 4, field: 'quickEditPopover', inPopover: true },
-    // Section 5: Full rate editor
-    { section: 5, field: 'addRateAction' },
-    { section: 5, field: 'rateDrawerFields', inSheet: true },
-    // Section 6: Review rail & bulk actions
-    { section: 6, field: 'reviewRailWidget' },
-    { section: 6, field: 'confirmAll' },
-    // Section 7: Audit history & archive
-    { section: 7, field: 'activityAndArchive' },
+    // Section 0: Search & filters
+    { section: 0, field: 'yarnSearch' },
+    { section: 0, field: 'directionFilter' },
+    { section: 0, field: 'needsReviewFilter' },
+    { section: 0, field: 'confirmAll' },
+
+    // Section 1: Yarn rate row (separate section before row steps)
+    { section: 1, field: 'yarnRow' },
+
+    // Section 2: Rate details & trends
+    { section: 2, field: 'yarnNameCell' },
+    { section: 2, field: 'rateAndTrend' },
+    { section: 2, field: 'reviewStatusBadge' },
+    { section: 2, field: 'linkedQualitiesPopover' },
+
+    // Section 3: Fast inline actions
+    { section: 3, field: 'quickReviewAction' },
+    { section: 3, field: 'quickEditAction' },
+    { section: 3, field: 'quickEditPopover', inPopover: true },
+
+    // Section 4: Full rate editor
+    { section: 4, field: 'addRateAction' },
+    { section: 4, field: 'rateDrawerFields', inSheet: true },
+
+    // Section 5: Review rail & audit
+    { section: 5, field: 'reviewRailWidget' },
+    { section: 5, field: 'activityAndArchive' },
 ]
 
 function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; card: HTMLElement | null } {
@@ -54,6 +53,17 @@ function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; 
 
     if (!target) {
         target = document.querySelector<HTMLElement>(`[data-ratebook-field="${step.field}"]`)
+    }
+
+    if (step.field === 'yarnRow') {
+        const row = document.querySelector<HTMLElement>('tbody tr[data-ratebook-field="yarnRow"]') ??
+                    document.querySelector<HTMLElement>('tbody tr') ??
+                    document.querySelector<HTMLElement>('[data-ratebook-field="yarnRow"]') ??
+                    document.querySelector<HTMLElement>('[data-slot="card"]')
+        if (row) {
+            target = row
+            card = row
+        }
     }
 
     if (step.field === 'quickEditPopover') {
@@ -74,8 +84,9 @@ function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; 
 
     // Fallbacks if table rows are empty or not rendered
     if (!target) {
-        if (['yarnNameCell', 'rateAndTrend', 'reviewStatusBadge', 'linkedQualitiesPopover', 'quickReviewAction', 'quickEditAction'].includes(step.field)) {
-            target = document.querySelector<HTMLElement>('table') ??
+        if (['yarnRow', 'yarnNameCell', 'rateAndTrend', 'reviewStatusBadge', 'linkedQualitiesPopover', 'quickReviewAction', 'quickEditAction'].includes(step.field)) {
+            target = document.querySelector<HTMLElement>('tbody tr') ??
+                     document.querySelector<HTMLElement>('table') ??
                      document.querySelector<HTMLElement>('[data-ratebook-field="rateTableCard"]') ??
                      document.querySelector<HTMLElement>('[data-slot="card"]')
         } else if (step.field === 'confirmAll') {
