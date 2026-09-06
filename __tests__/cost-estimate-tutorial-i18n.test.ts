@@ -8,7 +8,7 @@ describe('Cost Estimate tutorial translations', () => {
             const copy = costEstimateTutorialCopy[language]
             expect(Object.keys(copy).sort()).toEqual(Object.keys(english).sort())
             expect(Object.keys(copy.fields).sort()).toEqual(Object.keys(english.fields).sort())
-            expect(copy.sections).toHaveLength(7)
+            expect(copy.sections).toHaveLength(9)
             expect(copy.sectionProgress).toContain('{current}')
             expect(copy.sectionProgress).toContain('{total}')
             const strings = [
@@ -36,6 +36,8 @@ describe('Cost Estimate tutorial translations', () => {
     })
 
     it('recognises stable field IDs regardless of the displayed language', () => {
+        expect(isTutorialField('entryMode')).toBe(true)
+        expect(isTutorialField('savedQualities')).toBe(true)
         expect(isTutorialField('warpComponentCount')).toBe(true)
         expect(isTutorialField('monthlyOverheadMethod')).toBe(true)
         expect(isTutorialField('toString')).toBe(false)

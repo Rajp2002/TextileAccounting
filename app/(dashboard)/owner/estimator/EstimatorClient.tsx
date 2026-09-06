@@ -927,17 +927,18 @@ function YarnComponentCountFields({
     )
 }
 
-function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step }: {
+function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step, tutorialSection }: {
     title:    string
     icon:     React.ElementType
     accent?:  EstimatorAccent
     badgeContent?: React.ReactNode
     detail?: React.ReactNode
     step?: number
+    tutorialSection?: number
 }) {
     const colorClass = getAccentStyles(accent)
     return (
-        <div data-tutorial-section={step} className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div data-tutorial-section={tutorialSection} className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
                 {step != null && (
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border text-[12px] font-semibold ${colorClass.marker}`}>
@@ -978,6 +979,7 @@ function StepperField({
     ghostValue,
     ghostPlaceholder,
     placeholderKind = 'example',
+    fieldKey,
 }: {
     label: string
     value: number
@@ -989,6 +991,7 @@ function StepperField({
     ghostValue?: number
     ghostPlaceholder?: string
     placeholderKind?: EstimatorPlaceholderKind
+    fieldKey?: string
 }) {
     const decrement = () => onChange(Math.max(0, Number((value - step).toFixed(2))))
     const increment = () => onChange(Number((value + step).toFixed(2)))
@@ -996,7 +999,7 @@ function StepperField({
     const placeholderClass = 'placeholder:text-[var(--color-muted)]'
     const valueClass = 'text-[var(--color-yarn-orange)]'
     return (
-        <div className="min-w-0 space-y-2">
+        <div data-estimator-field={fieldKey} className="min-w-0 space-y-2">
             <Label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">
                 {label}
             </Label>
@@ -2613,12 +2616,11 @@ function QuickCostingView({
     return (
         <div
             className="space-y-3"
-            data-costing-tutorial-root="true"
             data-enter-navigate-container="true"
             onKeyDown={handleEnterKeyNavigation}
         >
             <EstimatorCard accent="neutral">
-                <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} />
+                <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} tutorialSection={2} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     {showPartyField && (
                         <div className="space-y-1.5 sm:col-span-2">
@@ -2657,13 +2659,6 @@ function QuickCostingView({
                             className="h-11 border-slate-200 font-bold"
                         />
                         <p className="text-[10px] font-medium leading-normal text-slate-400">Use the name your staff and repeat customers will recognise.</p>
-                    </div>
-                    <div className="sm:col-span-2">
-                        <YarnComponentCountFields
-                            warpCount={state.warpRows.length}
-                            weftCount={state.weftRows.length}
-                            dispatch={dispatch}
-                        />
                     </div>
                     <NumField fieldKey="warpCrimpPct"
                         label="Warp crimp (take-up)"
@@ -2707,6 +2702,7 @@ function QuickCostingView({
                     icon={Sparkles}
                     accent="warp"
                     step={2}
+                    tutorialSection={3}
                     detail={<p className="text-[11px] text-[var(--color-muted)]">{state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · crimp {state.warpCrimpPct || 0}% + waste {state.yarnShortagePct || 0}%</p>}
                     badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
                 />
@@ -2763,6 +2759,7 @@ function QuickCostingView({
                     icon={Scissors}
                     accent="weft"
                     step={3}
+                    tutorialSection={4}
                     badgeContent={<div className="flex items-center gap-2"><div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5"><button type="button" onClick={() => onWidthUnitChange('cm')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>cm</button><button type="button" onClick={() => onWidthUnitChange('inch')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>inch</button></div><SectionCostPill value={totals.yarnBaseWeftPerM} valid={hasValidCostResult} /></div>}
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
@@ -2792,7 +2789,7 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="weave">
-                <SectionHeader title="Weaving cost" icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
+                <SectionHeader title="Weaving cost" icon={Gauge} accent="weave" step={4} tutorialSection={5} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <WeavingRateFields
                         state={state}
@@ -2808,7 +2805,7 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="post">
-                <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
+                <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} tutorialSection={6} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {/* Warping Group */}
@@ -2923,7 +2920,7 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="overhead">
-                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
+                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} tutorialSection={7} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button data-estimator-field="directOverheadMethod" type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => onOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'}`}>
@@ -2968,6 +2965,7 @@ function QuickCostingView({
                     icon={Coins}
                     accent="neutral"
                     step={7}
+                    tutorialSection={8}
                 />
                 <CardContent className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
                     <NumField fieldKey="profitPct" label="Target margin" value={state.profitPct} onChange={value => dispatch({ type: 'SET', field: 'profitPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 10" hint="Your desired profit above break-even." />
@@ -3258,7 +3256,7 @@ export default function EstimatorClient({
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
-    const prepareTutorial = useCallback(() => { setEntryMode('quick'); setShowAdvancedOverhead(false) }, [])
+    const prepareTutorial = useCallback(() => { setEntryMode('detailed'); setShowAdvancedOverhead(false) }, [])
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
@@ -5627,12 +5625,13 @@ export default function EstimatorClient({
                     </div>
 
                     {/* ── MAIN FORM ────────────────────────────────────────────── */}
-                    <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`}>
+                    <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`} data-costing-tutorial-root="true">
 
                 {/* ── CURRENT QUALITY + MODE ─────────────────────────────── */}
                 <Sheet open={showQualityLibrary} onOpenChange={setShowQualityLibrary}>
                     <section
                         id="active-quality"
+                        data-slot="card"
                         aria-labelledby="active-quality-title"
                         className="premium-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
                     >
@@ -5653,43 +5652,42 @@ export default function EstimatorClient({
                                 </p>
                             </div>
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                {(!templatesLoaded || templates.length === 0) && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowQualityLibrary(true)}
-                                    className="h-11 justify-center rounded-[10px] border-[var(--color-hairline-strong)] bg-white px-4 text-[12px] font-semibold text-[var(--color-body)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] hover:text-[var(--color-yarn-orange-dark)]"
+                                <div
+                                    className="flex items-center rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5"
+                                    role="tablist"
+                                    aria-label={entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}
+                                    data-tutorial-section={1}
+                                    data-estimator-field="entryMode"
                                 >
-                                    <BookmarkPlus className="h-3.5 w-3.5" />
-                                    Change quality
-                                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                                </Button>
-                                )}
-                                <div className="flex items-center rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label={entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}>
                                     <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Quick Costing · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
                                     <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                                 </div>
                             </div>
                         </div>
-                        {templatesLoaded && templates.length > 0 && (
-                            <button
-                                type="button"
-                                data-testid="saved-quality-quick-picker"
-                                onClick={() => setShowQualityLibrary(true)}
-                                aria-haspopup="dialog"
-                                aria-label={`Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}`}
-                                className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)]/60 px-3.5 py-2.5 text-left transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
-                            >
-                                <span className="min-w-0">
-                                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">Saved qualities</span>
-                                    <span className="mt-0.5 block truncate text-[12px] font-medium text-[var(--color-body)]">Tap to view {templates.length} saved {templates.length === 1 ? 'quality' : 'qualities'}</span>
+                        <button
+                            type="button"
+                            data-testid="saved-quality-quick-picker"
+                            data-tutorial-section={9}
+                            data-estimator-field="savedQualities"
+                            data-slot="card"
+                            onClick={() => setShowQualityLibrary(true)}
+                            aria-haspopup="dialog"
+                            aria-label={templatesLoaded && templates.length > 0 ? `Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}` : tx('Saved qualities library')}
+                            className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)]/60 px-3.5 py-2.5 text-left transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
+                        >
+                            <span className="min-w-0">
+                                <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">Saved qualities</span>
+                                <span className="mt-0.5 block truncate text-[12px] font-medium text-[var(--color-body)]">
+                                    {templatesLoaded && templates.length > 0
+                                        ? `Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}`
+                                        : tx('Tap to browse saved qualities library or save this recipe')}
                                 </span>
-                                <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-yarn-orange-dark)]">
-                                    View
-                                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                                </span>
-                            </button>
-                        )}
+                            </span>
+                            <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-yarn-orange-dark)]">
+                                {templatesLoaded && templates.length > 0 ? 'View' : 'Open'}
+                                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                            </span>
+                        </button>
                         <div data-testid="costing-validity" className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
                             <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                             <span className="font-semibold">{validityStatus.label}</span>
@@ -5923,7 +5921,7 @@ export default function EstimatorClient({
                 >
                 {/* 1. Costing Basics */}
                 <EstimatorCard accent="neutral">
-                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
+                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} tutorialSection={2} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Customer is quotation context only. Standalone Base costings are quality-first. */}
@@ -5933,6 +5931,8 @@ export default function EstimatorClient({
                                         {t('estimator.order_basics.party')}
                                     </Label>
                                     <Input
+                                        data-estimator-field="partyName"
+                                        aria-label="Party / Customer"
                                         list="estimator-party-options"
                                         value={partyName}
                                         onChange={e => setPartyNameFromUser(e.target.value)}
@@ -5986,6 +5986,14 @@ export default function EstimatorClient({
                             </div>
                         </div>
 
+                        <div className="border-t border-slate-100 pt-1">
+                            <YarnComponentCountFields
+                                warpCount={state.warpRows.length}
+                                weftCount={state.weftRows.length}
+                                dispatch={dispatch}
+                            />
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
@@ -6016,6 +6024,7 @@ export default function EstimatorClient({
                         icon={Sparkles} 
                         accent="warp"
                         step={2}
+                        tutorialSection={3}
                         detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
                         badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
                     />
@@ -6024,6 +6033,7 @@ export default function EstimatorClient({
                         <div className="mb-6 grid overflow-hidden rounded-[13px] border border-[#D7E7F1] bg-[#F7FBFD] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(260px,0.9fr)]">
                             <div className="border-b border-[#D7E7F1] p-4 sm:border-b-0 sm:border-r">
                                 <StepperField
+                                    fieldKey="warpCrimpPct"
                                     label="Warp Crimp (Take-up)"
                                     value={state.warpCrimpPct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })}
@@ -6033,6 +6043,7 @@ export default function EstimatorClient({
                             </div>
                             <div className="border-b border-[#D7E7F1] p-4 sm:border-b-0 sm:border-r">
                                 <StepperField
+                                    fieldKey="yarnShortagePct"
                                     label="Default Yarn Waste"
                                     value={state.yarnShortagePct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
@@ -6211,6 +6222,7 @@ export default function EstimatorClient({
                         icon={Scissors} 
                         accent="weft"
                         step={3}
+                        tutorialSection={4}
                         badgeContent={
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5 shadow-[0_1px_2px_rgba(30,37,40,0.03)]">
@@ -6392,7 +6404,7 @@ export default function EstimatorClient({
 
                 {/* 4. Weave Cost */}
                 <EstimatorCard accent="weave">
-                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
+                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} tutorialSection={5} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <WeavingRateFields
                             state={state}
@@ -6409,7 +6421,7 @@ export default function EstimatorClient({
 
                 {/* 5. Warping & Sizing */}
                 <EstimatorCard accent="post">
-                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
+                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} tutorialSection={6} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                     <CardContent className="p-5 sm:p-6 space-y-4">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {/* Warping Group */}
@@ -6425,7 +6437,7 @@ export default function EstimatorClient({
                                             </span>
                                         )}
                                     </div>
-                                    <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                    <div data-estimator-field="warpingMode" className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
                                         <button
                                             id="warping-mode-in-house"
                                             type="button"
@@ -6480,7 +6492,7 @@ export default function EstimatorClient({
                                             </span>
                                         )}
                                     </div>
-                                    <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                                    <div data-estimator-field="sizingMode" className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
                                         <button
                                             id="sizing-mode-in-house"
                                             type="button"
@@ -6537,6 +6549,7 @@ export default function EstimatorClient({
                         icon={Calculator}
                         accent="overhead"
                         step={6}
+                        tutorialSection={7}
                         badgeContent={
                             <div className="flex items-center gap-2">
                                 <SectionCostPill value={costingResult.overheadPerM} valid={hasValidCostResult} />
@@ -6552,11 +6565,11 @@ export default function EstimatorClient({
                             </div>
 
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                <button type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => handleOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
+                                <button data-estimator-field="directOverheadMethod" type="button" aria-pressed={state.overheadMode === 'direct'} onClick={() => handleOverheadModeChange('direct')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'direct' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
                                     <p className="text-[12px] font-semibold text-[var(--color-ink)]">Direct overhead rate</p>
                                     <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Enter the rate used in this costing; it is never inferred.</p>
                                 </button>
-                                <button type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => handleOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
+                                <button data-estimator-field="monthlyOverheadMethod" type="button" aria-pressed={state.overheadMode === 'monthly_expenses'} onClick={() => handleOverheadModeChange('monthly_expenses')} className={`rounded-[10px] border px-3 py-3 text-left transition-colors ${state.overheadMode === 'monthly_expenses' ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] ring-1 ring-[var(--color-yarn-orange)]/20' : 'border-[var(--color-hairline)] bg-[var(--color-canvas)] hover:border-[var(--color-hairline-strong)]'}`}>
                                     <p className="text-[12px] font-semibold text-[var(--color-ink)]">Calculate from monthly expenses</p>
                                     <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--color-muted)]">Use saved expenses and standard monthly production.</p>
                                 </button>
@@ -6573,6 +6586,7 @@ export default function EstimatorClient({
                                                 <div className="relative w-full sm:w-[140px]">
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--color-muted)] pointer-events-none">₹</span>
                                                     <Input
+                                                        data-estimator-field="overheadOverridePerM"
                                                         type="number"
                                                         min={0}
                                                         step={0.1}
@@ -6618,6 +6632,7 @@ export default function EstimatorClient({
                         {/* Monthly expense editor trigger */}
                                         <div className="border-t border-[var(--color-hairline)] pt-4">
                                             <button
+                                                data-estimator-field="monthlyOverhead"
                                                 type="button"
                                                 onClick={() => setShowAdvancedOverhead(true)}
                                                 aria-haspopup="dialog"
@@ -6937,6 +6952,7 @@ export default function EstimatorClient({
                         icon={Coins}
                         accent="weft"
                         step={9}
+                        tutorialSection={8}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

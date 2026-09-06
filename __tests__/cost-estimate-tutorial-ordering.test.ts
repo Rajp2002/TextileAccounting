@@ -1,0 +1,68 @@
+import { describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+import { costEstimateTutorialCopy } from '../lib/i18n/cost-estimate-tutorial'
+
+describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
+    const estimatorClientPath = path.resolve(__dirname, '../app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+    const estimatorClientSource = fs.readFileSync(estimatorClientPath, 'utf8')
+    const tutorialComponentPath = path.resolve(__dirname, '../components/estimator/CostEstimateTutorial.tsx')
+    const tutorialComponentSource = fs.readFileSync(tutorialComponentPath, 'utf8')
+
+    it('has 9 sections in i18n copy with Quick vs Detailed first and Saved qualities last', () => {
+        for (const lang of ['en', 'hi', 'gu'] as const) {
+            const sections = costEstimateTutorialCopy[lang].sections
+            expect(sections).toHaveLength(9)
+        }
+        expect(costEstimateTutorialCopy.en.sections[0]).toBe('Quick vs Detailed')
+        expect(costEstimateTutorialCopy.en.sections[8]).toBe('Saved qualities')
+    })
+
+    it('sets prepareTutorial to switch to detailed entryMode', () => {
+        expect(estimatorClientSource).toContain("const prepareTutorial = useCallback(() => { setEntryMode('detailed'); setShowAdvancedOverhead(false) }, [])")
+    })
+
+    it('moves YarnComponentCountFields out of QuickCostingView so it only exists in Detailed view', () => {
+        // Extract QuickCostingView body
+        const quickCostingStart = estimatorClientSource.indexOf('function QuickCostingView(')
+        const quickCostingEnd = estimatorClientSource.indexOf('const DETAILED_ESTIMATOR_ISSUE_FIELDS =', quickCostingStart)
+        expect(quickCostingStart).toBeGreaterThan(0)
+        expect(quickCostingEnd).toBeGreaterThan(quickCostingStart)
+        const quickCostingSource = estimatorClientSource.slice(quickCostingStart, quickCostingEnd)
+
+        // QuickCostingView must NOT have YarnComponentCountFields
+        expect(quickCostingSource).not.toContain('<YarnComponentCountFields')
+
+        // Detailed view (around Costing Basics) MUST contain YarnComponentCountFields
+        const detailedCostingStart = estimatorClientSource.indexOf('{/* 1. Costing Basics */}')
+        const detailedCostingEnd = estimatorClientSource.indexOf('{/* 2. Warp Yarn Rows */}')
+        expect(detailedCostingStart).toBeGreaterThan(0)
+        expect(detailedCostingEnd).toBeGreaterThan(detailedCostingStart)
+        const detailedCostingSection1 = estimatorClientSource.slice(detailedCostingStart, detailedCostingEnd)
+
+        expect(detailedCostingSection1).toContain('<YarnComponentCountFields')
+    })
+
+    it('places data-costing-tutorial-root on estimator-form-panel', () => {
+        expect(estimatorClientSource).toContain('id="estimator-form-panel"')
+        expect(estimatorClientSource).toMatch(/id="estimator-form-panel"[^>]*data-costing-tutorial-root="true"/)
+    })
+
+    it('tags Quick vs Detailed toggle with data-tutorial-section={1} and data-estimator-field="entryMode"', () => {
+        expect(estimatorClientSource).toMatch(/data-tutorial-section=\{1\}[\s\S]*?data-estimator-field="entryMode"/)
+    })
+
+    it('tags Saved qualities with data-tutorial-section={9} and data-estimator-field="savedQualities"', () => {
+        expect(estimatorClientSource).toMatch(/data-tutorial-section=\{9\}[\s\S]*?data-estimator-field="savedQualities"/)
+    })
+
+    it('sorts tutorial section headers numerically in CostEstimateTutorial to guarantee Section 1 is first and Section 9 is last', () => {
+        expect(tutorialComponentSource).toContain('Number(a.dataset.tutorialSection) - Number(b.dataset.tutorialSection)')
+    })
+
+    it('adapts explainer modal panel placement to prevent obscuring top-right controls', () => {
+        expect(tutorialComponentSource).toContain("const [panelPlacement, setPanelPlacement] = useState<'top-right' | 'bottom-right'>('top-right')")
+        expect(tutorialComponentSource).toContain('targetRect.top < 340')
+        expect(tutorialComponentSource).toContain("setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')")
+    })
+})

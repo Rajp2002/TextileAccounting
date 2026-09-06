@@ -3,13 +3,15 @@ import type { Language } from './context'
 // Explicit copy: never infer a tutorial title from potentially untranslated DOM labels.
 const en = {
   "sections": [
+    "Quick vs Detailed",
     "Quality basics",
     "Warp yarn",
     "Weft yarn",
     "Weaving cost",
     "Warping and sizing",
     "Factory overhead",
-    "Selling price and quantity"
+    "Selling price and quantity",
+    "Saved qualities"
   ],
   "sectionProgress": "Section {current} of {total}",
   "replay": "How to estimate · Guided tour",
@@ -145,6 +147,14 @@ const en = {
     "orderQuantityM": {
       "title": "Costing quantity",
       "description": "Optionally enter the total fabric quantity in metres to see order-level totals. Quantity is needed for quotations."
+    },
+    "entryMode": {
+      "title": "Quick vs Detailed mode",
+      "description": "Switch between Quick costing for fast estimates with essential inputs, and Detailed costing for full technical parameters, crimp, and factory assumptions. Both use the exact same calculation engine."
+    },
+    "savedQualities": {
+      "title": "Saved qualities",
+      "description": "Browse and select from your library of saved fabric recipes. Loading a saved quality instantly populates yarn construction, weaving rates, and overhead assumptions."
     }
   }
 }
@@ -154,13 +164,15 @@ type TutorialCopy = Omit<typeof en, 'fields'> & { fields: Record<TutorialField, 
 
 const hi: TutorialCopy = {
   "sections": [
+    "त्वरित बनाम विस्तृत मोड",
     "क्वालिटी की मूल जानकारी",
     "ताना यार्न",
     "बाना यार्न",
     "बुनाई खर्च",
     "वार्पिंग और साइजिंग",
     "फैक्ट्री ओवरहेड",
-    "बिक्री मूल्य और मात्रा"
+    "बिक्री मूल्य और मात्रा",
+    "सेव की गई क्वालिटी"
   ],
   "sectionProgress": "भाग {current} / {total}",
   "replay": "अनुमान कैसे बनाएं · ट्यूटोरियल",
@@ -296,19 +308,29 @@ const hi: TutorialCopy = {
     "orderQuantityM": {
       "title": "अनुमान की मात्रा",
       "description": "ऑर्डर का कुल हिसाब देखने के लिए चाहें तो कपड़े की कुल मात्रा मीटर में दर्ज करें। कोटेशन के लिए मात्रा ज़रूरी है।"
+    },
+    "entryMode": {
+      "title": "त्वरित बनाम विस्तृत मोड",
+      "description": "आवश्यक इनपुट के साथ तेज़ गणना के लिए त्वरित (Quick) मोड, या पूर्ण तकनीकी विवरण और फैक्ट्री मान्यताओं के लिए विस्तृत (Detailed) मोड चुनें। दोनों में एक ही गणना इंजन काम करता है।"
+    },
+    "savedQualities": {
+      "title": "सेव की गई क्वालिटी",
+      "description": "अपनी सेव की गई कपड़े की क्वालिटी और रेसिपी की लाइब्रेरी देखें और चुनें। सेव की गई क्वालिटी लोड करने पर यार्न की बनावट, बुनाई की दरें और ओवरहेड तुरंत भर जाते हैं।"
     }
   }
 }
 
 const gu: TutorialCopy = {
   "sections": [
+    "ઝડપી કે વિગતવાર મોડ",
     "ક્વોલિટીની મૂળભૂત માહિતી",
     "તાણાનું યાર્ન",
     "વાણાનું યાર્ન",
     "વણાટ ખર્ચ",
     "વાર્પિંગ અને સાઇઝિંગ",
     "ફેક્ટરી ઓવરહેડ",
-    "વેચાણ કિંમત અને જથ્થો"
+    "વેચાણ કિંમત અને જથ્થો",
+    "સેવ કરેલી ક્વોલિટી"
   ],
   "sectionProgress": "ભાગ {current} / {total}",
   "replay": "અંદાજ કેવી રીતે બનાવવો · ટ્યુટોરિયલ",
@@ -444,6 +466,14 @@ const gu: TutorialCopy = {
     "orderQuantityM": {
       "title": "અંદાજનો જથ્થો",
       "description": "ઓર્ડરનો કુલ હિસાબ જોવા માટે ઇચ્છો તો કાપડનો કુલ જથ્થો મીટરમાં દાખલ કરો. ક્વોટેશન માટે જથ્થો જરૂરી છે."
+    },
+    "entryMode": {
+      "title": "ઝડપી કે વિગતવાર મોડ",
+      "description": "જરૂરી વિગતો સાથે ઝડપી ગણતરી માટે ક્વિક (Quick) મોડ, અથવા સંપૂર્ણ ટેકનિકલ પરિમાણો અને ફેક્ટરી ધારણાઓ માટે વિગતવાર (Detailed) મોડ પસંદ કરો. બંને એક જ ગણતરી એન્જિન વાપરે છે."
+    },
+    "savedQualities": {
+      "title": "સેવ કરેલી ક્વોલિટી",
+      "description": "તમારી સેવ કરેલી કાપડની ક્વોલિટી અને રેસિપીની લાઇબ્રેરી જુઓ અને પસંદ કરો. સેવ કરેલી ક્વોલિટી લોડ કરવાથી યાર્નની રચના, વણાટ દર અને ઓવરહેડ તરત ભરાઈ જાય છે."
     }
   }
 }

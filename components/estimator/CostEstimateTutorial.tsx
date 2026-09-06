@@ -30,6 +30,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const prevSectionRef = useRef<number | null>(null)
     const [isSectionTransition, setIsSectionTransition] = useState(false)
     const isScrollingRef = useRef(false)
+    const [panelPlacement, setPanelPlacement] = useState<'top-right' | 'bottom-right'>('top-right')
 
     const syncDismissal = useCallback(async () => {
         if (syncing.current) return
@@ -102,13 +103,26 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             const collect = () => {
                 if (tutorialRows.current.some(row => row.querySelector('[aria-expanded]')?.getAttribute('aria-expanded') !== 'true')) return
                 const next: Step[] = []
-                root.querySelectorAll<HTMLElement>('[data-tutorial-section]').forEach(header => {
+                const headers = Array.from(root.querySelectorAll<HTMLElement>('[data-tutorial-section]'))
+                    .sort((a, b) => Number(a.dataset.tutorialSection) - Number(b.dataset.tutorialSection))
+
+                headers.forEach(header => {
                     const section = Number(header.dataset.tutorialSection) - 1
-                    const card = header.closest<HTMLElement>('[data-slot="card"]')
-                    if (!card || !costEstimateTutorialCopy.en.sections[section]) return
+                    if (!costEstimateTutorialCopy.en.sections[section]) return
+                    const card = header.closest<HTMLElement>('[data-slot="card"]') ?? header
+
+                    if (header.dataset.estimatorField && isTutorialField(header.dataset.estimatorField)) {
+                        if (header.getClientRects().length) {
+                            next.push({ section, card, target: header, field: header.dataset.estimatorField as TutorialField })
+                        }
+                        return
+                    }
+
                     card.querySelectorAll<HTMLElement>('[data-estimator-field]').forEach(target => {
                         const field = target.dataset.estimatorField!
                         if (!isTutorialField(field) || !target.getClientRects().length) return
+                        const targetSection = target.closest<HTMLElement>('[data-tutorial-section]')
+                        if (targetSection && targetSection !== header) return
                         next.push({ section, card, target, field })
                     })
                 })
@@ -134,6 +148,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         void syncDismissal()
         prevSectionRef.current = null
         setIsSectionTransition(false)
+        setPanelPlacement('top-right')
         setSteps([])
         setRects(null)
     }, [key, syncDismissal])
@@ -224,6 +239,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
         const cardRect = active.card.getBoundingClientRect()
         const targetRect = active.target.getBoundingClientRect()
+        const targetIsTopRight = targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
+        setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
         const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
         const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
 
@@ -428,7 +445,11 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 />
             )}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="cost-tour-title" aria-describedby="cost-tour-description" tabIndex={-1}
-                className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none">
+                className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
+                    panelPlacement === 'bottom-right'
+                        ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
+                        : 'top-4 right-4 sm:top-6 sm:right-6'
+                }`}>
                 <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
                     <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
