@@ -17,6 +17,13 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     if (!target) {
         target = document.querySelector<HTMLElement>(`[data-estimator-field="${step.field}"]`)
     }
+    const isModalField = Boolean(step.inModal || ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(step.field))
+    if (isModalField) {
+        const modalPanel = document.getElementById('mobile-live-estimate-panel')
+        if (modalPanel) {
+            card = modalPanel
+        }
+    }
     if (!card && target) {
         card = target.closest<HTMLElement>('#mobile-live-estimate-panel') ??
                target.closest<HTMLElement>('[data-slot="card"]') ??
@@ -289,12 +296,45 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
         const isModal = Boolean(active.inModal || ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
 
+        let stableFrames = 0
+        let lastRect = { top: -9999, left: -9999, width: -9999, height: -9999 }
+        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
+
         const measureAndPosition = () => {
             if (!isMounted) return
 
             const { target: targetEl, card: cardEl } = resolveStepElements(active)
 
-            if (!targetEl || !cardEl || !targetEl.getClientRects().length) {
+            if (!targetEl || !cardEl || !targetEl.getClientRects().length || !cardEl.getClientRects().length) {
+                retryRaf = window.requestAnimationFrame(measureAndPosition)
+                return
+            }
+
+            const cardRect = cardEl.getBoundingClientRect()
+            const targetRect = targetEl.getBoundingClientRect()
+
+            // If card or target has not been laid out (0 dimensions), retry on next frame
+            if (cardRect.width === 0 || cardRect.height === 0 || targetRect.width === 0 || targetRect.height === 0) {
+                retryRaf = window.requestAnimationFrame(measureAndPosition)
+                return
+            }
+
+            // Ensure coordinates have stabilized across consecutive frames (handles modal mounting & CSS animation)
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+            const elapsed = now - startTime
+            const isMoving = Math.abs(cardRect.top - lastRect.top) > 0.5 ||
+                             Math.abs(cardRect.left - lastRect.left) > 0.5 ||
+                             Math.abs(cardRect.height - lastRect.height) > 0.5 ||
+                             Math.abs(cardRect.width - lastRect.width) > 0.5
+
+            if (isMoving && elapsed < 350) {
+                lastRect = { top: cardRect.top, left: cardRect.left, width: cardRect.width, height: cardRect.height }
+                stableFrames = 0
+                retryRaf = window.requestAnimationFrame(measureAndPosition)
+                return
+            } else if (stableFrames < 1 && elapsed < 200) {
+                stableFrames++
+                lastRect = { top: cardRect.top, left: cardRect.left, width: cardRect.width, height: cardRect.height }
                 retryRaf = window.requestAnimationFrame(measureAndPosition)
                 return
             }
@@ -304,9 +344,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             const modalBottom = panelRect ? panelRect.bottom : 220
             const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
 
-            const cardRect = cardEl.getBoundingClientRect()
-            const targetRect = targetEl.getBoundingClientRect()
-            const targetIsTopRight = targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
+            const targetIsTopRight = !isModal && targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
             setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
 
             const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
@@ -326,7 +364,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 // Never scroll the window behind fixed elements or modal dialogs
                 deltaY = 0
                 if (isModal) {
-                    targetEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+                    targetEl.scrollIntoView({ block: 'nearest', behavior: 'auto' })
                 }
             } else {
                 const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
@@ -374,7 +412,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             const update = () => {
                 if (!isMounted) return
                 const { target: curTarget, card: curCard } = resolveStepElements(active)
-                if (curTarget && curCard) {
+                if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
                     setRects({
                         field: curTarget.getBoundingClientRect(),
                         card: curCard.getBoundingClientRect(),
@@ -427,19 +465,33 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 update()
                 if (isNewSection) {
                     setIsSectionTransition(true)
-                    settleTimer = window.setTimeout(() => setIsSectionTransition(false), 500)
                 }
+                settleTimer = window.setTimeout(() => {
+                    update()
+                    if (isNewSection) setIsSectionTransition(false)
+                }, isNewSection ? 500 : 200)
             }
         }
 
-        const initialDelay = isModal ? 80 : 0
         const timer = window.setTimeout(() => {
             measureAndPosition()
-        }, initialDelay)
+        }, 0)
+
+        const backupTimer = window.setTimeout(() => {
+            if (!isMounted) return
+            const { target: curTarget, card: curCard } = resolveStepElements(active)
+            if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
+                setRects({
+                    field: curTarget.getBoundingClientRect(),
+                    card: curCard.getBoundingClientRect(),
+                })
+            }
+        }, 350)
 
         return () => {
             isMounted = false
             window.clearTimeout(timer)
+            window.clearTimeout(backupTimer)
             if (settleTimer) window.clearTimeout(settleTimer)
             if (retryRaf) window.cancelAnimationFrame(retryRaf)
         }
