@@ -36,9 +36,23 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
             expect(client).toContain('onOpenAdvanced={openAdvancedDraft}')
         })
 
-        it('wires QuickRateEditPopover in mobile card actions', () => {
+        it('renders a stacked two-pill layout with "Confirm current rate" on top and "Edit rate" beneath it', () => {
+            expect(client).toContain("aria-label={`${reviewLabel} for ${rate.name}`}")
+            expect(client).toContain("aria-label={`Edit rate for ${rate.name}`}")
+            expect(client).toContain("{tx('Edit rate')}")
+            expect(client).toContain('flex flex-col items-stretch gap-1.5 w-full max-w-[170px]')
+        })
+
+        it('wires QuickRateEditPopover in mobile card actions with "Edit rate" label', () => {
             const mobileMatchCount = (client.match(/<QuickRateEditPopover/g) || []).length
             expect(mobileMatchCount).toBe(2) // Once in desktop table, once in mobile card
+            expect(client).toContain("<Pencil className=\"h-4 w-4\" /> <span className=\"truncate\">{tx('Edit rate')}</span>")
+        })
+
+        it('wires explicit onClick handler on trigger to open quick rate edit popover directly', () => {
+            expect(client).toContain("setQuickEditIsMobile(false)")
+            expect(client).toContain("setQuickEditIsMobile(true)")
+            expect(client).toContain("isOpen={quickEditRate?.id === rate.id && quickEditIsMobile}")
         })
 
         it('provides "Advanced edit" in row overflow dropdown menu', () => {

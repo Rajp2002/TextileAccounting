@@ -293,8 +293,12 @@ function QuickRateEditPopover({
     useEffect(() => {
         if (isOpen) {
             const timer = setTimeout(() => {
-                inputRef.current?.focus()
-                inputRef.current?.select()
+                try {
+                    inputRef.current?.focus()
+                    inputRef.current?.select()
+                } catch {
+                    inputRef.current?.focus()
+                }
             }, 10)
             return () => clearTimeout(timer)
         }
@@ -319,8 +323,12 @@ function QuickRateEditPopover({
                 sideOffset={8}
                 onOpenAutoFocus={(e) => {
                     e.preventDefault()
-                    inputRef.current?.focus()
-                    inputRef.current?.select()
+                    try {
+                        inputRef.current?.focus()
+                        inputRef.current?.select()
+                    } catch {
+                        inputRef.current?.focus()
+                    }
                 }}
                 className="w-[320px] max-w-[calc(100vw-2rem)] rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-panel)] z-50"
             >
@@ -861,6 +869,7 @@ export default function RatesClient({
     const [quickEditValue, setQuickEditValue] = useState<number | string>('')
     const [quickEditSource, setQuickEditSource] = useState('')
     const [quickEditError, setQuickEditError] = useState<string | null>(null)
+    const [quickEditIsMobile, setQuickEditIsMobile] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
 
@@ -1050,6 +1059,7 @@ export default function RatesClient({
 
     const openAdvancedDraft = (rate: CostRateRow) => {
         setQuickEditRate(null)
+        setQuickEditIsMobile(false)
         setSaveError(null)
         const nextDraft = rowToDraft(rate)
         const parsed = Number(quickEditValue)
@@ -1104,6 +1114,7 @@ export default function RatesClient({
                 }
                 setQuickEditError(null)
                 setQuickEditRate(null)
+                setQuickEditIsMobile(false)
                 if (result.syncedQualityCount) {
                     toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Existing costing snapshots were not changed.`))
                 } else {
@@ -1653,42 +1664,83 @@ export default function RatesClient({
                                                 </td>
                                                 <td className="px-3 py-3 align-top"><LinkedQualitiesCell rate={rate} /></td>
                                                 <td className="px-3 py-3 align-top">
-                                                    <div className="ml-auto flex w-full max-w-[210px] items-center justify-end gap-1.5">
-                                                        {!archived && reviewState !== 'current' ? (
-                                                            <Button variant="default" size="sm" onClick={() => handleQuickReview(rate)} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`} className="h-9 max-w-full rounded-full border-0 px-3 text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white">
-                                                                    {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
-                                                            </Button>
-                                                        ) : !archived ? (
-                                                            <QuickRateEditPopover
-                                                                rate={rate}
-                                                                isOpen={quickEditRate?.id === rate.id}
-                                                                onOpenChange={open => {
-                                                                    if (open) {
-                                                                        setQuickEditRate(rate)
-                                                                        setQuickEditValue(rate.current_value)
-                                                                        setQuickEditSource(rate.source ?? '')
-                                                                        setQuickEditError(null)
-                                                                    } else {
-                                                                        setQuickEditRate(null)
+                                                    <div className="ml-auto flex w-full max-w-[210px] items-start justify-end gap-1.5">
+                                                        <div className="flex flex-col items-stretch gap-1.5 w-full max-w-[170px]">
+                                                            {!archived && reviewState !== 'current' && (
+                                                                <Button
+                                                                    variant="default"
+                                                                    size="sm"
+                                                                    onClick={() => handleQuickReview(rate)}
+                                                                    disabled={isPending}
+                                                                    aria-label={`${reviewLabel} for ${rate.name}`}
+                                                                    className="h-8 w-full rounded-full border-0 px-3 text-xs font-semibold text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white justify-center"
+                                                                >
+                                                                    {actionKind === 'review' ? (
+                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                    ) : (
+                                                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                                                    )}{' '}
+                                                                    <span className="truncate">{tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</span>
+                                                                </Button>
+                                                            )}
+                                                            {!archived && (
+                                                                <QuickRateEditPopover
+                                                                    rate={rate}
+                                                                    isOpen={quickEditRate?.id === rate.id}
+                                                                    onOpenChange={open => {
+                                                                        if (open) {
+                                                                            setQuickEditIsMobile(false)
+                                                                            setQuickEditRate(rate)
+                                                                            setQuickEditValue(rate.current_value)
+                                                                            setQuickEditSource(rate.source ?? '')
+                                                                            setQuickEditError(null)
+                                                                        } else {
+                                                                            setQuickEditRate(null)
+                                                                            setQuickEditIsMobile(false)
+                                                                        }
+                                                                    }}
+                                                                    value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
+                                                                    onChangeValue={setQuickEditValue}
+                                                                    source={quickEditRate?.id === rate.id ? quickEditSource : (rate.source ?? '')}
+                                                                    onChangeSource={setQuickEditSource}
+                                                                    error={quickEditRate?.id === rate.id ? quickEditError : null}
+                                                                    isPending={isPending && pendingAction?.id === rate.id}
+                                                                    onSave={handleQuickSave}
+                                                                    onOpenAdvanced={openAdvancedDraft}
+                                                                    trigger={
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            disabled={isPending}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                setQuickEditIsMobile(false)
+                                                                                setQuickEditRate(rate)
+                                                                                setQuickEditValue(rate.current_value)
+                                                                                setQuickEditSource(rate.source ?? '')
+                                                                                setQuickEditError(null)
+                                                                            }}
+                                                                            aria-label={`Edit rate for ${rate.name}`}
+                                                                            className="h-8 w-full rounded-full border-saffron/35 bg-saffron-soft/55 px-3 text-xs font-semibold text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep justify-center cursor-pointer"
+                                                                        >
+                                                                            <Pencil className="h-3.5 w-3.5" />
+                                                                            <span>{tx('Edit rate')}</span>
+                                                                        </Button>
                                                                     }
-                                                                }}
-                                                                value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
-                                                                onChangeValue={setQuickEditValue}
-                                                                source={quickEditRate?.id === rate.id ? quickEditSource : (rate.source ?? '')}
-                                                                onChangeSource={setQuickEditSource}
-                                                                error={quickEditRate?.id === rate.id ? quickEditError : null}
-                                                                isPending={isPending && pendingAction?.id === rate.id}
-                                                                onSave={handleQuickSave}
-                                                                onOpenAdvanced={openAdvancedDraft}
-                                                                trigger={
-                                                                    <Button variant="outline" size="sm" disabled={isPending} className="h-9 rounded-full border-saffron/35 bg-saffron-soft/55 px-3 text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep">
-                                                                        <Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}
-                                                                    </Button>
-                                                                }
-                                                            />
-                                                        ) : null}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label={`More actions for ${rate.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 shrink-0 rounded-full"
+                                                                    aria-label={`More actions for ${rate.name}`}
+                                                                >
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end" className="w-48">
                                                                 {!archived && (
                                                                     <DropdownMenuItem onSelect={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}>
@@ -1780,15 +1832,17 @@ export default function RatesClient({
                                                 {!archived && (
                                                     <QuickRateEditPopover
                                                         rate={rate}
-                                                        isOpen={quickEditRate?.id === rate.id}
+                                                        isOpen={quickEditRate?.id === rate.id && quickEditIsMobile}
                                                         onOpenChange={open => {
                                                             if (open) {
+                                                                setQuickEditIsMobile(true)
                                                                 setQuickEditRate(rate)
                                                                 setQuickEditValue(rate.current_value)
                                                                 setQuickEditSource(rate.source ?? '')
                                                                 setQuickEditError(null)
                                                             } else {
                                                                 setQuickEditRate(null)
+                                                                setQuickEditIsMobile(false)
                                                             }
                                                         }}
                                                         value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
@@ -1803,9 +1857,17 @@ export default function RatesClient({
                                                             <Button
                                                                 variant="outline"
                                                                 disabled={isPending}
-                                                                className="h-10 min-w-0 flex-1 rounded-xl border-saffron/35 bg-saffron-soft/55 px-3 text-sm text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setQuickEditIsMobile(true)
+                                                                    setQuickEditRate(rate)
+                                                                    setQuickEditValue(rate.current_value)
+                                                                    setQuickEditSource(rate.source ?? '')
+                                                                    setQuickEditError(null)
+                                                                }}
+                                                                className="h-10 min-w-0 flex-1 rounded-xl border-saffron/35 bg-saffron-soft/55 px-3 text-sm text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep cursor-pointer"
                                                             >
-                                                                <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Change rate')}</span>
+                                                                <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Edit rate')}</span>
                                                             </Button>
                                                         }
                                                     />
