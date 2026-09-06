@@ -1,0 +1,141 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+
+const mocks = vi.hoisted(() => ({
+    requireRole: vi.fn(),
+    updateUser: vi.fn(),
+    revalidatePath: vi.fn(),
+}))
+
+vi.mock('@/lib/auth', () => ({ requireRole: mocks.requireRole }))
+vi.mock('@/lib/supabase/server', () => ({
+    createClient: async () => ({ auth: { updateUser: mocks.updateUser } }),
+}))
+vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }))
+
+import {
+    rateBookTutorialCopy,
+    isRatebookTutorialField,
+} from '../lib/i18n/rate-book-tutorial'
+import { dismissRatebookTutorial } from '../app/(dashboard)/owner/rates/tutorial-actions'
+
+beforeEach(() => {
+    vi.resetAllMocks()
+    mocks.requireRole.mockResolvedValue({ user: { id: 'owner-1', user_metadata: { name: 'Owner' } } })
+    mocks.updateUser.mockResolvedValue({
+        data: { user: { user_metadata: { ratebook_tutorial_dismissed: true } } },
+        error: null,
+    })
+})
+
+describe('Rate Book Guided Tour i18n & Integrity', () => {
+    it('provides exactly 8 sections for en, hi, and gu', () => {
+        for (const lang of ['en', 'hi', 'gu'] as const) {
+            const copy = rateBookTutorialCopy[lang]
+            expect(copy.sections).toHaveLength(8)
+            expect(copy.replay).toBeTruthy()
+            expect(copy.skip).toBeTruthy()
+            expect(copy.next).toBeTruthy()
+            expect(copy.back).toBeTruthy()
+            expect(copy.finish).toBeTruthy()
+        }
+    })
+
+    it('has matching field keys across en, hi, and gu', () => {
+        const enFields = Object.keys(rateBookTutorialCopy.en.fields).sort()
+        const hiFields = Object.keys(rateBookTutorialCopy.hi.fields).sort()
+        const guFields = Object.keys(rateBookTutorialCopy.gu.fields).sort()
+
+        expect(enFields).toEqual(hiFields)
+        expect(enFields).toEqual(guFields)
+        expect(enFields.length).toBeGreaterThanOrEqual(20)
+    })
+
+    it('validates fields with isRatebookTutorialField', () => {
+        expect(isRatebookTutorialField('overview')).toBe(true)
+        expect(isRatebookTutorialField('yarnSearch')).toBe(true)
+        expect(isRatebookTutorialField('quickEditPopover')).toBe(true)
+        expect(isRatebookTutorialField('nonExistentField')).toBe(false)
+    })
+})
+
+describe('RatesClient Integration & Overlay Stability', () => {
+    const ratesClientPath = path.resolve(__dirname, '../app/(dashboard)/owner/rates/RatesClient.tsx')
+    const ratesClientSource = fs.readFileSync(ratesClientPath, 'utf8')
+    const tutorialPath = path.resolve(__dirname, '../components/rates/RateBookTutorial.tsx')
+    const tutorialSource = fs.readFileSync(tutorialPath, 'utf8')
+    const ratesPagePath = path.resolve(__dirname, '../app/(dashboard)/owner/rates/page.tsx')
+    const ratesPageSource = fs.readFileSync(ratesPagePath, 'utf8')
+
+    it('attaches data-ratebook-tutorial-root to RatesClient container', () => {
+        expect(ratesClientSource).toContain('data-ratebook-tutorial-root="true"')
+    })
+
+    it('embeds RateBookTutorial component in RatesClient', () => {
+        expect(ratesClientSource).toContain('<RateBookTutorial')
+        expect(ratesClientSource).toContain("import { RateBookTutorial } from '@/components/rates/RateBookTutorial'")
+    })
+
+    it('passes tutorialDismissed, userId, and orgId from RatesPage', () => {
+        expect(ratesPageSource).toContain('tutorialDismissed={user.user_metadata?.ratebook_tutorial_dismissed === true}')
+        expect(ratesPageSource).toContain('userId={user.id}')
+        expect(ratesPageSource).toContain('orgId={profile.org_id}')
+    })
+
+    it('tags core sections and interactive fields with data-ratebook attributes', () => {
+        const expectedFields = [
+            'overview',
+            'immutabilityNotice',
+            'activeRatesCount',
+            'lastReviewedDate',
+            'yarnSearch',
+            'directionFilter',
+            'needsReviewFilter',
+            'archivedToggle',
+            'yarnNameCell',
+            'rateAndTrend',
+            'reviewStatusBadge',
+            'linkedQualitiesPopover',
+            'quickReviewAction',
+            'quickEditAction',
+            'quickEditPopover',
+            'addRateAction',
+            'rateDrawerFields',
+            'reviewRailWidget',
+            'confirmAll',
+            'activityAndArchive',
+        ]
+
+        for (const field of expectedFields) {
+            expect(ratesClientSource).toContain(`data-ratebook-field="${field}"`)
+        }
+    })
+
+    it('passes hideOverlay={isTutorialActive} to SheetContent and DueForReviewDialog to prevent overlay clash', () => {
+        expect(ratesClientSource).toContain('hideOverlay={isTutorialActive}')
+    })
+
+    it('RateBookTutorial component includes dual spotlight and smart panel placement', () => {
+        expect(tutorialSource).toContain('clipPath')
+        expect(tutorialSource).toContain('panelPlacement')
+        expect(tutorialSource).toContain('data-testid="rate-book-tutorial"')
+    })
+
+    it('RateBookTutorial manages keyboard navigation (Enter, Escape, ArrowLeft, ArrowRight)', () => {
+        expect(tutorialSource).toContain("event.key === 'Escape'")
+        expect(tutorialSource).toContain("event.key === 'Enter'")
+        expect(tutorialSource).toContain("event.key === 'ArrowRight'")
+        expect(tutorialSource).toContain("event.key === 'ArrowLeft'")
+    })
+
+    it('dismissRatebookTutorial updates user metadata and revalidates /owner/rates', async () => {
+        const res = await dismissRatebookTutorial()
+        expect(res).toEqual({ success: true })
+        expect(mocks.requireRole).toHaveBeenCalledWith(['owner'])
+        expect(mocks.updateUser).toHaveBeenCalledWith({
+            data: { ratebook_tutorial_dismissed: true },
+        })
+        expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/rates')
+    })
+})

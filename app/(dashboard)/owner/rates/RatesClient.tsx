@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { RateBookTutorial } from '@/components/rates/RateBookTutorial'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -319,6 +320,7 @@ function QuickRateEditPopover({
                 {trigger}
             </PopoverTrigger>
             <PopoverContent
+                data-ratebook-field="quickEditPopover"
                 align="end"
                 sideOffset={8}
                 onOpenAutoFocus={(e) => {
@@ -478,6 +480,7 @@ function DueForReviewDialog({
     onConfirmAll,
     isConfirmingAll = false,
     pendingActionId = null,
+    hideOverlay = false,
 }: {
     open: boolean
     rates: CostRateRow[]
@@ -487,10 +490,11 @@ function DueForReviewDialog({
     onConfirmAll?: () => void
     isConfirmingAll?: boolean
     pendingActionId?: string | null
+    hideOverlay?: boolean
 }) {
     return (
         <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) onClose() }}>
-            <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-[680px]">
+            <DialogContent hideOverlay={hideOverlay} className="border-0 bg-transparent p-0 shadow-none sm:max-w-[680px]">
                 <DialogHeader className="sr-only">
                     <DialogTitle>Rates due for review</DialogTitle>
                     <DialogDescription>Review or edit the current yarn rates used by your saved qualities.</DialogDescription>
@@ -836,10 +840,16 @@ export default function RatesClient({
     initialRates,
     initialConflicts,
     defaultReviewIntervalDays,
+    tutorialDismissed = false,
+    userId = 'owner',
+    orgId = 'org',
 }: {
     initialRates: CostRateRow[]
     initialConflicts: YarnRateConflict[]
     defaultReviewIntervalDays: number
+    tutorialDismissed?: boolean
+    userId?: string
+    orgId?: string
 }) {
     const { t, tx } = useTranslation()
     const [rates, setRates] = useState(initialRates)
@@ -847,6 +857,7 @@ export default function RatesClient({
     const [statusFilter, setStatusFilter] = useState<RateStatusFilter>('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [showArchived, setShowArchived] = useState(false)
+    const [isTutorialActive, setIsTutorialActive] = useState(false)
     const searchRef = useRef<HTMLInputElement>(null)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [showDueReviews, setShowDueReviews] = useState(false)
@@ -872,6 +883,41 @@ export default function RatesClient({
     const [quickEditIsMobile, setQuickEditIsMobile] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
+
+    const prepareTutorial = useCallback(() => {
+        setSearchQuery('')
+        setCategoryFilter('all')
+        setStatusFilter('all')
+        setShowArchived(false)
+    }, [])
+
+    const handleOpenQuickEditFromTour = useCallback((open: boolean) => {
+        if (open) {
+            setQuickEditRate(prev => {
+                if (prev) return prev
+                const target = rates.find(r => r.is_active !== false) ?? rates[0] ?? null
+                if (target) {
+                    setQuickEditValue(target.current_value)
+                    setQuickEditSource(target.source ?? '')
+                    setQuickEditError(null)
+                    setQuickEditIsMobile(false)
+                }
+                return target
+            })
+        } else {
+            setQuickEditRate(null)
+        }
+    }, [rates])
+
+    const handleOpenRateDrawerFromTour = useCallback((open: boolean) => {
+        if (open) {
+            setSaveError(null)
+            setDraft(defaultDraft(defaultReviewIntervalDays))
+        } else {
+            setDraft(null)
+            setSaveError(null)
+        }
+    }, [defaultReviewIntervalDays])
 
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
@@ -1372,7 +1418,7 @@ export default function RatesClient({
 
     return (
         <>
-            <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
+            <div data-ratebook-tutorial-root="true" className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -1384,16 +1430,41 @@ export default function RatesClient({
             <div className="min-[1540px]:hidden">
                 <ArchivePolicyNotice />
             </div>
-            <PageHeader
-                icon={Tags}
-                title={t('common.yarn_rate_book')}
-                description={tx('Keep current yarn rates for future estimates. Saved costing snapshots stay unchanged.')}
-                actions={(
-                    <Button variant="saffron" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className="w-full sm:w-auto">
-                        <Plus className="h-4 w-4" /> {tx('Add Yarn Rate')}
-                    </Button>
-                )}
-            />
+            <div data-ratebook-section={1} data-ratebook-field="overview" className="space-y-1">
+                <PageHeader
+                    icon={Tags}
+                    title={t('common.yarn_rate_book')}
+                    description={(
+                        <span data-ratebook-field="immutabilityNotice">
+                            {tx('Keep current yarn rates for future estimates. Saved costing snapshots stay unchanged.')}
+                        </span>
+                    )}
+                    actions={(
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <div className="min-[1540px]:hidden">
+                                <RateBookTutorial
+                                    accountDismissed={tutorialDismissed}
+                                    enabled={!isPending}
+                                    orgId={orgId}
+                                    userId={userId}
+                                    onPrepare={prepareTutorial}
+                                    onOpenQuickEdit={handleOpenQuickEditFromTour}
+                                    onOpenRateDrawer={handleOpenRateDrawerFromTour}
+                                    onActiveChange={setIsTutorialActive}
+                                />
+                            </div>
+                            <Button
+                                data-ratebook-field="addRateAction"
+                                variant="saffron"
+                                onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
+                                className="w-full sm:w-auto"
+                            >
+                                <Plus className="h-4 w-4" /> {tx('Add Yarn Rate')}
+                            </Button>
+                        </div>
+                    )}
+                />
+            </div>
 
             {pendingMessage && (
                 <p role="status" className="rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">
@@ -1425,11 +1496,11 @@ export default function RatesClient({
                 </div>
             )}
 
-            <Card className="premium-surface">
+            <Card className="premium-surface" data-ratebook-section={2} data-ratebook-section-card="true">
                 <CardContent className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-5">
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
+                        <div data-ratebook-field="activeRatesCount" className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
+                        <div data-ratebook-field="lastReviewedDate" className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-subtle">
                         <span><span className="font-semibold text-ink">{warpRatesCount}</span> {tx('Warp')}</span>
@@ -1439,20 +1510,20 @@ export default function RatesClient({
                 </CardContent>
             </Card>
 
-            <Card className="gap-0 overflow-hidden p-0">
+            <Card className="gap-0 overflow-hidden p-0" data-ratebook-section={4} data-ratebook-section-card="true" data-ratebook-field="rateTableCard">
                 <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
                     <div>
                         <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
                         <p className="mt-1 hidden text-xs leading-relaxed text-body sm:block">{tx('Discovered rates stay marked for review until you confirm the displayed value.')}</p>
                     </div>
-                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-xs text-subtle hover:text-ink">
+                    <Button data-ratebook-field="archivedToggle" variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-xs text-subtle hover:text-ink">
                         {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}
                     </Button>
                 </div>
 
-                <Toolbar className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
+                <Toolbar data-ratebook-section={3} data-ratebook-section-card="true" className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-1 flex-wrap items-center gap-3">
-                        <div className="relative min-w-0 flex-1 sm:max-w-xs md:max-w-sm">
+                        <div data-ratebook-field="yarnSearch" className="relative min-w-0 flex-1 sm:max-w-xs md:max-w-sm">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
                             <Label htmlFor="yarn-rates-search" className="sr-only">{tx('Search yarn rates')}</Label>
                             <Input
@@ -1488,6 +1559,7 @@ export default function RatesClient({
                         </div>
 
                         <div
+                            data-ratebook-field="directionFilter"
                             role="group"
                             aria-label="Show yarn rates by direction"
                             className="relative grid min-h-11 w-full grid-cols-3 overflow-hidden rounded-xl border border-hairline-strong/70 bg-surface-soft/75 p-1 sm:w-80"
@@ -1515,6 +1587,7 @@ export default function RatesClient({
                         </div>
 
                         <button
+                            data-ratebook-field="needsReviewFilter"
                             type="button"
                             aria-pressed={statusFilter === 'needs_review'}
                             onClick={() => setStatusFilter(current => current === 'needs_review' ? 'all' : 'needs_review')}
@@ -1541,6 +1614,7 @@ export default function RatesClient({
 
                         {dueReviewRates.length > 0 && (
                             <Button
+                                data-ratebook-field="confirmAll"
                                 type="button"
                                 onClick={handleConfirmAll}
                                 disabled={isPending}
@@ -1647,27 +1721,28 @@ export default function RatesClient({
                                         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
                                         return (
                                             <tr key={rate.id} className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}>
-                                                <td className="px-3 py-3 align-top">
+                                                <td data-ratebook-field="yarnNameCell" className="px-3 py-3 align-top">
                                                     <p className="font-semibold text-ink">{rate.name}</p>
                                                     <p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
                                                     {rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}
                                                 </td>
-                                                <td className="px-3 py-3 align-top">
+                                                <td data-ratebook-field="rateAndTrend" className="px-3 py-3 align-top">
                                                     <p className="font-mono text-sm font-bold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
                                                     <div className="mt-1.5">
                                                         <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
                                                     </div>
                                                 </td>
-                                                <td className="px-3 py-3 align-top">
+                                                <td data-ratebook-field="reviewStatusBadge" className="px-3 py-3 align-top">
                                                     <ReviewBadge rate={rate} />
                                                     <p className="mt-1 text-[11px] text-subtle">Effective {formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                 </td>
-                                                <td className="px-3 py-3 align-top"><LinkedQualitiesCell rate={rate} /></td>
+                                                <td data-ratebook-field="linkedQualitiesPopover" className="px-3 py-3 align-top"><LinkedQualitiesCell rate={rate} /></td>
                                                 <td className="px-3 py-3 align-top">
                                                     <div className="ml-auto flex w-full max-w-[210px] items-start justify-end gap-1.5">
                                                         <div className="flex flex-col items-stretch gap-1.5 w-full max-w-[170px]">
                                                             {!archived && reviewState !== 'current' && (
                                                                 <Button
+                                                                    data-ratebook-field="quickReviewAction"
                                                                     variant="default"
                                                                     size="sm"
                                                                     onClick={() => handleQuickReview(rate)}
@@ -1709,6 +1784,7 @@ export default function RatesClient({
                                                                     onOpenAdvanced={openAdvancedDraft}
                                                                     trigger={
                                                                         <Button
+                                                                            data-ratebook-field="quickEditAction"
                                                                             variant="outline"
                                                                             size="sm"
                                                                             disabled={isPending}
@@ -1787,7 +1863,7 @@ export default function RatesClient({
                                     <Card key={rate.id} className={`premium-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}>
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0">
+                                                <div data-ratebook-field="yarnNameCell" className="min-w-0">
                                                     <p className="truncate font-bold text-ink">{rate.name}</p>
                                                     <p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
                                                 </div>
@@ -1795,7 +1871,7 @@ export default function RatesClient({
                                             </div>
 
                                             <div className="mt-3.5 flex items-baseline justify-between gap-3 border-y border-hairline/70 py-2.5">
-                                                <div className="flex flex-wrap items-baseline gap-2">
+                                                <div data-ratebook-field="rateAndTrend" className="flex flex-wrap items-baseline gap-2">
                                                     <span className="font-mono text-xl font-black tracking-tight text-ink">
                                                         {formatRateValue(rate.current_value, rate.unit)}
                                                     </span>
@@ -1819,6 +1895,7 @@ export default function RatesClient({
                                             <div className="mt-4 flex items-center gap-2 border-t border-hairline/70 pt-3" role="group" aria-label={tx('Actions')}>
                                                 {!archived && reviewState !== 'current' && (
                                                     <Button
+                                                        data-ratebook-field="quickReviewAction"
                                                         variant="default"
                                                         onClick={() => handleQuickReview(rate)}
                                                         disabled={isPending}
@@ -1855,6 +1932,7 @@ export default function RatesClient({
                                                         onOpenAdvanced={openAdvancedDraft}
                                                         trigger={
                                                             <Button
+                                                                data-ratebook-field="quickEditAction"
                                                                 variant="outline"
                                                                 disabled={isPending}
                                                                 onClick={(e) => {
@@ -1929,6 +2007,7 @@ export default function RatesClient({
                 onConfirmAll={handleConfirmAll}
                 isConfirmingAll={pendingAction?.id === 'all-review'}
                 pendingActionId={pendingAction?.id}
+                hideOverlay={isTutorialActive}
             />
 
             <Dialog open={showConflicts && conflicts.length > 0} onOpenChange={setShowConflicts}>
@@ -1965,10 +2044,14 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending) { setDraft(null); setSaveError(null) } }}>
-                    <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending && !isTutorialActive) { setDraft(null); setSaveError(null) } }}>
+                    <SheetContent
+                        data-ratebook-field="rateDrawerFields"
+                        hideOverlay={isTutorialActive}
+                        className="w-full overflow-y-auto sm:max-w-lg"
+                    >
                     <SheetHeader className="border-b border-hairline px-6 py-5"><SheetTitle className="text-xl font-black">{tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')}</SheetTitle><SheetDescription>{tx('Set the current rate used by matching Saved Quality layers.')}</SheetDescription></SheetHeader>
-                    {draft && <div className="space-y-5 px-6 py-2">
+                    {draft && <div data-ratebook-field="rateDrawerFields" className="space-y-5 px-6 py-2">
                         <div role="status" aria-live="polite" className="flex gap-3 rounded-lg border border-info/25 bg-info-soft p-4 text-info"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">{draft.id
                             ? draftSavedQualityCount === 0
                                 ? t('common.rate_update_no_saved_quality_summary')
@@ -2065,17 +2148,31 @@ export default function RatesClient({
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
             <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
-                <RateReviewRailWidget
-                    dueReviewRates={dueReviewRates}
-                    mostRecentReview={mostRecentReview}
-                    defaultReviewIntervalDays={defaultReviewIntervalDays}
-                    onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                <RateBookTutorial
+                    accountDismissed={tutorialDismissed}
+                    enabled={!isPending}
+                    orgId={orgId}
+                    userId={userId}
+                    onPrepare={prepareTutorial}
+                    onOpenQuickEdit={handleOpenQuickEditFromTour}
+                    onOpenRateDrawer={handleOpenRateDrawerFromTour}
+                    onActiveChange={setIsTutorialActive}
                 />
-                <RateBookReferenceCard />
+                <div data-ratebook-section={7} data-ratebook-field="reviewRailWidget">
+                    <RateReviewRailWidget
+                        dueReviewRates={dueReviewRates}
+                        mostRecentReview={mostRecentReview}
+                        defaultReviewIntervalDays={defaultReviewIntervalDays}
+                        onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                    />
+                </div>
+                <div data-ratebook-field="immutabilityNotice">
+                    <RateBookReferenceCard />
+                </div>
             </aside>
 
             {/* Pin the archive policy to the bottom edge of the desktop rail. */}
-            <aside className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
+            <aside data-ratebook-section={8} data-ratebook-field="activityAndArchive" className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
                 <ArchivePolicyNotice />
             </aside>
 
