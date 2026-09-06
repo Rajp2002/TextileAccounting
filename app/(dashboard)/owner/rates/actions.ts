@@ -184,6 +184,7 @@ export async function getCostRateUsage() {
             .select('id, quality_label, party_name, warp_rows, weft_rows')
             .eq('org_id', profile.org_id)
             .eq('record_kind', 'costing')
+            .is('template_id', null)
             .eq('is_archived', false),
     ])
     if (templatesResult.error || costingsResult.error) {

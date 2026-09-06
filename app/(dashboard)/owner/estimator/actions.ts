@@ -1087,6 +1087,7 @@ async function syncTemplateYarnRenames(
                 .select('warp_rows, weft_rows')
                 .eq('org_id', orgId)
                 .eq('record_kind', 'costing')
+                .is('template_id', null)
                 .eq('is_archived', false),
             supabase
                 .from('cost_rate_book')
