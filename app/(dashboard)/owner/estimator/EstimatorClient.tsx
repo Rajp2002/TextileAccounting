@@ -1412,7 +1412,7 @@ function MobileLiveEstimateShortcut({
         <>
             {visible && !keyboardVisible && !open && (
                 <div
-                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-6 md:right-6 min-[1660px]:right-[16rem]"
+                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-7 md:right-7 min-[1660px]:right-[16rem]"
                     data-testid="mobile-live-estimate-shortcut"
                 >
                     <button
@@ -1423,21 +1423,21 @@ function MobileLiveEstimateShortcut({
                         aria-expanded={open}
                         aria-controls="mobile-live-estimate-panel"
                         onClick={() => setOpen(true)}
-                        className="group flex items-center justify-end gap-2 rounded-full border border-[var(--color-yarn-orange)]/20 bg-[var(--color-canvas-white)]/95 p-1.5 pl-3 text-left shadow-[0_8px_24px_rgba(30,37,40,0.16)] backdrop-blur-xl transition-[transform,box-shadow] duration-200 motion-reduce:transition-none hover:shadow-[0_10px_28px_rgba(30,37,40,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
+                        className="group flex items-center justify-end gap-3 sm:gap-3.5 rounded-full border-2 border-[var(--color-yarn-orange)]/25 bg-[var(--color-canvas-white)]/95 p-2 pl-4 sm:p-2.5 sm:pl-5 text-left shadow-[0_12px_32px_rgba(30,37,40,0.18),0_2px_8px_rgba(30,37,40,0.06)] backdrop-blur-xl transition-all duration-200 motion-reduce:transition-none hover:border-[var(--color-yarn-orange)]/45 hover:shadow-[0_16px_38px_rgba(30,37,40,0.22),0_4px_12px_rgba(30,37,40,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_8px_20px_rgba(30,37,40,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
                     >
-                        <span className="min-w-0 max-w-[10.5rem] pr-1">
-                            <span className="block text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Live cost</span>
-                            <span className="mt-0.5 block truncate text-[12px] font-semibold text-[var(--color-ink)]">
+                        <span className="min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
+                            <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">Live cost</span>
+                            <span className="mt-0.5 block truncate text-[13px] sm:text-[15px] font-bold text-[var(--color-ink)]">
                                 {hasValidCostResult ? 'View costing' : 'Complete inputs'}
                             </span>
                         </span>
-                        <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
-                            <Calculator className="h-5 w-5" aria-hidden="true" />
+                        <span className="relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
+                            <Calculator className="h-6 w-6" aria-hidden="true" />
                             <span
                                 aria-hidden="true"
-                                className={`absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[var(--color-canvas-white)] px-0.5 text-[8px] font-bold leading-none text-white ${hasValidCostResult && hasValidPrice ? 'bg-[var(--color-factory-green)]' : 'bg-[var(--color-warning-amber)]'}`}
+                                className={`absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-[var(--color-canvas-white)] px-1 text-[10px] font-bold leading-none text-white shadow-sm ${hasValidCostResult && hasValidPrice ? 'bg-[var(--color-factory-green)]' : 'bg-[var(--color-warning-amber)]'}`}
                             >
-                                {shortcutBadge === 'Live' ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : shortcutBadge}
+                                {shortcutBadge === 'Live' ? <span className="h-2 w-2 rounded-full bg-white" /> : shortcutBadge}
                             </span>
                         </span>
                     </button>
