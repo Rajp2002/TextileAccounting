@@ -129,6 +129,24 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(tutorialSource).toContain("event.key === 'ArrowLeft'")
     })
 
+    it('renders RateBookTutorial inside .rates-left-rail-desktop pinned to top of left rail', () => {
+        expect(ratesClientSource).toContain('<aside className="rates-left-rail-desktop')
+        const leftRailIndex = ratesClientSource.indexOf('className="rates-left-rail-desktop')
+        const tutorialIndex = ratesClientSource.indexOf('<RateBookTutorial', leftRailIndex)
+        expect(tutorialIndex).toBeGreaterThan(leftRailIndex)
+    })
+
+    it('defines responsive positioning for .rates-left-rail-desktop in globals.css matching Cost Estimator', () => {
+        const stylesPath = path.resolve(__dirname, '../app/globals.css')
+        const styles = fs.readFileSync(stylesPath, 'utf8')
+
+        expect(styles).toContain('.rates-left-rail-desktop')
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?position:\s*fixed/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?top:\s*6\.5rem/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?width:\s*14rem/)
+    })
+
     it('dismissRatebookTutorial updates user metadata and revalidates /owner/rates', async () => {
         const res = await dismissRatebookTutorial()
         expect(res).toEqual({ success: true })
@@ -139,3 +157,4 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/rates')
     })
 })
+

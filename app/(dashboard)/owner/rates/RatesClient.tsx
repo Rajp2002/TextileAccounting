@@ -1418,6 +1418,20 @@ export default function RatesClient({
 
     return (
         <>
+            {/* Rate Book Left Rail - pinned to top of left rail beside sidebar, matching the Cost Estimator left rail pattern */}
+            <aside className="rates-left-rail-desktop space-y-3" aria-label={tx('Rate Book guides and tools')}>
+                <RateBookTutorial
+                    accountDismissed={tutorialDismissed}
+                    enabled={!isPending}
+                    orgId={orgId}
+                    userId={userId}
+                    onPrepare={prepareTutorial}
+                    onOpenQuickEdit={handleOpenQuickEditFromTour}
+                    onOpenRateDrawer={handleOpenRateDrawerFromTour}
+                    onActiveChange={setIsTutorialActive}
+                />
+            </aside>
+
             <div data-ratebook-tutorial-root="true" className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
@@ -1441,7 +1455,7 @@ export default function RatesClient({
                     )}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <div className="min-[1540px]:hidden">
+                            <div className="min-[1660px]:hidden">
                                 <RateBookTutorial
                                     accountDismissed={tutorialDismissed}
                                     enabled={!isPending}
@@ -2148,16 +2162,6 @@ export default function RatesClient({
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
             <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
-                <RateBookTutorial
-                    accountDismissed={tutorialDismissed}
-                    enabled={!isPending}
-                    orgId={orgId}
-                    userId={userId}
-                    onPrepare={prepareTutorial}
-                    onOpenQuickEdit={handleOpenQuickEditFromTour}
-                    onOpenRateDrawer={handleOpenRateDrawerFromTour}
-                    onActiveChange={setIsTutorialActive}
-                />
                 <div data-ratebook-section={7} data-ratebook-field="reviewRailWidget">
                     <RateReviewRailWidget
                         dueReviewRates={dueReviewRates}

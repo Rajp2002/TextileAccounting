@@ -523,6 +523,36 @@
     }
   }
 
+  /* Rate Book Left Rail - pinned to top of left rail beside sidebar,
+     matching the Cost Estimator left rail pattern. */
+  .rates-left-rail-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1660px) {
+    .rates-left-rail-desktop {
+      display: block;
+      position: fixed;
+      top: 6.5rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7.5rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .rates-left-rail-desktop {
+      left: calc(248px + 1.25rem);
+      width: 14.5rem;
+    }
+  }
+
   /* Rate Book Right Rail - positioned in right viewport margin. The rail is
      rendered outside the animated route wrapper so fixed positioning remains
      anchored to the viewport instead of the centered Rate Book content. */
