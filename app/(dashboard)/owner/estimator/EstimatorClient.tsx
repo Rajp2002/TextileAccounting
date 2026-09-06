@@ -1444,11 +1444,31 @@ function MobileLiveEstimateShortcut({
                 </div>
             )}
 
-            <Sheet open={open} onOpenChange={setOpen} modal={!isTutorialActive}>
+            <Sheet
+                open={open}
+                onOpenChange={(nextOpen) => {
+                    if (isTutorialActive && !nextOpen) {
+                        return
+                    }
+                    setOpen(nextOpen)
+                }}
+                modal={!isTutorialActive}
+            >
                 <SheetContent
                     id="mobile-live-estimate-panel"
                     side="bottom"
                     hideOverlay={isTutorialActive}
+                    showCloseButton={!isTutorialActive}
+                    onPointerDownOutside={(e) => {
+                        if (isTutorialActive) {
+                            e.preventDefault()
+                        }
+                    }}
+                    onInteractOutside={(e) => {
+                        if (isTutorialActive) {
+                            e.preventDefault()
+                        }
+                    }}
                     className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:bottom-6 md:top-6 md:mx-auto md:h-auto md:max-h-none md:w-[min(calc(100vw-3rem),38rem)] md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
@@ -1514,6 +1534,7 @@ function MobileLiveEstimateShortcut({
                         <button
                             type="button"
                             onClick={() => {
+                                if (isTutorialActive) return
                                 setOpen(false)
                                 onJumpToInput()
                             }}
@@ -1531,7 +1552,7 @@ function MobileLiveEstimateShortcut({
 
                     {actions && (
                         <div data-estimator-field="liveCostActions" className="border-t border-[var(--color-hairline)]/80 px-5 pb-1 pt-4">
-                            {typeof actions === 'function' ? actions(() => setOpen(false)) : actions}
+                            {typeof actions === 'function' ? actions(() => { if (!isTutorialActive) setOpen(false) }) : actions}
                         </div>
                     )}
                 </SheetContent>

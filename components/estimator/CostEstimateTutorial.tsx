@@ -303,6 +303,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         const measureAndPosition = () => {
             if (!isMounted) return
 
+            if (isModal) {
+                onOpenLiveCostModal?.(true)
+            }
+
             const { target: targetEl, card: cardEl } = resolveStepElements(active)
 
             if (!targetEl || !cardEl || !targetEl.getClientRects().length || !cardEl.getClientRects().length) {

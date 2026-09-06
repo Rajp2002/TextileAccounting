@@ -44,4 +44,24 @@ describe('CostEstimateTutorial Modal Positioning and Stability', () => {
     it('schedules post-mount settle updates to guarantee highlight alignment', () => {
         expect(tutorialSource).toContain('backupTimer')
     })
+
+    it('guards onOpenChange and blocks auto-close when tutorial is active', () => {
+        expect(estimatorClientSource).toContain('if (isTutorialActive && !nextOpen)')
+    })
+
+    it('prevents dismiss on outside clicks and interactions during tutorial', () => {
+        expect(estimatorClientSource).toContain('onPointerDownOutside={(e) => {')
+        expect(estimatorClientSource).toContain('if (isTutorialActive) {')
+        expect(estimatorClientSource).toContain('e.preventDefault()')
+        expect(estimatorClientSource).toContain('onInteractOutside={(e) => {')
+    })
+
+    it('hides the sheet close button during tutorial to prevent accidental dismissal', () => {
+        expect(estimatorClientSource).toContain('showCloseButton={!isTutorialActive}')
+    })
+
+    it('re-asserts modal open state during measurement of modal steps', () => {
+        expect(tutorialSource).toContain('if (isModal) {')
+        expect(tutorialSource).toContain('onOpenLiveCostModal?.(true)')
+    })
 })
