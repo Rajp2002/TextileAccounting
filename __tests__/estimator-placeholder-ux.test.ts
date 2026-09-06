@@ -82,4 +82,14 @@ describe('Estimator placeholder clarity', () => {
         expect(estimator).toContain('text-[var(--color-yarn-orange)]')
         expect(estimator).toContain('placeholder:text-[var(--color-muted)]')
     })
+
+    it('ensures component count and stepper field labels adhere to standard text-[var(--color-muted)]', () => {
+        const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+
+        // Labels must adhere to product standard color and not use accent-colored text
+        expect(estimator).toContain('<Label htmlFor={inputId} className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">')
+        expect(estimator).toContain('<Label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">')
+        expect(estimator).not.toContain('${accentStyles.text}')
+    })
 })
+

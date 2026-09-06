@@ -795,7 +795,6 @@ function ComponentCountField({
 }) {
     const inputId = useId()
     const [draftValue, setDraftValue] = useState(String(value))
-    const accentStyles = getAccentStyles(accent)
 
     useEffect(() => {
         setDraftValue(String(value))
@@ -819,7 +818,7 @@ function ComponentCountField({
 
     return (
         <div className="min-w-0 space-y-1.5">
-            <Label htmlFor={inputId} className={`flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] ${accentStyles.text}`}>
+            <Label htmlFor={inputId} className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">
                 {label}
             </Label>
             <div className="relative">
@@ -991,7 +990,6 @@ function StepperField({
     ghostPlaceholder?: string
     placeholderKind?: EstimatorPlaceholderKind
 }) {
-    const accentStyles = getAccentStyles(accent)
     const decrement = () => onChange(Math.max(0, Number((value - step).toFixed(2))))
     const increment = () => onChange(Number((value + step).toFixed(2)))
     const isGhostValue = ghostValue !== undefined && value === ghostValue
@@ -999,7 +997,7 @@ function StepperField({
     const valueClass = 'text-[var(--color-yarn-orange)]'
     return (
         <div className="min-w-0 space-y-2">
-            <Label className={`block text-[11px] font-semibold uppercase tracking-[0.05em] ${accentStyles.text}`}>
+            <Label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">
                 {label}
             </Label>
             <div className="inline-flex h-11 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
