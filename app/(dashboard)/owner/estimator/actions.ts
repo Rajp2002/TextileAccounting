@@ -1075,20 +1075,13 @@ async function syncTemplateYarnRenames(
     newWeftRows?: WeftRow[] | null,
 ) {
     try {
-        const [otherTemplatesRes, costingsRes, existingRatesRes] = await Promise.all([
+        const [otherTemplatesRes, existingRatesRes] = await Promise.all([
             supabase
                 .from('estimator_templates')
                 .select('warp_rows, weft_rows')
                 .eq('org_id', orgId)
                 .eq('is_active', true)
                 .neq('id', templateId),
-            supabase
-                .from('estimator_quotes')
-                .select('warp_rows, weft_rows')
-                .eq('org_id', orgId)
-                .eq('record_kind', 'costing')
-                .is('template_id', null)
-                .eq('is_archived', false),
             supabase
                 .from('cost_rate_book')
                 .select('name, category')
@@ -1102,7 +1095,6 @@ async function syncTemplateYarnRenames(
             newWarpRows,
             newWeftRows,
             otherTemplates: otherTemplatesRes.data ?? [],
-            savedCostings: costingsRes.data ?? [],
             existingRates: existingRatesRes.data ?? [],
         })
 

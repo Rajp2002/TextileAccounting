@@ -360,7 +360,7 @@ export function getOrphanedYarnRateIds(params: {
     return params.rates
         .filter(rate => {
             if (rate.category !== 'yarn_warp' && rate.category !== 'yarn_weft') return false
-            if (rate.source !== 'Saved quality') return false
+            if (rate.source !== 'Saved quality' && rate.source !== 'Saved costing') return false
             if (rate.apply_as_default) return false
             const key = `${rate.category}:${normalizeYarnName(rate.name)}`
             return !activeYarnKeys.has(key)

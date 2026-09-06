@@ -173,43 +173,25 @@ export async function getCostRateUsage() {
     const tierError = await requireBaseTier(profile.org_id)
     if (tierError) return { error: tierError }
     const supabase = await createServerClient()
-    const [templatesResult, costingsResult] = await Promise.all([
-        supabase
-            .from('estimator_templates')
-            .select('id, name, warp_rows, weft_rows')
-            .eq('org_id', profile.org_id)
-            .eq('is_active', true),
-        supabase
-            .from('estimator_quotes')
-            .select('id, quality_label, party_name, warp_rows, weft_rows')
-            .eq('org_id', profile.org_id)
-            .eq('record_kind', 'costing')
-            .is('template_id', null)
-            .eq('is_archived', false),
-    ])
-    if (templatesResult.error || costingsResult.error) {
-        return { error: templatesResult.error?.message ?? costingsResult.error?.message }
-    }
+    const { data: templates, error } = await supabase
+        .from('estimator_templates')
+        .select('id, name, warp_rows, weft_rows')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+    if (error) return { error: error.message }
 
-    const qualityTemplates = (templatesResult.data ?? []).map(template => ({
+    const qualityTemplates = (templates ?? []).map(template => ({
         ...template,
         discoverySource: 'saved_quality' as const,
     })) as YarnRateTemplate[]
-    const savedCostings = (costingsResult.data ?? []).map(costing => ({
-        id: `costing:${costing.id}`,
-        name: costing.quality_label?.trim() || costing.party_name?.trim() || 'Saved costing',
-        discoverySource: 'saved_costing' as const,
-        warp_rows: costing.warp_rows,
-        weft_rows: costing.weft_rows,
-    })) as YarnRateTemplate[]
-    const savedYarnSources = [...qualityTemplates, ...savedCostings]
+
     // Legacy page discovery previously used review_interval_days:
     // review_interval_days: yarnReviewIntervalDays
-    // and `.is('template_id', null)`. Both are now
-    // handled by write-time sync plus the explicit maintenance operation.
+    // and `.from('estimator_quotes').eq('record_kind', 'costing').is('template_id', null)`.
+    // The Rate Book is strictly quality-first: only active Saved Qualities define yarn usage.
     return {
-        data: collectYarnRateCandidates(savedYarnSources),
-        conflicts: getYarnRateConflicts(savedYarnSources),
+        data: collectYarnRateCandidates(qualityTemplates),
+        conflicts: getYarnRateConflicts(qualityTemplates),
     }
 }
 
@@ -238,7 +220,7 @@ export async function reconcileLegacyYarnRates() {
             p_category: candidate.category,
             p_current_value: candidate.currentValue,
             p_review_interval_days: reviewIntervalDays,
-            p_source: candidate.discoverySource === 'saved_quality' ? 'Saved quality' : 'Saved costing',
+            p_source: 'Saved quality',
             p_notes: candidate.usageNotes.slice(0, 500),
         })
         if (error) return { error: error.message, attempted }
@@ -251,7 +233,7 @@ export async function reconcileLegacyYarnRates() {
         .select('id, name, category, source, apply_as_default')
         .eq('org_id', profile.org_id)
         .in('category', ['yarn_warp', 'yarn_weft'])
-        .eq('source', 'Saved quality')
+        .in('source', ['Saved quality', 'Saved costing'])
         .eq('apply_as_default', false)
 
     const activeKeys = new Set(
