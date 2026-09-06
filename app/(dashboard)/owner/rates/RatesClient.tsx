@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { RateBookTutorial } from '@/components/rates/RateBookTutorial'
+import { RateBookTutorialLauncher } from '@/components/rates/RateBookTutorial'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -858,6 +859,10 @@ export default function RatesClient({
     const [searchQuery, setSearchQuery] = useState('')
     const [showArchived, setShowArchived] = useState(false)
     const [isTutorialActive, setIsTutorialActive] = useState(false)
+    const [tutorialTrigger, setTutorialTrigger] = useState(0)
+    const handleLaunchTutorial = useCallback(() => {
+        setTutorialTrigger(prev => prev + 1)
+    }, [])
     const searchRef = useRef<HTMLInputElement>(null)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [showDueReviews, setShowDueReviews] = useState(false)
@@ -1425,6 +1430,7 @@ export default function RatesClient({
                     enabled={!isPending}
                     orgId={orgId}
                     userId={userId}
+                    requestTrigger={tutorialTrigger}
                     onPrepare={prepareTutorial}
                     onOpenQuickEdit={handleOpenQuickEditFromTour}
                     onOpenRateDrawer={handleOpenRateDrawerFromTour}
@@ -1456,15 +1462,9 @@ export default function RatesClient({
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <div className="min-[1660px]:hidden">
-                                <RateBookTutorial
-                                    accountDismissed={tutorialDismissed}
-                                    enabled={!isPending}
-                                    orgId={orgId}
-                                    userId={userId}
-                                    onPrepare={prepareTutorial}
-                                    onOpenQuickEdit={handleOpenQuickEditFromTour}
-                                    onOpenRateDrawer={handleOpenRateDrawerFromTour}
-                                    onActiveChange={setIsTutorialActive}
+                                <RateBookTutorialLauncher
+                                    onClick={handleLaunchTutorial}
+                                    disabled={isPending}
                                 />
                             </div>
                             <Button

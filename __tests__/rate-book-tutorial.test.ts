@@ -156,5 +156,17 @@ describe('RatesClient Integration & Overlay Stability', () => {
         })
         expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/rates')
     })
+
+    it('mounts RateBookTutorial exactly once to prevent duplicate portals and inert focus collisions', () => {
+        const matches = ratesClientSource.match(/<RateBookTutorial\b/g)
+        expect(matches).toHaveLength(1)
+        expect(ratesClientSource).toContain('<RateBookTutorialLauncher')
+    })
+
+    it('provides reliable skip tour and backdrop dismissal', () => {
+        expect(tutorialSource).toContain('data-tour-control="skip"')
+        expect(tutorialSource).toContain('data-ratebook-portal="true"')
+        expect(tutorialSource).toContain('onClick={(e) => {')
+    })
 })
 

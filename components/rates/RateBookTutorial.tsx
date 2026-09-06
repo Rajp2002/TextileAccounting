@@ -96,11 +96,56 @@ function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; 
     return { target, card }
 }
 
+export function RateBookTutorialLauncher({
+    onClick,
+    disabled = false,
+    className = '',
+}: {
+    onClick: () => void
+    disabled?: boolean
+    className?: string
+}) {
+    const { language, languageStatus } = useTranslation()
+    const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
+    const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
+        ? copy.replay.split(' · ')
+        : [copy.replay, '']
+
+    return (
+        <button
+            data-i18n-skip="true"
+            lang={language}
+            type="button"
+            onClick={onClick}
+            disabled={disabled || languageStatus === 'loading'}
+            className={`group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/75 px-3.5 py-2.5 text-left text-sm font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-100/70 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 ${className}`}
+            aria-label={copy.replay}
+            title={copy.replay}
+        >
+            <div className="flex min-w-0 items-center gap-2.5">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 transition-colors group-hover:bg-amber-200">
+                    <Compass className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                    <p className="truncate text-xs font-bold text-slate-900">{replayTitle}</p>
+                    {replaySubtitle && (
+                        <p className="truncate text-[11px] font-medium text-amber-700">{replaySubtitle}</p>
+                    )}
+                </div>
+            </div>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100/90 text-amber-700 transition-colors group-hover:bg-amber-200">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+        </button>
+    )
+}
+
 export function RateBookTutorial({
     accountDismissed,
     enabled,
     orgId,
     userId,
+    requestTrigger,
     onPrepare,
     onOpenQuickEdit,
     onOpenRateDrawer,
@@ -110,6 +155,7 @@ export function RateBookTutorial({
     enabled: boolean
     orgId: string
     userId: string
+    requestTrigger?: number
     onPrepare?: () => void
     onOpenQuickEdit?: (open: boolean) => void
     onOpenRateDrawer?: (open: boolean) => void
@@ -131,6 +177,12 @@ export function RateBookTutorial({
     const prevSectionRef = useRef<number | null>(null)
     const [isSectionTransition, setIsSectionTransition] = useState(false)
     const [panelPlacement, setPanelPlacement] = useState<'top-right' | 'bottom-right'>('top-right')
+
+    useEffect(() => {
+        if (requestTrigger && requestTrigger > 0) {
+            setRequested(true)
+        }
+    }, [requestTrigger])
 
     const syncDismissal = useCallback(async () => {
         if (syncing.current) return
@@ -235,6 +287,13 @@ export function RateBookTutorial({
         setRects(null)
         onOpenQuickEdit?.(false)
         onOpenRateDrawer?.(false)
+        if (typeof document !== 'undefined') {
+            Array.from(document.body.children).forEach(el => {
+                if (el instanceof HTMLElement && el.inert) {
+                    el.inert = false
+                }
+            })
+        }
     }, [key, syncDismissal, onOpenQuickEdit, onOpenRateDrawer])
 
     const handleNext = useCallback(() => {
@@ -255,7 +314,11 @@ export function RateBookTutorial({
         if (!active) return
         const previousFocus = document.activeElement as HTMLElement | null
         const siblings = Array.from(document.body.children).filter(
-            (el): el is HTMLElement => el instanceof HTMLElement && !el.contains(panel.current)
+            (el): el is HTMLElement =>
+                el instanceof HTMLElement &&
+                !el.contains(panel.current) &&
+                el.getAttribute('data-testid') !== 'rate-book-tutorial' &&
+                !el.hasAttribute('data-ratebook-portal')
         )
         const prior = siblings.map(el => el.inert)
         siblings.forEach(el => { el.inert = true })
@@ -513,9 +576,17 @@ export function RateBookTutorial({
             )}
 
             {active && createPortal(
-                <div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="rate-book-tutorial">
+                <div data-i18n-skip="true" lang={language} data-ratebook-portal="true" className="fixed inset-0 z-[100]" data-testid="rate-book-tutorial">
                     <div
-                        className="absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300"
+                        role="button"
+                        tabIndex={-1}
+                        aria-label={copy.skip}
+                        onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            close()
+                        }}
+                        className="absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 cursor-pointer"
                         style={{
                             transition: 'clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
                             ...(rects ? {
@@ -561,6 +632,7 @@ export function RateBookTutorial({
                         aria-labelledby="ratebook-tour-title"
                         aria-describedby="ratebook-tour-description"
                         tabIndex={-1}
+                        onClick={(e) => e.stopPropagation()}
                         className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
                             panelPlacement === 'bottom-right'
                                 ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
@@ -596,15 +668,46 @@ export function RateBookTutorial({
                         </div>
 
                         <div className="mt-3.5 flex items-center justify-between gap-2">
-                            <Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                data-tour-control="skip"
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    close()
+                                }}
+                            >
                                 {copy.skip}
                             </Button>
                             <span className="text-xs font-medium text-[var(--color-muted)]">{index + 1}/{steps.length}</span>
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm" data-tour-control="back" disabled={index === 0} onClick={handleBack}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    data-tour-control="back"
+                                    disabled={index === 0}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        handleBack()
+                                    }}
+                                >
                                     {copy.back}
                                 </Button>
-                                <Button size="sm" data-tour-control="next" onClick={handleNext} className="group gap-1.5 font-medium bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    data-tour-control="next"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        handleNext()
+                                    }}
+                                    className="group gap-1.5 font-medium bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all"
+                                >
                                     <span>{index === steps.length - 1 ? copy.finish : copy.next}</span>
                                     <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/25 bg-white/20 px-1 text-[10px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
                                 </Button>
