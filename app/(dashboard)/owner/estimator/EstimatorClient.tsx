@@ -1348,6 +1348,9 @@ function MobileLiveEstimateShortcut({
     actions,
     expectedProfitTotal,
     hasOrderQty,
+    open: controlledOpen,
+    onOpenChange: setControlledOpen,
+    isTutorialActive = false,
 }: {
     visible: boolean
     keyboardVisible: boolean
@@ -1371,8 +1374,13 @@ function MobileLiveEstimateShortcut({
     actions?: React.ReactNode | ((onDismiss: () => void) => React.ReactNode)
     expectedProfitTotal?: number | null
     hasOrderQty?: boolean
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    isTutorialActive?: boolean
 }) {
-    const [open, setOpen] = useState(false)
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+    const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
+    const setOpen = setControlledOpen ?? setUncontrolledOpen
     const hasValidPrice = hasValidCostResult && quoteIsValid
     const hasReviewState = needsReview || missingIssueCount > 0 || !hasValidCostResult || !quoteIsValid
     const marginTone = actualMarginPct === null
@@ -1409,6 +1417,8 @@ function MobileLiveEstimateShortcut({
                 >
                     <button
                         type="button"
+                        data-tutorial-section={9}
+                        data-estimator-field="liveCostShortcut"
                         aria-label={`View live cost estimate. ${shortcutLabel}`}
                         aria-expanded={open}
                         aria-controls="mobile-live-estimate-panel"
@@ -1434,7 +1444,7 @@ function MobileLiveEstimateShortcut({
                 </div>
             )}
 
-            <Sheet open={open} onOpenChange={setOpen}>
+            <Sheet open={open} onOpenChange={setOpen} modal={!isTutorialActive}>
                 <SheetContent
                     id="mobile-live-estimate-panel"
                     side="bottom"
@@ -1448,7 +1458,7 @@ function MobileLiveEstimateShortcut({
                         <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">Updates live as you edit the estimate.</p>
                     </SheetHeader>
 
-                    <div className={`mx-5 mt-4 flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityClassName}`} role="status" aria-live="polite">
+                    <div data-estimator-field="liveCostReadiness" className={`mx-5 mt-4 flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityClassName}`} role="status" aria-live="polite">
                         <ValidityIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                         <div className="min-w-0">
                             <span className="font-semibold">{validityLabel}</span>
@@ -1456,46 +1466,48 @@ function MobileLiveEstimateShortcut({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5 px-5 pt-4" aria-label="Live cost metrics">
-                        <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
-                            <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Production cost / m</p>
-                            <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
-                                {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'}
-                            </p>
+                    <div data-estimator-field="liveCostMetrics" className="space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2.5 px-5 pt-4" aria-label="Live cost metrics">
+                            <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
+                                <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Production cost / m</p>
+                                <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
+                                    {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'}
+                                </p>
+                            </div>
+                            <div className="min-w-0 rounded-[12px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-3 py-3">
+                                <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Suggested price / m</p>
+                                <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                                    {hasValidPrice ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                                </p>
+                            </div>
                         </div>
-                        <div className="min-w-0 rounded-[12px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-3 py-3">
-                            <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Suggested price / m</p>
-                            <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
-                                {hasValidPrice ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'}
-                            </p>
+
+                        <div className="grid grid-cols-2 gap-2.5 px-5 pt-2.5">
+                            <div className={`min-w-0 rounded-[12px] border px-3 py-3 ${marginSurface}`}>
+                                <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Actual margin</p>
+                                <p className={`mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
+                                    {actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`}
+                                </p>
+                            </div>
+                            <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
+                                <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Break-even price / m</p>
+                                <p className="mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
+                                    {hasValidCostResult && breakEvenPricePerM != null ? `₹${breakEvenPricePerM.toFixed(2)}` : '—'}
+                                </p>
+                            </div>
                         </div>
+
+                        {hasOrderQty && expectedProfitTotal != null && (
+                            <div className="mx-5 mt-2.5 flex items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
+                                <span className="text-[11px] font-semibold text-[var(--color-muted)]">Expected profit</span>
+                                <span className={`font-mono text-[13px] font-semibold tabular-nums ${expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
+                                    ₹{expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5 px-5 pt-2.5">
-                        <div className={`min-w-0 rounded-[12px] border px-3 py-3 ${marginSurface}`}>
-                            <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Actual margin</p>
-                            <p className={`mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
-                                {actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`}
-                            </p>
-                        </div>
-                        <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
-                            <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Break-even price / m</p>
-                            <p className="mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
-                                {hasValidCostResult && breakEvenPricePerM != null ? `₹${breakEvenPricePerM.toFixed(2)}` : '—'}
-                            </p>
-                        </div>
-                    </div>
-
-                    {hasOrderQty && expectedProfitTotal != null && (
-                        <div className="mx-5 mt-2.5 flex items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
-                            <span className="text-[11px] font-semibold text-[var(--color-muted)]">Expected profit</span>
-                            <span className={`font-mono text-[13px] font-semibold tabular-nums ${expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
-                                ₹{expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                    )}
-
-                    {assumptions && <div className="px-5 pt-3">{assumptions}</div>}
+                    {assumptions && <div data-estimator-field="liveCostAssumptions" className="px-5 pt-3">{assumptions}</div>}
 
                     {hasReviewState ? (
                         <button
@@ -1517,7 +1529,7 @@ function MobileLiveEstimateShortcut({
                     )}
 
                     {actions && (
-                        <div className="border-t border-[var(--color-hairline)]/80 px-5 pb-1 pt-4">
+                        <div data-estimator-field="liveCostActions" className="border-t border-[var(--color-hairline)]/80 px-5 pb-1 pt-4">
                             {typeof actions === 'function' ? actions(() => setOpen(false)) : actions}
                         </div>
                     )}
@@ -3257,6 +3269,8 @@ export default function EstimatorClient({
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
     const prepareTutorial = useCallback(() => { setEntryMode('detailed'); setShowAdvancedOverhead(false) }, [])
+    const [isTutorialActive, setIsTutorialActive] = useState(false)
+    const [liveEstimateOpen, setLiveEstimateOpen] = useState(false)
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
@@ -5187,6 +5201,8 @@ export default function EstimatorClient({
                         orgId={orgId}
                         userId={userId}
                         onPrepare={prepareTutorial}
+                        onOpenLiveCostModal={setLiveEstimateOpen}
+                        onActiveChange={setIsTutorialActive}
                     />
                 </aside>
 
@@ -5667,7 +5683,7 @@ export default function EstimatorClient({
                         <button
                             type="button"
                             data-testid="saved-quality-quick-picker"
-                            data-tutorial-section={9}
+                            data-tutorial-section={10}
                             data-estimator-field="savedQualities"
                             data-slot="card"
                             onClick={() => setShowQualityLibrary(true)}
@@ -6987,6 +7003,9 @@ export default function EstimatorClient({
             </div>
 
             <MobileLiveEstimateShortcut
+                open={liveEstimateOpen}
+                onOpenChange={setLiveEstimateOpen}
+                isTutorialActive={isTutorialActive}
                 visible={mobileCostingShortcutVisible}
                 keyboardVisible={mobileKeyboardVisible}
                 activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}

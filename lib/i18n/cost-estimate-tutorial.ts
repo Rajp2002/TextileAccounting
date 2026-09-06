@@ -11,6 +11,7 @@ const en = {
     "Warping and sizing",
     "Factory overhead",
     "Selling price and quantity",
+    "Live cost estimate",
     "Saved qualities"
   ],
   "sectionProgress": "Section {current} of {total}",
@@ -152,6 +153,26 @@ const en = {
       "title": "Quick vs Detailed mode",
       "description": "Switch between Quick costing for fast estimates with essential inputs, and Detailed costing for full technical parameters, crimp, and factory assumptions. Both use the exact same calculation engine."
     },
+    "liveCostShortcut": {
+      "title": "Live cost estimator",
+      "description": "Tap this floating shortcut anytime to review your live production cost, suggested price, margin, and order profit without losing your place in the form."
+    },
+    "liveCostReadiness": {
+      "title": "Costing status and readiness",
+      "description": "Quickly check whether your costing has all required inputs or needs review. If any inputs are missing, tap here to jump straight to the first issue."
+    },
+    "liveCostMetrics": {
+      "title": "Live cost and margin metrics",
+      "description": "Review real-time calculations: production cost per metre, suggested selling price based on your target margin, actual margin %, break-even rate, and total order profit."
+    },
+    "liveCostAssumptions": {
+      "title": "Commercial assumptions",
+      "description": "Open assumptions to review active overhead rates, target margin, broker commission, order quantity, and process charges factored into this estimate."
+    },
+    "liveCostActions": {
+      "title": "Costing actions and orders",
+      "description": "Save this quotation as a draft or accepted deal, start a market production run, or create a party order directly from the live estimate."
+    },
     "savedQualities": {
       "title": "Saved qualities",
       "description": "Browse and select from your library of saved fabric recipes. Loading a saved quality instantly populates yarn construction, weaving rates, and overhead assumptions."
@@ -172,6 +193,7 @@ const hi: TutorialCopy = {
     "वार्पिंग और साइजिंग",
     "फैक्ट्री ओवरहेड",
     "बिक्री मूल्य और मात्रा",
+    "लाइव लागत अनुमान",
     "सेव की गई क्वालिटी"
   ],
   "sectionProgress": "भाग {current} / {total}",
@@ -313,6 +335,26 @@ const hi: TutorialCopy = {
       "title": "त्वरित बनाम विस्तृत मोड",
       "description": "आवश्यक इनपुट के साथ तेज़ गणना के लिए त्वरित (Quick) मोड, या पूर्ण तकनीकी विवरण और फैक्ट्री मान्यताओं के लिए विस्तृत (Detailed) मोड चुनें। दोनों में एक ही गणना इंजन काम करता है।"
     },
+    "liveCostShortcut": {
+      "title": "लाइव लागत शॉर्टकट",
+      "description": "फॉर्म में कहीं भी रहते हुए अपना लाइव उत्पादन खर्च, सुझाई गई बिक्री कीमत, मार्जिन और ऑर्डर का मुनाफा देखने के लिए इस बटन को दबाएं।"
+    },
+    "liveCostReadiness": {
+      "title": "अनुमान की स्थिति और तैयारी",
+      "description": "तुरंत देखें कि अनुमान में सभी ज़रूरी जानकारी भर दी गई है या समीक्षा की आवश्यकता है। यदि कोई इनपुट छूटा है, तो सीधे वहाँ पहुँचने के लिए यहाँ टैप करें।"
+    },
+    "liveCostMetrics": {
+      "title": "लाइव लागत और मार्जिन विवरण",
+      "description": "प्रति मीटर उत्पादन लागत, लक्षित मार्जिन के आधार पर सुझाई गई बिक्री कीमत, वास्तविक मार्जिन %, ब्रेक-इवन दर और कुल ऑर्डर मुनाफे की लाइव गणना देखें।"
+    },
+    "liveCostAssumptions": {
+      "title": "व्यावसायिक मान्यताएं",
+      "description": "इस अनुमान में शामिल ओवरहेड दर, लक्षित मार्जिन, ब्रोकर कमीशन, ऑर्डर मात्रा और प्रक्रिया खर्चों की समीक्षा करने के लिए मान्यताएं खोलें।"
+    },
+    "liveCostActions": {
+      "title": "अनुमान सेव और ऑर्डर कार्य",
+      "description": "इस कोटेशन को ड्राफ्ट या स्वीकृत सौदे के रूप में सेव करें, मार्केट रन शुरू करें, या लाइव अनुमान से सीधे पार्टी ऑर्डर तैयार करें।"
+    },
     "savedQualities": {
       "title": "सेव की गई क्वालिटी",
       "description": "अपनी सेव की गई कपड़े की क्वालिटी और रेसिपी की लाइब्रेरी देखें और चुनें। सेव की गई क्वालिटी लोड करने पर यार्न की बनावट, बुनाई की दरें और ओवरहेड तुरंत भर जाते हैं।"
@@ -330,6 +372,7 @@ const gu: TutorialCopy = {
     "વાર્પિંગ અને સાઇઝિંગ",
     "ફેક્ટરી ઓવરહેડ",
     "વેચાણ કિંમત અને જથ્થો",
+    "લાઇવ ખર્ચ અંદાજ",
     "સેવ કરેલી ક્વોલિટી"
   ],
   "sectionProgress": "ભાગ {current} / {total}",
@@ -470,6 +513,26 @@ const gu: TutorialCopy = {
     "entryMode": {
       "title": "ઝડપી કે વિગતવાર મોડ",
       "description": "જરૂરી વિગતો સાથે ઝડપી ગણતરી માટે ક્વિક (Quick) મોડ, અથવા સંપૂર્ણ ટેકનિકલ પરિમાણો અને ફેક્ટરી ધારણાઓ માટે વિગતવાર (Detailed) મોડ પસંદ કરો. બંને એક જ ગણતરી એન્જિન વાપરે છે."
+    },
+    "liveCostShortcut": {
+      "title": "લાઇવ ખર્ચ શોર્ટકટ",
+      "description": "ફોર્મમાં કોઈપણ જગ્યાએ હોવ ત્યારે તમારો લાઈવ ઉત્પાદન ખર્ચ, સૂચવેલી કિંમત, માર્જિન અને નફો જોવા માટે આ બટન દબાવો."
+    },
+    "liveCostReadiness": {
+      "title": "અંદાજની સ્થિતિ અને તૈયારી",
+      "description": "ગણતરીમાં બધી જરૂરી વિગતો ભરાઈ ગઈ છે કે તપાસ બાકી છે તે તરત જુઓ. કોઈ માહિતી ખૂટતી હોય તો સીધા ત્યાં પહોંચવા અહીં ટેપ કરો."
+    },
+    "liveCostMetrics": {
+      "title": "લાઇવ ખર્ચ અને માર્જિન વિગતો",
+      "description": "પ્રતિ મીટર ઉત્પાદન ખર્ચ, લક્ષિત માર્જિન મુજબ સૂચવેલી વેચાણ કિંમત, સાચો માર્જિન %, બ્રેક-ઈવન દર અને કુલ ઓર્ડર નફાની લાઈવ ગણતરી જુઓ."
+    },
+    "liveCostAssumptions": {
+      "title": "વાણિજ્યિક ધારણાઓ",
+      "description": "આ અંદાજમાં સામેલ ઓવરહેડ દર, લક્ષિત માર્જિન, દલાલી કમિશન, ઓર્ડર જથ્થો અને પ્રોસેસ ખર્ચની સમીક્ષા માટે ધારણાઓ ખોલો."
+    },
+    "liveCostActions": {
+      "title": "અંદાજ સેવ અને ઓર્ડર કાર્ય",
+      "description": "આ ક્વોટેશન ડ્રાફ્ટ કે મંજૂર ડીલ તરીકે સેવ કરો, માર્કેટ રન શરૂ કરો, અથવા લાઈવ અંદાજ પરથી સીધો પાર્ટી ઓર્ડર બનાવો."
     },
     "savedQualities": {
       "title": "સેવ કરેલી ક્વોલિટી",

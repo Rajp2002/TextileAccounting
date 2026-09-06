@@ -8,10 +8,28 @@ import { costEstimateTutorialCopy, isTutorialField, type TutorialField } from '@
 import { Button } from '@/components/ui/button'
 import { Compass, Sparkles } from 'lucide-react'
 
-type Step = { section: number; target: HTMLElement; card: HTMLElement; field: TutorialField }
+type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare }: {
+function resolveStepElements(step: Step): { target: HTMLElement | null; card: HTMLElement | null } {
+    let target = step.target && document.body.contains(step.target) ? step.target : null
+    let card = step.card && document.body.contains(step.card) ? step.card : null
+
+    if (!target) {
+        target = document.querySelector<HTMLElement>(`[data-estimator-field="${step.field}"]`)
+    }
+    if (!card && target) {
+        card = target.closest<HTMLElement>('#mobile-live-estimate-panel') ??
+               target.closest<HTMLElement>('[data-slot="card"]') ??
+               target.closest<HTMLElement>('[data-testid="mobile-live-estimate-shortcut"]') ??
+               target
+    }
+    return { target, card }
+}
+
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onActiveChange }: {
     accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => void
+    onOpenLiveCostModal?: (open: boolean) => void
+    onActiveChange?: (active: boolean) => void
 }) {
     const { language, languageStatus } = useTranslation()
     const copy = costEstimateTutorialCopy[language]
@@ -80,6 +98,24 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
     const isTutorialActive = Boolean(active)
     useEffect(() => {
+        onActiveChange?.(isTutorialActive)
+    }, [isTutorialActive, onActiveChange])
+
+    const isModalStep = Boolean(active?.inModal || (active?.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)))
+
+    useEffect(() => {
+        if (!active) {
+            onOpenLiveCostModal?.(false)
+            return
+        }
+        if (isModalStep) {
+            onOpenLiveCostModal?.(true)
+        } else {
+            onOpenLiveCostModal?.(false)
+        }
+    }, [active, isModalStep, onOpenLiveCostModal])
+
+    useEffect(() => {
         if (!isTutorialActive) return
         const root = document.querySelector<HTMLElement>('[data-costing-tutorial-root]')
         if (!root) return
@@ -103,7 +139,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             const collect = () => {
                 if (tutorialRows.current.some(row => row.querySelector('[aria-expanded]')?.getAttribute('aria-expanded') !== 'true')) return
                 const next: Step[] = []
-                const headers = Array.from(root.querySelectorAll<HTMLElement>('[data-tutorial-section]'))
+                const headers = Array.from(document.querySelectorAll<HTMLElement>('[data-tutorial-section]'))
                     .sort((a, b) => Number(a.dataset.tutorialSection) - Number(b.dataset.tutorialSection))
 
                 headers.forEach(header => {
@@ -112,6 +148,20 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                     const card = header.closest<HTMLElement>('[data-slot="card"]') ?? header
 
                     if (header.dataset.estimatorField && isTutorialField(header.dataset.estimatorField)) {
+                        if (header.dataset.estimatorField === 'liveCostShortcut') {
+                            next.push({
+                                section,
+                                card: header.closest<HTMLElement>('[data-testid="mobile-live-estimate-shortcut"]') ?? header,
+                                target: header,
+                                field: 'liveCostShortcut'
+                            })
+                            const modalFields: TutorialField[] = ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions']
+                            modalFields.forEach(field => {
+                                next.push({ section, card: null, target: null, field, inModal: true })
+                            })
+                            return
+                        }
+
                         if (header.getClientRects().length) {
                             next.push({ section, card, target: header, field: header.dataset.estimatorField as TutorialField })
                         }
@@ -151,7 +201,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         setPanelPlacement('top-right')
         setSteps([])
         setRects(null)
-    }, [key, syncDismissal])
+        onOpenLiveCostModal?.(false)
+    }, [key, syncDismissal, onOpenLiveCostModal])
 
     const handleNext = useCallback(() => {
         if (!steps.length) return
@@ -227,142 +278,194 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     useEffect(() => {
         if (!active) return
 
+        let isMounted = true
+        let settleTimer: number | undefined
+        let retryRaf: number | undefined
+
         const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
         const scrollBehavior = prefersReducedMotion ? 'instant' : 'smooth'
         const viewportHeight = window.innerHeight
         const fixedPadding = 20
 
-        // Measure explainer modal boundaries to adaptively prevent overlap
-        const panelRect = panel.current?.getBoundingClientRect()
-        const modalBottom = panelRect ? panelRect.bottom : 220
-        const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
+        const isModal = Boolean(active.inModal || ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
 
-        const cardRect = active.card.getBoundingClientRect()
-        const targetRect = active.target.getBoundingClientRect()
-        const targetIsTopRight = targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
-        setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
-        const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
-        const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+        const measureAndPosition = () => {
+            if (!isMounted) return
 
-        const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
-        prevSectionRef.current = active.section
+            const { target: targetEl, card: cardEl } = resolveStepElements(active)
 
-        let deltaY = 0
-        if (isNewSection) {
-            setIsSectionTransition(true)
-            // When entering a new section, frame the top of the card cleanly so the header and initial controls are visible
-            const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
-            const targetCardTop = active.card.offsetHeight <= viewportHeight
-                ? Math.max(centeredTop, minAllowedTop)
-                : minAllowedTop
-            deltaY = cardRect.top - targetCardTop
-        } else if (active.card.offsetHeight <= viewportHeight) {
-            // Card fits in viewport. When navigating between fields in the same section,
-            // never re-center the card; move directly from one field to the next without scrolling.
-            const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
-            if (targetRect.top < minAllowedTargetTop) {
-                deltaY = targetRect.top - minAllowedTargetTop
-            } else if (targetRect.bottom > viewportHeight - 20) {
-                deltaY = targetRect.bottom - (viewportHeight - 20)
-            } else {
+            if (!targetEl || !cardEl || !targetEl.getClientRects().length) {
+                retryRaf = window.requestAnimationFrame(measureAndPosition)
+                return
+            }
+
+            // Measure explainer modal boundaries to adaptively prevent overlap
+            const panelRect = panel.current?.getBoundingClientRect()
+            const modalBottom = panelRect ? panelRect.bottom : 220
+            const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
+
+            const cardRect = cardEl.getBoundingClientRect()
+            const targetRect = targetEl.getBoundingClientRect()
+            const targetIsTopRight = targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
+            setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
+
+            const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
+            prevSectionRef.current = active.section
+
+            const isFixed = isModal ||
+                window.getComputedStyle(targetEl).position === 'fixed' ||
+                window.getComputedStyle(cardEl).position === 'fixed' ||
+                Boolean(targetEl.closest('.fixed') || cardEl.closest('.fixed'))
+
+            let deltaY = 0
+
+            active.card = cardEl
+            active.target = targetEl
+
+            if (isFixed) {
+                // Never scroll the window behind fixed elements or modal dialogs
                 deltaY = 0
+                if (isModal) {
+                    targetEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+                }
+            } else {
+                const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
+                const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+
+                if (isNewSection) {
+                    setIsSectionTransition(true)
+                    // When entering a new section, frame the top of the card cleanly so the header and initial controls are visible
+                    const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
+                    const targetCardTop = active.card.offsetHeight <= viewportHeight
+                        ? Math.max(centeredTop, minAllowedTop)
+                        : minAllowedTop
+                    deltaY = cardRect.top - targetCardTop
+                } else if (active.card.offsetHeight <= viewportHeight) {
+                    // Card fits in viewport. When navigating between fields in the same section,
+                    // never re-center the card; move directly from one field to the next without scrolling.
+                    const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                    if (targetRect.top < minAllowedTargetTop) {
+                        deltaY = targetRect.top - minAllowedTargetTop
+                    } else if (targetRect.bottom > viewportHeight - 20) {
+                        deltaY = targetRect.bottom - (viewportHeight - 20)
+                    } else {
+                        deltaY = 0
+                    }
+                } else {
+                    // Card is taller than viewport. Ensure active field clears modal and remains visible in viewport.
+                    const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                    if (targetRect.top < minAllowedTargetTop) {
+                        deltaY = targetRect.top - minAllowedTargetTop
+                    } else if (targetRect.bottom > viewportHeight - 20) {
+                        deltaY = targetRect.bottom - (viewportHeight - 20)
+                    }
+                }
+
+                // Clamp deltaY to the document's actual scrollable limits so we never subtract a phantom scroll distance
+                const maxScrollY = typeof document !== 'undefined'
+                    ? Math.max(0, document.documentElement.scrollHeight - viewportHeight)
+                    : 0
+                const currentScrollY = typeof window !== 'undefined' ? window.scrollY || window.pageYOffset || 0 : 0
+                const maxDeltaDown = Math.max(0, maxScrollY - currentScrollY)
+                const maxDeltaUp = -currentScrollY
+                deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))
             }
-        } else {
-            // Card is taller than viewport. Ensure active field clears modal and remains visible in viewport.
-            const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
-            if (targetRect.top < minAllowedTargetTop) {
-                deltaY = targetRect.top - minAllowedTargetTop
-            } else if (targetRect.bottom > viewportHeight - 20) {
-                deltaY = targetRect.bottom - (viewportHeight - 20)
+
+            const update = () => {
+                if (!isMounted) return
+                const { target: curTarget, card: curCard } = resolveStepElements(active)
+                if (curTarget && curCard) {
+                    setRects({
+                        field: curTarget.getBoundingClientRect(),
+                        card: curCard.getBoundingClientRect(),
+                    })
+                }
             }
-        }
 
-        // Clamp deltaY to the document's actual scrollable limits so we never subtract a phantom scroll distance
-        const maxScrollY = typeof document !== 'undefined'
-            ? Math.max(0, document.documentElement.scrollHeight - viewportHeight)
-            : 0
-        const currentScrollY = typeof window !== 'undefined' ? window.scrollY || window.pageYOffset || 0 : 0
-        const maxDeltaDown = Math.max(0, maxScrollY - currentScrollY)
-        const maxDeltaUp = -currentScrollY
-        deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))
+            if (Math.abs(deltaY) > 2 && scrollBehavior === 'smooth') {
+                isScrollingRef.current = true
+                window.scrollBy({ top: deltaY, behavior: 'smooth' })
 
-        const update = () => {
-            setRects({
-                field: active.target.getBoundingClientRect(),
-                card: active.card.getBoundingClientRect(),
-            })
-        }
+                // Set target rects immediately to the expected post-scroll viewport position.
+                // This allows CSS transitions (duration-500) to smoothly morph from the old position
+                // to the new section position without any pre-scroll snap down the screen.
+                const targetCardRect = {
+                    left: cardRect.left,
+                    right: cardRect.right,
+                    width: cardRect.width,
+                    height: cardRect.height,
+                    top: cardRect.top - deltaY,
+                    bottom: cardRect.bottom - deltaY,
+                    x: cardRect.x,
+                    y: cardRect.y - deltaY,
+                    toJSON: () => ({}),
+                } as DOMRect
 
-        if (Math.abs(deltaY) > 2 && scrollBehavior === 'smooth') {
-            isScrollingRef.current = true
-            window.scrollBy({ top: deltaY, behavior: 'smooth' })
+                const targetFieldRect = {
+                    left: targetRect.left,
+                    right: targetRect.right,
+                    width: targetRect.width,
+                    height: targetRect.height,
+                    top: targetRect.top - deltaY,
+                    bottom: targetRect.bottom - deltaY,
+                    x: targetRect.x,
+                    y: targetRect.y - deltaY,
+                    toJSON: () => ({}),
+                } as DOMRect
 
-            // Set target rects immediately to the expected post-scroll viewport position.
-            // This allows CSS transitions (duration-500) to smoothly morph from the old position
-            // to the new section position without any pre-scroll snap down the screen.
-            const targetCardRect = {
-                left: cardRect.left,
-                right: cardRect.right,
-                width: cardRect.width,
-                height: cardRect.height,
-                top: cardRect.top - deltaY,
-                bottom: cardRect.bottom - deltaY,
-                x: cardRect.x,
-                y: cardRect.y - deltaY,
-                toJSON: () => ({}),
-            } as DOMRect
+                setRects({ field: targetFieldRect, card: targetCardRect })
 
-            const targetFieldRect = {
-                left: targetRect.left,
-                right: targetRect.right,
-                width: targetRect.width,
-                height: targetRect.height,
-                top: targetRect.top - deltaY,
-                bottom: targetRect.bottom - deltaY,
-                x: targetRect.x,
-                y: targetRect.y - deltaY,
-                toJSON: () => ({}),
-            } as DOMRect
-
-            setRects({ field: targetFieldRect, card: targetCardRect })
-
-            const settleTimer = window.setTimeout(() => {
-                isScrollingRef.current = false
+                settleTimer = window.setTimeout(() => {
+                    isScrollingRef.current = false
+                    update()
+                    setIsSectionTransition(false)
+                }, isNewSection ? 550 : 350)
+            } else {
+                if (Math.abs(deltaY) > 2) {
+                    window.scrollBy({ top: deltaY, behavior: 'auto' })
+                }
                 update()
-                setIsSectionTransition(false)
-            }, isNewSection ? 550 : 350)
+                if (isNewSection) {
+                    setIsSectionTransition(true)
+                    settleTimer = window.setTimeout(() => setIsSectionTransition(false), 500)
+                }
+            }
+        }
 
-            return () => {
-                window.clearTimeout(settleTimer)
-            }
-        } else {
-            if (Math.abs(deltaY) > 2) {
-                window.scrollBy({ top: deltaY, behavior: 'auto' })
-            }
-            update()
-            if (isNewSection) {
-                setIsSectionTransition(true)
-                const transitionTimer = window.setTimeout(() => setIsSectionTransition(false), 500)
-                return () => window.clearTimeout(transitionTimer)
-            }
+        const initialDelay = isModal ? 80 : 0
+        const timer = window.setTimeout(() => {
+            measureAndPosition()
+        }, initialDelay)
+
+        return () => {
+            isMounted = false
+            window.clearTimeout(timer)
+            if (settleTimer) window.clearTimeout(settleTimer)
+            if (retryRaf) window.cancelAnimationFrame(retryRaf)
         }
     }, [active])
 
     useEffect(() => {
         if (!active) return
+        const { target: targetEl, card: cardEl } = resolveStepElements(active)
+        if (!targetEl || !cardEl) return
+
         const handleManualScrollOrResize = () => {
             if (!isScrollingRef.current) {
-                setRects({
-                    field: active.target.getBoundingClientRect(),
-                    card: active.card.getBoundingClientRect(),
-                })
+                const { target: curTarget, card: curCard } = resolveStepElements(active)
+                if (curTarget && curCard) {
+                    setRects({
+                        field: curTarget.getBoundingClientRect(),
+                        card: curCard.getBoundingClientRect(),
+                    })
+                }
             }
         }
         window.addEventListener('scroll', handleManualScrollOrResize, true)
         window.addEventListener('resize', handleManualScrollOrResize)
         const observer = new ResizeObserver(handleManualScrollOrResize)
-        observer.observe(active.card)
-        observer.observe(active.target)
+        observer.observe(cardEl)
+        observer.observe(targetEl)
         return () => {
             window.removeEventListener('scroll', handleManualScrollOrResize, true)
             window.removeEventListener('resize', handleManualScrollOrResize)

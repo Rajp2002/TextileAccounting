@@ -9,13 +9,14 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
     const tutorialComponentPath = path.resolve(__dirname, '../components/estimator/CostEstimateTutorial.tsx')
     const tutorialComponentSource = fs.readFileSync(tutorialComponentPath, 'utf8')
 
-    it('has 9 sections in i18n copy with Quick vs Detailed first and Saved qualities last', () => {
+    it('has 10 sections in i18n copy with Quick vs Detailed first, Live cost estimate at 9, and Saved qualities last', () => {
         for (const lang of ['en', 'hi', 'gu'] as const) {
             const sections = costEstimateTutorialCopy[lang].sections
-            expect(sections).toHaveLength(9)
+            expect(sections).toHaveLength(10)
         }
         expect(costEstimateTutorialCopy.en.sections[0]).toBe('Quick vs Detailed')
-        expect(costEstimateTutorialCopy.en.sections[8]).toBe('Saved qualities')
+        expect(costEstimateTutorialCopy.en.sections[8]).toBe('Live cost estimate')
+        expect(costEstimateTutorialCopy.en.sections[9]).toBe('Saved qualities')
     })
 
     it('sets prepareTutorial to switch to detailed entryMode', () => {
@@ -52,11 +53,22 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
         expect(estimatorClientSource).toMatch(/data-tutorial-section=\{1\}[\s\S]*?data-estimator-field="entryMode"/)
     })
 
-    it('tags Saved qualities with data-tutorial-section={9} and data-estimator-field="savedQualities"', () => {
-        expect(estimatorClientSource).toMatch(/data-tutorial-section=\{9\}[\s\S]*?data-estimator-field="savedQualities"/)
+    it('tags Live cost estimate shortcut with data-tutorial-section={9} and data-estimator-field="liveCostShortcut"', () => {
+        expect(estimatorClientSource).toMatch(/data-tutorial-section=\{9\}[\s\S]*?data-estimator-field="liveCostShortcut"/)
     })
 
-    it('sorts tutorial section headers numerically in CostEstimateTutorial to guarantee Section 1 is first and Section 9 is last', () => {
+    it('tags modal fields in MobileLiveEstimateShortcut for readiness, metrics, assumptions, and actions', () => {
+        expect(estimatorClientSource).toContain('data-estimator-field="liveCostReadiness"')
+        expect(estimatorClientSource).toContain('data-estimator-field="liveCostMetrics"')
+        expect(estimatorClientSource).toContain('data-estimator-field="liveCostAssumptions"')
+        expect(estimatorClientSource).toContain('data-estimator-field="liveCostActions"')
+    })
+
+    it('tags Saved qualities with data-tutorial-section={10} and data-estimator-field="savedQualities"', () => {
+        expect(estimatorClientSource).toMatch(/data-tutorial-section=\{10\}[\s\S]*?data-estimator-field="savedQualities"/)
+    })
+
+    it('sorts tutorial section headers numerically in CostEstimateTutorial to guarantee Section 1 is first and Section 10 is last', () => {
         expect(tutorialComponentSource).toContain('Number(a.dataset.tutorialSection) - Number(b.dataset.tutorialSection)')
     })
 
