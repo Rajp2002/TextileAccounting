@@ -184,6 +184,14 @@ const en = {
     "savedQualities": {
       "title": "Saved qualities",
       "description": "Browse and select from your library of saved fabric recipes. Loading a saved quality instantly populates yarn construction, weaving rates, and overhead assumptions."
+    },
+    "monthlyExpensesBreakdown": {
+      "title": "Monthly expenses",
+      "description": "Enter the rupee amounts you expect to pay each month for electricity, maintenance, factory staff salaries, rent, insurance, and other operating expenses."
+    },
+    "monthlyProductionM": {
+      "title": "Total monthly production in m",
+      "description": "Enter your factory's typical monthly production in metres. Total monthly expenses are divided by this output to calculate overhead per metre."
     }
   }
 }
@@ -374,6 +382,14 @@ const hi: TutorialCopy = {
     "savedQualities": {
       "title": "सेव की गई क्वालिटी",
       "description": "अपनी सेव की गई कपड़े की क्वालिटी और रेसिपी की लाइब्रेरी देखें और चुनें। सेव की गई क्वालिटी लोड करने पर यार्न की बनावट, बुनाई की दरें और ओवरहेड तुरंत भर जाते हैं।"
+    },
+    "monthlyExpensesBreakdown": {
+      "title": "मासिक खर्च",
+      "description": "बिजली, रखरखाव, कर्मचारियों के वेतन, किराया, बीमा और अन्य फैक्ट्री खर्चों के लिए हर महीने होने वाला अनुमानित खर्च दर्ज करें।"
+    },
+    "monthlyProductionM": {
+      "title": "कुल मासिक उत्पादन (मीटर में)",
+      "description": "अपनी फैक्ट्री का सामान्य मासिक उत्पादन मीटर में दर्ज करें। प्रति मीटर ओवरहेड निकालने के लिए कुल मासिक खर्च को इस उत्पादन से विभाजित किया जाता है।"
     }
   }
 }
@@ -561,6 +577,14 @@ const gu: TutorialCopy = {
     "savedQualities": {
       "title": "સેવ કરેલી ક્વોલિટી",
       "description": "તમારી સેવ કરેલી કાપડની ક્વોલિટી અને રેસિપીની લાઇબ્રેરી જુઓ અને પસંદ કરો. સેવ કરેલી ક્વોલિટી લોડ કરવાથી યાર્નની રચના, વણાટ દર અને ઓવરહેડ તરત ભરાઈ જાય છે."
+    },
+    "monthlyExpensesBreakdown": {
+      "title": "માસિક ખર્ચ",
+      "description": "વીજળી, સમારકામ, સ્ટાફ પગાર, ભાડું, વીમો અને અન્ય ફેક્ટરી ખર્ચ માટે દર મહિને થતો અંદાજિત ખર્ચ દાખલ કરો."
+    },
+    "monthlyProductionM": {
+      "title": "કુલ માસિક ઉત્પાદન (મીટરમાં)",
+      "description": "તમારી ફેક્ટરીનું સામાન્ય માસિક ઉત્પાદન મીટરમાં દાખલ કરો. મીટર દીઠ ઓવરહેડ ગણવા માટે કુલ માસિક ખર્ચને આ ઉત્પાદન વડે ભાગવામાં આવે છે."
     }
   }
 }

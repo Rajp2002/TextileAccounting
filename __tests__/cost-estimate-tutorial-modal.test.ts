@@ -6,10 +6,17 @@ describe('CostEstimateTutorial Modal Positioning and Stability', () => {
     const tutorialPath = path.resolve(__dirname, '../components/estimator/CostEstimateTutorial.tsx')
     const estimatorClientPath = path.resolve(__dirname, '../app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const sheetPath = path.resolve(__dirname, '../components/ui/sheet.tsx')
+    const dialogPath = path.resolve(__dirname, '../components/ui/dialog.tsx')
 
     const tutorialSource = fs.readFileSync(tutorialPath, 'utf8')
     const estimatorClientSource = fs.readFileSync(estimatorClientPath, 'utf8')
     const sheetSource = fs.readFileSync(sheetPath, 'utf8')
+    const dialogSource = fs.readFileSync(dialogPath, 'utf8')
+
+    it('supports hideOverlay prop in DialogContent to prevent overlay interference', () => {
+        expect(dialogSource).toContain('hideOverlay = false')
+        expect(dialogSource).toContain('{!hideOverlay && <DialogOverlay />}')
+    })
 
     it('supports hideOverlay prop in SheetContent to prevent overlay interference', () => {
         expect(sheetSource).toContain('hideOverlay = false')
@@ -74,5 +81,33 @@ describe('CostEstimateTutorial Modal Positioning and Stability', () => {
     it('ensures Enter key advances tour unless focus is explicitly on Back or Skip controls', () => {
         expect(tutorialSource).toContain("activeEl.dataset.tourControl === 'back' || activeEl.dataset.tourControl === 'skip'")
         expect(tutorialSource).toContain('handleNext()')
+    })
+
+    it('passes hideOverlay and disables animations on monthly-expenses-dialog-panel when tutorial is active', () => {
+        expect(estimatorClientSource).toContain('id="monthly-expenses-dialog-panel"')
+        expect(estimatorClientSource).toContain('hideOverlay={isTutorialActive}')
+        expect(estimatorClientSource).toContain(
+            "isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''"
+        )
+    })
+
+    it('binds card to monthly-expenses-dialog-panel for monthly expenses fields in resolveStepElements', () => {
+        expect(tutorialSource).toContain("document.getElementById('monthly-expenses-dialog-panel')")
+        expect(tutorialSource).toContain('isExpensesModalField')
+    })
+
+    it('inserts monthlyExpensesBreakdown and monthlyProductionM after monthlyOverhead in collect()', () => {
+        expect(tutorialSource).toContain("if (field === 'monthlyOverhead') {")
+        expect(tutorialSource).toContain("field: 'monthlyExpensesBreakdown'")
+        expect(tutorialSource).toContain("field: 'monthlyProductionM'")
+    })
+
+    it('re-asserts monthly expenses modal open state during measurement', () => {
+        expect(tutorialSource).toContain('onOpenMonthlyExpensesModal?.(true)')
+    })
+
+    it('tags monthlyExpensesBreakdown and monthlyProductionM fields in EstimatorClient', () => {
+        expect(estimatorClientSource).toContain('data-estimator-field="monthlyExpensesBreakdown"')
+        expect(estimatorClientSource).toContain('data-estimator-field="monthlyProductionM"')
     })
 })

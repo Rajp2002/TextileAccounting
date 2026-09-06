@@ -79,4 +79,16 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
         expect(tutorialComponentSource).toContain('targetRect.top < 340')
         expect(tutorialComponentSource).toContain("setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')")
     })
+
+    it('defines copy for monthlyExpensesBreakdown and monthlyProductionM in en, hi, and gu', () => {
+        for (const lang of ['en', 'hi', 'gu'] as const) {
+            expect(costEstimateTutorialCopy[lang].fields.monthlyExpensesBreakdown).toBeDefined()
+            expect(costEstimateTutorialCopy[lang].fields.monthlyExpensesBreakdown.title).toBeTruthy()
+            expect(costEstimateTutorialCopy[lang].fields.monthlyExpensesBreakdown.description).toBeTruthy()
+
+            expect(costEstimateTutorialCopy[lang].fields.monthlyProductionM).toBeDefined()
+            expect(costEstimateTutorialCopy[lang].fields.monthlyProductionM.title).toBeTruthy()
+            expect(costEstimateTutorialCopy[lang].fields.monthlyProductionM.description).toBeTruthy()
+        }
+    })
 })

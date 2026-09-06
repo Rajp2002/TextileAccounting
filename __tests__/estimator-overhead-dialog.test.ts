@@ -9,8 +9,8 @@ const estimator = readFileSync(
 
 describe('monthly overhead expense editor', () => {
     it('opens a focused owner-entered expense model in a dialog', () => {
-        expect(estimator).toContain('aria-haspopup="dialog"')
-        expect(estimator).toContain('<Dialog open={showAdvancedOverhead} onOpenChange={setShowAdvancedOverhead}>')
+        expect(estimator).toContain('open={showAdvancedOverhead}')
+        expect(estimator).toContain('setShowAdvancedOverhead(nextOpen)')
         expect(estimator).toContain('Enter your typical monthly expenses and a rough estimate of total monthly production.')
         expect(estimator).toContain('Typical monthly production (m)')
         expect(estimator).toContain('Edit monthly overhead details')

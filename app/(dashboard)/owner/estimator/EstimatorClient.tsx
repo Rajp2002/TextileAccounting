@@ -5229,6 +5229,7 @@ export default function EstimatorClient({
                         userId={userId}
                         onPrepare={prepareTutorial}
                         onOpenLiveCostModal={setLiveEstimateOpen}
+                        onOpenMonthlyExpensesModal={setShowAdvancedOverhead}
                         onActiveChange={setIsTutorialActive}
                     />
                 </aside>
@@ -6701,8 +6702,37 @@ export default function EstimatorClient({
                                         </div>
 
                                         {/* Owner-entered monthly expense dialog */}
-                                        <Dialog open={showAdvancedOverhead} onOpenChange={setShowAdvancedOverhead}>
-                                            <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl">
+                                        <Dialog
+                                            open={showAdvancedOverhead}
+                                            onOpenChange={(nextOpen) => {
+                                                if (isTutorialActive && !nextOpen) {
+                                                    return
+                                                }
+                                                setShowAdvancedOverhead(nextOpen)
+                                            }}
+                                            modal={!isTutorialActive}
+                                        >
+                                            <DialogContent
+                                                id="monthly-expenses-dialog-panel"
+                                                hideOverlay={isTutorialActive}
+                                                showCloseButton={!isTutorialActive}
+                                                onOpenAutoFocus={(e) => {
+                                                    if (isTutorialActive) {
+                                                        e.preventDefault()
+                                                    }
+                                                }}
+                                                onPointerDownOutside={(e) => {
+                                                    if (isTutorialActive) {
+                                                        e.preventDefault()
+                                                    }
+                                                }}
+                                                onInteractOutside={(e) => {
+                                                    if (isTutorialActive) {
+                                                        e.preventDefault()
+                                                    }
+                                                }}
+                                                className={`max-h-[calc(100dvh-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
+                                            >
                                                 <DialogHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-14 text-left sm:px-6">
                                                     <DialogTitle className="flex items-center gap-2 text-[17px]">
                                                         <Calculator className="h-4 w-4 text-[var(--color-yarn-orange)]" />
@@ -6713,7 +6743,7 @@ export default function EstimatorClient({
                                                     </DialogDescription>
                                                 </DialogHeader>
                                                 <div id="estimator-monthly-expenses" className="min-h-0 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
-                                                <div className="space-y-2">
+                                                <div data-estimator-field="monthlyExpensesBreakdown" className="space-y-2">
                                                     <div className="mb-2 flex items-center justify-between">
                                                         <div>
                                                             <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Monthly expenses</p>
@@ -6775,7 +6805,7 @@ export default function EstimatorClient({
                                                 </div>
 
                                                 <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
-                                                    <div className="space-y-1.5">
+                                                    <div data-estimator-field="monthlyProductionM" className="space-y-1.5">
                                                         <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
                                                         <div className="relative">
                                                             <Input
@@ -6811,7 +6841,7 @@ export default function EstimatorClient({
                                                     )}
                                                 </div>
                                                 </div>
-                                                <DialogFooter className="border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-5 py-3 sm:px-6" showCloseButton>
+                                                <DialogFooter className="border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-5 py-3 sm:px-6" showCloseButton={!isTutorialActive}>
                                                     <Button type="button" onClick={() => void handleSaveProfile()} disabled={saving}>
                                                         {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
                                                         {t('estimator.sprint1.save_baseline')}

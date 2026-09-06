@@ -24,8 +24,16 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
             card = modalPanel
         }
     }
+    const isExpensesModalField = Boolean(step.inModal || ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(step.field))
+    if (isExpensesModalField && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(step.field)) {
+        const expensesPanel = document.getElementById('monthly-expenses-dialog-panel')
+        if (expensesPanel) {
+            card = expensesPanel
+        }
+    }
     if (!card && target) {
         card = target.closest<HTMLElement>('#mobile-live-estimate-panel') ??
+               target.closest<HTMLElement>('#monthly-expenses-dialog-panel') ??
                target.closest<HTMLElement>('[data-slot="card"]') ??
                target.closest<HTMLElement>('[data-testid="mobile-live-estimate-shortcut"]') ??
                target
@@ -33,9 +41,10 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     return { target, card }
 }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onActiveChange }: {
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onActiveChange }: {
     accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => void
     onOpenLiveCostModal?: (open: boolean) => void
+    onOpenMonthlyExpensesModal?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
 }) {
     const { language, languageStatus } = useTranslation()
@@ -108,19 +117,27 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         onActiveChange?.(isTutorialActive)
     }, [isTutorialActive, onActiveChange])
 
-    const isModalStep = Boolean(active?.inModal || (active?.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)))
+    const isLiveCostModalStep = Boolean(active?.inModal && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)) || Boolean(active?.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
+    const isExpensesModalStep = Boolean(active?.inModal && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field)) || Boolean(active?.field && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field))
+    const isModalStep = isLiveCostModalStep || isExpensesModalStep
 
     useEffect(() => {
         if (!active) {
             onOpenLiveCostModal?.(false)
+            onOpenMonthlyExpensesModal?.(false)
             return
         }
-        if (isModalStep) {
+        if (isLiveCostModalStep) {
             onOpenLiveCostModal?.(true)
         } else {
             onOpenLiveCostModal?.(false)
         }
-    }, [active, isModalStep, onOpenLiveCostModal])
+        if (isExpensesModalStep) {
+            onOpenMonthlyExpensesModal?.(true)
+        } else {
+            onOpenMonthlyExpensesModal?.(false)
+        }
+    }, [active, isLiveCostModalStep, isExpensesModalStep, onOpenLiveCostModal, onOpenMonthlyExpensesModal])
 
     useEffect(() => {
         if (!isTutorialActive) return
@@ -181,6 +198,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                         const targetSection = target.closest<HTMLElement>('[data-tutorial-section]')
                         if (targetSection && targetSection !== header) return
                         next.push({ section, card, target, field })
+                        if (field === 'monthlyOverhead') {
+                            next.push({ section, card: null, target: null, field: 'monthlyExpensesBreakdown', inModal: true })
+                            next.push({ section, card: null, target: null, field: 'monthlyProductionM', inModal: true })
+                        }
                     })
                 })
                 observer?.disconnect()
@@ -209,7 +230,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         setSteps([])
         setRects(null)
         onOpenLiveCostModal?.(false)
-    }, [key, syncDismissal, onOpenLiveCostModal])
+        onOpenMonthlyExpensesModal?.(false)
+    }, [key, syncDismissal, onOpenLiveCostModal, onOpenMonthlyExpensesModal])
 
     const handleNext = useCallback(() => {
         if (!steps.length) return
@@ -300,7 +322,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         const viewportHeight = window.innerHeight
         const fixedPadding = 20
 
-        const isModal = Boolean(active.inModal || ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
+        const isLiveCost = Boolean(active.inModal && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)) || Boolean(active.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
+        const isExpenses = Boolean(active.inModal && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field)) || Boolean(active.field && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field))
+        const isModal = isLiveCost || isExpenses
 
         let stableFrames = 0
         let lastRect = { top: -9999, left: -9999, width: -9999, height: -9999 }
@@ -310,7 +334,12 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             if (!isMounted) return
 
             if (isModal) {
-                onOpenLiveCostModal?.(true)
+                if (isLiveCost) {
+                    onOpenLiveCostModal?.(true)
+                }
+                if (isExpenses) {
+                    onOpenMonthlyExpensesModal?.(true)
+                }
             }
 
             const { target: targetEl, card: cardEl } = resolveStepElements(active)
