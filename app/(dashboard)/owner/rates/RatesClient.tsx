@@ -259,6 +259,208 @@ function LinkedQualitiesCell({ rate }: { rate: CostRateRow }) {
     )
 }
 
+function QuickRateEditPopover({
+    rate,
+    isOpen,
+    onOpenChange,
+    value,
+    onChangeValue,
+    source,
+    onChangeSource,
+    error,
+    isPending,
+    onSave,
+    onOpenAdvanced,
+    trigger,
+}: {
+    rate: CostRateRow
+    isOpen: boolean
+    onOpenChange: (open: boolean) => void
+    value: number | string
+    onChangeValue: (val: number | string) => void
+    source: string
+    onChangeSource: (src: string) => void
+    error: string | null
+    isPending: boolean
+    onSave: (rate: CostRateRow, val: number, src: string) => void
+    onOpenAdvanced: (rate: CostRateRow) => void
+    trigger: React.ReactNode
+}) {
+    const { tx } = useTranslation()
+    const inputRef = useRef<HTMLInputElement>(null)
+    const savedQualityCount = getSavedQualityCount(rate)
+
+    useEffect(() => {
+        if (isOpen) {
+            const timer = setTimeout(() => {
+                inputRef.current?.focus()
+                inputRef.current?.select()
+            }, 10)
+            return () => clearTimeout(timer)
+        }
+    }, [isOpen])
+
+    const rawVal = Number(value)
+    const isValueValid = value !== '' && Number.isFinite(rawVal) && rawVal >= 0 && rawVal <= 10_000_000
+    const previewVal = isValueValid ? rawVal : Number(rate.current_value)
+
+    const handleSubmit = () => {
+        if (!isValueValid) return
+        onSave(rate, rawVal, source)
+    }
+
+    return (
+        <Popover open={isOpen} onOpenChange={onOpenChange}>
+            <PopoverTrigger asChild>
+                {trigger}
+            </PopoverTrigger>
+            <PopoverContent
+                align="end"
+                sideOffset={8}
+                onOpenAutoFocus={(e) => {
+                    e.preventDefault()
+                    inputRef.current?.focus()
+                    inputRef.current?.select()
+                }}
+                className="w-[320px] max-w-[calc(100vw-2rem)] rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-panel)] z-50"
+            >
+                <div>
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="truncate text-sm font-bold text-ink" title={rate.name}>
+                            {rate.name}
+                        </p>
+                        <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold text-subtle">
+                            {rate.category === 'yarn_warp' ? 'Warp yarn' : 'Weft yarn'}
+                        </span>
+                    </div>
+                    <p className="mt-1 text-xs text-subtle">
+                        Current: <span className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</span>
+                    </p>
+                </div>
+
+                <div className="mt-3.5 space-y-3">
+                    <div>
+                        <Label htmlFor={`quick-rate-${rate.id}`} className="text-xs font-semibold text-ink">
+                            {tx('New Rate')}
+                        </Label>
+                        <div className="relative mt-1">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm font-bold text-subtle">
+                                ₹
+                            </span>
+                            <Input
+                                ref={inputRef}
+                                id={`quick-rate-${rate.id}`}
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={value}
+                                onChange={e => onChangeValue(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault()
+                                        handleSubmit()
+                                    }
+                                }}
+                                className="h-10 pl-7 pr-14 font-mono text-base font-bold text-ink"
+                                disabled={isPending}
+                                placeholder="0.00"
+                            />
+                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-subtle">
+                                /kg
+                            </span>
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between">
+                            <span className="text-[11px] text-subtle">{tx('Trend preview:')}</span>
+                            <PriceDeltaBadge
+                                currentValue={previewVal}
+                                previousValue={Number(rate.current_value)}
+                                unit={rate.unit}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label htmlFor={`quick-source-${rate.id}`} className="text-xs font-semibold text-ink">
+                            {tx('Source / Broker note (optional)')}
+                        </Label>
+                        <Input
+                            id={`quick-source-${rate.id}`}
+                            type="text"
+                            value={source}
+                            onChange={e => onChangeSource(e.target.value)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    handleSubmit()
+                                }
+                            }}
+                            placeholder="Broker note, email..."
+                            className="mt-1 h-8 text-xs"
+                            disabled={isPending}
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-hairline/60 bg-surface-soft/50 p-2 text-[11px] leading-relaxed text-subtle">
+                    {savedQualityCount > 0 ? (
+                        <p>
+                            {tx(`Updates future estimates for ${savedQualityCount} saved ${savedQualityCount === 1 ? 'quality' : 'qualities'}. Past snapshots unchanged.`)}
+                        </p>
+                    ) : (
+                        <p>
+                            {tx('Updates future estimates. Past snapshots unchanged.')}
+                        </p>
+                    )}
+                </div>
+
+                {error && (
+                    <p className="mt-2 text-xs font-semibold text-risk">{error}</p>
+                )}
+
+                <div className="mt-3 flex items-center justify-end gap-2 border-t border-hairline pt-3">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onOpenChange(false)}
+                        disabled={isPending}
+                        className="h-8 rounded-lg px-3 text-xs"
+                    >
+                        {tx('Cancel')}
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleSubmit}
+                        disabled={isPending || !isValueValid}
+                        className="h-8 rounded-lg bg-saffron px-3.5 text-xs font-bold text-white shadow-none hover:bg-saffron-deep"
+                    >
+                        {isPending ? (
+                            <>
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                {tx('Saving…')}
+                            </>
+                        ) : (
+                            tx('Save Rate')
+                        )}
+                    </Button>
+                </div>
+
+                <div className="mt-2 text-center">
+                    <button
+                        type="button"
+                        onClick={() => onOpenAdvanced(rate)}
+                        disabled={isPending}
+                        className="text-[11px] font-medium text-saffron-deep underline-offset-2 hover:underline focus-visible:outline-none"
+                    >
+                        {tx('Advanced settings (dates, review interval)...')}
+                    </button>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
 function DueForReviewDialog({
     open,
     rates,
@@ -655,6 +857,10 @@ export default function RatesClient({
     const [showConflicts, setShowConflicts] = useState(initialConflicts.length > 0)
     const [usageLoading, setUsageLoading] = useState(true)
     const [usageError, setUsageError] = useState<string | null>(null)
+    const [quickEditRate, setQuickEditRate] = useState<CostRateRow | null>(null)
+    const [quickEditValue, setQuickEditValue] = useState<number | string>('')
+    const [quickEditSource, setQuickEditSource] = useState('')
+    const [quickEditError, setQuickEditError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
 
@@ -671,7 +877,7 @@ export default function RatesClient({
 
             const isModalOpen = Boolean(
                 draft || showDueReviews || historyRate ||
-                reviewRate || archiveRate || deleteRate || showConflicts
+                reviewRate || archiveRate || deleteRate || showConflicts || quickEditRate
             )
 
             if (event.key === '/' && !isInputFocused && !isModalOpen) {
@@ -690,7 +896,7 @@ export default function RatesClient({
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [draft, showDueReviews, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, searchQuery])
+    }, [draft, showDueReviews, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, searchQuery])
 
     useEffect(() => {
         let cancelled = false
@@ -835,6 +1041,81 @@ export default function RatesClient({
             } catch (error) {
                 const message = userFacingError(error, 'Rate could not be saved. Try again.')
                 setSaveError(message)
+                toast.error(tx(message))
+            } finally {
+                setPendingAction(null)
+            }
+        })
+    }
+
+    const openAdvancedDraft = (rate: CostRateRow) => {
+        setQuickEditRate(null)
+        setSaveError(null)
+        const nextDraft = rowToDraft(rate)
+        const parsed = Number(quickEditValue)
+        if (quickEditValue !== '' && Number.isFinite(parsed) && parsed >= 0) {
+            nextDraft.currentValue = parsed
+        }
+        if (quickEditSource.trim()) {
+            nextDraft.source = quickEditSource.trim()
+        }
+        setDraft(nextDraft)
+    }
+
+    const handleQuickSave = (rate: CostRateRow, newValue: number, newSource: string) => {
+        const target: CostRateInput = {
+            id: rate.id,
+            expectedUpdatedAt: rate.updated_at,
+            name: rate.name,
+            category: rate.category,
+            unit: rate.unit,
+            currentValue: newValue,
+            effectiveDate: today(),
+            lastReviewedAt: today(),
+            reviewIntervalDays: Number(rate.review_interval_days),
+            source: newSource.trim() || (rate.source ?? ''),
+            notes: rate.notes ?? '',
+            applyAsDefault: rate.apply_as_default,
+        }
+        setQuickEditError(null)
+        setPendingAction({ id: rate.id, kind: 'save' })
+        startTransition(async () => {
+            try {
+                const result = await saveCostRate(target)
+                if (result.error || !result.data) {
+                    const message = userFacingError(result.error, 'Rate could not be saved.')
+                    setQuickEditError(message)
+                    toast.error(tx(message))
+                    return
+                }
+                const savedRate = result.data as CostRateRow
+                setRates(current => {
+                    const previousRate = current.find(r => r.id === savedRate.id)
+                    const next = current.filter(r => r.id !== savedRate.id)
+                    return [...next, {
+                        ...savedRate,
+                        discovery_source: savedRate.discovery_source ?? previousRate?.discovery_source ?? null,
+                        fabric_names: savedRate.fabric_names ?? previousRate?.fabric_names ?? [],
+                    }]
+                })
+                const savedYarnName = normalizeYarnName(target.name)
+                if (target.category === 'yarn_warp' || target.category === 'yarn_weft') {
+                    setConflicts(current => current.filter(conflict => conflict.normalizedName !== savedYarnName))
+                }
+                setQuickEditError(null)
+                setQuickEditRate(null)
+                if (result.syncedQualityCount) {
+                    toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Existing costing snapshots were not changed.`))
+                } else {
+                    toast.success(tx('Rate updated. Existing costing snapshots were not changed.'))
+                }
+                void trackPlanEvent('rate_book_action', {
+                    action: 'update',
+                    category: target.category,
+                })
+            } catch (error) {
+                const message = userFacingError(error, 'Rate could not be saved. Try again.')
+                setQuickEditError(message)
                 toast.error(tx(message))
             } finally {
                 setPendingAction(null)
@@ -1378,12 +1659,42 @@ export default function RatesClient({
                                                                     {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
                                                             </Button>
                                                         ) : !archived ? (
-                                                            <Button variant="outline" size="sm" onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }} disabled={isPending} className="h-9 rounded-full border-saffron/35 bg-saffron-soft/55 px-3 text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"><Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}</Button>
+                                                            <QuickRateEditPopover
+                                                                rate={rate}
+                                                                isOpen={quickEditRate?.id === rate.id}
+                                                                onOpenChange={open => {
+                                                                    if (open) {
+                                                                        setQuickEditRate(rate)
+                                                                        setQuickEditValue(rate.current_value)
+                                                                        setQuickEditSource(rate.source ?? '')
+                                                                        setQuickEditError(null)
+                                                                    } else {
+                                                                        setQuickEditRate(null)
+                                                                    }
+                                                                }}
+                                                                value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
+                                                                onChangeValue={setQuickEditValue}
+                                                                source={quickEditRate?.id === rate.id ? quickEditSource : (rate.source ?? '')}
+                                                                onChangeSource={setQuickEditSource}
+                                                                error={quickEditRate?.id === rate.id ? quickEditError : null}
+                                                                isPending={isPending && pendingAction?.id === rate.id}
+                                                                onSave={handleQuickSave}
+                                                                onOpenAdvanced={openAdvancedDraft}
+                                                                trigger={
+                                                                    <Button variant="outline" size="sm" disabled={isPending} className="h-9 rounded-full border-saffron/35 bg-saffron-soft/55 px-3 text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep">
+                                                                        <Pencil className="h-3.5 w-3.5" /> {tx('Change rate')}
+                                                                    </Button>
+                                                                }
+                                                            />
                                                         ) : null}
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label={`More actions for ${rate.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end" className="w-48">
-                                                                {!archived && reviewState !== 'current' && <DropdownMenuItem onSelect={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}><Pencil /> {tx('Change rate')}</DropdownMenuItem>}
+                                                                {!archived && (
+                                                                    <DropdownMenuItem onSelect={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}>
+                                                                        <Pencil /> {tx('Advanced edit')}
+                                                                    </DropdownMenuItem>
+                                                                )}
                                                                 <DropdownMenuItem onSelect={() => openHistory(rate)}><History /> {tx('Activity')}</DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem onSelect={() => { setArchiveError(null); setArchiveRate(rate) }} className={archived ? '' : 'text-risk focus:text-risk'}>
@@ -1467,14 +1778,37 @@ export default function RatesClient({
                                                     </Button>
                                                 )}
                                                 {!archived && (
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}
-                                                        disabled={isPending}
-                                                        className="h-10 min-w-0 flex-1 rounded-xl border-saffron/35 bg-saffron-soft/55 px-3 text-sm text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"
-                                                    >
-                                                        <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Change rate')}</span>
-                                                    </Button>
+                                                    <QuickRateEditPopover
+                                                        rate={rate}
+                                                        isOpen={quickEditRate?.id === rate.id}
+                                                        onOpenChange={open => {
+                                                            if (open) {
+                                                                setQuickEditRate(rate)
+                                                                setQuickEditValue(rate.current_value)
+                                                                setQuickEditSource(rate.source ?? '')
+                                                                setQuickEditError(null)
+                                                            } else {
+                                                                setQuickEditRate(null)
+                                                            }
+                                                        }}
+                                                        value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
+                                                        onChangeValue={setQuickEditValue}
+                                                        source={quickEditRate?.id === rate.id ? quickEditSource : (rate.source ?? '')}
+                                                        onChangeSource={setQuickEditSource}
+                                                        error={quickEditRate?.id === rate.id ? quickEditError : null}
+                                                        isPending={isPending && pendingAction?.id === rate.id}
+                                                        onSave={handleQuickSave}
+                                                        onOpenAdvanced={openAdvancedDraft}
+                                                        trigger={
+                                                            <Button
+                                                                variant="outline"
+                                                                disabled={isPending}
+                                                                className="h-10 min-w-0 flex-1 rounded-xl border-saffron/35 bg-saffron-soft/55 px-3 text-sm text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep"
+                                                            >
+                                                                <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Change rate')}</span>
+                                                            </Button>
+                                                        }
+                                                    />
                                                 )}
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -1483,6 +1817,11 @@ export default function RatesClient({
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-48">
+                                                        {!archived && (
+                                                            <DropdownMenuItem onSelect={() => { setSaveError(null); setDraft(rowToDraft(rate)) }}>
+                                                                <Pencil /> {tx('Advanced edit')}
+                                                            </DropdownMenuItem>
+                                                        )}
                                                         <DropdownMenuItem onSelect={() => openHistory(rate)}>
                                                             <History /> {tx('Activity')}
                                                         </DropdownMenuItem>
