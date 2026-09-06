@@ -36,8 +36,7 @@ export default function Home() {
         </div>
  
         {/* Pre-footer CTA */}
-        <section className="landing-section relative isolate overflow-hidden border-y border-orange-200 bg-orange-50/70">
-          <div className="absolute left-1/2 top-0 h-80 w-[52rem] -translate-x-1/2 rounded-full bg-orange-400/15 blur-2xl" aria-hidden="true" />
+        <section className="landing-section relative isolate overflow-hidden">
           <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-20 sm:py-28 lg:grid-cols-[minmax(0,1.05fr)_minmax(24rem,0.8fr)] lg:gap-20 lg:px-8">
             <div className="relative max-w-3xl lg:pr-4">
               <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-700">

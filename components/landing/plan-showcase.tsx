@@ -61,8 +61,7 @@ function PlanCapabilityGrid({ items }: { items: typeof liteCapabilities | typeof
 export default function LandingPlanShowcase() {
     return (
         <>
-            <section className="landing-section relative isolate overflow-hidden border-y border-orange-200 bg-[#fff8ea] py-20 sm:py-28 lg:py-12" id="plans">
-                <div className="absolute -right-32 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-orange-300/20 blur-3xl" aria-hidden="true" />
+            <section className="landing-section relative isolate overflow-hidden py-20 sm:py-28 lg:py-12" id="plans">
                 <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:px-8">
                     <div>
                         <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700">Two ways to begin</p>
@@ -79,7 +78,7 @@ export default function LandingPlanShowcase() {
                             <Link
                                 key={plan.name}
                                 href={plan.href}
-                                className={`group flex min-h-80 flex-col border p-6 transition-all hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(154,52,18,0.14)] sm:p-8 ${index === 0 ? 'border-zinc-200 bg-white' : 'border-orange-300 bg-orange-100/70'}`}
+                                className={`group flex min-h-80 flex-col border p-6 transition-all hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(154,52,18,0.14)] sm:p-8 ${index === 0 ? 'border-zinc-200 bg-white/95 backdrop-blur' : 'border-orange-300 bg-white/95 backdrop-blur'}`}
                             >
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="flex h-12 w-12 items-center justify-center bg-zinc-950 text-white">
@@ -145,7 +144,7 @@ export default function LandingPlanShowcase() {
                 </div>
             </section>
 
-            <section className="landing-section relative isolate overflow-hidden border-y border-orange-200 bg-orange-50/70 py-20 sm:py-28 lg:py-12" id="plan-base">
+            <section className="landing-section relative isolate overflow-hidden py-20 sm:py-28 lg:py-12" id="plan-base">
                 <div className="relative z-10 mx-auto w-full max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
                         <div>
