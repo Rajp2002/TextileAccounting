@@ -6,6 +6,7 @@ import { dismissCostEstimateTutorial } from '@/app/(dashboard)/owner/estimator/t
 import { useTranslation } from '@/lib/i18n/context'
 import { costEstimateTutorialCopy, isTutorialField, type TutorialField } from '@/lib/i18n/cost-estimate-tutorial'
 import { Button } from '@/components/ui/button'
+import { Compass, Sparkles } from 'lucide-react'
 
 type Step = { section: number; target: HTMLElement; card: HTMLElement; field: TutorialField }
 
@@ -352,12 +353,42 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         }
     }, [active])
 
+    const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
+        ? copy.replay.split(' · ')
+        : [copy.replay, '']
+
     return <>
-        {syncFailed && <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
-            <span>{copy.syncFailed}</span>
-            <Button type="button" variant="ghost" onClick={() => void syncDismissal()}>{copy.retry}</Button>
+        {syncFailed && <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 text-xs text-[var(--color-muted)]">
+            <span className="text-amber-900">{copy.syncFailed}</span>
+            <button type="button" className="font-semibold text-amber-800 underline hover:text-amber-900" onClick={() => void syncDismissal()}>{copy.retry}</button>
         </div>}
-        {enabled && <Button data-i18n-skip="true" lang={language} type="button" variant="ghost" onClick={() => setRequested(true)} disabled={languageStatus === 'loading'}>{copy.replay}</Button>}
+        {enabled && (
+            <button
+                data-i18n-skip="true"
+                lang={language}
+                type="button"
+                onClick={() => setRequested(true)}
+                disabled={languageStatus === 'loading'}
+                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/75 px-3.5 py-2.5 text-left text-sm font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-100/70 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
+                aria-label={copy.replay}
+                title={copy.replay}
+            >
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 transition-colors group-hover:bg-amber-200">
+                        <Compass className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-slate-900">{replayTitle}</p>
+                        {replaySubtitle && (
+                            <p className="truncate text-[11px] font-medium text-amber-700">{replaySubtitle}</p>
+                        )}
+                    </div>
+                </div>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100/90 text-amber-700 transition-colors group-hover:bg-amber-200">
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+            </button>
+        )}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
             <div
                 className="absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300"

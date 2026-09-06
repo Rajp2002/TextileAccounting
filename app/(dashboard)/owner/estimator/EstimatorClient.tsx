@@ -5016,8 +5016,6 @@ export default function EstimatorClient({
                 />
             )}
 
-            <CostEstimateTutorial accountDismissed={tutorialDismissed} enabled={state.isConfigured && !saving} orgId={orgId} userId={userId} onPrepare={prepareTutorial} />
-
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (
                 <div className={pageShellClass}>
@@ -5181,6 +5179,19 @@ export default function EstimatorClient({
                 estimate and reference links move into the spare viewport rail
                 instead of taking space from the estimator canvas. */}
             <div className="estimator-workspace-shell">
+                <aside
+                    className="estimator-left-rail space-y-3"
+                    aria-label="Estimator guides and tools"
+                >
+                    <CostEstimateTutorial
+                        accountDismissed={tutorialDismissed}
+                        enabled={state.isConfigured && !saving}
+                        orgId={orgId}
+                        userId={userId}
+                        onPrepare={prepareTutorial}
+                    />
+                </aside>
+
                 <div className="estimator-workspace-main min-w-0">
                     <div className="relative min-w-0">
                     {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}

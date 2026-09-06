@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+const root = process.cwd()
+const read = (path: string) => readFileSync(join(root, path), 'utf8')
+
+describe('Estimator Left Rail & Guided Tour CTA', () => {
+    const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+    const styles = read('app/globals.css')
+    const tutorialComponent = read('components/estimator/CostEstimateTutorial.tsx')
+
+    it('renders the left rail inside the estimator workspace shell before main content and reference rail', () => {
+        const shellStart = estimator.indexOf('className="estimator-workspace-shell"')
+        const leftRailStart = estimator.indexOf('<aside\n                    className="estimator-left-rail', shellStart)
+        const tutorialStart = estimator.indexOf('<CostEstimateTutorial', leftRailStart)
+        const leftRailEnd = estimator.indexOf('</aside>', leftRailStart)
+        const mainContentStart = estimator.indexOf('className="estimator-workspace-main min-w-0"', leftRailEnd)
+        const referenceRailStart = estimator.indexOf('className="estimator-reference-rail', mainContentStart)
+
+        expect(shellStart).toBeGreaterThanOrEqual(0)
+        expect(leftRailStart).toBeGreaterThan(shellStart)
+        expect(tutorialStart).toBeGreaterThan(leftRailStart)
+        expect(tutorialStart).toBeLessThan(leftRailEnd)
+        expect(mainContentStart).toBeGreaterThan(leftRailEnd)
+        expect(referenceRailStart).toBeGreaterThan(mainContentStart)
+    })
+
+    it('defines responsive positioning for .estimator-left-rail in globals.css matching the layout system', () => {
+        expect(styles).toContain('.estimator-left-rail')
+        expect(styles).toMatch(/\.estimator-left-rail\s*\{[^}]*width:\s*100%/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?position:\s*fixed/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?top:\s*6rem/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?width:\s*14rem/)
+    })
+
+    it('gives the guided tour button an interactive subtle muted background and clear affordance', () => {
+        expect(tutorialComponent).toContain('Compass')
+        expect(tutorialComponent).toContain('Sparkles')
+        expect(tutorialComponent).toContain('bg-amber-50/75')
+        expect(tutorialComponent).toContain('border-amber-200/90')
+        expect(tutorialComponent).toContain('hover:bg-amber-100/70')
+        expect(tutorialComponent).toContain('estimator-touch-target')
+        expect(tutorialComponent).toContain('shadow-xs')
+    })
+})

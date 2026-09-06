@@ -468,6 +468,11 @@
     width: 100%;
   }
 
+  .estimator-left-rail {
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+
   .estimator-reference-rail {
     width: 100%;
     margin-top: 1.25rem;
@@ -480,6 +485,20 @@
   }
 
   @media (min-width: 1660px) {
+    .estimator-left-rail {
+      position: fixed;
+      top: 6rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
     .estimator-reference-rail {
       position: fixed;
       top: 6rem;
@@ -491,6 +510,16 @@
       margin-top: 0;
       padding-bottom: 0.25rem;
       scrollbar-width: thin;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .estimator-left-rail {
+      left: calc(248px + 1.25rem);
+    }
+
+    .estimator-reference-rail {
+      right: 1.25rem;
     }
   }
 
