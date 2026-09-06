@@ -769,7 +769,7 @@ export async function getEstimatorSecondaryData() {
     const canUseProduction = tierSatisfies(effectiveTier, 'premium')
     const supabase = await createServerClient()
 
-    const [templatesResult, workersResult, partiesResult, ratesResult] = await Promise.all([
+    const [templatesResult, workersResult, partiesResult, ratesResult, yarnRatesResult] = await Promise.all([
         getEstimatorTemplates(),
         canUseProduction ? getFixedWorkersForOverhead() : Promise.resolve({ data: [] }),
         canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
@@ -779,12 +779,19 @@ export async function getEstimatorSecondaryData() {
             .eq('org_id', profile.org_id)
             .eq('is_active', true)
             .eq('apply_as_default', true),
+        supabase
+            .from('cost_rate_book')
+            .select('id, name, category, current_value, unit')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .in('category', ['yarn_warp', 'yarn_weft']),
     ])
 
     const deferredErrors = [templatesResult, workersResult, partiesResult]
         .map(result => (result as { error?: string }).error)
         .filter((error): error is string => Boolean(error))
     if (ratesResult.error) deferredErrors.push(ratesResult.error.message)
+    if (yarnRatesResult.error) deferredErrors.push(yarnRatesResult.error.message)
     if (deferredErrors.length > 0) return { error: deferredErrors[0] }
 
     return {
@@ -794,6 +801,13 @@ export async function getEstimatorSecondaryData() {
         staleDefaultRateNames: (ratesResult.data ?? [])
             .filter(rate => getRateReviewStatus(rate) === 'overdue')
             .map(rate => rate.name),
+        rateBookYarns: (yarnRatesResult.data ?? []).map(r => ({
+            id: r.id,
+            name: r.name,
+            category: r.category as 'yarn_warp' | 'yarn_weft',
+            currentValue: Number(r.current_value),
+            unit: r.unit,
+        })),
     }
 }
 
