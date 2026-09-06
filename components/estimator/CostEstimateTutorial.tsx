@@ -231,7 +231,13 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         const prior = siblings.map(el => el.inert)
         siblings.forEach(el => { el.inert = true })
         panel.current?.focus({ preventScroll: true })
+        const focusTimer = window.setTimeout(() => {
+            if (panel.current && !panel.current.contains(document.activeElement)) {
+                panel.current.focus({ preventScroll: true })
+            }
+        }, 50)
         return () => {
+            window.clearTimeout(focusTimer)
             siblings.forEach((el, i) => { el.inert = prior[i] })
             previousFocus?.focus({ preventScroll: true })
         }
@@ -247,8 +253,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             }
             if (event.key === 'Enter') {
                 const activeEl = document.activeElement
-                // If focus is specifically on a non-next control (e.g. Back or Skip button), let native click handle it
-                if (activeEl instanceof HTMLButtonElement && activeEl.dataset.tourControl !== 'next') {
+                // If focus is specifically on Back or Skip tour button, let native click handle it
+                if (activeEl instanceof HTMLButtonElement && (activeEl.dataset.tourControl === 'back' || activeEl.dataset.tourControl === 'skip')) {
                     return
                 }
                 event.preventDefault()

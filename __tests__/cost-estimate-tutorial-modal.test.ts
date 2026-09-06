@@ -64,4 +64,15 @@ describe('CostEstimateTutorial Modal Positioning and Stability', () => {
         expect(tutorialSource).toContain('if (isModal) {')
         expect(tutorialSource).toContain('onOpenLiveCostModal?.(true)')
     })
+
+    it('prevents auto-focusing elements inside SheetContent during tutorial to avoid Enter key conflict', () => {
+        expect(estimatorClientSource).toContain('onOpenAutoFocus={(e) => {')
+        expect(estimatorClientSource).toContain('if (isTutorialActive) {')
+        expect(estimatorClientSource).toContain('e.preventDefault()')
+    })
+
+    it('ensures Enter key advances tour unless focus is explicitly on Back or Skip controls', () => {
+        expect(tutorialSource).toContain("activeEl.dataset.tourControl === 'back' || activeEl.dataset.tourControl === 'skip'")
+        expect(tutorialSource).toContain('handleNext()')
+    })
 })

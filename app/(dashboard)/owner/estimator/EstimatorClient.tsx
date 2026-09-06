@@ -1459,6 +1459,11 @@ function MobileLiveEstimateShortcut({
                     side="bottom"
                     hideOverlay={isTutorialActive}
                     showCloseButton={!isTutorialActive}
+                    onOpenAutoFocus={(e) => {
+                        if (isTutorialActive) {
+                            e.preventDefault()
+                        }
+                    }}
                     onPointerDownOutside={(e) => {
                         if (isTutorialActive) {
                             e.preventDefault()
