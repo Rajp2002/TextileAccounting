@@ -42,6 +42,8 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
         const detailedCostingSection1 = estimatorClientSource.slice(detailedCostingStart, detailedCostingEnd)
 
         expect(detailedCostingSection1).toContain('<YarnComponentCountFields')
+        expect(detailedCostingSection1).toContain('data-estimator-field="warpConstruction"')
+        expect(detailedCostingSection1).toContain('data-estimator-field="weftConstruction"')
     })
 
     it('places data-costing-tutorial-root on estimator-form-panel', () => {

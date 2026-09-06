@@ -44,6 +44,8 @@ describe('Cost Estimate tutorial translations', () => {
         expect(isTutorialField('liveCostAssumptions')).toBe(true)
         expect(isTutorialField('liveCostActions')).toBe(true)
         expect(isTutorialField('warpComponentCount')).toBe(true)
+        expect(isTutorialField('warpConstruction')).toBe(true)
+        expect(isTutorialField('weftConstruction')).toBe(true)
         expect(isTutorialField('monthlyOverheadMethod')).toBe(true)
         expect(isTutorialField('toString')).toBe(false)
         expect(isTutorialField('unknownField')).toBe(false)

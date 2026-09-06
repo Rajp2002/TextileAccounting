@@ -6014,6 +6014,8 @@ export default function EstimatorClient({
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
                                 <Input
+                                    data-estimator-field="warpConstruction"
+                                    aria-label="Warp yarn construction"
                                     value={warpInstruction === lastGeneratedWarp.current ? '' : warpInstruction}
                                     onChange={e => setWarpInstructionFromUser(e.target.value)}
                                     placeholder={formatEstimatorPlaceholder(lastGeneratedWarp.current || '50/48 + Rainbow')}
@@ -6023,6 +6025,8 @@ export default function EstimatorClient({
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
                                 <Input
+                                    data-estimator-field="weftConstruction"
+                                    aria-label="Weft yarn construction"
                                     value={weftInstruction === lastGeneratedWeft.current ? '' : weftInstruction}
                                     onChange={e => setWeftInstructionFromUser(e.target.value)}
                                     placeholder={formatEstimatorPlaceholder(lastGeneratedWeft.current || '50/48 - 68 Picks')}

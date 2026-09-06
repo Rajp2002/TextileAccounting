@@ -65,6 +65,14 @@ const en = {
       "title": "Weft components",
       "description": "Enter how many different weft yarn components this quality uses. Each component gets its own row."
     },
+    "warpConstruction": {
+      "title": "Warp yarn construction",
+      "description": "Optionally enter the warp specification or blend name (such as 50/48 + Rainbow). It auto-fills from your warp components and appears on quotations."
+    },
+    "weftConstruction": {
+      "title": "Weft yarn construction",
+      "description": "Optionally enter the weft specification or pick details (such as 50/48 - 68 Picks). It auto-fills from your weft components and appears on quotations."
+    },
     "warpCrimpPct": {
       "title": "Warp crimp (take-up)",
       "description": "Enter the extra warp length taken up as yarn bends around the weft, as a percentage. Review the default for this fabric."
@@ -247,6 +255,14 @@ const hi: TutorialCopy = {
       "title": "बाना यार्न के घटक",
       "description": "इस क्वालिटी में बाना यार्न के कितने अलग घटक हैं, वह संख्या दर्ज करें। हर घटक की अलग पंक्ति बनेगी।"
     },
+    "warpConstruction": {
+      "title": "ताना यार्न संरचना",
+      "description": "ताना यार्न का तकनीकी विवरण या नाम दर्ज करें (जैसे 50/48 + Rainbow)। यह आपके ताना यार्न घटकों से अपने-आप भर जाता है और कोटेशन पर छपता है।"
+    },
+    "weftConstruction": {
+      "title": "बाना यार्न संरचना",
+      "description": "बाना यार्न का तकनीकी विवरण या पिक्स दर्ज करें (जैसे 50/48 - 68 Picks)। यह आपके बाना यार्न घटकों से अपने-आप भर जाता है और कोटेशन पर छपता है।"
+    },
     "warpCrimpPct": {
       "title": "ताना क्रिम्प (टेक-अप)",
       "description": "बाने के चारों ओर मुड़ने से ताने में जितनी अतिरिक्त लंबाई लगती है, उसका प्रतिशत दर्ज करें। इस कपड़े के लिए पहले से भरा मान जाँच लें।"
@@ -425,6 +441,14 @@ const gu: TutorialCopy = {
     "weftComponentCount": {
       "title": "વાણાના યાર્નના ઘટકો",
       "description": "આ ક્વોલિટીમાં વાણાના યાર્નના કેટલા અલગ ઘટકો છે તે સંખ્યા દાખલ કરો. દરેક ઘટકની અલગ પંક્તિ બનશે."
+    },
+    "warpConstruction": {
+      "title": "તાણાના યાર્નની રચના",
+      "description": "તાણાના યાર્નની સ્પેસિફિકેશન કે નામ દાખલ કરો (જેમ કે 50/48 + Rainbow). આ તમારા તાણાના ઘટકો પરથી આપોઆપ ભરાય છે અને ક્વોટેશનમાં દર્શાવાય છે."
+    },
+    "weftConstruction": {
+      "title": "વાણાના યાર્નની રચના",
+      "description": "વાણાના યાર્નની સ્પેસિફિકેશન કે પિક્સ વિગત દાખલ કરો (જેમ કે 50/48 - 68 Picks). આ તમારા વાણાના ઘટકો પરથી આપોઆપ ભરાય છે અને ક્વોટેશનમાં દર્શાવાય છે."
     },
     "warpCrimpPct": {
       "title": "તાણા ક્રિમ્પ (ટેક-અપ)",
