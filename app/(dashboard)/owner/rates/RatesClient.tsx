@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -18,8 +18,10 @@ import {
     MoreHorizontal,
     Pencil,
     Plus,
+    Search,
     Tags,
     Trash2,
+    X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import {
     archiveCostRate,
+    confirmAllCostRateReviews,
     confirmCostRateReview,
     deleteCostRate,
     getCostRateUsage,
@@ -43,6 +46,7 @@ import {
 } from './actions'
 import {
     COST_RATE_CATEGORY_LABELS,
+    filterCostRates,
     formatRateValue,
     getCostRateDisplayNotes,
     getCostRateDisplaySource,
@@ -65,6 +69,14 @@ import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 
 type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
+type YarnDirectionFilter = 'all' | YarnRateCategory
+type RateStatusFilter = 'all' | 'needs_review'
+
+const DIRECTION_OPTIONS: { value: YarnDirectionFilter; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'yarn_warp', label: 'Warp' },
+    { value: 'yarn_weft', label: 'Weft' },
+]
 type RateHistoryRow = {
     id: string
     value: number
@@ -287,12 +299,18 @@ function DueForReviewDialog({
     onClose,
     onReview,
     onEdit,
+    onConfirmAll,
+    isConfirmingAll = false,
+    pendingActionId = null,
 }: {
     open: boolean
     rates: CostRateRow[]
     onClose: () => void
     onReview: (rate: CostRateRow) => void
     onEdit: (rate: CostRateRow) => void
+    onConfirmAll?: () => void
+    isConfirmingAll?: boolean
+    pendingActionId?: string | null
 }) {
     return (
         <Dialog open={open} onOpenChange={nextOpen => { if (!nextOpen) onClose() }}>
@@ -312,9 +330,23 @@ function DueForReviewDialog({
                                 <p className="mt-1 truncate text-sm font-bold text-ink">Rates due for review</p>
                             </div>
                         </div>
-                        <span className="shrink-0 rounded-full bg-warning-soft px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-warning">
-                            {rates.length} {rates.length === 1 ? 'rate' : 'rates'}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {rates.length > 0 && onConfirmAll && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={onConfirmAll}
+                                    disabled={isConfirmingAll}
+                                    className="h-8 rounded-full border-0 bg-success px-3.5 text-xs font-bold text-white shadow-none hover:bg-success/90 hover:text-white"
+                                >
+                                    {isConfirmingAll ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+                                    {isConfirmingAll ? 'Confirming all…' : `Confirm All (${rates.length}) as Current`}
+                                </Button>
+                            )}
+                            <span className="shrink-0 rounded-full bg-warning-soft px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-warning">
+                                {rates.length} {rates.length === 1 ? 'rate' : 'rates'}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="border-b border-hairline py-5">
@@ -374,10 +406,11 @@ function DueForReviewDialog({
                                             type="button"
                                             size="sm"
                                             onClick={() => onReview(rate)}
+                                            disabled={pendingActionId === rate.id || isConfirmingAll}
                                             aria-label={`Review ${rate.name}`}
                                             className="h-9 rounded-full border-0 bg-success px-4 text-white shadow-none hover:bg-success/90 hover:text-white"
                                         >
-                                            <CheckCircle2 className="h-4 w-4" /> Review
+                                            {pendingActionId === rate.id ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-4 w-4" />} Review
                                         </Button>
                                         <Button
                                             type="button"
@@ -573,8 +606,11 @@ export default function RatesClient({
 }) {
     const { t, tx } = useTranslation()
     const [rates, setRates] = useState(initialRates)
-    const [category, setCategory] = useState<YarnRateCategory>('yarn_warp')
+    const [categoryFilter, setCategoryFilter] = useState<YarnDirectionFilter>('all')
+    const [statusFilter, setStatusFilter] = useState<RateStatusFilter>('all')
+    const [searchQuery, setSearchQuery] = useState('')
     const [showArchived, setShowArchived] = useState(false)
+    const searchRef = useRef<HTMLInputElement>(null)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [showDueReviews, setShowDueReviews] = useState(false)
     const [usageRate, setUsageRate] = useState<CostRateRow | null>(null)
@@ -595,6 +631,40 @@ export default function RatesClient({
     const [usageError, setUsageError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
+
+    useEffect(() => {
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.ctrlKey || event.metaKey || event.altKey) return
+
+            const activeElement = document.activeElement
+            const isInputFocused =
+                activeElement instanceof HTMLInputElement ||
+                activeElement instanceof HTMLTextAreaElement ||
+                activeElement instanceof HTMLSelectElement ||
+                Boolean(activeElement?.getAttribute('contenteditable'))
+
+            const isModalOpen = Boolean(
+                draft || showDueReviews || usageRate || historyRate ||
+                reviewRate || archiveRate || deleteRate || showConflicts
+            )
+
+            if (event.key === '/' && !isInputFocused && !isModalOpen) {
+                event.preventDefault()
+                searchRef.current?.focus()
+                searchRef.current?.select()
+            }
+
+            if (event.key === 'Escape' && document.activeElement === searchRef.current) {
+                if (searchQuery) {
+                    setSearchQuery('')
+                }
+                searchRef.current?.blur()
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [draft, showDueReviews, usageRate, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, searchQuery])
 
     useEffect(() => {
         let cancelled = false
@@ -641,20 +711,13 @@ export default function RatesClient({
         [rates],
     )
     const activeYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active !== false), [yarnRates])
-    const visibleRates = useMemo(
-        () => yarnRates
-            .filter(rate => rate.category === category && (showArchived ? rate.is_active === false : rate.is_active !== false))
-            .sort((left, right) => {
-                if (showArchived) return left.name.localeCompare(right.name, 'en-IN')
-                return REVIEW_STATUS_PRIORITY[getRateReviewStatus(left)] - REVIEW_STATUS_PRIORITY[getRateReviewStatus(right)]
-                    || left.name.localeCompare(right.name, 'en-IN')
-            }),
-        [category, showArchived, yarnRates],
-    )
-    const resultMotionKey = `${category}|${showArchived ? 'archived' : 'active'}|${visibleRates.length}`
-    const selectedCategoryLabel = category === 'yarn_warp' ? 'Warp' : 'Weft'
-    const warpRatesCount = useMemo(() => activeYarnRates.filter(rate => rate.category === 'yarn_warp').length, [activeYarnRates])
-    const weftRatesCount = useMemo(() => activeYarnRates.filter(rate => rate.category === 'yarn_weft').length, [activeYarnRates])
+    const archivedYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active === false), [yarnRates])
+    const targetYarnRates = showArchived ? archivedYarnRates : activeYarnRates
+
+    const allRatesCount = targetYarnRates.length
+    const warpRatesCount = useMemo(() => targetYarnRates.filter(rate => rate.category === 'yarn_warp').length, [targetYarnRates])
+    const weftRatesCount = useMemo(() => targetYarnRates.filter(rate => rate.category === 'yarn_weft').length, [targetYarnRates])
+
     const dueReviewRates = useMemo(
         () => activeYarnRates
             .filter(rate => getRateReviewStatus(rate) !== 'current')
@@ -665,6 +728,35 @@ export default function RatesClient({
             }),
         [activeYarnRates],
     )
+
+    const filteredRates = useMemo(
+        () => filterCostRates(targetYarnRates, {
+            query: searchQuery,
+            category: categoryFilter,
+            status: statusFilter,
+        }),
+        [targetYarnRates, searchQuery, categoryFilter, statusFilter],
+    )
+
+    const visibleRates = useMemo(
+        () => [...filteredRates].sort((left, right) => {
+            if (showArchived) return left.name.localeCompare(right.name, 'en-IN')
+            return REVIEW_STATUS_PRIORITY[getRateReviewStatus(left)] - REVIEW_STATUS_PRIORITY[getRateReviewStatus(right)]
+                || left.name.localeCompare(right.name, 'en-IN')
+        }),
+        [filteredRates, showArchived],
+    )
+
+    const resultMotionKey = `${categoryFilter}|${statusFilter}|${showArchived ? 'archived' : 'active'}|${searchQuery.trim()}|${visibleRates.length}`
+    const selectedCategoryLabel = categoryFilter === 'all' ? 'All' : categoryFilter === 'yarn_warp' ? 'Warp' : 'Weft'
+    const hasActiveFilters = Boolean(searchQuery.trim()) || statusFilter !== 'all' || categoryFilter !== 'all'
+
+    const resetFilters = () => {
+        setSearchQuery('')
+        setStatusFilter('all')
+        setCategoryFilter('all')
+    }
+
     const mostRecentReview = activeYarnRates.length
         ? activeYarnRates.reduce((latest, rate) => rate.last_reviewed_at > latest ? rate.last_reviewed_at : latest, activeYarnRates[0].last_reviewed_at)
         : null
@@ -748,6 +840,63 @@ export default function RatesClient({
             } catch (error) {
                 const message = tx(userFacingError(error, 'The current rate could not be confirmed. Try again.'))
                 setReviewError(message)
+                toast.error(message)
+            } finally {
+                setPendingAction(null)
+            }
+        })
+    }
+
+    const handleQuickReview = (target: CostRateRow) => {
+        setReviewError(null)
+        setPendingAction({ id: target.id, kind: 'review' })
+        startTransition(async () => {
+            try {
+                const result = await confirmCostRateReview(target.id, target.updated_at)
+                if (result.error || !result.data) {
+                    const message = tx(userFacingError(result.error, 'The current rate could not be confirmed. Try again.'))
+                    toast.error(message)
+                    return
+                }
+                const savedRate = result.data as CostRateRow
+                setRates(current => current.map(rate => rate.id === target.id
+                    ? { ...rate, ...savedRate, is_reviewed: true }
+                    : rate))
+                toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+                void trackPlanEvent('rate_book_action', { action: 'review', category: target.category })
+            } catch (error) {
+                const message = tx(userFacingError(error, 'The current rate could not be confirmed. Try again.'))
+                toast.error(message)
+            } finally {
+                setPendingAction(null)
+            }
+        })
+    }
+
+    const handleConfirmAll = () => {
+        if (dueReviewRates.length === 0) return
+        const targetRates = [...dueReviewRates]
+        setPendingAction({ id: 'all-review', kind: 'review' })
+        startTransition(async () => {
+            try {
+                const payload = targetRates.map(r => ({ id: r.id, expectedUpdatedAt: r.updated_at }))
+                const result = await confirmAllCostRateReviews(payload)
+                if (result.error || !result.data) {
+                    const message = tx(userFacingError(result.error, 'Could not confirm all rates. Refresh and try again.'))
+                    toast.error(message)
+                    return
+                }
+                const updatedMap = new Map((result.data as CostRateRow[]).map(r => [r.id, r]))
+                setRates(current => current.map(rate => {
+                    const updated = updatedMap.get(rate.id)
+                    return updated ? { ...rate, ...updated, is_reviewed: true } : rate
+                }))
+                const count = result.count ?? targetRates.length
+                toast.success(tx(`Confirmed ${count} yarn ${count === 1 ? 'rate' : 'rates'} as current. Existing costing snapshots were not changed.`))
+                void trackPlanEvent('rate_book_action', { action: 'confirm_all_reviews', count: targetRates.length })
+                setShowDueReviews(false)
+            } catch (error) {
+                const message = tx(userFacingError(error, 'Could not confirm all rates. Refresh and try again.'))
                 toast.error(message)
             } finally {
                 setPendingAction(null)
@@ -983,36 +1132,128 @@ export default function RatesClient({
                     </Button>
                 </div>
 
-                <Toolbar className="flex rounded-none border-0 border-b border-hairline p-4 shadow-none">
-                    <div
-                        role="group"
-                        aria-label="Show yarn rates by direction"
-                        className="relative grid min-h-11 w-full grid-cols-2 overflow-hidden rounded-xl border border-hairline-strong/70 bg-surface-soft/75 p-1 sm:max-w-xs"
-                    >
-                        <span
-                            aria-hidden="true"
-                            className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%_-_0.25rem)] rounded-lg border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${category === 'yarn_weft' ? 'translate-x-full' : 'translate-x-0'}`}
-                        />
-                        {YARN_CATEGORIES.map(value => {
-                            const isSelected = category === value
-                            const label = value === 'yarn_warp' ? 'Warp' : 'Weft'
-                            return (
+                <Toolbar className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-1 flex-wrap items-center gap-3">
+                        <div className="relative min-w-0 flex-1 sm:max-w-xs md:max-w-sm">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+                            <Label htmlFor="yarn-rates-search" className="sr-only">{tx('Search yarn rates')}</Label>
+                            <Input
+                                id="yarn-rates-search"
+                                ref={searchRef}
+                                type="search"
+                                value={searchQuery}
+                                onChange={event => setSearchQuery(event.target.value)}
+                                placeholder={tx('Search yarn by name, count, source, or fabric…')}
+                                aria-label={tx('Search yarn by name, count, source, or fabric')}
+                                className="h-11 w-full min-w-0 rounded-xl pl-9 pr-12 text-xs sm:text-sm border-hairline-strong/70 bg-surface-soft/40 focus:bg-surface"
+                            />
+                            {searchQuery ? (
                                 <button
-                                    key={value}
                                     type="button"
-                                    aria-pressed={isSelected}
-                                    onClick={() => setCategory(value)}
-                                    className={`relative z-10 flex min-h-10 items-center justify-center rounded-lg px-4 text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'font-semibold text-subtle hover:text-ink'}`}
+                                    onClick={() => {
+                                        setSearchQuery('')
+                                        searchRef.current?.focus()
+                                    }}
+                                    aria-label={tx('Clear search')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
                                 >
-                                    {label}
+                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                                 </button>
-                            )
-                        })}
+                            ) : (
+                                <kbd
+                                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden select-none rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-[10px] font-semibold text-subtle shadow-sm sm:inline-block"
+                                    aria-hidden="true"
+                                >
+                                    /
+                                </kbd>
+                            )}
+                        </div>
+
+                        <div
+                            role="group"
+                            aria-label="Show yarn rates by direction"
+                            className="relative grid min-h-11 w-full grid-cols-3 overflow-hidden rounded-xl border border-hairline-strong/70 bg-surface-soft/75 p-1 sm:w-80"
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(33.333%_-_0.25rem)] rounded-lg border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${categoryFilter === 'yarn_warp' ? 'translate-x-full' : categoryFilter === 'yarn_weft' ? 'translate-x-[200%]' : 'translate-x-0'}`}
+                            />
+                            {DIRECTION_OPTIONS.map(({ value, label }) => {
+                                const isSelected = categoryFilter === value
+                                const count = value === 'all' ? allRatesCount : value === 'yarn_warp' ? warpRatesCount : weftRatesCount
+                                return (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        aria-pressed={isSelected}
+                                        onClick={() => setCategoryFilter(value)}
+                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold sm:text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'text-subtle hover:text-ink'}`}
+                                    >
+                                        <span>{label}</span>
+                                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isSelected ? 'bg-saffron/20 text-saffron-deep' : 'bg-surface-soft text-subtle'}`}>{count}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <button
+                            type="button"
+                            aria-pressed={statusFilter === 'needs_review'}
+                            onClick={() => setStatusFilter(current => current === 'needs_review' ? 'all' : 'needs_review')}
+                            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3.5 text-xs sm:text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 ${
+                                statusFilter === 'needs_review'
+                                    ? 'border-warning/60 bg-warning-soft text-ink ring-1 ring-warning/30 shadow-sm'
+                                    : 'border-hairline-strong/70 bg-surface-soft/75 text-body hover:bg-surface-soft hover:text-ink'
+                            }`}
+                        >
+                            <CalendarClock className={`h-4 w-4 shrink-0 ${statusFilter === 'needs_review' ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />
+                            <span>Needs Review</span>
+                            <span
+                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide ${
+                                    dueReviewRates.length > 0
+                                        ? statusFilter === 'needs_review'
+                                            ? 'bg-warning text-white'
+                                            : 'bg-warning-soft text-warning border border-warning/30'
+                                        : 'bg-surface text-subtle'
+                                    }`}
+                            >
+                                {dueReviewRates.length}
+                            </span>
+                        </button>
+
+                        {dueReviewRates.length > 0 && (
+                            <Button
+                                type="button"
+                                onClick={handleConfirmAll}
+                                disabled={isPending}
+                                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-0 bg-success px-3.5 text-xs sm:text-sm font-bold text-white shadow-none hover:bg-success/90 hover:text-white"
+                            >
+                                {pendingAction?.id === 'all-review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                                <span>{pendingAction?.id === 'all-review' ? tx('Confirming…') : tx(`Confirm All (${dueReviewRates.length}) as Current`)}</span>
+                            </Button>
+                        )}
+
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={resetFilters}
+                                className="h-11 shrink-0 rounded-xl px-2.5 text-xs text-subtle hover:bg-surface-soft hover:text-ink"
+                                aria-label={tx('Clear active search and filters')}
+                            >
+                                <X className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                                {tx('Clear filters')}
+                            </Button>
+                        )}
                     </div>
                 </Toolbar>
-                <p className="sr-only">{tx(`Showing ${selectedCategoryLabel.toLowerCase()} yarn rates. Switch direction above to see the other yarns.`)}</p>
+                <p className="sr-only">
+                    {categoryFilter === 'all'
+                        ? tx('Showing all yarn rates.')
+                        : tx(`Showing ${selectedCategoryLabel.toLowerCase()} yarn rates. Switch direction above to see the other yarns.`)}
+                </p>
                 <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-                    {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} shown.
+                    {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} found.
                 </p>
 
                 {visibleRates.length === 0 ? (
@@ -1020,8 +1261,43 @@ export default function RatesClient({
                         key={`empty-${resultMotionKey}`}
                         icon={Tags}
                         className="premium-content-swap rounded-none border-0 bg-transparent shadow-none"
-                        title={showArchived ? `No archived ${selectedCategoryLabel.toLowerCase()} yarn rates` : yarnRates.length === 0 ? 'No yarn rates yet' : `No ${selectedCategoryLabel.toLowerCase()} yarn rates yet`}
-                        description={showArchived ? 'Archived rates stay available here for audit and can be restored when needed.' : yarnRates.length === 0 ? 'Save a quality or costing and its yarn rates will appear here automatically.' : `Add a ${selectedCategoryLabel.toLowerCase()} yarn rate to continue.`}
+                        title={
+                            searchQuery.trim()
+                                ? `No yarn rates match “${searchQuery.trim()}”`
+                                : statusFilter === 'needs_review'
+                                    ? tx('No yarn rates need review')
+                                    : showArchived
+                                        ? categoryFilter === 'all'
+                                            ? tx('No archived yarn rates')
+                                            : tx(`No archived ${selectedCategoryLabel.toLowerCase()} yarn rates`)
+                                        : yarnRates.length === 0
+                                            ? tx('No yarn rates yet')
+                                            : categoryFilter === 'all'
+                                                ? tx('No yarn rates yet')
+                                                : tx(`No ${selectedCategoryLabel.toLowerCase()} yarn rates yet`)
+                        }
+                        description={
+                            searchQuery.trim()
+                                ? tx('Check the spelling or clear active filters to view all yarns.')
+                                : statusFilter === 'needs_review'
+                                    ? tx('All current yarn rates have been confirmed and are up to date.')
+                                    : showArchived
+                                        ? tx('Archived rates stay available here for audit and can be restored when needed.')
+                                        : yarnRates.length === 0
+                                            ? tx('Save a quality or costing and its yarn rates will appear here automatically.')
+                                            : tx(`Add a ${selectedCategoryLabel.toLowerCase()} yarn rate to continue.`)
+                        }
+                        action={hasActiveFilters ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={resetFilters}
+                                className="rounded-lg border-hairline bg-surface hover:bg-surface-soft"
+                            >
+                                <X className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                                {tx('Clear search & filters')}
+                            </Button>
+                        ) : undefined}
                     />
                 ) : (
                     <>
@@ -1056,7 +1332,7 @@ export default function RatesClient({
                                                 <td className="px-3 py-3 align-top">
                                                     <div className="ml-auto flex w-full max-w-[210px] items-center justify-end gap-1.5">
                                                         {!archived && reviewState !== 'current' ? (
-                                                            <Button variant="default" size="sm" onClick={() => { setReviewError(null); setReviewRate(rate) }} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`} className="h-9 max-w-full rounded-full border-0 px-3 text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white">
+                                                            <Button variant="default" size="sm" onClick={() => handleQuickReview(rate)} disabled={isPending} aria-label={`${reviewLabel} for ${rate.name}`} className="h-9 max-w-full rounded-full border-0 px-3 text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white">
                                                                     {actionKind === 'review' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
                                                             </Button>
                                                         ) : !archived ? (
@@ -1146,7 +1422,7 @@ export default function RatesClient({
                                                 {!archived && reviewState !== 'current' && (
                                                     <Button
                                                         variant="default"
-                                                        onClick={() => { setReviewError(null); setReviewRate(rate) }}
+                                                        onClick={() => handleQuickReview(rate)}
                                                         disabled={isPending}
                                                         aria-label={tx(`${reviewLabel} for ${rate.name}`)}
                                                         className="h-10 min-w-0 flex-1 rounded-xl border-0 bg-success px-3 text-sm text-white shadow-none hover:bg-success/90 hover:text-white"
@@ -1208,16 +1484,15 @@ export default function RatesClient({
                 open={showDueReviews}
                 rates={dueReviewRates}
                 onClose={() => setShowDueReviews(false)}
-                onReview={rate => {
-                    setShowDueReviews(false)
-                    setReviewError(null)
-                    setReviewRate(rate)
-                }}
+                onReview={handleQuickReview}
                 onEdit={rate => {
                     setShowDueReviews(false)
                     setSaveError(null)
                     setDraft(rowToDraft(rate))
                 }}
+                onConfirmAll={handleConfirmAll}
+                isConfirmingAll={pendingAction?.id === 'all-review'}
+                pendingActionId={pendingAction?.id}
             />
 
             {usageRate && <SavedQualityUsageDialog rate={usageRate} onClose={() => setUsageRate(null)} />}

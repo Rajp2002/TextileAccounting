@@ -116,10 +116,16 @@ export function filterCostRates<T extends CostRateRow>(
             getCostRateDisplayNotes(rate),
             rate.source,
             rate.notes,
+            ...(rate.fabric_names ?? []),
         ].filter(Boolean).join(' ')
         const matchesQuery = !query || searchText.toLocaleLowerCase('en-IN').includes(query)
         const matchesCategory = options.category === 'all' || rate.category === options.category
-        const matchesStatus = options.status === 'all' || getRateReviewStatus(rate, now) === options.status
+        const reviewStatus = getRateReviewStatus(rate, now)
+        const matchesStatus = options.status === 'all'
+            ? true
+            : options.status === 'needs_review'
+                ? reviewStatus !== 'current'
+                : reviewStatus === options.status
         return matchesQuery && matchesCategory && matchesStatus
     })
 }

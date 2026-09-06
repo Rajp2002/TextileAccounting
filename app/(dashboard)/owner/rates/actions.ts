@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getCachedOrgTier } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
-import { getRateReviewStatus } from '@/lib/cost-rates'
+import { getRateReviewStatus, type CostRateRow } from '@/lib/cost-rates'
 import {
     collectYarnRateCandidates,
     getYarnRateDiscoverySource,
@@ -347,6 +347,45 @@ export async function confirmCostRateReview(rateId: string, expectedUpdatedAt: s
     revalidatePath('/owner/rates')
     revalidatePath('/owner/estimator')
     return { data: result.rate }
+}
+
+export async function confirmAllCostRateReviews(
+    ratesToReview: { id: string; expectedUpdatedAt: string }[]
+): Promise<{ data?: CostRateRow[]; count?: number; error?: string }> {
+    if (!Array.isArray(ratesToReview)) return { error: 'Invalid rates payload.' }
+    if (ratesToReview.length === 0) return { data: [], count: 0 }
+
+    for (const item of ratesToReview) {
+        if (!item?.id || !UUID_PATTERN.test(item.id)) return { error: 'Rate identifier is invalid.' }
+        if (!item.expectedUpdatedAt || !Number.isFinite(Date.parse(item.expectedUpdatedAt))) {
+            return { error: 'One or more rates changed or are missing version data. Refresh before reviewing.' }
+        }
+    }
+
+    const { user, profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+
+    const supabase = await createServerClient()
+    await setAuditActor(supabase, user.id)
+
+    const updatedRates: CostRateRow[] = []
+    for (const item of ratesToReview) {
+        const { data, error } = await supabase.rpc('review_cost_rate_atomic', {
+            p_rate_id: item.id,
+            p_expected_updated_at: item.expectedUpdatedAt,
+        })
+        if (error) return { error: error.message }
+        const result = data as { rate?: unknown } | null
+        if (!result?.rate) {
+            return { error: 'A rate review completed without returning the reviewed rate.' }
+        }
+        updatedRates.push(result.rate as CostRateRow)
+    }
+
+    revalidatePath('/owner/rates')
+    revalidatePath('/owner/estimator')
+    return { data: updatedRates, count: updatedRates.length }
 }
 
 async function setCostRateActive(rateId: string, expectedUpdatedAt: string | undefined, isActive: boolean) {

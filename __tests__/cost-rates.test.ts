@@ -37,9 +37,11 @@ describe('cost rate review memory', () => {
         const rates: CostRateRow[] = [
             base,
             { ...base, id: '00000000-0000-4000-8000-000000000002', name: 'Processing', category: 'processing', unit: 'per_m', source: 'Internal', last_reviewed_at: '2026-01-01' },
+            { ...base, id: '00000000-0000-4000-8000-000000000003', name: 'Raw Silk', category: 'yarn_warp', source: 'Direct', is_reviewed: false },
         ]
         expect(filterCostRates(rates, { query: 'supplier', category: 'all', status: 'all' }, new Date('2026-07-19')).map(rate => rate.name)).toEqual(['75D Polyester'])
         expect(filterCostRates(rates, { query: '', category: 'processing', status: 'overdue' }, new Date('2026-07-19')).map(rate => rate.name)).toEqual(['Processing'])
+        expect(filterCostRates(rates, { query: '', category: 'all', status: 'needs_review' }, new Date('2026-07-19')).map(rate => rate.name)).toEqual(['Processing', 'Raw Silk'])
     })
 
     it('formats money and percentage units clearly', () => {
