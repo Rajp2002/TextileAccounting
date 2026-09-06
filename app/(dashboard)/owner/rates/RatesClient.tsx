@@ -1432,7 +1432,7 @@ export default function RatesClient({
                 />
             </aside>
 
-            <div data-ratebook-tutorial-root="true" className="premium-route-enter mx-auto w-full max-w-7xl space-y-6">
+            <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -2176,7 +2176,7 @@ export default function RatesClient({
             </aside>
 
             {/* Pin the archive policy to the bottom edge of the desktop rail. */}
-            <aside data-ratebook-section={8} data-ratebook-field="activityAndArchive" className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
+            <aside className="rates-archive-policy-rail-desktop" data-ratebook-section={8} data-ratebook-field="activityAndArchive" aria-label={tx('Rate Book archive policy')}>
                 <ArchivePolicyNotice />
             </aside>
 
