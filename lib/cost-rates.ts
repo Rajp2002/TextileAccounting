@@ -62,6 +62,71 @@ export function formatRateValue(value: number, unit: CostRateUnit) {
     return `${prefix}${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${suffix}`
 }
 
+export type RatePriceDelta = {
+    difference: number
+    percentChange: number | null
+    direction: 'increased' | 'decreased' | 'unchanged' | 'initial'
+    formattedDifference: string
+    formattedPercent: string | null
+    previousValueFormatted: string | null
+}
+
+export function getRatePriceDelta(
+    currentValue: number,
+    previousValue: number | null | undefined,
+    unit: CostRateUnit = 'per_kg',
+): RatePriceDelta {
+    if (previousValue == null || !Number.isFinite(Number(previousValue))) {
+        return {
+            difference: 0,
+            percentChange: null,
+            direction: 'initial',
+            formattedDifference: 'Initial rate',
+            formattedPercent: null,
+            previousValueFormatted: null,
+        }
+    }
+
+    const curr = Number(currentValue)
+    const prev = Number(previousValue)
+    const prevFormatted = formatRateValue(prev, unit)
+    const rawDiff = Number((curr - prev).toFixed(4))
+
+    if (Math.abs(rawDiff) < 0.0001) {
+        return {
+            difference: 0,
+            percentChange: 0,
+            direction: 'unchanged',
+            formattedDifference: 'Unchanged',
+            formattedPercent: null,
+            previousValueFormatted: prevFormatted,
+        }
+    }
+
+    const percentChange = prev > 0 ? Number(((rawDiff / prev) * 100).toFixed(2)) : null
+
+    if (rawDiff > 0) {
+        return {
+            difference: rawDiff,
+            percentChange,
+            direction: 'increased',
+            formattedDifference: `+${formatRateValue(rawDiff, unit)}`,
+            formattedPercent: percentChange != null ? `+${percentChange.toFixed(1)}%` : null,
+            previousValueFormatted: prevFormatted,
+        }
+    }
+
+    return {
+        difference: rawDiff,
+        percentChange,
+        direction: 'decreased',
+        formattedDifference: `-${formatRateValue(Math.abs(rawDiff), unit)}`,
+        formattedPercent: percentChange != null ? `${percentChange.toFixed(1)}%` : null,
+        previousValueFormatted: prevFormatted,
+    }
+}
+
+
 export function getCostRateDisplaySource(rate: Pick<CostRateRow, 'source' | 'discovery_source'>) {
     return rate.discovery_source
         ? YARN_RATE_DISCOVERY_SOURCE_LABELS[rate.discovery_source]

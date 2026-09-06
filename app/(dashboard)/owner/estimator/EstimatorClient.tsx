@@ -2232,51 +2232,78 @@ function LayerNameField({
             {isOpen && filteredOptions.length > 0 && (
                 <div
                     data-testid="yarn-ratebook-dropdown"
-                    className="absolute left-0 right-0 top-full mt-1 z-50 overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-xl max-h-60 overflow-y-auto"
+                    className="absolute left-0 top-full mt-1.5 z-50 w-[360px] sm:w-[440px] max-w-[calc(100vw-2.5rem)] rounded-[14px] border border-slate-200/90 bg-white shadow-[0_16px_40px_-6px_rgba(15,23,42,0.18),0_4px_16px_-2px_rgba(15,23,42,0.08)] ring-1 ring-black/5 overflow-hidden"
                 >
-                    <div className="sticky top-0 bg-slate-50/95 backdrop-blur-xs px-3 py-1.5 border-b border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                        <span>Rate Book Yarns</span>
-                        <span>Denier · Rate</span>
+                    <div className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs px-3.5 py-2 border-b border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5">
+                            <BookOpen className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span>Saved Yarns ({filteredOptions.length})</span>
+                        </div>
+                        <span className="text-[10px] font-normal text-slate-400 lowercase tracking-normal">auto-fills denier & rate</span>
                     </div>
-                    <ul className="divide-y divide-slate-100/70 p-1">
+                    <ul className="max-h-64 overflow-y-auto divide-y divide-slate-100/70 p-1.5">
                         {filteredOptions.map((opt, idx) => {
                             const isSelected = idx === highlightedIndex
                             return (
                                 <li key={`${opt.name}-${opt.category}-${idx}`}>
                                     <button
                                         type="button"
+                                        onMouseDown={e => {
+                                            // Prevent input blur before click registers
+                                            e.preventDefault()
+                                        }}
                                         onMouseEnter={() => setHighlightedIndex(idx)}
                                         onClick={() => handleSelect(opt)}
-                                        className={`w-full text-left px-3 py-2 rounded-[7px] text-xs flex items-center justify-between gap-3 transition-colors ${
-                                            isSelected ? 'bg-amber-50 text-amber-950 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                                        className={`w-full text-left p-2.5 rounded-[9px] transition-colors flex flex-col gap-1.5 ${
+                                            isSelected ? 'bg-amber-50/90 ring-1 ring-amber-300/80 text-slate-900' : 'hover:bg-slate-50/90 text-slate-800'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <BookOpen className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                            <span className="truncate">{opt.name}</span>
-                                            {opt.category !== 'both' && (
-                                                <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-semibold shrink-0">
-                                                    {opt.category === 'yarn_warp' ? 'Warp' : 'Weft'}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            {opt.denier > 0 && (
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono text-[11px] font-semibold">
-                                                    {opt.denier} D
-                                                </span>
-                                            )}
+                                        {/* Line 1: Full, readable yarn name + Rate badge */}
+                                        <div className="flex items-start justify-between gap-3 min-w-0">
+                                            <span className="text-xs font-bold text-slate-900 leading-snug break-words">
+                                                {opt.name}
+                                            </span>
                                             {opt.yarnRate > 0 && (
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono text-[11px] font-semibold">
+                                                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap shadow-xs">
                                                     ₹{opt.yarnRate}/kg
                                                 </span>
                                             )}
+                                        </div>
+
+                                        {/* Line 2: Density, Category, and Provenance */}
+                                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                                            {opt.denier > 0 && (
+                                                <span className="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200/70 px-1.5 py-0.2 rounded shrink-0">
+                                                    {opt.denier} D
+                                                </span>
+                                            )}
+                                            <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider text-[9px] shrink-0">
+                                                {opt.category === 'yarn_warp' ? 'Warp' : opt.category === 'yarn_weft' ? 'Weft' : 'Warp / Weft'}
+                                            </span>
+                                            <span className="text-slate-300">·</span>
+                                            <span className="text-slate-400 font-medium truncate max-w-[200px]">
+                                                {opt.source === 'rate_book' ? 'Rate Book' : opt.qualityNames?.[0] ? opt.qualityNames[0] : 'Saved Quality'}
+                                            </span>
                                         </div>
                                     </button>
                                 </li>
                             )
                         })}
                     </ul>
+                    <div className="bg-slate-50/90 px-3 py-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Use ↑ ↓ to navigate · Enter to select</span>
+                        <span>Esc to close</span>
+                    </div>
+                </div>
+            )}
+            {isOpen && filteredOptions.length === 0 && inputValue.trim().length > 0 && (
+                <div
+                    className="absolute left-0 top-full mt-1.5 z-50 w-[320px] max-w-[calc(100vw-2.5rem)] rounded-[12px] border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-black/5"
+                >
+                    <p className="text-xs font-semibold text-slate-700">No matching saved yarn</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400">
+                        "{inputValue}" will be used as a custom component name.
+                    </p>
                 </div>
             )}
         </div>

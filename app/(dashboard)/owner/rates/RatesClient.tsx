@@ -15,12 +15,15 @@ import {
     History,
     Info,
     Loader2,
+    Minus,
     MoreHorizontal,
     Pencil,
     Plus,
     Search,
     Tags,
     Trash2,
+    TrendingDown,
+    TrendingUp,
     X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -43,6 +46,7 @@ import {
     saveCostRate,
     type CostRateCategory,
     type CostRateInput,
+    type CostRateUnit,
 } from './actions'
 import {
     COST_RATE_CATEGORY_LABELS,
@@ -50,6 +54,7 @@ import {
     formatRateValue,
     getCostRateDisplayNotes,
     getCostRateDisplaySource,
+    getRatePriceDelta,
     getRateReviewDueDate,
     getRateHistoryEventLabel,
     getRateReviewStatus,
@@ -438,6 +443,67 @@ function DueForReviewDialog({
                 </div>
             </DialogContent>
         </Dialog>
+    )
+}
+
+function PriceDeltaBadge({
+    currentValue,
+    previousValue,
+    unit = 'per_kg',
+    className = '',
+}: {
+    currentValue: number
+    previousValue: number | null | undefined
+    unit?: CostRateUnit
+    className?: string
+}) {
+    const delta = getRatePriceDelta(currentValue, previousValue, unit)
+
+    if (delta.direction === 'increased') {
+        return (
+            <span
+                className={`inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-300 ${className}`}
+                title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
+            >
+                <TrendingUp className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <span>{delta.formattedDifference}</span>
+                {delta.formattedPercent && <span className="opacity-80">({delta.formattedPercent})</span>}
+            </span>
+        )
+    }
+
+    if (delta.direction === 'decreased') {
+        return (
+            <span
+                className={`inline-flex items-center gap-1 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300 ${className}`}
+                title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
+            >
+                <TrendingDown className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                <span>{delta.formattedDifference}</span>
+                {delta.formattedPercent && <span className="opacity-80">({delta.formattedPercent})</span>}
+            </span>
+        )
+    }
+
+    if (delta.direction === 'unchanged') {
+        return (
+            <span
+                className={`inline-flex items-center gap-1 rounded-md border border-hairline bg-surface-soft/80 px-1.5 py-0.5 text-[10px] font-medium text-subtle ${className}`}
+                title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
+            >
+                <Minus className="h-2.5 w-2.5 shrink-0 text-subtle/70" aria-hidden="true" />
+                <span>Unchanged</span>
+            </span>
+        )
+    }
+
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-md border border-hairline/60 bg-surface-soft/40 px-1.5 py-0.5 text-[10px] font-normal italic text-subtle ${className}`}
+            title="Initial rate recorded"
+        >
+            <span>Initial rate</span>
+        </span>
     )
 }
 
@@ -1306,15 +1372,21 @@ export default function RatesClient({
                         <div key={`table-${resultMotionKey}`} className="premium-content-swap hidden lg:block">
                             <table className="w-full table-fixed text-left text-[12px]">
                                 <colgroup>
-                                    <col className="w-[13%]" />
-                                    <col className="w-[11%]" />
-                                    <col className="w-[10%]" />
-                                    <col className="w-[10%]" />
-                                    <col className="w-[15%]" />
+                                    <col className="w-[24%]" />
                                     <col className="w-[18%]" />
-                                    <col className="w-[23%]" />
+                                    <col className="w-[18%]" />
+                                    <col className="w-[18%]" />
+                                    <col className="w-[22%]" />
                                 </colgroup>
-                                <thead className="border-b border-hairline bg-surface-soft text-[11px] font-semibold uppercase tracking-wide text-subtle"><tr><th className="px-3 py-3">Yarn / Use</th><th className="px-3 py-3">{t('common.current_yarn_rate')}</th><th className="px-3 py-3">Previous rate</th><th className="px-3 py-3">Effective from</th><th className="px-3 py-3">Review status</th><th className="px-3 py-3">Source / Notes</th><th className="px-3 py-3 text-right">Actions</th></tr></thead>
+                                <thead className="border-b border-hairline bg-surface-soft text-[11px] font-semibold uppercase tracking-wide text-subtle">
+                                    <tr>
+                                        <th className="px-3 py-3">{tx('Yarn / Quality')}</th>
+                                        <th className="px-3 py-3">{tx('Current Rate & Trend')}</th>
+                                        <th className="px-3 py-3">{tx('Review Status')}</th>
+                                        <th className="px-3 py-3">{tx('Source & Linked Qualities')}</th>
+                                        <th className="px-3 py-3 text-right">{tx('Actions')}</th>
+                                    </tr>
+                                </thead>
                                 <tbody className="divide-y divide-hairline">
                                     {visibleRates.map(rate => {
                                         const reviewState = getRateReviewStatus(rate)
@@ -1323,11 +1395,21 @@ export default function RatesClient({
                                         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
                                         return (
                                             <tr key={rate.id} className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}>
-                                                <td className="px-3 py-3 align-top"><p className="font-semibold text-ink">{rate.name}</p><p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p></td>
-                                                <td className="px-3 py-3 align-top"><p className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>{rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}</td>
-                                                <td className="px-3 py-3 align-top font-mono text-[11px] text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</td>
-                                                <td className="px-3 py-3 align-top text-[11px] text-body">{formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                                                <td className="px-3 py-3 align-top"><ReviewBadge rate={rate} /></td>
+                                                <td className="px-3 py-3 align-top">
+                                                    <p className="font-semibold text-ink">{rate.name}</p>
+                                                    <p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
+                                                    {rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}
+                                                </td>
+                                                <td className="px-3 py-3 align-top">
+                                                    <p className="font-mono text-sm font-bold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
+                                                    <div className="mt-1.5">
+                                                        <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                    </div>
+                                                </td>
+                                                <td className="px-3 py-3 align-top">
+                                                    <ReviewBadge rate={rate} />
+                                                    <p className="mt-1 text-[11px] text-subtle">Effective {formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                                </td>
                                                 <td className="px-3 py-3 align-top"><RateSourceNotes rate={rate} onOpenUsage={setUsageRate} /></td>
                                                 <td className="px-3 py-3 align-top">
                                                     <div className="ml-auto flex w-full max-w-[210px] items-center justify-end gap-1.5">
@@ -1389,15 +1471,16 @@ export default function RatesClient({
                                                 {archived ? <StatusBadge status="archived" className="text-[10px]" /> : <ReviewBadge rate={rate} compact />}
                                             </div>
 
-                                            <div className="mt-4 flex items-end justify-between gap-4 border-y border-hairline/70 py-3">
-                                                <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{t('common.current_yarn_rate')}</p>
-                                                    <p className="mt-1 font-mono text-xl font-black tracking-tight text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
+                                            <div className="mt-3.5 flex items-baseline justify-between gap-3 border-y border-hairline/70 py-2.5">
+                                                <div className="flex flex-wrap items-baseline gap-2">
+                                                    <span className="font-mono text-xl font-black tracking-tight text-ink">
+                                                        {formatRateValue(rate.current_value, rate.unit)}
+                                                    </span>
+                                                    <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">Previous rate</p>
-                                                    <p className="mt-1 font-mono text-base font-semibold text-body">{rate.previous_value == null ? '—' : formatRateValue(rate.previous_value, rate.unit)}</p>
-                                                </div>
+                                                {rate.apply_as_default && (
+                                                    <span className="text-[10px] font-semibold text-success">Default</span>
+                                                )}
                                             </div>
 
                                             <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-subtle">
