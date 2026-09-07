@@ -274,6 +274,7 @@ function QuickRateEditPopover({
     onSave,
     onOpenAdvanced,
     trigger,
+    isTutorialActive = false,
 }: {
     rate: CostRateRow
     isOpen: boolean
@@ -287,13 +288,14 @@ function QuickRateEditPopover({
     onSave: (rate: CostRateRow, val: number, src: string) => void
     onOpenAdvanced: (rate: CostRateRow) => void
     trigger: React.ReactNode
+    isTutorialActive?: boolean
 }) {
     const { tx } = useTranslation()
     const inputRef = useRef<HTMLInputElement>(null)
     const savedQualityCount = getSavedQualityCount(rate)
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !isTutorialActive) {
             const timer = setTimeout(() => {
                 try {
                     inputRef.current?.focus()
@@ -304,7 +306,7 @@ function QuickRateEditPopover({
             }, 10)
             return () => clearTimeout(timer)
         }
-    }, [isOpen])
+    }, [isOpen, isTutorialActive])
 
     const rawVal = Number(value)
     const isValueValid = value !== '' && Number.isFinite(rawVal) && rawVal >= 0 && rawVal <= 10_000_000
@@ -326,11 +328,28 @@ function QuickRateEditPopover({
                 sideOffset={8}
                 onOpenAutoFocus={(e) => {
                     e.preventDefault()
-                    try {
-                        inputRef.current?.focus()
-                        inputRef.current?.select()
-                    } catch {
-                        inputRef.current?.focus()
+                    if (!isTutorialActive) {
+                        try {
+                            inputRef.current?.focus()
+                            inputRef.current?.select()
+                        } catch {
+                            inputRef.current?.focus()
+                        }
+                    }
+                }}
+                onPointerDownOutside={(e) => {
+                    if (isTutorialActive) {
+                        e.preventDefault()
+                    }
+                }}
+                onInteractOutside={(e) => {
+                    if (isTutorialActive) {
+                        e.preventDefault()
+                    }
+                }}
+                onFocusOutside={(e) => {
+                    if (isTutorialActive) {
+                        e.preventDefault()
                     }
                 }}
                 className="w-[320px] max-w-[calc(100vw-2rem)] rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-panel)] z-50"
@@ -896,23 +915,6 @@ export default function RatesClient({
         setShowArchived(false)
     }, [])
 
-    const handleOpenQuickEditFromTour = useCallback((open: boolean) => {
-        if (open) {
-            setQuickEditRate(prev => {
-                if (prev) return prev
-                const target = rates.find(r => r.is_active !== false) ?? rates[0] ?? null
-                if (target) {
-                    setQuickEditValue(target.current_value)
-                    setQuickEditSource(target.source ?? '')
-                    setQuickEditError(null)
-                    setQuickEditIsMobile(false)
-                }
-                return target
-            })
-        } else {
-            setQuickEditRate(null)
-        }
-    }, [rates])
 
     const handleOpenRateDrawerFromTour = useCallback((open: boolean) => {
         if (open) {
@@ -1038,6 +1040,22 @@ export default function RatesClient({
         }),
         [filteredRates, showArchived],
     )
+
+    const handleOpenQuickEditFromTour = useCallback((open: boolean) => {
+        if (open) {
+            const target = visibleRates.find(r => r.is_active !== false) ?? visibleRates[0] ?? activeYarnRates[0] ?? rates[0] ?? null
+            if (target) {
+                setQuickEditIsMobile(false)
+                setQuickEditRate(target)
+                setQuickEditValue(target.current_value)
+                setQuickEditSource(target.source ?? '')
+                setQuickEditError(null)
+            }
+        } else {
+            setQuickEditRate(null)
+            setQuickEditIsMobile(false)
+        }
+    }, [visibleRates, activeYarnRates, rates])
 
     const resultMotionKey = `${categoryFilter}|${statusFilter}|${showArchived ? 'archived' : 'active'}|${searchQuery.trim()}|${visibleRates.length}`
     const selectedCategoryLabel = categoryFilter === 'all' ? 'All' : categoryFilter === 'yarn_warp' ? 'Warp' : 'Weft'
@@ -1780,6 +1798,7 @@ export default function RatesClient({
                                                                 <QuickRateEditPopover
                                                                     rate={rate}
                                                                     isOpen={quickEditRate?.id === rate.id}
+                                                                    isTutorialActive={isTutorialActive}
                                                                     onOpenChange={open => {
                                                                         if (open) {
                                                                             setQuickEditIsMobile(false)
@@ -1787,7 +1806,7 @@ export default function RatesClient({
                                                                             setQuickEditValue(rate.current_value)
                                                                             setQuickEditSource(rate.source ?? '')
                                                                             setQuickEditError(null)
-                                                                        } else {
+                                                                        } else if (!isTutorialActive) {
                                                                             setQuickEditRate(null)
                                                                             setQuickEditIsMobile(false)
                                                                         }
@@ -1932,6 +1951,7 @@ export default function RatesClient({
                                                     <QuickRateEditPopover
                                                         rate={rate}
                                                         isOpen={quickEditRate?.id === rate.id && quickEditIsMobile}
+                                                        isTutorialActive={isTutorialActive}
                                                         onOpenChange={open => {
                                                             if (open) {
                                                                 setQuickEditIsMobile(true)
@@ -1939,7 +1959,7 @@ export default function RatesClient({
                                                                 setQuickEditValue(rate.current_value)
                                                                 setQuickEditSource(rate.source ?? '')
                                                                 setQuickEditError(null)
-                                                            } else {
+                                                            } else if (!isTutorialActive) {
                                                                 setQuickEditRate(null)
                                                                 setQuickEditIsMobile(false)
                                                             }
@@ -2070,6 +2090,12 @@ export default function RatesClient({
                     <SheetContent
                         data-ratebook-field="rateDrawerFields"
                         hideOverlay={isTutorialActive}
+                        onPointerDownOutside={(e) => {
+                            if (isTutorialActive) e.preventDefault()
+                        }}
+                        onInteractOutside={(e) => {
+                            if (isTutorialActive) e.preventDefault()
+                        }}
                         className="w-full overflow-y-auto sm:max-w-lg"
                     >
                     <SheetHeader className="border-b border-hairline px-6 py-5"><SheetTitle className="text-xl font-black">{tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')}</SheetTitle><SheetDescription>{tx('Set the current rate used by matching Saved Quality layers.')}</SheetDescription></SheetHeader>

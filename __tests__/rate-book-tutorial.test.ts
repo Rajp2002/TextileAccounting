@@ -165,5 +165,24 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(tutorialSource).toContain('data-ratebook-portal="true"')
         expect(tutorialSource).toContain('onClick={(e) => {')
     })
+
+    it('protects QuickRateEditPopover from premature dismissal during tutorial', () => {
+        expect(ratesClientSource).toContain('onPointerDownOutside={(e) => {')
+        expect(ratesClientSource).toContain('onInteractOutside={(e) => {')
+        expect(ratesClientSource).toContain('onFocusOutside={(e) => {')
+        expect(ratesClientSource).toContain('else if (!isTutorialActive) {')
+        expect(ratesClientSource).toContain('isTutorialActive={isTutorialActive}')
+    })
+
+    it('exempts Radix popover and sheet portals from inert state during tutorial', () => {
+        expect(tutorialSource).toContain("!el.hasAttribute('data-radix-popper-content-wrapper')")
+        expect(tutorialSource).toContain("!el.querySelector('[data-slot=\"popover-content\"]')")
+        expect(tutorialSource).toContain("!el.querySelector('[data-slot=\"sheet-content\"]')")
+    })
+
+    it('dynamically docks tutorial panel to bottom-right when spotlighting top-right popover', () => {
+        expect(tutorialSource).toContain('!isSheetStep && targetRect.top < 380')
+        expect(tutorialSource).toContain("setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')")
+    })
 })
 

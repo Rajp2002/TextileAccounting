@@ -67,10 +67,11 @@ function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; 
     }
 
     if (step.field === 'quickEditPopover') {
-        const popoverPanel = document.querySelector<HTMLElement>('[data-slot="popover-content"]')
+        const popoverPanel = document.querySelector<HTMLElement>('[data-ratebook-field="quickEditPopover"]') ??
+                             document.querySelector<HTMLElement>('[data-slot="popover-content"]')
         if (popoverPanel) {
             card = popoverPanel
-            target = popoverPanel.querySelector<HTMLElement>('[data-ratebook-field="quickEditPopover"]') ?? popoverPanel
+            target = popoverPanel
         }
     }
 
@@ -84,7 +85,13 @@ function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; 
 
     // Fallbacks if table rows are empty or not rendered
     if (!target) {
-        if (['yarnRow', 'yarnNameCell', 'rateAndTrend', 'reviewStatusBadge', 'linkedQualitiesPopover', 'quickReviewAction', 'quickEditAction'].includes(step.field)) {
+        if (step.field === 'quickEditPopover') {
+            const triggerEl = document.querySelector<HTMLElement>('[data-ratebook-field="quickEditAction"]')
+            if (triggerEl) {
+                target = triggerEl
+                card = triggerEl
+            }
+        } else if (['yarnRow', 'yarnNameCell', 'rateAndTrend', 'reviewStatusBadge', 'linkedQualitiesPopover', 'quickReviewAction', 'quickEditAction'].includes(step.field)) {
             target = document.querySelector<HTMLElement>('tbody tr') ??
                      document.querySelector<HTMLElement>('table') ??
                      document.querySelector<HTMLElement>('[data-ratebook-field="rateTableCard"]') ??
@@ -329,7 +336,13 @@ export function RateBookTutorial({
                 el instanceof HTMLElement &&
                 !el.contains(panel.current) &&
                 el.getAttribute('data-testid') !== 'rate-book-tutorial' &&
-                !el.hasAttribute('data-ratebook-portal')
+                !el.hasAttribute('data-ratebook-portal') &&
+                !el.hasAttribute('data-radix-popper-content-wrapper') &&
+                !el.hasAttribute('data-radix-portal') &&
+                !el.querySelector('[data-slot="popover-content"]') &&
+                !el.querySelector('[data-slot="sheet-content"]') &&
+                !el.querySelector('[data-ratebook-field="quickEditPopover"]') &&
+                !el.querySelector('[data-ratebook-field="rateDrawerFields"]')
         )
         const prior = siblings.map(el => el.inert)
         siblings.forEach(el => { el.inert = true })
@@ -451,7 +464,7 @@ export function RateBookTutorial({
             const modalBottom = panelRect ? panelRect.bottom : 220
             const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
 
-            const targetIsTopRight = !isModal && targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
+            const targetIsTopRight = !isSheetStep && targetRect.top < 380 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
             setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
 
             const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
