@@ -679,26 +679,26 @@ export function RateBookTutorial({
                         <div className="flex-1 flex flex-col">
                             <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ring-1 ring-inset transition-all duration-300 ${
+                                    <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
                                         isSectionTransition
                                             ? 'bg-saffron text-white ring-saffron shadow-sm scale-105'
                                             : 'bg-saffron/10 text-saffron-deep ring-saffron/25'
                                     }`}>
                                         {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
                                     </span>
-                                    <span className="text-[11px] font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
+                                    <span className="text-xs font-semibold text-[var(--color-ink)]/75">· {copy.sections[active.section]}</span>
                                 </div>
-                                <h2 id="ratebook-tour-title" className="mt-2 text-sm sm:text-base font-bold tracking-tight text-[var(--color-ink)] leading-snug">
+                                <h2 id="ratebook-tour-title" className="mt-2.5 text-base sm:text-[17px] font-bold tracking-tight text-[var(--color-ink)] leading-snug">
                                     {copy.fields[active.field]?.title}
                                 </h2>
-                                <p id="ratebook-tour-description" className="mt-2 text-xs leading-relaxed text-[var(--color-ink)]/90">
+                                <p id="ratebook-tour-description" className="mt-2.5 text-xs sm:text-[13.5px] leading-relaxed text-[var(--color-ink)]/90">
                                     {copy.fields[active.field]?.description}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="mt-3 pt-2.5 border-t border-hairline/60 space-y-2.5 shrink-0">
-                            <p className="text-[10.5px] text-[var(--color-muted)] leading-tight">{copy.hint}</p>
+                        <div className="mt-3.5 pt-3 border-t border-hairline/60 space-y-3 shrink-0">
+                            <p className="text-[11.5px] text-[var(--color-muted)] leading-normal">{copy.hint}</p>
 
                             <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                                 <div
@@ -707,13 +707,13 @@ export function RateBookTutorial({
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between gap-1 pt-0.5">
+                            <div className="flex items-center justify-between gap-1.5 pt-0.5">
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
                                     data-tour-control="skip"
-                                    className="h-7 px-1.5 text-xs text-subtle hover:text-ink"
+                                    className="h-8 px-2 text-xs font-medium text-subtle hover:text-ink"
                                     onClick={(e) => {
                                         e.preventDefault()
                                         e.stopPropagation()
@@ -722,15 +722,15 @@ export function RateBookTutorial({
                                 >
                                     {copy.skip}
                                 </Button>
-                                <span className="text-[11px] font-semibold text-[var(--color-muted)] shrink-0">{index + 1}/{steps.length}</span>
-                                <div className="flex items-center gap-1">
+                                <span className="text-xs font-semibold text-[var(--color-muted)] shrink-0">{index + 1}/{steps.length}</span>
+                                <div className="flex items-center gap-1.5">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
                                         data-tour-control="back"
                                         disabled={index === 0}
-                                        className="h-7 px-2 text-xs"
+                                        className="h-8 px-2.5 text-xs font-medium"
                                         onClick={(e) => {
                                             e.preventDefault()
                                             e.stopPropagation()
@@ -748,10 +748,10 @@ export function RateBookTutorial({
                                             e.stopPropagation()
                                             handleNext()
                                         }}
-                                        className="group h-7 gap-1 px-2.5 text-xs font-semibold bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all"
+                                        className="group h-8 gap-1 px-3 text-xs font-semibold bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all"
                                     >
                                         <span>{index === steps.length - 1 ? copy.finish : copy.next}</span>
-                                        <kbd className="hidden sm:inline-flex h-3 items-center rounded border border-white/25 bg-white/20 px-1 text-[8.5px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
+                                        <kbd className="hidden sm:inline-flex h-3.5 items-center rounded border border-white/25 bg-white/20 px-1 text-[9px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
                                     </Button>
                                 </div>
                             </div>

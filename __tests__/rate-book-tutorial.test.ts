@@ -205,5 +205,11 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(trIndex).toBeLessThan(outerCardIndex)
         expect(sectionCardIndex).toBeLessThan(outerCardIndex)
     })
+
+    it('scales up typography across title, description, and badge for improved readability', () => {
+        expect(tutorialSource).toContain('text-base sm:text-[17px] font-bold')
+        expect(tutorialSource).toContain('text-xs sm:text-[13.5px] leading-relaxed')
+        expect(tutorialSource).toContain('text-[11px] font-bold')
+    })
 })
 
