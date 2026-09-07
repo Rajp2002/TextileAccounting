@@ -31,9 +31,17 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
             card = expensesPanel
         }
     }
+    const isQualityModalField = Boolean(step.inModal || ['savedQualityPicker'].includes(step.field))
+    if (isQualityModalField && ['savedQualityPicker'].includes(step.field)) {
+        const qualityPanel = document.getElementById('saved-qualities-sheet-panel')
+        if (qualityPanel) {
+            card = qualityPanel
+        }
+    }
     if (!card && target) {
         card = target.closest<HTMLElement>('#mobile-live-estimate-panel') ??
                target.closest<HTMLElement>('#monthly-expenses-dialog-panel') ??
+               target.closest<HTMLElement>('#saved-qualities-sheet-panel') ??
                target.closest<HTMLElement>('[data-slot="card"]') ??
                target.closest<HTMLElement>('[data-testid="mobile-live-estimate-shortcut"]') ??
                target
@@ -41,10 +49,11 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     return { target, card }
 }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onActiveChange }: {
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange }: {
     accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => void
     onOpenLiveCostModal?: (open: boolean) => void
     onOpenMonthlyExpensesModal?: (open: boolean) => void
+    onOpenQualityLibraryModal?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
 }) {
     const { language, languageStatus } = useTranslation()
@@ -119,12 +128,14 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
     const isLiveCostModalStep = Boolean(active?.inModal && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)) || Boolean(active?.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
     const isExpensesModalStep = Boolean(active?.inModal && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field)) || Boolean(active?.field && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field))
-    const isModalStep = isLiveCostModalStep || isExpensesModalStep
+    const isQualityModalStep = Boolean(active?.inModal && ['savedQualityPicker'].includes(active.field)) || Boolean(active?.field && ['savedQualityPicker'].includes(active.field))
+    const isModalStep = isLiveCostModalStep || isExpensesModalStep || isQualityModalStep
 
     useEffect(() => {
         if (!active) {
             onOpenLiveCostModal?.(false)
             onOpenMonthlyExpensesModal?.(false)
+            onOpenQualityLibraryModal?.(false)
             return
         }
         if (isLiveCostModalStep) {
@@ -137,7 +148,12 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         } else {
             onOpenMonthlyExpensesModal?.(false)
         }
-    }, [active, isLiveCostModalStep, isExpensesModalStep, onOpenLiveCostModal, onOpenMonthlyExpensesModal])
+        if (isQualityModalStep) {
+            onOpenQualityLibraryModal?.(true)
+        } else {
+            onOpenQualityLibraryModal?.(false)
+        }
+    }, [active, isLiveCostModalStep, isExpensesModalStep, isQualityModalStep, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
 
     useEffect(() => {
         if (!isTutorialActive) return
@@ -186,6 +202,12 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                             return
                         }
 
+                        if (header.dataset.estimatorField === 'savedQualities') {
+                            next.push({ section, card, target: header, field: 'savedQualities' })
+                            next.push({ section, card: null, target: null, field: 'savedQualityPicker', inModal: true })
+                            return
+                        }
+
                         if (header.getClientRects().length) {
                             next.push({ section, card, target: header, field: header.dataset.estimatorField as TutorialField })
                         }
@@ -231,7 +253,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         setRects(null)
         onOpenLiveCostModal?.(false)
         onOpenMonthlyExpensesModal?.(false)
-    }, [key, syncDismissal, onOpenLiveCostModal, onOpenMonthlyExpensesModal])
+        onOpenQualityLibraryModal?.(false)
+    }, [key, syncDismissal, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
 
     const handleNext = useCallback(() => {
         if (!steps.length) return
@@ -324,7 +347,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
         const isLiveCost = Boolean(active.inModal && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)) || Boolean(active.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
         const isExpenses = Boolean(active.inModal && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field)) || Boolean(active.field && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field))
-        const isModal = isLiveCost || isExpenses
+        const isQuality = Boolean(active.inModal && ['savedQualityPicker'].includes(active.field)) || Boolean(active.field && ['savedQualityPicker'].includes(active.field))
+        const isModal = isLiveCost || isExpenses || isQuality
 
         let stableFrames = 0
         let lastRect = { top: -9999, left: -9999, width: -9999, height: -9999 }
@@ -339,6 +363,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 }
                 if (isExpenses) {
                     onOpenMonthlyExpensesModal?.(true)
+                }
+                if (isQuality) {
+                    onOpenQualityLibraryModal?.(true)
                 }
             }
 

@@ -110,4 +110,30 @@ describe('CostEstimateTutorial Modal Positioning and Stability', () => {
         expect(estimatorClientSource).toContain('data-estimator-field="monthlyExpensesBreakdown"')
         expect(estimatorClientSource).toContain('data-estimator-field="monthlyProductionM"')
     })
+
+    it('passes hideOverlay and disables animations on saved-qualities-sheet-panel when tutorial is active', () => {
+        expect(estimatorClientSource).toContain('id="saved-qualities-sheet-panel"')
+        expect(estimatorClientSource).toContain('hideOverlay={isTutorialActive}')
+        expect(estimatorClientSource).toContain(
+            "isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''"
+        )
+    })
+
+    it('binds card to saved-qualities-sheet-panel for savedQualityPicker in resolveStepElements', () => {
+        expect(tutorialSource).toContain("document.getElementById('saved-qualities-sheet-panel')")
+        expect(tutorialSource).toContain('isQualityModalField')
+    })
+
+    it('inserts savedQualityPicker as the last step in Section 10 after savedQualities in collect()', () => {
+        expect(tutorialSource).toContain("if (header.dataset.estimatorField === 'savedQualities') {")
+        expect(tutorialSource).toContain("field: 'savedQualityPicker'")
+    })
+
+    it('re-asserts quality library sheet open state during measurement', () => {
+        expect(tutorialSource).toContain('onOpenQualityLibraryModal?.(true)')
+    })
+
+    it('tags savedQualityPicker field in EstimatorClient', () => {
+        expect(estimatorClientSource).toContain('data-estimator-field="savedQualityPicker"')
+    })
 })

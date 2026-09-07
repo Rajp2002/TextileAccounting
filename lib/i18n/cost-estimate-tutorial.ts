@@ -183,7 +183,11 @@ const en = {
     },
     "savedQualities": {
       "title": "Saved qualities",
-      "description": "Browse and select from your library of saved fabric recipes. Loading a saved quality instantly populates yarn construction, weaving rates, and overhead assumptions."
+      "description": "Browse and select from your library of saved fabric recipes. Tap here to open the quality library, or save the current setup for next time."
+    },
+    "savedQualityPicker": {
+      "title": "Pick a saved quality",
+      "description": "Pick a quality to auto-populate its specifications and commercial inputs, or save your current recipe for next time."
     },
     "monthlyExpensesBreakdown": {
       "title": "Monthly expenses",
@@ -381,7 +385,11 @@ const hi: TutorialCopy = {
     },
     "savedQualities": {
       "title": "सेव की गई क्वालिटी",
-      "description": "अपनी सेव की गई कपड़े की क्वालिटी और रेसिपी की लाइब्रेरी देखें और चुनें। सेव की गई क्वालिटी लोड करने पर यार्न की बनावट, बुनाई की दरें और ओवरहेड तुरंत भर जाते हैं।"
+      "description": "अपनी सेव की गई कपड़े की क्वालिटी और रेसिपी की लाइब्रेरी देखने के लिए यहाँ टैप करें, या मौजूदा सेटअप सेव करें।"
+    },
+    "savedQualityPicker": {
+      "title": "सेव की गई क्वालिटी चुनें",
+      "description": "तकनीकी विवरण और व्यावसायिक इनपुट अपने आप भरने के लिए कोई क्वालिटी चुनें, या अपनी वर्तमान रेसिपी भविष्य के लिए सेव करें।"
     },
     "monthlyExpensesBreakdown": {
       "title": "मासिक खर्च",
@@ -576,7 +584,11 @@ const gu: TutorialCopy = {
     },
     "savedQualities": {
       "title": "સેવ કરેલી ક્વોલિટી",
-      "description": "તમારી સેવ કરેલી કાપડની ક્વોલિટી અને રેસિપીની લાઇબ્રેરી જુઓ અને પસંદ કરો. સેવ કરેલી ક્વોલિટી લોડ કરવાથી યાર્નની રચના, વણાટ દર અને ઓવરહેડ તરત ભરાઈ જાય છે."
+      "description": "તમારી સેવ કરેલી કાપડની ક્વોલિટી અને રેસિપીની લાઇબ્રેરી જોવા માટે અહીં ટેપ કરો, અથવા વર્તમાન સેટઅપ સાચવો."
+    },
+    "savedQualityPicker": {
+      "title": "સાચવેલી ક્વોલિટી પસંદ કરો",
+      "description": "વિશિષ્ટતાઓ અને વ્યવસાયિક ઇનપુટ આપમેળે ભરવા માટે કોઈ ક્વોલિટી પસંદ કરો, અથવા તમારી વર્તમાન રેસિપી ભવિષ્ય માટે સાચવો."
     },
     "monthlyExpensesBreakdown": {
       "title": "માસિક ખર્ચ",

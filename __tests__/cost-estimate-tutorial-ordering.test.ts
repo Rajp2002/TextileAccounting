@@ -91,4 +91,12 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
             expect(costEstimateTutorialCopy[lang].fields.monthlyProductionM.description).toBeTruthy()
         }
     })
+
+    it('defines copy for savedQualityPicker in en, hi, and gu', () => {
+        for (const lang of ['en', 'hi', 'gu'] as const) {
+            expect(costEstimateTutorialCopy[lang].fields.savedQualityPicker).toBeDefined()
+            expect(costEstimateTutorialCopy[lang].fields.savedQualityPicker.title).toBeTruthy()
+            expect(costEstimateTutorialCopy[lang].fields.savedQualityPicker.description).toBeTruthy()
+        }
+    })
 })

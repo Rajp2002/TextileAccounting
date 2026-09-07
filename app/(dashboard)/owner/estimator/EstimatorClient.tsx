@@ -5682,6 +5682,7 @@ export default function EstimatorClient({
                         onPrepare={prepareTutorial}
                         onOpenLiveCostModal={setLiveEstimateOpen}
                         onOpenMonthlyExpensesModal={setShowAdvancedOverhead}
+                        onOpenQualityLibraryModal={setShowQualityLibrary}
                         onActiveChange={setIsTutorialActive}
                     />
                 </aside>
@@ -6124,7 +6125,16 @@ export default function EstimatorClient({
                     <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`} data-costing-tutorial-root="true">
 
                 {/* ── CURRENT QUALITY + MODE ─────────────────────────────── */}
-                <Sheet open={showQualityLibrary} onOpenChange={setShowQualityLibrary}>
+                <Sheet
+                    open={showQualityLibrary}
+                    onOpenChange={(nextOpen) => {
+                        if (isTutorialActive && !nextOpen) {
+                            return
+                        }
+                        setShowQualityLibrary(nextOpen)
+                    }}
+                    modal={!isTutorialActive}
+                >
                     <section
                         id="active-quality"
                         data-slot="card"
@@ -6192,9 +6202,26 @@ export default function EstimatorClient({
                     </section>
 
                     <SheetContent
+                        id="saved-qualities-sheet-panel"
                         side="bottom"
-                        onOpenAutoFocus={event => event.preventDefault()}
-                        className="max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:top-1/2 md:bottom-auto md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[min(calc(100vw-3rem),48rem)] md:rounded-[22px] md:border md:border-[var(--color-hairline)]"
+                        hideOverlay={isTutorialActive}
+                        showCloseButton={!isTutorialActive}
+                        onOpenAutoFocus={(e) => {
+                            if (isTutorialActive) {
+                                e.preventDefault()
+                            }
+                        }}
+                        onPointerDownOutside={(e) => {
+                            if (isTutorialActive) {
+                                e.preventDefault()
+                            }
+                        }}
+                        onInteractOutside={(e) => {
+                            if (isTutorialActive) {
+                                e.preventDefault()
+                            }
+                        }}
+                        className={`max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:top-1/2 md:bottom-auto md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[min(calc(100vw-3rem),48rem)] md:rounded-[22px] md:border md:border-[var(--color-hairline)] ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                     >
                         <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
                             <SheetTitle className="text-[17px]">Change quality</SheetTitle>
@@ -6234,6 +6261,7 @@ export default function EstimatorClient({
                 {/* ── SAVED FABRIC QUALITIES ─────────────────────────────── */}
                 <section
                     id="saved-qualities"
+                    data-estimator-field="savedQualityPicker"
                     aria-labelledby="saved-qualities-title"
                     aria-busy={!templatesLoaded}
                     className="premium-focus-surface mt-4 overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"

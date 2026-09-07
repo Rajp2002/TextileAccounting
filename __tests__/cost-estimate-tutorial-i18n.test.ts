@@ -38,6 +38,7 @@ describe('Cost Estimate tutorial translations', () => {
     it('recognises stable field IDs regardless of the displayed language', () => {
         expect(isTutorialField('entryMode')).toBe(true)
         expect(isTutorialField('savedQualities')).toBe(true)
+        expect(isTutorialField('savedQualityPicker')).toBe(true)
         expect(isTutorialField('liveCostShortcut')).toBe(true)
         expect(isTutorialField('liveCostReadiness')).toBe(true)
         expect(isTutorialField('liveCostMetrics')).toBe(true)
