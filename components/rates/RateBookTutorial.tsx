@@ -459,11 +459,26 @@ export function RateBookTutorial({
                 return
             }
 
+            const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200
+            const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800
             const panelRect = panel.current?.getBoundingClientRect()
             const modalBottom = panelRect ? panelRect.bottom : 220
-            const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
+            const modalLeft = panelRect ? panelRect.left : viewportWidth - 315
 
-            const targetIsTopRight = !isSheetStep && targetRect.top < 380 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
+            const rightThreshold = viewportWidth - 360
+            const topThreshold = Math.max(380, modalBottom + 20)
+
+            const targetOverlapsTopRight = !isSheetStep && (
+                (targetRect.top < topThreshold && targetRect.bottom > 0 && targetRect.right > rightThreshold) ||
+                (cardRect.top < topThreshold && cardRect.bottom > 0 && cardRect.right > rightThreshold)
+            )
+
+            const targetOverlapsBottomRight = (
+                (targetRect.bottom > viewportHeight - 420 && targetRect.top < viewportHeight && targetRect.right > rightThreshold) ||
+                (cardRect.bottom > viewportHeight - 420 && cardRect.top < viewportHeight && cardRect.right > rightThreshold)
+            )
+
+            const targetIsTopRight = (!isSheetStep && targetRect.top < 380 && (targetOverlapsTopRight || targetRect.right > rightThreshold)) || (targetOverlapsTopRight && !targetOverlapsBottomRight)
             setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
 
             const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
@@ -483,7 +498,8 @@ export function RateBookTutorial({
                 targetEl.scrollIntoView({ block: 'nearest', behavior: 'auto' })
             } else {
                 const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
-                const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                const isPanelAtTop = !targetIsTopRight
+                const minAllowedTop = isHorizontallyOverlapping && isPanelAtTop ? modalBottom + fixedPadding : 16
 
                 if (isNewSection) {
                     setIsSectionTransition(true)
@@ -656,84 +672,90 @@ export function RateBookTutorial({
                         aria-describedby="ratebook-tour-description"
                         tabIndex={-1}
                         onClick={(e) => e.stopPropagation()}
-                        className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
+                        className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[305px] max-w-[315px] min-h-[380px] sm:min-h-[410px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col justify-between ${
                             panelPlacement === 'bottom-right'
                                 ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
                                 : 'top-4 right-4 sm:top-6 sm:right-6'
                         }`}
                     >
-                        <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
-                            <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
-                                    isSectionTransition
-                                        ? 'bg-saffron text-white ring-saffron shadow-sm scale-105'
-                                        : 'bg-saffron/10 text-saffron-deep ring-saffron/25'
-                                }`}>
-                                    {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
-                                </span>
-                                <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
+                        <div className="flex-1 flex flex-col">
+                            <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] sm:text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
+                                        isSectionTransition
+                                            ? 'bg-saffron text-white ring-saffron shadow-sm scale-105'
+                                            : 'bg-saffron/10 text-saffron-deep ring-saffron/25'
+                                    }`}>
+                                        {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
+                                    </span>
+                                    <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
+                                </div>
+                                <h2 id="ratebook-tour-title" className="mt-2 text-base font-bold tracking-tight text-[var(--color-ink)] leading-snug">
+                                    {copy.fields[active.field]?.title}
+                                </h2>
+                                <p id="ratebook-tour-description" className="mt-2 text-xs sm:text-[13px] leading-relaxed text-[var(--color-ink)]/90">
+                                    {copy.fields[active.field]?.description}
+                                </p>
                             </div>
-                            <h2 id="ratebook-tour-title" className="mt-1.5 text-base sm:text-lg font-semibold text-[var(--color-ink)]">
-                                {copy.fields[active.field]?.title}
-                            </h2>
-                            <p id="ratebook-tour-description" className="mt-1 text-sm leading-relaxed text-[var(--color-ink)]/90">
-                                {copy.fields[active.field]?.description}
-                            </p>
                         </div>
 
-                        <p className="mt-2.5 text-xs text-[var(--color-muted)]">{copy.hint}</p>
+                        <div className="mt-4 pt-3 border-t border-hairline/60 space-y-3 shrink-0">
+                            <p className="text-[11px] text-[var(--color-muted)] leading-normal">{copy.hint}</p>
 
-                        <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
-                            <div
-                                className="h-full rounded-full bg-gradient-to-r from-saffron to-amber-500 transition-all duration-300 ease-out"
-                                style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
-                            />
-                        </div>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
+                                <div
+                                    className="h-full rounded-full bg-gradient-to-r from-saffron to-amber-500 transition-all duration-300 ease-out"
+                                    style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
+                                />
+                            </div>
 
-                        <div className="mt-3.5 flex items-center justify-between gap-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                data-tour-control="skip"
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    close()
-                                }}
-                            >
-                                {copy.skip}
-                            </Button>
-                            <span className="text-xs font-medium text-[var(--color-muted)]">{index + 1}/{steps.length}</span>
-                            <div className="flex gap-2">
+                            <div className="flex items-center justify-between gap-1.5 pt-0.5">
                                 <Button
                                     type="button"
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
-                                    data-tour-control="back"
-                                    disabled={index === 0}
+                                    data-tour-control="skip"
+                                    className="h-8 px-2 text-xs text-subtle hover:text-ink"
                                     onClick={(e) => {
                                         e.preventDefault()
                                         e.stopPropagation()
-                                        handleBack()
+                                        close()
                                     }}
                                 >
-                                    {copy.back}
+                                    {copy.skip}
                                 </Button>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    data-tour-control="next"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        handleNext()
-                                    }}
-                                    className="group gap-1.5 font-medium bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all"
-                                >
-                                    <span>{index === steps.length - 1 ? copy.finish : copy.next}</span>
-                                    <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/25 bg-white/20 px-1 text-[10px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
-                                </Button>
+                                <span className="text-xs font-semibold text-[var(--color-muted)] shrink-0">{index + 1}/{steps.length}</span>
+                                <div className="flex items-center gap-1.5">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        data-tour-control="back"
+                                        disabled={index === 0}
+                                        className="h-8 px-2.5 text-xs"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleBack()
+                                        }}
+                                    >
+                                        {copy.back}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        data-tour-control="next"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleNext()
+                                        }}
+                                        className="group h-8 gap-1 px-3 text-xs font-semibold bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all"
+                                    >
+                                        <span>{index === steps.length - 1 ? copy.finish : copy.next}</span>
+                                        <kbd className="hidden sm:inline-flex h-3.5 items-center rounded border border-white/25 bg-white/20 px-1 text-[9px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -179,9 +179,18 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(tutorialSource).toContain("!el.querySelector('[data-slot=\"sheet-content\"]')")
     })
 
-    it('dynamically docks tutorial panel to bottom-right when spotlighting top-right popover', () => {
+    it('dynamically docks tutorial panel to bottom-right when spotlighting top-right popover or toolbar section', () => {
         expect(tutorialSource).toContain('!isSheetStep && targetRect.top < 380')
         expect(tutorialSource).toContain("setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')")
+        expect(tutorialSource).toContain('cardRect.top < topThreshold && cardRect.bottom > 0 && cardRect.right > rightThreshold')
+        expect(tutorialSource).toContain('targetOverlapsTopRight && !targetOverlapsBottomRight')
+    })
+
+    it('scales down tutorial panel width and scales up vertical height to prevent section overlap', () => {
+        expect(tutorialSource).toContain('sm:w-[305px] max-w-[315px]')
+        expect(tutorialSource).toContain('min-h-[380px] sm:min-h-[410px]')
+        expect(tutorialSource).toContain('flex flex-col justify-between')
+        expect(tutorialSource).toContain('modalLeft = panelRect ? panelRect.left : viewportWidth - 315')
     })
 })
 
