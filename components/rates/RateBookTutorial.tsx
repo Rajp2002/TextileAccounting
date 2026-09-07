@@ -618,15 +618,12 @@ export function RateBookTutorial({
             {active && createPortal(
                 <div data-i18n-skip="true" lang={language} data-ratebook-portal="true" className="fixed inset-0 z-[100]" data-testid="rate-book-tutorial">
                     <div
-                        role="button"
-                        tabIndex={-1}
-                        aria-label={copy.skip}
+                        aria-hidden="true"
                         onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            close()
                         }}
-                        className="absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 cursor-pointer"
+                        className="absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 select-none cursor-default"
                         style={{
                             transition: 'clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
                             ...(rects ? {

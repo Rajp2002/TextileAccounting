@@ -159,10 +159,11 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(ratesClientSource).toContain('<RateBookTutorialLauncher')
     })
 
-    it('provides reliable skip tour and backdrop dismissal', () => {
+    it('ensures tour only skips via skip tour button or Escape shortcut, disabling outside click dismissal', () => {
         expect(tutorialSource).toContain('data-tour-control="skip"')
+        expect(tutorialSource).toContain("event.key === 'Escape'")
         expect(tutorialSource).toContain('data-ratebook-portal="true"')
-        expect(tutorialSource).toContain('onClick={(e) => {')
+        expect(tutorialSource).not.toMatch(/role="button"[\s\S]*?aria-label=\{copy\.skip\}[\s\S]*?close\(\)/)
     })
 
     it('protects QuickRateEditPopover from premature dismissal during tutorial', () => {
