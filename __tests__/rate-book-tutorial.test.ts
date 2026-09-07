@@ -101,7 +101,6 @@ describe('RatesClient Integration & Overlay Stability', () => {
             'addRateAction',
             'rateDrawerFields',
             'reviewRailWidget',
-            'activityAndArchive',
         ]
 
         for (const field of expectedFields) {

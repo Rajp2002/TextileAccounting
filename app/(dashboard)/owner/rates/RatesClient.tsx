@@ -2210,7 +2210,7 @@ export default function RatesClient({
             </aside>
 
             {/* Pin the archive policy to the bottom edge of the desktop rail. */}
-            <aside className="rates-archive-policy-rail-desktop" data-ratebook-section={6} data-ratebook-field="activityAndArchive" aria-label={tx('Rate Book archive policy')}>
+            <aside className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
                 <ArchivePolicyNotice />
             </aside>
 

@@ -8,7 +8,7 @@ const en = {
     "Rate details & trends",
     "Fast inline actions",
     "Full rate editor",
-    "Review rail & audit"
+    "Review rail"
   ],
   "sectionProgress": "Section {current} of {total}",
   "replay": "How Rate Book works · Guided tour",
@@ -115,7 +115,7 @@ const hi: typeof en = {
     "रेट विवरण और रुझान",
     "त्वरित इनलाइन कार्य",
     "विस्तृत रेट संपादक",
-    "रिव्यू रेल और ऑडिट"
+    "रिव्यू रेल"
   ],
   "sectionProgress": "अनुभाग {current} का {total}",
   "replay": "रेट बुक कैसे काम करता है · गाइडेड टूर",
@@ -222,7 +222,7 @@ const gu: typeof en = {
     "રેટ વિગતો અને વલણો",
     "ઝડપી ઇનલાઇન ક્રિયાઓ",
     "વિગતવાર રેટ સંપાદક",
-    "રિવ્યૂ રેલ અને ઓડિટ"
+    "રિવ્યૂ રેલ"
   ],
   "sectionProgress": "વિભાગ {current} / {total}",
   "replay": "રેટ બુક કેવી રીતે કાર્ય કરે છે · ગાઇડેડ ટૂર",

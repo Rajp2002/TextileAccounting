@@ -42,9 +42,8 @@ const ORDERED_STEPS: { section: number; field: RatebookTutorialField; inSheet?: 
     { section: 4, field: 'addRateAction' },
     { section: 4, field: 'rateDrawerFields', inSheet: true },
 
-    // Section 5: Review rail & audit
+    // Section 5: Review rail
     { section: 5, field: 'reviewRailWidget' },
-    { section: 5, field: 'activityAndArchive' },
 ]
 
 function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; card: HTMLElement | null } {
