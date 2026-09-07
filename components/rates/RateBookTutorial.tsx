@@ -474,9 +474,10 @@ export function RateBookTutorial({
                 (cardRect.top < topThreshold && cardRect.bottom > 0 && cardRect.right > rightThreshold)
             )
 
+            const panelHeight = panelRect ? panelRect.height : 320
             const targetOverlapsBottomRight = (
-                (targetRect.bottom > viewportHeight - 440 && targetRect.top < viewportHeight && targetRect.right > rightThreshold) ||
-                (cardRect.bottom > viewportHeight - 440 && cardRect.top < viewportHeight && cardRect.right > rightThreshold)
+                (targetRect.bottom > viewportHeight - panelHeight && targetRect.top < viewportHeight && targetRect.right > rightThreshold) ||
+                (cardRect.bottom > viewportHeight - panelHeight && cardRect.top < viewportHeight && cardRect.right > rightThreshold)
             )
 
             const targetIsTopRight = (!isSheetStep && targetRect.top < 380 && (targetOverlapsTopRight || targetRect.right > rightThreshold)) || (targetOverlapsTopRight && !targetOverlapsBottomRight)
@@ -670,13 +671,13 @@ export function RateBookTutorial({
                         aria-describedby="ratebook-tour-description"
                         tabIndex={-1}
                         onClick={(e) => e.stopPropagation()}
-                        className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] min-h-[420px] sm:min-h-[440px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col justify-between ${
+                        className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
                             panelPlacement === 'bottom-right'
                                 ? 'bottom-4 right-4 sm:bottom-5 sm:right-5'
                                 : 'top-4 right-4 sm:top-5 sm:right-5'
                         }`}
                     >
-                        <div className="flex-1 flex flex-col">
+                        <div className="flex flex-col">
                             <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
@@ -688,17 +689,17 @@ export function RateBookTutorial({
                                     </span>
                                     <span className="text-xs font-semibold text-[var(--color-ink)]/75">· {copy.sections[active.section]}</span>
                                 </div>
-                                <h2 id="ratebook-tour-title" className="mt-2.5 text-base sm:text-[17px] font-bold tracking-tight text-[var(--color-ink)] leading-snug">
+                                <h2 id="ratebook-tour-title" className="mt-3 text-base sm:text-[17px] font-bold tracking-tight text-[var(--color-ink)] leading-snug sm:leading-[1.4]">
                                     {copy.fields[active.field]?.title}
                                 </h2>
-                                <p id="ratebook-tour-description" className="mt-2.5 text-xs sm:text-[13.5px] leading-relaxed text-[var(--color-ink)]/90">
+                                <p id="ratebook-tour-description" className="mt-3 text-xs sm:text-[13.5px] leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">
                                     {copy.fields[active.field]?.description}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="mt-3.5 pt-3 border-t border-hairline/60 space-y-3 shrink-0">
-                            <p className="text-[11.5px] text-[var(--color-muted)] leading-normal">{copy.hint}</p>
+                        <div className="mt-4 pt-3.5 border-t border-hairline/60 space-y-3 shrink-0">
+                            <p className="text-[11.5px] text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
 
                             <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                                 <div

@@ -655,10 +655,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                         </span>
                         <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
                     </div>
-                    <h2 id="cost-tour-title" className="mt-1.5 text-base sm:text-lg font-semibold text-[var(--color-ink)]">{copy.fields[active.field].title}</h2>
-                    <p id="cost-tour-description" className="mt-1 text-sm leading-relaxed text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
+                    <h2 id="cost-tour-title" className="mt-2 text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug sm:leading-[1.4]">{copy.fields[active.field].title}</h2>
+                    <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
                 </div>
-                <p className="mt-2.5 text-xs text-[var(--color-muted)]">{copy.hint}</p>
+                <p className="mt-3 text-xs text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
                 <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                     <div
                         className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300 ease-out"

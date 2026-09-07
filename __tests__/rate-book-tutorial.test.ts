@@ -187,10 +187,11 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(tutorialSource).toContain('targetOverlapsTopRight && !targetOverlapsBottomRight')
     })
 
-    it('scales down tutorial panel width and scales up vertical height to prevent section overlap', () => {
+    it('adapts tutorial panel height to content with minimal blank space and safe width', () => {
         expect(tutorialSource).toContain('sm:w-[260px] max-w-[268px]')
-        expect(tutorialSource).toContain('min-h-[420px] sm:min-h-[440px]')
-        expect(tutorialSource).toContain('flex flex-col justify-between')
+        expect(tutorialSource).toContain('h-auto')
+        expect(tutorialSource).toContain('flex flex-col')
+        expect(tutorialSource).not.toContain('min-h-[420px]')
         expect(tutorialSource).toContain('modalLeft = panelRect ? panelRect.left : viewportWidth - 268')
     })
 
