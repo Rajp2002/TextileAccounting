@@ -187,10 +187,22 @@ describe('RatesClient Integration & Overlay Stability', () => {
     })
 
     it('scales down tutorial panel width and scales up vertical height to prevent section overlap', () => {
-        expect(tutorialSource).toContain('sm:w-[305px] max-w-[315px]')
-        expect(tutorialSource).toContain('min-h-[380px] sm:min-h-[410px]')
+        expect(tutorialSource).toContain('sm:w-[260px] max-w-[268px]')
+        expect(tutorialSource).toContain('min-h-[420px] sm:min-h-[440px]')
         expect(tutorialSource).toContain('flex flex-col justify-between')
-        expect(tutorialSource).toContain('modalLeft = panelRect ? panelRect.left : viewportWidth - 315')
+        expect(tutorialSource).toContain('modalLeft = panelRect ? panelRect.left : viewportWidth - 268')
+    })
+
+    it('prioritizes table rows and section cards over outer cards to avoid massive card spotlights', () => {
+        const trIndex = tutorialSource.indexOf("target.closest<HTMLElement>('tbody tr')")
+        const sectionCardIndex = tutorialSource.indexOf("target.closest<HTMLElement>('[data-ratebook-section-card]')")
+        const outerCardIndex = tutorialSource.indexOf("target.closest<HTMLElement>('[data-slot=\"card\"]')")
+
+        expect(trIndex).toBeGreaterThan(-1)
+        expect(sectionCardIndex).toBeGreaterThan(-1)
+        expect(outerCardIndex).toBeGreaterThan(-1)
+        expect(trIndex).toBeLessThan(outerCardIndex)
+        expect(sectionCardIndex).toBeLessThan(outerCardIndex)
     })
 })
 
