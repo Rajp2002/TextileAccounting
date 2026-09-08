@@ -1,0 +1,133 @@
+
+> textile-saas@0.1.0 prebuild
+> npm run test
+
+
+> textile-saas@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+
+ Test Files  217 passed (217)
+      Tests  1444 passed | 1 skipped (1445)
+   Start at  01:37:08
+   Duration  14.24s (transform 10.63s, setup 0ms, import 82.12s, tests 18.89s, environment 71ms)
+
+
+> textile-saas@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.2.12 (webpack)
+- Environments: .env.production.local, .env.local
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · optimizePackageImports
+  · serverActions
+
+  Creating an optimized production build ...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /Users/rajpatel/Projects/textile Saas/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ✓ (pwa) Found a custom worker implementation at /Users/rajpatel/Projects/textile Saas/worker/index.ts.
+ ✓ (pwa) Building the custom worker to /Users/rajpatel/Projects/textile Saas/public/worker-b17bfe3dd647df9d.js...
+ ○ (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ ○ (pwa)   Documents (pages): /_offline
+ ○ (pwa) Custom runtimeCaching array found, using it instead of the default one.
+✓ Compiled successfully in 30.9s
+  Running TypeScript ...
+  Finished TypeScript in 42s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/50) ...
+  Generating static pages using 15 workers (12/50)
+  Generating static pages using 15 workers (24/50)
+  Generating static pages using 15 workers (37/50)
+✓ Generating static pages using 15 workers (50/50) in 1099ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /api/analytics/plan-events
+├ ƒ /api/analytics/web-vitals
+├ ƒ /api/billing/checkout-script
+├ ƒ /api/billing/checkout-state
+├ ƒ /api/billing/create-order
+├ ƒ /api/billing/invoice/[invoiceId]
+├ ƒ /api/billing/receipt/[paymentId]
+├ ƒ /api/billing/redeem-referral-year
+├ ƒ /api/billing/status
+├ ƒ /api/billing/verify-payment
+├ ƒ /api/referrals/apply
+├ ƒ /api/referrals/generate
+├ ƒ /api/subscriptions/auto-renew
+├ ƒ /api/subscriptions/create
+├ ƒ /api/subscriptions/trial
+├ ƒ /api/telemetry/logout
+├ ƒ /api/telemetry/sign-in
+├ ƒ /api/webhooks/razorpay
+├ ○ /auth/auth-code-error
+├ ƒ /auth/callback
+├ ○ /auth/confirm
+├ ƒ /auth/signout
+├ ○ /feature-archived
+├ ƒ /forgot-password
+├ ○ /join
+├ ƒ /locked
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ○ /offline
+├ ƒ /onboarding
+├ ƒ /owner/advances
+├ ƒ /owner/analytics
+├ ƒ /owner/archive
+├ ƒ /owner/archive/market-runs/[id]
+├ ƒ /owner/billing
+├ ƒ /owner/commercials
+├ ƒ /owner/data-export
+├ ƒ /owner/dispatches
+├ ƒ /owner/estimator
+├ ƒ /owner/fixed-workers
+├ ƒ /owner/inventory
+├ ƒ /owner/ledger
+├ ƒ /owner/machines
+├ ƒ /owner/market-runs
+├ ƒ /owner/market-runs/[id]
+├ ƒ /owner/operations
+├ ƒ /owner/orders
+├ ƒ /owner/payroll
+├ ƒ /owner/production
+├ ƒ /owner/quotes
+├ ƒ /owner/rates
+├ ƒ /owner/settings
+├ ƒ /owner/settings/audit
+├ ○ /owner/settings/dpa
+├ ƒ /owner/stock
+├ ƒ /owner/system-health
+├ ƒ /owner/today
+├ ○ /privacy
+├ ○ /privacy-request
+├ ○ /refund-policy
+├ ƒ /reset-password
+├ ○ /security-incident
+├ ○ /signup
+├ ƒ /supervisor/attendance
+├ ƒ /supervisor/dashboard
+├ ƒ /supervisor/machines
+├ ƒ /supervisor/production
+├ ƒ /supervisor/workers
+├ ○ /terms
+├ ƒ /track/[token]
+└ ○ /verify
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
