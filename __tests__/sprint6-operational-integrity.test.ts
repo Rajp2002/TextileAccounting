@@ -54,13 +54,10 @@ describe('Sprint 6 operational integrity', () => {
     it('keeps the customer-facing state changes explicit and refreshable', () => {
         const ordersClient = read('app/(dashboard)/owner/orders/OrdersClient.tsx')
         const dispatchClient = read('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
-        const sellDialog = read('components/dispatches/SellAndDispatchDialog.tsx')
 
         expect(ordersClient).toContain('title="Cancel order?"')
         expect(ordersClient).toContain('Existing production, stock, sales, dispatches, receipts, and payments')
         expect(dispatchClient).toContain('await refreshDispatchData()')
         expect(dispatchClient).toContain('Due after first dispatch')
-        expect(sellDialog).toContain('Credit days (0–365)')
-        expect(sellDialog).toContain('Starts from dispatch date + credit days')
     })
 })

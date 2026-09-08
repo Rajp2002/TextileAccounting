@@ -14,12 +14,9 @@ function readProjectFile(path: string) {
 describe('P2 Batch 3 dispatch / sale / receipt correctness', () => {
     it('persists sale and dispatch idempotency keys and wires them from client to RPC', () => {
         const migration = readProjectFile(batch3Migration)
-        const dispatchActions = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
         const orderActions = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
-        const sellDialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
         const dispatchModal = readProjectFile('components/dispatches/DispatchModals.tsx')
         const dispatchesClient = readProjectFile('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
-        const types = readProjectFile('lib/dispatch/sell-and-dispatch-types.ts')
 
         expect(migration).toContain('ADD COLUMN IF NOT EXISTS idempotency_key TEXT')
         expect(migration).toContain('idx_fabric_stock_sales_org_idempotency_key')
@@ -28,10 +25,7 @@ describe('P2 Batch 3 dispatch / sale / receipt correctness', () => {
         expect(migration).toContain('AND s.idempotency_key = v_idempotency_key')
         expect(migration).toContain('AND d.idempotency_key = v_idempotency_key')
 
-        expect(types).toContain('idempotencyKey?: string | null')
-        expect(dispatchActions).toContain('p_idempotency_key: cleanText(input.idempotencyKey)')
         expect(orderActions).toContain('p_idempotency_key: idempotencyKey?.trim() || null')
-        expect(sellDialog).toContain("createClientIdempotencyKey('stock-sale')")
         expect(dispatchModal).toContain("createClientIdempotencyKey('order-dispatch')")
         expect(dispatchesClient).toContain("createClientIdempotencyKey('stock-dispatch')")
     })

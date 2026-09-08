@@ -1,0 +1,18 @@
+Replayed 277 historical migrations; skipped 4 external WhatsApp schedules.
+PASS cutover preserves historical production and legacy lots without importing them
+PASS production creates quality stock exactly once on reviewed-save retries
+PASS opening is additive once, normalizes labels, and validates retry payloads
+PASS production replacement emits only the final net delta; zero reverses production
+PASS historical corrections apply only the difference from the cutover baseline
+PASS reviewed balance corrections reject stale totals and repeated requests do not duplicate
+PASS simultaneous production in separate shifts loses no metres
+PASS simultaneous retries of one production request save once
+PASS two reviewed stock corrections cannot overwrite one another
+PASS job quality changes transfer production without changing total available metres
+PASS stock tables and RPCs isolate owners, reject supervisors and direct writes
+PASS locked tenants, revoked owners, Lite and missing JWT roles cannot adjust stock
+PASS legacy stock insertions and public sale/adjustment functions are retired
+PASS Full Suite supervisor production and owner corrections use only new quality stock
+PASS historical pending dispatch still creates its package without debiting new quality stock
+PASS history keyset pagination reads more than 50 movements without gaps
+PASS 16 database scenarios on PostgreSQL 18.4

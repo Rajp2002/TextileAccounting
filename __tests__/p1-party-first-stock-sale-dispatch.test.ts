@@ -9,28 +9,7 @@ function readProjectFile(path: string) {
 }
 
 describe('P1 party-first stock sale dispatch refinement', () => {
-    it('supports market-run stock sale without a fake order', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
-        expect(action).toContain('createPartyStockSaleAndOptionalDispatch')
-        expect(action).toContain("return { success: false, stage: 'validation', message: 'Party name is required' }")
-        expect(migration).toContain('order_id,')
-        expect(migration).toContain('NULL,')
-        expect(migration).toContain('party_name')
-        expect(migration).toContain("NULLIF(btrim(p_party_name), '')")
-    })
 
-    it('supports save-only, full dispatch, partial dispatch, and pending dispatch meters', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
-        expect(action).toContain("dispatchNow")
-        expect(action).toContain("create_party_stock_sale_dispatch_v1")
-        expect(action).toContain('pendingDispatchMeters')
-        expect(migration).toContain("WHEN NOT p_dispatch_now THEN 'not_dispatched'")
-        expect(migration).toContain("WHEN v_actual_dispatched_meters + 0.01 < p_sold_meters THEN 'partially_dispatched'")
-        expect(migration).toContain("ELSE 'dispatched'")
-        expect(migration).toContain('v_pending_dispatch_meters := GREATEST(p_sold_meters - v_actual_dispatched_meters, 0)')
-    })
 
     it('snapshots cost, gross profit inputs, credit terms, and named receivables', () => {
         const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
@@ -43,14 +22,6 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(receivables).not.toContain("|| 'Anonymous'")
     })
 
-    it('keeps partial dispatch out of stock discrepancy creation', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        const partyFirstAction = action.split('export async function sellAndDispatchTakas')[0]
-        const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
-        expect(partyFirstAction).not.toContain("stock_discrepancies")
-        expect(migration).not.toContain('stock_discrepancies')
-        expect(migration).not.toContain("'discrepancy'")
-    })
 
     it('validates over-selling with guarded atomic stock decrement', () => {
         const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
@@ -61,23 +32,7 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(migration).toContain("RAISE EXCEPTION 'Cannot sell more than available stock'")
     })
 
-    it('allows sold takas to be optional when sold meters are provided', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
-        const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
-        expect(action).toContain('p_sold_takas: soldTakas')
-        expect(dialog).toContain('Sold takas <span')
-        expect(dialog).toContain('Leave blank if unknown')
-        expect(migration).toContain('p_sold_takas NUMERIC')
-        expect(migration).toContain('COALESCE(p_sold_takas')
-    })
 
-    it('keeps the order-based dispatch RPC path for order and both-mode regressions', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        expect(action).toContain('export async function sellAndDispatchTakas')
-        expect(action).toContain("supabase.rpc('create_stock_sale_dispatch'")
-        expect(action).toContain('p_order_id: input.orderId')
-    })
 
     it('keeps ledger archived and updates commercials through the existing lightweight view', () => {
         const phaseScope = readProjectFile('lib/phase1-scope.ts')
@@ -88,28 +43,7 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(migration).toContain("'overdue'")
     })
 
-    it('uses production wording for booked profit, due date basis, and available-for-sale stock', () => {
-        const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
-        const stock = readProjectFile('app/(dashboard)/owner/stock/TakaStockClient.tsx')
-        const commercials = readProjectFile('app/(dashboard)/owner/commercials/CommercialsClient.tsx')
-        expect(dialog).toContain('Due date')
-        expect(stock).toContain('Available for sale')
-        expect(stock).toContain('Sold Pending Dispatch')
-        expect(commercials).toContain('Booked Gross Profit')
-        expect(commercials).not.toMatch(/profit received/i)
-    })
 
-    it('keeps sales meter-first and treats takas as optional display metadata', () => {
-        const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
-        const stock = readProjectFile('app/(dashboard)/owner/stock/TakaStockClient.tsx')
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        expect(dialog).toContain('optional display count')
-        expect(dialog).toContain('Metres Sold reserve Godown Stock. Taka is provisional and changes only when entered.')
-        expect(stock).toContain('Sell by metres')
-        expect(stock).toContain('approx ${stockUnits')
-        expect(stock).not.toContain('positiveWholeInput')
-        expect(action).toContain(".gt('available_meters', 0)")
-    })
 
     it('verifies direct receipt confirmation, deferring credit due date, and tracking removal', () => {
         const action = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
@@ -185,22 +119,4 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(receiptMigration).toContain("AND d.stock_sale_id = v_sale.id")
     })
 
-    it('selects or creates persistent parties during stock sale entry', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
-        const migration = readProjectFile('supabase/migrations/20260601010000_commercial_party_identity.sql')
-
-        expect(action).toContain(".from('parties')")
-        expect(action).toContain('p_party_id: partyId')
-        expect(dialog).toContain('Search existing party or type new name')
-        expect(dialog).toContain('New party will be saved with this sale')
-        expect(dialog).toContain('applyPartyToForm')
-        expect(dialog).toContain('Multiple saved parties share this name')
-        expect(dialog).toContain('partyDetailLabel')
-        expect(dialog).toContain('hasAmbiguousPartyName')
-        expect(dialog).not.toContain('sell-stock-party-options')
-        expect(migration).toContain('DROP INDEX IF EXISTS idx_parties_org_name_active')
-        expect(migration).toContain('v_party_id := v_party.id')
-        expect(migration).toContain('party_id = EXCLUDED.party_id')
-    })
 })
