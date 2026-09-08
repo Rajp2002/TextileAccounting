@@ -79,13 +79,9 @@ describe('UX-012 terminology baseline', () => {
     })
 
     it('keeps Sale, Dispatch, receipt confirmation, and their metre quantities explicit', () => {
-        const sale = source('components/dispatches/SellAndDispatchDialog.tsx')
         const dispatch = source('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
         const locale = source('lib/i18n/locales/en.ts')
 
-        expect(sale).toContain('Sale, Dispatch, and Party Receipt Confirmation remain separate events.')
-        expect(sale).toContain('Metres Sold')
-        expect(sale).toContain('Metres Sent')
         expect(locale).toContain('Metres Received by Party')
         expect(dispatch).toContain('Delivery Challan Number')
     })
@@ -123,8 +119,7 @@ describe('UX-012 terminology baseline', () => {
             'components/factory-today/TodayKpiStrip.tsx',
             'components/factory-today/PayrollHisaabCard.tsx',
             'app/(dashboard)/owner/advances/AdvancesClient.tsx',
-            'app/(dashboard)/owner/stock/TakaStockClient.tsx',
-            'components/dispatches/SellAndDispatchDialog.tsx',
+            'app/(dashboard)/owner/stock/QualityStockClient.tsx',
             'lib/generate-payslip.ts',
             'lib/whatsapp.ts',
         ].map(source).join('\n')

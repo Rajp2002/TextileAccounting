@@ -96,7 +96,7 @@ describe('B15 authentication, privacy, accessibility, and PWA guardrails', () =>
             source('app/(dashboard)/owner/dispatches/DispatchesClient.tsx'),
             source('app/(dashboard)/owner/fixed-workers/page.tsx'),
             source('app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
-            source('app/(dashboard)/owner/stock/TakaStockClient.tsx'),
+            source('app/(dashboard)/owner/stock/QualityStockClient.tsx'),
         ]
         for (const file of userFacingSources) {
             expect(file).not.toContain('dangerouslySetInnerHTML')

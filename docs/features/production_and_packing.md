@@ -1,3 +1,9 @@
+# Production and stock
+
+Current stock behavior is defined in [Quality stock](inventory_and_stock.md). Saved production adds metres by fabric quality; the previous package/taka stock and stock-sale entry surfaces have been removed. Full Suite historical dispatch/receipt/payment records remain available.
+
+## Historical pre-replacement workflow (reference only)
+
 # Production and Packing
 
 Last analyzed from the active codebase on July 9, 2026.

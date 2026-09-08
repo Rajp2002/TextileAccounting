@@ -28,7 +28,7 @@ All of these actions are owner-only. Base now supports dated shift assignment, m
 ## Kept for Full Suite
 
 - Formal party-backed quotations and orders.
-- Market runs, inventory/godown stock, sales, dispatch, and commercial receivables.
+- Market runs, sales, dispatch, and commercial receivables. Quality metre stock is now included; see features/inventory_and_stock.md.
 - Supervisor or production-recorder access, day/night shift workflows, loom assignments, downtime, and floor accountability.
 - Full Suite worker master data, attendance, fixed salary, statutory deductions, payslips, and payroll controls.
 - Factory Today, analytics, automated alerts, WhatsApp, and operational reporting.
@@ -36,7 +36,7 @@ All of these actions are owner-only. Base now supports dated shift assignment, m
 ## Boundary and upgrade rules
 
 - Base uses separate `base_production_*`, `base_worker_advances`, and `base_payroll_settlements` tables. It does not write to Full Suite `production_logs`, `workers`, or `payroll_settlements`.
-- A Base production job is not a party order and does not create stock, dispatch, receivables, or a customer quotation lifecycle.
+- A Base production job is not a party order and adds saved production to quality metre stock, but does not create dispatch, receivables, or a customer quotation lifecycle.
 - Costing economics remain planned economics; Base does not claim actual stock margin or order profitability.
 - A Full Suite customer may use the smaller Base workspace, but the Full Suite navigation remains the place for the formal factory workflow.
 - A supervisor login becomes a future product decision only if owner-only entry stops working for a real factory—for example, multiple shifts, multiple sites, or too many daily records—not as part of the initial Base release.

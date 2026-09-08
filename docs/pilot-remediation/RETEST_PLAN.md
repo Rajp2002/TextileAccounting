@@ -632,7 +632,7 @@ Acceptance:
 - Preserve explicit `party_id` on new receivables and separation of distinct parties that share a normalized display name.
 - Preserve row-locked lot mutation: a concurrent sale and adjustment that together exceed availability yield one success, one rejection, one movement, and a non-negative lot.
 - Preserve fresh second-session market summaries and the formal under-two-second budget for the exercised 26-run fixture.
-- Focused regression command: `npx vitest run __tests__/b12-stock-source-integrity.test.ts`; run `node scripts/qa/b12-market-stock-runtime-proof.mjs` in isolated QA, and use `--production` only against an approved exact deployment when stock-source, sale, dispatch, receipt, commercial party, or market-summary boundaries change.
+- September 8 stock replacement: the old stock runtime probe is retired. Use `npm run test:stock-db` against disposable local PostgreSQL and follow [Quality stock](../features/inventory_and_stock.md). The historical migration assertions in `__tests__/b12-stock-source-integrity.test.ts` remain for retained records; they are not the new stock contract.
 - Canonical evidence is `output/qa/blocked-row-campaign/B12-qa-market-stock.json` and `B12-production-market-stock.json` on production deployment `dpl_q1bQa4dHd9bFKFU8ZphcVQNcE2d1`.
 - Canonical counts after B12: 317 pass, 3 fail, 56 blocked, and 1 not applicable. Begin B13; do not rerun B12 unless one of these boundaries changes.
 

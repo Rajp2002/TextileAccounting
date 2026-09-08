@@ -1,0 +1,13 @@
+
+> textile-saas@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.8 /Users/rajpatel/.codex/worktrees/3327/textile Saas
+
+
+ Test Files  215 passed (215)
+      Tests  1422 passed | 1 skipped (1423)
+   Start at  23:22:07
+   Duration  13.95s (transform 9.12s, setup 0ms, import 77.09s, tests 18.79s, environment 66ms)
+

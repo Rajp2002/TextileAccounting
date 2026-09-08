@@ -119,8 +119,8 @@ Keep looms productive when client orders are light while still knowing cost, sto
 2. Owner sets the target meters and cost assumptions.
 3. Supervisor logs production against the market-run production anchor.
 4. Owner tracks produced meters, expected in-godown meters, sold meters, revenue, cost, and profit.
-5. Production creates expected stock in the godown ledger; this is not physical inward confirmation.
-6. Owner records a stock sale against a saved party or newly captured party details, creating a receivable.
+5. Production adds metres to the replacement quality stock balance.
+6. New stock-sale entry is retired. Historical sales remain available for dispatch and payment completion.
 7. Owner dispatches pending sold meters in one or more batches and reviews any shortage or excess at receipt.
 8. Owner closes the run when done.
 
@@ -199,39 +199,18 @@ Owner no longer waits for register handoff to understand the day.
 - `machines`
 - worker aggregates
 
-## 7. Stock and Godown Workflow
+## 7. Quality Stock Workflow
 
-Entry point: `/owner/stock`
+Entry point: `/owner/stock` (owner with production access).
 
-### Goal
+1. Save production in the existing register. Its metres appear under the production's fabric quality automatically.
+2. Review quality balances and movement history; filter history by quality or load older movements.
+3. Record verified remaining pre-cutover fabric once as opening stock. Do not include historical fabric committed to legacy pending dispatches.
+4. Correct a verified current balance with a reason. Concurrent changes require a reload and review.
+5. Production correction or reversal applies only its net difference atomically. No piece registration, stock sale, order reservation, or customer directory is involved.
 
-Know what fabric should exist in godown, what is actually dispatched, and which differences need owner review.
+See [Quality stock](docs/features/inventory_and_stock.md) for migration, baseline and future standalone dispatch rules. Other sections describing old stock-sale creation are historical; those entry points were removed in this replacement.
 
-### Flow
-
-1. Owner opens Stock.
-2. Owner reviews expected available takas/meters and stock value at cost.
-3. Market-run production contributes expected stock automatically from production records.
-4. Owner adds manual/opening/order stock lots where needed.
-5. Owner records a party-first stock sale by selecting a saved party, auto-linking an unambiguous party name, or creating a new party with distinguishing contact details.
-6. The sale creates a named Commercials receivable, a `party_id` link where available, and pending dispatch meters.
-7. If the lot has no saleable meters left and its market run is closed or sold out, it moves from Active Stock to Archive / History.
-8. Owner dispatches sold stock fully or partially.
-9. Any receipt shortage or excess becomes a stock discrepancy with Needs Review status.
-10. Owner adjustments remain traceable and owner-only.
-11. Commercials reflects realized stock profit and collection state.
-
-### Pain Point Replaced
-
-Loose godown memory becomes an expected ledger reconciled against dispatch reality.
-Pending dispatch is tracked separately from Active Stock so sold-out closed runs do not keep empty lots in the active godown list.
-
-### Outputs
-
-- `fabric_stock_lots`
-- `fabric_stock_sales`
-- `fabric_stock_movements`
-- `fabric_stock_inward_drafts`
 
 ## 8. Dispatch and Tracking Workflow
 
