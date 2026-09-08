@@ -35,7 +35,7 @@ function hasOpenBillingWindow(currentEnd: string | null | undefined, nowMs = Dat
  * immediately before it.
  */
 export async function deleteAccountPermanently(input: DeleteAccountInput): Promise<DeleteAccountResult> {
-    const { profile, user } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })
 
     const rateLimit = await checkRateLimit(getDestructiveLimiter, `delete-account:${user.id}`)
     if (!rateLimit.success) {

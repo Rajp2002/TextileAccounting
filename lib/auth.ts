@@ -1,5 +1,6 @@
 import 'server-only'
 import { cache } from 'react'
+import { getCachedOrgPlanAccess } from './subscription'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
@@ -175,7 +176,7 @@ export const getCachedSession = cache(async (): Promise<{
  * @returns { user, profile: { role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in } } on success
  * @throws redirect to /login if user is not authenticated or unauthorized
  */
-export async function requireRole(allowedRoles: string[]) {
+export async function requireRole(allowedRoles: string[], options: { allowFreeAccount?: boolean } = {}) {
     const session = await getCachedSession()
 
     if (!session) {
@@ -187,6 +188,11 @@ export async function requireRole(allowedRoles: string[]) {
 
     if (!allowedRoles.includes(role)) {
         redirect(getRoleHomePath(role))
+    }
+
+    if (!options.allowFreeAccount && role !== 'admin') {
+        const access = await getCachedOrgPlanAccess(org_id)
+        if (access.effectiveTier === 'free' || access.freeAccount) redirect('/free')
     }
 
     return {
@@ -233,6 +239,8 @@ export async function getAuthenticatedUser() {
 
     const { user, profile } = session
     const { role, org_id } = profile
+    const access = await getCachedOrgPlanAccess(org_id)
+    if (access.effectiveTier === 'free' || access.freeAccount) redirect('/free')
 
     // Return a supabase client scoped to this user's session for RLS queries
     const supabase = await createClient()

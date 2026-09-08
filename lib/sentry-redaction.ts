@@ -12,6 +12,7 @@ type RedactableSentryEvent = {
     user?: Record<string, unknown>
     request?: {
         url?: string
+        data?: unknown
         query_string?: unknown
         cookies?: string
         headers?: Record<string, unknown>
@@ -44,6 +45,8 @@ export function redactSentryEvent<T>(event: T): T {
     if (redactionTarget.message) redactionTarget.message = redactSensitiveText(redactionTarget.message)
 
     if (redactionTarget.request) {
+        // Request bodies may contain commercially sensitive form values.
+        delete redactionTarget.request.data
         if (redactionTarget.request.url) redactionTarget.request.url = redactSensitiveText(redactionTarget.request.url)
         if (redactionTarget.request.query_string) redactionTarget.request.query_string = "[redacted]"
         if (redactionTarget.request.cookies) redactionTarget.request.cookies = "[redacted]"

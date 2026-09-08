@@ -85,7 +85,7 @@ export function isPlanAnalyticsProperties(event: PlanAnalyticsEventName, value: 
 
 /** Fire-and-forget browser event; the server derives the organization and plan. */
 export async function trackPlanEvent(eventName: PlanAnalyticsEventName, properties: PlanAnalyticsProperties = {}): Promise<boolean> {
-  if (typeof window === 'undefined' || !isPlanAnalyticsProperties(eventName, properties)) return false
+  if (typeof window === 'undefined' || window.location?.pathname === '/free' || window.location?.pathname.startsWith('/free/') || !isPlanAnalyticsProperties(eventName, properties)) return false
   try {
     const response = await fetch('/api/analytics/plan-events', {
       method: 'POST',

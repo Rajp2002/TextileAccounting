@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslation } from '@/lib/i18n/context'
+import { freeText } from '@/lib/i18n/free-tier'
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -50,10 +52,11 @@ function getPasswordStrength(password: string): {
 }
 
 function SignupForm() {
+    const { language } = useTranslation()
     const searchParams = useSearchParams()
     
     const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '')
-    const selectedPlan = searchParams?.get('plan') === 'base' ? 'base' as const : 'lite' as const
+    const selectedPlan = searchParams?.get('plan') === 'free' ? 'free' as const : searchParams?.get('plan') === 'base' ? 'base' as const : 'lite' as const
     
     const [loading, setLoading] = useState(false)
     const [ownerName, setOwnerName]     = useState('')
@@ -70,7 +73,7 @@ function SignupForm() {
 
     const validate = () => {
         const newErrors: Record<string, string> = {}
-        if (!factoryName.trim() || factoryName.trim().length < 2)
+        if (selectedPlan !== 'free' && (!factoryName.trim() || factoryName.trim().length < 2))
             newErrors.factoryName = 'Factory name must be at least 2 characters'
         if (!ownerName.trim() || ownerName.trim().length < 2)
             newErrors.ownerName = 'Name must be at least 2 characters'
@@ -108,7 +111,7 @@ function SignupForm() {
                 phone: normalizeIndianPhone(phone),
                 password,
                 confirmPassword,
-                factoryName: factoryName.trim(),
+                factoryName: selectedPlan === 'free' ? ownerName.trim() : factoryName.trim(),
                 referralCode: referralCode.trim() || undefined,
                 selectedPlan,
                 legalAcceptance: {
@@ -134,12 +137,12 @@ function SignupForm() {
 
     return (
         <AuthLayout
-            title="Create your factory"
-            subtitle="Get started as a factory owner"
+            title={selectedPlan === 'free' ? freeText(language,'signupTitle') : "Create your factory"}
+            subtitle={selectedPlan === 'free' ? freeText(language,'signupSubtitle') : 'Get started as a factory owner'}
         >
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 {/* Factory Name */}
-                <div className="space-y-1.5">
+                {selectedPlan !== 'free' && <div className="space-y-1.5">
                     <Label htmlFor="factoryName" className="text-gray-700 font-medium">
                         Factory name
                     </Label>
@@ -157,7 +160,7 @@ function SignupForm() {
                         disabled={loading}
                     />
                     {errors.factoryName && <p className="text-xs text-red-500 mt-1">{errors.factoryName}</p>}
-                </div>
+                </div>}
 
                 {/* Owner Name */}
                 <div className="space-y-1.5">

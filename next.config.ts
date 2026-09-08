@@ -132,6 +132,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
+      { source: '/free/:path*', headers: protectedDocumentHeaders },
+      { source: '/api/free/:path*', headers: protectedDocumentHeaders },
       { source: '/owner', headers: protectedDocumentHeaders },
       { source: '/owner/:path*', headers: protectedDocumentHeaders },
       { source: '/supervisor', headers: protectedDocumentHeaders },

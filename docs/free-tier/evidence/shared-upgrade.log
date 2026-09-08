@@ -1,0 +1,1 @@
+PASS: wrong amount/currency/account rejected; local captured activation succeeds once; retry deduplicates; exactly one paid activation event; no automatic costing save

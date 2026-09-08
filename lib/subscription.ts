@@ -1,6 +1,8 @@
 import 'server-only'
 
 import { cache } from 'react'
+import { getFreeGrant } from './free-account'
+import { hasEstablishedPaidHistory } from './subscription-access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -52,11 +54,18 @@ export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
 
     const subscriptionRows = data?.org_subscriptions ?? []
     const subscriptionTier = resolveEffectiveSubscription(subscriptionRows).tier
-    return resolveOrgPlanAccess(
+    const access = resolveOrgPlanAccess(
         subscriptionTier,
         data?.product_experience,
         subscriptionTier === 'none' && hasPaidBaseHistory(subscriptionRows),
     )
+    if (access.effectiveTier !== 'none') return access
+    const grant = await getFreeGrant(orgId)
+    if (!grant) return access
+    // An activated paid history never silently falls back to Free on expiry.
+    const hadPaidAccess = hasEstablishedPaidHistory(subscriptionRows)
+    return hadPaidAccess ? { ...access, freeAccount: true }
+        : { ...resolveOrgPlanAccess('free', 'base'), freeAccount: true }
 }
 
 export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {

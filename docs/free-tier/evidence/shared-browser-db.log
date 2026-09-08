@@ -1,0 +1,2 @@
+PASS: both browser-created snapshots persist; zero-allowance history reads do not debit; no quality or paid-quote records; Rate Book retains only the preplanted sentinel
+PASS: revised shared UI records result_viewed against committed receipts without costing payloads

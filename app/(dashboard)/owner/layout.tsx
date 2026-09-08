@@ -21,7 +21,10 @@ import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
  * commit while claims/profile/plan reads are still in flight. The boundaries
  * retain the existing server-side role, entitlement, RLS, and lockdown checks.
  */
-export default function OwnerLayout({ children }: { children: React.ReactNode }) {
+export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
+    const { profile } = await requireRole(['owner'], { allowFreeAccount: true })
+    const access = await getCachedOrgPlanAccess(profile.org_id)
+    if (access.effectiveTier === 'free' || access.freeAccount) redirect('/free')
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background" data-owner-shell>
             <BrandBackground />

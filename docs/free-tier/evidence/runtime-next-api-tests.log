@@ -1,0 +1,2 @@
+PASS: actual authenticated Next API; guest denial, validation no-charge, first/second success, receipt replay, changed-input conflict, third result withheld and demo bypass rejected
+PASS: no-store headers on success and failure; protected request bodies remain in memory

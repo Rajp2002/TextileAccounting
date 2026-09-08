@@ -1,0 +1,13 @@
+
+> textile-saas@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+
+ Test Files  218 passed (218)
+      Tests  1448 passed | 1 skipped (1449)
+   Start at  23:46:59
+   Duration  14.98s (transform 10.45s, setup 0ms, import 85.52s, tests 22.95s, environment 101ms)
+

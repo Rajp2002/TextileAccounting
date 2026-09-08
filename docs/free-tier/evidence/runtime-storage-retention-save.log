@@ -1,0 +1,1 @@
+PASS: restrictive Storage reads/writes deny Free despite a permissive policy; exactly one explicit paid costing; non-null first-save rate review interval; retention inactive; expired receipts pruned; test transaction rolled back

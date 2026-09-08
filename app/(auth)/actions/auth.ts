@@ -16,6 +16,7 @@ import { cookies, headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { parseJWT, requireRole } from '@/lib/auth'
+import { canEnrollFree, finishFreeProvisioning } from '@/lib/free-account'
 import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 import { getOrgTier } from '@/lib/subscription'
@@ -83,7 +84,7 @@ type CreateOrganizationInput = {
     factoryName: string
     phone: string
     referralCode?: string
-    selectedPlan?: 'lite' | 'base'
+    selectedPlan?: 'free' | 'lite' | 'base'
     legalAcceptance: {
         accepted: boolean
         termsVersion: string
@@ -141,6 +142,8 @@ export async function createOrganization(input: CreateOrganizationInput) {
     })
     if ('error' in parsed) return { error: parsed.error }
 
+    const freeSignup = input.selectedPlan === 'free'
+    if (freeSignup && !await canEnrollFree(parsed.data.email)) return { error: 'Free enrollment is not available for this account yet.' }
     const requestHeaders = await headers()
     const userAgent = requestHeaders.get('user-agent')?.trim().slice(0, 512) || null
 
@@ -163,6 +166,7 @@ export async function createOrganization(input: CreateOrganizationInput) {
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email: parsed.data.email,
         password: parsed.data.password,
+        app_metadata: freeSignup ? { free_signup: true } : {},
         email_confirm: true, // Skip email verification — owner is ready to use immediately
     })
 
@@ -203,6 +207,10 @@ export async function createOrganization(input: CreateOrganizationInput) {
             parsed.data.phone,
         )
         if (result.success) await applySignupReferral(orgId)
+        if (result.success && freeSignup) {
+            try { await finishFreeProvisioning(authData.user, orgId) }
+            catch { return { error: 'Account created. Log in to retry Free activation.' } }
+        }
         return result
     }
 
@@ -316,6 +324,7 @@ export async function createOrganizationAndRedirect(input: CreateOrganizationInp
     if (result && 'error' in result) return result
     // Plan selection comes before factory onboarding. Estimator-only owners do
     // not need machines, workers, payroll, or production-mode setup.
+    if (input.selectedPlan === 'free') redirect('/free')
     const selectedPlan = input.selectedPlan === 'base' ? 'base' : 'lite'
     redirect(`/owner/billing?plan=${selectedPlan}`)
 }
@@ -579,6 +588,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
         // effective tier of `base`, so sending it to Factory Today would land
         // behind the Full Suite access wall.
         const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
+        if (tier === 'free' || data.session.user.app_metadata.free_signup === true && tier === 'none') return succeed('/free')
 
         if (!onboardingComplete) {
             if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')

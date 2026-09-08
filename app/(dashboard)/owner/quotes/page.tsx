@@ -1,3 +1,5 @@
+import {getFreeGrant} from '@/lib/free-account'
+import SavedFreeCostings from '@/app/free/costings/SavedFreeCostings'
 import { getEstimatorQuotes, getEstimatorTemplates } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
 import { getAuthenticatedUser } from '@/lib/auth'
@@ -36,7 +38,9 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const canUseQuotationWorkflow = canUseProduction
         && getEstimatorWorkflowConfig(productionMode).allowsPartyOrders
 
-    return (
+    const previousFreeGrant = await getFreeGrant(profile.org_id)
+    return (<>
+        {previousFreeGrant && <SavedFreeCostings />}
         <QuotesClient 
             initialQuotes={quotes ?? []} 
             initialTemplates={templates ?? []}
@@ -50,5 +54,5 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
             canUseQuotationWorkflow={canUseQuotationWorkflow}
             organizationName={organizationRes.data?.name ?? ''}
         />
-    )
+    </>)
 }

@@ -1,0 +1,31 @@
+# Free beta operations (disabled; review before use)
+
+No commands in this document have been run against production. The migrations and application guards must ship together through the established approval process. Preserve the guards when pausing Free.
+
+## Configuration and beta
+
+Apply the foundation, runtime, first-saved-quality and shared-saved-costing migrations after reviewing any existing PostgREST pre-request hook. The runtime migration deliberately stops if a different configured hook exists; compose it explicitly. On installations using Supabase Storage, verify `free_storage_boundary` on `storage.objects`. The full-schema local test verifies restrictive Storage RLS despite a permissive test policy. The Storage HTTP service and deployed service policies still require verification.
+
+Set server-only `WEAVLY_FREE_SIGNING_KEY_ID` and `WEAVLY_FREE_SIGNING_KEYS` (JSON object mapping key IDs to independent random secrets of at least 32 bytes). Keep previous keys for the entire signed request lifetime. Never use a `NEXT_PUBLIC_` key. The current engine version must remain compatible for outstanding retries; an engine-changing deployment invalidates incompatible requests explicitly, without charging a replacement automatically.
+
+Set `WEAVLY_FREE_BETA_EMAILS` to the approved comma-separated beta email list. The private list plus `free_rollout.enrollment_enabled` govern `/signup?plan=free`. Existing accounts are not automatically enrolled. New owner grants are anchored to the original owner's Auth UUID, across any linked organizations; supervisors do not get separate allowances. Ownership transfer needs a reviewed mapping. Existing normal signup auto-confirms Auth emails; this is not proof of an email challenge or a new OTP system.
+
+The three flags in `public.free_rollout` are independently controlled: enrollment, estimation, tour. All start false. Start with approved test accounts, then the approved small beta. Public enrollment is not implemented as an unguarded toggle; it requires removing/replacing the private beta eligibility check through review. Do not enable estimation without the signing key, retention schedule, privacy/authorization evidence and reviewed launch policy.
+
+## Retention and reporting
+
+`public.prune_free_operational_metadata()` is service-only. The migration prepares the daily `weavly-free-retention` pg_cron job in an inactive state. After retention approval, activate that named job through the established Supabase scheduling mechanism and alert on failure. It deletes expired request receipts, events older than 90 days, and weekly usage older than 90 days with no remaining receipt. Deletion is limited to operational metadata. Saved costing snapshots are independent of receipts and remain until account deletion; this preserves the user’s requested saved history. Receipt expiry alone does not run the cleanup. The proposed receipt lifetime is 30 days; the separate 90-day cohort/weekly retention needs approval. The schedule remains inactive until explicitly approved and enabled. Job activation uses the existing [pg_cron API](https://github.com/citusdata/pg_cron#altering-a-cron-job).
+
+`public.free_support_status` exposes only account/grant state and current usage to the service role. Join to the existing organization subscription resolver for the effective paid plan. Do not share service-role credentials with support agents; use existing authorized admin tooling or have an authorized operator run a subject-scoped read. Diagnose errors using the fixed API error code and request ID; completed Free costing snapshots contain user-authorized specifications. Inspect them only through an authorized, subject-scoped support workflow; never add them to telemetry.
+
+`public.free_cohort_metrics` excludes subjects unless `analytics_eligible=true`. Keep staff, automated fixtures and demo accounts false. Review eligibility/consent before admitting actual cohorts. The view supplies counts, not a misleading universal conversion percentage: activation numerator / eligible signup denominator; day-30 conversion numerator / fully observed 30-day denominator. Return use means distinct real-calculation dates. Fixed demo/tour events are not real activation. First verified captured-payment activation is deduplicated per subject. Infrastructure/auth costs and support burden remain existing operational measurements, not costing payload events.
+
+No public quota-reset endpoint exists. A manual correction requires separately scoped authorization, an explicit reason and the existing audit mechanism. Do not edit counters ad hoc or delete receipts; that breaks retry accounting.
+
+## Pause and rollback
+
+Disable `enrollment_enabled`, `estimation_enabled` and optionally `tour_enabled` in the singleton rollout row. Retain Free grants, signing keys, RLS restrictions, the Data API pre-request hook and application guards. Paid access continues through the existing resolver and billing system. Never revert to code that treats Free as an unknown unrestricted plan. Never delete users or reverse the additive schema to pause access. The local SQL tests demonstrate that paused flags retain restrictions and existing paid eligibility.
+
+## Remaining release approvals
+
+The user confirmed two completed costings per India-time Monday week, saved costings and exports. Review the remaining operational decisions: no carryover, another explicit allowance unit for changed effective inputs, 30-day receipts/90-day analytical metadata, and existing Lite ₹2,999 first year / ₹1,499 annual renewal including configured GST. Native Gujarati/Hindi terminology review and five actual owner sessions are required. No human acceptance, field INP or commercial approval is inferred from automated tests.

@@ -43,7 +43,7 @@ describe('permanent account deletion guardrails', () => {
     })
 
     it('cancels active provider subscriptions before calling the database erasure RPC', () => {
-        expect(action).toContain("const { profile, user } = await requireRole(['owner'])")
+        expect(action).toContain("const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })")
         expect(action).toContain('getRazorpay()')
         expect(action).toContain('subscriptions.cancel(subscriptionId, false)')
         expect(action).toContain("select('razorpay_subscription_id, status, current_end')")
