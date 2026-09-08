@@ -148,6 +148,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     ])
     if (hasProduction) {
         costingWorkspaceRoutes.add('/owner/production')
+        costingWorkspaceRoutes.add('/owner/stock')
         costingWorkspaceRoutes.add('/owner/operations')
         costingWorkspaceRoutes.add('/owner/payroll')
     }
@@ -271,7 +272,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
     const visibleBottomNavItems = hasLegacyWorkspace
         ? bottomNavItems.filter((item) => isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey)).slice(0, 5)
         : hasProduction
-          ? bottomNavItems.filter((item) => ['/owner/estimator', '/owner/production', '/owner/operations', '/owner/payroll'].includes(item.href))
+          ? bottomNavItems.filter((item) => ['/owner/estimator', '/owner/production', '/owner/stock', '/owner/operations', '/owner/payroll'].includes(item.href))
           : subscriptionTier === 'free' ? freeNavItems : liteBottomNavItems
     const moreIsActive = !visibleBottomNavItems.some((item) => (
         pathname === item.href || item.href !== "/free" && pathname.startsWith(item.href + "/")

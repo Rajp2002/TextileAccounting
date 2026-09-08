@@ -87,11 +87,9 @@ describe('P1 production correction and generated stock atomicity', () => {
 
     it('keeps dashboard and stock readers on reconciled source tables/views', () => {
         const stockActions = readProjectFile('app/(dashboard)/owner/stock/actions.ts')
-        const dispatchActions = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
         const todayActions = readProjectFile('app/(dashboard)/owner/today/actions.ts')
 
-        expect(stockActions).toContain(".from('fabric_stock_lot_summary')")
-        expect(dispatchActions).toContain(".from('fabric_stock_lot_summary')")
+        expect(stockActions).toContain("supabase.rpc('get_quality_stock_board'")
         expect(todayActions).toContain(".from('production_logs')")
         expect(todayActions).toContain(".from('order_progress_summary')")
         expect(todayActions).toContain('total_meters_produced')

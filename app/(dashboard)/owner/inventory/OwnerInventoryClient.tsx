@@ -10,18 +10,14 @@ import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import InventoryClient from './InventoryClient'
 import type { InventoryModuleData } from './actions'
-import StockClient from '../stock/StockClient'
-import type { FabricStockBoardData } from '../stock/actions'
 
 type InventoryTab = 'yarn' | 'beams' | 'grey-stock'
 
 export default function OwnerInventoryClient({
     inventoryData,
-    stockData,
     beamTrackingEnabled,
 }: {
     inventoryData: InventoryModuleData
-    stockData: FabricStockBoardData
     beamTrackingEnabled: boolean
 }) {
     const { t } = useTranslation()
@@ -79,7 +75,7 @@ export default function OwnerInventoryClient({
                 ) : null}
 
                 {activeTab === 'grey-stock' ? (
-                    <StockClient initialData={stockData} hideHeader />
+                    <Button asChild><Link href="/owner/stock">{t('nav.stock')}</Link></Button>
                 ) : null}
             </Tabs>
         </div>

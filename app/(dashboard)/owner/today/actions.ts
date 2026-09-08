@@ -731,10 +731,10 @@ async function loadFactoryTodayChecklistPayload(
                 }
             })(),
 
-            // Activation checklist: any stock lot.
+            // Activation checklist: a quality stock balance.
             (async () => {
                 try {
-                    const { data } = await supabase.from('fabric_stock_lots').select('id').eq('org_id', orgId).limit(1)
+                    const { data } = await supabase.from('quality_stock').select('id').eq('org_id', orgId).limit(1)
                     return { data: data ?? [] }
                 } catch {
                     return { data: [] }

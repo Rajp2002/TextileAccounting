@@ -38,7 +38,6 @@ import {
 import { formatDateOnly } from '@/lib/format'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
-import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
 import {
     Dialog,
     DialogContent,
@@ -636,7 +635,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
     const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
-    const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
 
     // For tab switching: 'dispatched' (default) or 'pending'
     const [activeTab, setActiveTab] = useState<'dispatched' | 'pending'>('dispatched')
@@ -846,13 +844,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     <p className="text-muted-foreground font-medium">Monitor fabric shipments grouped by order — track progress and verify trader confirmations.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button 
-                        onClick={() => setSellAndDispatchOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-11 px-6 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
-                    >
-                        <Plus className="h-5 w-5" />
-                        New Sell & Dispatch
-                    </Button>
                     <Button 
                         variant="outline"
                         onClick={() => setGlobalModalStep('select_order')}
@@ -1151,17 +1142,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     void refreshDispatchData()
                 }}
             />
-            {sellAndDispatchOpen && (
-                <SellAndDispatchDialog
-                    open={sellAndDispatchOpen}
-                    onOpenChange={setSellAndDispatchOpen}
-                    onSuccess={() => {
-                        setSellAndDispatchOpen(false)
-                        setActiveTab('dispatched')
-                        void refreshDispatchData()
-                    }}
-                />
-            )}
             {confirmingSale && (
                 <Dialog open={confirmingSale !== null} onOpenChange={(v) => { if (!v) setConfirmingSale(null) }}>
                     <DialogContent className="max-w-md">

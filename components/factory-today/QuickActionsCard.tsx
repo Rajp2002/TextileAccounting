@@ -36,7 +36,7 @@ const actions = [
     {
         id: 'confirm-taka',
         label: 'Godown Stock',
-        description: 'Review expected stock',
+        description: 'Review quality balances',
         href: '/owner/stock',
         icon: Zap,
         color: 'text-success bg-success-soft border-success/20',
