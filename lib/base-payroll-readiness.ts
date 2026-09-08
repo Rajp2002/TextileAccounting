@@ -67,6 +67,14 @@ export function buildBasePayrollReadiness({
     entries: BaseProductionEntry[]
     allocations: BaseProductionAllocation[]
 }): BasePayrollReadiness {
+    // Keep source order within each worker, including duplicate entries. This
+    // index belongs only to this calculation; corrections are read on every call.
+    const entriesByWorker = new Map<string, BaseProductionEntry[]>()
+    for (const entry of entries) {
+        const current = entriesByWorker.get(entry.worker_id) ?? []
+        current.push(entry)
+        entriesByWorker.set(entry.worker_id, current)
+    }
     const allocationsByEntry = new Map<string, BaseProductionAllocation[]>()
     for (const allocation of allocations) {
         const current = allocationsByEntry.get(allocation.entry_id) ?? []
@@ -75,9 +83,8 @@ export function buildBasePayrollReadiness({
     }
 
     const workers = payables.map((payable): BaseWorkerPayrollReadiness => {
-        const periodEntries = entries.filter((entry) => (
-            entry.worker_id === payable.worker_id
-            && entry.production_date >= payable.period_start
+        const periodEntries = (entriesByWorker.get(payable.worker_id) ?? []).filter((entry) => (
+            entry.production_date >= payable.period_start
             && entry.production_date <= payable.period_end
             && positive(entry.meters)
             && entry.entry_status !== 'zero'

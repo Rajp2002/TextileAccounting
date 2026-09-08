@@ -3,6 +3,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { buildBasePayrollReadiness } from '../lib/base-payroll-readiness'
+import { buildBasePayrollReadiness as originalReadiness } from './fixtures/payroll-readiness-original'
+import { payrollReadinessFixture } from '../scripts/performance/payroll-readiness-fixture'
 import type {
     BaseProductionAllocation,
     BaseProductionEntry,
@@ -35,6 +37,74 @@ function allocation(overrides: Partial<BaseProductionAllocation> = {}): BaseProd
 }
 
 describe('Base payroll readiness', () => {
+    it('preserves complete results on mixed histories without mutating inputs', () => {
+        for (let seed = 0; seed < 20; seed++) {
+            const input = payrollReadinessFixture(20, 40, seed)
+            const snapshot = structuredClone(input)
+            expect(buildBasePayrollReadiness(input)).toStrictEqual(originalReadiness(input))
+            expect(input).toStrictEqual(snapshot)
+        }
+    })
+
+    it('preserves worker and issue order, duplicate payables, and independent date windows', () => {
+        const input = {
+            payables: [
+                { ...payable, worker_id: 'worker-2' },
+                payable,
+                { ...payable, period_start: '2026-08-31' },
+                { ...payable, worker_id: '__proto__' },
+            ],
+            entries: [
+                entry({ id: 'end', production_date: '2026-08-31' }),
+                entry({ id: 'other', worker_id: 'worker-2' }),
+                entry({ id: 'start', production_date: '2026-08-01' }),
+                entry({ id: 'outside', production_date: '2026-09-01' }),
+                entry({ id: 'unknown', worker_id: 'unknown' }),
+                entry({ id: 'special', worker_id: '__proto__' }),
+            ],
+            allocations: [],
+        }
+        const result = buildBasePayrollReadiness(input)
+        expect(result).toStrictEqual(originalReadiness(input))
+        expect(result.workers.map(worker => worker.issues.map(issue => issue.entryId)))
+            .toEqual([['other'], ['end', 'start'], ['end'], ['special']])
+    })
+
+    it('keeps invalid values, empty inputs, paid eligibility, and allocation tolerances unchanged', () => {
+        for (const meters of [0, -1, NaN, Infinity, 120, 120.01, 120.01001]) {
+            for (const entry_status of ['entered', 'zero', 'absent', 'blank'] as const) {
+                for (const status of ['paid', 'unsettled'] as const) {
+                    const input = { payables: [{ ...payable, status }], entries: [entry({ meters, entry_status })], allocations: [allocation()] }
+                    expect(buildBasePayrollReadiness(input)).toStrictEqual(originalReadiness(input))
+                }
+            }
+        }
+        expect(buildBasePayrollReadiness({ payables: [], entries: [], allocations: [] }))
+            .toStrictEqual(originalReadiness({ payables: [], entries: [], allocations: [] }))
+    })
+
+    it('rechecks corrected input on the next call without retaining readiness', () => {
+        const input = { payables: [payable], entries: [entry()], allocations: [] as BaseProductionAllocation[] }
+        expect(buildBasePayrollReadiness(input).workers[0].readyToSettle).toBe(false)
+        input.allocations.push(allocation())
+        expect(buildBasePayrollReadiness(input).workers[0].readyToSettle).toBe(true)
+        input.payables = [{ ...payable, status: 'paid' }]
+        expect(buildBasePayrollReadiness(input).workers[0].readyToSettle).toBe(false)
+    })
+
+    it('retains duplicate entries and allocation issue ordering', () => {
+        const input = {
+            payables: [payable], entries: [entry(), entry()],
+            allocations: [allocation({ meters: 100, worker_id: 'other', worker_rate_snapshot: 0 })],
+        }
+        const result = buildBasePayrollReadiness(input)
+        expect(result).toStrictEqual(originalReadiness(input))
+        expect(result.workers[0].issues.map(issue => issue.code)).toEqual([
+            'allocation_mismatch', 'missing_context', 'missing_rate',
+            'allocation_mismatch', 'missing_context', 'missing_rate',
+        ])
+    })
+
     it('verifies machine allocation lines exactly once', () => {
         const result = buildBasePayrollReadiness({ payables: [payable], entries: [entry()], allocations: [allocation()] })
 

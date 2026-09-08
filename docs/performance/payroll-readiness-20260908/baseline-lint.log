@@ -1,0 +1,28 @@
+
+> textile-saas@0.1.0 lint
+> eslint --max-warnings=0
+
+[BABEL] Note: The code generator has deoptimised the styling of /Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/estimator/EstimatorClient.tsx as it exceeds the max of 500KB.
+
+/Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/estimator/EstimatorClient.tsx
+  1017:5   warning  'accent' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+  2305:25  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  2305:38  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/rates/RatesClient.tsx
+  1749:62  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+  1884:54  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/estimator/CostEstimateTutorial.tsx
+  132:11  warning  'isModalStep' is assigned a value but never used                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  564:8   warning  React Hook useEffect has missing dependencies: 'onOpenLiveCostModal', 'onOpenMonthlyExpensesModal', and 'onOpenQualityLibraryModal'. Either include them or remove the dependency array. If 'onOpenLiveCostModal' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+/Users/rajpatel/Projects/textile Saas/components/rates/RateBookTutorial.tsx
+    7:32  warning  'isRatebookTutorialField' is defined but never used  @typescript-eslint/no-unused-vars
+  418:15  warning  'viewportHeight' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/lib/estimator-yarn-suggestions.ts
+  2:39  warning  'WarpRow' is defined but never used  @typescript-eslint/no-unused-vars
+  2:53  warning  'WeftRow' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 11 problems (2 errors, 9 warnings)

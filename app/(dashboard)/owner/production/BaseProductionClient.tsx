@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
 import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
+import { calculateBaseJobSummaries } from '@/lib/base-job-summaries'
 import { basePayrollReview } from '@/lib/base-payroll-review'
 import { currentBaseMonthlySalary } from '@/lib/base-salary'
 import { baseProductionHref, readBaseProductionNavigation } from '@/lib/base-production-navigation'
@@ -219,7 +220,7 @@ export default function BaseProductionClient({
         [initialData.jobs],
     )
     const jobSummaries = useMemo(
-        () => new Map(initialData.jobs.map((job) => [job.id, calculateBaseJobSummary(job, initialData.entries, initialData.allocations)])),
+        () => calculateBaseJobSummaries(initialData.jobs, initialData.entries, initialData.allocations),
         [initialData.allocations, initialData.entries, initialData.jobs],
     )
     const productionAllocationLabels = useMemo(() => {
