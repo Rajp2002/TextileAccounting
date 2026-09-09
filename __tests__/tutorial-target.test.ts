@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clipTourRect, findTourTarget, isTourTargetVisible } from '../lib/tutorial-target'
+import { clipTourRect, findTourScrollContainer, findTourTarget, isTourTargetVisible } from '../lib/tutorial-target'
 
 function element(options: { connected?: boolean; laidOut?: boolean; width?: number; parent?: HTMLElement; style?: Record<string, string> } = {}) {
     return {
@@ -61,5 +61,45 @@ describe('mobile spotlight clipping', () => {
     })
     it('does not draw a zero-area spotlight on a viewport edge', () => {
         expect(clipTourRect({ left: 367, right: 400, top: 100, bottom: 150 }, bounds)).toBeNull()
+    })
+})
+
+describe('tour scroll container selection', () => {
+    function scroller(overflowY: string, clientHeight: number, scrollHeight: number, parent?: HTMLElement) {
+        return Object.assign(element({ style: { overflowY }, parent }), { clientHeight, scrollHeight })
+    }
+    function documentRoot() {
+        mockWindow()
+        const root = scroller('auto', 800, 5000)
+        const body = scroller('visible', 5000, 5000, root)
+        vi.stubGlobal('document', { scrollingElement: root, documentElement: root, body })
+        return { root, body }
+    }
+    it('scrolls the document past a full-height overflow-x-hidden owner shell', () => {
+        const { root, body } = documentRoot()
+        // CSS computes overflowY:auto, but this wrapper grows with its content.
+        const shell = scroller('auto', 4000, 4000, body)
+        expect(findTourScrollContainer(element({ parent: shell }))).toBe(root)
+    })
+    it('uses the scrollable monthly-expenses body instead of the page behind the dialog', () => {
+        const { body } = documentRoot()
+        const dialog = scroller('auto', 500, 1000, body)
+        expect(findTourScrollContainer(element({ parent: dialog }))).toBe(dialog)
+    })
+    it('ignores a non-scrolling wrapper inside a scrollable sheet', () => {
+        const { body } = documentRoot()
+        const sheet = scroller('auto', 500, 1000, body)
+        const wrapper = scroller('auto', 800, 800, sheet)
+        expect(findTourScrollContainer(element({ parent: wrapper }))).toBe(sheet)
+    })
+    it('supports programmatic scrolling of constrained overflow-hidden containers', () => {
+        const { body } = documentRoot()
+        const container = scroller('hidden', 300, 600, body)
+        expect(findTourScrollContainer(element({ parent: container }))).toBe(container)
+    })
+    it('uses the browser scrollingElement when it is the body', () => {
+        const { body, root } = documentRoot()
+        vi.stubGlobal('document', { scrollingElement: body, documentElement: root, body })
+        expect(findTourScrollContainer(element({ parent: body }))).toBe(body)
     })
 })

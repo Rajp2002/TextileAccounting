@@ -272,13 +272,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         setIndex(i => Math.max(0, i - 1))
     }, [])
 
-    const removeUnavailableStep = useCallback(() => {
-        setRects(null)
-        if (index === steps.length - 1) { close(); return }
-        setSteps(current => current.filter((_, position) => position !== index))
-        setIndex(current => Math.min(current, steps.length - 2))
-    }, [close, index, steps.length])
-    const mobileTour = useMobileTour(active, panel, resolveStepElements, removeUnavailableStep)
+    const mobileTour = useMobileTour(active, panel, resolveStepElements)
     const spotlight = mobileTour.mobile ? mobileTour.rects : rects
 
 
@@ -386,7 +380,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
             if (!targetEl || !cardEl || !targetEl.getClientRects().length || !cardEl.getClientRects().length) {
                 setRects(null)
-                if (performance.now() - startTime > 1500) { removeUnavailableStep(); return }
+                if (performance.now() - startTime > 1500) return
 
                 retryRaf = window.requestAnimationFrame(measureAndPosition)
                 return
@@ -577,7 +571,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             if (settleTimer) window.clearTimeout(settleTimer)
             if (retryRaf) window.cancelAnimationFrame(retryRaf)
         }
-    }, [active, mobileTour.mobile, removeUnavailableStep, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
+    }, [active, mobileTour.mobile, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
 
     useEffect(() => {
         if (!active || mobileTour.mobile) return
@@ -605,7 +599,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             window.removeEventListener('resize', handleManualScrollOrResize)
             observer.disconnect()
         }
-    }, [active, mobileTour.mobile, removeUnavailableStep])
+    }, [active, mobileTour.mobile])
 
     const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
         ? copy.replay.split(' · ')
