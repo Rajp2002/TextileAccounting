@@ -134,12 +134,24 @@ export function scrollInputIntoComfortableView(
     const sectionTarget = typeof element.closest === 'function'
         ? element.closest<HTMLElement>('[data-enter-scroll-target]')
         : null
-    const scrollTarget = sectionTarget ?? element
+    // A tall section cannot be fully visible (particularly with a mobile keyboard).
+    // In that case keep the field itself at the centre of the usable viewport.
+    const viewport = typeof window !== 'undefined' ? window.visualViewport : null
+    const viewportHeight = typeof window !== 'undefined'
+        ? viewport?.height ?? window.innerHeight
+        : 0
+    const oversizedSection = Boolean(sectionTarget && viewportHeight > 0 &&
+        sectionTarget.getBoundingClientRect().height > viewportHeight - 160)
+    const scrollTarget = oversizedSection ? element : sectionTarget ?? element
     if (typeof scrollTarget.scrollIntoView !== 'function') return
 
     const resolvedScrollOptions: ScrollIntoViewOptions = sectionTarget
         ? { behavior: 'smooth', block: 'center', inline: 'nearest', ...scrollOptions }
         : { behavior: 'smooth', block: 'nearest', inline: 'nearest', ...scrollOptions }
+
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        resolvedScrollOptions.behavior = 'auto'
+    }
 
     scrollTarget.scrollIntoView(resolvedScrollOptions)
 

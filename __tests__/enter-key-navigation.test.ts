@@ -197,6 +197,46 @@ describe('Form Enter-Key Navigation Engine', () => {
         })
     })
 
+    it('centres the active input when its section cannot fit above the mobile keyboard', () => {
+        vi.stubGlobal('window', {
+            innerHeight: 900,
+            visualViewport: { height: 400 },
+            matchMedia: () => ({ matches: false }),
+        })
+        try {
+            const input = createMockElement()
+            const section = {
+                getBoundingClientRect: () => ({ height: 600 }),
+                scrollIntoView: vi.fn(),
+            } as unknown as HTMLElement
+            input.closest = (() => section) as typeof input.closest
+            scrollInputIntoComfortableView(input)
+            expect(input.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+            expect(section.scrollIntoView).not.toHaveBeenCalled()
+        } finally {
+            vi.unstubAllGlobals()
+        }
+    })
+
+    it('respects reduced motion when centring a section', () => {
+        vi.stubGlobal('window', {
+            innerHeight: 900,
+            matchMedia: () => ({ matches: true }),
+        })
+        try {
+            const input = createMockElement()
+            const section = {
+                getBoundingClientRect: () => ({ height: 300 }),
+                scrollIntoView: vi.fn(),
+            } as unknown as HTMLElement
+            input.closest = (() => section) as typeof input.closest
+            scrollInputIntoComfortableView(input)
+            expect(section.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'center', inline: 'nearest' })
+        } finally {
+            vi.unstubAllGlobals()
+        }
+    })
+
     it('navigates to previous field on Shift+Enter', () => {
         const step1 = createMockElement({ id: 'step1', type: 'text', value: 'First' })
         const step2 = createMockElement({ id: 'step2', type: 'text', value: 'Second' })
