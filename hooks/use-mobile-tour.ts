@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState, type RefObject } from 'react'
-import { clipTourRect, isTourTargetVisible } from '@/lib/tutorial-target'
+import { clipTourRect, findTourScrollContainer, isTourTargetVisible } from '@/lib/tutorial-target'
 
 type Elements = { target: HTMLElement | null; card: HTMLElement | null }
 type Rect = NonNullable<ReturnType<typeof clipTourRect>>
 
 /** Mobile tours reserve a measured reading area and never draw speculative coordinates. */
-export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDivElement | null>, resolve: (step: T) => Elements, onUnavailable: () => void) {
+export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDivElement | null>, resolve: (step: T) => Elements) {
     const [mobile, setMobile] = useState(false)
     const [measurement, setMeasurement] = useState<{ step: T; field: Rect; card: Rect } | null>(null)
 
@@ -38,7 +38,8 @@ export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDiv
             const panelRect = panel.current?.getBoundingClientRect()
             if (!isTourTargetVisible(target) || !panelRect) {
                 setMeasurement(null)
-                if (performance.now() - start > 1500) { stopped = true; onUnavailable(); return }
+                // A late mount is not permission to remove or advance a step.
+                if (performance.now() - start > 1500) return
                 frame = requestAnimationFrame(measure)
                 return
             }
@@ -57,18 +58,14 @@ export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDiv
                     return
                 }
                 // Reserve room in the actual scroll container, including drawers and sheets.
-                let scrollParent = target.parentElement
-                while (scrollParent && scrollParent !== document.body) {
-                    if (/(auto|scroll)/.test(getComputedStyle(scrollParent).overflowY)) break
-                    scrollParent = scrollParent.parentElement
-                }
-                const scroller = scrollParent && scrollParent !== document.body ? scrollParent : document.documentElement
+                const scroller = findTourScrollContainer(target)
+                const rootScroller = document.scrollingElement ?? document.documentElement
                 rememberPadding(scroller, panelRect.height + 100)
                 target.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' })
                 const rect = target.getBoundingClientRect()
                 const desiredTop = top + Math.max(0, (bottom - top - rect.height) / 2)
                 const delta = rect.top - desiredTop
-                if (scroller === document.documentElement) window.scrollBy({ top: delta, behavior: 'instant' })
+                if (scroller === rootScroller) window.scrollBy({ top: delta, behavior: 'instant' })
                 else scroller.scrollBy({ top: delta, behavior: 'instant' })
                 positioned = target
                 frame = requestAnimationFrame(measure)
@@ -88,7 +85,7 @@ export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDiv
             }
             setMeasurement(clipped ? { step: active, field: clipped, card: clipped } : null)
             if (!clipped && attempts++ < 2) { positioned = null; frame = requestAnimationFrame(measure) }
-            else if (!clipped) { stopped = true; onUnavailable() }
+            // If positioning still fails, keep this step and its navigation intact.
         }
         const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure) }
         const resize = () => { positioned = null; attempts = 0; schedule() }
@@ -97,6 +94,7 @@ export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDiv
         window.addEventListener('scroll', schedule, true)
         window.addEventListener('resize', resize)
         window.visualViewport?.addEventListener('resize', resize)
+        window.visualViewport?.addEventListener('scroll', schedule)
         frame = requestAnimationFrame(measure)
         return () => {
             stopped = true
@@ -105,10 +103,11 @@ export function useMobileTour<T>(active: T | undefined, panel: RefObject<HTMLDiv
             window.removeEventListener('scroll', schedule, true)
             window.removeEventListener('resize', resize)
             window.visualViewport?.removeEventListener('resize', resize)
+            window.visualViewport?.removeEventListener('scroll', schedule)
             originalPadding.forEach((padding, element) => { element.style.paddingBottom = padding })
             originalBottom.forEach((bottom, element) => { element.style.bottom = bottom })
         }
-    }, [active, mobile, panel, resolve, onUnavailable])
+    }, [active, mobile, panel, resolve])
 
     return { mobile, rects: measurement?.step === active ? measurement : null }
 }

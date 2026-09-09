@@ -21,3 +21,14 @@ export function clipTourRect(rect: Pick<DOMRect, 'left' | 'top' | 'right' | 'bot
     const bottom = Math.min(rect.bottom, bounds.bottom)
     return right > left && bottom > top ? { left, top, right, bottom, width: right - left, height: bottom - top } : null
 }
+
+/** overflow-x:hidden can compute overflow-y:auto on a non-scrolling page wrapper. */
+export function findTourScrollContainer(target: HTMLElement): HTMLElement {
+    const root = (document.scrollingElement ?? document.documentElement) as HTMLElement
+    for (let parent = target.parentElement; parent && parent !== document.body && parent !== root; parent = parent.parentElement) {
+        if (/(auto|scroll|hidden)/.test(window.getComputedStyle(parent).overflowY) && parent.scrollHeight > parent.clientHeight + 1) {
+            return parent
+        }
+    }
+    return root
+}
