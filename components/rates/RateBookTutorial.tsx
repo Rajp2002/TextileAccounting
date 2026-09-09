@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { dismissRatebookTutorial } from '@/app/(dashboard)/owner/rates/tutorial-actions'
 import { useTranslation } from '@/lib/i18n/context'
-import { rateBookTutorialCopy, isRatebookTutorialField, type RatebookTutorialField } from '@/lib/i18n/rate-book-tutorial'
+import { rateBookTutorialCopy, type RatebookTutorialField } from '@/lib/i18n/rate-book-tutorial'
 import { Button } from '@/components/ui/button'
 import { Compass, Sparkles } from 'lucide-react'
+import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
+import { useMobileTour } from '@/hooks/use-mobile-tour'
 
 export type RatebookStep = {
     section: number
@@ -47,58 +49,12 @@ const ORDERED_STEPS: { section: number; field: RatebookTutorialField; inSheet?: 
 ]
 
 function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; card: HTMLElement | null } {
-    let target = step.target && document.body.contains(step.target) ? step.target : null
-    let card = step.card && document.body.contains(step.card) ? step.card : null
+    let target = isTourTargetVisible(step.target) ? step.target : null
+    let card = isTourTargetVisible(step.card) ? step.card : null
 
     if (!target) {
-        target = document.querySelector<HTMLElement>(`[data-ratebook-field="${step.field}"]`)
-    }
-
-    if (step.field === 'yarnRow') {
-        const row = document.querySelector<HTMLElement>('tbody tr[data-ratebook-field="yarnRow"]') ??
-                    document.querySelector<HTMLElement>('tbody tr') ??
-                    document.querySelector<HTMLElement>('[data-ratebook-field="yarnRow"]') ??
-                    document.querySelector<HTMLElement>('[data-slot="card"]')
-        if (row) {
-            target = row
-            card = row
-        }
-    }
-
-    if (step.field === 'quickEditPopover') {
-        const popoverPanel = document.querySelector<HTMLElement>('[data-ratebook-field="quickEditPopover"]') ??
-                             document.querySelector<HTMLElement>('[data-slot="popover-content"]')
-        if (popoverPanel) {
-            card = popoverPanel
-            target = popoverPanel
-        }
-    }
-
-    if (step.field === 'rateDrawerFields') {
-        const sheetPanel = document.querySelector<HTMLElement>('[data-slot="sheet-content"]')
-        if (sheetPanel) {
-            card = sheetPanel
-            target = sheetPanel.querySelector<HTMLElement>('[data-ratebook-field="rateDrawerFields"]') ?? sheetPanel
-        }
-    }
-
-    // Fallbacks if table rows are empty or not rendered
-    if (!target) {
-        if (step.field === 'quickEditPopover') {
-            const triggerEl = document.querySelector<HTMLElement>('[data-ratebook-field="quickEditAction"]')
-            if (triggerEl) {
-                target = triggerEl
-                card = triggerEl
-            }
-        } else if (['yarnRow', 'yarnNameCell', 'rateAndTrend', 'reviewStatusBadge', 'linkedQualitiesPopover', 'quickReviewAction', 'quickEditAction'].includes(step.field)) {
-            target = document.querySelector<HTMLElement>('tbody tr') ??
-                     document.querySelector<HTMLElement>('table') ??
-                     document.querySelector<HTMLElement>('[data-ratebook-field="rateTableCard"]') ??
-                     document.querySelector<HTMLElement>('[data-slot="card"]')
-        } else if (step.field === 'confirmAll') {
-            target = document.querySelector<HTMLElement>('[data-ratebook-field="confirmAll"]') ??
-                     document.querySelector<HTMLElement>('[data-ratebook-field="needsReviewFilter"]')
-        }
+        card = null
+        target = findTourTarget(`[data-ratebook-field="${step.field}"]`)
     }
 
     if (!card && target) {
@@ -188,6 +144,7 @@ export function RateBookTutorial({
     const panel = useRef<HTMLDivElement>(null)
     const key = `weavly:ratebook-tutorial:v1:${orgId}:${userId}`
     const active = steps[index]
+    const visibleSections = [...new Set(steps.map(step => step.section))]
     const dismissed = useRef(accountDismissed)
     const syncing = useRef(false)
     const autoStarted = useRef(false)
@@ -256,7 +213,11 @@ export function RateBookTutorial({
             const root = document.querySelector('[data-ratebook-tutorial-root]')
             if (!root) { setRequested(false); return }
 
-            const next: RatebookStep[] = ORDERED_STEPS.map(item => ({
+            const next: RatebookStep[] = ORDERED_STEPS.filter(item => {
+                if (item.inSheet) return Boolean(onOpenRateDrawer)
+                if (item.inPopover) return Boolean(onOpenQuickEdit && findTourTarget('[data-ratebook-field="quickEditAction"]'))
+                return Boolean(findTourTarget(`[data-ratebook-field="${item.field}"]`))
+            }).map(item => ({
                 section: item.section,
                 card: null,
                 target: null,
@@ -270,7 +231,7 @@ export function RateBookTutorial({
             setRequested(false)
         }, 120)
         return () => window.clearTimeout(timer)
-    }, [requested, enabled, onPrepare, languageStatus])
+    }, [requested, enabled, onPrepare, languageStatus, onOpenRateDrawer, onOpenQuickEdit])
 
     // Orchestrating modal/popover/drawer states
     const isPopoverStep = active?.field === 'quickEditPopover'
@@ -326,6 +287,16 @@ export function RateBookTutorial({
     const handleBack = useCallback(() => {
         setIndex(i => Math.max(0, i - 1))
     }, [])
+
+    const removeUnavailableStep = useCallback(() => {
+        setRects(null)
+        if (index === steps.length - 1) { close(); return }
+        setSteps(current => current.filter((_, position) => position !== index))
+        setIndex(current => Math.min(current, steps.length - 2))
+    }, [close, index, steps.length])
+    const mobileTour = useMobileTour(active, panel, resolveStepElements, removeUnavailableStep)
+    const spotlight = mobileTour.mobile ? mobileTour.rects : rects
+
 
     // Focus management and background element inertia
     useEffect(() => {
@@ -406,7 +377,7 @@ export function RateBookTutorial({
 
     // Spotlight measurement & adaptive viewport positioning
     useEffect(() => {
-        if (!active) {
+        if (!active || mobileTour.mobile) {
             setRects(null)
             return
         }
@@ -415,7 +386,6 @@ export function RateBookTutorial({
         let isMounted = true
         const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
         const scrollBehavior = prefersReducedMotion ? 'instant' : 'smooth'
-        const viewportHeight = window.innerHeight
         const fixedPadding = 20
 
         const isModal = isPopoverStep || isSheetStep
@@ -429,6 +399,9 @@ export function RateBookTutorial({
             const { target: targetEl, card: cardEl } = resolveStepElements(active)
 
             if (!targetEl || !cardEl || !targetEl.getClientRects().length || !cardEl.getClientRects().length) {
+                setRects(null)
+                if (performance.now() - startTime > 1500) { removeUnavailableStep(); return }
+
                 retryRaf = window.requestAnimationFrame(measureAndPosition)
                 return
             }
@@ -573,7 +546,7 @@ export function RateBookTutorial({
             window.removeEventListener('scroll', handleManualScrollOrResize, true)
             window.removeEventListener('resize', handleManualScrollOrResize)
         }
-    }, [active, isPopoverStep, isSheetStep])
+    }, [active, isPopoverStep, isSheetStep, mobileTour.mobile, removeUnavailableStep])
 
     const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
         ? copy.replay.split(' · ')
@@ -624,41 +597,41 @@ export function RateBookTutorial({
                             e.preventDefault()
                             e.stopPropagation()
                         }}
-                        className="absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 select-none cursor-default"
+                        className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 select-none cursor-default"
                         style={{
                             transition: 'clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
-                            ...(rects ? {
-                                clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)`
+                            ...(spotlight ? {
+                                clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${spotlight.card.left}px ${spotlight.card.top}px, ${spotlight.card.left}px ${spotlight.card.bottom}px, ${spotlight.card.right}px ${spotlight.card.bottom}px, ${spotlight.card.right}px ${spotlight.card.top}px, ${spotlight.card.left}px ${spotlight.card.top}px)`
                             } : {})
                         }}
                     />
 
-                    {rects && (
+                    {spotlight && !mobileTour.mobile && (
                         <div
-                            className={`pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
+                            className={`guided-tour-highlight pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
                                 isSectionTransition
                                     ? 'border-saffron/80 shadow-[0_0_0_1px_rgba(217,119,6,0.5),0_0_50px_rgba(217,119,6,0.35)] ring-2 ring-saffron/30'
                                     : 'border-saffron/40 shadow-[0_0_0_1px_rgba(217,119,6,0.3),0_0_35px_rgba(217,119,6,0.2)]'
                             }`}
                             style={{
-                                left: rects.card.left - 4,
-                                top: rects.card.top - 4,
-                                width: rects.card.width + 8,
-                                height: rects.card.height + 8,
+                                left: spotlight.card.left - 4,
+                                top: spotlight.card.top - 4,
+                                width: spotlight.card.width + 8,
+                                height: spotlight.card.height + 8,
                             }}
                         />
                     )}
 
-                    {rects && (
+                    {spotlight && (
                         <div
-                            className={`pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30 transition-all ${
+                            className={`guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30 transition-all ${
                                 isSectionTransition ? 'duration-500 ease-out' : 'duration-300 ease-out'
                             }`}
                             style={{
-                                left: rects.field.left - 4,
-                                top: rects.field.top - 4,
-                                width: rects.field.width + 8,
-                                height: rects.field.height + 8,
+                                left: spotlight.field.left - 4,
+                                top: spotlight.field.top - 4,
+                                width: spotlight.field.width + 8,
+                                height: spotlight.field.height + 8,
                             }}
                         />
                     )}
@@ -671,7 +644,7 @@ export function RateBookTutorial({
                         aria-describedby="ratebook-tour-description"
                         tabIndex={-1}
                         onClick={(e) => e.stopPropagation()}
-                        className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
+                        className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
                             panelPlacement === 'bottom-right'
                                 ? 'bottom-4 right-4 sm:bottom-5 sm:right-5'
                                 : 'top-4 right-4 sm:top-5 sm:right-5'
@@ -685,7 +658,7 @@ export function RateBookTutorial({
                                             ? 'bg-saffron text-white ring-saffron shadow-sm scale-105'
                                             : 'bg-saffron/10 text-saffron-deep ring-saffron/25'
                                     }`}>
-                                        {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
+                                        {copy.sectionProgress.replace('{current}', String(visibleSections.indexOf(active.section) + 1)).replace('{total}', String(visibleSections.length))}
                                     </span>
                                     <span className="text-xs font-semibold text-[var(--color-ink)]/75">· {copy.sections[active.section]}</span>
                                 </div>
@@ -699,7 +672,7 @@ export function RateBookTutorial({
                         </div>
 
                         <div className="mt-4 pt-3.5 border-t border-hairline/60 space-y-3 shrink-0">
-                            <p className="text-[11.5px] text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
+                            <p className="hidden sm:block text-[11.5px] text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
 
                             <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                                 <div
@@ -708,7 +681,7 @@ export function RateBookTutorial({
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                            <div className="guided-tour-controls flex items-center justify-between gap-1.5 pt-0.5">
                                 <Button
                                     type="button"
                                     variant="ghost"

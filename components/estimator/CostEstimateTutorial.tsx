@@ -7,15 +7,18 @@ import { useTranslation } from '@/lib/i18n/context'
 import { costEstimateTutorialCopy, isTutorialField, type TutorialField } from '@/lib/i18n/cost-estimate-tutorial'
 import { Button } from '@/components/ui/button'
 import { Compass, Sparkles } from 'lucide-react'
+import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
+import { useMobileTour } from '@/hooks/use-mobile-tour'
 
 type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean }
 
 function resolveStepElements(step: Step): { target: HTMLElement | null; card: HTMLElement | null } {
-    let target = step.target && document.body.contains(step.target) ? step.target : null
-    let card = step.card && document.body.contains(step.card) ? step.card : null
+    let target = isTourTargetVisible(step.target) ? step.target : null
+    let card = isTourTargetVisible(step.card) ? step.card : null
 
     if (!target) {
-        target = document.querySelector<HTMLElement>(`[data-estimator-field="${step.field}"]`)
+        card = null
+        target = findTourTarget(`[data-estimator-field="${step.field}"]`)
     }
     const isModalField = Boolean(step.inModal || ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(step.field))
     if (isModalField) {
@@ -66,6 +69,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const tutorialRows = useRef<HTMLElement[]>([])
     const key = `weavly:cost-estimate-tutorial:v1:${orgId}:${userId}`
     const active = steps[index]
+    const visibleSections = [...new Set(steps.map(step => step.section))]
     const dismissed = useRef(accountDismissed)
     const syncing = useRef(false)
     const autoStarted = useRef(false)
@@ -129,7 +133,6 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const isLiveCostModalStep = Boolean(active?.inModal && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field)) || Boolean(active?.field && ['liveCostReadiness', 'liveCostMetrics', 'liveCostAssumptions', 'liveCostActions'].includes(active.field))
     const isExpensesModalStep = Boolean(active?.inModal && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field)) || Boolean(active?.field && ['monthlyExpensesBreakdown', 'monthlyProductionM'].includes(active.field))
     const isQualityModalStep = Boolean(active?.inModal && ['savedQualityPicker'].includes(active.field)) || Boolean(active?.field && ['savedQualityPicker'].includes(active.field))
-    const isModalStep = isLiveCostModalStep || isExpensesModalStep || isQualityModalStep
 
     useEffect(() => {
         if (!active) {
@@ -184,7 +187,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
                 headers.forEach(header => {
                     const section = Number(header.dataset.tutorialSection) - 1
-                    if (!costEstimateTutorialCopy.en.sections[section]) return
+                    if (!costEstimateTutorialCopy.en.sections[section] || !isTourTargetVisible(header)) return
                     const card = header.closest<HTMLElement>('[data-slot="card"]') ?? header
 
                     if (header.dataset.estimatorField && isTutorialField(header.dataset.estimatorField)) {
@@ -216,7 +219,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
                     card.querySelectorAll<HTMLElement>('[data-estimator-field]').forEach(target => {
                         const field = target.dataset.estimatorField!
-                        if (!isTutorialField(field) || !target.getClientRects().length) return
+                        if (!isTutorialField(field) || !isTourTargetVisible(target)) return
                         const targetSection = target.closest<HTMLElement>('[data-tutorial-section]')
                         if (targetSection && targetSection !== header) return
                         next.push({ section, card, target, field })
@@ -268,6 +271,16 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const handleBack = useCallback(() => {
         setIndex(i => Math.max(0, i - 1))
     }, [])
+
+    const removeUnavailableStep = useCallback(() => {
+        setRects(null)
+        if (index === steps.length - 1) { close(); return }
+        setSteps(current => current.filter((_, position) => position !== index))
+        setIndex(current => Math.min(current, steps.length - 2))
+    }, [close, index, steps.length])
+    const mobileTour = useMobileTour(active, panel, resolveStepElements, removeUnavailableStep)
+    const spotlight = mobileTour.mobile ? mobileTour.rects : rects
+
 
     useEffect(() => {
         if (!active) return
@@ -334,7 +347,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     }, [active, handleNext, handleBack, close])
 
     useEffect(() => {
-        if (!active) return
+        if (!active || mobileTour.mobile) return
 
         let isMounted = true
         let settleTimer: number | undefined
@@ -372,6 +385,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             const { target: targetEl, card: cardEl } = resolveStepElements(active)
 
             if (!targetEl || !cardEl || !targetEl.getClientRects().length || !cardEl.getClientRects().length) {
+                setRects(null)
+                if (performance.now() - startTime > 1500) { removeUnavailableStep(); return }
+
                 retryRaf = window.requestAnimationFrame(measureAndPosition)
                 return
             }
@@ -561,10 +577,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             if (settleTimer) window.clearTimeout(settleTimer)
             if (retryRaf) window.cancelAnimationFrame(retryRaf)
         }
-    }, [active])
+    }, [active, mobileTour.mobile, removeUnavailableStep, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
 
     useEffect(() => {
-        if (!active) return
+        if (!active || mobileTour.mobile) return
         const { target: targetEl, card: cardEl } = resolveStepElements(active)
         if (!targetEl || !cardEl) return
 
@@ -589,7 +605,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             window.removeEventListener('resize', handleManualScrollOrResize)
             observer.disconnect()
         }
-    }, [active])
+    }, [active, mobileTour.mobile, removeUnavailableStep])
 
     const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
         ? copy.replay.split(' · ')
@@ -629,44 +645,44 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         )}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
             <div
-                className="absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300"
+                className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300"
                 style={{
                     transition: 'clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
-                    ...(rects ? {
-                        clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${rects.card.left}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.bottom}px, ${rects.card.right}px ${rects.card.top}px, ${rects.card.left}px ${rects.card.top}px)`
+                    ...(spotlight ? {
+                        clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${spotlight.card.left}px ${spotlight.card.top}px, ${spotlight.card.left}px ${spotlight.card.bottom}px, ${spotlight.card.right}px ${spotlight.card.bottom}px, ${spotlight.card.right}px ${spotlight.card.top}px, ${spotlight.card.left}px ${spotlight.card.top}px)`
                     } : {})
                 }}
             />
-            {rects && (
+            {spotlight && !mobileTour.mobile && (
                 <div
-                    className={`pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
+                    className={`guided-tour-highlight pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
                         isSectionTransition
                             ? 'border-orange-500/60 shadow-[0_0_0_1px_rgba(249,115,22,0.4),0_0_50px_rgba(249,115,22,0.32)] ring-2 ring-orange-400/25'
                             : 'border-orange-500/35 shadow-[0_0_0_1px_rgba(249,115,22,0.25),0_0_35px_rgba(249,115,22,0.2)]'
                     }`}
                     style={{
-                        left: rects.card.left - 4,
-                        top: rects.card.top - 4,
-                        width: rects.card.width + 8,
-                        height: rects.card.height + 8,
+                        left: spotlight.card.left - 4,
+                        top: spotlight.card.top - 4,
+                        width: spotlight.card.width + 8,
+                        height: spotlight.card.height + 8,
                     }}
                 />
             )}
-            {rects && (
+            {spotlight && (
                 <div
-                    className={`pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/30 transition-all ${
+                    className={`guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/30 transition-all ${
                         isSectionTransition ? 'duration-500 ease-out' : 'duration-300 ease-out'
                     }`}
                     style={{
-                        left: rects.field.left - 4,
-                        top: rects.field.top - 4,
-                        width: rects.field.width + 8,
-                        height: rects.field.height + 8,
+                        left: spotlight.field.left - 4,
+                        top: spotlight.field.top - 4,
+                        width: spotlight.field.width + 8,
+                        height: spotlight.field.height + 8,
                     }}
                 />
             )}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="cost-tour-title" aria-describedby="cost-tour-description" tabIndex={-1}
-                className={`fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
+                className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
                     panelPlacement === 'bottom-right'
                         ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
                         : 'top-4 right-4 sm:top-6 sm:right-6'
@@ -678,21 +694,21 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                                 ? 'bg-orange-500 text-white ring-orange-500 shadow-sm scale-105'
                                 : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 ring-orange-500/25'
                         }`}>
-                            {copy.sectionProgress.replace('{current}', String(active.section + 1)).replace('{total}', String(copy.sections.length))}
+                            {copy.sectionProgress.replace('{current}', String(visibleSections.indexOf(active.section) + 1)).replace('{total}', String(visibleSections.length))}
                         </span>
                         <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
                     </div>
                     <h2 id="cost-tour-title" className="mt-2 text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug sm:leading-[1.4]">{copy.fields[active.field].title}</h2>
                     <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
                 </div>
-                <p className="mt-3 text-xs text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
+                <p className="hidden sm:block mt-3 text-xs text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
                 <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                     <div
                         className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300 ease-out"
                         style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
                     />
                 </div>
-                <div className="mt-3.5 flex items-center justify-between gap-2">
+                <div className="guided-tour-controls mt-3.5 flex items-center justify-between gap-2">
                     <Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>{copy.skip}</Button>
                     <span className="text-xs font-medium text-[var(--color-muted)]">{index + 1}/{steps.length}</span>
                     <div className="flex gap-2">
