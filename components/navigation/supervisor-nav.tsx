@@ -139,6 +139,10 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                     })}
                 </div>
             </nav>
+            <Link href="/install" onClick={onLinkClick} className="mx-3 mb-3 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
+                <DownloadCloud className="h-[18px] w-[18px]" aria-hidden="true" />
+                Install Weavly guide
+            </Link>
 
             {/* Footer — Language + Logout. pb-safe handles iPad landscape home indicator */}
             <div className="border-t border-white/10 p-4 pb-safe">

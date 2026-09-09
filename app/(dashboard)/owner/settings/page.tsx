@@ -441,6 +441,11 @@ export default function SettingsPage() {
                     )}
                 />
 
+                <Link href="/install" className="my-4 flex min-h-11 w-fit items-center gap-2 rounded-lg border border-hairline px-4 py-3 text-sm font-semibold hover:bg-muted">
+                    <Smartphone className="h-4 w-4" aria-hidden="true" />
+                    Install Weavly on desktop or mobile
+                </Link>
+
                 <div className="mt-6 max-w-5xl space-y-6">
                     <SettingsCategory
                         title="Cost Estimate Setup"
@@ -650,6 +655,11 @@ export default function SettingsPage() {
                     </Button>
                 )}
             />
+
+            <Link href="/install" className="my-4 flex min-h-11 w-fit items-center gap-2 rounded-lg border border-hairline px-4 py-3 text-sm font-semibold hover:bg-muted">
+                <Smartphone className="h-4 w-4" aria-hidden="true" />
+                Install Weavly on desktop or mobile
+            </Link>
 
             <div className="settings-layout-grid">
                 <div className="min-w-0 space-y-8">
