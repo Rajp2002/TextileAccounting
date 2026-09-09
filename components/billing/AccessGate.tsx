@@ -3,11 +3,12 @@ import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability, type PlanCapability, type SubscriptionTier } from '@/lib/subscription-access'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calculator, ArrowRight, ArrowLeft, CheckCircle2, Lock, Zap } from 'lucide-react'
+import { Calculator, ArrowRight, ArrowLeft, Lock, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createPerfTimer } from '@/lib/perf'
 import { getBillingPrice } from '@/lib/billing-constants'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
+import { UpgradeWall } from '@/components/billing/UpgradeWall'
 import PlanAnalyticsLink from '@/components/billing/PlanAnalyticsLink'
 
 interface AccessGateProps {
@@ -153,39 +154,22 @@ function ProductionUpgradeWall({ currentTier, routeName }: { currentTier: Subscr
     const formatAmount = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`
 
     return (
-        <div className="flex min-h-[60vh] items-center justify-center p-6">
-            <div className="w-full max-w-md space-y-6 text-center">
-                <PlanAnalyticsBeacon eventName="production_cta_viewed" properties={{ feature: featureName }} />
-                <PlanAnalyticsBeacon eventName="upgrade_screen_opened" properties={{ feature: featureName, plan_tier: currentTier }} />
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 shadow-sm">
-                    <Zap className="h-8 w-8 text-orange-600" />
-                </div>
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Take your costing into production</h2>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                        {currentTier === 'lite'
-                            ? `${featureName} is available with Weavly Base. Keep your costing connected while you create jobs and track production progress.`
-                            : `${featureName} requires an active Weavly Base entitlement.`}
-                    </p>
-                </div>
-                <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left">
-                    {[
-                        'Create production directly from a saved costing',
-                        'Track planned, produced, and remaining metres',
-                        'Keep costing, machine, worker, and settlement data connected',
-                    ].map((feature) => (
-                        <div key={feature} className="flex items-start gap-2 text-sm text-gray-700">
-                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                            <span>{feature}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                    <p className="text-sm text-gray-500">Weavly Base</p>
-                    <p className="mt-1 text-3xl font-extrabold text-gray-900">
-                        {formatAmount(price.totalPaise)}<span className="text-lg font-normal text-gray-400"> total / first year</span>
-                    </p>
-                    <p className="text-xs text-gray-400">{formatAmount(price.basePaise)} + {formatAmount(price.gstPaise)} GST · {formatAmount(renewal.totalPaise)} total renewal</p>
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+            <PlanAnalyticsBeacon eventName="production_cta_viewed" properties={{ feature: featureName }} />
+            <PlanAnalyticsBeacon eventName="upgrade_screen_opened" properties={{ feature: featureName, plan_tier: currentTier }} />
+            <div className="max-w-2xl">
+                <h2 className="text-2xl font-bold text-ink">Take your costing into production</h2>
+                <p className="mt-2 text-sm leading-relaxed text-body">
+                    {currentTier === 'lite'
+                        ? `${featureName} is available with Weavly Base. Keep your costing connected while you create jobs and track production progress.`
+                        : `${featureName} requires an active Weavly Base entitlement.`}
+                </p>
+            </div>
+            <UpgradeWall currentPlan={currentTier} actions={{ base: <>
+                <div className="space-y-1">
+                    <p><span className="text-3xl font-bold tracking-tight text-ink">{formatAmount(price.totalPaise)}</span><span className="ml-2 text-sm text-subtle">/ first year</span></p>
+                    <p className="text-sm text-body">{formatAmount(renewal.totalPaise)} / year to renew</p>
+                    <p className="text-xs text-subtle">GST included · manual annual renewal</p>
                 </div>
                 <PlanAnalyticsLink
                     href="/owner/billing?plan=base"
@@ -193,14 +177,13 @@ function ProductionUpgradeWall({ currentTier, routeName }: { currentTier: Subscr
                     eventName="production_cta_clicked"
                     properties={{ feature: featureName, source: 'production_upgrade_wall' }}
                 >
-                    <Button id="upgrade-to-base-production-btn" size="lg" className="w-full gap-2 rounded-xl bg-amber-600 text-white shadow-lg shadow-amber-200 hover:bg-amber-700">
-                        <Zap className="h-4 w-4" />
+                    <Button id="upgrade-to-base-production-btn" className="h-auto min-h-11 w-full gap-2 whitespace-normal py-3">
+                        <Zap className="h-4 w-4 shrink-0" aria-hidden="true" />
                         Take costing into production
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
                     </Button>
                 </PlanAnalyticsLink>
-                <p className="text-xs text-gray-400">Secure Razorpay checkout · GST-inclusive totals shown</p>
-            </div>
+            </> }} />
         </div>
     )
 }
