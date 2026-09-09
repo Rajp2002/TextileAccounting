@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { BILLING_MODEL, BILLING_PLANS, getBillingPrice, RENEWAL_ELIGIBILITY_DAYS } from '../lib/billing-constants'
 import { readBillingOrderContext, resolveBillingPurchase, type BillingSubscriptionRow } from '../lib/billing-lifecycle'
+import { UPGRADE_PLAN_FEATURES, UPGRADE_FEATURE_IMAGES, upgradeFeatureBullets, upgradeText } from '../lib/upgrade-wall'
 
 const root = process.cwd()
 
@@ -49,9 +50,10 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         const content = readProjectFile('app/(dashboard)/owner/billing/page.tsx')
         expect(content).toContain('Weavly Lite')
         expect(content).toContain('Weavly Base')
-        expect(content).toContain('Complete costing desk')
-        expect(content).toContain('Everything in Lite')
-        expect(content).toContain('Manual annual renewal from year 2')
+        expect(content).toContain('<UpgradeWall')
+        expect(upgradeText('en', 'liteFit')).toBe('Your complete costing desk')
+        expect(UPGRADE_PLAN_FEATURES.base).toEqual([...UPGRADE_PLAN_FEATURES.lite, 'production', 'payroll'])
+        expect(content).toContain('manual annual renewal')
         expect(content).toContain('activeRenewalPrice')
         expect(content).toContain("subscriptionTier === 'lite'")
         expect(content).toContain('Payment history')
@@ -60,6 +62,25 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content.toLowerCase()).not.toContain('₹5,900/month')
         expect(content).not.toContain('Weavly Full Suite')
         expect(content).not.toContain('AutoRenewToggle')
+    })
+
+    it('pairs every included feature with a picture and plan-specific explanatory bullets', () => {
+        expect(UPGRADE_PLAN_FEATURES.free).toEqual(['estimator', 'costings'])
+        expect(upgradeFeatureBullets('free', 'estimator')).toContain('limit')
+        expect(upgradeFeatureBullets('free', 'estimator')).toContain('noQuality')
+        expect(upgradeFeatureBullets('lite', 'estimator')).toContain('unlimited')
+        expect(upgradeFeatureBullets('free', 'costings')).toContain('viewExport')
+        for (const plan of ['free', 'lite', 'base'] as const) {
+            for (const feature of UPGRADE_PLAN_FEATURES[plan]) {
+                const picture = UPGRADE_FEATURE_IMAGES[feature]
+                expect(readFileSync(join(root, 'public', picture.src)).byteLength).toBeGreaterThan(1000)
+                for (const language of ['en', 'gu', 'hi'] as const) {
+                    for (const bullet of upgradeFeatureBullets(plan, feature)) {
+                        expect(upgradeText(language, bullet).length).toBeGreaterThan(10)
+                    }
+                }
+            }
+        }
     })
 
     it('keeps public landing pricing aligned with the annual billing catalog', () => {

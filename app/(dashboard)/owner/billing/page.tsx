@@ -2,14 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { getCachedOrgPlanAccess, getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
+import { UpgradeWall } from '@/components/billing/UpgradeWall'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
 import { PaymentHistoryDialog, type BillingHistoryEntry, type BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
-    CheckCircle2, AlertCircle, ChevronDown, Clock, XCircle,
-    ShieldCheck, Star, Zap, Timer, Lock, CreditCard, Calculator,
+    AlertCircle, ChevronDown, Clock, XCircle,
+    ShieldCheck, Star, Zap, Timer, Lock, CreditCard,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
@@ -34,7 +35,7 @@ import { type BillingAttemptRow } from '@/lib/billing-attempts'
 import { getBillingReadiness } from '@/lib/billing-readiness'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { Suspense } from 'react'
-import { PageHeader, SectionHeader, StatusBadge } from '@/components/ui/page-header'
+import { PageHeader, StatusBadge } from '@/components/ui/page-header'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -437,87 +438,41 @@ function PlanCards({
     visibleTiers: readonly PurchasablePlanTier[]
     resumePendingCheckout?: boolean
 }) {
-    const plans = [
-        {
-            tier: 'lite' as const,
-            name: 'Weavly Lite',
-            badge: 'Complete costing desk',
-            positioning: 'Textile costing and rate management',
-            features: ['Complete textile estimator and live calculations', 'Saved costings, history, reuse, and recalculation', 'Saved qualities and Rate Book references', 'Hosted account data and persistent records'],
-            icon: Calculator,
-        },
-        {
-            tier: 'base' as const,
-            name: 'Weavly Base',
-            badge: 'Costing + production',
-            positioning: 'Costing and production management',
-            features: ['Everything in Lite', 'Create production directly from saved costings', 'Track planned, produced, and remaining metres', 'Machines, daily production, piece-rate pay, advances, and settlements'],
-            icon: Zap,
-        },
-    ]
-        .filter((plan) => visibleTiers.includes(plan.tier))
-        .filter((plan) => decisions[plan.tier].allowed)
-
-    if (plans.length === 0) return null
-
-    return (
-        <div className="space-y-5 pt-4">
-            <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: currentTier }} />
-            <SectionHeader title={label} description="Clear annual pricing. 18% GST is included in every total shown." />
-            <div className="grid gap-6 lg:grid-cols-2">
-                {plans.map((plan) => {
-                    const Icon = plan.icon
-                    const decision = decisions[plan.tier]
-                    const price = getBillingPrice(plan.tier, decision.purchaseType)
-                    const total = formatAmount(price.totalPaise)
-                    const breakdown = `${formatAmount(price.basePaise)} + ${formatAmount(price.gstPaise)} GST (18%)`
-                    const isRenewal = decision.purchaseType === 'renewal'
-                    return (
-                    <div key={plan.tier} className="premium-surface group relative rounded-xl border border-hairline bg-surface p-6 shadow-[var(--shadow-card)]">
-                        <span className="absolute right-5 top-5 rounded-full bg-saffron-soft px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-saffron-deep">
-                            {plan.badge}
-                        </span>
-                        <div className="flex h-full flex-col gap-6">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 pr-24">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron"><Icon className="h-5 w-5" /></div>
-                                    <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
-                                </div>
-                                <p className="text-sm font-semibold text-saffron-deep">{plan.positioning}</p>
-                                <div>
-                                    <div className="flex items-baseline gap-1"><span className="text-3xl font-bold tracking-tight text-ink">{total}</span><span className="text-sm text-subtle">/{isRenewal ? 'renewal year' : 'first year'}</span></div>
-                                    <p className="mt-1 text-xs text-body">{breakdown}</p>
-                                </div>
-                                <div className="rounded-lg border border-hairline bg-surface-soft p-3 text-sm font-medium text-body">
-                                    <p>Manual annual renewal from year 2</p><p className="mt-0.5 text-xs text-subtle">{formatAmount(getBillingPrice(plan.tier, 'renewal').totalPaise)} total renewal · GST included</p>
-                                </div>
-                            </div>
-                            <ul className="flex-1 space-y-3">
-                                {plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm leading-tight text-body"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />{feature}</li>)}
-                            </ul>
-                            <SubscribeButton
-                                planTier={plan.tier}
-                                tierName={plan.name}
-                                displayAmount={total}
-                                buttonLabel={resumePendingCheckout
-                                    ? `Resume secure payment · ${total}`
-                                    : `Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
-                                successHref="/owner/estimator"
-                                successLabel={isRenewal ? 'View payment history' : 'Start your first Cost Estimate'}
-                            />
-                        </div>
-                    </div>
-                    )
-                })}
+    const action = (planTier: PurchasablePlanTier) => {
+        const decision = decisions[planTier]
+        if (!visibleTiers.includes(planTier) || !decision.allowed) return undefined
+        const plan = getBillingPlan(planTier)
+        const price = getBillingPrice(planTier, decision.purchaseType)
+        const total = formatAmount(price.totalPaise)
+        const isRenewal = decision.purchaseType === 'renewal'
+        return <>
+            <div className="space-y-1">
+                <p><span className="text-3xl font-bold tracking-tight text-ink">{total}</span><span className="ml-2 text-sm text-subtle">/{isRenewal ? 'renewal year' : 'first year'}</span></p>
+                <p className="text-xs text-body">{formatAmount(price.basePaise)} + {formatAmount(price.gstPaise)} GST (18%)</p>
+                <p className="text-sm text-body">{formatAmount(getBillingPrice(planTier, 'renewal').totalPaise)} / year to renew</p>
+                <p className="text-xs text-subtle">GST included · manual annual renewal</p>
             </div>
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3">
-                <ShieldCheck className="h-4 w-4 text-subtle" />
-                <p className="text-xs font-medium text-body">
-                    Secure Razorpay checkout · Tenant-scoped data access
-                </p>
-            </div>
+            <SubscribeButton
+                planTier={planTier}
+                tierName={plan.name}
+                displayAmount={total}
+                buttonLabel={resumePendingCheckout
+                    ? `Resume secure payment · ${total}`
+                    : `Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
+                successHref="/owner/estimator"
+                successLabel={isRenewal ? 'View payment history' : 'Start your first Cost Estimate'}
+            />
+        </>
+    }
+
+    return <div className="space-y-5 pt-4" aria-label={label}>
+        <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: currentTier }} />
+        <UpgradeWall currentPlan={currentTier} actions={{ lite: action('lite'), base: action('base') }} />
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3">
+            <ShieldCheck className="h-4 w-4 text-subtle" aria-hidden="true" />
+            <p className="text-xs font-medium text-body">Secure Razorpay checkout · GST-inclusive totals shown</p>
         </div>
-    )
+    </div>
 }
 
 export default async function BillingPage({
@@ -683,6 +638,17 @@ export default async function BillingPage({
             </div>
             <BillingDocumentNotice compact />
 
+            {canShowPlanCards && billingReadiness.canCreateOrder && (
+                <PlanCards
+                    label={planSectionLabel}
+                    currentTier={tier}
+                    decisions={purchaseDecisions}
+                    visibleTiers={cardPlanTiers}
+                    resumePendingCheckout={isPending}
+                />
+            )}
+            {canShowPlanCards && !billingReadiness.canCreateOrder && <UpgradeWall currentPlan={tier} />}
+
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                 <div className="space-y-6 lg:col-span-8">
                     {latestAttemptNeedsAttention && latestAttempt && <BillingAttemptStatus attempt={latestAttempt} />}
@@ -704,15 +670,6 @@ export default async function BillingPage({
                                 </div>
                             </div>
                         </Card>
-                    )}
-                    {canShowPlanCards && billingReadiness.canCreateOrder && (
-                        <PlanCards
-                            label={planSectionLabel}
-                            currentTier={subscriptionTier}
-                            decisions={purchaseDecisions}
-                            visibleTiers={cardPlanTiers}
-                            resumePendingCheckout={isPending}
-                        />
                     )}
                 </div>
 

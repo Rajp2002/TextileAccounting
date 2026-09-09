@@ -26,7 +26,7 @@ describe('Estimator-first billing rollout', () => {
     expect(isSelfServePlanTier('forged')).toBe(false)
 
     const billingPage = read('app/(dashboard)/owner/billing/page.tsx')
-    expect(billingPage).toContain('visibleTiers.includes(plan.tier)')
+    expect(billingPage).toContain('!visibleTiers.includes(planTier) || !decision.allowed')
     expect(billingPage).toContain('BILLING_SELF_SERVE_PLAN_TIERS')
     expect(billingPage).toContain('Choose Weavly Lite or Base')
   })
