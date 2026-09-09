@@ -108,6 +108,7 @@ import {
     handleEnterKeyNavigation,
     findNavigableFormInputs,
     focusAndSelectInput,
+    scrollInputIntoComfortableView,
     DEFAULT_INPUT_SELECTOR,
     isElementNavigable,
 } from '@/lib/form-navigation'
@@ -1002,7 +1003,18 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
 function EstimatorCard({ children, accent = 'neutral' }: { children: React.ReactNode; accent?: EstimatorAccent }) {
     const accentClass = getAccentStyles(accent).rail
     return (
-        <Card className="relative mb-3 overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_8px_28px_rgba(30,37,40,0.045)]">
+        <Card
+            data-enter-scroll-target="true"
+            onFocusCapture={event => {
+                const field = event.target
+                if (!(field instanceof HTMLElement) || !event.currentTarget.contains(field)) return
+                if (!field.matches('input, textarea, select, [role="combobox"]')) return
+                // Let pointer selection and browser focus scrolling finish first.
+                requestAnimationFrame(() => {
+                    if (document.activeElement === field) scrollInputIntoComfortableView(field)
+                })
+            }}
+            className="relative mb-3 overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_8px_28px_rgba(30,37,40,0.045)]">
             <div className={`absolute left-0 top-0 h-full w-[3px] ${accentClass}`} />
             {children}
         </Card>
@@ -2179,7 +2191,14 @@ function LayerNameField({
             setIsOpen(true)
             return
         }
-        if (!isOpen || filteredOptions.length === 0) return
+        if (!isOpen) return
+
+        if (e.key === 'Escape' || (e.key === 'Enter' && highlightedIndex < 0)) {
+            setIsOpen(false)
+            setHighlightedIndex(-1)
+            return
+        }
+        if (filteredOptions.length === 0) return
 
         if (e.key === 'ArrowDown') {
             e.preventDefault()
@@ -2192,13 +2211,21 @@ function LayerNameField({
                 e.preventDefault()
                 handleSelect(filteredOptions[highlightedIndex])
             }
-        } else if (e.key === 'Escape') {
-            setIsOpen(false)
         }
     }
 
     return (
-        <div data-estimator-field="label" className="space-y-1.5 min-w-0 relative" ref={containerRef}>
+        <div
+            data-estimator-field="label"
+            className="space-y-1.5 min-w-0 relative"
+            ref={containerRef}
+            onBlur={e => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                    setIsOpen(false)
+                    setHighlightedIndex(-1)
+                }
+            }}
+        >
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 {label}
             </Label>
@@ -2855,6 +2882,7 @@ function WeavingRateFields({
 
 // setPartyName={setPartyName} remains the QuickCostingView prop contract; the owner wrapper marks a user edit.
 function QuickCostingView({
+    constructionFields,
     state,
     dispatch,
     totals,
@@ -2884,6 +2912,7 @@ function QuickCostingView({
     onSelectWarpYarn,
     onSelectWeftYarn,
 }: {
+    constructionFields: React.ReactNode
     state: EstimateState
     dispatch: React.Dispatch<Action>
     totals: EstimatorV3Totals
@@ -2923,7 +2952,7 @@ function QuickCostingView({
 
     return (
         <div
-            className="space-y-3"
+            className="space-y-3 pb-[50dvh]"
             data-enter-navigate-container="true"
             onKeyDown={handleEnterKeyNavigation}
         >
@@ -2968,6 +2997,7 @@ function QuickCostingView({
                         />
                         <p className="text-[10px] font-medium leading-normal text-slate-400">Use the name your staff and repeat customers will recognise.</p>
                     </div>
+                    <div className="sm:col-span-2">{constructionFields}</div>
                     <NumField fieldKey="warpCrimpPct"
                         label="Warp crimp (take-up)"
                         value={state.warpCrimpPct}
@@ -5394,6 +5424,33 @@ export default function EstimatorClient({
         { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
         { label: 'Factory expenses / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
+    const constructionFields = (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
+                <Input
+                    data-estimator-field="warpConstruction"
+                    aria-label="Warp yarn construction"
+                    value={warpInstruction === lastGeneratedWarp.current ? '' : warpInstruction}
+                    onChange={e => setWarpInstructionFromUser(e.target.value)}
+                    placeholder={formatEstimatorPlaceholder(lastGeneratedWarp.current || '50/48 + Rainbow')}
+                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
+                />
+            </div>
+            <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
+                <Input
+                    data-estimator-field="weftConstruction"
+                    aria-label="Weft yarn construction"
+                    value={weftInstruction === lastGeneratedWeft.current ? '' : weftInstruction}
+                    onChange={e => setWeftInstructionFromUser(e.target.value)}
+                    placeholder={formatEstimatorPlaceholder(lastGeneratedWeft.current || '50/48 - 68 Picks')}
+                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
+                />
+            </div>
+        </div>
+    )
+
     return (
         <div data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="premium-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <FreeMeterPanel meter={freeMeter} />
@@ -6439,6 +6496,7 @@ export default function EstimatorClient({
                 {entryMode === 'quick' && !showAdvancedOverhead ? (
                     <div key="quick" className="premium-content-swap">
                     <QuickCostingView
+                        constructionFields={constructionFields}
                         state={state}
                         dispatch={dispatch}
                         totals={totals}
@@ -6472,7 +6530,7 @@ export default function EstimatorClient({
                 ) : (
                 <div
                     key="detailed"
-                    className="premium-content-swap space-y-7"
+                    className="premium-content-swap space-y-7 pb-[50dvh]"
                     data-enter-navigate-container="true"
                     onKeyDown={handleEnterKeyNavigation}
                 >
@@ -6551,48 +6609,10 @@ export default function EstimatorClient({
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
-                                <Input
-                                    data-estimator-field="warpConstruction"
-                                    aria-label="Warp yarn construction"
-                                    value={warpInstruction === lastGeneratedWarp.current ? '' : warpInstruction}
-                                    onChange={e => setWarpInstructionFromUser(e.target.value)}
-                                    placeholder={formatEstimatorPlaceholder(lastGeneratedWarp.current || '50/48 + Rainbow')}
-                                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
-                                <Input
-                                    data-estimator-field="weftConstruction"
-                                    aria-label="Weft yarn construction"
-                                    value={weftInstruction === lastGeneratedWeft.current ? '' : weftInstruction}
-                                    onChange={e => setWeftInstructionFromUser(e.target.value)}
-                                    placeholder={formatEstimatorPlaceholder(lastGeneratedWeft.current || '50/48 - 68 Picks')}
-                                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </EstimatorCard>
-
-                {/* 2. Warp Yarn Rows */}
-                <EstimatorCard accent="warp">
-                    <SectionHeader 
-                        title={t('estimator.warp.title')} 
-                        icon={Sparkles} 
-                        accent="warp"
-                        step={2}
-                        tutorialSection={3}
-                        detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
-                        badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
-                    />
-                    <CardContent className="p-5 sm:p-6 space-y-5">
+                        {constructionFields}
                         {/* Global Defaults Block */}
-                        <div className="mb-6 grid overflow-hidden rounded-[13px] border border-[#D7E7F1] bg-[#F7FBFD] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(260px,0.9fr)]">
-                            <div className="border-b border-[#D7E7F1] p-4 sm:border-b-0 sm:border-r">
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 rounded-[13px] border border-[#D7E7F1] bg-[#F7FBFD] p-4">
+                            <div className="min-w-0">
                                 <StepperField
                                     fieldKey="warpCrimpPct"
                                     label="Warp Crimp (Take-up)"
@@ -6602,7 +6622,7 @@ export default function EstimatorClient({
                                     accent="warp"
                                 />
                             </div>
-                            <div className="border-b border-[#D7E7F1] p-4 sm:border-b-0 sm:border-r">
+                            <div className="min-w-0">
                                 <StepperField
                                     fieldKey="yarnShortagePct"
                                     label="Default Yarn Waste"
@@ -6615,7 +6635,7 @@ export default function EstimatorClient({
                                     accent="warp"
                                 />
                             </div>
-                            <div className="flex items-center justify-between gap-4 p-4">
+                            <div className="col-span-full flex items-center gap-4 border-t border-[#D7E7F1] pt-4">
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-1.5">
                                         <Calculator className="h-3.5 w-3.5 text-[var(--color-info-blue)]" />
@@ -6631,6 +6651,21 @@ export default function EstimatorClient({
                             </div>
                         </div>
 
+                    </CardContent>
+                </EstimatorCard>
+
+                {/* 2. Warp Yarn Rows */}
+                <EstimatorCard accent="warp">
+                    <SectionHeader
+                        title={t('estimator.warp.title')}
+                        icon={Sparkles}
+                        accent="warp"
+                        step={2}
+                        tutorialSection={3}
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
+                        badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
+                    />
+                    <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="space-y-4">
                             {state.warpRows.map((row, i) => {
                                 const unverified = unverifiedYarnRows[row.id]
