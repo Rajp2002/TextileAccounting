@@ -1,0 +1,2 @@
+PASS: real Auth login; Data API Rate Book, saved costings, qualities, private RPC and profile reparenting denied
+PASS: fixture credentials stored in a restricted local file; no secrets printed

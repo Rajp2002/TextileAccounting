@@ -98,6 +98,11 @@ const bottomNavItems = [
     { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
+const freeNavItems = [
+    { name: 'Cost Estimate', href: '/free', icon: Calculator, translationKey: 'estimator', workflow: 'estimator' },
+    { name: 'Saved Costings', href: '/free/costings', icon: FileText, translationKey: 'quotes', workflow: 'estimator' },
+]
+
 const liteBottomNavItems = [
     { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
     { name: "Saved Costings", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
@@ -105,6 +110,7 @@ const liteBottomNavItems = [
 ]
 
 function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
+    if (item.name === 'Saved Costings') return 'Saved Costings'
     if (item.name === 'Setup') return 'Setup'
     if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Stock'
     if (item.name === 'Quotations') return productionMode === 'market_run' ? 'Saved Costings' : 'Costings & Quotations'
@@ -146,7 +152,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
         costingWorkspaceRoutes.add('/owner/operations')
         costingWorkspaceRoutes.add('/owner/payroll')
     }
-    const visibleGroups = navGroups
+    const visibleGroups = subscriptionTier === 'free' ? [{label:'Costing',items:freeNavItems}] : navGroups
         .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
@@ -170,7 +176,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
                             <p data-i18n-skip="true" className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
-                            <p className="text-[11px] font-medium text-zinc-400">{hasLegacyWorkspace ? 'Owner control' : hasProduction ? 'Weavly Base workspace' : 'Weavly Lite workspace'}</p>
+                            <p className="text-[11px] font-medium text-zinc-400">{subscriptionTier === 'free' ? 'Weavly Free workspace' : hasLegacyWorkspace ? 'Owner control' : hasProduction ? 'Weavly Base workspace' : 'Weavly Lite workspace'}</p>
                         </div>
                     </div>
                 )}
@@ -194,7 +200,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         {group.items.map((item) => {
                             const Icon = item.icon
                             const itemPath = item.href.split('#')[0]
-                            const isActive = (item.name === 'Settings' || item.name === 'Factory Today')
+                            const isActive = (item.href === '/free' || item.name === 'Settings' || item.name === 'Factory Today')
                                 ? pathname === itemPath
                                 : pathname === itemPath || pathname.startsWith(itemPath + "/")
 
@@ -242,9 +248,9 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                 )}
                 <div className="flex flex-col gap-3">
                     {!hasLegacyWorkspace && (
-                        <Link href="/owner/billing" onClick={onLinkClick} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
+                        <Link href={subscriptionTier === 'free' ? '/free/account' : '/owner/billing'} onClick={onLinkClick} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
                             <CreditCard className="h-[18px] w-[18px]" />
-                            Subscription & Billing
+                            {subscriptionTier === 'free' ? 'Account settings' : 'Subscription & Billing'}
                         </Link>
                     )}
                     <LanguageSwitcher className="text-saffron hover:bg-saffron-deep hover:text-white" />
@@ -267,9 +273,9 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
         ? bottomNavItems.filter((item) => isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey)).slice(0, 5)
         : hasProduction
           ? bottomNavItems.filter((item) => ['/owner/estimator', '/owner/production', '/owner/stock', '/owner/operations', '/owner/payroll'].includes(item.href))
-          : liteBottomNavItems
+          : subscriptionTier === 'free' ? freeNavItems : liteBottomNavItems
     const moreIsActive = !visibleBottomNavItems.some((item) => (
-        pathname === item.href || pathname.startsWith(item.href + "/")
+        pathname === item.href || item.href !== "/free" && pathname.startsWith(item.href + "/")
     ))
 
     return (
@@ -310,7 +316,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
             )}>
                 {visibleBottomNavItems.map((item) => {
                     const Icon = item.icon
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                    const isActive = pathname === item.href || item.href !== "/free" && pathname.startsWith(item.href + "/")
                     const navLabel = !hasLegacyWorkspace && item.href === '/owner/quotes'
                         ? 'Saved Costings'
                         : !hasLegacyWorkspace && item.href === '/owner/rates'

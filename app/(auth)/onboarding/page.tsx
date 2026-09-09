@@ -51,6 +51,7 @@ export default async function OnboardingPage() {
     // states out of this page, including direct/stale links to /onboarding.
     if (role === 'owner' && orgId) {
         const tier = await getOrgTier(orgId)
+        if (tier === 'free' || user.app_metadata.free_signup === true && tier === 'none') redirect('/free')
         if (tier === 'none') redirect('/owner/billing')
         if (tier === 'lite' || tier === 'base') redirect('/owner/estimator')
     }

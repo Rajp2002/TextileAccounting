@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ❯ __tests__/base-payroll-readiness.test.ts (10 tests | 1 failed) 6490ms
+     × preserves complete results on mixed histories without mutating inputs 6349ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  __tests__/base-payroll-readiness.test.ts > Base payroll readiness > preserves complete results on mixed histories without mutating inputs
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ __tests__/base-payroll-readiness.test.ts:40:5
+     38|
+     39| describe('Base payroll readiness', () => {
+     40|     it('preserves complete results on mixed histories without mutating…
+       |     ^
+     41|         for (let seed = 0; seed < 20; seed++) {
+     42|             const input = payrollReadinessFixture(20, 40, seed)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 219 passed (220)
+      Tests  1 failed | 1457 passed | 1 skipped (1459)
+   Start at  00:15:13
+   Duration  847.69s (transform 20.77s, setup 0ms, import 306.31s, tests 101.34s, environment 398ms)
+

@@ -1,0 +1,91 @@
+
+> textile-saas@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ❯ __tests__/base-job-summaries.test.ts (4 tests | 1 failed) 19930ms
+     × matches the original call-site results exactly on interleaved histories without mutation 19445ms
+ ❯ __tests__/base-payroll-readiness.test.ts (10 tests | 1 failed) 32177ms
+     × preserves complete results on mixed histories without mutating inputs 31776ms
+ ❯ __tests__/backup-sanitized-inventory.test.ts (13 tests | 4 failed) 162596ms
+     × fails closed when Storage contains objects 18261ms
+     × fails closed when psql returns more than one JSON row 17539ms
+     × rejects non-integer or invalid Storage counts: { bucket_count: -1 } 17944ms
+     × rejects non-integer or invalid Storage counts: { object_count: 0.5 } 15207ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  __tests__/backup-sanitized-inventory.test.ts > sanitized backup inventory capture > fails closed when Storage contains objects
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ __tests__/backup-sanitized-inventory.test.ts:162:3
+    160|   })
+    161|
+    162|   it('fails closed when Storage contains objects', () => {
+       |   ^
+    163|     const { result, outputPath } = runCapture(JSON.stringify(inventory…
+    164|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  __tests__/backup-sanitized-inventory.test.ts > sanitized backup inventory capture > fails closed when psql returns more than one JSON row
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ __tests__/backup-sanitized-inventory.test.ts:190:3
+    188|   })
+    189|
+    190|   it('fails closed when psql returns more than one JSON row', () => {
+       |   ^
+    191|     const multipleRows = `${JSON.stringify(inventory())}\n${JSON.strin…
+    192|     const { result, outputPath } = runCapture(multipleRows)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  __tests__/backup-sanitized-inventory.test.ts > sanitized backup inventory capture > rejects non-integer or invalid Storage counts: { bucket_count: -1 }
+ FAIL  __tests__/backup-sanitized-inventory.test.ts > sanitized backup inventory capture > rejects non-integer or invalid Storage counts: { object_count: 0.5 }
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ __tests__/backup-sanitized-inventory.test.ts:202:4
+    200|     { object_count: 0.5 },
+    201|     { total_bytes: '0' },
+    202|   ])('rejects non-integer or invalid Storage counts: %o', (invalid) =>…
+       |    ^
+    203|     const candidate = inventory() as Record<string, unknown> & {
+    204|       storage: Record<string, unknown>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  __tests__/base-job-summaries.test.ts > Base job summaries > matches the original call-site results exactly on interleaved histories without mutation
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ __tests__/base-job-summaries.test.ts:11:5
+      9|
+     10| describe('Base job summaries', () => {
+     11|     it('matches the original call-site results exactly on interleaved …
+       |     ^
+     12|         for (let seed = 0; seed < 20; seed++) {
+     13|             const input = jobSummariesFixture(25, 1000, seed)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  __tests__/base-payroll-readiness.test.ts > Base payroll readiness > preserves complete results on mixed histories without mutating inputs
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ __tests__/base-payroll-readiness.test.ts:40:5
+     38|
+     39| describe('Base payroll readiness', () => {
+     40|     it('preserves complete results on mixed histories without mutating…
+       |     ^
+     41|         for (let seed = 0; seed < 20; seed++) {
+     42|             const input = payrollReadinessFixture(20, 40, seed)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+
+ Test Files  3 failed | 216 passed (219)
+      Tests  6 failed | 1447 passed | 1 skipped (1454)
+   Start at  23:59:29
+   Duration  318.70s (transform 172.84s, setup 0ms, import 1688.95s, tests 399.25s, environment 1.68s)
+

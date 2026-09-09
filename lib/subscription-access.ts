@@ -1,5 +1,5 @@
 /** Pure subscription access resolution shared by server code and unit tests. */
-export type SubscriptionTier = 'none' | 'trial' | 'lite' | 'base' | 'premium'
+export type SubscriptionTier = 'none' | 'free' | 'trial' | 'lite' | 'base' | 'premium'
 // `base` is the shared Lite/Base workspace, not a production entitlement.
 export type ProductExperience = 'base' | 'full_suite'
 
@@ -15,6 +15,8 @@ export type PlanCapability =
   | 'rate_book'
   | 'existing_costing_tools'
   | 'account_data'
+  | 'account_settings'
+  | 'export_document'
   | 'production'
   | 'production_management'
   | 'production_tracking'
@@ -28,6 +30,8 @@ const LITE_CAPABILITIES = [
   'rate_book',
   'existing_costing_tools',
   'account_data',
+  'account_settings',
+  'export_document',
 ] as const satisfies readonly PlanCapability[]
 
 const BASE_CAPABILITIES = [
@@ -41,6 +45,10 @@ const BASE_CAPABILITIES = [
 /** Internal legacy access is retained for existing accounts only. */
 export const PLAN_CAPABILITIES = {
   none: [] as const,
+  // Free grants are explicit operational records, never inferred from a
+  // missing subscription. account_data includes business exports/deletion;
+  // account_settings is the separate non-business account surface.
+  free: ['estimator', 'account_settings', 'saved_costings', 'export_document'] as const,
   lite: LITE_CAPABILITIES,
   base: BASE_CAPABILITIES,
   trial: [...BASE_CAPABILITIES, 'legacy_full_suite'] as const,
@@ -50,6 +58,8 @@ export const PLAN_CAPABILITIES = {
 export type OrgPlanAccess = {
   /** Paid/trial entitlement retained for billing and conversion eligibility. */
   subscriptionTier: SubscriptionTier
+  /** Explicit historical Free identity, retained even when suspended or upgraded. */
+  freeAccount?: boolean
   /** Tier the product should enforce for navigation, routes, and actions. */
   effectiveTier: SubscriptionTier
   productExperience: ProductExperience
@@ -97,7 +107,7 @@ export function hasCapability(actual: SubscriptionTier, capability: PlanCapabili
 export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'premium'): boolean {
   return required === 'premium'
     ? hasCapability(actual, 'legacy_full_suite')
-    : hasCapability(actual, 'estimator')
+    : hasCapability(actual, 'existing_costing_tools')
 }
 
 export function normalizeProductExperience(value: unknown): ProductExperience {
@@ -116,7 +126,7 @@ export function resolveOrgPlanAccess(
 ): OrgPlanAccess {
   const hasFullSuiteEntitlement = tierSatisfies(subscriptionTier, 'premium')
   const fallbackTier = retainLiteAfterBaseExpiry && subscriptionTier === 'none' ? 'lite' : subscriptionTier
-  const productExperience = fallbackTier === 'lite' || fallbackTier === 'base'
+  const productExperience = fallbackTier === 'free' || fallbackTier === 'lite' || fallbackTier === 'base'
     ? 'base'
     : normalizeProductExperience(productExperienceValue)
 
@@ -149,6 +159,13 @@ export function hasPaidBaseHistory(
   })
 }
 
+/** Failed/cancelled checkout attempts are not previously purchased access. */
+export function hasEstablishedPaidHistory(rows: readonly SubscriptionAccessRow[]): boolean {
+  return rows.some(row => Boolean(row.razorpay_payment_id)
+    || ['active', 'authenticated', 'completed', 'expired'].includes(row.status)
+    || (['paused', 'halted', 'cancelled'].includes(row.status) && Boolean(row.current_start || row.current_end)))
+}
+
 function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): boolean {
   // Paid access is period-based, not webhook-label-based. A failed renewal,
   // pause, halt, completion, or cancel-at-cycle-end must not erase the period
@@ -175,7 +192,7 @@ export function resolveEffectiveSubscription<T extends SubscriptionAccessRow>(
   rows: T[],
   nowMs = Date.now()
 ): { tier: SubscriptionTier; subscription: T | null } {
-  const rank: Record<SubscriptionTier, number> = { none: 0, lite: 1, base: 2, trial: 3, premium: 4 }
+  const rank: Record<SubscriptionTier, number> = { none: 0, free: 0, lite: 1, base: 2, trial: 3, premium: 4 }
   const current = rows
     .filter((row) => isSubscriptionRowCurrent(row, nowMs))
     .map((row) => ({

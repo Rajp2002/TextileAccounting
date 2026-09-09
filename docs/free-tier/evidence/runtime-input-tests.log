@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+
+ Test Files  3 passed (3)
+      Tests  18 passed (18)
+   Start at  00:59:05
+   Duration  14.80s (transform 7.74s, setup 0ms, import 11.74s, tests 2.37s, environment 14ms)
+

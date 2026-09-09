@@ -1,0 +1,5 @@
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ❯ __tests__/base-payroll-readiness.test.ts (10 tests | 1 failed) 9051ms
+     × preserves complete results on mixed histories without mutating inputs 8835ms

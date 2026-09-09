@@ -1,0 +1,5 @@
+PASS: verified owner provisioning is scoped and idempotent; pending verification denied
+PASS: Free business/RPC and account mutation pre-request denial; direct Rate Book RLS and private analytics restriction
+PASS: existing non-Free accounts unaffected; active Lite releases Free boundary; expiry does not expose paid data
+PASS: receipt and authoritative activation event share a transaction; test cohorts excluded; immature conversion denominator is zero
+PASS: pause retains authorization; account deletion requires confirmation and cascades only scoped Free metadata

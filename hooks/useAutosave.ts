@@ -19,6 +19,7 @@ import {
 interface UseAutosaveOptions<TState = unknown> {
   orgId: string
   userId: string
+  enabled?: boolean
   debounceMs?: number
   maxAgeMs?: number  // max age before draft is considered stale (default 7 days)
   /** Do not create a draft for an untouched/default estimator screen. */
@@ -89,6 +90,7 @@ function makeWriterId() {
 export function useAutosave<TState = unknown>({
   orgId,
   userId,
+  enabled = true,
   debounceMs = 2000,
   maxAgeMs = ESTIMATOR_DRAFT_MAX_AGE_MS,
   shouldPersist,
@@ -138,6 +140,7 @@ export function useAutosave<TState = unknown>({
   }, [])
 
   const readStoredDraft = useCallback((): EstimatorAutosaveData<TState> | null => {
+    if (!enabled) return null
     let raw: string | null
     try {
       raw = localStorage.getItem(keyRef.current)
@@ -160,9 +163,10 @@ export function useAutosave<TState = unknown>({
     })
     if (!safelyRemoveLocalStorageItem(keyRef.current)) markStorageFailure('remove')
     return null
-  }, [markStorageAvailable, markStorageFailure, maxAgeMs, validateState])
+  }, [enabled, markStorageAvailable, markStorageFailure, maxAgeMs, validateState])
 
   const isMeaningful = useCallback((data: EstimatorDraftInput<TState>, allowProgrammatic = false) => {
+    if (!enabled) return false
     // Reset, restore, and successful saves often update several React states
     // in one turn. Do not infer that those programmatic changes are a user
     // edit from a changing JSON fingerprint; the editor explicitly calls
@@ -177,7 +181,7 @@ export function useAutosave<TState = unknown>({
     }
     if (!allowProgrammatic && !userEditedRef.current && shouldPersist) return false
     return shouldPersist ? shouldPersist(data as EstimatorDraftInput<unknown>) : true
-  }, [shouldPersist])
+  }, [enabled, shouldPersist])
 
   const persistDraft = useCallback((data: EstimatorDraftInput<TState>, allowPendingDecision = false) => {
     if (draftDecisionPendingRef.current && !allowPendingDecision) return false
@@ -250,6 +254,7 @@ export function useAutosave<TState = unknown>({
   }, [flushDraft])
 
   const removeDraftIfCurrent = useCallback((knownOverride?: EstimatorAutosaveData<TState> | null) => {
+    if (!enabled) return false
     const stored = readStoredDraft()
     const known = knownOverride ?? latestPersistedDraftRef.current ?? draft
     if (stored && known && compareEstimatorDrafts(stored, known) > 0) {
@@ -271,7 +276,7 @@ export function useAutosave<TState = unknown>({
       markStorageFailure('remove')
       return false
     }
-  }, [draft, markStorageAvailable, markStorageFailure, readStoredDraft])
+  }, [enabled, draft, markStorageAvailable, markStorageFailure, readStoredDraft])
 
   const clearDraft = useCallback(() => {
     const knownDraft = latestPersistedDraftRef.current ?? draft

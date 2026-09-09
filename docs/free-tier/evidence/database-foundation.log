@@ -1,0 +1,8 @@
+PASS: flags disabled and client roles denied table/RPC access
+PASS: first debit, same-request replay, changed-input and wrong-account conflicts
+PASS: 20 simultaneous requests with one remaining permit exactly one success; retry at exhaustion still succeeds
+PASS: first-row creation and double-click races debit once
+PASS: unverified and suspended subjects cannot consume or receive a successful receipt
+PASS: active allowance frozen, rollback creates no charge, expired request rejected
+PASS: replay retains original week without creating a new allowance window
+PASS: pause preserves receipts and usage; local flags restored to disabled

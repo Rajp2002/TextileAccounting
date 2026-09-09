@@ -8,6 +8,7 @@ const LEGACY_PROTECTED_CACHE_NAMES = [
   'next-data',
   'static-data-assets',
   'start-url',
+  'cross-origin',
 ]
 
 function isLegacyProtectedRuntimeCache(cacheName: string) {

@@ -1,0 +1,5 @@
+PASS: snapshot constraint failure rolls back both quota and receipt
+PASS: 10 concurrent duplicate submissions save and debit exactly once; snapshot stays immutable on retry
+PASS: one remaining allowance admits one of 20 concurrent requests; no paid costing/quality/Rate Book propagation
+PASS: client roles cannot read/write snapshots directly; receipt expiry does not remove saved history
+PASS: account organization deletion cascades saved snapshot content
