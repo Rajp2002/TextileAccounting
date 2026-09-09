@@ -82,8 +82,10 @@ export function CostingExportDialog({
   sourceRecordKind,
   onQuoteUpdated,
   onMarkAsSent,
+  tutorialPreview = false,
 }: {
   open: boolean
+  tutorialPreview?: boolean
   onOpenChange: (open: boolean) => void
   model: CostingExportModel | null
   defaultCustomerName?: string
@@ -141,8 +143,8 @@ export function CostingExportDialog({
     setMarkingSent(false)
     setMarkedSent(false)
     setLatestQuoteUpdatedAt(sourceQuoteUpdatedAt)
-    void trackPlanEvent('export_preview_opened', { mode: defaultMode })
-  }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, model, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind])
+    if (!tutorialPreview) void trackPlanEvent('export_preview_opened', { mode: defaultMode })
+  }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, model, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind, tutorialPreview])
 
   const options = useMemo(() => ({
     mode,
@@ -218,6 +220,7 @@ export function CostingExportDialog({
   }
 
   const handlePrint = async () => {
+    if (tutorialPreview) return
     if (!model || validationErrors.length > 0) {
       const message = validationErrors[0] ?? 'Complete the document details before printing.'
       setErrorMessage(message)
@@ -264,6 +267,7 @@ export function CostingExportDialog({
   }
 
   const handlePdf = async () => {
+    if (tutorialPreview) return
     if (!model || validationErrors.length > 0) {
       const message = validationErrors[0] ?? 'Complete the document details before generating the PDF.'
       setErrorMessage(message)
@@ -325,6 +329,7 @@ export function CostingExportDialog({
   }
 
   const handleShare = async () => {
+    if (tutorialPreview) return
     if (!generatedBlob || !model || !generatedFileIsCurrent) {
       const message = 'Generate the PDF before sharing it.'
       setErrorMessage(message)
@@ -386,8 +391,8 @@ export function CostingExportDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
+    <Dialog modal={!tutorialPreview} open={open} onOpenChange={value => { if (!tutorialPreview) onOpenChange(value) }}>
+      <DialogContent data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-blue-600" />
@@ -431,7 +436,7 @@ export function CostingExportDialog({
           </section>
 
           <section className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div data-costing-tour="export-modes" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               <button
                 type="button"
                 onClick={() => switchMode('internal')}
@@ -543,7 +548,7 @@ export function CostingExportDialog({
           </section>
         </div>
 
-        <DialogFooter className="flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+        <DialogFooter data-costing-tour="export-actions" className="flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           {exportActionHint && <p id="export-action-help" className="text-xs font-medium leading-relaxed text-amber-700 sm:max-w-sm">{exportActionHint}</p>}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0} aria-describedby={exportActionHint ? 'export-action-help' : undefined}>
