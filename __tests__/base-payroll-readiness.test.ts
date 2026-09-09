@@ -37,14 +37,17 @@ function allocation(overrides: Partial<BaseProductionAllocation> = {}): BaseProd
 }
 
 describe('Base payroll readiness', () => {
-    it('preserves complete results on mixed histories without mutating inputs', () => {
-        for (let seed = 0; seed < 20; seed++) {
+    // Keep all histories, but give each scenario its own timeout and failure report.
+    // One aggregate test can exceed the default timeout on a busy local runner.
+    it.each(Array.from({ length: 20 }, (_, seed) => seed))(
+        'preserves complete results without mutating mixed history (seed %i)',
+        seed => {
             const input = payrollReadinessFixture(20, 40, seed)
             const snapshot = structuredClone(input)
             expect(buildBasePayrollReadiness(input)).toStrictEqual(originalReadiness(input))
             expect(input).toStrictEqual(snapshot)
-        }
-    })
+        },
+    )
 
     it('preserves worker and issue order, duplicate payables, and independent date windows', () => {
         const input = {
