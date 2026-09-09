@@ -5,6 +5,7 @@ const authMock = vi.hoisted(() => ({
     getClaims: vi.fn(),
     signOut: vi.fn(),
 }))
+const revocationMock = vi.hoisted(() => vi.fn(async () => false))
 const rateLimitMock = vi.hoisted(() => vi.fn(async () => null as number | null))
 
 vi.mock('@supabase/ssr', () => ({
@@ -14,7 +15,7 @@ vi.mock('@supabase/ssr', () => ({
 vi.mock('@/lib/rate-limit', () => ({
     checkAuthRateLimit: rateLimitMock,
     getClientIpFromHeaders: vi.fn(() => '198.51.100.20'),
-    isUserRevoked: vi.fn(async () => false),
+    isUserRevoked: revocationMock,
 }))
 
 vi.mock('@/lib/phase1-scope', () => ({
@@ -75,6 +76,7 @@ function anonymousRequestFor(pathname: string, method = 'GET') {
 beforeEach(() => {
     authMock.getClaims.mockReset()
     authMock.signOut.mockReset()
+    revocationMock.mockClear()
     rateLimitMock.mockReset()
     rateLimitMock.mockResolvedValue(null)
 })
@@ -171,5 +173,60 @@ describe('Proxy post-login session handling', () => {
         expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/login')
         expect(authMock.signOut).toHaveBeenCalledWith({ scope: 'local' })
         expect(response.cookies.get('last_activity')?.value).toBe('')
+    })
+})
+
+
+describe('PWA idle-session cold start', () => {
+    beforeEach(() => {
+        authMock.getClaims.mockResolvedValue({
+            data: { claims: { sub: 'owner-user-id', app_metadata: {
+                role: 'owner', onboarding_complete: true,
+            } } },
+            error: null,
+        })
+    })
+
+    it('renders login in one response and clears both browser and forwarded session cookies', async () => {
+        const response = await updateSession(requestFor('/login'))
+
+        expect(response.status).toBe(200)
+        expect(response.headers.get('location')).toBeNull()
+        expect(authMock.signOut).toHaveBeenCalledWith({ scope: 'local' })
+        expect(revocationMock).not.toHaveBeenCalled()
+        for (const name of [`${authCookieBase}.0`, `${authCookieBase}.1`, 'last_activity', 'weavly_pwa_login_recovery']) {
+            expect(response.cookies.get(name)?.maxAge).toBe(0)
+            expect(response.headers.get('x-middleware-request-cookie')).not.toContain(name)
+        }
+        expect(response.headers.get('x-middleware-request-cookie')).toContain('unrelated_cookie=keep-me')
+    })
+
+    it('redirects an idle protected page with cookie deletions so login does not revalidate it', async () => {
+        const response = await updateSession(requestFor('/owner/estimator'))
+        expect(response.status).toBe(307)
+        expect(response.cookies.get(`${authCookieBase}.0`)?.maxAge).toBe(0)
+        expect(response.cookies.get(`${authCookieBase}.1`)?.maxAge).toBe(0)
+        expect(revocationMock).not.toHaveBeenCalled()
+
+        authMock.getClaims.mockClear()
+        await updateSession(anonymousRequestFor('/login'))
+        expect(authMock.getClaims).not.toHaveBeenCalled()
+    })
+
+    it('returns JSON and clears cookies for an idle protected API request', async () => {
+        const response = await updateSession(requestFor('/api/private'))
+        expect(response.status).toBe(401)
+        expect(response.headers.get('location')).toBeNull()
+        expect(await response.json()).toEqual({ error: 'Session expired. Please sign in again.' })
+        expect(response.cookies.get(`${authCookieBase}.0`)?.maxAge).toBe(0)
+    })
+
+    it('still validates and checks revocation when reopening an active session', async () => {
+        const response = await updateSession(requestFor('/login', 'GET', Date.now().toString()))
+        expect(response.status).toBe(307)
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/owner/today')
+        expect(authMock.getClaims).toHaveBeenCalledOnce()
+        expect(revocationMock).toHaveBeenCalledWith('owner-user-id')
+        expect(authMock.signOut).not.toHaveBeenCalled()
     })
 })

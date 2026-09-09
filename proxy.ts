@@ -200,8 +200,16 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    const recoverTerminalAuthSession = (code: string) => {
-        authSessionCookieNames.forEach(name => request.cookies.delete(name))
+    const clearAuthSessionResponse = () => {
+        // A refresh can change the session's cookie chunk count. Clear both
+        // the incoming names and any names written during this request.
+        const sessionCookieNames = [...new Set([
+            ...authSessionCookieNames,
+            ...request.cookies.getAll()
+                .filter(({ name }) => isSupabaseAuthSessionCookie(name))
+                .map(({ name }) => name),
+        ])]
+        sessionCookieNames.forEach(name => request.cookies.delete(name))
         request.cookies.delete('last_activity')
         request.cookies.delete(PWA_LOGIN_RECOVERY_COOKIE)
         forwardedHeaders.set('cookie', request.cookies.toString())
@@ -218,10 +226,14 @@ export async function updateSession(request: NextRequest) {
             maxAge: 0,
         })
 
-        authSessionCookieNames.forEach(expireCookie)
+        sessionCookieNames.forEach(expireCookie)
         expireCookie('last_activity')
         expireCookie(PWA_LOGIN_RECOVERY_COOKIE)
 
+        return target
+    }
+
+    const recoverTerminalAuthSession = (code: string) => {
         console.warn(JSON.stringify({
             level: 'warning',
             event: 'terminal_auth_session_recovered',
@@ -229,7 +241,7 @@ export async function updateSession(request: NextRequest) {
             route: pathname,
         }))
 
-        return target
+        return clearAuthSessionResponse()
     }
 
     // Supabase verifies asymmetric JWTs locally with the cached JWKS when the
@@ -265,26 +277,6 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
     }
 
-    // ── Check Instant Session Revocation ──────────────────────────────────
-    if (userId) {
-        const { isUserRevoked } = await import('@/lib/rate-limit')
-        const revocationStartedAt = performance.now()
-        const userIsRevoked = await isUserRevoked(userId)
-        logProxyPhase('revocation', pathname, revocationStartedAt)
-        if (userIsRevoked) {
-            await supabase.auth.signOut()
-            response = NextResponse.redirect(new URL('/login', request.url))
-            response.cookies.delete('last_activity')
-            return response
-        }
-        // The cached server auth helper skips its normal-request fallback
-        // check only when this marker was set by this Proxy invocation.
-        forwardedHeaders.set('x-weavly-revocation-checked', '1')
-        forwardedHeaders.set('cookie', request.cookies.toString())
-        response = NextResponse.next({ request: { headers: forwardedHeaders } })
-        applySessionCookies.forEach(applyCookie => applyCookie(response))
-    }
-
     // ── Inactivity Timeout (1 hour) ───────────────────────────────────────
     const lastActivity = request.cookies.get('last_activity')?.value
     const now = Date.now()
@@ -304,10 +296,31 @@ export async function updateSession(request: NextRequest) {
                 idle_ms: timeSinceLastActivity,
             }))
             await supabase.auth.signOut({ scope: 'local' })
+            // Render /login directly and expire cookies on the response that
+            // actually reaches the browser; a replacement redirect loses the
+            // cookies written by signOut and repeats Auth work on reopen.
+            return clearAuthSessionResponse()
+        }
+    }
+
+    // ── Check Instant Session Revocation ──────────────────────────────────
+    if (userId) {
+        const { isUserRevoked } = await import('@/lib/rate-limit')
+        const revocationStartedAt = performance.now()
+        const userIsRevoked = await isUserRevoked(userId)
+        logProxyPhase('revocation', pathname, revocationStartedAt)
+        if (userIsRevoked) {
+            await supabase.auth.signOut()
             response = NextResponse.redirect(new URL('/login', request.url))
             response.cookies.delete('last_activity')
             return response
         }
+        // The cached server auth helper skips its normal-request fallback
+        // check only when this marker was set by this Proxy invocation.
+        forwardedHeaders.set('x-weavly-revocation-checked', '1')
+        forwardedHeaders.set('cookie', request.cookies.toString())
+        response = NextResponse.next({ request: { headers: forwardedHeaders } })
+        applySessionCookies.forEach(applyCookie => applyCookie(response))
     }
 
     if (userId) {
