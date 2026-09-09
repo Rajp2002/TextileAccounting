@@ -7,7 +7,6 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
     let frame = 0
     let stopped = false
     let positioned: HTMLElement | null = null
-    let attempts = 0
     const start = performance.now()
     const originalPadding = new Map<HTMLElement, string>()
     const originalBottom = new Map<HTMLElement, string>()
@@ -46,9 +45,12 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
             const rootScroller = document.scrollingElement ?? document.documentElement
             // Never resize the root viewport: Safari emits visualViewport resize while scrolling.
             rememberPadding(scroller === rootScroller ? document.body : scroller, panelRect.height + 100)
-            target.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' })
+            // One vertical scroll command: do not race scrollIntoView against a second scroll.
             const rect = target.getBoundingClientRect()
-            const desiredTop = top + Math.max(0, (bottom - top - rect.height) / 2)
+            const scrollport = scroller === rootScroller ? bounds : scroller.getBoundingClientRect()
+            const availableTop = Math.max(top, scrollport.top)
+            const availableBottom = Math.min(bottom, scrollport.bottom)
+            const desiredTop = availableTop + Math.max(0, (availableBottom - availableTop - rect.height) / 2)
             const delta = rect.top - desiredTop
             if (scroller === rootScroller) window.scrollBy({ top: delta, behavior: 'instant' })
             else scroller.scrollBy({ top: delta, behavior: 'instant' })
@@ -69,7 +71,6 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
             })
         }
         onMeasure(clipped)
-        if (!clipped && attempts++ < 2) { positioned = null; frame = requestAnimationFrame(measure) }
         // If positioning still fails, keep this step and its navigation intact.
     }
     const schedule = () => { if (!stopped && !frame) frame = requestAnimationFrame(measure) }
@@ -80,15 +81,20 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
     if (panelElement) observer.observe(panelElement)
     window.addEventListener('scroll', schedule, true)
     window.addEventListener('resize', resize)
+    window.addEventListener('scrollend', schedule, true)
     window.visualViewport?.addEventListener('resize', resize)
     window.visualViewport?.addEventListener('scroll', schedule)
+    // Some mobile browsers defer scroll delivery. Re-measure without another scroll command.
+    const settleTimers = [120, 350].map(delay => setTimeout(schedule, delay))
     frame = requestAnimationFrame(measure)
     return () => {
         stopped = true
         cancelAnimationFrame(frame)
+        settleTimers.forEach(timer => clearTimeout(timer))
         observer.disconnect()
         window.removeEventListener('scroll', schedule, true)
         window.removeEventListener('resize', resize)
+        window.removeEventListener('scrollend', schedule, true)
         window.visualViewport?.removeEventListener('resize', resize)
         window.visualViewport?.removeEventListener('scroll', schedule)
         originalPadding.forEach((padding, element) => { element.style.paddingBottom = padding })

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { trackMobileTourTarget } from '../lib/mobile-tour-positioning'
 
 function harness() {
+    vi.useFakeTimers()
     let top = 900
     let clock = 0
     let id = 0
@@ -54,7 +55,7 @@ function harness() {
     return { target, panel, scrollBy, drain, resize, frames, root, body, setTop: (value: number) => { top = value } }
 }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
 
 describe('mobile tour event feedback', () => {
     it('does not scroll again in response to repeated iOS viewport and panel resize events', () => {
@@ -63,6 +64,7 @@ describe('mobile tour event feedback', () => {
         const cleanup = trackMobileTourTarget(() => h.target, () => h.panel, measured)
         h.drain()
         expect(h.scrollBy).toHaveBeenCalledTimes(1)
+        expect(h.target.scrollIntoView).not.toHaveBeenCalled()
         for (let i = 0; i < 50; i++) { h.resize(); h.drain() }
         expect(h.scrollBy).toHaveBeenCalledTimes(1)
         expect(measured.mock.lastCall?.[0]).toMatchObject({ height: 40 })
@@ -85,6 +87,22 @@ describe('mobile tour event feedback', () => {
         // Retries remain bounded even if scrolling is unable to move the target.
         expect(h.scrollBy.mock.calls.length).toBeLessThanOrEqual(3)
         cleanup()
+    })
+    it('refreshes after a delayed scroll even when the browser emits no scroll event', () => {
+        const h = harness()
+        h.scrollBy.mockImplementation(() => {})
+        const measured = vi.fn()
+        const cleanup = trackMobileTourTarget(() => h.target, () => h.panel, measured)
+        h.drain()
+        expect(measured).toHaveBeenLastCalledWith(null)
+        // Layout catches up later, with no manual swipe and no scroll/resize notification.
+        h.setTop(240)
+        vi.advanceTimersByTime(350)
+        h.drain()
+        expect(measured).toHaveBeenLastCalledWith(expect.objectContaining({ top: 240, height: 40 }))
+        expect(h.scrollBy).toHaveBeenCalledTimes(1)
+        cleanup()
+        expect(vi.getTimerCount()).toBe(0)
     })
     it('stops waiting for a missing target without starving navigation or scheduling forever', () => {
         const h = harness()
