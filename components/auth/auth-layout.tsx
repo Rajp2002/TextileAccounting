@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { getSuratDate } from '@/lib/time'
 import { BrandBackground } from '@/components/brand-background'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
@@ -66,6 +67,9 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                         className="px-5 pb-6 xs:px-6 xs:pb-8 sm:px-8 sm:pb-10"
                     >
                         {children}
+                        <Link href="/install" className="mt-5 block rounded py-2 text-center text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                            Install Weavly on desktop or mobile
+                        </Link>
                     </motion.div>
                 </div>
 

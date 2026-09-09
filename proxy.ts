@@ -73,6 +73,7 @@ function isPasswordRecoveryRoute(pathname: string): boolean {
 function isPublicRoute(pathname: string): boolean {
     return (
         pathname === '/' ||
+        pathname === '/install' ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
         pathname.startsWith('/join') ||

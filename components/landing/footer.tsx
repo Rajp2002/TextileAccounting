@@ -21,6 +21,7 @@ const footerSections = [
         title: 'Resources',
         links: [
             { name: 'FAQ', href: '/#faq' },
+            { name: 'Install Weavly', href: '/install' },
             { name: 'Weavly Lite / Base workspace', href: '/login' },
             { name: 'Choose a plan', href: '/signup' },
         ]
