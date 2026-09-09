@@ -3,6 +3,8 @@
 import { createServer } from 'vite'
 import pg from 'pg'
 pg.types.setTypeParser(1700, Number)
+// Match PostgREST: calendar dates are strings, never timezone-shifted instants.
+pg.types.setTypeParser(1082, (value) => value)
 import path from 'node:path'
 const url = new URL(process.env.STOCK_TEST_DATABASE_URL || '')
 if (

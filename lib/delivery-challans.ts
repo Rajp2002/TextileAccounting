@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import Decimal from 'decimal.js'
+import { validPaymentDueDate } from './challan-payment-terms'
 const decimal = z
     .number()
     .finite()
@@ -29,6 +30,11 @@ export const DocumentSchema = z
             Number.isNaN(Date.parse(d.date))
         )
             ctx.addIssue({ code: 'custom', message: 'Enter a valid date.' })
+        if (d.payment_due_date && !validPaymentDueDate(d.payment_due_date))
+            ctx.addIssue({
+                code: 'custom',
+                message: 'Enter a valid payment due date.',
+            })
         for (const key of ['external_attachment'])
             if (d[key] && !safeEvidenceUrl(d[key]))
                 ctx.addIssue({
@@ -67,6 +73,8 @@ export const ChallanDraftSchema = z
     })
 export type ChallanDraft = z.infer<typeof ChallanDraftSchema>
 export type Challan = ChallanDraft & {
+    payment_due_date?: string | null
+    payment_terms?: string
     id: string
     number: string
     quality_label: string
@@ -84,6 +92,10 @@ export type Challan = ChallanDraft & {
     created_at: string
 }
 export type ChallanEvent = {
+    previous_terms?: {
+        payment_due_date: string | null
+        payment_terms: string
+    } | null
     id: string
     action: string
     payload: { data: Record<string, unknown> }
@@ -97,6 +109,7 @@ export type ChallanMutation = {
     requestId: string
     version: number
     action:
+        | 'payment_terms'
         | 'save'
         | 'confirm'
         | 'receipt'
@@ -108,11 +121,27 @@ export type ChallanMutation = {
         | 'reverse_dispatch'
     payload: Record<string, unknown>
 }
+export const PaymentTermsSchema = z.object({
+    payment_due_date: z
+        .string()
+        .refine(
+            (v) => v === '' || validPaymentDueDate(v),
+            'Enter a valid payment due date.',
+        )
+        .optional(),
+    payment_terms: z.string().max(1000).optional(),
+    reason: z
+        .string()
+        .trim()
+        .min(3, 'Explain why the agreed payment terms changed.')
+        .max(500),
+})
 export const MutationSchema = z.object({
     id: z.string().uuid(),
     requestId: z.string().uuid(),
     version: z.number().int().nonnegative(),
     action: z.enum([
+        'payment_terms',
         'save',
         'confirm',
         'receipt',
