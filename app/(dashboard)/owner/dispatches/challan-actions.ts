@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
     ChallanDraftSchema,
     MutationSchema,
+    PaymentTermsSchema,
     type Challan,
     type ChallanEvent,
     type ChallanMutation,
@@ -80,6 +81,10 @@ export async function mutateChallan(input: ChallanMutation) {
         const draft = ChallanDraftSchema.safeParse(input.payload)
         if (!draft.success) return { error: draft.error.issues[0].message }
     }
+    if (input.action === 'payment_terms') {
+        const terms = PaymentTermsSchema.safeParse(input.payload)
+        if (!terms.success) return { error: terms.error.issues[0].message }
+    }
     const db = await createClient()
     const { data, error } = await db.rpc('mutate_delivery_challan', {
         p_id: input.id,
@@ -90,12 +95,19 @@ export async function mutateChallan(input: ChallanMutation) {
     })
     if (error)
         return {
-            error: ['22023', '40001', '22007', '22P02'].includes(error.code)
+            error: ['22023', '40001', '22007', '22008', '22P02'].includes(
+                error.code,
+            )
                 ? error.message
                 : 'Save could not be confirmed. Retry the same request.',
-            uncertain: !['22023', '40001', '22007', '22P02', '42501'].includes(
-                error.code,
-            ),
+            uncertain: ![
+                '22023',
+                '40001',
+                '22007',
+                '22008',
+                '22P02',
+                '42501',
+            ].includes(error.code),
         }
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')

@@ -33,3 +33,23 @@ Run `CHALLAN_TEST=1 STOCK_TEST_DATABASE_URL=postgresql://...@127.0.0.1:PORT/post
 The browser harness (`scripts/qa/challan-browser/server.mjs`) renders the actual production React components and executes the actual SQL functions as the fixture owner. It accepts only a retained disposable loopback database. Its test transport does not verify hosted Supabase auth or PostgREST; those boundaries are separately checked in server code and role/RLS integration tests. Do not expose this test server externally.
 
 Final checks: 1,426 Vitest tests passed (one existing skip); TypeScript, changed-file ESLint and the production build passed. Browser verification created the seven-lot example, confirmed dispatch, accepted 583 m, recorded two payments, and verified automatic history plus a persisted 415 m stock balance. The three-copy PDF was exported and visually checked.
+
+## Keyboard entry and live preview
+
+The draft editor groups fabric/rate, sender/customer/delivery and numbered lot rows. Transport/GST/reference fields are in an expandable section. The row number is automatic; the lot identifier is free text and retains leading zeros. Enter advances from lot ID to metres, then to the next lot row, creating an empty row when needed. Shift+Enter moves backwards using the estimator's shared navigation helper. Enter in an input never submits the draft; Save draft is explicit. Duplicate lot IDs and invalid metre values do not advance.
+
+A desktop document preview updates while typing. On mobile, running totals stay visible beneath the entry area and a Live preview button opens the full preview. Lot counts and total metres include completed, identified rows only. Untouched empty rows are omitted on save; partially entered rows must still be completed and are never silently dropped. Changes to rows or selling rate recalculate the preview with decimal arithmetic.
+
+Usability verification: browser-tested header-to-lot navigation, automatic rows, Enter/Shift+Enter, duplicate IDs, invalid quantities, decimal entry, leading-zero identifiers, editing/removing rows, mobile entry/preview, and saving two lots with an untouched trailing row. Example 225 m + 275 m displays 2 lots / 500 m / Rs20,000 at Rs40/m. Focused draft-entry tests, all 1,460 unit tests (one existing skip), TypeScript and changed-file lint pass. Screenshots are in `output/challan-ux/`. No schema migration is needed for these entry improvements.
+
+### Agreed payment dates and partial payments
+
+Drafts accept an optional **Full payment due date** and **Agreed payment terms** note (up to 1,000 characters). The date starts blank, has no suggested credit periods, and accepts any valid calendar date chosen by the owner. Both fields update in the live preview. Existing challans remain undated after migration.
+
+Outstanding issued dispatches show **Due date not set**, **Due in N days**, **Due today**, or **Overdue by N days**, using the Asia/Kolkata business date. Drafts, reversals, fully paid balances and customer credits do not receive overdue labels. Receipt disputes remain visible separately. Partial payments continue through Record payment: each receipt reduces the balance without changing the due date; one full payment uses the same flow.
+
+After issue, **Change payment terms** requires a 3–500 character reason. Owners can replace or clear the date and note. The immutable event stores the previous date/note alongside the new payload, actor and timestamp; optimistic version checks and request IDs prevent stale updates and duplicate events. Changing terms does not move stock or change money. Printed copies retain the date and terms in the document as issued; current collection terms appear in dispatch details and history.
+
+Implementation migration: `20260909045727_challan_payment_terms.sql`. Apply before deploying the updated application. It has been tested against disposable local PostgreSQL, not applied to production in this implementation session.
+
+Verification: 32 stock/challan database scenarios pass, including custom dates, blank dates, invalid-date rejection, multiple partial payments, deadline extension/clearing, previous-term audit, unchanged issued snapshot, unchanged stock/balance, stale versions, retry deduplication and final settlement. Unit suite: 1,464 passed, one skipped. TypeScript and targeted ESLint checks pass. Browser evidence is under `output/challan-payment-terms/` (draft live preview, partial-payment audit, issued print).

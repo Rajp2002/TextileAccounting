@@ -3,7 +3,10 @@ import PrintButton from './[id]/print/PrintButton'
 export default function ChallanPrint({ d }: { d: Challan }) {
     const doc = d.document
     return (
-        <div data-i18n-skip="true" className="challan-print-root bg-white p-6 text-black">
+        <div
+            data-i18n-skip="true"
+            className="challan-print-root bg-white p-6 text-black"
+        >
             <style>{`@page { size: A4; margin: 14mm; } @media print { body:has(.challan-print-root) *:not(.challan-print-root):not(.challan-print-root *):not(:has(.challan-print-root)) { display:none!important; } *:has(.challan-print-root) { display:block!important; position:static!important; overflow:visible!important; height:auto!important; min-height:0!important; width:auto!important; margin:0!important; padding:0!important; transform:none!important; } .challan-print-root { position:static;width:100%;padding:0; } .no-print,.no-print * {display:none!important;} .challan-copy {break-after:page;} .challan-copy:last-child {break-after:auto;} table{width:100%;border-collapse:collapse;} thead {display:table-header-group;} tr,.signature {break-inside:avoid;} } .challan-copy {max-width:180mm;margin:0 auto 30px;font:12px/1.5 Arial,sans-serif;overflow-wrap:anywhere;} .challan-copy td,.challan-copy th {border:1px solid #ccc;padding:6px;text-align:left;} .challan-copy h1 {font-size:24px;font-weight:700;} .challan-copy h2 {font-size:14px;font-weight:700;} `}</style>
             <div className="no-print mx-auto mb-6 max-w-3xl space-y-2">
                 <PrintButton />
@@ -96,7 +99,10 @@ export default function ChallanPrint({ d }: { d: Challan }) {
                     </table>
                     <p>
                         <strong>Fabric value:</strong> Rs{' '}
-                        {challanTotals(d.lines, Number(d.selling_rate)).value.toFixed(2)}{' '}
+                        {challanTotals(
+                            d.lines,
+                            Number(d.selling_rate),
+                        ).value.toFixed(2)}{' '}
                         (before applicable taxes / charges)
                     </p>
                     <p>
@@ -123,6 +129,16 @@ export default function ChallanPrint({ d }: { d: Challan }) {
                         <strong>External challan:</strong>{' '}
                         {doc.external_reference || '—'}
                     </p>
+                    <p>
+                        <strong>Full payment due date (at issue):</strong>{' '}
+                        {doc.payment_due_date || 'Not set'}
+                    </p>
+                    {doc.payment_terms && (
+                        <p>
+                            <strong>Agreed payment terms (at issue):</strong>{' '}
+                            {doc.payment_terms}
+                        </p>
+                    )}
                     {doc.notes && (
                         <p>
                             <strong>Notes:</strong> {doc.notes}

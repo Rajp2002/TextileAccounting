@@ -16,6 +16,12 @@ export async function testChallans({
             'utf8',
         ),
     )
+    await admin.query(
+        readFileSync(
+            'supabase/migrations/20260909045727_challan_payment_terms.sql',
+            'utf8',
+        ),
+    )
     const quality = (
         await admin.query(
             "select id from quality_stock where org_id=$1 and quality_key='cotton'",
@@ -330,7 +336,10 @@ export async function testChallans({
         await act(over, 'receipt', { meters: 587 })
         assert.equal((await get(over)).difference_status, 'review')
         assert.equal(await balance(over), 23400)
-        await act(over, 'resolve', { decision: 'accepted', reason: 'Accept remeasured quantity' })
+        await act(over, 'resolve', {
+            decision: 'accepted',
+            reason: 'Accept remeasured quantity',
+        })
         assert.equal(await balance(over), 23480)
         assert.equal(await stock(), 415)
     })
@@ -381,5 +390,88 @@ export async function testChallans({
             ).rows[0].allowed,
             false,
         )
+    })
+    await test('payment terms have no default and reject invalid dates', async () => {
+        const undated = await create()
+        assert.equal((await get(undated)).payment_due_date, null)
+        for (const date of [
+            '2026-02-30',
+            '2026-13-01',
+            'tomorrow',
+            '0000-01-01',
+        ]) {
+            await assert.rejects(
+                create({
+                    ...body,
+                    document: { ...body.document, payment_due_date: date },
+                }),
+            )
+        }
+    })
+    await test('partial payments preserve agreed deadline; changes and clearing are audited and retry safe', async () => {
+        await setStock(1000)
+        const due = '2026-11-30'
+        const termsBody = {
+            ...body,
+            document: {
+                ...body.document,
+                payment_due_date: due,
+                payment_terms: 'Two payments agreed',
+            },
+        }
+        const d = await create(termsBody)
+        await act(d, 'confirm')
+        const stockBefore = await stock()
+        await act(d, 'payment', financial(1000))
+        await act(d, 'payment', financial(2000))
+        assert.equal(await balance(d), 20400)
+        const dateString = (value) =>
+            value instanceof Date
+                ? `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+                : value
+        assert.equal(dateString((await get(d)).payment_due_date), due)
+        await assert.rejects(
+            act(d, 'payment_terms', { payment_due_date: '2027-01-31' }),
+            /Explain/,
+        )
+        const version = (await get(d)).version,
+            request = randomUUID()
+        const patch = {
+            payment_due_date: '2027-01-31',
+            payment_terms: 'Balance by January',
+            reason: 'Customer requested extension',
+        }
+        await call(a, d, version, 'payment_terms', patch, request)
+        await call(a, d, version, 'payment_terms', patch, request)
+        await assert.rejects(
+            call(a, d, version, 'payment_terms', patch),
+            /changed/,
+        )
+        const record = await get(d)
+        assert.equal(dateString(record.payment_due_date), '2027-01-31')
+        assert.equal(record.document.payment_due_date, due)
+        const audit = (
+            await a.query(
+                "select * from delivery_challan_events where challan_id=$1 and action='payment_terms'",
+                [d],
+            )
+        ).rows
+        assert.equal(audit.length, 1)
+        assert.deepEqual(audit[0].previous_terms, {
+            payment_due_date: due,
+            payment_terms: 'Two payments agreed',
+        })
+        await act(d, 'payment_terms', {
+            payment_due_date: '',
+            payment_terms: '',
+            reason: 'Date no longer agreed',
+        })
+        assert.equal((await get(d)).payment_due_date, null)
+        assert.equal(await stock(), stockBefore)
+        assert.equal(await balance(d), 20400)
+        await act(d, 'receipt', { meters: 585 })
+        await act(d, 'payment', financial(20400))
+        assert.equal(await balance(d), 0)
+        assert.ok((await get(d)).archived_at)
     })
 }

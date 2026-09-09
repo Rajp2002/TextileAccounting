@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
 import {
-    challanTotals,
     paymentStatus,
     safeEvidenceUrl,
     type Challan,
@@ -22,36 +21,8 @@ import {
 } from '@/lib/delivery-challans'
 import type { StockQuality } from '@/lib/quality-stock'
 import { getChallan, listChallans, mutateChallan } from './challan-actions'
-const documentFields = [
-    'date',
-    'sender_name',
-    'sender_address',
-    'sender_gstin',
-    'customer_name',
-    'customer_address',
-    'customer_phone',
-    'customer_gstin',
-    'delivery_address',
-    'place_of_supply',
-    'hsn',
-    'transport',
-    'vehicle',
-    'lr_reference',
-    'invoice_reference',
-    'eway_bill_reference',
-    'external_reference',
-    'external_attachment',
-    'tax_details',
-    'notes',
-]
-const requiredFields = [
-    'date',
-    'sender_name',
-    'sender_address',
-    'customer_name',
-    'customer_address',
-    'delivery_address',
-]
+import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
+import ChallanDraftEditor from './ChallanDraftEditor'
 const blank = (): ChallanDraft => ({
     quality_id: '',
     selling_rate: 0,
@@ -67,6 +38,20 @@ export default function ChallansClient({
 }) {
     const { t } = useTranslation()
     const tx = (s: string) => t(`challan.${s}`)
+    const [today, setToday] = useState(businessDate)
+    useEffect(() => {
+        const refresh = () => setToday(businessDate())
+        const timer = window.setInterval(refresh, 60000)
+        window.addEventListener('focus', refresh)
+        return () => {
+            window.clearInterval(timer)
+            window.removeEventListener('focus', refresh)
+        }
+    }, [])
+    function dueLabel(d: Challan) {
+        const status = challanDueStatus(d, today)
+        return status ? t(`challan.${status.kind}`, { days: status.days }) : ''
+    }
     const [rows, setRows] = useState(initialData),
         [history, setHistory] = useState(false),
         [search, setSearch] = useState(''),
@@ -179,20 +164,24 @@ export default function ChallansClient({
     function start(action: ChallanMutation['action']) {
         setOperation(action)
         setFields(
-            action === 'receipt'
-                ? { meters: String(selected?.sent_meters ?? '') }
-                : action === 'resolve'
-                  ? { decision: 'accepted' }
-                  : ['payment', 'refund'].includes(action)
-                    ? {
-                          date: new Date().toLocaleDateString('en-CA'),
-                          method: 'bank',
-                      }
-                    : {},
+            action === 'payment_terms'
+                ? {
+                      payment_due_date: selected?.payment_due_date ?? '',
+                      payment_terms: selected?.payment_terms ?? '',
+                  }
+                : action === 'receipt'
+                  ? { meters: String(selected?.sent_meters ?? '') }
+                  : action === 'resolve'
+                    ? { decision: 'accepted' }
+                    : ['payment', 'refund'].includes(action)
+                      ? {
+                            date: new Date().toLocaleDateString('en-CA'),
+                            method: 'bank',
+                        }
+                      : {},
         )
         setError('')
     }
-    const totals = draft ? challanTotals(draft.lines, draft.selling_rate) : null
     const field = (key: string, type = 'text', required = false) => (
         <label key={key} className="grid gap-1 text-sm">
             {tx(key === 'evidence' ? 'evidenceLink' : key)}
@@ -210,7 +199,10 @@ export default function ChallansClient({
         </label>
     )
     return (
-        <div data-i18n-skip="true" className="mx-auto max-w-6xl space-y-5 p-4 md:p-8">
+        <div
+            data-i18n-skip="true"
+            className="mx-auto max-w-6xl space-y-5 p-4 md:p-8"
+        >
             <div className="flex flex-wrap justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-semibold">{tx('title')}</h1>
@@ -306,6 +298,12 @@ export default function ChallansClient({
                                     : tx('balance')}
                                 : Rs {money(Math.abs(d.balance))}
                             </p>
+                            <p>
+                                {dueLabel(d)}
+                                {d.payment_due_date
+                                    ? `${dueLabel(d) ? ' · ' : ''}${d.payment_due_date}`
+                                    : ''}
+                            </p>
                             {['review', 'disputed'].includes(
                                 d.difference_status,
                             ) && (
@@ -333,221 +331,33 @@ export default function ChallansClient({
                     if (!open && !busy && !pending) setDraft(null)
                 }}
             >
-                <DialogContent data-i18n-skip="true" className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+                <DialogContent
+                    data-i18n-skip="true"
+                    className="flex h-[92dvh] max-h-[92dvh] w-[calc(100%-1rem)] flex-col overflow-hidden sm:max-w-6xl"
+                >
                     <DialogHeader>
                         <DialogTitle>{tx('draftTitle')}</DialogTitle>
                         <DialogDescription>{tx('draftHelp')}</DialogDescription>
                     </DialogHeader>
                     {draft && (
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault()
-                                save('save', draft)
-                            }}
-                            className="space-y-4"
+                        <ChallanDraftEditor
+                            draft={draft}
+                            onChange={setDraft}
+                            onSave={(value) => save('save', value)}
+                            qualities={qualities}
+                            number={selected?.number}
+                            disabled={busy || !!pending}
+                            error={error}
+                        />
+                    )}
+                    {pending && !busy && (
+                        <Button
+                            onClick={() =>
+                                save(pending.action, pending.payload)
+                            }
                         >
-                            <fieldset
-                                disabled={busy || !!pending}
-                                className="space-y-4"
-                            >
-                                <label className="grid gap-1">
-                                    {tx('quality')} *
-                                    <select
-                                        required
-                                        className="h-10 rounded border bg-background px-3"
-                                        value={draft.quality_id}
-                                        onChange={(e) =>
-                                            setDraft({
-                                                ...draft,
-                                                quality_id: e.target.value,
-                                            })
-                                        }
-                                    >
-                                        <option value="">
-                                            {tx('chooseQuality')}
-                                        </option>
-                                        {qualities.map((q) => (
-                                            <option key={q.id} value={q.id}>
-                                                {q.quality_label} · {q.meters} m{' '}
-                                                {tx('available')}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <label className="grid gap-1">
-                                    {tx('sellingRate')} *
-                                    <Input
-                                        type="number"
-                                        min="0.01"
-                                        step="0.01"
-                                        required
-                                        value={draft.selling_rate || ''}
-                                        onChange={(e) =>
-                                            setDraft({
-                                                ...draft,
-                                                selling_rate: Number(
-                                                    e.target.value,
-                                                ),
-                                            })
-                                        }
-                                    />
-                                </label>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {documentFields.map((key) => (
-                                        <label
-                                            key={key}
-                                            className="grid gap-1 text-sm"
-                                        >
-                                            {tx(key)}
-                                            {requiredFields.includes(key)
-                                                ? ' *'
-                                                : ''}
-                                            <Input
-                                                type={
-                                                    key === 'date'
-                                                        ? 'date'
-                                                        : key ===
-                                                            'external_attachment'
-                                                          ? 'url'
-                                                          : 'text'
-                                                }
-                                                required={requiredFields.includes(
-                                                    key,
-                                                )}
-                                                maxLength={1000}
-                                                autoComplete="off"
-                                                value={
-                                                    draft.document[key] ?? ''
-                                                }
-                                                onChange={(e) =>
-                                                    setDraft({
-                                                        ...draft,
-                                                        document: {
-                                                            ...draft.document,
-                                                            [key]: e.target
-                                                                .value,
-                                                        },
-                                                    })
-                                                }
-                                            />
-                                        </label>
-                                    ))}
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {tx('taxHelp')}
-                                </p>
-                                <div className="space-y-2">
-                                    {draft.lines.map((line, i) => (
-                                        <div key={i} className="flex gap-2">
-                                            <Input
-                                                aria-label={`${tx('lot')} ${i + 1}`}
-                                                placeholder={tx('lot')}
-                                                required
-                                                maxLength={80}
-                                                value={line.lot}
-                                                onChange={(e) =>
-                                                    setDraft({
-                                                        ...draft,
-                                                        lines: draft.lines.map(
-                                                            (l, j) =>
-                                                                j === i
-                                                                    ? {
-                                                                          ...l,
-                                                                          lot: e
-                                                                              .target
-                                                                              .value,
-                                                                      }
-                                                                    : l,
-                                                        ),
-                                                    })
-                                                }
-                                            />
-                                            <Input
-                                                aria-label={`${tx('meters')} ${i + 1}`}
-                                                type="number"
-                                                min="0.01"
-                                                step="0.01"
-                                                required
-                                                value={line.meters || ''}
-                                                onChange={(e) =>
-                                                    setDraft({
-                                                        ...draft,
-                                                        lines: draft.lines.map(
-                                                            (l, j) =>
-                                                                j === i
-                                                                    ? {
-                                                                          ...l,
-                                                                          meters: Number(
-                                                                              e
-                                                                                  .target
-                                                                                  .value,
-                                                                          ),
-                                                                      }
-                                                                    : l,
-                                                        ),
-                                                    })
-                                                }
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                aria-label={tx('remove')}
-                                                disabled={
-                                                    draft.lines.length === 1
-                                                }
-                                                onClick={() =>
-                                                    setDraft({
-                                                        ...draft,
-                                                        lines: draft.lines.filter(
-                                                            (_, j) => j !== i,
-                                                        ),
-                                                    })
-                                                }
-                                            >
-                                                ×
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={draft.lines.length >= 500}
-                                    onClick={() =>
-                                        setDraft({
-                                            ...draft,
-                                            lines: [
-                                                ...draft.lines,
-                                                { lot: '', meters: 0 },
-                                            ],
-                                        })
-                                    }
-                                >
-                                    {tx('addLine')}
-                                </Button>
-                                <p className="font-semibold">
-                                    {totals?.count} {tx('lots')} ·{' '}
-                                    {totals?.meters} m · Rs{' '}
-                                    {money(totals?.value ?? 0)}
-                                </p>
-                                <Button type="submit">{tx('saveDraft')}</Button>
-                            </fieldset>
-                            {error && (
-                                <p role="alert" className="text-red-700">
-                                    {error}
-                                </p>
-                            )}
-                            {pending && !busy && (
-                                <Button
-                                    type="button"
-                                    onClick={() =>
-                                        save(pending.action, pending.payload)
-                                    }
-                                >
-                                    {tx('retryButton')}
-                                </Button>
-                            )}
-                        </form>
+                            {tx('retryButton')}
+                        </Button>
                     )}
                 </DialogContent>
             </Dialog>
@@ -578,7 +388,17 @@ export default function ChallansClient({
                         {selected.sent_meters} m · {tx('acknowledged')}:{' '}
                         {selected.acknowledged_meters ?? '—'} m ·{' '}
                         {tx('chargeable')}: {selected.chargeable_meters} m
-                        {selected.acknowledged_meters !== null && <> · {tx('differenceMeters')}: {(Number(selected.sent_meters)-Number(selected.acknowledged_meters)).toFixed(2)} m</>}
+                        {selected.acknowledged_meters !== null && (
+                            <>
+                                {' '}
+                                · {tx('differenceMeters')}:{' '}
+                                {(
+                                    Number(selected.sent_meters) -
+                                    Number(selected.acknowledged_meters)
+                                ).toFixed(2)}{' '}
+                                m
+                            </>
+                        )}
                     </p>
                     <p>
                         {tx('sellingRate')}: Rs {money(selected.selling_rate)} ·{' '}
@@ -596,6 +416,18 @@ export default function ChallansClient({
                         {tx(paymentStatus(selected))}
                         {selected.archived_at ? ` · ${tx('archived')}` : ''}
                     </p>
+                    <p>
+                        {tx('payment_due_date')}:{' '}
+                        {selected.payment_due_date || tx('dueDateNotSet')}
+                        {dueLabel(selected) && selected.payment_due_date
+                            ? ` · ${dueLabel(selected)}`
+                            : ''}
+                    </p>
+                    {selected.payment_terms && (
+                        <p className="break-words">
+                            {tx('payment_terms')}: {selected.payment_terms}
+                        </p>
+                    )}
                     <div className="flex flex-wrap gap-2">
                         {selected.delivery_status === 'draft' ? (
                             <>
@@ -656,6 +488,7 @@ export default function ChallansClient({
                                         [
                                             'payment',
                                             'adjustment',
+                                            'payment_terms',
                                             ...(Number(selected.balance) < 0
                                                 ? ['refund']
                                                 : []),
@@ -667,7 +500,11 @@ export default function ChallansClient({
                                             disabled={busy || !!pending}
                                             onClick={() => start(a)}
                                         >
-                                            {tx(a)}
+                                            {tx(
+                                                a === 'payment_terms'
+                                                    ? 'changePaymentTerms'
+                                                    : a,
+                                            )}
                                         </Button>
                                     ))}
                                     {selected.delivery_status === 'sent' &&
@@ -771,6 +608,32 @@ export default function ChallansClient({
                                                 </Button>
                                             )}
                                     </div>
+                                    {e.action === 'payment_terms' && (
+                                        <div className="break-words">
+                                            <p>
+                                                {tx('previousTerms')}:{' '}
+                                                {e.previous_terms
+                                                    ?.payment_due_date ||
+                                                    tx('dueDateNotSet')}{' '}
+                                                ·{' '}
+                                                {e.previous_terms
+                                                    ?.payment_terms || '—'}
+                                            </p>
+                                            <p>
+                                                {tx('updatedTerms')}:{' '}
+                                                {String(
+                                                    e.payload.data
+                                                        .payment_due_date ||
+                                                        tx('dueDateNotSet'),
+                                                )}{' '}
+                                                ·{' '}
+                                                {String(
+                                                    e.payload.data
+                                                        .payment_terms || '—',
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
                                     {e.action === 'receipt' && (
                                         <p>
                                             {tx('acknowledged')}:{' '}
@@ -827,14 +690,22 @@ export default function ChallansClient({
                 <DialogContent data-i18n-skip="true">
                     <DialogHeader>
                         <DialogTitle>
-                            {operation ? tx(operation) : ''}
+                            {operation
+                                ? tx(
+                                      operation === 'payment_terms'
+                                          ? 'changePaymentTerms'
+                                          : operation,
+                                  )
+                                : ''}
                         </DialogTitle>
                         <DialogDescription>
                             {operation === 'confirm'
                                 ? tx('confirmHelp')
                                 : operation === 'reverse_dispatch'
                                   ? tx('reverseHelp')
-                                  : tx('operationHelp')}
+                                  : operation === 'payment_terms'
+                                    ? tx('paymentTermsChangeHelp')
+                                    : tx('operationHelp')}
                         </DialogDescription>
                     </DialogHeader>
                     <form
@@ -863,6 +734,12 @@ export default function ChallansClient({
                             disabled={busy || !!pending}
                             className="space-y-3"
                         >
+                            {operation === 'payment_terms' && (
+                                <>
+                                    {field('payment_due_date', 'date')}
+                                    {field('payment_terms')}
+                                </>
+                            )}
                             {operation === 'receipt' && (
                                 <>
                                     {field('meters', 'number', true)}
