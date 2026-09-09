@@ -277,23 +277,18 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
 
     useEffect(() => {
-        if (!active) return
+        if (!isTutorialActive) return
+        // Hold focus/inert state for the entire tour, never restore page inputs between steps.
         const previousFocus = document.activeElement as HTMLElement | null
         const siblings = Array.from(document.body.children).filter((el): el is HTMLElement => el instanceof HTMLElement && !el.contains(panel.current))
         const prior = siblings.map(el => el.inert)
         siblings.forEach(el => { el.inert = true })
         panel.current?.focus({ preventScroll: true })
-        const focusTimer = window.setTimeout(() => {
-            if (panel.current && !panel.current.contains(document.activeElement)) {
-                panel.current.focus({ preventScroll: true })
-            }
-        }, 50)
         return () => {
-            window.clearTimeout(focusTimer)
             siblings.forEach((el, i) => { el.inert = prior[i] })
             previousFocus?.focus({ preventScroll: true })
         }
-    }, [active])
+    }, [isTutorialActive])
 
     useEffect(() => {
         if (!active) return
