@@ -1466,6 +1466,7 @@ function MobileLiveEstimateShortcut({
                 <div
                     className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-7 md:right-7 min-[1660px]:right-[16rem]"
                     data-testid="mobile-live-estimate-shortcut"
+                    data-tour-floating="true"
                 >
                     <button
                         type="button"
