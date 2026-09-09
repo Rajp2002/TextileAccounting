@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -22,69 +21,40 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                 <LanguageSwitcher placement="bottom" className="bg-surface/80 text-ink shadow-sm backdrop-blur hover:bg-surface" />
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-[440px]"
-            >
+            {/* Keep auth content visible in server HTML, before hydration. */}
+            <div className="relative z-10 w-full max-w-[440px]">
                 <div className="overflow-hidden rounded-2xl border border-hairline bg-surface/88 shadow-[var(--shadow-panel)] backdrop-blur-xl">
                     <div className="p-5 pb-3 text-center xs:p-6 xs:pb-4 sm:p-8 sm:pb-4">
                         {/* App Logo */}
                         <div className="mx-auto mb-2 h-24 w-40 relative flex items-center justify-center group cursor-default">
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2, duration: 0.5 }}
-                                className="relative h-full w-full"
-                            >
+                            <div className="relative h-full w-full">
                                 <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="10rem" className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
-                            </motion.div>
+                            </div>
                         </div>
 
-                        <motion.h1 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="mb-2 text-2xl font-semibold tracking-normal text-ink"
-                        >
+                        <h1 className="mb-2 text-2xl font-semibold tracking-normal text-ink">
                             {title}
-                        </motion.h1>
-                        <motion.p 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-sm text-muted-foreground"
-                        >
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
                             {subtitle}
-                        </motion.p>
+                        </p>
                     </div>
 
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="px-5 pb-6 xs:px-6 xs:pb-8 sm:px-8 sm:pb-10"
-                    >
+                    <div className="px-5 pb-6 xs:px-6 xs:pb-8 sm:px-8 sm:pb-10">
                         {children}
                         <Link href="/install" className="mt-5 block rounded py-2 text-center text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
                             Install Weavly on desktop or mobile
                         </Link>
-                    </motion.div>
+                    </div>
                 </div>
 
                 {/* Footer branding */}
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="mt-8 text-center"
-                >
+                <div className="mt-8 text-center">
                     <p className="text-xs font-medium tracking-wide text-muted-foreground">
                         Weavly &copy; {getSuratDate().getFullYear()} &bull; Built for India
                     </p>
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
         </div>
     )
 }
