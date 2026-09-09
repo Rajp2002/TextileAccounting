@@ -13,7 +13,7 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Batch 3E — owner dispatches shared initial discrepancy read', () => {
-    const page = read('app/(dashboard)/owner/dispatches/page.tsx')
+    const page = read('app/(dashboard)/owner/dispatches/legacy/page.tsx')
     const loader = read('app/(dashboard)/owner/dispatches/loaders.ts')
     const actions = read('app/(dashboard)/owner/orders/actions.ts')
 

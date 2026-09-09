@@ -13,7 +13,7 @@ export const StockAdjustmentSchema = z.object({
 export type StockAdjustmentInput = z.input<typeof StockAdjustmentSchema>
 export type StockQuality = { id: string; quality_label: string; quality_key: string; meters: number; production_meters: number; opening_recorded: boolean }
 export type StockMovement = {
-    id: string; quality_id: string; quality_label: string; kind: 'production' | 'opening' | 'correction'
+    id: string; quality_id: string; quality_label: string; kind: 'production' | 'opening' | 'correction' | 'dispatch' | 'dispatch_reversal'
     meters_delta: number; balance_after: number; reason: string; created_at: string; created_by: string | null
     source_table: string | null; source_id: string | null; production_before: number | null; production_after: number | null
 }
