@@ -2086,10 +2086,12 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending && !isTutorialActive) { setDraft(null); setSaveError(null) } }}>
+            <Sheet modal={!isTutorialActive} open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending && !isTutorialActive) { setDraft(null); setSaveError(null) } }}>
                     <SheetContent
                         data-ratebook-field="rateDrawerFields"
                         hideOverlay={isTutorialActive}
+                        onOpenAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}
+                        onCloseAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}
                         onPointerDownOutside={(e) => {
                             if (isTutorialActive) e.preventDefault()
                         }}

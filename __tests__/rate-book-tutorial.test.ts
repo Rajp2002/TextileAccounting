@@ -174,6 +174,12 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(ratesClientSource).toContain('isTutorialActive={isTutorialActive}')
     })
 
+    it('keeps the tour in control when the rate editor mounts', () => {
+        expect(ratesClientSource).toContain('<Sheet modal={!isTutorialActive} open={Boolean(draft)}')
+        expect(ratesClientSource).toContain('onOpenAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}')
+        expect(ratesClientSource).toContain('onCloseAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}')
+    })
+
     it('exempts Radix popover and sheet portals from inert state during tutorial', () => {
         expect(tutorialSource).toContain("!el.hasAttribute('data-radix-popper-content-wrapper')")
         expect(tutorialSource).toContain("!el.querySelector('[data-slot=\"popover-content\"]')")
