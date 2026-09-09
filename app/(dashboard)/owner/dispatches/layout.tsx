@@ -1,5 +1,5 @@
 import AccessGate from '@/components/billing/AccessGate'
 
 export default function DispatchesLayout({ children }: { children: React.ReactNode }) {
-    return <AccessGate requiredTier="premium" routeName="/owner/dispatches">{children}</AccessGate>
+    return <AccessGate requiredCapability="production" routeName="/owner/dispatches">{children}</AccessGate>
 }

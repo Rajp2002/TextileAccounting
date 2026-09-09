@@ -1,5 +1,7 @@
 # Dispatches and Tracking
 
+> New dispatch creation now uses [standalone delivery challans](standalone_delivery_challans.md) at `/owner/dispatches`. The documentation below describes the retained legacy commercial workflow at `/owner/dispatches/legacy`; it does not describe new dispatch creation.
+
 Last analyzed from the active codebase on June 1, 2026.
 
 ## Phase 1 Status

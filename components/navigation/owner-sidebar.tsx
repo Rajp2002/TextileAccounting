@@ -149,6 +149,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
     if (hasProduction) {
         costingWorkspaceRoutes.add('/owner/production')
         costingWorkspaceRoutes.add('/owner/stock')
+        costingWorkspaceRoutes.add('/owner/dispatches')
         costingWorkspaceRoutes.add('/owner/operations')
         costingWorkspaceRoutes.add('/owner/payroll')
     }

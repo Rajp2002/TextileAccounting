@@ -27,10 +27,10 @@ describe('P1 Billing Gates Coverage', () => {
         expect(content).toContain('requiredCapability="production"')
     })
 
-    it('verifies /owner/dispatches has AccessGate with premium tier', () => {
+    it('verifies /owner/dispatches has AccessGate with production capability', () => {
         const content = readProjectFile('app/(dashboard)/owner/dispatches/layout.tsx')
         expect(content).toContain('AccessGate')
-        expect(content).toContain('requiredTier="premium"')
+        expect(content).toContain('requiredCapability="production"')
     })
 
     it('verifies /owner/commercials has AccessGate with premium tier', () => {

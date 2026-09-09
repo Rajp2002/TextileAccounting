@@ -200,6 +200,10 @@ try {
         }
         assert.equal(seen.size,(await admin.query('select count(*)::int n from quality_stock_movements where org_id=$1',[org])).rows[0].n)
     })
+    if (process.env.CHALLAN_TEST === '1') {
+        const { testChallans } = await import('./challan-db-scenarios.mjs')
+        await testChallans({ admin, a, b, outsider, floor, org, test })
+    }
     console.log(`PASS ${checks} database scenarios on PostgreSQL ${(await admin.query('show server_version')).rows[0].server_version}`)
 } finally {
     for(const db of connections) await db.end()

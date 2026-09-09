@@ -1,39 +1,23 @@
-import DispatchesClient from "./DispatchesClient"
-import { requireRole } from '@/lib/auth'
 import { createPerfTimer } from '@/lib/perf'
-import { loadOwnerDispatchesInitialData } from './loaders'
-
-export const metadata = {
-    title: "Dispatches | Owner Dashboard",
-    description: "Monitor sent fabric dispatches and trader confirmations.",
-}
-
+import ChallansClient from './ChallansClient'
+import { listChallans } from './challan-actions'
+import { getQualityStockBoard } from '../stock/actions'
+export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Delivery challans | Weavly' }
 export default async function DispatchesPage() {
     const perf = createPerfTimer('/owner/dispatches')
-    await perf.measure('authSession', () => requireRole(['owner']), 0)
-    const initialData = await perf.measure(
+    const [challans, stock] = await perf.measure(
         'businessData',
-        () => loadOwnerDispatchesInitialData(),
-        4
+        () => Promise.all([listChallans(), getQualityStockBoard()]),
+        2,
     )
-    perf.log({ note: 'server initial payload shares one open stock_discrepancies read across active dispatches and overview totals' })
-
-    if ('error' in initialData) {
-        return (
-            <div className="p-8 text-center">
-                <h1 className="text-2xl font-bold text-red-500">Error loading dispatches</h1>
-                <p className="text-muted-foreground">{initialData.error}</p>
-            </div>
-        )
-    }
-
+    perf.log()
+    if ('error' in challans || 'error' in stock)
+        throw new Error('Dispatches could not be loaded. Please retry.')
     return (
-        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-            <DispatchesClient
-                initialDispatches={initialData.data.dispatches}
-                initialOverview={initialData.data.overview}
-                initialPendingSales={initialData.data.pendingSales}
-            />
-        </div>
+        <ChallansClient
+            initialData={challans.data!}
+            qualities={stock.data.qualities}
+        />
     )
 }
