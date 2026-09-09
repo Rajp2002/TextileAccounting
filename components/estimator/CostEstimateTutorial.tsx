@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Compass, Sparkles } from 'lucide-react'
 import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
+import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
 
 type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean }
 
@@ -272,28 +273,24 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         setIndex(i => Math.max(0, i - 1))
     }, [])
 
+    useTourViewportLock(isTutorialActive, panel)
     const mobileTour = useMobileTour(active, panel, resolveStepElements)
     const spotlight = mobileTour.mobile ? mobileTour.rects : rects
 
 
     useEffect(() => {
-        if (!active) return
+        if (!isTutorialActive) return
+        // Hold focus/inert state for the entire tour, never restore page inputs between steps.
         const previousFocus = document.activeElement as HTMLElement | null
         const siblings = Array.from(document.body.children).filter((el): el is HTMLElement => el instanceof HTMLElement && !el.contains(panel.current))
         const prior = siblings.map(el => el.inert)
         siblings.forEach(el => { el.inert = true })
         panel.current?.focus({ preventScroll: true })
-        const focusTimer = window.setTimeout(() => {
-            if (panel.current && !panel.current.contains(document.activeElement)) {
-                panel.current.focus({ preventScroll: true })
-            }
-        }, 50)
         return () => {
-            window.clearTimeout(focusTimer)
             siblings.forEach((el, i) => { el.inert = prior[i] })
             previousFocus?.focus({ preventScroll: true })
         }
-    }, [active])
+    }, [isTutorialActive])
 
     useEffect(() => {
         if (!active) return
@@ -681,7 +678,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                         ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
                         : 'top-4 right-4 sm:top-6 sm:right-6'
                 }`}>
-                <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
+                <div data-tour-description-scroll aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
                     <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
                             isSectionTransition
