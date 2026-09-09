@@ -1057,3 +1057,37 @@
     transition: background-color 0.25s ease;
   }
 }
+
+/* Keep the mobile tour's reading area steady while the highlighted field changes. */
+@media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
+  .guided-tour-panel {
+    top: auto;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 8px;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-width: none;
+    max-height: 46dvh;
+    padding: 16px;
+    border-radius: 20px;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    transition: none;
+  }
+  .guided-tour-panel > div:first-child { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .guided-tour-panel > [role="progressbar"], .guided-tour-controls { flex-shrink: 0; }
+  .guided-tour-controls { background: var(--color-surface); padding-block: 8px; flex-wrap: wrap; }
+  .guided-tour-panel [data-tour-control] { min-height: 44px; }
+  .guided-tour-panel [id$="tour-description"] { font-size: 14px; }
+  .guided-tour-panel [aria-live] { animation: none; }
+  .guided-tour-highlight { transition: none; }
+  .guided-tour-backdrop { backdrop-filter: none; transition: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guided-tour-panel, .guided-tour-panel *, .guided-tour-highlight, .guided-tour-backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+}
