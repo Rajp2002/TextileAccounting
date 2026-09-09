@@ -1091,3 +1091,12 @@
     transition: none !important;
   }
 }
+
+/* Keep tour navigation reachable; only explanation text accepts manual scrolling. */
+.guided-tour-panel { display: flex; flex-direction: column; overflow: hidden; }
+.guided-tour-panel [data-tour-description-scroll] {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.guided-tour-panel > [role="progressbar"], .guided-tour-controls { flex-shrink: 0; }

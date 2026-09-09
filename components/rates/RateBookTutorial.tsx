@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Compass, Sparkles } from 'lucide-react'
 import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
+import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
 
 export type RatebookStep = {
     section: number
@@ -288,6 +289,7 @@ export function RateBookTutorial({
         setIndex(i => Math.max(0, i - 1))
     }, [])
 
+    useTourViewportLock(isTutorialActive, panel)
     const mobileTour = useMobileTour(active, panel, resolveStepElements)
     const spotlight = mobileTour.mobile ? mobileTour.rects : rects
 
@@ -639,7 +641,7 @@ export function RateBookTutorial({
                                 : 'top-4 right-4 sm:top-5 sm:right-5'
                         }`}
                     >
-                        <div className="flex flex-col">
+                        <div data-tour-description-scroll className="flex flex-col">
                             <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
