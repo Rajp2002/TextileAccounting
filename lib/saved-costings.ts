@@ -210,6 +210,10 @@ export type SavedQualityFactoryProfile = Partial<{
   avg_output_per_loom_per_day: unknown
   yarn_shortage_pct: unknown
   warp_crimp_pct: unknown
+  default_warping_mode?: 'in_house' | 'outsourced' | null
+  default_sizing_mode?: 'in_house' | 'outsourced' | null
+  warping_mode?: 'in_house' | 'outsourced' | null
+  sizing_mode?: 'in_house' | 'outsourced' | null
   is_configured: boolean
 }>
 
@@ -427,6 +431,8 @@ export function buildSavedQualityRecipeState(
     avgOutputPerLoomPerDay: finiteNumber(profile?.avg_output_per_loom_per_day, base.avgOutputPerLoomPerDay),
     yarnShortagePct: finiteNumber(profile?.yarn_shortage_pct, base.yarnShortagePct),
     warpCrimpPct: finiteNumber(profile?.warp_crimp_pct, base.warpCrimpPct),
+    warpingMode: (profile?.default_warping_mode ?? profile?.warping_mode ?? base.warpingMode) as 'in_house' | 'outsourced',
+    sizingMode: (profile?.default_sizing_mode ?? profile?.sizing_mode ?? base.sizingMode) as 'in_house' | 'outsourced',
     isConfigured: profile?.is_configured ?? base.isConfigured,
   }
 
@@ -479,8 +485,8 @@ export function buildSavedQualityRecipeState(
     loomPowerKw: nullableFiniteNumber(recipe.loom_power_kw, null),
     loomRpmIsCustomised: false,
     loomPowerKwIsCustomised: false,
-    warpingMode: recipe.warping_mode ?? 'in_house',
-    sizingMode: recipe.sizing_mode ?? 'in_house',
+    warpingMode: recipe.warping_mode ?? state.warpingMode ?? 'in_house',
+    sizingMode: recipe.sizing_mode ?? state.sizingMode ?? 'in_house',
     hoursPerShift: nullableFiniteNumber(recipe.hours_per_shift, state.hoursPerShift),
   }
 }

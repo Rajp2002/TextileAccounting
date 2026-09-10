@@ -16,6 +16,7 @@ export type PlanCapability =
   | 'existing_costing_tools'
   | 'account_data'
   | 'account_settings'
+  | 'costing_defaults'
   | 'export_document'
   | 'production'
   | 'production_management'
@@ -31,6 +32,7 @@ const LITE_CAPABILITIES = [
   'existing_costing_tools',
   'account_data',
   'account_settings',
+  'costing_defaults',
   'export_document',
 ] as const satisfies readonly PlanCapability[]
 

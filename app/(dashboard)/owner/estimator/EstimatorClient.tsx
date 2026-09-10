@@ -220,6 +220,10 @@ type FactoryCostProfile = Partial<{
     avg_output_per_loom_per_day: number | string | null
     yarn_shortage_pct: number | string | null
     warp_crimp_pct: number | string | null
+    default_warping_mode?: 'in_house' | 'outsourced' | null
+    default_sizing_mode?: 'in_house' | 'outsourced' | null
+    warping_mode?: 'in_house' | 'outsourced' | null
+    sizing_mode?: 'in_house' | 'outsourced' | null
     is_configured: boolean
 }>
 
@@ -318,6 +322,8 @@ function buildEstimatorBaseline(
         warpCrimpPct: profile.warp_crimp_pct != null
             ? Number(profile.warp_crimp_pct)
             : base.warpCrimpPct,
+        warpingMode: (profile.default_warping_mode ?? profile.warping_mode ?? base.warpingMode) as 'in_house' | 'outsourced',
+        sizingMode: (profile.default_sizing_mode ?? profile.sizing_mode ?? base.sizingMode) as 'in_house' | 'outsourced',
         isConfigured: profileHasSavedBaseline(profile),
     }
 
