@@ -5490,8 +5490,8 @@ export default function EstimatorClient({
             {freeMode && (
                 <FreeUsageCard
                     quota={freeMeter.status?.quota}
-                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.error)}
-                    error={freeMeter.error}
+                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.usageError)}
+                    error={freeMeter.usageError}
                     stale={freeMeter.stale}
                     isPending={freeMeter.pending}
                     onRefresh={freeMeter.refresh}

@@ -36,4 +36,10 @@ describe('Saved Costings guided tour', () => {
    }
   }
  })
+ it('guides users to explore and delete demo sample costing on finish step', () => {
+  expect(savedCostingsTutorialCopy.en.fields.finish[1]).toContain('sample demo costing')
+  expect(savedCostingsTutorialCopy.en.fields.finish[1]).toContain('delete it anytime')
+  expect(savedCostingsTutorialCopy.hi.fields.finish[1]).toContain('डेमो नमूना')
+  expect(savedCostingsTutorialCopy.gu.fields.finish[1]).toContain('ડેમો નમૂનો')
+ })
 })

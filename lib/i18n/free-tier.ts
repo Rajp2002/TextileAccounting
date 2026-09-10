@@ -83,6 +83,11 @@ const phrases = {
  remainingOfLimit:['{remaining} of {limit} free costings remaining','{limit} માંથી {remaining} ફ્રી કોસ્ટિંગ બાકી','{limit} में से {remaining} फ्री कॉस्टिंग बाकी'],
  reset:['Resets {date} (India time)','રીસેટ: {date} (ભારતીય સમય)','रीसेट: {date} (भारतीय समय)'],
  toggleDetails:['Toggle allowance details','ભથ્થાની વિગતો દર્શાવો/છુપાવો','सीमा विवरण दिखाएँ/छिपाएँ'],
+ demoSample:['Demo sample','ડેમો નમૂનો','डेमो नमूना'],
+ demoTourCompleted:['Guided tour completed!','માર્ગદર્શિત ટૂર પૂર્ણ થઈ!','गाइडेड टूर पूरा हुआ!'],
+ demoTourCompletedHint:['Explore exports with this sample costing, or delete it whenever you are ready to create your own costings.','આ નમૂના કોસ્ટિંગ સાથે એક્સપોર્ટ ચકાસો, અથવા તમારી પોતાની ગણતરી બનાવવા માટે તેને ડિલીટ કરી શકો છો.','इस नमूना कॉस्टिंग के साथ निर्यात देखें, या अपनी खुद की गणना बनाने के लिए इसे कभी भी डिलीट कर सकते हैं।'],
+ deleteDemoSample:['Delete sample costing','નમૂના કોસ્ટિંગ ડિલીટ કરો','नमूना कॉस्टिंग डिलीट करें'],
+ dismiss:['Dismiss','બંધ કરો','खारिज करें'],
 } satisfies Record<string, readonly [string,string,string]>
 export type FreeText = keyof typeof phrases
 export function freeText(language:Language,key:FreeText,values:Record<string,string|number>={}) {

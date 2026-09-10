@@ -17,10 +17,10 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  const {language}=useTranslation()
  const [status,setStatus]=useState<Awaited<ReturnType<typeof freeStatus>>|null>(null)
  const [completed,setCompleted]=useState<Completed|null>(null)
- const [busy,setBusy]=useState(false),[error,setError]=useState(''),[warning,setWarning]=useState(false)
+ const [busy,setBusy]=useState(false),[submitError,setSubmitError]=useState(''),[statusError,setStatusError]=useState(''),[warning,setWarning]=useState(false)
  const pending=useRef<{estimate:EstimateState;label:string;requestToken:string}|null>(null),lock=useRef(false)
- const refresh=useCallback(async()=>{const r=await fetch('/api/free/status',{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await r.json();if(!r.ok)throw new Error(data.code);if(data.accessState==='paid'){if(onPaidActivated)onPaidActivated(data.plan);else window.location.assign('/owner/estimator')}setStatus(data);return data as Awaited<ReturnType<typeof freeStatus>>},[onPaidActivated])
- useEffect(()=>{if(!enabled)return;const load=()=>{void refresh().catch(()=>setError('FREE_TEMPORARY_ERROR'))};load();window.addEventListener('focus',load);return()=>window.removeEventListener('focus',load)},[enabled,refresh])
+ const refresh=useCallback(async()=>{const r=await fetch('/api/free/status',{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await r.json();if(!r.ok)throw new Error(data.code);if(data.accessState==='paid'){if(onPaidActivated)onPaidActivated(data.plan);else window.location.assign('/owner/estimator')}setStatus(data);setStatusError('');return data as Awaited<ReturnType<typeof freeStatus>>},[onPaidActivated])
+ useEffect(()=>{if(!enabled)return;const load=()=>{void refresh().catch(()=>setStatusError('FREE_TEMPORARY_ERROR'))};load();window.addEventListener('focus',load);return()=>window.removeEventListener('focus',load)},[enabled,refresh])
  useEffect(()=>{
   if(!enabled)return
   const client=createClient()
@@ -35,7 +35,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  const stale=!!completed&&completed.signature!==signature
  async function submit(ack=false) {
   if(!enabled||lock.current||completed&&!stale&&!pending.current)return
-  lock.current=true;setBusy(true);setError('')
+  lock.current=true;setBusy(true);setSubmitError('')
   try {
    if(!pending.current){const fresh=await refresh();if(!fresh.requestToken)throw new Error('FREE_ACCESS_DENIED');pending.current={estimate:structuredClone(state),label:label.trim()||'Costing',requestToken:fresh.requestToken}}
    const payload=pending.current
@@ -48,10 +48,10 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
    void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:data.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
    if(data.quota?.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:data.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
    await refresh()
-  }catch(e){setError(e instanceof Error?e.message:'FREE_TEMPORARY_ERROR')}
+  }catch(e){setSubmitError(e instanceof Error?e.message:'FREE_TEMPORARY_ERROR')}
   finally{lock.current=false;setBusy(false)}
  }
- return {enabled,status,completed,stale,busy,error,warning,submit,refresh,pending:!!pending.current}
+ return {enabled,status,completed,stale,busy,error:submitError,statusError,usageError:submitError||statusError,warning,submit,refresh,pending:!!pending.current}
 }
 export function FreeMeterPanel({meter}:{meter:ReturnType<typeof useFreeMeter>}) {
  const {language}=useTranslation()

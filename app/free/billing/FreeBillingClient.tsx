@@ -106,51 +106,47 @@ export default function FreeBillingClient({
                 </div>
             </Card>
 
-            {/* Plan Comparison & Upgrade Choices */}
-            <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <h3 className="text-base font-bold text-ink">Available plans</h3>
-                        <p className="text-xs text-subtle">
-                            Choose Lite for full costing with Rate Book, or Base to add production logging and payroll.
+            {/* Upgrade Plan Callout */}
+            <Card className="border-hairline bg-surface p-6 shadow-[var(--shadow-card)]">
+                <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron/15 text-saffron-deep">
+                                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <h3 className="text-lg font-bold text-ink">{upgradeText(language, 'upgradeToLite')} & Base</h3>
+                        </div>
+                        <p className="max-w-xl text-sm leading-relaxed text-body">
+                            {freeText(language, 'planSummary')}
                         </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            <span className="inline-flex items-center rounded-md bg-surface-soft px-2.5 py-1 text-xs font-medium text-ink border border-hairline">
+                                ✓ Unlimited calculations
+                            </span>
+                            <span className="inline-flex items-center rounded-md bg-surface-soft px-2.5 py-1 text-xs font-medium text-ink border border-hairline">
+                                ✓ Reusable saved qualities & Rate Book
+                            </span>
+                            <span className="inline-flex items-center rounded-md bg-surface-soft px-2.5 py-1 text-xs font-medium text-ink border border-hairline">
+                                ✓ Production logging & automatic payroll
+                            </span>
+                        </div>
                     </div>
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 shrink-0">
-                        <Link href="/plans?from=billing">
-                            <Sparkles className="h-3.5 w-3.5 text-saffron-deep" aria-hidden="true" />
-                            <span>{upgradeText(language, 'compareAllPlans')}</span>
-                            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Link>
-                    </Button>
+                    <div className="shrink-0 flex flex-col gap-2">
+                        <Button asChild size="lg" className="bg-saffron text-white hover:bg-saffron-deep font-semibold shadow-sm">
+                            <Link href="/plans?from=billing" className="gap-2">
+                                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                                <span>{upgradeText(language, 'compareAllPlans')}</span>
+                                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                            </Link>
+                        </Button>
+                        <p className="text-[11px] text-center text-subtle">Starting at ₹2,999/first year · GST included</p>
+                    </div>
                 </div>
+            </Card>
 
-                <UpgradeWall
-                    currentPlan={tier === 'free' ? 'free' : tier}
-                    actions={{
-                        free: (
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <p>
-                                        <span className="text-3xl font-bold tracking-tight text-ink">₹0</span>
-                                        <span className="ml-2 text-sm text-subtle">/ free forever</span>
-                                    </p>
-                                    <p className="text-sm text-body">2 cost estimates / week</p>
-                                    <p className="text-xs text-subtle">Single-loom costing · No payment required</p>
-                                </div>
-                                <Button asChild className="w-full">
-                                    <Link href="/free">Open Free Workspace</Link>
-                                </Button>
-                            </div>
-                        ),
-                        lite: paidAction('lite'),
-                        base: paidAction('base'),
-                    }}
-                />
-
-                <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3">
-                    <ShieldCheck className="h-4 w-4 text-subtle" aria-hidden="true" />
-                    <p className="text-xs font-medium text-body">Secure Razorpay checkout · GST-inclusive totals shown</p>
-                </div>
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3">
+                <ShieldCheck className="h-4 w-4 text-subtle" aria-hidden="true" />
+                <p className="text-xs font-medium text-body">Secure Razorpay checkout · GST-inclusive totals shown</p>
             </div>
         </div>
     )

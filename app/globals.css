@@ -553,6 +553,42 @@
     }
   }
 
+  /* Saved Costings Left Rail - positioned beside the sidebar,
+     matching the Cost Estimator and Rate Book left rail pattern. */
+  .saved-costings-left-rail {
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+
+  @media (min-width: 1660px) {
+    .saved-costings-left-rail {
+      position: fixed;
+      top: 6.5rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7.5rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .saved-costings-left-rail {
+      left: calc(248px + 1.25rem);
+      width: 14.5rem;
+    }
+  }
+
+  .saved-costings-left-rail .saved-costings-tour-launcher {
+    position: static;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
   /* Rate Book Right Rail - positioned in right viewport margin. The rail is
      rendered outside the animated route wrapper so fixed positioning remains
      anchored to the viewport instead of the centered Rate Book content. */

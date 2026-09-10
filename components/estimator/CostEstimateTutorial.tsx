@@ -421,9 +421,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             const modalLeft = panelRect ? panelRect.left : window.innerWidth - 420
 
             const targetIsTopRight = !isModal && targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
-            setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
+            const nextPlacement = targetIsTopRight ? 'bottom-right' : 'top-right'
+            setPanelPlacement(nextPlacement)
 
-            const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
+            const isNewSection = prevSectionRef.current !== active.section
             prevSectionRef.current = active.section
 
             const isFixed = isModal ||
@@ -444,7 +445,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 }
             } else {
                 const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
-                const minAllowedTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                const minAllowedTop = nextPlacement === 'top-right' && isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                const maxAllowedBottom = nextPlacement === 'bottom-right' && isHorizontallyOverlapping
+                    ? (panelRect ? panelRect.top : viewportHeight - 340) - fixedPadding
+                    : viewportHeight - 20
 
                 if (isNewSection) {
                     setIsSectionTransition(true)
@@ -457,21 +461,21 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 } else if (active.card.offsetHeight <= viewportHeight) {
                     // Card fits in viewport. When navigating between fields in the same section,
                     // never re-center the card; move directly from one field to the next without scrolling.
-                    const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                    const minAllowedTargetTop = nextPlacement === 'top-right' && isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
                     if (targetRect.top < minAllowedTargetTop) {
                         deltaY = targetRect.top - minAllowedTargetTop
-                    } else if (targetRect.bottom > viewportHeight - 20) {
-                        deltaY = targetRect.bottom - (viewportHeight - 20)
+                    } else if (targetRect.bottom > maxAllowedBottom) {
+                        deltaY = targetRect.bottom - maxAllowedBottom
                     } else {
                         deltaY = 0
                     }
                 } else {
                     // Card is taller than viewport. Ensure active field clears modal and remains visible in viewport.
-                    const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
+                    const minAllowedTargetTop = nextPlacement === 'top-right' && isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
                     if (targetRect.top < minAllowedTargetTop) {
                         deltaY = targetRect.top - minAllowedTargetTop
-                    } else if (targetRect.bottom > viewportHeight - 20) {
-                        deltaY = targetRect.bottom - (viewportHeight - 20)
+                    } else if (targetRect.bottom > maxAllowedBottom) {
+                        deltaY = targetRect.bottom - maxAllowedBottom
                     }
                 }
 
