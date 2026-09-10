@@ -1,0 +1,102 @@
+{
+  "navigation": {
+    "streaming": {
+      "shellMs": 12.699999988079071,
+      "readyMs": 1206.4000000059605,
+      "documentId": "062afa97-5309-4793-ae91-deca09d5ca9f"
+    },
+    "pending": {
+      "opacity": "0.260754",
+      "pointerEvents": "none"
+    },
+    "interruptedNavigation": true,
+    "keyboardNavigation": true,
+    "historyNavigation": true,
+    "persistentShell": true
+  },
+  "language": {
+    "results": [
+      {
+        "language": "gu",
+        "heading": "સાચવો",
+        "placeholder": "શોધો",
+        "observers": 1,
+        "note": "Keep this note"
+      },
+      {
+        "language": "hi",
+        "heading": "सहेजें",
+        "placeholder": "खोजें",
+        "observers": 1,
+        "note": "Keep this note"
+      },
+      {
+        "language": "en",
+        "heading": "Save",
+        "placeholder": "Search",
+        "observers": 0,
+        "note": "Keep this note"
+      },
+      {
+        "language": "gu",
+        "heading": "સાચવો",
+        "placeholder": "શોધો",
+        "observers": 1,
+        "note": "Keep this note"
+      },
+      {
+        "language": "en",
+        "heading": "Save",
+        "placeholder": "Search",
+        "observers": 0,
+        "note": "Keep this note"
+      }
+    ],
+    "englishScansAfterRestoration": 0,
+    "newContentLocalized": true,
+    "skippedNamesPreserved": true
+  },
+  "mobile": {
+    "dimensions": {
+      "viewport": 390,
+      "width": 390
+    },
+    "hint": {
+      "animation": "none",
+      "opacity": "1"
+    },
+    "skeletonAnimations": [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "documentRequests": 0,
+    "mobileNavigation": true
+  },
+  "baseline_revision": "2f6fd4fdb461249a7f56f4f61d652cba8d684390",
+  "browser": "HeadlessChrome/152.0.0.0; MacIntel; unthrottled localhost; synthetic Next.js 16.2.12 production app",
+  "english_mutations": {
+    "rows_added": 300,
+    "before": {
+      "initial_walks": 2,
+      "additional_walks": 300,
+      "active_observers": 1
+    },
+    "after": {
+      "initial_walks": 0,
+      "additional_walks": 0,
+      "active_observers": 0
+    }
+  },
+  "validation": {
+    "production_build": "passed",
+    "typescript": "passed",
+    "test_files_passed": 245,
+    "tests_passed": 1698,
+    "tests_skipped": 1,
+    "changed_file_lint": "passed with zero warnings",
+    "deployed": false
+  }
+}

@@ -4,6 +4,24 @@ import { usePathname } from 'next/navigation'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 
 const ROUTE_TITLES: Array<[string, string]> = [
+    ['/free/costings', 'Saved Costings'],
+    ['/free/account', 'Settings'],
+    ['/free/billing', 'Subscription & Billing'],
+    ['/free', 'Cost Estimate'],
+    ['/owner/production', 'Production'],
+    ['/owner/operations', 'Setup'],
+    ['/owner/payroll', 'Payroll'],
+    ['/owner/stock', 'Stock'],
+    ['/owner/dispatches', 'Dispatches'],
+    ['/owner/today', 'Factory Today'],
+    ['/owner/analytics', 'Analytics'],
+    ['/owner/orders', 'Party Orders'],
+    ['/owner/market-runs', 'Market Runs'],
+    ['/owner/commercials', 'Party Ledger'],
+    ['/owner/fixed-workers', 'Workers'],
+    ['/owner/advances', 'Upaad'],
+    ['/owner/machines', 'Looms'],
+    ['/owner/archive', 'Archive'],
     ['/owner/estimator', 'Cost Estimate'],
     ['/owner/rates', 'Yarn Rate Book'],
     ['/owner/quotes', 'Saved Costings'],
@@ -33,11 +51,11 @@ export function OwnerRouteLoading() {
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
             <div className="space-y-2 border-b border-hairline/80 pb-5">
                 <h1 className="text-3xl font-bold tracking-tight text-ink">{title}</h1>
-                <div className="h-4 w-64 max-w-full animate-pulse rounded-md bg-surface-soft" />
+                <div className="h-4 w-64 max-w-full animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none" />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
                 {[0, 1, 2, 3].map(index => (
-                    <div key={index} className="h-28 animate-pulse rounded-xl border border-hairline bg-surface" />
+                    <div key={index} className="h-28 animate-pulse rounded-xl border border-hairline bg-surface motion-reduce:animate-none" />
                 ))}
             </div>
         </div>

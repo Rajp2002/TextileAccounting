@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslation } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -268,7 +269,7 @@ function MachineAssignInline({
         return (
             <p className="text-xs text-slate-500 italic py-2">
                 {t('orders_page.no_active_machines')}{' '}
-                <a href="/owner/machines" className="text-indigo-400 underline">{t('orders_page.machine_mgmt')}</a>.
+                <Link href="/owner/machines" className="text-indigo-400 underline">{t('orders_page.machine_mgmt')}</Link>.
             </p>
         )
     }
@@ -1080,12 +1081,12 @@ function OrderDetailDrawer({
                                         <p className="text-xs text-slate-400 mt-1">
                                             Save the Quotation in Estimator, accept it in Quotations, then convert it into a live Party Order
                                         </p>
-                                        <a
+                                        <Link
                                             href="/owner/estimator"
                                             className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-semibold"
                                         >
                                             Go to Estimator <ArrowUpRight className="h-3 w-3" />
-                                        </a>
+                                        </Link>
                                     </div>
                                 )}
                             </div>
@@ -1459,7 +1460,7 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <a href="/owner/archive">
+                    <Link href="/owner/archive">
                         <Button
                             variant="outline"
                             className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2 hidden sm:flex"
@@ -1467,8 +1468,8 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
                             <Archive className="h-4 w-4 text-slate-500" />
                             Archive
                         </Button>
-                    </a>
-                    <a href="/owner/estimator">
+                    </Link>
+                    <Link href="/owner/estimator">
                         <Button
                             variant="outline"
                             className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2 hidden sm:flex"
@@ -1476,15 +1477,15 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
                             <Calculator className="h-4 w-4 text-indigo-500" />
                             {t('orders_page.estimator_btn')}
                         </Button>
-                    </a>
-                    <a href="/owner/estimator">
+                    </Link>
+                    <Link href="/owner/estimator">
                         <Button
                             className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
                         >
                             <Plus className="h-4 w-4" />
                             {t('orders_page.new_order')}
                         </Button>
-                    </a>
+                    </Link>
                 </div>
             </div>
 
@@ -1500,18 +1501,18 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 px-4">
-                            <a href="/owner/estimator" className="w-full sm:w-auto">
+                            <Link href="/owner/estimator" className="w-full sm:w-auto">
                                 <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2">
                                     <Plus className="h-4 w-4" />
                                     {t('orders_page.new_order')}
                                 </Button>
-                            </a>
-                            <a href="/owner/estimator" className="w-full sm:w-auto">
+                            </Link>
+                            <Link href="/owner/estimator" className="w-full sm:w-auto">
                                 <Button variant="outline" className="w-full sm:w-auto border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2">
                                     <Calculator className="h-4 w-4 text-primary" />
                                     {t('orders_page.go_to_estimator')}
                                 </Button>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 ) : (

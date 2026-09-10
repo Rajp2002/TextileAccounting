@@ -3762,7 +3762,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                                             setActiveTab('fixed')
                                             return
                                         }
-                                        window.location.href = '/owner/fixed-workers'
+                                        router.push('/owner/fixed-workers')
                                     }}
                                 >
                                     {t('emptyState.payroll.cta')}
@@ -3823,7 +3823,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                                             setActiveTab('meter')
                                             return
                                         }
-                                        window.location.href = '/owner/fixed-workers'
+                                        router.push('/owner/fixed-workers')
                                     }}
                                 >
                                     {t('emptyState.payroll.cta')}

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { NavigationLink } from "@/components/navigation/navigation-link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -94,12 +94,13 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                         const Icon = item.icon
                         const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                         return (
-                            <Link
+                            <NavigationLink
                                 key={item.name}
                                 href={item.href}
-                                onClick={onLinkClick}
+                                aria-current={isActive ? "page" : undefined}
+                                onNavigate={onLinkClick}
                                 className={cn(
-                                    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
+                                    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                     isActive
                                         ? "bg-saffron-deep text-white shadow-sm shadow-saffron/20"
                                         : "text-saffron hover:bg-saffron-deep hover:text-white"
@@ -107,7 +108,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                             >
                                 <Icon className="h-[18px] w-[18px]" />
                                 {t(`nav.${item.translationKey}`) || item.name}
-                            </Link>
+                            </NavigationLink>
                         )
                     })}
                 </div>
@@ -121,12 +122,13 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                         const Icon = item.icon
                         const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                         return (
-                            <Link
+                            <NavigationLink
                                 key={item.name}
                                 href={item.href}
-                                onClick={onLinkClick}
+                                aria-current={isActive ? "page" : undefined}
+                                onNavigate={onLinkClick}
                                 className={cn(
-                                    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
+                                    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                     isActive
                                         ? "bg-saffron-deep text-white shadow-sm shadow-saffron/20"
                                         : "text-saffron hover:bg-saffron-deep hover:text-white"
@@ -134,15 +136,15 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                             >
                                 <Icon className="h-[18px] w-[18px]" />
                                 {t(`nav.${item.translationKey}`) || item.name}
-                            </Link>
+                            </NavigationLink>
                         )
                     })}
                 </div>
             </nav>
-            <Link href="/install" onClick={onLinkClick} className="mx-3 mb-3 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
+            <NavigationLink href="/install" onNavigate={onLinkClick} className="mx-3 mb-3 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
                 <DownloadCloud className="h-[18px] w-[18px]" aria-hidden="true" />
                 Install Weavly guide
-            </Link>
+            </NavigationLink>
 
             {/* Footer — Language + Logout. pb-safe handles iPad landscape home indicator */}
             <div className="border-t border-white/10 p-4 pb-safe">
@@ -271,13 +273,14 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                     return (
-                        <Link
+                        <NavigationLink
                             key={item.name}
                             href={item.href}
+                            aria-current={isActive ? "page" : undefined}
                             className={cn(
                                 "flex flex-col items-center justify-center min-w-0 w-full relative",
                                 "mobile-nav-item",
-                                "py-1 px-0.5 transition-all duration-300",
+                                "py-1 px-0.5 transition-colors duration-150 motion-reduce:transition-none",
                                 isActive ? "text-saffron-deep" : "text-body"
                             )}
                             aria-label={t(`nav.${item.translationKey}`) || item.name}
@@ -285,7 +288,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             {/* Active scale is applied to the icon pill only to avoid
                                 layout shift on very narrow screens */}
                             <div className={cn(
-                                "mobile-nav-icon-pill py-1 px-2 xs:px-3 rounded-xl mb-0.5 transition-all duration-300",
+                                "mobile-nav-icon-pill py-1 px-2 xs:px-3 rounded-xl mb-0.5 transition-colors duration-150 motion-reduce:transition-none",
                                 "landscape:py-0.5 landscape:px-2",
                                 isActive
                                     ? "bg-saffron-soft scale-105"
@@ -305,7 +308,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             {isActive && (
                                 <span className="absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
                             )}
-                        </Link>
+                        </NavigationLink>
                     )
                 })}
 
