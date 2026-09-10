@@ -128,9 +128,12 @@ export default function FreeBillingClient({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold tracking-tight text-ink">Explore Weavly Plans</h2>
-                <span className="rounded-full bg-saffron-soft px-2 py-0.5 text-[10px] font-bold text-saffron-deep">
+                <Link
+                  href="/plans?from=billing"
+                  className="rounded-full bg-saffron-soft px-2.5 py-0.5 text-[10px] font-bold text-saffron-deep hover:bg-saffron/25 transition-colors cursor-pointer"
+                >
                   Recommended
-                </span>
+                </Link>
               </div>
               <p className="mt-1 text-sm text-body leading-relaxed max-w-2xl">
                 Compare Weavly Free, Lite, and Base with full interactive feature previews, instant activation, and GST tax invoices on our standalone plans page.

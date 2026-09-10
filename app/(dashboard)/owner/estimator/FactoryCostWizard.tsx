@@ -288,13 +288,13 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                     exit="exit"
                     className="w-full max-w-lg"
                 >
-                    <Card className="border-none shadow-2xl overflow-hidden bg-white/95 backdrop-blur-xl relative">
+                    <Card className="border-none shadow-2xl overflow-hidden bg-white text-slate-900 relative">
                         {onDismiss && (
                             <button
                                 type="button"
                                 onClick={onDismiss}
                                 aria-label="Close setup wizard"
-                                className="absolute top-3.5 right-3.5 z-20 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                                className="absolute top-3.5 right-3.5 z-20 rounded-full p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
                             >
                                 <X className="h-5 w-5" />
                             </button>
@@ -328,7 +328,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         <h2 className="text-2xl font-black tracking-tight text-slate-900">
                                             {canUseFactoryProfiles ? 'Set up your factory costing' : 'Set up your grey-fabric costing'}
                                         </h2>
-                                        <p className="text-slate-500 text-sm leading-relaxed">
+                                        <p className="text-slate-600 text-sm leading-relaxed">
                                             {canUseFactoryProfiles
                                                 ? 'Choose the type of work you do. We\'ll show only the charges relevant to your unit, then use your actual factory expenses to calculate a trustworthy ₹/m cost.'
                                                 : 'Weavly is set up for grey fabric weaving. Enter your actual factory expenses and rates to calculate a trustworthy ₹/m cost.'}
@@ -346,7 +346,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <button
                                                 type="button"
                                                 onClick={onDismiss}
-                                                className="w-full text-center text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors pt-1"
+                                                className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors pt-1"
                                             >
                                                 Skip for now · I&apos;ve already set this up
                                             </button>
@@ -359,7 +359,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                 <div className="space-y-5">
                                     <div className="space-y-1 text-center">
                                         <h2 className="text-xl font-bold text-slate-900">Choose your factory type</h2>
-                                        <p className="text-xs leading-relaxed text-slate-500">This is a preview until you save it. You can change the optional charges later.</p>
+                                        <p className="text-xs leading-relaxed text-slate-600">This is a preview until you save it. You can change the optional charges later.</p>
                                     </div>
                                     <div className="grid gap-2.5">
                                         {FACTORY_COST_PRESETS.map(profile => (
@@ -376,7 +376,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                         {profile.label}
                                                         {profile.recommended && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-amber-700">Recommended</span>}
                                                     </span>
-                                                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{profile.description}</span>
+                                                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-600">{profile.description}</span>
                                                 </span>
                                                 {selectedProfileId === profile.id && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />}
                                             </button>
@@ -409,7 +409,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                 <div className="space-y-6">
                                     <div className="text-center space-y-1">
                                         <h2 className="text-xl font-bold text-slate-900">How would you like to set up?</h2>
-                                        <p className="text-xs text-slate-500">Choose the method that suits you best.</p>
+                                        <p className="text-xs text-slate-600">Choose the method that suits you best.</p>
                                     </div>
                                     <div className="grid gap-4">
                                         <button 
@@ -421,7 +421,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                             <div>
                                                 <div className="font-black text-slate-900">I know my factory cost per metre</div>
-                                                <div className="text-xs text-slate-500">Enter the ₹/m factory cost you already use.</div>
+                                                <div className="text-xs text-slate-600">Enter the ₹/m factory cost you already use.</div>
                                             </div>
                                         </button>
                                         <button 
@@ -433,7 +433,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                             <div>
                                                 <div className="font-black text-slate-900">Calculate from monthly expenses</div>
-                                                <div className="text-xs text-slate-500">Enter expenses and output; we&apos;ll calculate ₹/m for you.</div>
+                                                <div className="text-xs text-slate-600">Enter expenses and output; we&apos;ll calculate ₹/m for you.</div>
                                             </div>
                                         </button>
                                     </div>
@@ -443,14 +443,14 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'fast' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                                        <button onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <h2 className="text-lg font-black text-slate-900">Enter your factory cost per metre</h2>
                                     </div>
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Direct factory overhead (₹/m) — REQUIRED</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-black text-slate-600">Direct factory overhead (₹/m) — REQUIRED</Label>
                                             <div className="relative">
                                                 <Input 
                                                     type="number"
@@ -459,11 +459,11 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value))}
                                                     className="h-14 text-2xl font-black text-indigo-600 pl-8 pr-12 rounded-xl border-slate-200 focus:ring-indigo-500/20"
                                                 />
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-400">₹</span>
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">/m</span>
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-500">₹</span>
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">/m</span>
                                             </div>
                                         </div>
-                                        <p className="text-[11px] text-slate-500 leading-relaxed italic">
+                                        <p className="text-[11px] text-slate-600 leading-relaxed italic">
                                             Enter the rate your unit already uses for rent, power, staff, repairs, and other fixed costs. No direct rate is inferred.
                                         </p>
                                     </div>
@@ -485,14 +485,14 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'detailed' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                                        <button onClick={() => setStep('choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <h2 className="text-lg font-black text-slate-900">Factory Capacity</h2>
                                     </div>
                                     <div className="grid gap-4">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Total Loom Count</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-600">Total Loom Count</Label>
                                             <Input
                                                 type="number"
                                                 min={1}
@@ -507,7 +507,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Working Days / Month</Label>
+                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-600">Working Days / Month</Label>
                                                 <Input 
                                                     type="number" 
                                                     min={1}
@@ -520,7 +520,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Average m / Loom / Day</Label>
+                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-600">Average m / Loom / Day</Label>
                                                 <Input 
                                                     type="number" 
                                                     min={0.01}
@@ -542,7 +542,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </div>
                                         </div>
                                         <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Standard monthly production</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-600">Standard monthly production</Label>
                                             <div className="relative">
                                                 <Input
                                                     type="number"
@@ -553,9 +553,9 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                     aria-invalid={monthlyOutput <= 0}
                                                     className="h-10 pr-10 font-mono font-bold"
                                                 />
-                                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/mo</span>
+                                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">m/mo</span>
                                             </div>
-                                            <p className="text-[10px] leading-relaxed text-slate-500">Use a normal representative production level, not maximum rated capacity, when dividing monthly expenses.</p>
+                                            <p className="text-[10px] leading-relaxed text-slate-600">Use a normal representative production level, not maximum rated capacity, when dividing monthly expenses.</p>
                                         </div>
                                     </div>
                                     {validationError && (
@@ -579,7 +579,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'detailed-expenses' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('detailed')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                                        <button onClick={() => setStep('detailed')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <h2 className="text-lg font-black text-slate-900">Monthly Expenses (₹)</h2>
@@ -587,10 +587,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     <div className="grid gap-3">
                                         <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50">
                                             <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
-                                                <Building2 className="h-4 w-4 text-slate-500" />
+                                                <Building2 className="h-4 w-4 text-slate-600" />
                                             </div>
                                             <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-slate-400">Rent / Lease</Label>
+                                                <Label className="text-[9px] uppercase font-bold text-slate-600">Rent / Lease</Label>
                                                 <Input 
                                                     type="number" 
                                                     value={rent === initialRent ? '' : rent}
@@ -605,7 +605,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Zap className="h-4 w-4 text-amber-500" />
                                             </div>
                                             <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-slate-400">Electricity & Power</Label>
+                                                <Label className="text-[9px] uppercase font-bold text-slate-600">Electricity & Power</Label>
                                                 <Input 
                                                     type="number" 
                                                     value={electricity === initialElectricity ? '' : electricity}
@@ -620,7 +620,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 <Briefcase className="h-4 w-4 text-blue-500" />
                                             </div>
                                             <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-slate-400">Fixed Staff Salary</Label>
+                                                <Label className="text-[9px] uppercase font-bold text-slate-600">Fixed Staff Salary</Label>
                                                 <Input 
                                                     type="number" 
                                                     value={staff === initialStaff ? '' : staff}
@@ -632,10 +632,10 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                         </div>
                                         <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50">
                                             <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
-                                                <Settings2 className="h-4 w-4 text-slate-400" />
+                                                <Settings2 className="h-4 w-4 text-slate-600" />
                                             </div>
                                             <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-slate-400">Others (Repairs, Oil, etc.)</Label>
+                                                <Label className="text-[9px] uppercase font-bold text-slate-600">Others (Repairs, Oil, etc.)</Label>
                                                 <Input 
                                                     type="number" 
                                                     value={others === initialOtherExpenses ? '' : others}
@@ -689,12 +689,12 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'defaults' && (
                                 <div className="space-y-5">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep(setupPath === 'direct' ? 'fast' : 'detailed-expenses')} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+                                        <button onClick={() => setStep(setupPath === 'direct' ? 'fast' : 'detailed-expenses')} className="rounded-lg p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <div>
                                             <h2 className="text-lg font-black text-slate-900">Cost Estimate Defaults</h2>
-                                            <p className="text-xs text-slate-500">These values pre-fill every new costing. Enter 0 for charges you do not use.</p>
+                                            <p className="text-xs text-slate-600">These values pre-fill every new costing. Enter 0 for charges you do not use.</p>
                                         </div>
                                     </div>
                                     <div className="grid max-h-[55vh] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
@@ -722,7 +722,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             const placeholderKind: EstimatorPlaceholderKind = label === 'Default yarn waste' ? 'applied-default' : 'example'
                                             return (
                                                 <div key={String(label)} className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                                                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">{String(label)}</Label>
+                                                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-600">{String(label)}</Label>
                                                     <div className="relative">
                                                         <Input
                                                             type="number"
@@ -734,13 +734,13 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                             onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}
                                                             className={`h-11 pr-14 font-mono font-bold ${placeholderKind === 'applied-default' ? 'text-orange-600 placeholder:text-orange-600' : 'placeholder:text-slate-400'}`}
                                                         />
-                                                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{String(unit)}</span>
+                                                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">{String(unit)}</span>
                                                     </div>
                                                 </div>
                                             )
                                         })}
                                         <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                                            <Label htmlFor="onboarding-yarn-review" className="text-[10px] font-black uppercase tracking-wider text-slate-500">Review yarn rates</Label>
+                                            <Label htmlFor="onboarding-yarn-review" className="text-[10px] font-black uppercase tracking-wider text-slate-600">Review yarn rates</Label>
                                             <select
                                                 id="onboarding-yarn-review"
                                                 value={yarnReviewIntervalDays}

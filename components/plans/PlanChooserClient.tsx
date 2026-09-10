@@ -59,12 +59,12 @@ export function PlanChooserClient({
 
   // Auto-finalize if user already paid during checkout return
   useEffect(() => {
-    if (!paid) return
+    if (!paid || !isOnboarding) return
     const timer = window.setTimeout(() => {
       void finish('paid')
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [paid, finish])
+  }, [paid, isOnboarding, finish])
 
   const handleOpenPreview = (feature: UpgradeFeature, planTier: UpgradePlan) => {
     setPreviewState({ feature, planTier })

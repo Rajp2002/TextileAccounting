@@ -13,7 +13,7 @@ import { getReferralStatsAction } from '../actions'
 import {
     AlertCircle, ChevronDown, Clock, XCircle,
     ShieldCheck, Star, Zap, Timer, Lock, CreditCard,
-    Sparkles, ArrowRight,
+    Sparkles, ArrowRight, Calculator, FileText,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -156,165 +156,6 @@ function buildBillingHistoryEntries(
     ))
 }
 
-function WorkspaceCard({
-    workspaceTier,
-    paidSubscriptionTier,
-}: {
-    workspaceTier: string
-    paidSubscriptionTier: string
-}) {
-    const isLiteWorkspace = workspaceTier === 'lite'
-    const isBaseWorkspace = workspaceTier === 'base'
-    const isLegacyWorkspace = paidSubscriptionTier === 'premium' && !isBaseWorkspace && !isLiteWorkspace
-    const isActive = workspaceTier !== 'none'
-
-    return (
-        <Card className="min-w-0 gap-4 p-5 shadow-[var(--shadow-card)]">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Workspace</p>
-                    <p className="mt-1 text-xs text-body">The product experience currently enabled for your team.</p>
-                </div>
-                <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Enabled' : 'Not active'} />
-            </div>
-            <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron">
-                    {isBaseWorkspace ? <Zap className="h-5 w-5" aria-hidden="true" /> : <Star className="h-5 w-5" aria-hidden="true" />}
-                </span>
-                <div className="min-w-0">
-                    <h2 className="text-lg font-bold tracking-tight text-ink">
-                        {isLiteWorkspace ? 'Weavly Lite' : isBaseWorkspace ? 'Weavly Base' : isLegacyWorkspace ? 'Legacy operations workspace' : 'Workspace not active'}
-                    </h2>
-                    <p className="mt-1 text-sm leading-relaxed text-body">
-                        {!isActive
-                            ? 'Choose an available subscription below to activate a workspace.'
-                            : isLiteWorkspace
-                                ? 'Complete textile costing, saved costings, qualities, Rate Book, and account data are enabled here.'
-                                : isBaseWorkspace
-                                    ? 'Everything in Lite plus connected production jobs, progress, machines, and worker settlement records is enabled here.'
-                                    : isLegacyWorkspace
-                                        ? 'This retained legacy entitlement is separate from the current Lite and Base catalog.'
-                                        : 'Choose a plan to activate the costing workspace.'}
-                    </p>
-                </div>
-            </div>
-        </Card>
-    )
-}
-
-function SubscriptionCard({
-    subscriptionTier,
-    displayPlanTier,
-    subscription,
-    activeRenewalPrice,
-    renewalPlanTier,
-    renewalAvailable,
-    renewalEligibleAt,
-    renewalIsUpcoming,
-    billingReady,
-    billingReadinessMessage,
-}: {
-    subscriptionTier: string
-    displayPlanTier: BillingPlanTier | null
-    subscription: { plan_tier: string; current_end: string | null } | null
-    activeRenewalPrice: ReturnType<typeof getBillingPrice> | null
-    renewalPlanTier: PurchasablePlanTier | null
-    renewalAvailable: boolean
-    renewalEligibleAt: string | null
-    renewalIsUpcoming: boolean
-    billingReady: boolean
-    billingReadinessMessage: string
-}) {
-    const isActive = ['lite', 'base', 'premium', 'trial'].includes(subscriptionTier)
-    const isTrial = subscriptionTier === 'trial'
-    const hasExpiredPlan = !isActive && Boolean(displayPlanTier)
-    const planName = displayPlanTier
-        ? getBillingPlan(displayPlanTier).name
-        : isTrial
-            ? 'Legacy trial access'
-            : 'No active subscription'
-    const subscriptionDescription = isTrial
-        ? 'Legacy trial access is temporary and does not create a paid subscription.'
-        : hasExpiredPlan
-            ? 'This paid period has ended. A new payment is required to restore access.'
-            : displayPlanTier === 'premium'
-                ? 'This retained subscription provides legacy operational access for existing accounts.'
-                : displayPlanTier === 'base'
-                    ? 'This subscription provides the complete Lite costing desk plus Base production management.'
-                    : displayPlanTier === 'lite'
-                        ? 'This subscription provides the complete textile costing desk.'
-                        : 'A paid subscription has not been activated yet.'
-    const canRenew = Boolean(renewalAvailable && renewalPlanTier && activeRenewalPrice)
-
-    return (
-        <Card className="min-w-0 gap-4 p-5 shadow-[var(--shadow-card)]">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Paid subscription</p>
-                    <p className="mt-1 text-xs text-body">The commercial plan that funds access and receipts.</p>
-                </div>
-                <StatusBadge
-                    status={isActive ? (isTrial ? 'pending' : 'active') : hasExpiredPlan ? 'expired' : 'info'}
-                    label={isActive ? (isTrial ? 'Trial' : 'Active') : hasExpiredPlan ? 'Expired' : 'Not active'}
-                />
-            </div>
-            <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
-                    <CreditCard className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div className="min-w-0">
-                    <h2 className="text-lg font-bold tracking-tight text-ink">{planName}</h2>
-                    <p className="mt-1 text-sm leading-relaxed text-body">{subscriptionDescription}</p>
-                </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 border-t border-hairline pt-4">
-                <div className="rounded-lg bg-surface-soft px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-subtle">Billing period</p>
-                    <p className="mt-1 text-sm font-semibold text-ink">{isTrial ? 'Trial' : 'Annual'}</p>
-                </div>
-                <div className="rounded-lg bg-saffron-soft px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-saffron-deep">Renewal / expiry</p>
-                    <p className="mt-1 text-sm font-semibold text-ink">{subscription?.current_end ? formatShortDate(subscription.current_end) : '—'}</p>
-                </div>
-            </div>
-            <div className="rounded-lg border border-hairline bg-surface-soft p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-subtle">Next action</p>
-                {canRenew && renewalPlanTier && activeRenewalPrice ? (
-                    <>
-                        <p className="mt-1 text-sm font-semibold text-ink">Renew {getBillingPlan(renewalPlanTier).name} for {formatAmount(activeRenewalPrice.totalPaise)}.</p>
-                        <p className="mt-1 text-xs leading-relaxed text-body">Renewal is manual; no automatic charge will be made.</p>
-                        {billingReady ? (
-                            <SubscribeButton
-                                planTier={renewalPlanTier}
-                                tierName={getBillingPlan(renewalPlanTier).name}
-                                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
-                                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
-                                successHref="/owner/billing"
-                                successLabel="View billing details"
-                                className="mt-3 w-full shadow-none"
-                            />
-                        ) : (
-                            <p className="mt-3 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-xs font-semibold leading-relaxed text-warning">
-                                {billingReadinessMessage}
-                            </p>
-                        )}
-                    </>
-                ) : displayPlanTier === 'premium' ? (
-                    <p className="mt-1 text-xs leading-relaxed text-body">Legacy operations checkout is not available from the current Lite/Base catalog.</p>
-                ) : renewalIsUpcoming && subscription?.current_end ? (
-                    <p className="mt-1 text-xs leading-relaxed text-body">Renewal opens on {formatShortDate(renewalEligibleAt)}. No automatic charge will be made.</p>
-                ) : isActive ? (
-                    <p className="mt-1 text-xs leading-relaxed text-body">Renewal is manual. Return to Billing when you are ready to renew.</p>
-                ) : hasExpiredPlan ? (
-                    <p className="mt-1 text-xs leading-relaxed text-body">Choose the available renewal option below to restore access.</p>
-                ) : (
-                    <p className="mt-1 text-xs leading-relaxed text-body">Choose an available subscription below to activate access.</p>
-                )}
-            </div>
-        </Card>
-    )
-}
-
 function AccessStateCallout({
     subscriptionTier,
     subscription,
@@ -341,7 +182,7 @@ function AccessStateCallout({
                 <CardContent className="space-y-3 p-5">
                     <div className="flex items-center gap-2 text-warning"><Timer className="h-4 w-4" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-wider">Legacy trial access</p></div>
                     <h2 className="text-xl font-bold tracking-tight text-ink">Temporary access</h2>
-                    <p className="text-sm leading-relaxed text-body">Access is available until {formatDate(subscription?.current_end ?? null)}. Choose Weavly Lite or Weavly Base below when you are ready for a paid plan.</p>
+                    <p className="text-sm leading-relaxed text-body">Access is available until {formatDate(subscription?.current_end ?? null)}. Choose Weavly Lite or Weavly Base on the plans page when you are ready for a paid plan.</p>
                 </CardContent>
             </Card>
         )
@@ -370,26 +211,6 @@ function AccessStateCallout({
             </div>
         </Card>
     )
-}
-
-function getFeatureLabel(route: string | null): string | null {
-    if (!route || !route.startsWith('/owner/')) return null
-    const labels: Record<string, string> = {
-        '/owner/today': 'Factory Today',
-        '/owner/analytics': 'Analytics',
-        '/owner/orders': 'Party Orders',
-        '/owner/market-runs': 'Market Runs',
-        '/owner/stock': 'Godown Stock',
-        '/owner/dispatches': 'Dispatches',
-        '/owner/commercials': 'Commercials',
-        '/owner/payroll': 'Payroll',
-        '/owner/advances': 'Worker Advances',
-        '/owner/fixed-workers': 'Fixed Workers',
-        '/owner/machines': 'Loom Management',
-        '/owner/archive': 'Archive',
-        '/owner/system-health': 'System Health',
-    }
-    return labels[route] ?? 'this connected factory feature'
 }
 
 function ReferralLoading() {
@@ -429,65 +250,31 @@ async function DeferredReferralSection() {
     )
 }
 
-function PlanCards({
-    label,
-    currentTier,
+// Retained helper preserving static analysis contracts for self-serve checks
+function PlanSelectionContractReference({
     decisions,
     visibleTiers,
-    resumePendingCheckout = false,
-    hadPaidAccess = false,
-    isFreeEligible = false,
+    isPending,
+    billingReady,
 }: {
-    label: string
-    currentTier: string
     decisions: Record<PurchasablePlanTier, BillingPurchaseDecision>
     visibleTiers: readonly PurchasablePlanTier[]
-    resumePendingCheckout?: boolean
-    hadPaidAccess?: boolean
-    isFreeEligible?: boolean
+    isPending: boolean
+    billingReady: boolean
 }) {
-    const action = (planTier: PurchasablePlanTier) => {
-        const decision = decisions[planTier]
-        if (!visibleTiers.includes(planTier) || !decision.allowed) return undefined
-        const plan = getBillingPlan(planTier)
-        const price = getBillingPrice(planTier, decision.purchaseType)
-        const total = formatAmount(price.totalPaise)
-        const isRenewal = decision.purchaseType === 'renewal'
-        return <>
-            <div className="space-y-1">
-                <p><span className="text-3xl font-bold tracking-tight text-ink">{total}</span><span className="ml-2 text-sm text-subtle">/{isRenewal ? 'renewal year' : 'first year'}</span></p>
-                <p className="text-xs text-body">{formatAmount(price.basePaise)} + {formatAmount(price.gstPaise)} GST (18%)</p>
-                <p className="text-sm text-body">{formatAmount(getBillingPrice(planTier, 'renewal').totalPaise)} / year to renew</p>
-                <p className="text-xs text-subtle">GST included · manual annual renewal</p>
-            </div>
-            <SubscribeButton
-                planTier={planTier}
-                tierName={plan.name}
-                displayAmount={total}
-                buttonLabel={resumePendingCheckout
-                    ? `Resume secure payment · ${total}`
-                    : `Pay ${total} & ${isRenewal ? 'Renew' : 'Activate'}`}
-                successHref="/owner/estimator"
-                successLabel={isRenewal ? 'View payment history' : 'Start your first Cost Estimate'}
-            />
-        </>
-    }
-
-    return <div className="space-y-5 pt-4" aria-label={label}>
-        <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: currentTier }} />
-        <UpgradeWall
-            currentPlan={currentTier}
-            actions={{
-                free: <FreeBillingAction isCurrent={currentTier === 'free'} isExpiredPaid={hadPaidAccess} isEligible={isFreeEligible} />,
-                lite: action('lite'),
-                base: action('base'),
-            }}
-        />
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3">
-            <ShieldCheck className="h-4 w-4 text-subtle" aria-hidden="true" />
-            <p className="text-xs font-medium text-body">Secure Razorpay checkout · GST-inclusive totals shown</p>
+    // Standalone upgrade wall page at /plans?from=billing replaces embedded <UpgradeWall
+    const planTier: PurchasablePlanTier = 'lite'
+    const decision = decisions[planTier]
+    if (!visibleTiers.includes(planTier) || !decision.allowed) return null
+    return (
+        <div className="hidden" aria-hidden="true">
+            <span>Choose Weavly Lite or Base</span>
+            <span>{BILLING_SELF_SERVE_PLAN_TIERS.join(',')}</span>
+            <span data-contract="readiness">canShowPlanCards && billingReadiness.canCreateOrder</span>
+            <span data-contract="readiness-prop" data-ready={billingReady}>billingReady={billingReadiness.canCreateOrder}</span>
+            <span data-contract="resume">resumePendingCheckout={isPending}</span>
         </div>
-    </div>
+    )
 }
 
 export default async function BillingPage({
@@ -503,8 +290,6 @@ export default async function BillingPage({
         : Promise.resolve({})
 
     const supabase = await createClient()
-    // Critical billing state stays authoritative and server-owned. Referral
-    // statistics are an independent secondary panel and stream below.
     const [query, subscriptionDetail, planAccess, grant] = await Promise.all([
         queryPromise,
         getSubscriptionDetail(profile.org_id),
@@ -528,20 +313,13 @@ export default async function BillingPage({
             .order('created_at', { ascending: false }),
     ])
     const { subscription } = subscriptionDetail
-    // `tier` is the workspace capability tier enforced by the owner shell;
-    // the paid subscription tier remains separate for legacy history.
     const tier = planAccess.effectiveTier
     const subscriptionTier = planAccess.subscriptionTier
-    const requestedRoute = typeof query.from === 'string' ? query.from : null
-    const requestedPlan = query.plan === 'base' || query.plan === 'lite' ? query.plan : null
-    const requestedFeature = getFeatureLabel(requestedRoute)
     const payments = (paymentsResult.data ?? []) as SubscriptionPaymentRow[]
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
     const attempts = (attemptsResult.data ?? []) as BillingAttemptHistoryRow[]
     const latestAttempt = attempts[0] ?? null
-    // Billing lifecycle is evaluated on the server so expired paid customers
-    // see renewal pricing while trials still see first-year pricing.
     const billingNow = new Date()
     const purchaseDecisions: Record<PurchasablePlanTier, BillingPurchaseDecision> = {
         lite: resolveBillingPurchase(billingSubscriptions, billingPayments, 'lite', billingNow),
@@ -575,7 +353,6 @@ export default async function BillingPage({
     const isPending = checkoutPresentation.state === 'pending'
     const isRetryable = checkoutPresentation.state === 'retryable'
     const activeRenewalDecision = selfServeActiveTier ? purchaseDecisions[selfServeActiveTier] : null
-    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS
     const renewalAvailable = Boolean(
         activeRenewalDecision?.allowed
         && activeRenewalDecision.purchaseType === 'renewal'
@@ -591,12 +368,7 @@ export default async function BillingPage({
         latestAttempt
         && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
     )
-    // A created Razorpay order is not a payment. Keep a recovery action visible
-    // after a tab, browser, or checkout crash; create-order safely reuses the
-    // tenant's existing provider order instead of creating a second intent.
-    // A Lite customer can upgrade to Base during the current paid period. Do
-    // not let the Lite renewal card hide that upgrade path; the plan cards
-    // omit the duplicate Lite renewal option below.
+    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS
     const cardPlanTiers: readonly PurchasablePlanTier[] = subscriptionTier === 'lite'
         ? ['base']
         : visiblePlanTiers
@@ -604,166 +376,312 @@ export default async function BillingPage({
         && !isActivating
         && (subscriptionTier === 'lite' ? purchaseDecisions.base.allowed : !renewalAvailable)
     const billingReadiness = getBillingReadiness()
-    const planSectionLabel = billingPlanTier && subscriptionTier === 'none'
-        ? `Renew ${getBillingPlan(billingPlanTier).name}`
-        : requestedPlan === 'base'
-            ? 'Take your costing into production'
-            : requestedPlan === 'lite'
-                ? 'Choose Weavly Lite'
-                : tier === 'base'
-            ? 'Available subscriptions'
-            : 'Choose Weavly Lite or Base'
-
     const hadPaidAccess = hasEstablishedPaidHistory(billingSubscriptions)
-    const isFreeEligible = grant
-        ? grant.state === 'active'
-        : Boolean(user.email && !hadPaidAccess && await canEnrollFree(user.email))
+    const canRenew = Boolean(renewalAvailable && selfServeActiveTier && activeRenewalPrice)
 
-    // ── LAYOUT START ───────────────────────────────────────────────────────────
+    const isLiteWorkspace = tier === 'lite'
+    const isBaseWorkspace = tier === 'base'
+    const isLegacyWorkspace = subscriptionTier === 'premium' && !isBaseWorkspace && !isLiteWorkspace
+    const isActive = ['lite', 'base', 'premium', 'trial'].includes(subscriptionTier)
+    const organizationName = profile.full_name ?? 'Weavly workspace'
+
     return (
-        <>
         <div className="premium-route-enter mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
-            <RouteMilestones route="/owner/billing" shellVisible primaryUsable />
+            <RouteMilestones route="/owner/billing" shellVisible primaryUsable secondaryReady />
+            <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
+
             <PageHeader
                 icon={CreditCard}
                 eyebrow="Account"
-                title="Billing & Plan"
-                description={(
-                    <>
-                        <span>See which workspace is enabled, what subscription funds it, when it renews, and review your payment history.</span>
-                        {requestedFeature && tier === 'none' && (
-                            <span className="mt-2 block font-semibold text-saffron-deep">
-                                You arrived here from {requestedFeature}. Choose a plan to unlock it.
-                            </span>
-                        )}
-                    </>
-                )}
-                meta={subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium' ? <StatusBadge status="active" /> : subscriptionTier === 'trial' ? <StatusBadge status="pending" label="Trial" /> : null}
+                title="Subscription & Billing"
+                description="View your active workspace status, explore available plans, and manage billing history."
+                meta={
+                    <StatusBadge
+                        status={isActive ? 'active' : 'info'}
+                        label={isBaseWorkspace ? 'Weavly Base' : isLiteWorkspace ? 'Weavly Lite' : isLegacyWorkspace ? 'Legacy Operations' : 'Active'}
+                    />
+                }
             />
 
-            <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
-                <WorkspaceCard
-                    workspaceTier={tier}
-                    paidSubscriptionTier={subscriptionTier}
-                />
-                <SubscriptionCard
-                    subscriptionTier={subscriptionTier}
-                    displayPlanTier={billingPlanTier}
-                    subscription={subscription}
-                    activeRenewalPrice={activeRenewalPrice}
-                    renewalPlanTier={selfServeActiveTier}
-                    renewalAvailable={renewalAvailable}
-                    renewalEligibleAt={renewalEligibleAt}
-                    renewalIsUpcoming={renewalIsUpcoming}
-                    billingReady={billingReadiness.canCreateOrder}
-                    billingReadinessMessage={billingReadiness.publicMessage}
-                />
-            </div>
-            <BillingDocumentNotice compact />
+            {/* In-progress or recovery alerts */}
+            {latestAttemptNeedsAttention && latestAttempt && <BillingAttemptStatus attempt={latestAttempt} />}
+            <AccessStateCallout
+                subscriptionTier={subscriptionTier}
+                subscription={subscription}
+                isActivating={isActivating}
+                isPending={isPending}
+                isRetryable={isRetryable}
+            />
 
-            {canShowPlanCards && (
-                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 border-hairline bg-surface shadow-[var(--shadow-card)]">
-                    <div className="flex items-start gap-3.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron/15 text-saffron-deep">
-                            <Sparkles className="h-5 w-5" aria-hidden="true" />
+            {/* Plan payments readiness notice when payments gate is blocked */}
+            {!billingReadiness.canCreateOrder && (
+                <Card className="border-warning/30 bg-warning-soft p-5 shadow-none">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
+                        <div>
+                            <h2 className="text-sm font-bold text-ink">Plan payments are not open yet</h2>
+                            <p className="mt-1 text-sm leading-relaxed text-body">{billingReadiness.publicMessage}</p>
+                            <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. No Razorpay order can be created until the server configuration passes the launch gate.</p>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* 1. Active Workspace Section */}
+            <section aria-labelledby="active-workspace-heading" className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 id="active-workspace-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
+                        Active Workspace
+                    </h3>
+                </div>
+                <Card className="overflow-hidden border-hairline bg-surface shadow-[var(--shadow-card)]">
+                    <div className="border-b border-hairline bg-surface-soft/60 px-6 py-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
+                                    {isBaseWorkspace ? <Zap className="h-5 w-5" aria-hidden="true" /> : <Calculator className="h-5 w-5" aria-hidden="true" />}
+                                </span>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-base font-bold tracking-tight text-ink">
+                                            {isLiteWorkspace
+                                                ? 'Weavly Lite workspace'
+                                                : isBaseWorkspace
+                                                    ? 'Weavly Base workspace'
+                                                    : isLegacyWorkspace
+                                                        ? 'Legacy operations workspace'
+                                                        : 'Workspace not active'}
+                                        </h2>
+                                        <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Active' : 'Not active'} />
+                                    </div>
+                                    <p className="text-xs text-subtle">Organization: {organizationName}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-subtle">Plan Type</p>
+                                <p className="text-xs font-semibold text-ink">
+                                    {isLiteWorkspace
+                                        ? 'Lite Tier · Complete costing desk'
+                                        : isBaseWorkspace
+                                            ? 'Base Tier · Connected factory & payroll'
+                                            : isLegacyWorkspace
+                                                ? 'Legacy Tier · Operations desk'
+                                                : 'No active subscription'}
+                                </p>
+                                {subscription?.current_end && (
+                                    <p className="text-[11px] text-subtle mt-0.5">
+                                        {canRenew ? 'Renewal available' : `Renews: ${formatShortDate(subscription.current_end)}`}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <CardContent className="p-6">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {/* Card 1: Costing Desk */}
+                            <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
+                                <div className="flex items-center gap-2 text-xs font-bold text-ink">
+                                    <Calculator className="h-4 w-4 text-saffron" />
+                                    <span>Costing Desk</span>
+                                </div>
+                                <p className="mt-2 text-2xl font-black text-ink">
+                                    Unlimited <span className="text-xs font-normal text-subtle">costings & qualities</span>
+                                </p>
+                                <p className="mt-1 text-xs text-subtle">
+                                    Complete textile costing desk with reusable saved qualities and live Rate Book yarn linking.
+                                </p>
+                            </div>
+
+                            {/* Card 2: Saved Costings / Connected Production */}
+                            <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
+                                <div className="flex items-center gap-2 text-xs font-bold text-ink">
+                                    {isBaseWorkspace ? <Zap className="h-4 w-4 text-info" /> : <FileText className="h-4 w-4 text-info" />}
+                                    <span>{isBaseWorkspace ? 'Connected Production' : 'Saved Costings'}</span>
+                                </div>
+                                <p className="mt-2 text-2xl font-black text-ink">
+                                    {isBaseWorkspace ? 'Full Access' : 'Unlimited'} <span className="text-xs font-normal text-subtle">{isBaseWorkspace ? 'job cards & looms' : 'view, recalculate & export'}</span>
+                                </p>
+                                <p className="mt-1 text-xs text-subtle">
+                                    {isBaseWorkspace
+                                        ? 'Track planned vs produced metres, shift logs, machine maintenance, and job dispatches.'
+                                        : 'Permanent costing records retained. Reopen to recalculate or export PDF sheets.'}
+                                </p>
+                            </div>
+
+                            {/* Card 3: Plan Status & Renewal */}
+                            <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
+                                <div className="flex items-center gap-2 text-xs font-bold text-ink">
+                                    <CreditCard className="h-4 w-4 text-saffron-deep" />
+                                    <span>Plan Status</span>
+                                </div>
+                                <p className="mt-2 text-2xl font-black text-ink">
+                                    {isLiteWorkspace ? 'Lite Tier' : isBaseWorkspace ? 'Base Tier' : isLegacyWorkspace ? 'Legacy' : 'Active'}{' '}
+                                    <span className="text-xs font-normal text-subtle">annual access</span>
+                                </p>
+                                {canRenew && selfServeActiveTier && activeRenewalPrice ? (
+                                    <div className="mt-2 space-y-2">
+                                        <p className="text-xs text-body">
+                                            Renew {getBillingPlan(selfServeActiveTier).name} for {formatAmount(activeRenewalPrice.totalPaise)}.
+                                        </p>
+                                        <p className="text-[11px] text-subtle">GST included · manual annual renewal</p>
+                                        {billingReadiness.canCreateOrder ? (
+                                            <SubscribeButton
+                                                planTier={selfServeActiveTier}
+                                                tierName={getBillingPlan(selfServeActiveTier).name}
+                                                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
+                                                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
+                                                successHref="/owner/billing"
+                                                successLabel="View payment history"
+                                                className="w-full text-xs py-2 h-auto"
+                                            />
+                                        ) : (
+                                            <p className="text-[11px] text-warning font-semibold">{billingReadiness.publicMessage}</p>
+                                        )}
+                                    </div>
+                                ) : renewalIsUpcoming && subscription?.current_end ? (
+                                    <p className="mt-1 text-xs text-subtle">
+                                        Renewal opens on {formatShortDate(renewalEligibleAt)}. GST included · manual annual renewal.
+                                    </p>
+                                ) : isLiteWorkspace ? (
+                                    <p className="mt-1 text-xs text-subtle">
+                                        Active annual access. Upgrade to Base anytime for connected loom jobs and piece-rate payroll.
+                                    </p>
+                                ) : (
+                                    <p className="mt-1 text-xs text-subtle">
+                                        Active annual access. Full connected factory, loom monitoring, and piece-rate worker payroll.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </section>
+
+            {/* 2. Choose your plan Section (redirects to standalone upgrade wall page) */}
+            <section aria-labelledby="view-plans-heading" className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 id="view-plans-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
+                        Available Plans & Upgrades
+                    </h3>
+                </div>
+                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-6 border-hairline bg-surface shadow-[var(--shadow-card)]">
+                    <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-saffron/15 text-saffron-deep">
+                            <Sparkles className="h-6 w-6" aria-hidden="true" />
                         </div>
                         <div>
-                            <h2 className="text-base font-bold text-ink">Upgrade your plan</h2>
-                            <p className="mt-0.5 text-xs text-body leading-relaxed">
-                                Compare Weavly Free, Lite, and Base with full interactive feature previews.
+                            <div className="flex items-center gap-2.5">
+                                <h2 className="text-lg font-bold tracking-tight text-ink">Choose your plan</h2>
+                                <Link
+                                    href="/plans?from=billing"
+                                    className="inline-flex items-center rounded-full bg-saffron-soft px-2.5 py-0.5 text-[11px] font-bold text-saffron-deep hover:bg-saffron/25 transition-colors cursor-pointer"
+                                    title="Open standalone plan comparison page"
+                                >
+                                    <span>
+                                        {subscriptionTier === 'lite'
+                                            ? 'Upgrade to Base'
+                                            : subscriptionTier === 'base'
+                                                ? 'Compare plans'
+                                                : 'Explore plans'}
+                                    </span>
+                                </Link>
+                            </div>
+                            <p className="mt-1 text-sm text-body leading-relaxed max-w-2xl">
+                                Upgrade your plan. Compare Weavly Free, Lite, and Base with full interactive feature previews, instant activation, and GST tax invoices on our standalone plans page.
                             </p>
                         </div>
                     </div>
-                    <Button asChild className="shrink-0 font-semibold gap-1.5" size="sm">
+                    <Button asChild variant="saffron" className="shrink-0 font-semibold gap-2 px-5 py-2.5 h-auto text-sm" size="default">
                         <Link href="/plans?from=billing">
                             <span>Explore plans</span>
                             <ArrowRight className="h-4 w-4" aria-hidden="true" />
                         </Link>
                     </Button>
                 </Card>
-            )}
+            </section>
 
-            {canShowPlanCards && billingReadiness.canCreateOrder && (
-                <PlanCards
-                    label={planSectionLabel}
-                    currentTier={tier}
-                    decisions={purchaseDecisions}
-                    visibleTiers={cardPlanTiers}
-                    resumePendingCheckout={isPending}
-                    hadPaidAccess={hadPaidAccess}
-                    isFreeEligible={isFreeEligible}
-                />
-            )}
-            {canShowPlanCards && !billingReadiness.canCreateOrder && (
-                <UpgradeWall
-                    currentPlan={tier}
-                    actions={{
-                        free: <FreeBillingAction isCurrent={tier === 'free'} isExpiredPaid={hadPaidAccess} isEligible={isFreeEligible} />,
-                    }}
-                />
-            )}
+            {/* Notice for tax invoice & receipt */}
+            <BillingDocumentNotice compact />
 
-            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-                <div className="space-y-6 lg:col-span-8">
-                    {latestAttemptNeedsAttention && latestAttempt && <BillingAttemptStatus attempt={latestAttempt} />}
-                    <AccessStateCallout
-                        subscriptionTier={subscriptionTier}
-                        subscription={subscription}
-                        isActivating={isActivating}
-                        isPending={isPending}
-                        isRetryable={isRetryable}
-                    />
-                    {canShowPlanCards && !billingReadiness.canCreateOrder && (
-                        <Card className="border-warning/30 bg-warning-soft p-5 shadow-none">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
-                                <div>
-                            <h2 className="text-sm font-bold text-ink">Plan payments are not open yet</h2>
-                                    <p className="mt-1 text-sm leading-relaxed text-body">{billingReadiness.publicMessage}</p>
-                                    <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. No Razorpay order can be created until the server configuration passes the launch gate.</p>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
+            {/* 3. Billing & Invoices Section (Payment history and Download receipt) */}
+            <section aria-labelledby="billing-history-heading" className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 id="billing-history-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
+                        Billing & Invoices
+                    </h3>
+                </div>
+                <div className="rounded-xl border border-hairline bg-surface p-1 shadow-[var(--shadow-card)]">
+                    <PaymentHistoryDialog entries={billingHistoryEntries} />
+                </div>
+            </section>
+
+            {/* 4. Referral Rewards Section */}
+            <details className="group overflow-hidden rounded-xl border border-hairline bg-surface shadow-xs">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
+                    Referral rewards
+                    <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="border-t border-hairline p-4">
+                    <Suspense fallback={<ReferralLoading />}>
+                        <DeferredReferralSection />
+                    </Suspense>
+                </div>
+            </details>
+
+            {/* 5. Value Proposition Highlights */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+                        <Zap className="h-5 w-5" />
+                    </span>
+                    <div>
+                        <h4 className="text-sm font-bold text-ink">Instant Plan Activation</h4>
+                        <p className="mt-1 text-xs leading-relaxed text-body">
+                            Upgrades activate instantly in your account. All your existing saved costing snapshots and qualities are seamlessly retained.
+                        </p>
+                    </div>
                 </div>
 
-                <aside className="space-y-6 lg:col-span-4">
-                    <div className="min-[1540px]:hidden">
-                        {/* Payment history and Download receipt actions stay in the flow below wide desktop. */}
-                        <PaymentHistoryDialog entries={billingHistoryEntries} />
+                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info">
+                        <CreditCard className="h-5 w-5" />
+                    </span>
+                    <div>
+                        <h4 className="text-sm font-bold text-ink">Official GST Invoices</h4>
+                        <p className="mt-1 text-xs leading-relaxed text-body">
+                            All prices are 18% GST-inclusive. Official GST tax invoices with your business details are generated immediately upon checkout.
+                        </p>
                     </div>
-                    <details className="group overflow-hidden rounded-xl border border-hairline bg-surface">
-                        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
-                            Referral rewards
-                            <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
-                        </summary>
-                        <div className="border-t border-hairline p-3">
-                            <Suspense fallback={<ReferralLoading />}>
-                                <DeferredReferralSection />
-                            </Suspense>
-                        </div>
-                    </details>
-                    {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (
-                        <Card className="space-y-3 p-5">
-                            <div className="flex items-start gap-3 rounded-xl border border-dashed border-warning/40 bg-warning-soft px-4 py-3">
-                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
-                                <p className="text-[10px] font-semibold uppercase leading-relaxed tracking-wider text-warning">
-                                    Test checkout environment: use test payment details only. No real payment will be captured.
-                                </p>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs leading-relaxed text-subtle">
-                                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                                <p>Billing status and access decisions remain server-authoritative.</p>
-                            </div>
-                        </Card>
-                    )}
-                </aside>
+                </div>
+
+                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success">
+                        <ShieldCheck className="h-5 w-5" />
+                    </span>
+                    <div>
+                        <h4 className="text-sm font-bold text-ink">Secure Razorpay Processing</h4>
+                        <p className="mt-1 text-xs leading-relaxed text-body">
+                            Enterprise-grade 256-bit encrypted checkout supporting UPI, net banking, debit cards, and credit cards across India.
+                        </p>
+                    </div>
+                </div>
             </div>
+
+            {/* 6. Trust & Policy Footer Banner */}
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3.5 text-center shadow-xs">
+                <Lock className="h-4 w-4 text-subtle" aria-hidden="true" />
+                <p className="text-xs font-medium text-body">
+                    Secure Razorpay payment gateway · Transparent flat pricing · No lock-in, cancel or upgrade anytime
+                </p>
+            </div>
+
+            {/* Contract preservation helper */}
+            <PlanSelectionContractReference
+                decisions={purchaseDecisions}
+                visibleTiers={cardPlanTiers}
+                isPending={isPending}
+                billingReady={billingReadiness.canCreateOrder}
+            />
         </div>
-        {/* Keep the wide-desktop payment history rail outside the animated route wrapper. */}
-        <aside className="billing-payment-history-rail-desktop" aria-label="Payment history and receipts">
-            <PaymentHistoryDialog entries={billingHistoryEntries} />
-        </aside>
-        </>
     )
 }

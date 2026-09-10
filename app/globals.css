@@ -299,9 +299,10 @@
     color: var(--color-ink);
   }
 
-  /* Preserve light text when a dark navigation, modal, or summary panel is
-     the reading surface. The attribute selectors also cover opacity variants
-     such as text-muted-foreground/70. */
+  /* Preserve light text when a dark navigation, solid modal, or summary panel is
+     the reading surface. Modal backdrops and overlays (e.g. fixed inset-0, backdrop-blur)
+     are excluded so light dialog cards nested inside them keep high-contrast dark text.
+     The attribute selectors also cover opacity variants such as text-muted-foreground/70. */
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
@@ -311,7 +312,7 @@
     [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
-  ) :is(
+  ):not([class*="fixed inset-0"]):not([class*="backdrop-blur"]):not([data-slot="dialog-overlay"]):not([data-slot="sheet-overlay"]) :is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
@@ -327,6 +328,76 @@
     [class*="text-zinc-500"]
   ) {
     color: #CBD5E1;
+  }
+
+  /* When a light reading surface (card, modal, dialog, sheet) appears inside
+     a dark overlay or backdrop (such as bg-slate-900/60 or bg-black/60), ensure
+     text inside the light surface remains crisp, dark and clearly readable. */
+  :root:not(.dark) :is(
+    [class*="bg-[#111111]"],
+    [class*="bg-black"],
+    [class*="bg-slate-900"],
+    [class*="bg-slate-950"],
+    [class*="bg-zinc-900"],
+    [class*="bg-zinc-950"],
+    [class~="bg-loom"],
+    [class~="bg-loom-elevated"]
+  ) :is(
+    [class*="bg-white"],
+    [class*="bg-surface"],
+    [class*="bg-card"],
+    [class*="bg-background"],
+    [class*="bg-slate-50"],
+    [class*="bg-slate-100"]
+  ) :is(
+    [class*="text-muted-foreground"],
+    [class*="text-body"],
+    [class*="text-subtle"],
+    [class~="text-muted"],
+    [class*="text-slate-300"],
+    [class*="text-slate-400"],
+    [class*="text-slate-500"],
+    [class*="text-slate-600"],
+    [class*="text-gray-300"],
+    [class*="text-gray-400"],
+    [class*="text-gray-500"],
+    [class*="text-zinc-300"],
+    [class*="text-zinc-400"],
+    [class*="text-zinc-500"]
+  ),
+  :root:not(.dark) :is(
+    [class*="bg-[#111111]"],
+    [class*="bg-black"],
+    [class*="bg-slate-900"],
+    [class*="bg-slate-950"],
+    [class*="bg-zinc-900"],
+    [class*="bg-zinc-950"],
+    [class~="bg-loom"],
+    [class~="bg-loom-elevated"]
+  ) :is(
+    [class*="bg-white"],
+    [class*="bg-surface"],
+    [class*="bg-card"],
+    [class*="bg-background"],
+    [class*="bg-slate-50"],
+    [class*="bg-slate-100"]
+  ):is(
+    [class*="text-muted-foreground"],
+    [class*="text-body"],
+    [class*="text-subtle"],
+    [class~="text-muted"],
+    [class*="text-slate-300"],
+    [class*="text-slate-400"],
+    [class*="text-slate-500"],
+    [class*="text-slate-600"],
+    [class*="text-gray-300"],
+    [class*="text-gray-400"],
+    [class*="text-gray-500"],
+    [class*="text-zinc-300"],
+    [class*="text-zinc-400"],
+    [class*="text-zinc-500"]
+  ) {
+    color: #475569;
   }
 
   /* Landing-page sections become discrete slides on roomy desktop viewports.
