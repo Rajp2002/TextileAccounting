@@ -22,8 +22,8 @@ const footerSections = [
         links: [
             { name: 'FAQ', href: '/#faq' },
             { name: 'Install Weavly', href: '/install' },
-            { name: 'Weavly Lite / Base workspace', href: '/login' },
-            { name: 'Choose a plan', href: '/signup' },
+            { name: 'Log in to your workspace', href: '/login' },
+            { name: 'Free, Lite & Base', href: '/#pricing' },
         ]
     },
     {
@@ -57,7 +57,7 @@ export default function LandingFooter() {
                                 </div>
                             </Link>
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
-                                Built for grey fabric weaving factories that want reliable Cost Estimates, saved costings, and margin visibility in one focused workspace.
+                                Free costing to get started. Lite for a complete costing desk. Base for connected production and worker settlement.
                             </p>
                             <a
                                 href={`mailto:${LEGAL_OPERATOR.contactEmail}`}

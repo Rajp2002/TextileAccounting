@@ -17,6 +17,9 @@ const runbook = read('docs/legal/base-security-incident-runbook.md')
 describe('Base Plan security incident workflow', () => {
     it('provides a discoverable public reporting channel with safe-reporting guidance', () => {
         expect(page).toContain('Report a suspected security incident')
+        const publicRoutes = read('proxy.ts').split('function isPublicRoute')[1].split('function logProxyPhase')[0]
+        expect(publicRoutes).toContain("pathname === '/security-incident'")
+        expect(publicRoutes).not.toContain("pathname.startsWith('/security')")
         expect(page).toContain('Do not send passwords, OTPs, card or bank credentials')
         expect(page).toContain('buildSecurityIncidentMailto')
         expect(footer).toContain("href: '/security-incident'")

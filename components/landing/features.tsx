@@ -13,36 +13,42 @@ const replaces = ['Excel costing sheet', 'Handwritten yarn rates', 'Repeated cal
 const workflow = [
     {
         title: 'Create a Cost Estimate',
+        plans: 'Free · Lite · Base',
         description: 'Enter warp and weft details, factory costs, GST, shortage, transport, commission, and margin in one guided workspace.',
         outcome: 'Know landed cost, break-even price, and expected margin before saying yes.',
         icon: Calculator,
     },
     {
         title: 'Reuse a Saved Quality',
+        plans: 'Lite · Base',
         description: 'Keep fabric construction and costing assumptions together so the next estimate starts from a known baseline.',
         outcome: 'Spend less time re-entering the same factory knowledge.',
         icon: Copy,
     },
     {
         title: 'Check the margin',
+        plans: 'Free · Lite · Base',
         description: 'See production cost per metre, suggested price, actual margin, break-even price, and the assumptions behind the result.',
         outcome: 'Make pricing decisions from visible inputs instead of a guessed total.',
         icon: ClipboardList,
     },
     {
         title: 'Save or export the costing',
+        plans: 'Free · Lite · Base',
         description: 'Save a costing for later comparison or export a clean cost sheet when you need to share the numbers.',
         outcome: 'Keep the decision record ready for the next customer conversation.',
         icon: Download,
     },
     {
         title: 'Run a simple production job',
+        plans: 'Base',
         description: 'Start a production job from the costing, record metres as the owner, and keep the target and economics together.',
         outcome: 'Move from a price decision to a useful production record without opening a full ERP.',
         icon: Factory,
     },
     {
         title: 'Settle piece-rate pay',
+        plans: 'Base',
         description: 'Use recorded metres, rate snapshots, and owner-entered advances to see gross pay, capped recovery, and net payout.',
         outcome: 'Know what each worker is owed while broader payroll workflows remain outside the current catalog.',
         icon: WalletCards,
@@ -62,7 +68,7 @@ const trustItems = [
     },
     {
         title: 'Choose the operational layer you need',
-        copy: 'Lite is the complete costing product. Base adds the connected production workflow. Broader factory modules remain outside the current catalog so each plan stays clear and dependable.',
+        copy: 'Free covers two costings per week with saved records and exports. Lite adds unlimited costings, reusable qualities, and Rate Book. Base connects costing with owner-led production and worker settlement.',
         icon: MessageCircle,
     },
 ]
@@ -143,7 +149,8 @@ export default function LandingFeatures() {
                                             <step.icon className="h-5 w-5" aria-hidden="true" />
                                         </div>
                                     </div>
-                                    <h3 className="mt-8 text-xl font-black text-zinc-950 dark:text-white">{step.title}</h3>
+                                    <p className="mt-6 text-sm font-bold text-orange-700 dark:text-orange-400">{step.plans}</p>
+                                    <h3 className="mt-2 text-xl font-black text-zinc-950 dark:text-white">{step.title}</h3>
                                     <p className="mt-3 text-sm leading-6 text-[var(--color-body)]">{step.description}</p>
                                     <p className="mt-6 border-t border-zinc-200 pt-5 text-sm font-bold leading-6 text-zinc-900 dark:border-white/10 dark:text-zinc-100">
                                         <span className="mb-2 block text-[11px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-400">Outcome</span>

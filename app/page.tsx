@@ -13,7 +13,7 @@ import LandingFooter from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <main className="landing-scroll h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-white font-sans text-zinc-950 selection:bg-orange-500/20 scroll-smooth">
+    <main className="landing-scroll scroll-pt-28 h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-white font-sans text-zinc-950 selection:bg-orange-500/20 scroll-smooth">
       <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
@@ -48,12 +48,12 @@ export default function Home() {
                 <span className="text-orange-600">Make the next price conversation clearer.</span>
               </h2>
               <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-700 sm:text-lg">
-                Start with complete costing management in Lite, then carry the same costing into production with Weavly Base when your factory is ready.
+                Start with two free costings per week, saved records, and Cost Sheet exports. Move to Lite for unlimited costing management or Base for connected production and worker settlement.
               </p>
               <div className="mt-9 flex items-center gap-x-6">
-                <Link href="/signup">
+                <Link href="/signup?plan=free">
                   <Button size="lg" className="rounded-md px-8 py-6 text-base font-bold bg-zinc-950 text-white hover:bg-zinc-800 shadow-xl shadow-zinc-950/10 transition-all group">
-                    Choose Weavly Lite or Base <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    Start with Free <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
               </div>

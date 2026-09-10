@@ -8,7 +8,7 @@ import { PRIVACY_REQUEST_SERVICE_LEVEL } from '@/lib/privacy-request'
 
 export const metadata: Metadata = {
     title: 'Privacy Policy — Weavly',
-    description: 'How Weavly collects, uses, shares, retains, and protects information used by Weavly Lite and Weavly Base.',
+    description: 'How Weavly collects, uses, shares, retains, and protects information used by Weavly Free, Lite, and Base.',
 }
 
 const sections = [
@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
         <PolicyPage
             activePath="/privacy"
             title="Privacy Policy"
-            description="What Weavly Lite and Weavly Base collect, why it is needed, who receives it, and the controls available to account owners."
+            description="What Weavly Free, Lite, and Base collect, why it is needed, who receives it, and the controls available to account owners."
             lastUpdated={LEGAL_DOCUMENTS.privacy.displayDate}
             sections={sections}
             facts={[
@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, on Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Lite and Weavly Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
+                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, on Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Free, Lite, and Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
             </p>
 
             <PolicySection id="scope" title="1. Scope and Our Data Roles">
@@ -52,10 +52,10 @@ export default function PrivacyPolicyPage() {
                     For account registration, authentication, billing, product security, support, and our own service administration, Weavly determines why and how personal information is processed. For those activities, Weavly is responsible for the processing it controls.
                 </p>
                 <p>
-                    An account owner may also enter personal information about customers, suppliers, brokers, employees, or other business contacts into a costing workspace. For that customer-provided information, the account owner decides what to enter and why, and Weavly processes it to provide the subscribed service. The account owner is responsible for having an appropriate basis to provide that information to Weavly.
+                    An account owner may also enter personal information about customers, suppliers, brokers, employees, or other business contacts into a costing workspace. For that customer-provided information, the account owner decides what to enter and why, and Weavly processes it to provide the selected service. The account owner is responsible for having an appropriate basis to provide that information to Weavly.
                 </p>
                 <p>
-                    This notice covers Weavly Lite costing data and the additional Base Production Core, including owner-created production jobs, production metre entries, piece-rate worker names and rates, advances, and basic settlement records. Broader operational modules outside the current Lite and Base catalog are not covered by this product rollout. The Base workflow does not require worker phone numbers, supervisor accounts, attendance, or statutory payroll identifiers.
+                    This notice covers Free account data, saved completed costings, calculation-allowance records, Weavly Lite costing data and the additional Base Production Core, including owner-created production jobs, production metre entries, piece-rate worker names and rates, advances, and basic settlement records. Broader operational modules outside the current Lite and Base catalog are not covered by this product rollout. The Base workflow does not require worker phone numbers, supervisor accounts, attendance, or statutory payroll identifiers.
                 </p>
             </PolicySection>
 
@@ -73,6 +73,14 @@ export default function PrivacyPolicyPage() {
                     <li>Factory costs, GST assumptions, shortage, commission, transport, target margin, quantity, notes, drafts, and saved costings</li>
                     <li>Customer, party, broker, supplier, or other contact details you choose to associate with a costing</li>
                     <li>Cost Sheet and organization-export activity, including export-history metadata; downloaded files are saved wherever you choose on your device</li>
+                </ul>
+
+                <h3>Free costing records and allowance data</h3>
+                <ul>
+                    <li>Completed Free costings are saved to your account with their label, fabric and yarn inputs, cost assumptions, calculated results, totals, and creation time so you can view and export them later.</li>
+                    <li>We keep your Free enrollment and verification status, weekly allowance and usage, reset period, and walkthrough completion state.</li>
+                    <li>Calculation request identifiers, timestamps, engine versions, and a cryptographic binding of the submitted inputs help prevent duplicate charges against your allowance. These operational receipts are separate from your saved business costings.</li>
+                    <li>Limited Free usage events record walkthrough progress, result views, allowance limits, and upgrade actions with language and entry-point labels. These events do not contain costing inputs or calculated results.</li>
                 </ul>
 
                 <h3>2.3 Production and worker-pay information</h3>
@@ -99,7 +107,7 @@ export default function PrivacyPolicyPage() {
                 <h3>2.6 Plan and product-usage information</h3>
                 <ul>
                     <li>Server-recorded feature events such as estimator use, costing saves and reopens, quality reuse, Rate Book activity, production actions, and upgrade-intent interactions</li>
-                    <li>The organization&apos;s server-derived subscription tier at the time of the event, together with limited event properties needed to measure Lite usage, Base production adoption, conversion, and retention</li>
+                    <li>The organization&apos;s server-derived subscription tier at the time of the event, together with limited event properties needed to measure Free and Lite usage, Base production adoption, conversion, and retention</li>
                 </ul>
             </PolicySection>
 
@@ -110,12 +118,13 @@ export default function PrivacyPolicyPage() {
                     <li>Calculate, save, restore, and export costing work requested by the account owner</li>
                     <li>Record owner-run production jobs and metres, calculate piece-rate pay from saved rate snapshots, and record basic advance recovery and settlement information</li>
                     <li>Process subscriptions, payments, renewals, receipts, refunds, and billing support</li>
-                    <li>Measure product usage separately for Lite and Base, understand upgrade intent and conversion, and improve the connected costing-to-production workflow</li>
+                    <li>Apply the Free weekly allowance and prevent duplicate counting</li>
+                    <li>Measure usage across Free, Lite, and Base, understand upgrades, and improve the costing-to-production workflow</li>
                     <li>Provide support, respond to privacy requests and grievances, and maintain request and resolution records</li>
                     <li>Detect abuse, enforce rate limits, investigate errors, maintain availability, and respond to security incidents</li>
                     <li>Comply with accounting, tax, cybersecurity, court, regulatory, and other legal obligations</li>
                 </ul>
-                <p>We do not sell personal information or use Lite/Base workspace data for third-party or behavioural advertising. Product-usage events are first-party service analytics used for product, reliability, commercial, and support decisions.</p>
+                <p>We do not sell personal information or use Free, Lite, or Base workspace data for third-party or behavioural advertising. Product-usage events are first-party service analytics used for product, reliability, commercial, and support decisions.</p>
             </PolicySection>
 
             <PolicySection id="choice" title="4. Consent and Choice">
@@ -157,6 +166,8 @@ export default function PrivacyPolicyPage() {
             <PolicySection id="retention" title="7. Retention and Deletion">
                 <ul>
                     <li><strong>Active account and costing data</strong> — kept while the account remains active and as needed to provide the requested service. An owner may permanently delete the workspace through Settings.</li>
+                    <li><strong>Completed Free costings</strong> — kept as account records independently of weekly resets and operational-receipt expiry. Reaching the allowance or upgrading does not by itself delete them. Unfinished Free inputs are held in page memory and are not saved as recoverable drafts.</li>
+                    <li><strong>Free allowance and usage records</strong> — operational calculation receipts have a configured lifetime of up to 30 days. Routine cleanup targets Free usage events older than 90 days and completed weekly-usage periods older than 90 days once no related receipt remains. This cleanup does not delete saved Free costings.</li>
                     <li><strong>Production data after plan change</strong> — retained when Base expires or an organization is placed in Lite; Base-only creation and mutation actions remain restricted until an eligible Base renewal is activated.</li>
                     <li><strong>Plan usage events</strong> — retained only as long as reasonably needed for product analytics, billing support, security, and commercial measurement, subject to deletion and legal-retention requirements.</li>
                     <li><strong>After owner-initiated deletion</strong> — organization and account records are removed from the active product database. Residual encrypted backup copies, provider logs, or cached copies may remain temporarily until the applicable provider&apos;s normal protection and deletion cycle completes.</li>
@@ -172,7 +183,7 @@ export default function PrivacyPolicyPage() {
                 <p>Depending on the information and the law in force, you may:</p>
                 <ul>
                     <li>Review and correct owner and billing information, or request correction of inaccurate information</li>
-                    <li>Download a structured owner-only organization export from Settings</li>
+                    <li>Download saved Cost Sheets, use the available owner-only organization export, or request a copy of your information through the privacy request channel</li>
                     <li>Withdraw consent for processing that relies on consent</li>
                     <li>Request deletion, subject to records that must be retained by law or for a permitted unresolved purpose</li>
                     <li>Raise a grievance about our processing or response to a privacy request</li>
@@ -193,14 +204,15 @@ export default function PrivacyPolicyPage() {
 
             <PolicySection id="children" title="10. Children">
                 <p>
-                    Lite and Base are business services and are not directed to children. Account owners must be at least 18 years old. We do not knowingly request children&apos;s personal information for these plans. If you believe a child&apos;s information has been entered, contact us so we can review and take appropriate action.
+                    Free, Lite, and Base are business services and are not directed to children. Account owners must be at least 18 years old. We do not knowingly request children&apos;s personal information for these plans. If you believe a child&apos;s information has been entered, contact us so we can review and take appropriate action.
                 </p>
             </PolicySection>
 
             <PolicySection id="browser-data" title="11. Cookies, Local Storage, and Offline Data">
                 <p>
-                    We use essential authentication cookies and may use a short-lived diagnostic cookie to understand whether sign-in completed successfully. The Progressive Web App service worker caches application assets, and the app may keep temporary or locally persisted costing drafts in browser storage. Saving costings and generating Cost Sheet exports require an internet connection. Logging out clears user-specific cached data and local drafts on that browser profile. These technologies support login, security, reliability, draft recovery, and first-party plan analytics; they are not used for third-party advertising.
+                    We use essential authentication cookies and may use a short-lived diagnostic cookie to understand whether sign-in completed successfully. The Progressive Web App service worker caches application assets. Lite and Base may keep locally persisted costing drafts in browser storage. Free holds unfinished costing inputs in page memory; a successful Free calculation saves the completed record to your account on the server. Free preferences and walkthrough state may use limited browser storage. Free calculations require an internet connection. Saving costings and generating Cost Sheet exports require an internet connection. Logging out clears user-specific cached data and local drafts on that browser profile. These technologies support login, security, reliability, draft recovery, and first-party plan analytics; they are not used for third-party advertising.
                 </p>
+                <p>Free costing surfaces exclude business content from error-session replay and diagnostic payloads. Saved Free costings are stored to provide the requested feature, separately from the limited usage events described above.</p>
             </PolicySection>
 
             <PolicySection id="grievance" title="12. Privacy Requests and Grievance Redressal">

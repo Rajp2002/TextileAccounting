@@ -4,15 +4,18 @@ import { CalendarDays, Database, IndianRupee, Scale } from 'lucide-react'
 import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
 import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
+import { ACCESS_DAYS, BILLING_PLANS, BILLING_SELF_SERVE_PLAN_TIERS, RENEWAL_ELIGIBILITY_DAYS } from '@/lib/billing-constants'
+import { formatINR } from '@/lib/finance'
 
 export const metadata: Metadata = {
     title: 'Terms of Service — Weavly',
-    description: 'Terms governing Weavly Lite costing and Weavly Base production management subscriptions.',
+    description: 'Terms for Weavly Free, Lite, and Base: costing allowances, plan features, annual pricing, renewal, and account data.',
 }
 
 const sections = [
     { href: '#parties-acceptance', title: 'Parties & Acceptance' },
-    { href: '#base-plan', title: 'Lite & Base Scope' },
+    { href: '#base-plan', title: 'Free, Lite & Base Scope' },
+    { href: '#free-allowance', title: 'Free Allowance' },
     { href: '#accounts', title: 'Accounts' },
     { href: '#commercial-terms', title: 'Price & Payment' },
     { href: '#customer-data', title: 'Customer Data' },
@@ -31,16 +34,12 @@ const sections = [
 ]
 
 const plans = [
-    {
-        name: 'Weavly Lite',
-        firstYear: '₹2,999 total (GST included)',
-        renewal: '₹1,499 total/year (GST included)',
-    },
-    {
-        name: 'Weavly Base',
-        firstYear: '₹9,999 total (GST included)',
-        renewal: '₹4,999 total/year (GST included)',
-    },
+    { name: 'Weavly Free', firstYear: '₹0 — no subscription fee', renewal: 'No annual renewal' },
+    ...BILLING_SELF_SERVE_PLAN_TIERS.map((tier) => ({
+        name: BILLING_PLANS[tier].name,
+        firstYear: `${formatINR(BILLING_PLANS[tier].firstYearTotalPaise / 100, { hideDecimals: true })} total (GST included)`,
+        renewal: `${formatINR(BILLING_PLANS[tier].renewalTotalPaise / 100, { hideDecimals: true })} total/year (GST included)`,
+    })),
 ]
 
 export default function TermsOfServicePage() {
@@ -48,18 +47,18 @@ export default function TermsOfServicePage() {
         <PolicyPage
             activePath="/terms"
             title="Terms of Service"
-            description="The contract for Weavly Lite, the complete textile costing workspace, and Weavly Base, which adds the connected production workflow."
+            description="The contract for Weavly Free costing, the complete Lite costing workspace, and Base costing with connected production and worker settlement."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
-                { label: 'Available plans', value: 'Weavly Lite and Weavly Base', icon: Database },
-                { label: 'First-year totals', value: '₹2,999 Lite · ₹9,999 Base', icon: IndianRupee },
-                { label: 'Renewal', value: 'Manual from 30 days before expiry', icon: CalendarDays },
+                { label: 'Available plans', value: 'Weavly Free, Lite, and Base', icon: Database },
+                { label: 'Starting price', value: '₹0 on Free; paid catalog below', icon: IndianRupee },
+                { label: 'Renewal', value: `Manual from ${RENEWAL_ELIGIBILITY_DAYS} days before expiry`, icon: CalendarDays },
                 { label: 'Contract location', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
-                These Terms of Service (&quot;Terms&quot;) govern subscriptions to Weavly Lite and Weavly Base. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
+                These Terms of Service (&quot;Terms&quot;) govern use of Weavly Free and paid subscriptions to Weavly Lite and Weavly Base. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
             </p>
 
             <PolicySection id="parties-acceptance" title="1. Parties and Acceptance">
@@ -71,22 +70,33 @@ export default function TermsOfServicePage() {
                 </p>
             </PolicySection>
 
-            <PolicySection id="base-plan" title="2. Lite and Base Plan Scope">
-                <p>Weavly offers two current plans for one Customer organization or factory workspace. Weavly Lite preserves the complete original costing-management product, while Weavly Base includes everything in Lite plus the Base Production Core:</p>
+            <PolicySection id="base-plan" title="2. Free, Lite, and Base Plan Scope">
+                <p>Weavly offers three current plans for one Customer organization or factory workspace:</p>
                 <ul>
-                    <li><strong>Weavly Lite:</strong> the complete textile estimator, live costing calculations, saved costings and history, reusable qualities, Rate Book references, costing tools, and hosted account data.</li>
+                    <li><strong>Weavly Free:</strong> two successful costings per week, automatic saving of completed costings, viewing their breakdowns, and Cost Sheet export. Reusable qualities, Rate Book, costing defaults, and production management are not included.</li>
+                    <li><strong>Weavly Lite:</strong> the complete textile estimator, unlimited costings, live costing calculations, saved costings and history, reusable qualities, Rate Book references, costing tools, and hosted account data.</li>
                     <li><strong>Weavly Base:</strong> all Lite functionality plus production jobs created from saved costings, planned/produced/remaining metres, machine or loom allocation where enabled, owner production updates, piece-rate worker records, advances, and production settlement records.</li>
                     <li>Cost Sheets, exports, costing breakdowns, and other costing-management workflows where enabled in the selected workspace</li>
                     <li>Owner-accessible organization data export and billing history</li>
                 </ul>
                 <p>
-                    The subscription covers one Customer organization or factory workspace. Individual user credentials may not be shared. Lite and Base use the same costing engine, formulas, inputs, accuracy, and validation behavior. Normal costing functionality is not intentionally limited in Lite to force an upgrade.
+                    Each plan covers one Customer organization or factory workspace. Individual user credentials may not be shared. All three plans use the same underlying costing engine. Free applies a weekly calculation allowance; Lite and Base do not have that weekly limit. Free requires an internet connection for calculations and does not provide recoverable unfinished drafts.
                 </p>
-                <PolicyCallout tone="neutral" title="Production is the plan boundary">
+                <PolicyCallout tone="neutral" title="Choose the workflow you need">
                     <p>
-                        Lite is a complete costing-management product for customers who do not need production management. Base adds only the production workflow currently described in the product, with the originating costing and quality carried into the production record where supported. Other broader operational modules shown in internal plans or development materials are outside the current Lite and Base catalog and are not promised under these Terms.
+                        Free supports occasional costings. Lite is a complete costing-management product for customers who do not need production management. Base adds only the production workflow currently described in the product, with the originating costing and quality carried into the production record where supported. Separate supervisor accounts, attendance, statutory payroll, and other broader operational modules shown in internal plans or development materials are outside the current Lite and Base catalog and are not promised under these Terms.
                     </p>
                 </PolicyCallout>
+            </PolicySection>
+
+            <PolicySection id="free-allowance" title="2.1 Free Plan Allowance">
+                <ul>
+                    <li>The current Free allowance is two successful new calculations per week for the verified owner. It resets every Monday at 12:00 am India Standard Time (Asia/Kolkata). Unused allowance does not roll over; switching devices or workspaces does not create an extra allowance.</li>
+                    <li>A successful calculation saves its inputs and result to your account and uses one allowance. A new calculation after changing inputs uses another allowance. Validation failures and retries of the same completed request do not use an additional allowance.</li>
+                    <li>Viewing saved costings, exporting their Cost Sheets, and using the example-data walkthrough do not use the weekly allowance.</li>
+                    <li>Free has no subscription fee, card requirement, or paid trial expiry. Enrollment and continued use are subject to account verification, availability, and these Terms. Changes to the Free offer will be disclosed in the product and these Terms.</li>
+                    <li>When the allowance is exhausted, wait for the next reset or choose Lite or Base. A paid upgrade requires your explicit purchase; reaching the Free limit never triggers a charge.</li>
+                </ul>
             </PolicySection>
 
             <PolicySection id="accounts" title="3. Accounts and Customer Responsibilities">
@@ -100,8 +110,8 @@ export default function TermsOfServicePage() {
             </PolicySection>
 
             <PolicySection id="commercial-terms" title="4. Price, Payment, Renewal, and Referrals">
-                <h3>4.1 Current Lite and Base catalog</h3>
-                <div className="not-prose my-6 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
+                <h3>4.1 Current Free, Lite, and Base catalog</h3>
+                <div className="not-prose my-6 overflow-x-auto rounded-lg border border-zinc-200 dark:border-white/10">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-zinc-50 text-zinc-600 dark:bg-white/5 dark:text-zinc-300">
                             <tr>
@@ -110,7 +120,7 @@ export default function TermsOfServicePage() {
                                 <th className="px-4 py-3 font-bold">Later annual renewal</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                        <tbody className="bg-white text-zinc-700 dark:bg-[#09090b] dark:text-zinc-300">
                             {plans.map((plan) => (
                                 <tr key={plan.name}>
                                     <td className="px-4 py-3 font-semibold text-zinc-950 dark:text-white">{plan.name}</td>
@@ -122,7 +132,7 @@ export default function TermsOfServicePage() {
                     </table>
                 </div>
                 <ul>
-                    <li>The selected first-year fee is paid upfront for 365 days of Lite or Base access. Any onboarding assistance included with a purchase is limited to what is described at checkout or agreed in writing; custom implementation or data migration is not included unless expressly agreed.</li>
+                    <li>Free requires no payment. For Lite or Base, the selected first-year fee is paid upfront for {ACCESS_DAYS} days of access. Any onboarding assistance included with a purchase is limited to what is described at checkout or agreed in writing; custom implementation or data migration is not included unless expressly agreed.</li>
                     <li>The final amount, tax treatment, and supplier details shown at live checkout or on the applicable order control if they differ from this page because of a lawful tax or catalog update.</li>
                     <li>Live payment collection and GST tax invoices are subject to completion of the required supplier, payment-provider, and tax configuration. A payment receipt is not a GST tax invoice.</li>
                     <li>Razorpay or another disclosed payment provider may process the payment. You authorize the selected provider to process the transaction information needed to complete it.</li>
@@ -130,9 +140,9 @@ export default function TermsOfServicePage() {
 
                 <h3>4.2 Manual renewal</h3>
                 <ul>
-                    <li>Renewal is manual and may be purchased during the final 30 days of the current paid period.</li>
+                    <li>Paid-plan renewal is manual and may be purchased during the final {RENEWAL_ELIGIBILITY_DAYS} days of the current paid period. Free has no annual renewal.</li>
                     <li>We do not automatically charge a Lite or Base renewal. If you do not wish to renew, no cancellation action is required; simply do not complete a renewal payment.</li>
-                    <li>A renewal adds the next 365-day period for the selected plan after successful payment and server-side activation.</li>
+                    <li>A renewal adds the next {ACCESS_DAYS}-day period for the selected plan after successful payment and server-side activation.</li>
                 </ul>
 
                 <h3>4.3 Referral program</h3>
@@ -178,7 +188,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="availability" title="8. Availability, Support, and Service Changes">
                 <p>
-                    We aim to keep Lite and Base available but do not promise uninterrupted or error-free operation. Access may be affected by maintenance, internet or provider outages, security incidents, force majeure events, or emergency remediation.
+                    We aim to keep Free, Lite, and Base available but do not promise uninterrupted or error-free operation. Access may be affected by maintenance, internet or provider outages, security incidents, force majeure events, or emergency remediation.
                 </p>
                 <p>
                     We may improve, replace, or discontinue individual features. During a paid period, we will not intentionally remove the core ability to calculate, save, and export Lite costings without a security, legal, provider, or technical reason. If we permanently discontinue a paid Lite or Base plan for convenience before the end of a Customer&apos;s current period, we will provide a reasonable export opportunity and a pro-rata refund or comparable remedy for the unused period.
@@ -187,7 +197,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="ip" title="9. Intellectual Property and Feedback">
                 <p>
-                    The Service, software, interface, documentation, formulas as implemented, branding, and other materials supplied by Weavly are owned by {LEGAL_OPERATOR.grievanceOfficer} or the applicable licensors and are protected by law. Subject to these Terms and payment, Customer receives a limited, non-exclusive, non-transferable, non-sublicensable right to use the selected plan internally during the applicable access period.
+                    The Service, software, interface, documentation, formulas as implemented, branding, and other materials supplied by Weavly are owned by {LEGAL_OPERATOR.grievanceOfficer} or the applicable licensors and are protected by law. Subject to these Terms and any applicable payment, Customer receives a limited, non-exclusive, non-transferable, non-sublicensable right to use the selected plan internally during the applicable access period.
                 </p>
                 <p>
                     If you provide suggestions or feedback, you permit us to use it without payment or restriction, provided we do not identify you publicly without permission.
@@ -196,7 +206,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="termination" title="10. Suspension, Expiry, and Termination">
                 <ul>
-                    <li><strong>Expiry</strong> — Paid Lite or Base capabilities expire at the end of the current 365-day period unless manually renewed. Lite costing functionality remains available when the account is placed in Lite; Base-only production creation and mutation actions are unavailable until Base is renewed.</li>
+                    <li><strong>Expiry</strong> — Paid access lasts for the current {ACCESS_DAYS}-day period unless renewed. On Lite expiry, paid costing access is restricted unless another entitlement applies. Under the current access policy, an organization with a completed paid Base period retains the Lite costing desk after Base expires; Base-only production creation and mutation actions are unavailable until Base is reactivated. A paid account does not automatically revert to Free on expiry.</li>
                     <li><strong>Production records</strong> — A plan change or expiry does not delete production history. Existing production records remain retained with the organization, and Base capability is restored when an eligible Base renewal is activated.</li>
                     <li><strong>Customer deletion</strong> — The owner may permanently delete the workspace through Settings. Deletion also attempts to cancel any applicable provider subscription before database removal.</li>
                     <li><strong>Immediate protective suspension</strong> — We may restrict access without advance notice when reasonably necessary to address a security threat, unlawful use, fraud, payment reversal, or risk to another customer or the Service.</li>
@@ -231,7 +241,7 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="term-changes" title="14. Changes to These Terms">
                 <p>
-                    We may update these Terms when Lite or Base, provider arrangements, or law changes. We will update the displayed version and date. A change will not retroactively increase the price already paid for a current period. We will give reasonable advance notice of a materially adverse change where practicable and request fresh acceptance where required by law or where the change materially expands Customer obligations. If you reject a materially adverse change, you may stop using the Service and decline the next manual renewal.
+                    We may update these Terms when Free, Lite, Base, provider arrangements, or law changes. We will update the displayed version and date. A change will not retroactively increase the price already paid for a current period. We will give reasonable advance notice of a materially adverse change where practicable and request fresh acceptance where required by law or where the change materially expands Customer obligations. If you reject a materially adverse change, you may stop using the Service and decline the next manual renewal.
                 </p>
             </PolicySection>
 

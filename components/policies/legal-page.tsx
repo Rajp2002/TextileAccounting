@@ -57,9 +57,10 @@ export function PolicyPage({
                 ? { href: '/refund-policy', label: 'Review refund rules' }
                 : { href: '/privacy', label: 'Review privacy commitments' }
 
+    // Keep inactive dark surfaces out of the global light-mode contrast selectors.
     return (
-        <main className="min-h-screen bg-white text-zinc-950 selection:bg-orange-200 selection:text-zinc-950 dark:bg-zinc-950 dark:text-white">
-            <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 shadow-sm shadow-zinc-950/[0.03] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/85">
+        <main className="min-h-screen bg-white text-zinc-950 selection:bg-orange-200 selection:text-zinc-950 dark:bg-[#09090b] dark:text-white">
+            <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 shadow-sm shadow-zinc-950/[0.03] backdrop-blur-xl dark:border-white/10 dark:bg-[#09090b]/85">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center transition-opacity hover:opacity-80" aria-label="Weavly home">
                         <span className="relative block h-11 w-32 sm:h-12 sm:w-36">
@@ -158,7 +159,7 @@ export function PolicyPage({
                 </div>
             </section>
 
-            <div className="bg-white dark:bg-zinc-950">
+            <div className="bg-white dark:bg-[#09090b]">
                 <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:px-8">
                     <aside className="hidden border-r border-zinc-200 py-14 pr-8 dark:border-white/10 lg:block">
                         <div className="sticky top-28">
