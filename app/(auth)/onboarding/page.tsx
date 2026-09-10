@@ -22,7 +22,7 @@ export default async function OnboardingPage() {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) redirect('/login')
-    if (user.app_metadata?.plan_selection_pending === true) redirect('/onboarding/plans')
+    if (user.app_metadata?.plan_selection_pending === true) redirect('/plans?from=onboarding')
 
     const userClaims = getUserClaims(user)
 

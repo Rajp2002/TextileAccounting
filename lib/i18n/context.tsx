@@ -36,7 +36,7 @@ interface I18nContextProps {
   tx: (text: string, values?: InterpolationValues) => string
 }
 
-const I18nContext = createContext<I18nContextProps | undefined>(undefined)
+export const I18nContext = createContext<I18nContextProps | undefined>(undefined)
 
 const LANGUAGE_STORAGE_KEY = "weavly_language"
 const SUPPORTED_LANGUAGES: Language[] = ["en", "hi", "gu"]
@@ -462,7 +462,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function useTranslation() {
   const context = useContext(I18nContext)
   if (context === undefined) {
-    throw new Error("useTranslation must be used within an I18nProvider")
+    return {
+      language: "en" as Language,
+      setLanguage: async (lang: Language) => ({ ok: true as const, language: lang }),
+      languageStatus: "ready" as LanguageLoadStatus,
+      pendingLanguage: null,
+      languageError: null,
+      t: (key: string, values?: InterpolationValues) => interpolate(key, values),
+      tx: (text: string, values?: InterpolationValues) => interpolate(text, values),
+    }
   }
   return context
 }

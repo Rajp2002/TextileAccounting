@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 
 /** A user preference only; never used for authorization. No client-supplied user ID. */
 export async function dismissCostEstimateTutorial(): Promise<{ success: boolean }> {
-    const { user } = await requireRole(['owner'])
+    const { user } = await requireRole(['owner'], { allowFreeAccount: true })
     if (user.user_metadata?.cost_estimate_tutorial_dismissed === true) return { success: true }
 
     const supabase = await createClient()
@@ -17,5 +17,6 @@ export async function dismissCostEstimateTutorial(): Promise<{ success: boolean 
         return { success: false }
     }
     revalidatePath('/owner/estimator')
+    revalidatePath('/free')
     return { success: true }
 }

@@ -98,10 +98,29 @@ const bottomNavItems = [
     { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
-const freeNavItems = [
-    { name: 'Cost Estimate', href: '/free', icon: Calculator, translationKey: 'estimator', workflow: 'estimator' },
-    { name: 'Saved Costings', href: '/free/costings', icon: FileText, translationKey: 'quotes', workflow: 'estimator' },
+const freeNavGroups = [
+    {
+        label: "Control",
+        items: [
+            { name: "Cost Estimate", href: "/free", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+            { name: "Saved Costings", href: "/free/costings", icon: FileText, translationKey: "quotes", workflow: "estimator" },
+        ]
+    },
+    {
+        label: "Money",
+        items: [
+            { name: "Billing", href: "/free/billing", icon: CreditCard, translationKey: "billing", workflow: "billing" },
+        ]
+    },
+    {
+        label: "System",
+        items: [
+            { name: "Settings", href: "/free/account", icon: Settings, translationKey: "settings", workflow: "settings" },
+        ]
+    }
 ]
+
+const freeNavItems = freeNavGroups[0].items
 
 const liteBottomNavItems = [
     { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
@@ -153,7 +172,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
         costingWorkspaceRoutes.add('/owner/operations')
         costingWorkspaceRoutes.add('/owner/payroll')
     }
-    const visibleGroups = subscriptionTier === 'free' ? [{label:'Costing',items:freeNavItems}] : navGroups
+    const visibleGroups = subscriptionTier === 'free' ? freeNavGroups : navGroups
         .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
@@ -249,9 +268,9 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                 )}
                 <div className="flex flex-col gap-3">
                     {!hasLegacyWorkspace && (
-                        <Link href={subscriptionTier === 'free' ? '/free/account' : '/owner/billing'} onClick={onLinkClick} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
+                        <Link href={subscriptionTier === 'free' ? '/free/billing' : '/owner/billing'} onClick={onLinkClick} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold text-saffron hover:bg-saffron-deep hover:text-white">
                             <CreditCard className="h-[18px] w-[18px]" />
-                            {subscriptionTier === 'free' ? 'Account settings' : 'Subscription & Billing'}
+                            Subscription & Billing
                         </Link>
                     )}
                     <LanguageSwitcher className="text-saffron hover:bg-saffron-deep hover:text-white" />

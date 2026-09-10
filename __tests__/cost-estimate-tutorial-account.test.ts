@@ -15,9 +15,10 @@ beforeEach(() => {
 describe('account-level cost estimate tutorial preference', () => {
     it('updates only the current authenticated account preference and refreshes server-rendered state', async () => {
         expect(await dismissCostEstimateTutorial()).toEqual({ success: true })
-        expect(mocks.requireRole).toHaveBeenCalledWith(['owner'])
+        expect(mocks.requireRole).toHaveBeenCalledWith(['owner'], { allowFreeAccount: true })
         expect(mocks.updateUser).toHaveBeenCalledWith({ data: { cost_estimate_tutorial_dismissed: true } })
         expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/estimator')
+        expect(mocks.revalidatePath).toHaveBeenCalledWith('/free')
     })
 
     it('recognises dismissal from another device without writing again', async () => {

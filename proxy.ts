@@ -320,6 +320,7 @@ export async function updateSession(request: NextRequest) {
         // check only when this marker was set by this Proxy invocation.
         forwardedHeaders.set('x-weavly-revocation-checked', '1')
         forwardedHeaders.set('cookie', request.cookies.toString())
+        forwardedHeaders.set('x-pathname', pathname)
         response = NextResponse.next({ request: { headers: forwardedHeaders } })
         applySessionCookies.forEach(applyCookie => applyCookie(response))
     }
@@ -386,8 +387,8 @@ export async function updateSession(request: NextRequest) {
 
     if (role === 'owner' && optimisticClaims.plan_selection_pending === true
         && !pathname.startsWith('/api/') && !pathname.startsWith('/auth/')
-        && pathname !== '/onboarding/plans' && pathname !== '/locked') {
-        const planRedirect = NextResponse.redirect(new URL('/onboarding/plans', request.url))
+        && pathname !== '/onboarding/plans' && !pathname.startsWith('/plans') && pathname !== '/locked') {
+        const planRedirect = NextResponse.redirect(new URL('/plans?from=onboarding', request.url))
         applyAuthenticatedResponseCookies(planRedirect)
         return planRedirect
     }
@@ -433,6 +434,7 @@ export async function updateSession(request: NextRequest) {
             !onboardingComplete &&
             !pathname.startsWith('/api/') &&
             !pathname.startsWith('/onboarding') &&
+            !pathname.startsWith('/plans') &&
             !pathname.startsWith('/free') &&
             !pathname.startsWith('/owner/billing') &&
             !pathname.startsWith('/owner/estimator') &&

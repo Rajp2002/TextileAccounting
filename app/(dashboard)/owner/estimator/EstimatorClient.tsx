@@ -100,7 +100,10 @@ import {
     archiveTemplate,
     renameTemplate,
 } from './actions'
-import { useFreeMeter, FreeMeterPanel } from '@/hooks/use-free-meter'
+import { useFreeMeter } from '@/hooks/use-free-meter'
+import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
+import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
+import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
 import { useAutosave } from '@/hooks/useAutosave'
 import { toast, userFacingError } from '@/lib/app-notifications'
@@ -2952,7 +2955,7 @@ function QuickCostingView({
 
     return (
         <div
-            className="space-y-3 pb-[50dvh]"
+            className="space-y-3"
             data-enter-navigate-container="true"
             onKeyDown={handleEnterKeyNavigation}
         >
@@ -3676,6 +3679,11 @@ export default function EstimatorClient({
     const pendingSaveRequestRef = useRef<Parameters<typeof saveEstimatorQuoteV3>[0] | null>(null)
     const reportedSaveRequestsRef = useRef(new Set<string>())
     const freeMeter = useFreeMeter(freeMode, state, qualityLabel, onFreeUpgrade)
+    const { isDocked: isFreeUsageDocked, dockStyle: freeUsageDockStyle, containerRef: estimatorGutterRef } = useGutterDock({
+        sidebarWidth: 248,
+        cardWidth: 248,
+        minClearance: 16,
+    })
     const freeCanCalculate = !!freeMeter.status?.estimationEnabled && freeMeter.status.quota.remaining > 0 && !freeMeter.busy && (!freeMeter.completed || freeMeter.stale)
     const [lastSavedCosting, setLastSavedCosting] = useState<{ id: string; version: number; savedAt: string; model: ReturnType<typeof createCostingExportModel> } | null>(null)
 
@@ -5452,8 +5460,7 @@ export default function EstimatorClient({
     )
 
     return (
-        <div data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="premium-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
-            <FreeMeterPanel meter={freeMeter} />
+        <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="premium-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <RouteMilestones
                 route="/owner/estimator"
                 shellVisible
@@ -5470,6 +5477,29 @@ export default function EstimatorClient({
                     </Button>
                 )}
             />
+            {freeMode && (
+                <FreeTransactionRecovery
+                    pending={freeMeter.pending}
+                    warning={freeMeter.warning}
+                    error={freeMeter.error}
+                    busy={freeMeter.busy}
+                    onSubmit={freeMeter.submit}
+                    onRefresh={freeMeter.refresh}
+                />
+            )}
+            {freeMode && (
+                <FreeUsageCard
+                    quota={freeMeter.status?.quota}
+                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.error)}
+                    error={freeMeter.error}
+                    stale={freeMeter.stale}
+                    isPending={freeMeter.pending}
+                    onRefresh={freeMeter.refresh}
+                    isDocked={isFreeUsageDocked}
+                    dockStyle={freeUsageDockStyle}
+                    className={!isFreeUsageDocked ? 'mb-4' : undefined}
+                />
+            )}
             {unconfirmedRequestId && (
                 <section role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                     <h2 className="font-semibold">{tx('Save not yet confirmed')}</h2>
@@ -5758,7 +5788,8 @@ export default function EstimatorClient({
                 >
                     <CostEstimateTutorial
                         accountDismissed={tutorialDismissed}
-                        enabled={!freeMode && state.isConfigured && !saving}
+                        enabled={state.isConfigured && !saving}
+                        freePlan={freeMode}
                         orgId={orgId}
                         userId={userId}
                         onPrepare={prepareTutorial}
@@ -6530,7 +6561,7 @@ export default function EstimatorClient({
                 ) : (
                 <div
                     key="detailed"
-                    className="premium-content-swap space-y-7 pb-[50dvh]"
+                    className="premium-content-swap space-y-7"
                     data-enter-navigate-container="true"
                     onKeyDown={handleEnterKeyNavigation}
                 >

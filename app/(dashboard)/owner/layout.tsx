@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { OwnerRouteLoading } from '@/components/navigation/owner-route-loading'
 import { requireRole } from '@/lib/auth'
@@ -24,7 +25,17 @@ import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const { profile } = await requireRole(['owner'], { allowFreeAccount: true })
     const access = await getCachedOrgPlanAccess(profile.org_id)
-    if (access.effectiveTier === 'free' || access.freeAccount) redirect('/free')
+    if (access.effectiveTier === 'free' || access.freeAccount) {
+        const headerList = await headers()
+        const pathname = headerList.get('x-pathname') || ''
+        if (pathname.startsWith('/owner/billing')) {
+            redirect('/free/billing')
+        }
+        if (pathname.startsWith('/owner/settings')) {
+            redirect('/free/account')
+        }
+        redirect('/free')
+    }
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background" data-owner-shell>
             <BrandBackground />

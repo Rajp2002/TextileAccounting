@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { BILLING_PLANS, type PurchasablePlanTier } from '@/lib/billing-constants'
 import { Button } from '@/components/ui/button'
@@ -46,6 +47,14 @@ export function UpgradeBenefitsPreview({ onActivated }: { onActivated: () => voi
         lite: paidAction('lite'),
         base: paidAction('base'),
       }} />
+      <div className="mt-3 flex justify-end">
+        <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-saffron-deep hover:text-saffron-deep">
+          <Link href="/plans?from=estimator">
+            <span>{upgradeText(language, 'compareAllPlans')}</span>
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
     </div>}
   </details>
 }

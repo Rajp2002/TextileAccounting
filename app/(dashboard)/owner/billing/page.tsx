@@ -13,8 +13,10 @@ import { getReferralStatsAction } from '../actions'
 import {
     AlertCircle, ChevronDown, Clock, XCircle,
     ShieldCheck, Star, Zap, Timer, Lock, CreditCard,
+    Sparkles, ArrowRight,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -658,6 +660,28 @@ export default async function BillingPage({
                 />
             </div>
             <BillingDocumentNotice compact />
+
+            {canShowPlanCards && (
+                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 border-hairline bg-surface shadow-[var(--shadow-card)]">
+                    <div className="flex items-start gap-3.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron/15 text-saffron-deep">
+                            <Sparkles className="h-5 w-5" aria-hidden="true" />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-bold text-ink">Upgrade your plan</h2>
+                            <p className="mt-0.5 text-xs text-body leading-relaxed">
+                                Compare Weavly Free, Lite, and Base with full interactive feature previews.
+                            </p>
+                        </div>
+                    </div>
+                    <Button asChild className="shrink-0 font-semibold gap-1.5" size="sm">
+                        <Link href="/plans?from=billing">
+                            <span>Explore plans</span>
+                            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        </Link>
+                    </Button>
+                </Card>
+            )}
 
             {canShowPlanCards && billingReadiness.canCreateOrder && (
                 <PlanCards

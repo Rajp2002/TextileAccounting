@@ -53,12 +53,13 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     return { target, card }
 }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange }: {
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false }: {
     accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => void
     onOpenLiveCostModal?: (open: boolean) => void
     onOpenMonthlyExpensesModal?: (open: boolean) => void
     onOpenQualityLibraryModal?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
+    freePlan?: boolean
 }) {
     const { language, languageStatus } = useTranslation()
     const copy = costEstimateTutorialCopy[language]
@@ -189,6 +190,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 headers.forEach(header => {
                     const section = Number(header.dataset.tutorialSection) - 1
                     if (!costEstimateTutorialCopy.en.sections[section] || !isTourTargetVisible(header)) return
+                    if (freePlan && (header.dataset.estimatorField === 'savedQualities' || Number(header.dataset.tutorialSection) === 10)) return
                     const card = header.closest<HTMLElement>('[data-slot="card"]') ?? header
 
                     if (header.dataset.estimatorField && isTutorialField(header.dataset.estimatorField)) {
@@ -207,6 +209,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                         }
 
                         if (header.dataset.estimatorField === 'savedQualities') {
+                            if (freePlan) return
                             next.push({ section, card, target: header, field: 'savedQualities' })
                             next.push({ section, card: null, target: null, field: 'savedQualityPicker', inModal: true })
                             return

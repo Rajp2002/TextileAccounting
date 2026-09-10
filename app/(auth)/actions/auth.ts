@@ -323,7 +323,7 @@ export async function createOrganizationAndRedirect(input: CreateOrganizationInp
     const result = await createOrganization(input)
     if (result && 'error' in result) return result
     // All new owner registrations go to initial plan selection
-    redirect('/onboarding/plans')
+    redirect('/plans?from=onboarding')
 }
 
 // ─── validateJoinCode ──────────────────────────────────────────────────────────
@@ -584,7 +584,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
         // route. A Premium organization using the Base Plan experience has an
         // effective tier of `base`, so sending it to Factory Today would land
         // behind the Full Suite access wall.
-        if (data.session.user.app_metadata?.plan_selection_pending === true) return succeed('/onboarding/plans')
+        if (data.session.user.app_metadata?.plan_selection_pending === true) return succeed('/plans?from=onboarding')
         const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
         if (tier === 'free' || data.session.user.app_metadata.free_signup === true && tier === 'none') return succeed('/free')
 
