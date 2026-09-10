@@ -218,5 +218,11 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(tutorialSource).toContain('text-xs sm:text-[13.5px] leading-relaxed')
         expect(tutorialSource).toContain('text-[11px] font-bold')
     })
+
+    it('positions explainer panel to the left of the drawer for step 14 to avoid overlapping the focused section', () => {
+        expect(tutorialSource).toContain('isSheetStep && !mobileTour.mobile')
+        expect(tutorialSource).toContain('sm:right-[calc(32rem+1.25rem)]')
+        expect(tutorialSource).toContain('window.innerWidth - spotlight.card.left + 20')
+    })
 })
 

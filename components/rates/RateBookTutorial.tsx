@@ -579,6 +579,17 @@ export function RateBookTutorial({
         ? copy.replay.split(' · ')
         : [copy.replay, '']
 
+    const sheetPanelStyle: React.CSSProperties | undefined =
+        isSheetStep && spotlight?.card && !mobileTour.mobile
+            ? {
+                right: (typeof window !== 'undefined' && spotlight.card.left >= 288)
+                    ? `${Math.round(window.innerWidth - spotlight.card.left + 20)}px`
+                    : undefined,
+                left: (spotlight.card.left < 288) ? '16px' : undefined,
+                top: '20px',
+            }
+            : undefined
+
     return (
         <>
             {syncFailed && (
@@ -655,10 +666,13 @@ export function RateBookTutorial({
                         tabIndex={-1}
                         onClick={(e) => e.stopPropagation()}
                         className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
-                            panelPlacement === 'bottom-right'
-                                ? 'bottom-4 right-4 sm:bottom-5 sm:right-5'
-                                : 'top-4 right-4 sm:top-5 sm:right-5'
+                            isSheetStep && !mobileTour.mobile
+                                ? 'top-4 right-4 sm:top-5 sm:right-[calc(32rem+1.25rem)]'
+                                : panelPlacement === 'bottom-right'
+                                    ? 'bottom-4 right-4 sm:bottom-5 sm:right-5'
+                                    : 'top-4 right-4 sm:top-5 sm:right-5'
                         }`}
+                        style={sheetPanelStyle}
                     >
                         <div data-tour-description-scroll className="flex flex-col">
                             <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
