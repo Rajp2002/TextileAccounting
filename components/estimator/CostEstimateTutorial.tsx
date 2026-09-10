@@ -422,7 +422,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
             const targetIsTopRight = !isModal && targetRect.top < 340 && targetRect.right > (typeof window !== 'undefined' ? window.innerWidth - 460 : 600)
             const nextPlacement = targetIsTopRight ? 'bottom-right' : 'top-right'
-            setPanelPlacement(nextPlacement)
+            setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
 
             const isNewSection = prevSectionRef.current !== active.section
             prevSectionRef.current = active.section

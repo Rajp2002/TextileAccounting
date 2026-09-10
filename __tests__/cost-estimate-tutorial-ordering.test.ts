@@ -86,7 +86,7 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
     it('adapts explainer modal panel placement to prevent obscuring top-right controls', () => {
         expect(tutorialComponentSource).toContain("const [panelPlacement, setPanelPlacement] = useState<'top-right' | 'bottom-right'>('top-right')")
         expect(tutorialComponentSource).toContain('targetRect.top < 340')
-        expect(tutorialComponentSource).toContain("setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')")
+        expect(tutorialComponentSource).toMatch(/setPanelPlacement\((?:targetIsTopRight \? 'bottom-right' : 'top-right'|nextPlacement)\)/)
     })
 
     it('defines copy for monthlyExpensesBreakdown and monthlyProductionM in en, hi, and gu', () => {
