@@ -28,7 +28,6 @@ import {
     buildBasePayrollHistory,
     buildBasePayrollHistoryCsv,
 } from '@/lib/base-payroll-history'
-import { generateBasePayrollPdf } from '@/lib/generate-base-payroll-pdf'
 import type { BasePayrollPaymentMode } from '@/lib/base-production-core'
 
 import type { BaseProductionInitialData } from './loaders'
@@ -176,6 +175,7 @@ export default function BasePayrollRecords({
         if (!selectedPeriod || exportingPdf) return
         setExportingPdf(true)
         try {
+            const { generateBasePayrollPdf } = await import('@/lib/generate-base-payroll-pdf')
             await generateBasePayrollPdf({ ...selectedPeriod, workers: selectedPeriod.workers.filter(worker => worker.status !== 'reversed') }, {
                 factoryName: initialData.factoryName,
                 autoSave: true,

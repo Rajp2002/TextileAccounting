@@ -1,0 +1,8 @@
+[BABEL] Note: The code generator has deoptimised the styling of /Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/estimator/EstimatorClient.tsx as it exceeds the max of 500KB.
+
+/Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/estimator/EstimatorClient.tsx
+  1040:5  warning  'accent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 1 problem (0 errors, 1 warning)
+
+ESLint found too many warnings (maximum: 0).

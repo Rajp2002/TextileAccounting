@@ -1,0 +1,322 @@
+{
+  "node": "v24.11.1",
+  "cpu": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+  "method": "5 fresh processes per fixture; actual generator and installed Node jsPDF; first import+generate then repeat; TS compilation excluded; autoSave false; not browser/network evidence",
+  "results": [
+    {
+      "workers": 1,
+      "firstTotalMs": {
+        "min": 155.84921899999995,
+        "median": 158.36022400000002,
+        "max": 203.96459200000004
+      },
+      "repeatTotalMs": {
+        "min": 11.872607000000016,
+        "median": 13.028656999999953,
+        "max": 13.452582000000007
+      },
+      "samples": [
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 121.91198300000008,
+            "generationMs": 82.05260899999996,
+            "totalMs": 203.96459200000004,
+            "bytes": 5599,
+            "pages": 1
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.22382600000003094,
+            "generationMs": 12.804830999999922,
+            "totalMs": 13.028656999999953,
+            "bytes": 5599,
+            "pages": 1
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.57668100000001,
+            "generationMs": 81.27253799999994,
+            "totalMs": 155.84921899999995,
+            "bytes": 5599,
+            "pages": 1
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.23526799999990544,
+            "generationMs": 13.217314000000101,
+            "totalMs": 13.452582000000007,
+            "bytes": 5599,
+            "pages": 1
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 75.20119799999998,
+            "generationMs": 83.15902600000004,
+            "totalMs": 158.36022400000002,
+            "bytes": 5599,
+            "pages": 1
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.20775900000001002,
+            "generationMs": 11.664848000000006,
+            "totalMs": 11.872607000000016,
+            "bytes": 5599,
+            "pages": 1
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 77.74766499999998,
+            "generationMs": 82.19690500000002,
+            "totalMs": 159.94457,
+            "bytes": 5599,
+            "pages": 1
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.2325029999999515,
+            "generationMs": 13.100822999999991,
+            "totalMs": 13.333325999999943,
+            "bytes": 5599,
+            "pages": 1
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.98010999999997,
+            "generationMs": 82.25024600000006,
+            "totalMs": 157.23035600000003,
+            "bytes": 5599,
+            "pages": 1
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.22862500000007913,
+            "generationMs": 12.628169999999955,
+            "totalMs": 12.856795000000034,
+            "bytes": 5599,
+            "pages": 1
+          }
+        ]
+      ]
+    },
+    {
+      "workers": 20,
+      "firstTotalMs": {
+        "min": 260.453975,
+        "median": 263.6254140000001,
+        "max": 278.39195099999995
+      },
+      "repeatTotalMs": {
+        "min": 77.80737999999997,
+        "median": 79.83630499999992,
+        "max": 85.96683300000018
+      },
+      "samples": [
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.77769699999999,
+            "generationMs": 187.845416,
+            "totalMs": 262.623113,
+            "bytes": 20203,
+            "pages": 5
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.1929049999999961,
+            "generationMs": 78.59738800000002,
+            "totalMs": 78.79029300000002,
+            "bytes": 20203,
+            "pages": 5
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 81.91159000000005,
+            "generationMs": 196.4803609999999,
+            "totalMs": 278.39195099999995,
+            "bytes": 20203,
+            "pages": 5
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.3143630000001849,
+            "generationMs": 85.65247,
+            "totalMs": 85.96683300000018,
+            "bytes": 20203,
+            "pages": 5
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.84230200000002,
+            "generationMs": 185.611673,
+            "totalMs": 260.453975,
+            "bytes": 20203,
+            "pages": 5
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.19282299999986208,
+            "generationMs": 83.00105700000017,
+            "totalMs": 83.19388000000004,
+            "bytes": 20203,
+            "pages": 5
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 80.10880499999996,
+            "generationMs": 187.30003899999997,
+            "totalMs": 267.40884399999993,
+            "bytes": 20203,
+            "pages": 5
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.22675200000003315,
+            "generationMs": 79.60955299999989,
+            "totalMs": 79.83630499999992,
+            "bytes": 20203,
+            "pages": 5
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.94563400000004,
+            "generationMs": 188.67978000000005,
+            "totalMs": 263.6254140000001,
+            "bytes": 20203,
+            "pages": 5
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.25185899999996764,
+            "generationMs": 77.555521,
+            "totalMs": 77.80737999999997,
+            "bytes": 20203,
+            "pages": 5
+          }
+        ]
+      ]
+    },
+    {
+      "workers": 100,
+      "firstTotalMs": {
+        "min": 551.671847,
+        "median": 554.0401969999999,
+        "max": 555.7826789999999
+      },
+      "repeatTotalMs": {
+        "min": 366.2812140000001,
+        "median": 380.323762,
+        "max": 384.3529760000001
+      },
+      "samples": [
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 73.90954899999997,
+            "generationMs": 477.762298,
+            "totalMs": 551.671847,
+            "bytes": 80493,
+            "pages": 21
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.21246500000006563,
+            "generationMs": 378.8434769999999,
+            "totalMs": 379.05594199999996,
+            "bytes": 80493,
+            "pages": 21
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.07779399999993,
+            "generationMs": 477.600058,
+            "totalMs": 551.6778519999999,
+            "bytes": 80493,
+            "pages": 21
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.22608100000002196,
+            "generationMs": 380.09768099999997,
+            "totalMs": 380.323762,
+            "bytes": 80493,
+            "pages": 21
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 75.23333300000002,
+            "generationMs": 480.5493459999999,
+            "totalMs": 555.7826789999999,
+            "bytes": 80493,
+            "pages": 21
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.20118700000011813,
+            "generationMs": 384.151789,
+            "totalMs": 384.3529760000001,
+            "bytes": 80493,
+            "pages": 21
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.272557,
+            "generationMs": 481.145798,
+            "totalMs": 555.418355,
+            "bytes": 80493,
+            "pages": 21
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.19448599999986982,
+            "generationMs": 383.1196400000001,
+            "totalMs": 383.314126,
+            "bytes": 80493,
+            "pages": 21
+          }
+        ],
+        [
+          {
+            "cache": "module-cold",
+            "importMs": 74.41130699999997,
+            "generationMs": 479.62888999999996,
+            "totalMs": 554.0401969999999,
+            "bytes": 80493,
+            "pages": 21
+          },
+          {
+            "cache": "module-warm",
+            "importMs": 0.24528800000007323,
+            "generationMs": 366.035926,
+            "totalMs": 366.2812140000001,
+            "bytes": 80493,
+            "pages": 21
+          }
+        ]
+      ]
+    }
+  ]
+}

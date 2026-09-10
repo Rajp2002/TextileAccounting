@@ -1946,6 +1946,35 @@ export interface ScenarioResult {
   profitDelta:             number | null  // vs baseline profit (null when no order qty)
 }
 
+/** Select the existing break-even scenario without running unused stress cases. */
+export function getBreakEvenScenario(
+  baseline: EstimateState,
+  baselineTotals: EstimatorV3Totals,
+): ScenarioResult | undefined {
+  // Solve for the selling price where gross profit is exactly ₹0.  This is
+  // not the landed cost of the baseline target-margin quote.
+  if (baselineTotals.orderQuote) {
+    const commercialInputs = getEffectiveCommercialInputs(baseline)
+    const breakEvenPricePerM = calculateBreakEvenPricePerM(
+      baselineTotals.totalProductionCostPerM,
+      commercialInputs.transportPerM,
+      commercialInputs.commissionPct,
+    )
+    return {
+      id:          'break-even',
+      label:       'Break-even',
+      description: 'Minimum selling price after transport and commission at 0% margin',
+      totalProductionCostPerM: baselineTotals.totalProductionCostPerM,
+      quotePricePerM: breakEvenPricePerM,
+      costDelta:   0, // production cost doesn't change
+      costDeltaPct: 0,
+      profitDelta: baselineTotals.orderQuote
+        ? new Decimal(0).minus(baselineTotals.orderQuote.grossProfitRupees).toNumber()
+        : null,
+    }
+  }
+}
+
 /**
  * Run 4 pricing risk scenarios against the current estimate baseline.
  * All computation is client-side — no server round-trips needed.
@@ -2009,28 +2038,8 @@ export function runScenarios(
   })
 
   // ── 3. Break-even margin ────────────────────────────────────────────────
-  // Solve for the selling price where gross profit is exactly ₹0.  This is
-  // not the landed cost of the baseline target-margin quote.
-  if (baselineTotals.orderQuote) {
-    const commercialInputs = getEffectiveCommercialInputs(baseline)
-    const breakEvenPricePerM = calculateBreakEvenPricePerM(
-      baselineTotals.totalProductionCostPerM,
-      commercialInputs.transportPerM,
-      commercialInputs.commissionPct,
-    )
-    results.push({
-      id:          'break-even',
-      label:       'Break-even',
-      description: 'Minimum selling price after transport and commission at 0% margin',
-      totalProductionCostPerM: baselineTotals.totalProductionCostPerM,
-      quotePricePerM: breakEvenPricePerM,
-      costDelta:   0, // production cost doesn't change
-      costDeltaPct: 0,
-      profitDelta: baselineTotals.orderQuote
-        ? new Decimal(0).minus(baselineTotals.orderQuote.grossProfitRupees).toNumber()
-        : null,
-    })
-  }
+  const breakEvenScenario = getBreakEvenScenario(baseline, baselineTotals)
+  if (breakEvenScenario) results.push(breakEvenScenario)
 
   // ── 4. Custom target price ──────────────────────────────────────────────
   // Owner enters a price the party demanded — what's the resulting margin?

@@ -1,0 +1,138 @@
+
+> textile-saas@0.1.0 lint
+> eslint --max-warnings=0
+
+[BABEL] Note: The code generator has deoptimised the styling of /Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/estimator/EstimatorClient.tsx as it exceeds the max of 500KB.
+
+/Users/rajpatel/Projects/textile Saas/__tests__/costing-defaults-initialization.test.ts
+  14:11  warning  'savedCostingsLib' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/__tests__/paid-plan-standardized-billing.test.ts
+  2:24  warning  'existsSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/__tests__/plan-aware-settings-permissions.test.ts
+  17:11  warning  'securityCard' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/__tests__/standalone-plan-chooser.test.ts
+  7:3  warning  'UPGRADE_PLAN_FEATURES' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/__tests__/tour-invitation-lifecycle.test.ts
+   1:32  warning  'beforeEach' is defined but never used         @typescript-eslint/no-unused-vars
+   1:48  warning  'afterEach' is defined but never used          @typescript-eslint/no-unused-vars
+  18:10  warning  'getTourDefinition' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/__tests__/tour-preferences-and-actions.test.ts
+  25:15  warning  'TourId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/billing/page.tsx
+    4:10  warning  'canEnrollFree' is defined but never used              @typescript-eslint/no-unused-vars
+    6:10  warning  'UpgradeWall' is defined but never used                @typescript-eslint/no-unused-vars
+    7:10  warning  'FreeBillingAction' is defined but never used          @typescript-eslint/no-unused-vars
+   27:10  warning  'BillingPlanTier' is defined but never used            @typescript-eslint/no-unused-vars
+  285:22  warning  'user' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  293:12  warning  'query' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  293:51  warning  'grant' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  375:11  warning  'canShowPlanCards' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  379:11  warning  'hadPaidAccess' is assigned a value but never used     @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/estimator/EstimatorClient.tsx
+  1040:5  warning  'accent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/app/(dashboard)/owner/rates/RatesClient.tsx
+  1887:62  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+  2022:54  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/app/actions/tour-preferences.ts
+  18:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rajpatel/Projects/textile Saas/components/estimator/CostEstimateTutorial.tsx
+    9:10  warning  'Compass' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+    9:19  warning  'Sparkles' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+  247:8   warning  React Hook useEffect has a missing dependency: 'freePlan'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  608:12  warning  'replayTitle' is assigned a value but never used                                                             @typescript-eslint/no-unused-vars
+  608:25  warning  'replaySubtitle' is assigned a value but never used                                                          @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/estimator/FreeUsageCard.tsx
+   7:20  warning  'freeErrorText' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  50:38  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `quota`, but the source dependencies were [quota?.resetsAt, language]. Inferred less specific property than source.
+
+/Users/rajpatel/Projects/textile Saas/components/estimator/FreeUsageCard.tsx:50:38
+  48 |   const isExhausted = remaining === 0
+  49 |
+> 50 |   const formattedResetDate = useMemo(() => {
+     |                                      ^^^^^^^
+> 51 |     if (!quota?.resetsAt) return ''
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 52 |     try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |     }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |   }, [quota?.resetsAt, language])
+     | ^^^^ Could not preserve existing manual memoization
+  64 |
+  65 |   // Honest loading without quota
+  66 |   const isInitialLoading = loading && remaining === null  react-hooks/preserve-manual-memoization
+
+/Users/rajpatel/Projects/textile Saas/components/estimator/SavedCostingsTutorial.tsx
+   5:10  warning  'Compass' is defined but never used                  @typescript-eslint/no-unused-vars
+   5:19  warning  'Sparkles' is defined but never used                 @typescript-eslint/no-unused-vars
+  37:65  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  39:19  warning  'languageStatus' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/plans/PlanCard.tsx
+   5:22  warning  'Lock' is defined but never used                 @typescript-eslint/no-unused-vars
+   8:30  warning  'PurchasablePlanTier' is defined but never used  @typescript-eslint/no-unused-vars
+  39:3   warning  'isOnboarding' is defined but never used         @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/plans/PlanChooserClient.tsx
+  41:9  warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/rates/RateBookTutorial.tsx
+    9:10  warning  'Compass' is defined but never used                  @typescript-eslint/no-unused-vars
+    9:19  warning  'Sparkles' is defined but never used                 @typescript-eslint/no-unused-vars
+   77:5   warning  'disabled' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  578:12  warning  'replayTitle' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  578:25  warning  'replaySubtitle' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/settings/plan-aware/plan-aware-settings-view.tsx
+  40:5  warning  'tier' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/components/tours/TourInvitation.tsx
+  13:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rajpatel/Projects/textile Saas/hooks/use-gutter-dock.ts
+  120:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rajpatel/Projects/textile Saas/hooks/use-gutter-dock.ts:120:5
+  118 |
+  119 |   useEffect(() => {
+> 120 |     updateDock()
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  121 |
+  122 |     let timeoutId: ReturnType<typeof setTimeout> | null = null
+  123 |     const handleResize = () => {  react-hooks/set-state-in-effect
+
+/Users/rajpatel/Projects/textile Saas/hooks/use-tour-invitation.ts
+  17:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rajpatel/Projects/textile Saas/lib/estimator-yarn-suggestions.ts
+  2:39  warning  'WarpRow' is defined but never used  @typescript-eslint/no-unused-vars
+  2:53  warning  'WeftRow' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/rajpatel/Projects/textile Saas/lib/tours/tour-preferences.ts
+  65:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/rajpatel/Projects/textile Saas/lib/tours/tour-registry.ts
+  53:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 50 problems (2 errors, 48 warnings)

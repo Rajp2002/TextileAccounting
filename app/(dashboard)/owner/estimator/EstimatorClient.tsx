@@ -55,7 +55,7 @@ import {
 import {
     calcFullTotals,
     buildCostingResult,
-    runScenarios,
+    getBreakEvenScenario,
     calcPerPickCostFromWeavingRate,
     makeDefaultEstimateState,
     DEFAULT_WARP_ROW,
@@ -4367,10 +4367,9 @@ export default function EstimatorClient({
             setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
         } finally { setCheckingSave(false); saveQuoteLockRef.current = false }
     }
-    const scenarios = useMemo(() => freeMode ? [] : runScenarios(state, totals), [state, totals, freeMode])
     const breakEvenScenario = useMemo(
-        () => scenarios.find(scenario => scenario.id === 'break-even'),
-        [scenarios],
+        () => freeMode ? undefined : getBreakEvenScenario(state, totals),
+        [state, totals, freeMode],
     )
     const handleOverheadModeChange = useCallback((nextMode: OverheadMode) => {
         dispatch({ type: 'SET', field: 'overheadMode', value: nextMode })
