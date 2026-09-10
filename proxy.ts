@@ -40,6 +40,7 @@ function normalizeOptimisticClaims(value: unknown): Record<string, unknown> {
         ...claims,
         ...customClaims,
         user_role: customClaims.user_role ?? appMetadata.role ?? claims.user_role,
+        plan_selection_pending: appMetadata.plan_selection_pending === true,
         org_id: appMetadata.org_id ?? customClaims.org_id ?? claims.org_id,
         onboarding_complete: appMetadata.onboarding_complete
             ?? customClaims.onboarding_complete
@@ -381,6 +382,14 @@ export async function updateSession(request: NextRequest) {
             httpOnly: true,
         })
         return redirectResponse
+    }
+
+    if (role === 'owner' && optimisticClaims.plan_selection_pending === true
+        && !pathname.startsWith('/api/') && !pathname.startsWith('/auth/')
+        && pathname !== '/onboarding/plans' && pathname !== '/locked') {
+        const planRedirect = NextResponse.redirect(new URL('/onboarding/plans', request.url))
+        applyAuthenticatedResponseCookies(planRedirect)
+        return planRedirect
     }
 
     // 1. Authenticated user hitting auth pages or landing → redirect to their home

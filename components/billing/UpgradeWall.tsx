@@ -9,7 +9,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import { BILLING_PLANS } from '@/lib/billing-constants'
 import { UPGRADE_PLAN_FEATURES, UPGRADE_FEATURE_IMAGES, upgradeFeatureBullets, upgradeText, type UpgradePlan } from '@/lib/upgrade-wall'
 
-function FeaturePlanCard({ plan, current, children }: { plan: UpgradePlan; current: boolean; children?: ReactNode }) {
+function FeaturePlanCard({ plan, current, selected, children }: { plan: UpgradePlan; current: boolean; selected?: boolean; children?: ReactNode }) {
   const { language } = useTranslation()
   const [index, setIndex] = useState(0)
   const [pictureOpen, setPictureOpen] = useState(false)
@@ -25,12 +25,13 @@ function FeaturePlanCard({ plan, current, children }: { plan: UpgradePlan; curre
   const move = (direction: number) => setIndex(value => (value + direction + features.length) % features.length)
 
   return (
-    <article aria-labelledby={`${id}-plan`} className={`flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${plan === 'lite' ? 'border-saffron/60' : 'border-hairline'}`}>
+    <article aria-labelledby={`${id}-plan`} className={`flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${selected ? 'border-saffron ring-2 ring-saffron/30' : plan === 'lite' ? 'border-saffron/60' : 'border-hairline'}`}>
       <div className={`h-1.5 ${plan === 'free' ? 'bg-slate-300' : plan === 'lite' ? 'bg-saffron' : 'bg-loom'}`} />
       <header data-i18n-skip="true" className="px-5 pb-4 pt-5">
         <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
           <h3 id={`${id}-plan`} className="text-2xl font-bold tracking-tight text-ink">{name}</h3>
           {current && <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">{t('current')}</span>}
+          {selected && <span className="rounded-full bg-saffron/15 px-2.5 py-1 text-xs font-semibold text-saffron-deep">{t('selected')}</span>}
         </div>
         <p className="mt-2 text-sm text-body">{t(plan === 'free' ? 'freeFit' : plan === 'lite' ? 'liteFit' : 'baseFit')}</p>
       </header>
@@ -119,8 +120,9 @@ function FeaturePlanCard({ plan, current, children }: { plan: UpgradePlan; curre
 }
 
 /** Feature exploration is local UI state. Purchase eligibility stays with the caller. */
-export function UpgradeWall({ currentPlan, actions, showHeading = true }: {
+export function UpgradeWall({ currentPlan, selectedPlan, actions, showHeading = true }: {
   currentPlan?: string
+  selectedPlan?: UpgradePlan
   actions?: Partial<Record<UpgradePlan, ReactNode>>
   showHeading?: boolean
 }) {
@@ -130,7 +132,7 @@ export function UpgradeWall({ currentPlan, actions, showHeading = true }: {
     {showHeading && <div data-i18n-skip="true"><h2 className="text-2xl font-bold tracking-tight text-ink">{upgradeText(language, 'title')}</h2><p className="mt-2 text-sm text-body">{upgradeText(language, 'intro')}</p></div>}
     <p data-i18n-skip="true" id={id} className="text-sm text-subtle">{upgradeText(language, 'swipe')}</p>
     <div aria-describedby={id} className="grid items-stretch gap-4 @4xl:grid-cols-3">
-      {(['free', 'lite', 'base'] as const).map(plan => <FeaturePlanCard key={plan} plan={plan} current={currentPlan === plan}>{actions?.[plan]}</FeaturePlanCard>)}
+      {(['free', 'lite', 'base'] as const).map(plan => <FeaturePlanCard key={plan} plan={plan} current={currentPlan === plan} selected={selectedPlan === plan}>{actions?.[plan]}</FeaturePlanCard>)}
     </div>
   </section>
 }

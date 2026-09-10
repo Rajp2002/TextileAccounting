@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
-import { getCachedOrgPlanAccess, getSubscriptionDetail } from '@/lib/subscription'
+import { getCachedOrgPlanAccess, getSubscriptionDetail, hasEstablishedPaidHistory } from '@/lib/subscription'
+import { canEnrollFree, getFreeGrant } from '@/lib/free-account'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { UpgradeWall } from '@/components/billing/UpgradeWall'
+import { FreeBillingAction } from '@/components/billing/FreeBillingAction'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
 import { PaymentHistoryDialog, type BillingHistoryEntry, type BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
@@ -431,12 +433,16 @@ function PlanCards({
     decisions,
     visibleTiers,
     resumePendingCheckout = false,
+    hadPaidAccess = false,
+    isFreeEligible = false,
 }: {
     label: string
     currentTier: string
     decisions: Record<PurchasablePlanTier, BillingPurchaseDecision>
     visibleTiers: readonly PurchasablePlanTier[]
     resumePendingCheckout?: boolean
+    hadPaidAccess?: boolean
+    isFreeEligible?: boolean
 }) {
     const action = (planTier: PurchasablePlanTier) => {
         const decision = decisions[planTier]
@@ -467,7 +473,14 @@ function PlanCards({
 
     return <div className="space-y-5 pt-4" aria-label={label}>
         <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: currentTier }} />
-        <UpgradeWall currentPlan={currentTier} actions={{ lite: action('lite'), base: action('base') }} />
+        <UpgradeWall
+            currentPlan={currentTier}
+            actions={{
+                free: <FreeBillingAction isCurrent={currentTier === 'free'} isExpiredPaid={hadPaidAccess} isEligible={isFreeEligible} />,
+                lite: action('lite'),
+                base: action('base'),
+            }}
+        />
         <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3">
             <ShieldCheck className="h-4 w-4 text-subtle" aria-hidden="true" />
             <p className="text-xs font-medium text-body">Secure Razorpay checkout · GST-inclusive totals shown</p>
@@ -480,7 +493,7 @@ export default async function BillingPage({
 }: {
     searchParams?: Promise<{ from?: string | string[]; plan?: string | string[] }>
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'])
     if (!profile.org_id) redirect('/owner/today')
 
     const queryPromise: Promise<{ from?: string | string[]; plan?: string | string[] }> = searchParams
@@ -490,10 +503,16 @@ export default async function BillingPage({
     const supabase = await createClient()
     // Critical billing state stays authoritative and server-owned. Referral
     // statistics are an independent secondary panel and stream below.
-    const [query, subscriptionDetail, planAccess, paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
+    const [query, subscriptionDetail, planAccess, grant] = await Promise.all([
         queryPromise,
         getSubscriptionDetail(profile.org_id),
         getCachedOrgPlanAccess(profile.org_id),
+        getFreeGrant(profile.org_id),
+    ])
+    const isFreeEligible = grant
+        ? grant.state === 'active'
+        : Boolean(user.email && user.email_confirmed_at && user.app_metadata?.free_signup === true && await canEnrollFree(user.email))
+    const [paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         supabase
             .from('subscription_payments')
             .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at, billing_attempt_id')
@@ -536,7 +555,7 @@ export default async function BillingPage({
     const latestSubscriptionTier = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
         ? subscription.plan_tier
         : null
-    const latestSelfServeTier = latestSubscriptionTier === 'lite' || latestSubscriptionTier === 'base'
+    const latestSelfServeTier: PurchasablePlanTier | null = latestSubscriptionTier === 'lite' || latestSubscriptionTier === 'base'
         ? latestSubscriptionTier
         : null
     const historicalPaidTier = latestSelfServeTier && purchaseDecisions[latestSelfServeTier].purchaseType === 'renewal'
@@ -596,6 +615,8 @@ export default async function BillingPage({
             ? 'Available subscriptions'
             : 'Choose Weavly Lite or Base'
 
+    const hadPaidAccess = hasEstablishedPaidHistory(billingSubscriptions)
+
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
         <>
@@ -645,9 +666,18 @@ export default async function BillingPage({
                     decisions={purchaseDecisions}
                     visibleTiers={cardPlanTiers}
                     resumePendingCheckout={isPending}
+                    hadPaidAccess={hadPaidAccess}
+                    isFreeEligible={isFreeEligible}
                 />
             )}
-            {canShowPlanCards && !billingReadiness.canCreateOrder && <UpgradeWall currentPlan={tier} />}
+            {canShowPlanCards && !billingReadiness.canCreateOrder && (
+                <UpgradeWall
+                    currentPlan={tier}
+                    actions={{
+                        free: <FreeBillingAction isCurrent={tier === 'free'} isExpiredPaid={hadPaidAccess} isEligible={isFreeEligible} />,
+                    }}
+                />
+            )}
 
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                 <div className="space-y-6 lg:col-span-8">

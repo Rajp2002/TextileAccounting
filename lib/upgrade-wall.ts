@@ -26,6 +26,7 @@ const phrases = {
   liteFit: ['Your complete costing desk', 'તમારી સંપૂર્ણ કોસ્ટિંગ વ્યવસ્થા', 'आपकी पूरी कॉस्टिंग व्यवस्था'],
   baseFit: ['Costing, production and payroll', 'કોસ્ટિંગ, ઉત્પાદન અને પગાર', 'कॉस्टिंग, उत्पादन और वेतन'],
   current: ['Current plan', 'હાલનો પ્લાન', 'मौजूदा प्लान'],
+  selected: ['Selected', 'પસંદ કરેલ', 'चयनित'],
   continueFree: ['Continue with Free', 'Free સાથે ચાલુ રાખો', 'Free के साथ जारी रखें'],
   comparison: ['Included for comparison', 'સરખામણી માટે દર્શાવેલ', 'तुलना के लिए दिखाया गया'],
   previous: ['Previous feature', 'પાછલી સુવિધા', 'पिछली सुविधा'],
