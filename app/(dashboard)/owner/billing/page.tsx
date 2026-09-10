@@ -271,7 +271,7 @@ function PlanSelectionContractReference({
             <span>Choose Weavly Lite or Base</span>
             <span>{BILLING_SELF_SERVE_PLAN_TIERS.join(',')}</span>
             <span data-contract="readiness">canShowPlanCards && billingReadiness.canCreateOrder</span>
-            <span data-contract="readiness-prop" data-ready={billingReady}>billingReady={billingReadiness.canCreateOrder}</span>
+            <span data-contract="readiness-prop" data-ready={billingReady}>billingReady={String(billingReady)}</span>
             <span data-contract="resume">resumePendingCheckout={isPending}</span>
         </div>
     )
