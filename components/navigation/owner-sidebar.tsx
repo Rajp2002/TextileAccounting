@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { NavigationLink } from "@/components/navigation/navigation-link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -212,12 +212,13 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                 : pathname === itemPath || pathname.startsWith(itemPath + "/")
 
                             return (
-                                <Link
+                                <NavigationLink
                                     key={item.name}
                                     href={item.href}
-                                    onClick={onLinkClick}
+                                    aria-current={isActive ? "page" : undefined}
+                                    onNavigate={onLinkClick}
                                     className={cn(
-                                        "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
+                                        "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                         isActive
                                             ? "bg-saffron-deep text-white shadow-sm shadow-saffron/20"
                                             : "text-saffron hover:bg-saffron-deep hover:text-white"
@@ -241,7 +242,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                             {yarnReviewDueCount > 99 ? '99+' : yarnReviewDueCount}
                                         </span>
                                     )}
-                                </Link>
+                                </NavigationLink>
                             )
                         })}
                     </div>
@@ -255,11 +256,11 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                 )}
                 <div className="flex flex-col gap-3">
                     {!hasLegacyWorkspace && (
-                        <Link
+                        <NavigationLink
                             href={subscriptionTier === 'free' ? '/free/billing' : '/owner/billing'}
-                            onClick={onLinkClick}
+                            onNavigate={onLinkClick}
                             className={cn(
-                                "flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold transition-all duration-150",
+                                "flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none",
                                 pathname === (subscriptionTier === 'free' ? '/free/billing' : '/owner/billing')
                                     ? "bg-saffron-deep text-white shadow-sm shadow-saffron/20"
                                     : "text-saffron hover:bg-saffron-deep hover:text-white"
@@ -267,14 +268,14 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         >
                             <CreditCard className="h-[18px] w-[18px]" />
                             Subscription & Billing
-                        </Link>
+                        </NavigationLink>
                     )}
                     {subscriptionTier === 'free' && (
-                        <Link
+                        <NavigationLink
                             href="/free/account"
-                            onClick={onLinkClick}
+                            onNavigate={onLinkClick}
                             className={cn(
-                                "flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold transition-all duration-150",
+                                "flex min-h-10 items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none",
                                 (pathname === '/free/account' || pathname.startsWith('/free/account/'))
                                     ? "bg-saffron-deep text-white shadow-sm shadow-saffron/20"
                                     : "text-saffron hover:bg-saffron-deep hover:text-white"
@@ -282,7 +283,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                         >
                             <Settings className="h-[18px] w-[18px]" />
                             Settings
-                        </Link>
+                        </NavigationLink>
                     )}
                     <LanguageSwitcher className="text-saffron hover:bg-saffron-deep hover:text-white" />
                     <LogoutButton className="rounded-lg px-2 py-1.5 text-saffron hover:bg-saffron-deep hover:text-white" />
@@ -364,19 +365,20 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
                         : getMobileNavLabel(item, normalizedProductionMode, t)
 
                     return (
-                        <Link
+                        <NavigationLink
                             key={item.name}
                             href={item.href}
+                            aria-current={isActive ? "page" : undefined}
                             className={cn(
                                 "mobile-nav-item flex min-w-0 flex-col items-center justify-center relative",
-                                "py-1 px-0.5 transition-all duration-300",
+                                "py-1 px-0.5 transition-colors duration-150 motion-reduce:transition-none",
                                 isActive ? "text-saffron-deep" : "text-body"
                             )}
                             aria-label={navLabel}
                             title={navLabel}
                         >
                             <div className={cn(
-                                "mobile-nav-icon-pill py-1 px-2 xs:px-3 rounded-xl mb-0.5 transition-all duration-300",
+                                "mobile-nav-icon-pill py-1 px-2 xs:px-3 rounded-xl mb-0.5 transition-colors duration-150 motion-reduce:transition-none",
                                 "landscape:py-0.5 landscape:px-2",
                                 isActive ? "bg-saffron-soft scale-105" : "hover:bg-surface-soft"
                             )}>
@@ -391,7 +393,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode, subscripti
                             {isActive && (
                                 <span className="premium-nav-indicator absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
                             )}
-                        </Link>
+                        </NavigationLink>
                     )
                 })}
                 

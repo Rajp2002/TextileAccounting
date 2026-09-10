@@ -315,12 +315,22 @@ function translateSubtree(
 function LegacyTextLocalizer({ language, phraseMap }: { language: Language; phraseMap: Map<string, string> }) {
   const textOriginals = useRef(new WeakMap<Text, LocalizedTextState>())
   const attributeOriginals = useRef(new WeakMap<Element, ElementAttributeStates>())
+  const hasLocalized = useRef(false)
 
   useEffect(() => {
     if (typeof document === "undefined" || !document.body) return
+    // English is already rendered by React. Avoid walking every route and
+    // observing every edit unless we need to restore a translated document.
+    if (language === "en" && !hasLocalized.current) return
 
     const strictBasePlan = isBasePlanSurfacePath(window.location.pathname)
     translateSubtree(document.body, language, phraseMap, textOriginals.current, attributeOriginals.current, strictBasePlan)
+    hasLocalized.current = language !== "en"
+    if (language === "en") {
+      textOriginals.current = new WeakMap()
+      attributeOriginals.current = new WeakMap()
+      return
+    }
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {

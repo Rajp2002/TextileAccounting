@@ -1222,6 +1222,23 @@
 }
 [data-costing-tour-dialog="true"] [data-slot="dialog-header"] { position: static; }
 
+/* A slow route acknowledges the click without flashing on cached transitions. */
+.navigation-pending {
+  opacity: 0;
+  animation: navigation-pending-reveal 100ms ease-out 100ms forwards;
+}
+
+@keyframes navigation-pending-reveal {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navigation-pending {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* ── Tour Invitation Halo (2 gentle cycles, 2.4s total, stationary) ── */
 @keyframes tour-halo-pulse {
   0% {
@@ -1257,4 +1274,3 @@
     display: none !important;
   }
 }
-
