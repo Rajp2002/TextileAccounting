@@ -1,0 +1,20 @@
+{
+  "baselineRevision": "a92b371930060bfa227e1da4dc3f115efcd3fa58",
+  "branch": "codex/performance-audit-20260911",
+  "node": "v24.11.1",
+  "platform": "darwin",
+  "arch": "x64",
+  "cpu": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+  "buildMode": "next build --webpack, NODE_ENV=production, isolated child env",
+  "backend": "http://127.0.0.1:9 (unused loopback port, placeholder keys)",
+  "files": {
+    "lib/estimator.ts": "1225e964a57121afa2e1404bc1036c1aa6615976d6d7af7ecc3fab476d34237c",
+    "app/(dashboard)/owner/estimator/EstimatorClient.tsx": "239ab0dacc76587545517d5cf7e0816672a78085e59a5892d121fceca7ead913",
+    "app/(dashboard)/owner/production/BasePayrollRecords.tsx": "d00a486aef99f69753d9a695d8b0a0a20d7f0b815a9a75af75b94d403b4bb1d0",
+    "package.json": "b0bc25b42928556dafb4a289c24962e504c156de1aa5080f1118f93410f00bc8",
+    "package-lock.json": "15ec7fadc3d7ce476b89117c0cb6d8b28ccb744b17d4c2f0b881faf28187baaa",
+    "next.config.ts": "c1b80e6e51423ecc869f1e5aebfb45ef4880196ceb03a9122561415b5ffb074b",
+    "__tests__/estimator-scenario-selection.test.ts": "3ee1ca5dfdcf330b6936f246e1a855addd99722124325a0727374820956ea438",
+    "scripts/performance/estimator-fixture.ts": "5e7065edd5c460af8964fbd7dc26e8da3afd68c8d6751808acd50a564fa37148"
+  }
+}

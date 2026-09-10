@@ -1,0 +1,428 @@
+
+> textile-saas@0.1.0 prebuild
+> npm run test
+
+
+> textile-saas@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Users/rajpatel/Projects/textile Saas[39m
+
+ [32m✓[39m __tests__/base-payroll-history.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m __tests__/auth-rate-limit-fallback.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m __tests__/estimator.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+ [32m✓[39m __tests__/backup-inventory-comparison.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 434[2mms[22m[39m
+ [32m✓[39m __tests__/lite-telemetry-lifecycle.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 164[2mms[22m[39m
+ [32m✓[39m __tests__/lite-document-privacy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 140[2mms[22m[39m
+ [32m✓[39m __tests__/sprint5-quotations-pdf-export.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 146[2mms[22m[39m
+ [32m✓[39m __tests__/base-estimator-refinements.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 145[2mms[22m[39m
+ [32m✓[39m __tests__/sprint17-costing-quotation-hardening.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 210[2mms[22m[39m
+ [32m✓[39m __tests__/base-payroll-pdf.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 459[2mms[22m[39m
+ [32m✓[39m __tests__/base-job-summaries.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 567[2mms[22m[39m
+     [33m[2m✓[22m[39m matches the original call-site results exactly on interleaved histories without mutation [33m 552[2mms[22m[39m
+ [32m✓[39m __tests__/sprint10-saved-costings-rates-comparison.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 119[2mms[22m[39m
+ [32m✓[39m __tests__/lite-task-validation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 134[2mms[22m[39m
+ [32m✓[39m __tests__/base-p1-remediation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 108[2mms[22m[39m
+ [32m✓[39m __tests__/finance.test.ts [2m([22m[2m43 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 87[2mms[22m[39m
+ [32m✓[39m __tests__/lite-quick-detailed-parity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 102[2mms[22m[39m
+ [32m✓[39m __tests__/free-estimator.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 127[2mms[22m[39m
+ [32m✓[39m __tests__/monthly-overhead-calculator.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 105[2mms[22m[39m
+ [32m✓[39m __tests__/b17-razorpay-lifecycle-boundaries.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m __tests__/base-payroll-readiness.test.ts [2m([22m[2m29 tests[22m[2m)[22m[33m 1303[2mms[22m[39m
+ [32m✓[39m __tests__/free-usage-counter.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m __tests__/free-service.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m __tests__/r0-stop-line-stabilization.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m __tests__/challan-payment-terms.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m __tests__/batch24e-master-data-guardrails.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/sprint15-trust-gate.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+ [32m✓[39m __tests__/sprint8-costing-trust.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 90[2mms[22m[39m
+ [32m✓[39m __tests__/lite-rate-impact.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+ [32m✓[39m __tests__/base-production-core.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+ [31m❯[39m __tests__/proxy-terminal-session-recovery.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m8 failed[39m[2m)[22m[32m 71[2mms[22m[39m
+[31m     [31m×[31m expires every auth chunk and redirects a protected request to login[39m[32m 27[2mms[22m[39m
+[31m     [31m×[31m renders a clean login request when Auth returns a terminal session error[39m[32m 5[2mms[22m[39m
+     [32m✓[39m does not count auth page loads or prefetches as password attempts[32m 3[2mms[22m[39m
+[31m     [31m×[31m accepts the activity timestamp refreshed by a successful login[39m[32m 5[2mms[22m[39m
+[31m     [31m×[31m still expires a genuinely idle current session locally[39m[32m 6[2mms[22m[39m
+[31m     [31m×[31m renders login in one response and clears both browser and forwarded session cookies[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m redirects an idle protected page with cookie deletions so login does not revalidate it[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m returns JSON and clears cookies for an idle protected API request[39m[32m 11[2mms[22m[39m
+[31m     [31m×[31m still validates and checks revocation when reopening an active session[39m[32m 3[2mms[22m[39m
+ [32m✓[39m __tests__/p1-estimator-draft-recovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+ [32m✓[39m __tests__/batch23-start-party-order-atomicity.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m __tests__/p1-billing-orders.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+ [32m✓[39m __tests__/lite-recovery-matrix.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m __tests__/performance-bundle-boundaries.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/base-machine-register.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+ [32m✓[39m __tests__/yarn-rate-reconciliation.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m __tests__/sprint0-costing-truth.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m __tests__/free-browser-cache.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32m✓[39m __tests__/saved-quality-costing-library.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m __tests__/cost-estimate-tutorial-i18n.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-yarn-ratebook-dropdown.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m __tests__/base-estimator-go-readiness.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m __tests__/saved-costings-tour.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m __tests__/ux-012-terminology-baseline.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m __tests__/costing-defaults-initialization.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m __tests__/lite-historical-immutability.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m __tests__/sprint7-ux-polish.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32m✓[39m __tests__/shift-log-safe-update-guard.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/batch10-estimator-quote-order-snapshots.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m __tests__/p1-commercial-payments.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m __tests__/lite-trust-journey.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m __tests__/width-field.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m __tests__/quality-stock.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-production-readiness.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m __tests__/batch24f-production-worker-assignment-policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m __tests__/p1-production-dispatch-regressions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+ [32m✓[39m __tests__/base-fixed-salary.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32m✓[39m __tests__/lite-web-vitals-route.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m __tests__/base-assignment-connectors.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 118[2mms[22m[39m
+ [32m✓[39m __tests__/free-continuation-integration.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 177[2mms[22m[39m
+ [32m✓[39m __tests__/commercials-read-model.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m __tests__/pilot-no-go-remediation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m __tests__/signup-legal-acceptance.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m __tests__/challan-draft-entry.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m __tests__/batch2-performance-instrumentation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/tour-preferences-and-actions.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m __tests__/batch9-offline-cache-truth.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-placeholder-ux.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m __tests__/mobile-tour-positioning.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m __tests__/sprint4-billing-trust.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/batch24c-factory-today-analytics-state.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m __tests__/sprint16-billing-language.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m __tests__/sprint-estimator-aesthetic.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/sprint3-estimator-simplicity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m __tests__/sprint5-rate-book-ui.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m __tests__/base-payroll-continuity.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/rate-book-tutorial.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m __tests__/rate-book-table-deltas.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m __tests__/batch15-payroll-doc-export-consistency.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m __tests__/batch24b-supervisor-ux-failures.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m __tests__/tour-quota-and-data-safety.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/sprint22-auth-boundary.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m __tests__/enter-key-navigation.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m __tests__/lite-winding-scope.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m __tests__/p1-party-first-stock-sale-dispatch.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/sprint9-editor-reliability.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/rate-book-quick-edit.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m __tests__/sprint3-profile-draft-recovery.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m __tests__/base-plan-localization.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/p1-production-log-strictness.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m __tests__/sprint2-calculation-safety.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-only-experience.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m __tests__/base-production-continuity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m __tests__/delivery-challans.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m __tests__/p2-dispatch-sale-receipt.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/free-tier-policy.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m __tests__/date-only-format.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m __tests__/batch3b-factory-today-query-fanout.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m __tests__/release-runtime-config.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/batch11-estimator-order-lifecycle.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m __tests__/p1-attendance-rls-boundary.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/owner-analytics.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/cost-estimate-tutorial-modal.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/b15-auth-privacy-pwa-guardrails.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m __tests__/plan-selection-actions.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/standalone-plan-chooser.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m __tests__/p1-production-stock-atomicity.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/lite-web-vitals.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/batch24g-security-audit-guardrails.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m __tests__/batch3d-owner-advances-server-loading.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/p0-locked-tenant-boundary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/payroll-manual-adjustments.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m __tests__/free-request-identity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/yarn-component-minimize-complete.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/prod-027-machine-breakdown-persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/b10-rate-limit-retry.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/i18n-runtime.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m __tests__/payroll-cycle.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m __tests__/batch24d-submit-draft-isolation.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m __tests__/base-p1-coverage.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m __tests__/lite-analytics-privacy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m __tests__/rate-book-search-filter.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-overhead-dialog.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m __tests__/b10-attendance-date-lockdown.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/bill-008-referral-boundary.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m __tests__/market-runs.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/off-009-mutation-outcome.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m __tests__/customer-contact-channels.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m __tests__/sprint21-base-route-boundaries.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/backup-sanitized-inventory.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 11148[2mms[22m[39m
+     [33m[2m✓[22m[39m emits valid JSON and allows continuation for zero Storage counts [33m 1118[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed when Storage contains objects [33m 837[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed for aligned or otherwise malformed psql output [33m 998[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed when required Storage fields are missing [33m 996[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed when psql returns more than one JSON row [33m 1079[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects non-integer or invalid Storage counts: { bucket_count: -1 } [33m 806[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects non-integer or invalid Storage counts: { object_count: 0.5 } [33m 876[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects non-integer or invalid Storage counts: { total_bytes: '0' } [33m 945[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps psql stderr separate from the JSON file and sanitized workflow output [33m 906[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed without echoing psql stderr when the query command fails [33m 806[2mms[22m[39m
+     [33m[2m✓[22m[39m accepts valid JSON with unusual whitespace and Unicode identifiers [33m 881[2mms[22m[39m
+     [33m[2m✓[22m[39m does not echo the database URL or fixture credential [33m 888[2mms[22m[39m
+ [32m✓[39m __tests__/rate-book-p1-features.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m __tests__/tutorial-viewport-lock.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/p0-access-code-boundary.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m __tests__/saved-quality-commercial-reuse.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/b10-india-calendar-boundaries.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m __tests__/cost-rates.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [32m✓[39m __tests__/p2-golden-a-completed-order-dispatch.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m __tests__/batch1-auth-waterfall-elimination.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/premium-base-experience-switch.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m __tests__/tutorial-target.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m __tests__/cost-estimate-tutorial-ordering.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/cost-estimate-tutorial-account.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m __tests__/factory-cost-wizard-account.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m __tests__/tour-invitation-lifecycle.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/tour-session-coordinator.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m __tests__/base-pilot-blockers.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m __tests__/auth-reset-flow.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/p1-razorpay-idempotency.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/full-suite-automatic-costing.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/p1-billing-gates.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/summary-view-security-invoker.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/costing-save-trust.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/sign-in-telemetry.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/auth-login-performance.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/billing-live-readiness.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/tour-i18n-parity.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/plan-aware-settings-permissions.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/production-mode.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-autofill.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/base-complete-query.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/p1-payroll-config-onboarding.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m __tests__/sprint6-operational-integrity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m __tests__/base-privacy-request-workflow.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/base-rate-book-production-readiness.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/sprint1-costing-save-trust.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/lite-accessibility-interaction.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/machine-operator-payroll.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m __tests__/rate-review-rail.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m __tests__/bill-009-referral-year-credit.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m __tests__/attendance-tenant-upsert.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/p2-commercials-receivables-payments.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m __tests__/costing-workspace-foundation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-first-billing-rollout.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/auth-012-organization-rls.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/batch3a-owner-machines-server-loading.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/privacy-policy-accuracy.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/settings-simplification-fixes.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m __tests__/batch3e-owner-dispatches-shared-discrepancies.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/pilot-whatsapp-disabled-readiness.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m __tests__/terms-base-rollout-accuracy.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m __tests__/b12-stock-source-integrity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/lite-localization-regression.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/lite-plan-copy-regression.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/b16-whatsapp-provider-boundaries.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/supervisor-access-management.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/lite-draft-identity-isolation.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/p1-priority6-triage.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/p0-authz-boundary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m __tests__/free-plan-settings-billing.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/batch3c-owner-payroll-server-loading.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/base-p0-remediation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/batch22-production-order-boundary-hardening.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/cost-estimate-tutorial-transitions.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/master-014-assignment-atomicity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/worker-breakdown-rpc-tenant-boundary.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m __tests__/sec-017-worker-age-verification.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/base-production-correction-history.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-left-rail.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/base-release-blocker-remediation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m __tests__/p0-provisioning-audit-actor.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/dash-004-historical-date-boundary.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m __tests__/tour-no-autostart.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/security-advisor-hardening.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/estimator-boundary-migrations.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/paid-plan-standardized-billing.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/free-plan-guided-tour.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m __tests__/base-settings-cold-load.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/b13-payroll-settlement-boundaries.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m __tests__/base-security-incident-workflow.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/account-deletion.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/base-organization-metadata.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m __tests__/b14-realtime-dashboard-states.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m __tests__/payroll-settlement-history.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m __tests__/auth-008-join-code-rate-limit.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m __tests__/master-009-worker-deactivation-readiness.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m __tests__/p0-atomicity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m __tests__/bill-010-referral-staged-rewards.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m __tests__/logout-route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/yarn-review-margin-preferences.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m __tests__/base-costing-export-status-boundary.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m __tests__/dispatch-archive.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m __tests__/pwa-install-nudge.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m __tests__/prod-002-single-shift-activation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/payroll-pay-date-config.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m __tests__/machine-link-rpc-tenant-boundary.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/phase1-scope.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m __tests__/whatsapp-consent.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m __tests__/p1-payroll-revert.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m __tests__/ux-007-settings-control-names.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m __tests__/saved-costings-archive-rail.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m __tests__/client-request-id.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m __tests__/saved-costing-archive-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m __tests__/auth-015-session-revocation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m __tests__/saved-costing-plan-panels.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m __tests__/p1-auth-login-route.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m __tests__/p1-payroll-guard.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m __tests__/settings-responsive-layout.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m __tests__/base-onboarding-route-guard.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m __tests__/setup-007-onboarding-network-retry.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m __tests__/guided-tour-fixes-and-demo-data.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m __tests__/sprint4-record-management.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m __tests__/rate-book-popover-usage.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 8 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mProxy terminal Auth session recovery[2m > [22mexpires every auth chunk and redirects a protected request to login
+[31m[1mAssertionError[22m: expected undefined to be '' // Object.is equality[39m
+
+[32m- Expected:[39m
+""
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m95:68[22m[39m
+    [90m 93|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m307[39m)
+    [90m 94|[39m         expect(response.headers.get('location')).toBe('https://textile…
+    [90m 95|[39m         expect(response.cookies.get(`${authCookieBase}.0`)?.value).toB…
+    [90m   |[39m                                                                    [31m^[39m
+    [90m 96|[39m         expect(response.cookies.get(`${authCookieBase}.1`)?.value).toB…
+    [90m 97|[39m         [34mexpect[39m(response[33m.[39mcookies[33m.[39m[35mget[39m([32m'last_activity'[39m)[33m?.[39mvalue)[33m.[39m[34mtoBe[39m([32m''[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mProxy terminal Auth session recovery[2m > [22mrenders a clean login request when Auth returns a terminal session error
+[31m[1mAssertionError[22m: expected 'sb-local-performance-auth-token.0=sta…' not to contain 'sb-local-performance-auth-token'[39m
+
+Expected: [32m"sb-local-performance-auth-token"[39m
+Received: [31m"sb-local-performance-auth-token[7m.0=stale-part-zero; sb-local-performance-auth-token.1=stale-part-one; last_activity=1700000000000; unrelated_cookie=keep-me[27m"[39m
+
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m112:37[22m[39m
+    [90m110|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m200[39m)
+    [90m111|[39m         [34mexpect[39m(response[33m.[39mheaders[33m.[39m[35mget[39m([32m'location'[39m))[33m.[39m[34mtoBeNull[39m()
+    [90m112|[39m         [34mexpect[39m(forwardedCookie)[33m.[39mnot[33m.[39m[34mtoContain[39m(authCookieBase)
+    [90m   |[39m                                     [31m^[39m
+    [90m113|[39m         [34mexpect[39m(forwardedCookie)[33m.[39m[34mtoContain[39m([32m'unrelated_cookie=keep-me'[39m)
+    [90m114|[39m         expect(response.cookies.get(`${authCookieBase}.0`)?.value).toB…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mProxy post-login session handling[2m > [22maccepts the activity timestamp refreshed by a successful login
+[31m[1mAssertionError[22m: expected 307 to be 200 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 200[39m
+[31m+ 307[39m
+
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m151:33[22m[39m
+    [90m149|[39m         ))
+    [90m150|[39m
+    [90m151|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m200[39m)
+    [90m   |[39m                                 [31m^[39m
+    [90m152|[39m         [34mexpect[39m(authMock[33m.[39msignOut)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()
+    [90m153|[39m         expect(Number(response.cookies.get('last_activity')?.value)).t…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mProxy post-login session handling[2m > [22mstill expires a genuinely idle current session locally
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { scope: 'local' } ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m174:34[22m[39m
+    [90m172|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m307[39m)
+    [90m173|[39m         expect(response.headers.get('location')).toBe('https://textile…
+    [90m174|[39m         expect(authMock.signOut).toHaveBeenCalledWith({ scope: 'local'…
+    [90m   |[39m                                  [31m^[39m
+    [90m175|[39m         [34mexpect[39m(response[33m.[39mcookies[33m.[39m[35mget[39m([32m'last_activity'[39m)[33m?.[39mvalue)[33m.[39m[34mtoBe[39m([32m''[39m)
+    [90m176|[39m     })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mPWA idle-session cold start[2m > [22mrenders login in one response and clears both browser and forwarded session cookies
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { scope: 'local' } ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m195:34[22m[39m
+    [90m193|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m200[39m)
+    [90m194|[39m         [34mexpect[39m(response[33m.[39mheaders[33m.[39m[35mget[39m([32m'location'[39m))[33m.[39m[34mtoBeNull[39m()
+    [90m195|[39m         expect(authMock.signOut).toHaveBeenCalledWith({ scope: 'local'…
+    [90m   |[39m                                  [31m^[39m
+    [90m196|[39m         [34mexpect[39m(revocationMock)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()
+    [90m197|[39m         for (const name of [`${authCookieBase}.0`, `${authCookieBase}.…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mPWA idle-session cold start[2m > [22mredirects an idle protected page with cookie deletions so login does not revalidate it
+[31m[1mAssertionError[22m: expected undefined to be +0 // Object.is equality[39m
+
+[32m- Expected:[39m
+0
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m207:69[22m[39m
+    [90m205|[39m         const response = await updateSession(requestFor('/owner/estima…
+    [90m206|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m307[39m)
+    [90m207|[39m         expect(response.cookies.get(`${authCookieBase}.0`)?.maxAge).to…
+    [90m   |[39m                                                                     [31m^[39m
+    [90m208|[39m         expect(response.cookies.get(`${authCookieBase}.1`)?.maxAge).to…
+    [90m209|[39m         [34mexpect[39m(revocationMock)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mPWA idle-session cold start[2m > [22mreturns JSON and clears cookies for an idle protected API request
+[31m[1mAssertionError[22m: expected { error: 'Unauthorized' } to deeply equal { Object (error) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "error": "Session expired. Please sign in again.",[39m
+[31m+   "error": "Unauthorized",[39m
+[2m  }[22m
+
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m220:39[22m[39m
+    [90m218|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m401[39m)
+    [90m219|[39m         [34mexpect[39m(response[33m.[39mheaders[33m.[39m[35mget[39m([32m'location'[39m))[33m.[39m[34mtoBeNull[39m()
+    [90m220|[39m         expect(await response.json()).toEqual({ error: 'Session expire…
+    [90m   |[39m                                       [31m^[39m
+    [90m221|[39m         expect(response.cookies.get(`${authCookieBase}.0`)?.maxAge).to…
+    [90m222|[39m     })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/proxy-terminal-session-recovery.test.ts[2m > [22mPWA idle-session cold start[2m > [22mstill validates and checks revocation when reopening an active session
+[31m[1mAssertionError[22m: expected 200 to be 307 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 307[39m
+[31m+ 200[39m
+
+[36m [2m❯[22m __tests__/proxy-terminal-session-recovery.test.ts:[2m226:33[22m[39m
+    [90m224|[39m     it('still validates and checks revocation when reopening an active…
+    [90m225|[39m         const response = await updateSession(requestFor('/login', 'GET…
+    [90m226|[39m         [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m307[39m)
+    [90m   |[39m                                 [31m^[39m
+    [90m227|[39m         expect(response.headers.get('location')).toBe('https://textile…
+    [90m228|[39m         [34mexpect[39m(authMock[33m.[39mgetClaims)[33m.[39m[34mtoHaveBeenCalledOnce[39m()
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m243 passed[39m[22m[90m (244)[39m
+[2m      Tests [22m [1m[31m8 failed[39m[22m[2m | [22m[1m[32m1673 passed[39m[22m[2m | [22m[33m1 skipped[39m[90m (1682)[39m
+[2m   Start at [22m 02:56:11
+[2m   Duration [22m 18.64s[2m (transform 14.96s, setup 0ms, import 111.47s, tests 22.86s, environment 91ms)[22m
