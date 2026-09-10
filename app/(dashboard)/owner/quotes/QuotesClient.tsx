@@ -906,6 +906,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
+    const [openQualityKey, setOpenQualityKey] = useState<string | null>(null)
     const [demoCostingDeleted, setDemoCostingDeleted] = useState(false)
     const [showCostingDeleteNudge, setShowCostingDeleteNudge] = useState(false)
     const tourSurface = costingTourSurface(tourStep)
@@ -937,13 +938,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const handleDeleteDemoCosting = useCallback(() => {
         setDemoCostingDeleted(true)
         setShowCostingDeleteNudge(false)
-        if (openQualityKey === 'tour-preview') {
-            setOpenQualityKey(null)
-        }
+        setOpenQualityKey(current => current === 'tour-preview' ? null : current)
         try {
             localStorage.setItem(DEMO_COSTING_STORAGE_KEY, 'true')
         } catch {}
-    }, [openQualityKey])
+    }, [])
 
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
@@ -974,7 +973,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [archiveAction, setArchiveAction] = useState<'archive' | 'restore'>('archive')
     const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
     const [showArchived, setShowArchived] = useState(false)
-    const [openQualityKey, setOpenQualityKey] = useState<string | null>(null)
     const showQualityLibrary = !canUseQuotationWorkflow || filterStatus === 'costings'
 
     const filteredQuotes = useMemo(() => {
@@ -2116,8 +2114,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     })}
                 </div>
             )}
-
             </div>
+            )}
             </div>
 
             {/* Keep the archive policy in the unused right margin on wide screens. */}
