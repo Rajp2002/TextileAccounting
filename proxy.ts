@@ -82,6 +82,7 @@ function isPublicRoute(pathname: string): boolean {
         pathname.startsWith('/auth') ||
         pathname.startsWith('/verify') ||
         pathname.startsWith('/privacy') ||
+        pathname === '/security-incident' ||
         pathname.startsWith('/terms') ||
         pathname.startsWith('/refund-policy') ||
         pathname.startsWith('/offline') ||

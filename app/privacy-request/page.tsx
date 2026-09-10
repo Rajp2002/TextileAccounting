@@ -12,13 +12,13 @@ import {
 
 export const metadata: Metadata = {
     title: 'Privacy & Grievance Requests — Weavly',
-    description: 'How to submit and follow up on a privacy request or grievance for a Weavly Lite or Base workspace.',
+    description: 'How to submit and follow up on a privacy request or grievance for a Weavly Free, Lite, or Base workspace.',
 }
 
 export default function PrivacyRequestPage() {
     return (
-        <main className="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white">
-            <header className="border-b border-zinc-200 bg-white/95 dark:border-white/10 dark:bg-zinc-950/95">
+        <main className="min-h-screen bg-white text-zinc-950 dark:bg-[#09090b] dark:text-white">
+            <header className="border-b border-zinc-200 bg-white/95 dark:border-white/10 dark:bg-[#09090b]/95">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                     <Link href="/" aria-label="Weavly home" className="relative block h-11 w-32">
                         <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="8rem" className="object-contain object-left" priority />
@@ -35,7 +35,7 @@ export default function PrivacyRequestPage() {
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300">Weavly privacy channel</p>
                     <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl">Privacy and grievance requests</h1>
                     <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">
-                        Use the monitored channel below to ask about your personal information, request a correction or deletion, report a concern, or challenge an earlier response.
+                        Owners on Free, Lite, and Base can use the monitored channel below to ask about your personal information, request a correction or deletion, report a concern, or challenge an earlier response.
                     </p>
                 </div>
             </section>

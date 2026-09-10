@@ -1,17 +1,17 @@
 export const LEGAL_DOCUMENTS = {
     terms: {
         type: 'terms',
-        version: '2026-08-30',
-        identifier: 'terms:2026-08-30',
+        version: '2026-09-11',
+        identifier: 'terms:2026-09-11',
         path: '/terms',
-        displayDate: 'August 30, 2026',
+        displayDate: 'September 11, 2026',
     },
     privacy: {
         type: 'privacy',
-        version: '2026-08-30',
-        identifier: 'privacy:2026-08-30',
+        version: '2026-09-11',
+        identifier: 'privacy:2026-09-11',
         path: '/privacy',
-        displayDate: 'August 30, 2026',
+        displayDate: 'September 11, 2026',
     },
 } as const
 

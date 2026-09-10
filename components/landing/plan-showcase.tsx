@@ -15,6 +15,14 @@ import { Button } from '@/components/ui/button'
 
 const planPaths = [
     {
+        name: 'Weavly Free',
+        eyebrow: 'Occasional costings',
+        summary: 'Calculate two costings each week, keep the completed records, and export Cost Sheets with no subscription fee.',
+        outcome: 'Start with the next fabric enquiry.',
+        href: '#pricing-free',
+        icon: FileDown,
+    },
+    {
         name: 'Weavly Lite',
         eyebrow: 'The costing desk',
         summary: 'For manufacturers who want every costing assumption, margin decision, and reusable quality in one dependable workspace.',
@@ -62,18 +70,18 @@ export default function LandingPlanShowcase() {
     return (
         <>
             <section className="landing-section relative isolate overflow-hidden py-20 sm:py-28 lg:py-12" id="plans">
-                <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:px-8">
+                <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-6 lg:px-8">
                     <div>
-                        <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700">Two ways to begin</p>
+                        <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700">Free, Lite, and Base</p>
                         <h2 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl">
                             Choose how far the costing should travel.
                         </h2>
                         <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-700">
-                            Both plans begin with the same complete costing foundation. The difference is what happens after the price is approved.
+                            Begin with occasional costings in Free, build a reusable costing desk in Lite, or connect the costing to daily production in Base.
                         </p>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 lg:grid-cols-3">
                         {planPaths.map((plan, index) => (
                             <Link
                                 key={plan.name}
@@ -89,7 +97,7 @@ export default function LandingPlanShowcase() {
                                 <p className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-orange-700">{plan.eyebrow}</p>
                                 <h3 className="mt-2 text-3xl font-black text-zinc-950">{plan.name}</h3>
                                 <p className="mt-4 text-sm leading-6 text-zinc-700">{plan.summary}</p>
-                                <div className="mt-auto flex items-end justify-between gap-5 border-t border-zinc-950/10 pt-6">
+                                <div className="mt-6 flex items-end justify-between gap-5 border-t border-zinc-950/10 pt-6">
                                     <p className="max-w-[15rem] text-sm font-black leading-6 text-zinc-950">{plan.outcome}</p>
                                     <ArrowRight className="h-5 w-5 flex-none text-orange-600 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                                 </div>
@@ -113,10 +121,10 @@ export default function LandingPlanShowcase() {
                         </div>
                         <div className="lg:pb-1">
                             <p className="text-lg leading-8 text-zinc-700">
-                                Lite is not a trial version of Base. It is the complete costing-management product for a factory that wants stronger price decisions without adding production administration.
+                                Lite removes the weekly costing limit and adds reusable qualities, Rate Book, and costing defaults. Keep original costing records and reuse their inputs for the next enquiry.
                             </p>
                             <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold text-zinc-950">
-                                {['Best for costing teams', 'No production setup needed', 'Upgrade path stays open'].map((item) => (
+                                {['Unlimited costings', 'Reusable qualities + Rate Book', 'Upgrade to Base when ready'].map((item) => (
                                     <span key={item} className="inline-flex items-center gap-2 border border-orange-200 bg-orange-50 px-3 py-2">
                                         <Check className="h-4 w-4 text-orange-600" aria-hidden="true" /> {item}
                                     </span>
@@ -158,7 +166,7 @@ export default function LandingPlanShowcase() {
                         </div>
                         <div className="lg:pb-1">
                             <p className="text-lg leading-8 text-zinc-700">
-                                Base adds a deliberately focused operating loop around the Lite costing foundation—enough to follow a job, record output, and understand piece-rate settlement without adopting a full ERP.
+                                Base includes everything in Lite and adds owner-led production: create jobs from saved costings, allocate machines, record daily metres, and calculate piece-rate earnings with advances and settlements.
                             </p>
                             <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold text-zinc-950">
                                 {['Everything in Lite', 'Best for owner-led production', 'One connected job record'].map((item) => (

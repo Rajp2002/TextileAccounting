@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import LandingPricing from '../components/landing/pricing'
 import { BILLING_MODEL, BILLING_PLANS, getBillingPrice, RENEWAL_ELIGIBILITY_DAYS } from '../lib/billing-constants'
 import { readBillingOrderContext, resolveBillingPurchase, type BillingSubscriptionRow } from '../lib/billing-lifecycle'
 import { UPGRADE_PLAN_FEATURES, UPGRADE_FEATURE_IMAGES, upgradeFeatureBullets, upgradeText } from '../lib/upgrade-wall'
@@ -84,8 +87,11 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
     })
 
     it('keeps public landing pricing aligned with the annual billing catalog', () => {
-        const content = readProjectFile('components/landing/pricing.tsx')
-        expect(content).toContain('BILLING_PLANS')
+        const content = renderToStaticMarkup(createElement(LandingPricing))
+        expect(content).toContain('Weavly Free')
+        expect(content).toContain('/signup?plan=free')
+        expect(content).toContain('/signup?plan=lite')
+        expect(content).toContain('/signup?plan=base')
         expect(content).toContain('First year')
         expect(content).toContain('Renewal from year 2')
         expect(content).toContain('Weavly Lite')

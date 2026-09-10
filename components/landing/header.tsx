@@ -102,9 +102,9 @@ export default function LandingHeader() {
                                     Log in
                                 </Button>
                             </Link>
-                            <Link href="/signup?plan=lite">
+                            <Link href="/signup?plan=free">
                                 <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-orange-500/20 rounded-md px-6 font-semibold transition-all">
-                                    Choose a plan
+                                    Start with Free
                                 </Button>
                             </Link>
                         </div>
@@ -149,8 +149,8 @@ export default function LandingHeader() {
                                     <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                                         <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-gray-600 hover:bg-white/10 text-gray-200">Log in</Button>
                                     </Link>
-                                    <Link href="/signup?plan=lite" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-md py-6 font-semibold shadow-md">Choose a plan</Button>
+                                    <Link href="/signup?plan=free" onClick={() => setMobileMenuOpen(false)}>
+                                        <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-md py-6 font-semibold shadow-md">Start with Free</Button>
                                     </Link>
                                 </div>
                             </div>

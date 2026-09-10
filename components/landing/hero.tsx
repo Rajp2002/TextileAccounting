@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
-const proofItems = ['Lite + Base plans available', 'GST-inclusive pricing', 'Works as an installable PWA']
+const proofItems = ['Free · Lite · Base', 'No card needed for Free', 'GST included on paid plans']
 
 const estimatorSignals = [
     'Production cost per metre',
@@ -27,28 +27,28 @@ export default function LandingHero() {
                         </h1>
 
                         <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-700 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
-                            Weavly gives factory owners a focused costing desk for fabric qualities, yarn assumptions, landed cost, margin, saved costings, and cost-sheet exports.
+                            Start with two free costings per week. Choose Lite for unlimited costings, saved qualities, and yarn rates, or Base to connect costing with production and worker pay.
                         </p>
 
                         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                            <Link href="/signup?plan=lite" className="w-full sm:w-auto">
+                            <Link href="/signup?plan=free" className="w-full sm:w-auto">
                                 <Button
                                     id="hero-owner-signup-btn"
                                     size="lg"
                                     className="w-full rounded-md bg-zinc-950 px-8 py-6 text-base font-bold text-white shadow-xl shadow-zinc-950/10 transition-all hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 sm:w-auto"
                                 >
-                                    Start with Weavly Lite
+                                    Start with Free
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
-                            <Link href="#product" className="w-full sm:w-auto">
+                            <Link href="#pricing" className="w-full sm:w-auto">
                                 <Button
                                     id="hero-product-btn"
                                     size="lg"
                                     variant="outline"
                                     className="w-full rounded-md border border-zinc-300 bg-white/80 px-8 py-6 text-base font-bold transition-all hover:border-orange-500 hover:text-orange-700 dark:border-zinc-600 dark:bg-zinc-950/50 dark:text-white dark:hover:border-orange-500 sm:w-auto"
                                 >
-                                    See the estimator
+                                    Compare all plans
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
@@ -81,7 +81,7 @@ export default function LandingHero() {
                             Open the app. See the numbers before you quote.
                         </h2>
                         <p className="mt-5 text-lg leading-8 text-zinc-700 dark:text-zinc-300">
-                            Lite gives you the complete costing desk: build a reliable estimate, save the quality and rates, and return to the decision whenever you need it. When the decision becomes a production job, Base carries that costing into the production workflow.
+                            Free lets you calculate, save, and export occasional costings. Lite gives you the complete costing desk: build a reliable estimate, save the quality and rates, and return to the decision whenever you need it. When the decision becomes a production job, Base carries that costing into the production workflow.
                         </p>
                         <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                             {estimatorSignals.map((signal) => (
@@ -92,7 +92,7 @@ export default function LandingHero() {
                             ))}
                         </ul>
                         <p className="mt-7 border-l-2 border-orange-500 pl-4 text-xs leading-5 text-zinc-700 dark:text-zinc-400">
-                            Authentic Weavly owner-screen capture from the current QA build. Demo costing data shown.
+                            Weavly Lite costing workspace. Example costing data shown.
                         </p>
                     </div>
 

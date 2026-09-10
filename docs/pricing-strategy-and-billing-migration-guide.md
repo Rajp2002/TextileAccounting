@@ -1,5 +1,8 @@
 # Weavly Pricing Strategy and Billing Migration Guide
 
+> Historical proposal — superseded by the Free, Lite, and Base catalog. Do not use the setup-fee or annual amounts below for current customer copy or billing. See [Current public plans and policies](public-plans-and-policies.md) and `lib/billing-constants.ts` for the implemented offer.
+
+
 Last updated: 2026-06-11
 
 This guide is for moving Weavly from the current monthly Base/Premium subscription model to a market-friendlier Indian textile SaaS model: a larger one-time implementation fee plus a smaller annual recurring subscription.

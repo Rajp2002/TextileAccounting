@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   applicationName: "Weavly",
   title: "Weavly — Textile Costing & Production Management",
-  description: "Weavly helps weaving factories calculate, save, and manage textile costings, yarn rates, qualities, and connected production workflows.",
+  description: "Textile costing for weaving factories. Start with Free, choose Lite for unlimited costings and yarn rates, or Base for production and worker settlement.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

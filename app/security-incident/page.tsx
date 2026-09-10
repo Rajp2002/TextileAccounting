@@ -13,13 +13,13 @@ import {
 
 export const metadata: Metadata = {
     title: 'Report a Security Incident — Weavly',
-    description: 'How to report a suspected account or data-security incident affecting a Weavly Lite or Base workspace.',
+    description: 'How to report a suspected account or data-security incident affecting a Weavly Free, Lite, or Base workspace.',
 }
 
 export default function SecurityIncidentPage() {
     return (
-        <main className="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white">
-            <header className="border-b border-zinc-200 bg-white/95 dark:border-white/10 dark:bg-zinc-950/95">
+        <main className="min-h-screen bg-white text-zinc-950 dark:bg-[#09090b] dark:text-white">
+            <header className="border-b border-zinc-200 bg-white/95 dark:border-white/10 dark:bg-[#09090b]/95">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                     <Link href="/" aria-label="Weavly home" className="relative block h-11 w-32">
                         <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="8rem" className="object-contain object-left" priority />
@@ -34,7 +34,7 @@ export default function SecurityIncidentPage() {
             <section className="border-b border-red-400/20 bg-zinc-950 text-white">
                 <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-300">Weavly security channel</p>
-                    <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">Report a suspected security incident</h1>
+                    <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl">Report a suspected security incident</h1>
                     <p className="mt-5 max-w-3xl text-lg leading-8 text-zinc-300">
                         Use this monitored channel for suspicious account activity, possible unauthorized access, billing-reference concerns, impersonation, or a potential vulnerability affecting Weavly.
                     </p>
@@ -68,14 +68,14 @@ export default function SecurityIncidentPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold">What this channel covers at launch</h2>
+                        <h2 className="text-2xl font-bold">What this channel covers</h2>
                         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                             {BASE_SECURITY_INCIDENT_DATA_CATEGORIES.map((category) => (
                                 <li key={category} className="rounded-lg border border-zinc-200 px-4 py-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:text-zinc-300">{category}</li>
                             ))}
                         </ul>
                         <p className="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                            Weavly Lite stores costing records, qualities, rates, and account data. Weavly Base additionally stores owner-run production records, piece-rate workers, advances, and basic settlement data. Report incidents affecting either workspace through this channel.
+                            Weavly Free stores account details, completed costings, and weekly-allowance records. Weavly Lite stores costing records, qualities, rates, and account data. Weavly Base additionally stores owner-run production records, piece-rate workers, advances, and basic settlement data. Report incidents affecting any of these workspaces through this channel.
                         </p>
                     </section>
 
