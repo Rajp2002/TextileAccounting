@@ -10,6 +10,7 @@ import { Compass, Sparkles } from 'lucide-react'
 import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
+import { TourInvitation } from '@/components/tours/TourInvitation'
 
 type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean }
 
@@ -53,13 +54,14 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     return { target, card }
 }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false }: {
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false, requestTrigger }: {
     accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => void
     onOpenLiveCostModal?: (open: boolean) => void
     onOpenMonthlyExpensesModal?: (open: boolean) => void
     onOpenQualityLibraryModal?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
     freePlan?: boolean
+    requestTrigger?: number
 }) {
     const { language, languageStatus } = useTranslation()
     const copy = costEstimateTutorialCopy[language]
@@ -74,12 +76,17 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const visibleSections = [...new Set(steps.map(step => step.section))]
     const dismissed = useRef(accountDismissed)
     const syncing = useRef(false)
-    const autoStarted = useRef(false)
     const [syncFailed, setSyncFailed] = useState(false)
     const prevSectionRef = useRef<number | null>(null)
     const [isSectionTransition, setIsSectionTransition] = useState(false)
     const isScrollingRef = useRef(false)
     const [panelPlacement, setPanelPlacement] = useState<'top-right' | 'bottom-right'>('top-right')
+
+    useEffect(() => {
+        if (requestTrigger && requestTrigger > 0) {
+            setRequested(true)
+        }
+    }, [requestTrigger])
 
     const syncDismissal = useCallback(async () => {
         if (syncing.current) return
@@ -97,23 +104,16 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         }
     }, [key])
 
+    // Legacy migration only (NO automatic starts on page entry, timer, or reload)
     useEffect(() => {
-        if (!enabled || languageStatus === 'loading' || autoStarted.current) return
-        const timer = window.setTimeout(() => {
-            if (accountDismissed || dismissed.current) return
-            // Migrate old browser-only completions and retry unconfirmed account saves.
-            try {
-                if (localStorage.getItem(key) === 'done') {
-                    dismissed.current = true
-                    void syncDismissal()
-                    return
-                }
-            } catch { /* Account state still works without browser storage. */ }
-            autoStarted.current = true
-            setRequested(true)
-        }, 0)
-        return () => window.clearTimeout(timer)
-    }, [enabled, key, accountDismissed, syncDismissal, languageStatus])
+        if (!enabled || languageStatus === 'loading') return
+        try {
+            if (localStorage.getItem(key) === 'done') {
+                dismissed.current = true
+                void syncDismissal()
+            }
+        } catch { /* Account state still works without browser storage. */ }
+    }, [enabled, key, syncDismissal, languageStatus])
 
     useEffect(() => {
         const retry = () => { if (syncFailed) void syncDismissal() }
@@ -615,31 +615,14 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             <button type="button" className="font-semibold text-amber-800 underline hover:text-amber-900" onClick={() => void syncDismissal()}>{copy.retry}</button>
         </div>}
         {enabled && (
-            <button
-                data-i18n-skip="true"
-                lang={language}
-                type="button"
-                onClick={() => setRequested(true)}
-                disabled={languageStatus === 'loading'}
-                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/75 px-3.5 py-2.5 text-left text-sm font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-100/70 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
-                aria-label={copy.replay}
-                title={copy.replay}
-            >
-                <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 transition-colors group-hover:bg-amber-200">
-                        <Compass className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-slate-900">{replayTitle}</p>
-                        {replaySubtitle && (
-                            <p className="truncate text-[11px] font-medium text-amber-700">{replaySubtitle}</p>
-                        )}
-                    </div>
-                </div>
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100/90 text-amber-700 transition-colors group-hover:bg-amber-200">
-                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                </span>
-            </button>
+            <TourInvitation
+                tourId="cost-estimate"
+                userId={userId}
+                orgId={orgId}
+                align="full"
+                onLaunch={() => setRequested(true)}
+                className="estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+            />
         )}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
             <div

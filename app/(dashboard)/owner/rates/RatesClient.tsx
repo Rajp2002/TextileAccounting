@@ -1483,6 +1483,8 @@ export default function RatesClient({
                                 <RateBookTutorialLauncher
                                     onClick={handleLaunchTutorial}
                                     disabled={isPending}
+                                    userId={userId}
+                                    orgId={orgId}
                                 />
                             </div>
                             <Button

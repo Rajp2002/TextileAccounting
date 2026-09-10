@@ -1447,7 +1447,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} production={canUseProductionPipeline} quotations={canUseQuotationWorkflow} />
+            <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} production={canUseProductionPipeline} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
             <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <div className="min-[1540px]:hidden">

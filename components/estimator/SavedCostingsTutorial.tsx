@@ -11,6 +11,8 @@ import { savedCostingTourSteps, type SavedCostingStep } from '@/lib/saved-costin
 import { findTourTarget } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
+import { TourInvitation } from '@/components/tours/TourInvitation'
+import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
 const selectors: Partial<Record<SavedCostingStep, string>> = {
  find: '#saved-costings-search', filters: '[data-costing-tour="filters"]',
@@ -29,9 +31,10 @@ function resolveTarget(step: SavedCostingStep) {
 }
 
 /** Controlled navigation lets the page derive sample dialogs without async data writes. */
-export function SavedCostingsTutorial({step, onStepChange, free = false, production = false, quotations = false, inline = false}: {
+export function SavedCostingsTutorial({step, onStepChange, free = false, production = false, quotations = false, inline = false, userId, orgId, userMetadata}: {
  step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void
  free?: boolean; production?: boolean; quotations?: boolean; inline?: boolean
+ userId?: string; orgId?: string; userMetadata?: Record<string, any> | null
 }) {
  const {language, languageStatus} = useTranslation()
  const copy = savedCostingsTutorialCopy[language]
@@ -130,9 +133,15 @@ export function SavedCostingsTutorial({step, onStepChange, free = false, product
  const bottom = spotlight && spotlight.top < 380 && spotlight.right > window.innerWidth - 300
  return <>
   <div className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4'}>
-   <button ref={launcher} data-costing-tour="launcher" data-i18n-skip="true" lang={language} type="button" disabled={languageStatus === 'loading'} onClick={() => onStepChange(steps[0])} className="group flex w-full items-center justify-between gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/75 px-3.5 py-2.5 text-left text-sm font-semibold text-slate-800 shadow-xs hover:bg-amber-100/70 focus-visible:ring-2 focus-visible:ring-saffron disabled:opacity-50">
-    <span className="flex items-center gap-2.5"><Compass className="h-7 w-7 rounded-lg bg-amber-100 p-1 text-amber-700"/><span><span className="block text-xs font-bold">{copy.replay.split(' · ')[0]}</span><span className="block text-[11px] text-amber-700">{copy.replay.split(' · ')[1]}</span></span></span><Sparkles className="h-4 w-4 shrink-0 text-amber-700"/>
-   </button>
+    <TourInvitation
+      tourId="saved-costings"
+      userId={userId}
+      orgId={orgId}
+      userMetadata={userMetadata}
+      onLaunch={() => onStepChange(steps[0])}
+      align="full"
+      className="border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+    />
   </div>
   {step && createPortal(<div ref={portal} data-testid="saved-costings-tutorial" data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" style={{pointerEvents: 'auto'}}>
    <div aria-hidden="true" className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs" style={spotlight ? {clipPath: `polygon(evenodd, 0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${spotlight.left}px ${spotlight.top}px,${spotlight.left}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.top}px,${spotlight.left}px ${spotlight.top}px)`} : undefined}/>
@@ -140,7 +149,19 @@ export function SavedCostingsTutorial({step, onStepChange, free = false, product
    <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="saved-costings-tour-title" aria-describedby="saved-costings-tour-description" tabIndex={-1} className={`guided-tour-panel fixed right-4 z-[101] flex w-[260px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${bottom ? 'bottom-4' : 'top-4'}`}>
     <div data-tour-description-scroll><div aria-live="polite"><span className="text-[11px] font-bold text-saffron-deep">{copy.sample}</span><h2 id="saved-costings-tour-title" className="mt-3 text-[17px] font-bold">{copy.fields[step][0]}</h2><p id="saved-costings-tour-description" className="mt-3 text-[13.5px] leading-relaxed">{copy.fields[step][1]}</p></div></div>
     <div role="progressbar" aria-label={controls.progress} aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} className="mt-4 h-1.5 rounded-full bg-amber-100"><div className="h-full rounded-full bg-saffron" style={{width: `${(index + 1) / steps.length * 100}%`}}/></div>
-    <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1"><Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>{controls.skip}</Button><span className="text-xs">{index + 1}/{steps.length}</span><Button variant="outline" size="sm" data-tour-control="back" disabled={index === 0} onClick={() => onStepChange(steps[index - 1])}>{controls.back}</Button><Button size="sm" data-tour-control="next" className="bg-saffron text-white" onClick={() => onStepChange(steps[index + 1] ?? null)}>{index === steps.length - 1 ? controls.finish : controls.next}</Button></div>
+    <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1">
+      <Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>{controls.skip}</Button>
+      <span className="text-xs">{index + 1}/{steps.length}</span>
+      <Button variant="outline" size="sm" data-tour-control="back" disabled={index === 0} onClick={() => onStepChange(steps[index - 1])}>{controls.back}</Button>
+      <Button size="sm" data-tour-control="next" className="bg-saffron text-white" onClick={() => {
+        if (index === steps.length - 1) {
+          if (userId) void persistTourCompleted('saved-costings', userId)
+          onStepChange(null)
+        } else {
+          onStepChange(steps[index + 1] ?? null)
+        }
+      }}>{index === steps.length - 1 ? controls.finish : controls.next}</Button>
+    </div>
    </div>
   </div>, document.body)}
  </>
