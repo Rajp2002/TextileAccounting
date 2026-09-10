@@ -107,12 +107,6 @@ const freeNavGroups = [
         ]
     },
     {
-        label: "Money",
-        items: [
-            { name: "Billing", href: "/free/billing", icon: CreditCard, translationKey: "billing", workflow: "billing" },
-        ]
-    },
-    {
         label: "System",
         items: [
             { name: "Settings", href: "/free/account", icon: Settings, translationKey: "settings", workflow: "settings" },
@@ -162,7 +156,6 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
         '/owner/estimator',
         '/owner/quotes',
         '/owner/rates',
-        '/owner/billing',
         '/owner/settings',
     ])
     if (hasProduction) {

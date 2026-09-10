@@ -9,18 +9,17 @@ describe('Free plan Setting and Billing sections', () => {
     const sidebar = read('components/navigation/owner-sidebar.tsx')
     const ownerLayout = read('app/(dashboard)/owner/layout.tsx')
 
-    it('includes Setting and Billing sections in the Free plan navigation', () => {
+    it('includes Setting and links Billing in the footer for Free plan navigation', () => {
         expect(sidebar).toContain('const freeNavGroups = [')
         expect(sidebar).toContain('subscriptionTier === \'free\' ? freeNavGroups : navGroups')
         
-        // Check all three navigation groups for Free plan
+        // Check navigation items for Free plan
         expect(sidebar).toContain("href: \"/free\"")
         expect(sidebar).toContain("href: \"/free/costings\"")
-        expect(sidebar).toContain("href: \"/free/billing\"")
         expect(sidebar).toContain("href: \"/free/account\"")
 
-        // Items and icons
-        expect(sidebar).toContain("{ name: \"Billing\", href: \"/free/billing\"")
+        // Billing is accessed via footer, not duplicated in nav groups
+        expect(sidebar).not.toContain("{ name: \"Billing\", href: \"/free/billing\"")
         expect(sidebar).toContain("{ name: \"Settings\", href: \"/free/account\"")
     })
 
