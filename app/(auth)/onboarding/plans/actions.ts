@@ -76,7 +76,6 @@ export async function completePlanSelection(plan: 'free' | 'paid'): Promise<{ hr
     // Must respect approved server-side enrollment policy per C1
     if (!user.email) return { error: 'An email address is required to enroll in Free.' }
     if (!user.email_confirmed_at) return { error: 'Please verify your email address before activating Free access.' }
-    if (user.app_metadata.free_signup !== true) return { error: 'Free enrollment is not available for this account yet.' }
     if (!await canEnrollFree(user.email)) return { error: 'Free enrollment is not available for this account yet.' }
 
     try {

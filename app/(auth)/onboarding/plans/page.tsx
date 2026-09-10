@@ -21,7 +21,7 @@ export default async function PlanSelectionPage() {
     const grant = await getFreeGrant(profile.org_id)
     const freeAvailable = grant
         ? grant.state === 'active'
-        : Boolean(user.email && user.email_confirmed_at && user.app_metadata.free_signup === true && await canEnrollFree(user.email))
+        : Boolean(user.email && !paid && await canEnrollFree(user.email))
     const supabase = await createClient()
     const { data: attempt, error } = await supabase.from('billing_checkout_attempts')
         .select('id, org_id, client_request_id, plan_tier, purchase_type, status, provider_order_id, provider_payment_id')

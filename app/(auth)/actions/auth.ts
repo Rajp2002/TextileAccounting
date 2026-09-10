@@ -166,7 +166,7 @@ export async function createOrganization(input: CreateOrganizationInput) {
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email: parsed.data.email,
         password: parsed.data.password,
-        app_metadata: freeSignup ? { free_signup: true } : {},
+        app_metadata: { plan_selection_pending: true, free_signup: true },
         email_confirm: true, // Skip email verification — owner is ready to use immediately
     })
 
@@ -322,11 +322,8 @@ async function _createOwnerProfile(
 export async function createOrganizationAndRedirect(input: CreateOrganizationInput) {
     const result = await createOrganization(input)
     if (result && 'error' in result) return result
-    // Plan selection comes before factory onboarding. Estimator-only owners do
-    // not need machines, workers, payroll, or production-mode setup.
-    if (input.selectedPlan === 'free') redirect('/free')
-    const selectedPlan = input.selectedPlan === 'base' ? 'base' : 'lite'
-    redirect(`/owner/billing?plan=${selectedPlan}`)
+    // All new owner registrations go to initial plan selection
+    redirect('/onboarding/plans')
 }
 
 // ─── validateJoinCode ──────────────────────────────────────────────────────────
@@ -587,6 +584,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
         // route. A Premium organization using the Base Plan experience has an
         // effective tier of `base`, so sending it to Factory Today would land
         // behind the Full Suite access wall.
+        if (data.session.user.app_metadata?.plan_selection_pending === true) return succeed('/onboarding/plans')
         const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
         if (tier === 'free' || data.session.user.app_metadata.free_signup === true && tier === 'none') return succeed('/free')
 
