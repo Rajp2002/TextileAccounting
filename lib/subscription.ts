@@ -14,6 +14,7 @@ import {
 } from './subscription-access'
 
 export {
+    hasEstablishedPaidHistory,
     hasPaidBaseHistory,
     resolveEffectiveSubscription,
     resolveOrgPlanAccess,
