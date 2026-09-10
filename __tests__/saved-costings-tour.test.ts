@@ -5,7 +5,7 @@ import { compareSavedCostingSnapshots, orderSavedCostingsForComparison } from '.
 
 describe('Saved Costings guided tour', () => {
  it('restricts Free and retained Free snapshots to snapshot/export functions', () => {
-  expect(savedCostingTourSteps(true, true, true)).toEqual(['snapshots', 'freeSelect', 'internal', 'customer', 'share', 'finish'])
+  expect(savedCostingTourSteps(true, true, true)).toEqual(['snapshots', 'searchAndFilters', 'search', 'freeFilters', 'freeSelect', 'internal', 'customer', 'share', 'finish'])
  })
  it('orders paid selection before breakdown and comparison selection before results', () => {
   const steps = savedCostingTourSteps(false)

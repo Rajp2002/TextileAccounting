@@ -2,7 +2,7 @@ import { makeDefaultEstimateState, calcFullTotals, buildCostingResult } from './
 import { createCostingExportModel } from './estimator-export'
 
 export const paidCostingSteps = ['find', 'filters', 'select', 'versions', 'breakdown', 'economics', 'reuse', 'organize', 'internal', 'customer', 'share', 'compareSelect', 'comparison', 'comparisonDetails', 'finish'] as const
-export const freeCostingSteps = ['snapshots', 'freeSelect', 'internal', 'customer', 'share', 'finish'] as const
+export const freeCostingSteps = ['snapshots', 'searchAndFilters', 'search', 'freeFilters', 'freeSelect', 'internal', 'customer', 'share', 'finish'] as const
 export type SavedCostingStep = typeof paidCostingSteps[number] | typeof freeCostingSteps[number] | 'production' | 'quotations'
 export function savedCostingTourSteps(free: boolean, production = false, quotations = false): SavedCostingStep[] {
     if (free) return [...freeCostingSteps]

@@ -22,6 +22,9 @@ const en: Copy = {
  production: ['Production from a saved costing', 'Where Start Production is available, it opens production with this costing selected. Archived snapshots cannot start production. Production usage, where shown, links saved costings to their runs and produced metres. The tour creates no production records.'],
  quotations: ['Costings and quotations', 'This workspace also has quotation status tabs. Open / Duplicate, Preview, status history and the allowed next status action appear on each quotation. Accepted quotations can link to an active order. These actions follow the quotation lifecycle and are separate from viewing saved costing snapshots.'],
  snapshots: ['Your Free snapshots', 'Completed Free calculations appear here as fixed snapshots. Viewing and exporting them does not use your weekly allowance. They are not reusable saved qualities and have no version history or comparison. These rules also apply to retained Free snapshots after upgrading.'],
+ searchAndFilters: ['Search and filters', 'Here you can search a specific costing or sort by filters.'],
+ search: ['Search', 'Here you can search a specific costing.'],
+ freeFilters: ['Filters', 'Here you can sort by specific filters.'],
  freeSelect: ['Open a Free snapshot', 'Choose View breakdown / Export beside a saved label, date and cost per metre to open its preview. Load more fetches the next page when available. If the list is empty, complete a calculation first; on a loading error, refresh. The tour uses a sample.'],
  finish: ['Ready to explore', 'Finish closes the sample views and restores your page. A sample demo costing is available on your page so you can test viewing and exporting. When you are ready to create your own costings, you can delete it anytime.'],
  }
@@ -44,6 +47,9 @@ const hi: Copy = { replay: 'सेव की गई लागतें कैस
  production: ['सेव लागत से उत्पादन', 'जहाँ Start Production उपलब्ध है, वहाँ यह चुनी लागत के साथ उत्पादन खोलता है। आर्काइव स्नैपशॉट से उत्पादन शुरू नहीं होता। उपलब्ध उपयोग विवरण रन और बने मीटर दिखाता है। टूर उत्पादन रिकॉर्ड नहीं बनाता।'],
  quotations: ['लागतें और कोटेशन', 'यहाँ कोटेशन स्थिति टैब भी हैं। प्रत्येक कोटेशन पर Open / Duplicate, Preview, स्थिति इतिहास और अगली अनुमत कार्रवाई मिलती है। स्वीकृत कोटेशन सक्रिय ऑर्डर से जुड़ सकते हैं। यह कोटेशन कार्यप्रवाह स्नैपशॉट देखने से अलग है।'],
  snapshots: ['आपके Free स्नैपशॉट', 'पूरी Free गणनाएँ यहाँ स्थिर स्नैपशॉट हैं। देखने और एक्सपोर्ट करने से साप्ताहिक सीमा नहीं घटती। ये दोबारा उपयोग योग्य क्वालिटी नहीं हैं और इनमें संस्करण इतिहास या तुलना नहीं है। अपग्रेड के बाद पुराने Free स्नैपशॉट पर भी यही नियम हैं।'],
+ searchAndFilters: ['खोज और फ़िल्टर', 'यहाँ आप कोई विशिष्ट लागत खोज सकते हैं या फ़िल्टर के अनुसार क्रमबद्ध कर सकते हैं।'],
+ search: ['खोजें', 'यहाँ आप कोई विशिष्ट लागत खोज सकते हैं।'],
+ freeFilters: ['फ़िल्टर', 'यहाँ आप विशिष्ट फ़िल्टर के अनुसार क्रमबद्ध कर सकते हैं।'],
  freeSelect: ['Free स्नैपशॉट खोलें', 'लेबल, तारीख और प्रति मीटर लागत के पास View breakdown / Export चुनें। उपलब्ध होने पर Load more अगला पेज लाता है। खाली सूची हो तो पहले गणना पूरी करें; लोड त्रुटि पर रीफ़्रेश करें। टूर नमूना दिखाता है।'],
  finish: ['अब खुद देखें', 'Finish नमूने बंद करके आपका पेज बहाल करता है। आपके पेज पर एक डेमो नमूना उपलब्ध है ताकि आप देखना और एक्सपोर्ट करना जाँच सकें। अपनी खुद की गणना शुरू करने के लिए आप इसे कभी भी डिलीट कर सकते हैं।'],
 }}
@@ -65,6 +71,9 @@ const gu: Copy = { replay: 'સાચવેલી ખર્ચ ગણતરી�
  production: ['સાચવેલી ગણતરીથી ઉત્પાદન', 'જ્યાં Start Production ઉપલબ્ધ છે, તે પસંદ કરેલી ગણતરી સાથે ઉત્પાદન ખોલે છે. આર્કાઇવ સ્નેપશોટથી ઉત્પાદન શરૂ થતું નથી. ઉપલબ્ધ ઉપયોગ વિગતો રન અને બનેલા મીટર બતાવે છે. ટૂર ઉત્પાદન રેકોર્ડ બનાવતો નથી.'],
  quotations: ['ગણતરીઓ અને ક્વોટેશન', 'અહીં ક્વોટેશન સ્થિતિ ટેબ પણ છે. દરેક ક્વોટેશન પર Open / Duplicate, Preview, સ્થિતિ ઇતિહાસ અને આગળની મંજૂર કાર્યવાહી મળે છે. સ્વીકૃત ક્વોટેશન સક્રિય ઓર્ડર સાથે જોડાઈ શકે છે. આ કાર્યપ્રવાહ સ્નેપશોટ જોવાથી અલગ છે.'],
  snapshots: ['તમારા Free સ્નેપશોટ', 'પૂર્ણ Free ગણતરી અહીં સ્થિર સ્નેપશોટ છે. જોવા અને એક્સપોર્ટથી સાપ્તાહિક મર્યાદા ઘટતી નથી. આ ફરી વાપરી શકાય તેવી ક્વોલિટી નથી અને તેમાં આવૃત્તિ ઇતિહાસ કે સરખામણી નથી. અપગ્રેડ પછી જૂના Free સ્નેપશોટ પર પણ આ જ નિયમ છે.'],
+ searchAndFilters: ['શોધો અને ફિલ્ટર', 'અહીં તમે ચોક્કસ ગણતરી શોધી શકો છો અથવા ફિલ્ટર મુજબ ક્રમબદ્ધ કરી શકો છો.'],
+ search: ['શોધો', 'અહીં તમે ચોક્કસ ગણતરી શોધી શકો છો.'],
+ freeFilters: ['ફિલ્ટર', 'અહીં તમે વિશિષ્ટ ફિલ્ટર મુજબ ક્રમબદ્ધ કરી શકો છો.'],
  freeSelect: ['Free સ્નેપશોટ ખોલો', 'લેબલ, તારીખ અને પ્રતિ મીટર ખર્ચ પાસે View breakdown / Export પસંદ કરો. ઉપલબ્ધ હોય ત્યારે Load more આગળનું પેજ લાવે છે. ખાલી યાદી હોય તો પહેલાં ગણતરી પૂર્ણ કરો; લોડ ભૂલ હોય તો રિફ્રેશ કરો. ટૂર નમૂનો બતાવે છે.'],
  finish: ['હવે જાતે જુઓ', 'Finish નમૂના બંધ કરીને તમારું પેજ પાછું લાવે છે. તમારા પેજ પર એક ડેમો નમૂનો ઉપલબ્ધ છે જેથી તમે જોવાનું અને એક્સપોર્ટ કરવાનું ચકાસી શકો. તમારી પોતાની ગણતરી શરૂ કરવા માટે તમે તેને ગમે ત્યારે ડિલીટ કરી શકો છો.'],
 }}

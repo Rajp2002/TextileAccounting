@@ -216,9 +216,9 @@ export default function SavedFreeCostings() {
 
   return (
     <>
-      <div className="saved-costings-top-tour mb-4">
-        <SavedCostingsTutorial free step={tourStep} onStepChange={handleStepChange} inline={true} />
-      </div>
+      <aside className="saved-costings-left-rail" aria-label={tx('Saved Costings guides and tools')}>
+        <SavedCostingsTutorial free step={tourStep} onStepChange={handleStepChange} />
+      </aside>
 
       <div className="premium-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
         <PageHeader
@@ -266,7 +266,7 @@ export default function SavedFreeCostings() {
           </div>
         )}
 
-        <Toolbar data-costing-tour="filters" className="overflow-visible">
+        <Toolbar data-costing-tour="search-and-filters" className="overflow-visible">
           <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto]">
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
@@ -282,38 +282,40 @@ export default function SavedFreeCostings() {
                 className="h-10 w-full min-w-0 pl-9"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="saved-costings-sort" className="sr-only">
-                {tx('Sort by')}
-              </Label>
-              <select
-                id="saved-costings-sort"
-                value={costingSort}
-                onChange={event => setCostingSort(event.target.value as CostingSort)}
-                className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
-              >
-                <option value="recent">{tx('Recently saved')}</option>
-                <option value="oldest">{tx('Oldest saved')}</option>
-                <option value="cost_asc">{tx('Lowest production cost')}</option>
-                <option value="margin_desc">{tx('Highest margin')}</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="saved-costings-margin" className="sr-only">
-                {tx('Margin')}
-              </Label>
-              <select
-                id="saved-costings-margin"
-                value={marginFilter}
-                onChange={event => setMarginFilter(event.target.value as MarginFilter)}
-                className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
-              >
-                <option value="all">{tx('All margins')}</option>
-                <option value="negative">{tx('Negative margin')}</option>
-                <option value="under_10">{tx('Under 10%')}</option>
-                <option value="10_to_20">{tx('10–20%')}</option>
-                <option value="over_20">{tx('Over 20%')}</option>
-              </select>
+            <div data-costing-tour="free-filters" className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="saved-costings-sort" className="sr-only">
+                  {tx('Sort by')}
+                </Label>
+                <select
+                  id="saved-costings-sort"
+                  value={costingSort}
+                  onChange={event => setCostingSort(event.target.value as CostingSort)}
+                  className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
+                >
+                  <option value="recent">{tx('Recently saved')}</option>
+                  <option value="oldest">{tx('Oldest saved')}</option>
+                  <option value="cost_asc">{tx('Lowest production cost')}</option>
+                  <option value="margin_desc">{tx('Highest margin')}</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="saved-costings-margin" className="sr-only">
+                  {tx('Margin')}
+                </Label>
+                <select
+                  id="saved-costings-margin"
+                  value={marginFilter}
+                  onChange={event => setMarginFilter(event.target.value as MarginFilter)}
+                  className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
+                >
+                  <option value="all">{tx('All margins')}</option>
+                  <option value="negative">{tx('Negative margin')}</option>
+                  <option value="under_10">{tx('Under 10%')}</option>
+                  <option value="10_to_20">{tx('10–20%')}</option>
+                  <option value="over_20">{tx('Over 20%')}</option>
+                </select>
+              </div>
             </div>
           </div>
           <p className="mt-3 text-xs font-medium text-body">
@@ -559,17 +561,19 @@ export default function SavedFreeCostings() {
         >
           {inspectingCosting && (
             <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto">
-              <DialogHeader className="sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6">
-                <div className="flex min-w-0 items-center gap-2">
+              <DialogHeader className="sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:pl-6 sm:pr-16">
+                <div className="flex min-w-0 items-center gap-2 pr-2">
                   <DialogTitle className="min-w-0 flex-1 truncate text-xl font-black" title={inspectingCosting.label}>
                     {inspectingCosting.label}
                   </DialogTitle>
-                  <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">
-                    {tx('Fixed snapshot')}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px] font-bold">
-                    v1
-                  </Badge>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">
+                      {tx('Fixed snapshot')}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] font-bold">
+                      v1
+                    </Badge>
+                  </div>
                 </div>
                 <DialogDescription>
                   {tx('Saved costing snapshot')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -578,7 +582,7 @@ export default function SavedFreeCostings() {
                   <button
                     type="button"
                     aria-label={tx('Close details')}
-                    className="absolute right-3 top-3 z-30 inline-flex h-10 w-10 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
+                    className="absolute right-4 top-4 z-30 inline-flex h-9 w-9 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
                   >
                     <X className="h-5 w-5" aria-hidden="true" />
                   </button>

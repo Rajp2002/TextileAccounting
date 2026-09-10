@@ -19,7 +19,9 @@ const selectors: Partial<Record<SavedCostingStep, string>> = {
  organize: '[data-costing-tour="versions"]', production: '[data-costing-tour="production"]',
  internal: '[data-costing-tour="export-modes"]', customer: '[data-costing-tour="export-modes"]',
  share: '[data-costing-tour="export-actions"]', compareSelect: '[data-costing-tour="versions"]',
- comparisonDetails: '[data-costing-tour="comparison-details"]', comparison: '[data-costing-tour="comparison"]', snapshots: '[data-free-costing]', freeSelect: '[data-costing-tour="free-sample"]',
+ comparisonDetails: '[data-costing-tour="comparison-details"]', comparison: '[data-costing-tour="comparison"]', snapshots: '[data-free-costing]',
+ searchAndFilters: '[data-costing-tour="search-and-filters"]', search: '#saved-costings-search', freeFilters: '[data-costing-tour="free-filters"]',
+ freeSelect: '[data-costing-tour="free-sample"]',
 }
 function resolveTarget(step: SavedCostingStep) {
  const target = findTourTarget(selectors[step] ?? '[data-costing-tour="launcher"]')
