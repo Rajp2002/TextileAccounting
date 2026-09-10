@@ -403,11 +403,12 @@ describe('A01–A06: Canonical Authorization Boundary Scenarios', () => {
         expect(result).toEqual({ href: '/free' })
 
         // Unsupported states: grantless free access does not exist in Weavly policy;
-        // missing grant resolves to tier 'none'
+        // missing grant resolves to tier 'none' and enrollment paused returns 'not available'
         mocks.getOrgPlanAccess.mockResolvedValueOnce({ effectiveTier: 'none', subscriptionTier: 'none' })
         mocks.getFreeGrant.mockResolvedValueOnce(null)
+        mocks.canEnrollFree.mockResolvedValueOnce(false)
         mocks.requireRole.mockResolvedValueOnce({
-            user: { ...eligibleUser, app_metadata: { plan_selection_pending: true, free_signup: false } },
+            user: { ...eligibleUser, app_metadata: { plan_selection_pending: true } },
             profile: eligibleProfile,
         })
         const unsupportedResult = await completePlanSelection('free')
@@ -592,15 +593,22 @@ describe('Supplemental Coverage: Recovery, Error Handling & Non-standard States'
         expect(result).toEqual({ error: 'Your plan is saved. Please sign in again to continue.' })
     })
 
-    it('Supplemental-04: unassigned owner without free_signup claim cannot enroll Free', async () => {
+    it('Supplemental-04: unassigned owner without prior free_signup claim can enroll in Free under open enrollment', async () => {
+        mocks.finishFreeProvisioning.mockImplementation(async () => {
+            mocks.getOrgPlanAccess.mockResolvedValue({ effectiveTier: 'free', freeAccount: true })
+            mocks.getFreeGrant.mockResolvedValue({ subjectId: eligibleUser.id, state: 'active' })
+            return true
+        })
         mocks.requireRole.mockResolvedValue({
             user: { ...eligibleUser, app_metadata: { plan_selection_pending: true } }, // free_signup missing
             profile: eligibleProfile,
         })
         const result = await completePlanSelection('free')
-        expect(result.error).toContain('not available')
-        expect(mocks.finishFreeProvisioning).not.toHaveBeenCalled()
-        expect(mocks.updateUserById).not.toHaveBeenCalled()
+        expect(result).toEqual({ href: '/free' })
+        expect(mocks.finishFreeProvisioning).toHaveBeenCalled()
+        expect(mocks.updateUserById).toHaveBeenCalledWith(eligibleUser.id, {
+            app_metadata: { plan_selection_pending: false },
+        })
     })
 
     it('Supplemental-05: unassigned owner with unconfirmed email cannot activate Free', async () => {

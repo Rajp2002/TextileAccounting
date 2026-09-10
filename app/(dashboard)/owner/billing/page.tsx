@@ -509,9 +509,6 @@ export default async function BillingPage({
         getCachedOrgPlanAccess(profile.org_id),
         getFreeGrant(profile.org_id),
     ])
-    const isFreeEligible = grant
-        ? grant.state === 'active'
-        : Boolean(user.email && user.email_confirmed_at && user.app_metadata?.free_signup === true && await canEnrollFree(user.email))
     const [paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         supabase
             .from('subscription_payments')
@@ -616,6 +613,9 @@ export default async function BillingPage({
             : 'Choose Weavly Lite or Base'
 
     const hadPaidAccess = hasEstablishedPaidHistory(billingSubscriptions)
+    const isFreeEligible = grant
+        ? grant.state === 'active'
+        : Boolean(user.email && !hadPaidAccess && await canEnrollFree(user.email))
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
