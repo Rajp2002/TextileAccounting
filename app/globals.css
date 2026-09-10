@@ -1218,7 +1218,7 @@
 
 /* Reserve the desktop reading panel beside tour-controlled previews. */
 @media (min-width: 768px) {
-  [data-costing-tour-dialog="true"] { width: calc(100vw - 330px) !important; max-width: 1180px !important; left: calc((100vw - 300px) / 2) !important; }
+  [data-costing-tour-dialog="true"] { width: calc(100vw - 330px) !important; max-width: 1180px !important; }
 }
 [data-costing-tour-dialog="true"] [data-slot="dialog-header"] { position: static; }
 

@@ -106,6 +106,7 @@ export function RateBookTutorial({
     onOpenQuickEdit,
     onOpenRateDrawer,
     onActiveChange,
+    onTourFinish,
 }: {
     accountDismissed: boolean
     enabled: boolean
@@ -116,6 +117,7 @@ export function RateBookTutorial({
     onOpenQuickEdit?: (open: boolean) => void
     onOpenRateDrawer?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
+    onTourFinish?: () => void
 }) {
     const { language, languageStatus } = useTranslation()
     const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
@@ -124,6 +126,7 @@ export function RateBookTutorial({
     const [requested, setRequested] = useState(false)
     const [rects, setRects] = useState<{ field: DOMRect; card: DOMRect } | null>(null)
     const panel = useRef<HTMLDivElement>(null)
+    const isScrollingRef = useRef(false)
     const key = `weavly:ratebook-tutorial:v1:${orgId}:${userId}`
     const active = steps[index]
     const visibleSections = [...new Set(steps.map(step => step.section))]
@@ -240,6 +243,7 @@ export function RateBookTutorial({
         setRects(null)
         onOpenQuickEdit?.(false)
         onOpenRateDrawer?.(false)
+        onTourFinish?.()
         if (typeof document !== 'undefined') {
             Array.from(document.body.children).forEach(el => {
                 if (el instanceof HTMLElement && el.inert) {
@@ -247,7 +251,7 @@ export function RateBookTutorial({
                 }
             })
         }
-    }, [key, syncDismissal, onOpenQuickEdit, onOpenRateDrawer])
+    }, [key, syncDismissal, onOpenQuickEdit, onOpenRateDrawer, onTourFinish])
 
     const handleNext = useCallback(() => {
         if (!steps.length) return
@@ -420,7 +424,7 @@ export function RateBookTutorial({
             const targetIsTopRight = (!isSheetStep && targetRect.top < 380 && (targetOverlapsTopRight || targetRect.right > rightThreshold)) || (targetOverlapsTopRight && !targetOverlapsBottomRight)
             setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
 
-            const isNewSection = prevSectionRef.current !== null && prevSectionRef.current !== active.section
+            const isNewSection = prevSectionRef.current !== active.section
             prevSectionRef.current = active.section
 
             const isFixed = isModal ||
@@ -474,24 +478,81 @@ export function RateBookTutorial({
                 deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))
             }
 
-            if (Math.abs(deltaY) > 2) {
-                window.scrollBy({ top: deltaY, behavior: scrollBehavior })
+            const update = () => {
+                if (!isMounted) return
+                const { target: curTarget, card: curCard } = resolveStepElements(active)
+                if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
+                    setRects({
+                        field: curTarget.getBoundingClientRect(),
+                        card: curCard.getBoundingClientRect(),
+                    })
+                }
             }
 
-            const updatedCard = cardEl.getBoundingClientRect()
-            const updatedField = targetEl.getBoundingClientRect()
-            setRects({ card: updatedCard, field: updatedField })
+            if (Math.abs(deltaY) > 2 && scrollBehavior === 'smooth') {
+                isScrollingRef.current = true
+                window.scrollBy({ top: deltaY, behavior: 'smooth' })
 
-            if (isNewSection) {
-                window.setTimeout(() => {
-                    if (isMounted) setIsSectionTransition(false)
-                }, 500)
+                const targetCardRect = {
+                    left: cardRect.left,
+                    right: cardRect.right,
+                    width: cardRect.width,
+                    height: cardRect.height,
+                    top: cardRect.top - deltaY,
+                    bottom: cardRect.bottom - deltaY,
+                    x: cardRect.x,
+                    y: cardRect.y - deltaY,
+                    toJSON: () => ({}),
+                } as DOMRect
+
+                const targetFieldRect = {
+                    left: targetRect.left,
+                    right: targetRect.right,
+                    width: targetRect.width,
+                    height: targetRect.height,
+                    top: targetRect.top - deltaY,
+                    bottom: targetRect.bottom - deltaY,
+                    x: targetRect.x,
+                    y: targetRect.y - deltaY,
+                    toJSON: () => ({}),
+                } as DOMRect
+
+                setRects({ field: targetFieldRect, card: targetCardRect })
+
+                settleTimer = window.setTimeout(() => {
+                    isScrollingRef.current = false
+                    update()
+                    setIsSectionTransition(false)
+                }, isNewSection ? 550 : 350)
+            } else {
+                if (Math.abs(deltaY) > 2) {
+                    window.scrollBy({ top: deltaY, behavior: 'auto' })
+                }
+                update()
+                if (isNewSection) {
+                    settleTimer = window.setTimeout(() => {
+                        setIsSectionTransition(false)
+                    }, 500)
+                }
             }
         }
 
+        let settleTimer: number | undefined
         retryRaf = window.requestAnimationFrame(measureAndPosition)
 
+        const backupTimer = window.setTimeout(() => {
+            if (!isMounted || isScrollingRef.current) return
+            const { target: curTarget, card: curCard } = resolveStepElements(active)
+            if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
+                setRects({
+                    field: curTarget.getBoundingClientRect(),
+                    card: curCard.getBoundingClientRect(),
+                })
+            }
+        }, 350)
+
         const handleManualScrollOrResize = () => {
+            if (isScrollingRef.current) return
             const { target: curTarget, card: curCard } = resolveStepElements(active)
             if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
                 setRects({
@@ -507,6 +568,8 @@ export function RateBookTutorial({
         return () => {
             isMounted = false
             if (retryRaf) window.cancelAnimationFrame(retryRaf)
+            if (settleTimer) window.clearTimeout(settleTimer)
+            window.clearTimeout(backupTimer)
             window.removeEventListener('scroll', handleManualScrollOrResize, true)
             window.removeEventListener('resize', handleManualScrollOrResize)
         }

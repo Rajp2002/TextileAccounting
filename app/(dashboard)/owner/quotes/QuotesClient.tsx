@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { savedCostingsTutorialCopy } from '@/lib/i18n/saved-costings-tutorial'
@@ -58,6 +58,8 @@ import {
     Download,
     Factory,
     Layers3,
+    Sparkles,
+    Trash2,
     ExternalLink,
     X,
 } from 'lucide-react'
@@ -904,12 +906,48 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
+    const [demoCostingDeleted, setDemoCostingDeleted] = useState(false)
+    const [showCostingDeleteNudge, setShowCostingDeleteNudge] = useState(false)
     const tourSurface = costingTourSurface(tourStep)
     const tourExamples = useMemo(makeSavedCostingTourExamples, [])
     const tourExport = useMemo(makeSavedCostingTourExport, [])
     const tourGroups = useMemo(() => [{key: 'tour-preview', name: 'Tour sample', template: null, records: tourExamples, updatedAt: tourExamples[0].updated_at, currentRecipeCostPerM: null}], [tourExamples])
+    const DEMO_COSTING_STORAGE_KEY = 'weavly:owner-demo-costing-deleted'
+
+    useEffect(() => {
+        try {
+            if (typeof window !== 'undefined' && localStorage.getItem(DEMO_COSTING_STORAGE_KEY) === 'true') {
+                setDemoCostingDeleted(true)
+            }
+        } catch {}
+    }, [])
+
+    const handleTourStepChange = useCallback((nextStep: SavedCostingStep | null) => {
+        if (nextStep === 'finish') {
+            setShowCostingDeleteNudge(true)
+        }
+        setTourStep(prev => {
+            if (prev !== null && nextStep === null) {
+                setShowCostingDeleteNudge(true)
+            }
+            return nextStep
+        })
+    }, [])
+
+    const handleDeleteDemoCosting = useCallback(() => {
+        setDemoCostingDeleted(true)
+        setShowCostingDeleteNudge(false)
+        if (openQualityKey === 'tour-preview') {
+            setOpenQualityKey(null)
+        }
+        try {
+            localStorage.setItem(DEMO_COSTING_STORAGE_KEY, 'true')
+        } catch {}
+    }, [openQualityKey])
+
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
+    const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourStep !== null
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
     const [quoteToConvert, setQuoteToConvert] = useState<QuoteRow | null>(null)
@@ -1021,8 +1059,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         })
     }, [canUseQuotationWorkflow, filterStatus, costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
     const selectedCostings = useMemo(
-        () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
-        [quotes, selectedCostingIds],
+        () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
+        [quotes, selectedCostingIds, tourExamples],
     )
     const comparisonCostings = useMemo(
         () => orderSavedCostingsForComparison<QuoteRow>(tourStep ? tourExamples : selectedCostings),
@@ -1207,7 +1245,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     }
 
     const toggleCostingSelection = async (id: string) => {
-        const target = quotes.find(quote => quote.id === id)
+        const target = quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)
         if (!target) return
 
         // Paint the selection in the next frame before any lazy detail fetch.
@@ -1447,7 +1485,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} production={canUseProductionPipeline} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
+            <SavedCostingsTutorial step={tourStep} onStepChange={handleTourStepChange} production={canUseProductionPipeline} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
             <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <div className="min-[1540px]:hidden">
@@ -1464,6 +1502,39 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </Button>
                 )}
             />
+            {showCostingDeleteNudge && !demoCostingDeleted && quotes.length === 0 && (
+                <div
+                    role="status"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <Sparkles className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+                        <div>
+                            <p className="font-semibold text-amber-900">{tx('Guided tour completed!')}</p>
+                            <p className="text-xs text-amber-800/90">{tx('Explore exports with this sample costing, or delete it whenever you are ready to create your own costings.')}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100/70"
+                            onClick={handleDeleteDemoCosting}
+                        >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+                            {tx('Delete sample costing')}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs text-amber-700 hover:text-amber-900"
+                            onClick={() => setShowCostingDeleteNudge(false)}
+                        >
+                            {tx('Dismiss')}
+                        </Button>
+                    </div>
+                </div>
+            )}
             {canUseQuotationWorkflow && <Toolbar className="w-full overflow-x-auto p-1">
                     {['all', 'costings', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
                         <button
@@ -1554,13 +1625,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </p>
                     ) : null}
                     <p className="mt-3 text-xs font-medium text-body">
-                        {showQualityLibrary
-                            ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`
-                            : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'}`}
+                        {isDemoCostingActive && quotes.length === 0
+                            ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
+                            : showQualityLibrary
+                                ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`
+                                : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'}`}
                     </p>
                 </Toolbar>
 
-            {tourStep && (
+            {tourStep ? (
                 <div data-costing-tour="sample" className="space-y-3">
                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
                     <SavedQualityLibraryView
@@ -1575,8 +1648,72 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         factoryInputsCapturedLabel={tx('Factory inputs captured')}
                     />
                 </div>
-            )}
-            <div hidden={Boolean(tourStep)}>
+            ) : isDemoCostingActive && quotes.length === 0 ? (
+                (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase())) || (filterStatus !== 'all' && filterStatus !== 'costings' && filterStatus !== 'draft') || showArchived ? (
+                    <EmptyState
+                        icon={FileText}
+                        title={searchQuery.trim()
+                            ? `No saved records match “${searchQuery.trim()}”.`
+                            : showArchived
+                                ? 'No archived records are showing. Switch to Active or save a costing first.'
+                                : `No quotations with status “${filterStatus}”.`}
+                        description={searchQuery.trim()
+                            ? 'Try a quality name, party name, quotation reference, or clear the search.'
+                            : showArchived
+                                ? 'No archived records are showing. Switch to Active or save a costing first.'
+                                : `No quotations with status “${filterStatus}”.`}
+                        action={(
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {(searchQuery || marginFilter !== 'all' || showFavoritesOnly) && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => { setSearchQuery(''); setMarginFilter('all'); setShowFavoritesOnly(false) }}
+                                    >
+                                        {t('common.clear_search_filters')}
+                                    </Button>
+                                )}
+                                {filterStatus !== 'all' && (
+                                    <Button variant="ghost" onClick={() => setFilterStatus('all')}>
+                                        {t('common.clear_filters')}
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                    />
+                ) : (
+                    <div data-costing-tour="sample" className="space-y-3">
+                        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
+                        <SavedQualityLibraryView
+                            groups={tourGroups}
+                            canUseProduction={canUseProduction}
+                            canUseProductionPipeline={canUseProductionPipeline}
+                            openKey={openQualityKey}
+                            comparisonMode={comparisonMode}
+                            selectedCostingIds={selectedCostingIds}
+                            updatingId={updatingId}
+                            detailLoadingId={detailLoadingId}
+                            onOpenDetails={(key, singleSnapshot) => {
+                                setOpenQualityKey(key)
+                                if (singleSnapshot) void ensureQuoteDetail(singleSnapshot)
+                            }}
+                            onCloseDetails={() => setOpenQualityKey(null)}
+                            onToggleComparison={toggleCostingSelection}
+                            onOpen={quote => { setOpenQualityKey(null); void handleRestore(quote, 'edit') }}
+                            onStartFrom={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
+                            onSaveAsNewQuality={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
+                            onExport={quote => { setOpenQualityKey(null); void openQuoteExport(quote) }}
+                            onAudit={() => { toast.info(tx('This is a sample costing for exploration.')) }}
+                            auditingId={updatingId}
+                            onToggleFavorite={() => { toast.info(tx('This is a sample costing for exploration.')) }}
+                            onToggleArchived={() => { toast.info(tx('This is a sample costing for exploration.')) }}
+                            onOpenUsage={() => { toast.info(tx('This is a sample costing for exploration.')) }}
+                            onEnsureDetail={ensureQuoteDetail}
+                            factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
+                        />
+                    </div>
+                )
+            ) : (
+            <div>
             {(showQualityLibrary ? qualityGroups.length === 0 : filteredQuotes.length === 0) ? (
                 <EmptyState
                     icon={FileText}

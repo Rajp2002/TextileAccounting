@@ -22,6 +22,7 @@ import {
     Pencil,
     Plus,
     Search,
+    Sparkles,
     Tags,
     Trash2,
     TrendingDown,
@@ -85,6 +86,29 @@ const DIRECTION_OPTIONS: { value: YarnDirectionFilter; label: string }[] = [
     { value: 'yarn_warp', label: 'Warp' },
     { value: 'yarn_weft', label: 'Weft' },
 ]
+
+export const DEMO_YARN_STORAGE_KEY = 'weavly:demo-yarn-rate-deleted'
+
+export const DEMO_YARN_RATE: CostRateRow = {
+    id: 'demo-sample-yarn-rate',
+    name: '30/1000 MUALTI Cotton',
+    category: 'yarn_warp',
+    unit: 'per_kg',
+    current_value: 285,
+    previous_value: 280,
+    effective_date: '2026-08-01',
+    last_reviewed_at: '2026-06-01',
+    review_interval_days: 30,
+    source: 'Surat Central Market',
+    notes: 'Tour sample entry for learning the rate catalog',
+    apply_as_default: false,
+    updated_at: '2026-08-01T00:00:00.000Z',
+    is_active: true,
+    is_reviewed: false,
+    discovery_source: 'saved_costing',
+    fabric_names: ['Cotton Roto Sheeting'],
+    saved_quality_count: 1,
+}
 type RateHistoryRow = {
     id: string
     value: number
@@ -872,7 +896,40 @@ export default function RatesClient({
     orgId?: string
 }) {
     const { t, tx } = useTranslation()
-    const [rates, setRates] = useState(initialRates)
+    const [demoYarnDeleted, setDemoYarnDeleted] = useState(false)
+    const [showDeleteNudge, setShowDeleteNudge] = useState(false)
+
+    useEffect(() => {
+        try {
+            if (typeof window !== 'undefined' && localStorage.getItem(DEMO_YARN_STORAGE_KEY) === 'true') {
+                setDemoYarnDeleted(true)
+            }
+        } catch {}
+    }, [])
+
+    const [rates, setRates] = useState<CostRateRow[]>(() => {
+        if (initialRates.length === 0) {
+            if (typeof window !== 'undefined') {
+                try {
+                    if (localStorage.getItem(DEMO_YARN_STORAGE_KEY) === 'true') {
+                        return []
+                    }
+                } catch {}
+            }
+            return [DEMO_YARN_RATE]
+        }
+        return initialRates
+    })
+
+    const handleDeleteDemoYarn = useCallback(() => {
+        setDemoYarnDeleted(true)
+        setShowDeleteNudge(false)
+        setRates(current => current.filter(r => r.id !== DEMO_YARN_RATE.id))
+        try {
+            localStorage.setItem(DEMO_YARN_STORAGE_KEY, 'true')
+        } catch {}
+    }, [])
+
     const [categoryFilter, setCategoryFilter] = useState<YarnDirectionFilter>('all')
     const [statusFilter, setStatusFilter] = useState<RateStatusFilter>('all')
     const [searchQuery, setSearchQuery] = useState('')
@@ -1142,6 +1199,15 @@ export default function RatesClient({
     }
 
     const handleQuickSave = (rate: CostRateRow, newValue: number, newSource: string) => {
+        if (rate.id === DEMO_YARN_RATE.id) {
+            setRates(current => current.map(r => r.id === rate.id
+                ? { ...r, current_value: newValue, previous_value: r.current_value, source: newSource.trim() || r.source, updated_at: new Date().toISOString() }
+                : r))
+            setQuickEditRate(null)
+            setQuickEditIsMobile(false)
+            toast.success(tx('Rate updated.'))
+            return
+        }
         const target: CostRateInput = {
             id: rate.id,
             expectedUpdatedAt: rate.updated_at,
@@ -1206,6 +1272,14 @@ export default function RatesClient({
     const handleConfirmReview = () => {
         if (!reviewRate) return
         const target = reviewRate
+        if (target.id === DEMO_YARN_RATE.id) {
+            setRates(current => current.map(rate => rate.id === target.id
+                ? { ...rate, is_reviewed: true, last_reviewed_at: getSuratTodayString() }
+                : rate))
+            toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+            setReviewRate(null)
+            return
+        }
         setReviewError(null)
         setPendingAction({ id: target.id, kind: 'review' })
         startTransition(async () => {
@@ -1235,6 +1309,13 @@ export default function RatesClient({
     }
 
     const handleQuickReview = (target: CostRateRow) => {
+        if (target.id === DEMO_YARN_RATE.id) {
+            setRates(current => current.map(rate => rate.id === target.id
+                ? { ...rate, is_reviewed: true, last_reviewed_at: getSuratTodayString() }
+                : rate))
+            toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+            return
+        }
         setReviewError(null)
         setPendingAction({ id: target.id, kind: 'review' })
         startTransition(async () => {
@@ -1263,10 +1344,17 @@ export default function RatesClient({
     const handleConfirmAll = () => {
         if (dueReviewRates.length === 0) return
         const targetRates = [...dueReviewRates]
+        const realRates = targetRates.filter(r => r.id !== DEMO_YARN_RATE.id)
+        if (realRates.length === 0) {
+            setRates(current => current.map(r => r.id === DEMO_YARN_RATE.id ? { ...r, is_reviewed: true, last_reviewed_at: getSuratTodayString() } : r))
+            toast.success(tx(`Confirmed 1 yarn rate as current. Existing costing snapshots were not changed.`))
+            setShowDueReviews(false)
+            return
+        }
         setPendingAction({ id: 'all-review', kind: 'review' })
         startTransition(async () => {
             try {
-                const payload = targetRates.map(r => ({ id: r.id, expectedUpdatedAt: r.updated_at }))
+                const payload = realRates.map(r => ({ id: r.id, expectedUpdatedAt: r.updated_at }))
                 const result = await confirmAllCostRateReviews(payload)
                 if (result.error || !result.data) {
                     const message = tx(userFacingError(result.error, 'Could not confirm all rates. Refresh and try again.'))
@@ -1275,12 +1363,15 @@ export default function RatesClient({
                 }
                 const updatedMap = new Map((result.data as CostRateRow[]).map(r => [r.id, r]))
                 setRates(current => current.map(rate => {
+                    if (rate.id === DEMO_YARN_RATE.id) {
+                        return { ...rate, is_reviewed: true, last_reviewed_at: getSuratTodayString() }
+                    }
                     const updated = updatedMap.get(rate.id)
                     return updated ? { ...rate, ...updated, is_reviewed: true } : rate
                 }))
-                const count = result.count ?? targetRates.length
+                const count = (result.count ?? realRates.length) + (targetRates.length - realRates.length)
                 toast.success(tx(`Confirmed ${count} yarn ${count === 1 ? 'rate' : 'rates'} as current. Existing costing snapshots were not changed.`))
-                void trackPlanEvent('rate_book_action', { action: 'confirm_all_reviews', count: targetRates.length })
+                void trackPlanEvent('rate_book_action', { action: 'confirm_all_reviews', count })
                 setShowDueReviews(false)
             } catch (error) {
                 const message = tx(userFacingError(error, 'Could not confirm all rates. Refresh and try again.'))
@@ -1394,6 +1485,12 @@ export default function RatesClient({
     const handleDelete = () => {
         if (!deleteRate) return
         const target = deleteRate
+        if (target.id === DEMO_YARN_RATE.id) {
+            handleDeleteDemoYarn()
+            setDeleteRate(null)
+            toast.success(tx('Sample yarn rate removed from Rate Book.'))
+            return
+        }
         setDeleteError(null)
         setPendingAction({ id: target.id, kind: 'delete' })
         startTransition(async () => {
@@ -1453,6 +1550,11 @@ export default function RatesClient({
                     onOpenQuickEdit={handleOpenQuickEditFromTour}
                     onOpenRateDrawer={handleOpenRateDrawerFromTour}
                     onActiveChange={setIsTutorialActive}
+                    onTourFinish={() => {
+                        if (!demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id)) {
+                            setShowDeleteNudge(true)
+                        }
+                    }}
                 />
             </aside>
 
@@ -1499,6 +1601,40 @@ export default function RatesClient({
                     )}
                 />
             </div>
+
+            {showDeleteNudge && !demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id) && (
+                <div
+                    role="status"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <Sparkles className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+                        <div>
+                            <p className="font-semibold text-amber-900">{tx('Tour completed')}</p>
+                            <p className="text-xs text-amber-800/90">{tx('A sample yarn rate was added so you could explore Rate Book features. You can delete it anytime.')}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100/70"
+                            onClick={handleDeleteDemoYarn}
+                        >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+                            {tx('Delete sample yarn')}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs text-amber-700 hover:text-amber-900"
+                            onClick={() => setShowDeleteNudge(false)}
+                        >
+                            {tx('Dismiss')}
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {pendingMessage && (
                 <p role="status" className="rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">
