@@ -377,7 +377,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(assignments).not.toContain('placeholder="Search machines"')
         expect(assignments).toContain('Assignment workspace view')
         expect(assignments).toContain("mobileView === 'machines'")
-        expect(assignments).toContain('Production job for ${machineLabel(machine)}')
+        expect(read('app/(dashboard)/owner/production/BaseMachineJobs.tsx')).toContain('Production job for ${machine.custom_label || machine.name}')
         expect(dailySheet).toContain('aria-controls="base-payroll-rollup"')
         expect(dailySheet).toContain("isPayrollExpanded ? 'block' : 'hidden'")
         expect(dailySheet).toContain('assignedWorkers.map')

@@ -17,7 +17,7 @@ export function validBaseDate(value: string | null | undefined): value is string
 export function safeBaseReturnPath(value: string | null | undefined) {
     if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return undefined
     const path = value.split('?')[0]
-    return ['/owner/production', '/owner/payroll', '/owner/operations'].includes(path) ? value : undefined
+    return ['/owner/production', '/owner/payroll', '/owner/operations', '/owner/setup'].includes(path) ? value : undefined
 }
 
 export function readBaseProductionNavigation(params: Pick<URLSearchParams, 'get'>): BaseProductionNavigation {

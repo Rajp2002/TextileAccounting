@@ -15,6 +15,7 @@ function revalidatePath(path: string) {
     if (path === '/owner/production') {
         revalidateNextPath('/owner/stock')
         revalidateNextPath('/owner/operations')
+        revalidateNextPath('/owner/setup')
         revalidateNextPath('/owner/payroll')
     }
 }

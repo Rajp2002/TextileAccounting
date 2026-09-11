@@ -26,6 +26,7 @@ import {
     BellRing,
     ClipboardList,
     Wrench,
+    SlidersHorizontal,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -42,7 +43,8 @@ const navGroups = [
             { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
             { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
             { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
-            { name: "Setup", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
+            { name: "Configuration", href: "/owner/operations", icon: SlidersHorizontal, translationKey: "settings", workflow: "baseProduction" },
+            { name: "Setup", href: "/owner/setup", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
             { name: "Yarn Rate Book", href: "/owner/rates", icon: Tags, translationKey: "settings", workflow: "estimator" },
             { name: "Quotations", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "estimator" },
             { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
@@ -94,7 +96,7 @@ const bottomNavItems = [
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
     { name: "Cost Estimate", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
     { name: "Production", href: "/owner/production", icon: ClipboardList, translationKey: "production", workflow: "baseProduction" },
-    { name: "Setup", href: "/owner/operations", icon: Wrench, translationKey: "settings", workflow: "baseProduction" },
+    { name: "Configuration", href: "/owner/operations", icon: SlidersHorizontal, translationKey: "settings", workflow: "baseProduction" },
     { name: "Worker Hisaab", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
@@ -118,7 +120,7 @@ const liteBottomNavItems = [
 
 function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
     if (item.name === 'Saved Costings') return 'Saved Costings'
-    if (item.name === 'Setup') return 'Setup'
+    if (item.name === 'Setup' || item.name === 'Configuration') return item.name
     if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Stock'
     if (item.name === 'Quotations') return productionMode === 'market_run' ? 'Saved Costings' : 'Costings & Quotations'
     if (item.name === 'Analytics') return 'Analytics'
@@ -127,6 +129,7 @@ function getNavLabel(item: { name: string; translationKey: string }, productionM
 
 function getMobileNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
     if (item.name === 'Factory Today') return 'Today'
+    if (item.name === 'Configuration') return 'Config'
     if (item.name === 'Market Runs') return 'Market'
     if (item.name === 'Stock' && productionMode === 'market_run') return 'Godown'
     return getNavLabel(item, productionMode, t)
@@ -157,6 +160,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
         costingWorkspaceRoutes.add('/owner/stock')
         costingWorkspaceRoutes.add('/owner/dispatches')
         costingWorkspaceRoutes.add('/owner/operations')
+        costingWorkspaceRoutes.add('/owner/setup')
         costingWorkspaceRoutes.add('/owner/payroll')
     }
     const visibleGroups = subscriptionTier === 'free' ? freeNavGroups : navGroups

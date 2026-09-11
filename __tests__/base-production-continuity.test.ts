@@ -10,6 +10,8 @@ describe('production navigation and local drafts', () => {
     })
     it('rejects invalid dates and external or unrelated return destinations', () => {
         expect(validBaseDate('2026-02-30')).toBe(false)
+        expect(safeBaseReturnPath('/owner/setup?section=machines')).toBe('/owner/setup?section=machines')
+        expect(safeBaseReturnPath('/owner/operations?shift=night')).toBe('/owner/operations?shift=night')
         expect(safeBaseReturnPath('//attacker.test')).toBeUndefined()
         expect(safeBaseReturnPath('/owner/production/../../api/delete')).toBeUndefined()
         expect(safeBaseReturnPath('https://attacker.test/owner/payroll')).toBeUndefined()
