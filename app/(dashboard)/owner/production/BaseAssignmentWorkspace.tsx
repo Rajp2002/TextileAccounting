@@ -4,19 +4,16 @@ import Link from 'next/link'
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { BriefcaseBusiness, Check, Edit3, Link2, Loader2, Search, Unlink, Users, Wrench } from 'lucide-react'
+import { ArrowUpRight, Check, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import type { BaseProductionJob, BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
+import type { BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
 import {
     removeBaseWorkerMachineAssignment,
-    setBaseMachineJobContext,
     upsertBaseWorkerMachineAssignment,
 } from './actions'
 import type { BaseProductionInitialData } from './loaders'
@@ -40,15 +37,6 @@ function machineLabel(machine: BaseProductionMachine) {
     return machine.custom_label || machine.name
 }
 
-function jobLabel(job: BaseProductionJob) {
-    const version = job.costing_version ? ` · v${job.costing_version}` : ''
-    return `${job.quality_label}${version} · ${formatMeters(job.target_meters)} target`
-}
-
-function formatMeters(value: number) {
-    return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)} m`
-}
-
 function formatWorkerShift(value: BaseProductionWorker['shift_availability']) {
     if (value === 'both') return 'Day & night'
     return value === 'day' ? 'Day shift' : 'Night shift'
@@ -69,14 +57,10 @@ function connectorPath(from: ConnectorPoint, to: ConnectorPoint, lane: number) {
 
 export default function BaseAssignmentWorkspace({
     initialData,
-    onEditWorker,
-    onEditMachine,
     focusWorkerId,
     initialShift,
 }: {
     initialData: BaseProductionInitialData
-    onEditWorker: (worker: BaseProductionWorker) => void
-    onEditMachine: (machine: BaseProductionMachine) => void
     focusWorkerId?: string
     initialShift?: BaseProductionShift
 }) {
@@ -94,6 +78,10 @@ export default function BaseAssignmentWorkspace({
     const [pendingKey, setPendingKey] = useState<string | null>(null)
     const [mobileView, setMobileView] = useState<'workers' | 'machines'>('workers')
     const boardRef = useRef<HTMLDivElement>(null)
+    const configurationParams = new URLSearchParams({ shift })
+    if (focusWorkerId) configurationParams.set('worker', focusWorkerId)
+    const configurationReturnTo = `/owner/operations?${configurationParams}`
+    const setupHref = (add: 'worker' | 'machine') => `/owner/setup?${new URLSearchParams({ section: add === 'worker' ? 'workers' : 'machines', add, returnTo: configurationReturnTo })}`
 
     const workerById = useMemo(
         () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
@@ -111,18 +99,6 @@ export default function BaseAssignmentWorkspace({
         () => initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active'),
         [initialData.jobs],
     )
-    const createJobHref = useMemo(() => {
-        if (initialData.costings.length === 0) {
-            const params = new URLSearchParams({ returnTo: '/owner/operations' })
-            return `/owner/estimator?${params}`
-        }
-        const params = new URLSearchParams({
-            tab: 'jobs',
-            costingId: initialData.costings[0].id,
-            returnTo: '/owner/operations',
-        })
-        return `/owner/production?${params}`
-    }, [initialData.costings])
     const activeJobIds = useMemo(() => new Set(activeJobs.map((job) => job.id)), [activeJobs])
     const currentJobByMachine = useMemo(() => {
         const result = new Map<string, string>()
@@ -366,77 +342,25 @@ export default function BaseAssignmentWorkspace({
         }
     }
 
-    async function handleContextChange(machineId: string, value: string) {
-        if (pendingKey) return
-        setPendingKey(`context-${machineId}`)
-        try {
-            const result = await setBaseMachineJobContext({
-                machineId,
-                jobId: value === 'none' ? null : value,
-                effectiveFrom: initialData.today,
-            })
-            const error = getActionError(result)
-            if (error) {
-                toast.error(error)
-                return
-            }
-            toast.success(value === 'none' ? 'Job context cleared.' : 'Machine job context saved.')
-            router.refresh()
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Machine job context could not be saved.')
-        } finally {
-            setPendingKey(null)
-        }
-    }
-
     return (
-        <div className="space-y-4">
-            <div>
-                <h2 className="text-lg font-bold text-ink">Worker and machine assignments</h2>
-                <p className="text-sm text-body">Set the current context once. Daily production will show it automatically.</p>
-            </div>
-
-            {activeJobs.length === 0 && (
-                <Card className="border-saffron/30 bg-saffron-soft/25">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Production job required</CardTitle>
-                        <CardDescription>Saved costings are reusable estimates. Create a production job from one before assigning a worker or recording machine metres.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <Button asChild size="sm"><Link href={createJobHref}>{initialData.costings.length > 0 ? 'Create production job' : 'Save a costing'}</Link></Button>
-                    </CardContent>
-                </Card>
-            )}
-
-            <Card className="border-saffron/20 bg-saffron-soft/20">
-                <CardContent className="flex items-center justify-between gap-3 py-3 sm:py-4">
-                    <div>
-                        <p className="text-sm font-bold text-ink">Primary meter worker · {shift === 'day' ? 'Day' : 'Night'} shift</p>
-                        <p className="mt-1 hidden text-xs leading-relaxed text-body sm:block">A worker can connect to more than one machine. Each machine has one primary Base worker for this shift.</p>
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_168px]">
+            <div className="min-w-0 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
+                        <Button type="button" size="sm" variant={shift === 'day' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'day'} disabled={pendingKey !== null} onClick={() => setShift('day')}><Sun className="h-4 w-4" /> Day shift</Button>
+                        <Button type="button" size="sm" variant={shift === 'night' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'night'} disabled={pendingKey !== null} onClick={() => setShift('night')}><Moon className="h-4 w-4" /> Night shift</Button>
                     </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                        <Label htmlFor="base-assignment-shift" className="sr-only">View shift</Label>
-                        <Select value={shift} onValueChange={(value) => setShift(value as BaseProductionShift)}>
-                            <SelectTrigger id="base-assignment-shift" className="w-[126px] sm:w-[140px]"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem></SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <div className="flex items-center justify-between gap-2">
-                <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm text-body"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={(event) => setShowInactive(event.target.checked)} /> Show inactive</label>
-                <Badge variant="secondary"><Link2 className="h-3 w-3" /> {currentAssignments.length} current assignment{currentAssignments.length === 1 ? '' : 's'}</Badge>
-            </div>
+                    <span className="text-xs text-muted-foreground" aria-live="polite">{currentAssignments.length} assignment{currentAssignments.length === 1 ? '' : 's'} · {shift === 'day' ? 'Day' : 'Night'} shift</span>
+                </div>
 
             <Card className="hidden overflow-hidden md:block">
                 <CardHeader className="border-b border-hairline/70">
                     <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Connect workers to machines</CardTitle>
-                    <CardDescription>Drag a worker connector onto a machine. The line follows your pointer, then reroutes automatically after saving. Assign remains available for keyboard use.</CardDescription>
+                    <CardDescription>Drag a connector or choose Assign. Each machine has one worker per shift.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4">
                     <div className="mb-3 grid grid-cols-2 gap-4">
-                        <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} placeholder="Search workers" className="pl-9" /></div>
+                        <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
                     </div>
                     <div ref={boardRef} className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-16 ${draggingWorkerId ? 'select-none' : ''}`}>
@@ -513,7 +437,6 @@ export default function BaseAssignmentWorkspace({
                                             </div>
                                         </div>
                                         <div className="flex shrink-0 items-center gap-1.5">
-                                            <Button variant="ghost" size="icon-xs" aria-label={`Edit ${worker.name}`} onClick={() => onEditWorker(worker)}><Edit3 className="h-4 w-4" /></Button>
                                             <Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>Assign</Button>
                                             <span
                                                 role="button"
@@ -547,7 +470,6 @@ export default function BaseAssignmentWorkspace({
                                 const workerPalette = worker ? (workerColorMap.get(worker.id) ?? DEFAULT_PALETTE) : null
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
                                 const hasActiveJob = jobId !== 'none'
-                                const pending = pendingKey === `context-${machine.id}`
                                 const isDropTargetValid = Boolean(draggingWorkerId && machine.is_active && hasActiveJob)
                                 return (
                                     <div
@@ -610,40 +532,21 @@ export default function BaseAssignmentWorkspace({
                                                 ) : (
                                                     <Badge variant="warning">Unassigned</Badge>
                                                 )}
-                                                <Button variant="ghost" size="icon-xs" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}>
-                                                    <Edit3 className="h-4 w-4" />
-                                                </Button>
+                                                {assignment && <Button variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
                                             </div>
                                         </div>
-                                        <div className="mt-2 flex items-center gap-2">
-                                            <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                                            <Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}>
-                                                <SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="h-8 min-w-0 flex-1 text-xs">
-                                                    <SelectValue placeholder="No active job context" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="none">No active job</SelectItem>
-                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{jobLabel(job)}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            {assignment && (
-                                                <Button variant="ghost" size="icon-xs" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey === `remove-${assignment.id}`}>
-                                                    <Unlink className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                        </div>
+                                        {!hasActiveJob && machine.is_active && <Link href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
                                     </div>
                                 )
                             })}
                         </div>
                     </div>
-                    <p className="mt-4 text-xs text-muted-foreground">Connectors are color-coded by worker and use separate curved lanes to keep assignments easy to trace.</p>
                 </CardContent>
             </Card>
 
             <Card className="gap-3 md:hidden">
                 <CardHeader className="border-b border-hairline/70 pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Assignment workspace</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Connect workers to machines</CardTitle>
                     <div className="grid grid-cols-2 rounded-lg bg-surface-soft p-1" role="group" aria-label="Assignment workspace view">
                         <Button type="button" size="sm" variant={mobileView === 'workers' ? 'secondary' : 'ghost'} aria-pressed={mobileView === 'workers'} onClick={() => setMobileView('workers')}><Users className="h-4 w-4" /> Workers</Button>
                         <Button type="button" size="sm" variant={mobileView === 'machines' ? 'secondary' : 'ghost'} aria-pressed={mobileView === 'machines'} onClick={() => setMobileView('machines')}><Wrench className="h-4 w-4" /> Machines</Button>
@@ -652,18 +555,18 @@ export default function BaseAssignmentWorkspace({
                 {mobileView === 'workers' ? (
                     <CardContent className="p-3 pt-0">
                         <p className="mb-3 text-xs text-body">Assign each worker to one or more machines.</p>
-                        <div className="relative mb-3"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} placeholder="Search workers" className="pl-9" /></div>
+                        <div className="relative mb-3"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
                         <div className="space-y-2">
                             {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
                                 const assignments = assignmentByWorker.get(worker.id) ?? []
                                 const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
-                                return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <span key={assignment.id} style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }} className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</span>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex shrink-0 items-center gap-1"><Button variant="ghost" size="icon-sm" aria-label={`Edit ${worker.name}`} onClick={() => onEditWorker(worker)}><Edit3 className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
+                                return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <span key={assignment.id} style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }} className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</span>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex shrink-0 items-center gap-1"><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
                             })}
                         </div>
                     </CardContent>
                 ) : (
                     <CardContent className="p-3 pt-0">
-                        <p className="mb-3 text-xs text-body">Set the production job used for each machine’s daily metres.</p>
+                        <p className="mb-3 text-xs text-body">View the worker connected to each machine for this shift.</p>
                         <div className="mb-3"><MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} /></div>
                         <div className="space-y-2">
                             {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
@@ -672,7 +575,6 @@ export default function BaseAssignmentWorkspace({
                                 const workerPalette = worker ? (workerColorMap.get(worker.id) ?? DEFAULT_PALETTE) : null
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
                                 const hasActiveJob = jobId !== 'none'
-                                const pending = pendingKey === `context-${machine.id}`
                                 return (
                                     <div key={machine.id} className="rounded-xl border border-hairline px-3 py-3">
                                         <div className="flex items-start justify-between gap-2">
@@ -701,24 +603,10 @@ export default function BaseAssignmentWorkspace({
                                                 ) : (
                                                     <Badge variant="warning">Unassigned</Badge>
                                                 )}
-                                                <Button variant="ghost" size="icon-sm" aria-label={`Edit ${machineLabel(machine)}`} onClick={() => onEditMachine(machine)}>
-                                                    <Edit3 className="h-4 w-4" />
-                                                </Button>
+                                                {assignment && <Button variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
                                             </div>
                                         </div>
-                                        <div className="mt-3 flex items-center gap-2">
-                                            <BriefcaseBusiness className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                            <Select value={jobId} onValueChange={(value) => void handleContextChange(machine.id, value)} disabled={pending || !machine.is_active}>
-                                                <SelectTrigger aria-label={`Production job for ${machineLabel(machine)}`} className="min-w-0 flex-1">
-                                                    <SelectValue placeholder="No active job" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="none">No active job</SelectItem>
-                                                    {activeJobs.map((job) => <SelectItem key={job.id} value={job.id}>{jobLabel(job)}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            {pending ? <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" /> : null}
-                                        </div>
+                                        {!hasActiveJob && machine.is_active && <Link href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
                                     </div>
                                 )
                             })}
@@ -726,6 +614,14 @@ export default function BaseAssignmentWorkspace({
                     </CardContent>
                 )}
             </Card>
+
+                <label className="flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} /> Show inactive</label>
+            </div>
+            <aside aria-label="Setup shortcuts" className="flex flex-wrap gap-2 xl:sticky xl:top-6 xl:flex-col xl:pt-14">
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link href={setupHref('worker')}><Plus className="h-4 w-4" /> Add worker</Link></Button>
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link href={setupHref('machine')}><Plus className="h-4 w-4" /> Add machine</Link></Button>
+                <Link href="/owner/setup" className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">View all in Setup <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+            </aside>
 
             <Sheet open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open) setPickerWorkerId(null) }}>
                 <SheetContent side="bottom" className="max-h-[82dvh] rounded-t-[28px] pb-6">
@@ -793,7 +689,7 @@ function MachineTypeFilters({
     onToggle: (machineType: string) => void
     onShowAll: () => void
 }) {
-    if (machineTypes.length === 0) return <p className="flex min-h-10 items-center text-sm text-muted-foreground">No machine types available</p>
+    if (machineTypes.length === 0) return null
 
     return (
         <div className="flex min-h-10 flex-wrap items-center gap-2" aria-label="Filter by machine type">

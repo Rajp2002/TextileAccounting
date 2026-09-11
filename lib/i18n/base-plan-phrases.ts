@@ -1144,6 +1144,7 @@ export const BASE_PLAN_SURFACE_PREFIXES = [
   '/owner/rates',
   '/owner/production',
   '/owner/operations',
+  '/owner/setup',
   '/owner/payroll',
   '/owner/settings',
   '/owner/billing',

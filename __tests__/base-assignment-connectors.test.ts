@@ -96,7 +96,5 @@ describe('BaseAssignmentWorkspace connector color styling', () => {
         expect(fileContent).toContain('data-machine-handle={machine.id}')
         expect(fileContent).toContain('workerPalette && hasActiveJob')
 
-        // Legend caption updated
-        expect(fileContent).toContain('Connectors are color-coded by worker and use separate curved lanes to keep assignments easy to trace.')
     })
 })
