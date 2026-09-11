@@ -29,7 +29,7 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
             'saved-costings': 'See how to find and review your saved costings.',
         },
         tourNames: {
-            configuration: 'Configuration',
+            configuration: 'Machine Assignments',
             'cost-estimate': 'Cost Estimator',
             'rate-book': 'Rate Book',
             'saved-costings': 'Saved Costings',
@@ -50,7 +50,7 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
             'saved-costings': 'તમારા સાચવેલા કોસ્ટિંગ કેવી રીતે શોધવા અને સમીક્ષા કરવી તે જુઓ.',
         },
         tourNames: {
-            configuration: 'કન્ફિગરેશન',
+            configuration: 'મશીન ફાળવણી',
             'cost-estimate': 'કોસ્ટ એસ્ટીમેટર',
             'rate-book': 'રેટ બુક',
             'saved-costings': 'સેવ કરેલ કોસ્ટિંગ',
@@ -71,7 +71,7 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
             'saved-costings': 'देखें कि अपनी सहेजी गई लागतों को कैसे खोजें और उनकी समीक्षा करें।',
         },
         tourNames: {
-            configuration: 'कॉन्फ़िगरेशन',
+            configuration: 'मशीन आवंटन',
             'cost-estimate': 'कॉस्ट एस्टीमेटर',
             'rate-book': 'रेट बुक',
             'saved-costings': 'सहेजी गई लागतें',

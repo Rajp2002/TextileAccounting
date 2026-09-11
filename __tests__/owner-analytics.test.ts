@@ -78,10 +78,10 @@ describe('owner analytics', () => {
   })
 
   it('names the owner destination Analytics instead of Dashboard', () => {
-    const navigation = readFileSync(join(process.cwd(), 'components/navigation/owner-sidebar.tsx'), 'utf8')
+    const navigation = readFileSync(join(process.cwd(), 'lib/owner-navigation.ts'), 'utf8')
     const page = readFileSync(join(process.cwd(), 'app/(dashboard)/owner/analytics/page.tsx'), 'utf8')
 
-    expect(navigation).toContain("if (item.name === 'Analytics') return 'Analytics'")
+    expect(navigation).toContain("item('analytics', 'Analytics'")
     expect(page).toContain("title: 'Analytics — Weavly'")
   })
 })

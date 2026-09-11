@@ -1,14 +1,15 @@
 'use client'
+import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { useTranslation } from '@/lib/i18n/context'
 import {
     CheckCircle2,
     ClipboardList,
     Clock3,
-    Edit3,
     History,
     IndianRupee,
     Loader2,
@@ -47,50 +48,23 @@ import {
     calculateBaseEntryGrossPay,
     type BasePayrollPaymentMode,
     type BaseProductionCosting,
-    type BaseProductionMachine,
     type BaseProductionJobStatus,
-    type BaseProductionWorker,
-    type BaseWorkerShiftAvailability,
 } from '@/lib/base-production-core'
 
 import {
     createBaseProductionJob,
-    createBaseProductionMachine,
-    createBaseProductionWorker,
     createBaseWorkerAdvance,
     settleBaseWorkerPayroll,
     updateBaseProductionJobStatus,
-    updateBaseProductionMachine,
-    updateBaseProductionWorker,
 } from './actions'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
-import BaseSetupWorkspace from './BaseSetupWorkspace'
 import BaseMachineJobs from './BaseMachineJobs'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BasePayrollRecords from './BasePayrollRecords'
 import type { BaseProductionInitialData } from './loaders'
 
-type DialogName = 'worker' | 'machine' | 'job' | 'advance' | null
-
-type WorkerDraft = {
-    payType: 'piece_rate' | 'fixed_monthly'
-    role: string
-    monthlySalary: string
-    startDate: string
-    endDate: string
-    salaryEffectiveFrom: string
-    name: string
-    shiftAvailability: BaseWorkerShiftAvailability
-    isActive: boolean
-}
-
-type MachineDraft = {
-    name: string
-    machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'
-    customLabel: string
-    isActive: boolean
-}
+type DialogName = 'job' | 'advance' | null
 
 type JobDraft = {
     costingId: string
@@ -150,14 +124,6 @@ function getActionError(result: unknown) {
     return typeof error === 'string' ? error : 'The action could not be completed.'
 }
 
-function emptyWorkerDraft(): WorkerDraft {
-    return { name: '', shiftAvailability: 'both', isActive: true, payType: 'piece_rate', role: '', monthlySalary: '', startDate: '', endDate: '', salaryEffectiveFrom: '' }
-}
-
-function emptyMachineDraft(): MachineDraft {
-    return { name: '', machineType: 'other', customLabel: '', isActive: true }
-}
-
 function costingTargetMeters(costing: BaseProductionCosting | undefined) {
     return costing?.order_quantity_m && costing.order_quantity_m > 0 ? String(costing.order_quantity_m) : ''
 }
@@ -185,10 +151,12 @@ export default function BaseProductionClient({
 }: {
     initialData: BaseProductionInitialData
     initialCostingId?: string | null
-    view?: 'production' | 'operations' | 'setup' | 'payroll'
+    view?: 'production' | 'operations' | 'payroll'
     tourMetadata?: Record<string, unknown>
 }) {
     const router = useRouter()
+    const { tx } = useTranslation()
+    useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
     const [activeTab, setActiveTab] = useState(view === 'operations' ? 'assignments' : view === 'payroll' ? 'pay' : 'production')
@@ -200,15 +168,11 @@ export default function BaseProductionClient({
     useEffect(() => {
         if (view === 'production') setActiveTab(navigation.tab ?? 'production')
     }, [navigation.tab, navigation.date, navigation.shift, navigation.entry, view])
-    const [dialog, setDialog] = useState<DialogName>(() => view === 'setup' && (searchParams.get('add') === 'worker' || searchParams.get('add') === 'machine') ? searchParams.get('add') as 'worker' | 'machine' : null)
+    const [dialog, setDialog] = useState<DialogName>(null)
     const [pendingAction, setPendingAction] = useState<string | null>(null)
-    const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null)
-    const [editingMachineId, setEditingMachineId] = useState<string | null>(null)
     const [settlingWorkerId, setSettlingWorkerId] = useState<string | null>(null)
     const [settlementRequestId, setSettlementRequestId] = useState('')
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
-    const [workerDraft, setWorkerDraft] = useState<WorkerDraft>(emptyWorkerDraft)
-    const [machineDraft, setMachineDraft] = useState<MachineDraft>(emptyMachineDraft)
     const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today, initialCostingId ?? ''))
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
 
@@ -308,45 +272,6 @@ export default function BaseProductionClient({
         }
     }
 
-    function openNewWorker() {
-        setEditingWorkerId(null)
-        setWorkerDraft(emptyWorkerDraft())
-        setDialog('worker')
-    }
-
-    function openNewMachine() {
-        setEditingMachineId(null)
-        setMachineDraft(emptyMachineDraft())
-        setDialog('machine')
-    }
-
-    function openEditMachine(machine: BaseProductionMachine) {
-        setEditingMachineId(machine.id)
-        setMachineDraft({
-            name: machine.name,
-            machineType: machine.machine_type as MachineDraft['machineType'],
-            customLabel: machine.custom_label ?? '',
-            isActive: machine.is_active,
-        })
-        setDialog('machine')
-    }
-
-    function openEditWorker(worker: BaseProductionWorker) {
-        setEditingWorkerId(worker.id)
-        setWorkerDraft({
-            payType: worker.pay_type ?? 'piece_rate',
-            role: worker.role ?? '',
-            monthlySalary: String(worker.monthly_salary ?? 0),
-            startDate: worker.start_date ?? '',
-            endDate: worker.end_date ?? '',
-            salaryEffectiveFrom: initialData.today,
-            name: worker.name,
-            shiftAvailability: worker.shift_availability,
-            isActive: worker.is_active,
-        })
-        setDialog('worker')
-    }
-
     function openNewJob() {
         const costing = initialData.costings.find((item) => item.id === initialCostingId)
         setJobDraft(emptyJobDraft(initialData.today, initialCostingId ?? '', costingTargetMeters(costing)))
@@ -362,12 +287,14 @@ export default function BaseProductionClient({
         const params = new URLSearchParams({ returnTo: view === 'payroll' ? '/owner/payroll' : baseProductionHref(navigation) })
         if (add) { params.set('add', add); params.set('section', add === 'machine' ? 'machines' : 'workers') }
         if (workerId) params.set('worker', workerId)
-        router.push(`/owner/setup?${params}`)
+        if (add === 'machine') params.set('register', 'base')
+        params.delete('section')
+        router.push(`/owner/${add === 'machine' ? 'machines' : 'workers'}?${params}`)
     }
 
     function openRecord(jobId?: string) {
         if (activeWorkers.length === 0) {
-            toast.info('Add a worker in Setup, then assign them in Configuration before recording production.')
+            toast.info('Add a worker in Workers, then assign them in Machine Assignments before recording production.')
             openSetup()
             return
         }
@@ -378,74 +305,7 @@ export default function BaseProductionClient({
 
     function closeDialog() {
         setDialog(null)
-        if (view === 'setup' && searchParams.has('add')) {
-            const params = new URLSearchParams(searchParams)
-            params.delete('add')
-            window.history.replaceState(null, '', `/owner/setup${params.size ? `?${params}` : ''}`)
-        }
-    }
 
-    function handleWorkerSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-        if (!workerDraft.name.trim()) {
-            toast.error('Enter a worker name.')
-            return
-        }
-
-        if (editingWorkerId) {
-            void runAction(
-                'worker-update',
-                () => updateBaseProductionWorker({
-                    expectedUpdatedAt: workerById.get(editingWorkerId)?.updated_at,
-                    ...workerDraft,
-                    monthlySalary: Number(workerDraft.monthlySalary),
-                    workerId: editingWorkerId,
-                    name: workerDraft.name,
-                    shiftAvailability: workerDraft.shiftAvailability,
-                    isActive: workerDraft.isActive,
-                }),
-                'Worker updated.',
-                closeDialog,
-            )
-            return
-        }
-
-        void runAction(
-            'worker-create',
-            () => createBaseProductionWorker({ ...workerDraft, monthlySalary: Number(workerDraft.monthlySalary) }),
-            'Worker added.',
-            closeDialog,
-        )
-    }
-
-    function handleMachineSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-        if (editingMachineId) {
-            void runAction(
-                'machine-update',
-                () => updateBaseProductionMachine({
-                    machineId: editingMachineId,
-                    name: machineDraft.name,
-                    machineType: machineDraft.machineType,
-                    customLabel: machineDraft.customLabel,
-                    isActive: machineDraft.isActive,
-                }),
-                'Machine updated.',
-                closeDialog,
-            )
-            return
-        }
-
-        void runAction(
-            'machine-create',
-            () => createBaseProductionMachine({
-                name: machineDraft.name,
-                machineType: machineDraft.machineType,
-                customLabel: machineDraft.customLabel,
-            }),
-            'Machine added.',
-            closeDialog,
-        )
     }
 
     function handleJobSubmit(event: FormEvent<HTMLFormElement>) {
@@ -523,13 +383,11 @@ export default function BaseProductionClient({
                 <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>
                     <h1 className="mt-1 text-2xl font-black tracking-tight text-ink sm:text-3xl">
-                        {view === 'operations' ? 'Configuration' : view === 'setup' ? 'Setup' : view === 'payroll' ? 'Payroll' : 'Production'}
+                        {view === 'operations' ? 'Worker–Machine Assignments' : view === 'payroll' ? 'Payroll' : 'Production'}
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-body">
                         {view === 'operations'
-                            ? 'Connect workers to machines for each shift.'
-                            : view === 'setup'
-                                ? 'Your workers and machines, all in one place.'
+                            ? 'Assign workers to machines and manage existing assignments.'
                             : view === 'payroll'
                                 ? 'Review piece-rate earnings, staff salaries, worker advances, and settle the current pay period.'
                                 : 'Create production jobs from saved costings and record daily machine metres.'}
@@ -563,8 +421,7 @@ export default function BaseProductionClient({
                 </>}
             </div>}
 
-            {view === 'operations' && <BaseAssignmentWorkspace key={`${navigation.worker ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={navigation.worker} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
-            {view === 'setup' && <BaseSetupWorkspace initialData={initialData} initialSection={searchParams.get('section') === 'machines' ? 'machines' : 'workers'} focusWorkerId={navigation.worker} onAddWorker={openNewWorker} onAddMachine={openNewMachine} onEditWorker={openEditWorker} onEditMachine={openEditMachine} />}
+            {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
             {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
                 {view === 'production' && <TabsList className="grid h-auto w-full grid-cols-2">
@@ -739,7 +596,7 @@ export default function BaseProductionClient({
                     </Card>
 
                     {initialData.workers.length === 0 ? (
-                        <EmptyState title="No workers yet" description="Add workers in Setup before recording metres or settling payroll." action={<Button size="sm" onClick={() => openSetup()}><Settings2 className="h-4 w-4" /> Open Setup</Button>} />
+                        <EmptyState title="No workers yet" description="Add workers in Workers before recording metres or settling payroll." action={<Button size="sm" onClick={() => openSetup()}><Settings2 className="h-4 w-4" /> Manage workers</Button>} />
                     ) : visiblePayables.length === 0 ? (
                         <EmptyState title="No matching workers" description="Try another name or payment status." action={<Button variant="outline" onClick={() => { setPayrollSearch(''); setPayrollFilter('all') }}>Clear filters</Button>} />
                     ) : (
@@ -753,7 +610,7 @@ export default function BaseProductionClient({
                                         <CardHeader className="border-b border-hairline/70">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div><CardTitle className="text-base">{payable.worker_name}</CardTitle><CardDescription>{worker?.pay_type === 'fixed_monthly' ? `${worker.role || 'Staff'} · Fixed monthly salary${worker.is_active ? '' : ' · Inactive'}` : worker?.is_active ? `${worker.shift_availability === 'both' ? 'Day & night' : worker.shift_availability === 'day' ? 'Day' : 'Night'} shift · weaver rate applied per machine` : 'Inactive worker'}</CardDescription></div>
-                                                <div className="flex items-center gap-2">{workerReadiness?.issueCount ? <Badge variant="warning">Review</Badge> : null}<Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Setup`} onClick={() => openSetup(undefined, payable.worker_id)}><Settings2 className="h-3.5 w-3.5" /></Button></div>
+                                                <div className="flex items-center gap-2">{workerReadiness?.issueCount ? <Badge variant="warning">Review</Badge> : null}<Badge variant={payable.status === 'paid' ? 'success' : 'warning'}>{payable.status === 'paid' ? 'Paid' : 'Open'}</Badge><Button variant="ghost" size="icon-xs" aria-label={`Manage ${payable.worker_name} in Workers`} onClick={() => openSetup(undefined, payable.worker_id)}><Settings2 className="h-3.5 w-3.5" /></Button></div>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="space-y-4 pt-0">
@@ -787,41 +644,6 @@ export default function BaseProductionClient({
                     )}
                 </TabsContent>}
             </Tabs>}
-
-            <Dialog open={dialog === 'machine'} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent>
-                    <DialogHeader><DialogTitle>{editingMachineId ? 'Edit machine' : 'Add machine'}</DialogTitle><DialogDescription>Name your machine and choose its type.</DialogDescription></DialogHeader>
-                    <form className="space-y-4" onSubmit={handleMachineSubmit}>
-                        <div className="space-y-2"><Label htmlFor="base-machine-name">Machine name {!editingMachineId && <span className="font-normal text-muted-foreground">(optional)</span>}</Label><Input id="base-machine-name" autoFocus value={machineDraft.name} onChange={(event) => setMachineDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Leave blank for Loom #1" required={Boolean(editingMachineId)} /></div>
-                        <div className="space-y-2"><Label htmlFor="base-machine-type">Machine type</Label><Select value={machineDraft.machineType} onValueChange={(value) => setMachineDraft((current) => ({ ...current, machineType: value as MachineDraft['machineType'] }))}><SelectTrigger id="base-machine-type" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jacquard">Jacquard</SelectItem><SelectItem value="power_loom">Power loom</SelectItem><SelectItem value="rapier">Rapier</SelectItem><SelectItem value="water_jet">Water jet</SelectItem><SelectItem value="air_jet">Air jet</SelectItem><SelectItem value="circular">Circular</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>
-                        <div className="space-y-2"><Label htmlFor="base-machine-label">Custom label <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-machine-label" value={machineDraft.customLabel} onChange={(event) => setMachineDraft((current) => ({ ...current, customLabel: event.target.value }))} placeholder="e.g. Rapier #1" /></div>
-                        {editingMachineId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={machineDraft.isActive} onChange={(event) => setMachineDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Available for new assignments and daily context</label>}
-                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === (editingMachineId ? 'machine-update' : 'machine-create')}>{pendingAction === (editingMachineId ? 'machine-update' : 'machine-create') ? <Loader2 className="h-4 w-4 animate-spin" /> : editingMachineId ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {editingMachineId ? 'Save changes' : 'Add machine'}</Button></DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={dialog === 'worker'} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent className="max-h-[90dvh] overflow-y-auto">
-                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : 'Add worker'}</DialogTitle><DialogDescription>Choose piece-rate pay for machine workers or a monthly salary for staff. Pay type cannot be changed later.</DialogDescription></DialogHeader>
-                    <form className="space-y-4" onSubmit={handleWorkerSubmit}>
-                        <div className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus required maxLength={120} value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
-                        <div className="space-y-2"><Label htmlFor="base-worker-pay-type">Pay type</Label><Select disabled={Boolean(editingWorkerId)} value={workerDraft.payType} onValueChange={value => setWorkerDraft(current => ({ ...current, payType: value as WorkerDraft['payType'], startDate: current.startDate || initialData.today }))}><SelectTrigger id="base-worker-pay-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="piece_rate">Piece rate (per metre)</SelectItem><SelectItem value="fixed_monthly">Fixed monthly salary</SelectItem></SelectContent></Select></div>
-                        {workerDraft.payType === 'fixed_monthly' && <>
-                            <div className="space-y-2"><Label htmlFor="base-staff-role">Role</Label><Input id="base-staff-role" value={workerDraft.role} maxLength={80} onChange={event => setWorkerDraft(current => ({ ...current, role: event.target.value }))} placeholder="e.g. Supervisor" /></div>
-                            <div className="space-y-2"><Label htmlFor="base-staff-salary">Monthly salary (₹)</Label><Input id="base-staff-salary" type="number" min="0.01" max="10000000" step="0.01" required value={workerDraft.monthlySalary} onChange={event => setWorkerDraft(current => ({ ...current, monthlySalary: event.target.value }))} /></div>
-                            <div className="space-y-2"><Label htmlFor="base-staff-start">Joining date</Label><Input id="base-staff-start" type="date" required disabled={Boolean(editingWorkerId)} value={workerDraft.startDate} onChange={event => setWorkerDraft(current => ({ ...current, startDate: event.target.value }))} /></div>
-                            {editingWorkerId && <>
-                                <div className="space-y-2"><Label htmlFor="base-staff-effective">Salary change effective from</Label><Input id="base-staff-effective" type="date" min={initialData.today} value={workerDraft.salaryEffectiveFrom} onChange={event => setWorkerDraft(current => ({ ...current, salaryEffectiveFrom: event.target.value }))} /><p className="text-xs text-body">Used only when changing salary. Earlier earnings and paid records stay unchanged.</p></div>
-                                <div className="space-y-2"><Label htmlFor="base-staff-end">Last working day (optional)</Label><Input id="base-staff-end" type="date" min={workerDraft.startDate} value={workerDraft.endDate} onChange={event => setWorkerDraft(current => ({ ...current, endDate: event.target.value }))} /><p className="text-xs text-body">Salary accrues through this date. Required when deactivating staff.</p></div>
-                            </>}
-                        </>}
-                        {workerDraft.payType === 'piece_rate' && <div className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>}
-                        {editingWorkerId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={workerDraft.isActive} onChange={(event) => setWorkerDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Active worker</label>}
-                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === 'worker-create' || pendingAction === 'worker-update'}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{editingWorkerId ? 'Save changes' : 'Add worker'}</Button></DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             <Dialog open={dialog === 'job'} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent>

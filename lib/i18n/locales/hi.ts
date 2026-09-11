@@ -1,4 +1,32 @@
 export const hi = {
+ navigation: {
+  "estimate": "लागत अनुमान",
+  "costings": "सेव की गई कॉस्टिंग",
+  "rates": "यार्न रेट बुक",
+  "production": "उत्पादन",
+  "assignments": "मशीन आवंटन",
+  "stock": "गोदाम स्टॉक",
+  "dispatches": "डिस्पैच",
+  "machines": "मशीनें",
+  "workers": "कारीगर",
+  "payroll": "पेरोल",
+  "today": "आज की फैक्टरी",
+  "orders": "पार्टी ऑर्डर",
+  "market_runs": "मार्केट रन",
+  "analytics": "विश्लेषण",
+  "legacy_workers": "पुराने कार्यक्षेत्र के कारीगर",
+  "advances": "उपाड़",
+  "commercials": "पार्टी खाता",
+  "archive": "संग्रह",
+  "settings": "सेटिंग्स",
+  "billing": "प्लान और बिलिंग",
+  "sections": {
+    "costing": "कॉस्टिंग",
+    "production_stock": "उत्पादन और स्टॉक",
+    "workforce": "कार्यबल",
+    "utilities": "खाता"
+  }
+},
     challan: {
         payment_due_date: "पूर्ण भुगतान की अंतिम तिथि",
         payment_terms: "सहमत भुगतान शर्तें",

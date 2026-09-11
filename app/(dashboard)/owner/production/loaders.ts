@@ -1,9 +1,9 @@
+import { normalizeWorker, normalizeMachine } from './registers/normalize'
 import 'server-only'
 
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { readBaseRevisionEntries } from '@/lib/base-production-audit'
 import { readMachineRecords } from '@/lib/base-machine-register'
-import { readBaseSalaryHistory } from '@/lib/base-salary'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
@@ -291,23 +291,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         created_at: String(row.created_at || new Date(0).toISOString()),
     }))
 
-    const workers: BaseProductionWorker[] = rawWorkers.map((row) => ({
-        updated_at: String(row.updated_at),
-        pay_type: row.pay_type === 'fixed_monthly' ? 'fixed_monthly' : 'piece_rate',
-        role: String(row.role ?? ''),
-        monthly_salary: toBaseNumber(row.monthly_salary),
-        salary_effective_from: toStringOrNull(row.salary_effective_from),
-        salary_history: readBaseSalaryHistory(row.salary_history),
-        start_date: toStringOrNull(row.start_date),
-        end_date: toStringOrNull(row.end_date),
-        id: String(row.id),
-        name: String(row.name || 'Unnamed worker'),
-        rate_per_meter: toBaseNumber(row.rate_per_meter),
-        shift_availability: row.shift_availability === 'day' || row.shift_availability === 'night'
-            ? row.shift_availability
-            : 'both',
-        is_active: row.is_active !== false,
-    }))
+    const workers = rawWorkers.map(normalizeWorker)
 
     const advances: BaseWorkerAdvance[] = rawAdvances.map((row) => ({
         id: String(row.id),
@@ -359,13 +343,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             : 'legacy_entry',
     }))
 
-    const machines: BaseProductionMachine[] = rawMachines.map((row) => ({
-        id: String(row.id),
-        name: String(row.name || 'Unnamed machine'),
-        machine_type: String(row.machine_type || 'other'),
-        custom_label: toStringOrNull(row.custom_label),
-        is_active: row.is_active !== false,
-    }))
+    const machines = rawMachines.map(normalizeMachine)
 
     const assignments: BaseWorkerMachineAssignment[] = rawAssignments.map((row) => ({
         id: String(row.id),

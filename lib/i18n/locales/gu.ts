@@ -1,4 +1,32 @@
 export const gu = {
+ navigation: {
+  "estimate": "ખર્ચ અંદાજ",
+  "costings": "સાચવેલી કોસ્ટિંગ",
+  "rates": "યાર્ન રેટ બુક",
+  "production": "ઉત્પાદન",
+  "assignments": "મશીન ફાળવણી",
+  "stock": "ગોદામ સ્ટોક",
+  "dispatches": "ડિસ્પેચ",
+  "machines": "મશીનો",
+  "workers": "કારીગરો",
+  "payroll": "પેરોલ",
+  "today": "આજની ફેક્ટરી",
+  "orders": "પાર્ટી ઓર્ડર",
+  "market_runs": "માર્કેટ રન",
+  "analytics": "વિશ્લેષણ",
+  "legacy_workers": "જૂના કાર્યક્ષેત્રના કારીગરો",
+  "advances": "ઉપાડ",
+  "commercials": "પાર્ટી ખાતું",
+  "archive": "સંગ્રહ",
+  "settings": "સેટિંગ્સ",
+  "billing": "પ્લાન અને બિલિંગ",
+  "sections": {
+    "costing": "કોસ્ટિંગ",
+    "production_stock": "ઉત્પાદન અને સ્ટોક",
+    "workforce": "કાર્યબળ",
+    "utilities": "ખાતું"
+  }
+},
     challan: {
         payment_due_date: "સંપૂર્ણ ચુકવણીની અંતિમ તારીખ",
         payment_terms: "સંમત ચુકવણીની શરતો",

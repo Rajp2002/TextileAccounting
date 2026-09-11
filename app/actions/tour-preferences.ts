@@ -68,6 +68,7 @@ export async function recordTourEventAction({
 
         if (tourId === 'configuration') {
             revalidatePath('/owner/operations')
+            revalidatePath('/owner/assignments')
         } else if (tourId === 'cost-estimate') {
             revalidatePath('/owner/estimator')
             revalidatePath('/free')

@@ -14,7 +14,7 @@ const root = process.cwd()
 const read = (p: string) => readFileSync(join(root, p), 'utf8')
 
 describe('Batch 3A — owner machines route server loading', () => {
-    const page = read('app/(dashboard)/owner/machines/page.tsx')
+    const page = read('app/(dashboard)/owner/machines/page.tsx') + read('app/(dashboard)/owner/machines/LegacyMachinesPage.tsx')
     const loader = read('app/(dashboard)/owner/machines/loaders.ts')
     const machineManagement = read('components/MachineManagement.tsx')
 

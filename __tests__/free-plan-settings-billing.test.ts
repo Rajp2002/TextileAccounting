@@ -1,3 +1,4 @@
+import { visibleOwnerNavigation } from '../lib/owner-navigation'
 import { describe, expect, it } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -6,26 +7,14 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Free plan Setting and Billing sections', () => {
-    const sidebar = read('components/navigation/owner-sidebar.tsx')
+    const groups = visibleOwnerNavigation({ tier: 'free', productionMode: 'market_run' })
     const ownerLayout = read('app/(dashboard)/owner/layout.tsx')
 
-    it('links Settings underneath Subscription & Billing in the footer for Free plan navigation', () => {
-        expect(sidebar).toContain('const freeNavGroups = [')
-        expect(sidebar).toContain('subscriptionTier === \'free\' ? freeNavGroups : navGroups')
-        
-        // Check navigation items for Free plan
-        expect(sidebar).toContain("href: \"/free\"")
-        expect(sidebar).toContain("href: \"/free/costings\"")
-        expect(sidebar).toContain("href=\"/free/account\"")
-
-        // Settings is placed in the footer underneath Subscription & Billing, not in top nav groups
-        expect(sidebar).not.toContain("{ name: \"Billing\", href: \"/free/billing\"")
-        expect(sidebar).not.toContain("{ name: \"Settings\", href: \"/free/account\"")
-    })
-
-    it('updates sidebar footer link to route free accounts to /free/billing', () => {
-        expect(sidebar).toContain("href={subscriptionTier === 'free' ? '/free/billing' : '/owner/billing'}")
-        expect(sidebar).toContain('Subscription & Billing')
+    it('keeps Free account destinations in the consolidated footer', () => {
+        expect(groups.map(group => [group.id, group.items.map(item => item.href)])).toEqual([
+            ['costing', ['/free', '/free/costings']],
+            ['utilities', ['/free/account', '/free/billing']],
+        ])
     })
 
     it('creates dedicated Free billing page and client with Active Workspace, standalone Plans link, and PaymentHistoryDialog', () => {

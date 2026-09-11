@@ -1,3 +1,4 @@
+import { visibleOwnerNavigation } from '../lib/owner-navigation'
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -6,7 +7,6 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Estimator-only product presentation', () => {
-    const sidebar = read('components/navigation/owner-sidebar.tsx')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const quotes = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     const settings = read('app/(dashboard)/owner/settings/page.tsx')
@@ -17,17 +17,10 @@ describe('Estimator-only product presentation', () => {
     const rateActions = read('app/(dashboard)/owner/rates/actions.ts')
 
     it('keeps Lite navigation complete and adds a Base production entry point', () => {
-        expect(sidebar).toContain('const liteBottomNavItems = [')
-        expect(sidebar).toContain('{ name: "Saved Costings", href: "/owner/quotes"')
-        expect(sidebar).toContain('{ name: "Rates", href: "/owner/rates"')
-        expect(sidebar).toContain("if (hasProduction) {")
-        expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/production')")
-        expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/operations')")
-        expect(sidebar).toContain("costingWorkspaceRoutes.add('/owner/payroll')")
-        expect(sidebar).toContain("href: \"/owner/production\"")
-        expect(sidebar).toContain("? 'Saved Costings'")
-        expect(sidebar).toContain('Yarn Rate Book')
-        expect(sidebar).toContain('Subscription & Billing')
+        const lite = visibleOwnerNavigation({ tier: 'lite', productionMode: 'market_run' }).flatMap(group => group.items)
+        expect(lite.map(item => item.href)).toEqual(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings', '/owner/billing'])
+        const base = visibleOwnerNavigation({ tier: 'base', productionMode: 'market_run' }).flatMap(group => group.items)
+        expect(base.map(item => item.href)).toEqual(expect.arrayContaining(['/owner/production', '/owner/assignments', '/owner/workers', '/owner/machines?register=base', '/owner/payroll']))
     })
 
     it('presents rates as a single-purpose yarn rate book', () => {

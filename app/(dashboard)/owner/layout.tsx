@@ -39,13 +39,14 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background" data-owner-shell>
             <BrandBackground />
+            <a href="#owner-main" className="sr-only fixed left-3 top-3 z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
 
             <Suspense fallback={<OwnerSidebarLoading />}>
                 <OwnerSidebarBoundary />
             </Suspense>
 
             <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
-                <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
+                <main id="owner-main" tabIndex={-1} className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
                     <Suspense fallback={<OwnerRouteLoading />}>
                         <OwnerRouteBoundary>{children}</OwnerRouteBoundary>
                     </Suspense>
