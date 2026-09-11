@@ -534,6 +534,50 @@
     width: 100%;
   }
 
+  .configuration-page-frame {
+    width: 100%;
+  }
+
+  .configuration-guide-rail {
+    margin-bottom: 1.25rem;
+    max-width: 32rem;
+  }
+
+  .configuration-actions-rail {
+    margin-top: 1.25rem;
+  }
+
+  /* Use the margins beside the centered board, just like the estimator rails.
+     Below this breakpoint both rails rejoin the page without narrowing it. */
+  @media (min-width: 1660px) {
+    .configuration-page-frame {
+      width: min(100%, calc(100vw - 248px - 33rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .configuration-guide-rail,
+    .configuration-actions-rail {
+      position: fixed;
+      top: 6.5rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100dvh - 7.5rem);
+      overflow-y: auto;
+      margin: 0;
+      scrollbar-width: thin;
+    }
+
+    .configuration-guide-rail {
+      left: calc(248px + 1rem);
+    }
+
+    .configuration-actions-rail {
+      right: 1rem;
+      flex-direction: column;
+    }
+  }
+
   .estimator-workspace-main {
     min-width: 0;
     width: 100%;
@@ -1207,6 +1251,13 @@
   overscroll-behavior: contain;
 }
 .guided-tour-panel > [role="progressbar"], .guided-tour-controls { flex-shrink: 0; }
+
+/* Keep the sample picker visible above the reading panel on compact phones.
+   Its corner Close control remains visible; the duplicate footer is redundant. */
+@media (max-width: 767px) and (max-height: 650px) {
+  [data-configuration-tour="picker"][data-tour-floating] { gap: 8px; padding-bottom: 12px; }
+  [data-configuration-tour="picker"][data-tour-floating] [data-slot="sheet-footer"] { display: none; }
+}
 
 /* Same upper left rail and narrow-screen inline placement as Rate Book. */
 @media (min-width: 1660px) {

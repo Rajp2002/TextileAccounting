@@ -237,6 +237,13 @@ describe('Tour Preferences Adapter & Server Action', () => {
     })
   })
 
+  it('persists Configuration completion for the authenticated owner and revalidates its route', async () => {
+    await recordTourEventAction({ tourId: 'configuration', action: 'completed' })
+    expect(mocks.updateUser).toHaveBeenCalledWith({ data: { tour_preferences: { configuration: expect.objectContaining({ completed: true, version: 'v1' }) } } })
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/operations')
+    expect(getTourStatus('configuration', { tour_preferences: { configuration: { completed: true } } }, 'owner-1').isFirstEligibleVisit).toBe(false)
+  })
+
   describe('Client Persistence Helpers', () => {
     it('persistTourImpression updates local storage and dispatches server action', async () => {
       await persistTourImpression('cost-estimate', 'user-1')

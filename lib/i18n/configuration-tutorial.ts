@@ -1,0 +1,85 @@
+import type { Language } from './context'
+import type { ConfigurationTourStep } from '../configuration-tour'
+
+type Copy = {
+    sample: string; worker: string; machine: string; inactiveMachine: string
+    back: string; next: string; finish: string; skip: string; progress: string
+    fields: Record<ConfigurationTourStep, readonly [string, string]>
+}
+export const configurationTutorialCopy: Record<Language, Copy> = {
+    en: {
+        sample: 'Tour samples · No changes to your factory', worker: 'Sample worker', machine: 'Sample loom', inactiveMachine: 'Sample inactive loom',
+        back: 'Back', next: 'Next', finish: 'Finish', skip: 'Skip tour', progress: 'Tour progress',
+        fields: {
+            purpose: ['Who works on which machine?', 'Configuration connects piece-rate workers to machines for the current day or night shift. These assignments carry into Daily production. This tour uses a sample worker and loom to explain the controls; your factory data stays unchanged.'],
+            dayShift: ['Choose the day shift', 'The Day shift and Night shift buttons switch between two separate sets of assignments. The selected button is filled. A worker can run several machines, but each machine has one primary worker in a shift.'],
+            nightShift: ['Night has its own assignments', 'The sample worker is available for both shifts, so appears here too. Its day assignment would not automatically apply at night. Workers appear when available for the selected shift, or when they already have an assignment in it.'],
+            workers: ['Read a worker card', 'Each card shows the worker’s name, shift availability, and any assigned machine labels. Salaried staff do not need machine assignments and are managed in Setup. Use Assign, or Change on mobile, to connect a piece-rate worker.'],
+            search: ['Find a worker', 'Search filters worker names within the selected shift. Clear the search to bring the list back. Searching changes what you see; it does not change anyone’s assignments.'],
+            machines: ['Read a machine card', 'The machine card shows its name, type, and assigned worker. Unassigned means it is ready to receive a worker. On a phone, use the Workers and Machines buttons to switch lists; on desktop, both lists appear together.'],
+            machineTypes: ['Filter the machine list', 'Choose one or more machine types to show only those types. Click a selected type again to remove that filter, or choose All to reset. The same filters apply in the assignment picker. Hidden machines keep their assignments.'],
+            jobRequired: ['Prepare a machine in Production', 'No production job means this machine cannot receive a worker yet. Set job in Production opens Production → Jobs, where you can create a job from a saved costing and choose it under Machine jobs. Then return to Configuration.'],
+            assign: ['Choose Assign', 'Assign opens a list of active machines for this worker and shift. On mobile, a worker with existing links shows Change. A worker may connect to several machines; choosing another machine does not remove their other links.'],
+            picker: ['Choose a machine', 'Choose saves the link immediately. Current marks a machine already linked to this worker. Machines without an active job are disabled. If another worker is assigned, their name is shown and replacing them requires confirmation. Close exits without choosing.'],
+            drag: ['Or drag a connector', 'On desktop, drag the round connector beside a worker onto a machine. The line follows your pointer and a valid target highlights. Drop to save, or release outside a machine to cancel. Assign provides the same function with a keyboard or on a phone.'],
+            connected: ['See the saved connection', 'The sample now shows a connection: a colored line on desktop, a machine label on the worker, and the worker’s name on the machine. Colors help trace each worker’s links. Real saves show a confirmation toast with Undo; the count updates for the selected shift.'],
+            replace: ['Changing the primary worker', 'To replace a machine’s worker, assign a different worker to it in the same shift. Confirm the replacement prompt, or cancel to keep the current link. This changes the current assignment; previously saved production and pay records retain their saved details.'],
+            remove: ['Disconnect a worker', 'The unlink button beside the assigned worker removes this machine’s current connection for the selected shift. It does not delete the worker or machine. Use Assign to reconnect them. Saved production records remain intact.'],
+            inactive: ['Show inactive records', 'Show inactive reveals inactive workers and machines for reference. Inactive records cannot receive new assignments. Worker shift availability and the current search or type filters still apply. Activate or edit records in Setup.'],
+            addWorker: ['Add a worker in Setup', 'This shortcut opens the Add worker form on Setup. Enter a name, choose piece-rate or monthly pay, and set shift availability for piece-rate workers. Return here to connect them. Pay type is fixed after creation.'],
+            addMachine: ['Add a machine in Setup', 'This shortcut opens the Add machine form on Setup. Choose a machine type and optionally enter a name or custom label. Once added, set its job under Production → Jobs, then connect its worker here.'],
+            setup: ['View and edit your records', 'View all in Setup opens the worker and machine lists. Search, edit details, manage salaried staff, or change active status there. Configuration stays focused on assignments. On smaller screens, these shortcuts sit below the board.'],
+            finish: ['Ready to configure your shifts', 'Start with workers and machines in Setup, set machine jobs in Production, then connect workers here for each shift. Daily production uses these links. Finish or Skip tour restores your original view and removes every sample. You can replay the tour from the left rail anytime.'],
+        },
+    },
+    hi: {
+        sample: 'टूर के नमूने · आपकी फैक्ट्री में कोई बदलाव नहीं', worker: 'नमूना कारीगर', machine: 'नमूना लूम', inactiveMachine: 'निष्क्रिय नमूना लूम',
+        back: 'पीछे', next: 'आगे', finish: 'पूरा करें', skip: 'टूर छोड़ें', progress: 'टूर की प्रगति',
+        fields: {
+            purpose: ['कौन किस मशीन पर काम करता है?', 'कॉन्फ़िगरेशन में पीस-रेट कारीगरों को दिन या रात की शिफ्ट की मशीनों से जोड़ें। दैनिक प्रोडक्शन में ये असाइनमेंट आते हैं। टूर में नमूना कारीगर और लूम दिखते हैं; आपकी फैक्ट्री का डेटा नहीं बदलता।'],
+            dayShift: ['दिन की शिफ्ट चुनें', 'दिन और रात के बटन अलग-अलग शिफ्ट के असाइनमेंट दिखाते हैं। चुना हुआ बटन भरा दिखता है। एक कारीगर कई मशीनों पर काम कर सकता है, पर हर शिफ्ट में एक मशीन का एक मुख्य कारीगर होता है।'],
+            nightShift: ['रात के असाइनमेंट अलग हैं', 'नमूना कारीगर दोनों शिफ्ट में उपलब्ध है, इसलिए यहाँ भी दिखता है। दिन का असाइनमेंट रात में अपने आप लागू नहीं होता। चुनी शिफ्ट में उपलब्ध या पहले से असाइन कारीगर ही दिखते हैं।'],
+            workers: ['कारीगर का कार्ड पढ़ें', 'कार्ड में नाम, शिफ्ट की उपलब्धता और जुड़ी मशीनों के नाम दिखते हैं। वेतनभोगी स्टाफ को मशीन असाइनमेंट नहीं चाहिए; उन्हें सेटअप में संभालें। पीस-रेट कारीगर जोड़ने के लिए असाइन या मोबाइल पर बदलें चुनें।'],
+            search: ['कारीगर खोजें', 'खोज चुनी हुई शिफ्ट में कारीगरों के नाम छाँटती है। पूरी सूची के लिए खोज मिटाएँ। खोज केवल दिखाई देने वाली सूची बदलती है, असाइनमेंट नहीं।'],
+            machines: ['मशीन का कार्ड पढ़ें', 'कार्ड में मशीन का नाम, प्रकार और असाइन कारीगर दिखता है। असाइन नहीं है का मतलब मशीन कारीगर के लिए तैयार है। फोन पर कारीगर और मशीन बटन से सूचियाँ बदलें; डेस्कटॉप पर दोनों साथ दिखती हैं।'],
+            machineTypes: ['मशीन के प्रकार से छाँटें', 'एक या अधिक प्रकार चुनें। चुने प्रकार को फिर दबाकर हटाएँ, या सभी चुनकर फ़िल्टर साफ़ करें। यही फ़िल्टर असाइनमेंट सूची में भी लगता है। छिपी मशीनों के असाइनमेंट बने रहते हैं।'],
+            jobRequired: ['प्रोडक्शन में मशीन तैयार करें', 'प्रोडक्शन काम नहीं है दिखने पर कारीगर नहीं जोड़ सकते। प्रोडक्शन में काम चुनें से प्रोडक्शन → काम खुलता है। सेव कॉस्टिंग से काम बनाएँ और मशीनों के काम में उसे चुनें, फिर कॉन्फ़िगरेशन पर लौटें।'],
+            assign: ['असाइन चुनें', 'इस कारीगर और शिफ्ट के लिए सक्रिय मशीनों की सूची खुलेगी। मोबाइल पर पहले से जुड़े कारीगर के लिए बदलें दिखता है। दूसरी मशीन चुनने से कारीगर की बाकी मशीनों के लिंक नहीं हटते।'],
+            picker: ['मशीन चुनें', 'चुनें दबाते ही लिंक सेव होता है। वर्तमान इस कारीगर की जुड़ी मशीन है। सक्रिय काम बिना मशीन नहीं चुन सकते। दूसरे कारीगर का नाम दिखे तो बदलने से पहले पुष्टि माँगी जाती है। बंद करें से बिना चुने बाहर निकलें।'],
+            drag: ['या कनेक्टर खींचें', 'डेस्कटॉप पर कारीगर के गोल कनेक्टर को मशीन पर खींचें। रेखा पॉइंटर के साथ चलती है और सही मशीन उभरती है। मशीन पर छोड़ें तो सेव, बाहर छोड़ें तो रद्द। कीबोर्ड या फोन पर असाइन इस्तेमाल करें।'],
+            connected: ['सेव हुआ लिंक देखें', 'नमूना अब जुड़ा है: डेस्कटॉप पर रंगीन रेखा, कारीगर पर मशीन का नाम और मशीन पर कारीगर का नाम। रंग लिंक पहचानने में मदद करते हैं। असली सेव पर पुष्टि और वापस लें दिखता है; चुनी शिफ्ट की गिनती अपडेट होती है।'],
+            replace: ['मुख्य कारीगर बदलना', 'उसी शिफ्ट में मशीन पर दूसरा कारीगर असाइन करें। बदलने की पुष्टि करें या रद्द करके पुराना लिंक रखें। इससे मौजूदा असाइनमेंट बदलता है; पहले सेव प्रोडक्शन और वेतन रिकॉर्ड के विवरण बने रहते हैं।'],
+            remove: ['कारीगर का लिंक हटाएँ', 'कारीगर के पास अनलिंक बटन चुनी शिफ्ट में इस मशीन का मौजूदा लिंक हटाता है। कारीगर या मशीन नहीं मिटते। असाइन से फिर जोड़ें। सेव प्रोडक्शन रिकॉर्ड सुरक्षित रहते हैं।'],
+            inactive: ['निष्क्रिय रिकॉर्ड दिखाएँ', 'निष्क्रिय दिखाएँ से निष्क्रिय कारीगर और मशीनें संदर्भ के लिए दिखती हैं। उन्हें नया असाइनमेंट नहीं दे सकते। शिफ्ट उपलब्धता, खोज और प्रकार के फ़िल्टर लागू रहते हैं। सेटअप में सक्रिय करें या विवरण बदलें।'],
+            addWorker: ['सेटअप में कारीगर जोड़ें', 'यह शॉर्टकट सेटअप का कारीगर जोड़ें फॉर्म खोलता है। नाम, पीस-रेट या मासिक वेतन चुनें और पीस-रेट कारीगर की शिफ्ट उपलब्धता तय करें। फिर यहाँ जोड़ें। वेतन का प्रकार बाद में नहीं बदल सकता।'],
+            addMachine: ['सेटअप में मशीन जोड़ें', 'यह शॉर्टकट मशीन जोड़ें फॉर्म खोलता है। प्रकार चुनें, चाहें तो नाम या कस्टम लेबल दें। फिर प्रोडक्शन → काम में मशीन का काम चुनें और यहाँ कारीगर जोड़ें।'],
+            setup: ['रिकॉर्ड देखें और बदलें', 'सेटअप में सभी देखें से कारीगर और मशीन सूचियाँ खुलती हैं। वहाँ खोजें, विवरण बदलें, वेतनभोगी स्टाफ संभालें या सक्रिय स्थिति बदलें। कॉन्फ़िगरेशन असाइनमेंट के लिए है। छोटी स्क्रीन पर शॉर्टकट बोर्ड के नीचे हैं।'],
+            finish: ['अपनी शिफ्ट तैयार करें', 'सेटअप में कारीगर और मशीनें जोड़ें, प्रोडक्शन में मशीन के काम चुनें, फिर यहाँ हर शिफ्ट के कारीगर जोड़ें। दैनिक प्रोडक्शन इन लिंक का उपयोग करता है। पूरा करें या टूर छोड़ें से सभी नमूने हटकर पुराना दृश्य लौटता है। बाएँ रेल से कभी भी टूर दोहराएँ।'],
+        },
+    },
+    gu: {
+        sample: 'ટૂરનાં નમૂના · તમારી ફેક્ટરીમાં કોઈ ફેરફાર નહીં', worker: 'નમૂના કારીગર', machine: 'નમૂના લૂમ', inactiveMachine: 'નિષ્ક્રિય નમૂના લૂમ',
+        back: 'પાછળ', next: 'આગળ', finish: 'પૂર્ણ કરો', skip: 'ટૂર છોડો', progress: 'ટૂરની પ્રગતિ',
+        fields: {
+            purpose: ['કોણ કયા મશીન પર કામ કરે છે?', 'કન્ફિગરેશનમાં પીસ-રેટ કારીગરોને દિવસ કે રાતની શિફ્ટના મશીનો સાથે જોડો. દૈનિક પ્રોડક્શનમાં આ સોંપણીઓ આવે છે. ટૂરમાં નમૂના કારીગર અને લૂમ છે; તમારી ફેક્ટરીનો ડેટા બદલાતો નથી.'],
+            dayShift: ['દિવસની શિફ્ટ પસંદ કરો', 'દિવસ અને રાતનાં બટનો અલગ શિફ્ટની સોંપણીઓ બતાવે છે. પસંદ કરેલું બટન ભરેલું દેખાય છે. એક કારીગર અનેક મશીનો ચલાવી શકે, પણ એક શિફ્ટમાં દરેક મશીનનો એક મુખ્ય કારીગર હોય છે.'],
+            nightShift: ['રાતની સોંપણીઓ અલગ છે', 'નમૂના કારીગર બંને શિફ્ટમાં ઉપલબ્ધ છે, તેથી અહીં પણ દેખાય છે. દિવસની સોંપણી રાતે આપમેળે લાગુ પડતી નથી. પસંદ શિફ્ટમાં ઉપલબ્ધ અથવા પહેલેથી સોંપાયેલા કારીગરો દેખાય છે.'],
+            workers: ['કારીગરનું કાર્ડ વાંચો', 'કાર્ડમાં નામ, શિફ્ટની ઉપલબ્ધતા અને જોડાયેલા મશીનોનાં નામ દેખાય છે. પગારદાર સ્ટાફને મશીન સોંપણીની જરૂર નથી; તેમને સેટઅપમાં સંભાળો. પીસ-રેટ કારીગર માટે સોંપો અથવા મોબાઇલ પર બદલો પસંદ કરો.'],
+            search: ['કારીગર શોધો', 'શોધ પસંદ શિફ્ટમાં કારીગરનાં નામ પ્રમાણે યાદી ગાળે છે. સંપૂર્ણ યાદી માટે શોધ સાફ કરો. શોધ માત્ર દેખાતી યાદી બદલે છે, સોંપણીઓ નહીં.'],
+            machines: ['મશીનનું કાર્ડ વાંચો', 'કાર્ડમાં મશીનનું નામ, પ્રકાર અને સોંપાયેલ કારીગર દેખાય છે. સોંપાયેલ નથી એટલે મશીન કારીગર માટે તૈયાર છે. ફોન પર કારીગરો અને મશીનોનાં બટનથી યાદી બદલો; ડેસ્કટોપ પર બંને સાથે દેખાય છે.'],
+            machineTypes: ['મશીનના પ્રકારથી ગાળો', 'એક અથવા વધુ પ્રકાર પસંદ કરો. પસંદ કરેલો પ્રકાર ફરી દબાવી દૂર કરો અથવા બધા પસંદ કરી ફિલ્ટર સાફ કરો. સોંપણી પસંદગીમાં પણ આ જ ફિલ્ટર લાગુ પડે છે. છુપાયેલાં મશીનોની સોંપણીઓ જળવાય છે.'],
+            jobRequired: ['પ્રોડક્શનમાં મશીન તૈયાર કરો', 'પ્રોડક્શન કામ નથી હોય ત્યારે કારીગર જોડી શકાતો નથી. પ્રોડક્શનમાં કામ પસંદ કરો દ્વારા પ્રોડક્શન → કામ ખોલો. સાચવેલા કોસ્ટિંગથી કામ બનાવો અને મશીનોનાં કામમાં પસંદ કરો, પછી કન્ફિગરેશન પર પાછા આવો.'],
+            assign: ['સોંપો પસંદ કરો', 'આ કારીગર અને શિફ્ટ માટે સક્રિય મશીનોની યાદી ખૂલે છે. મોબાઇલ પર પહેલેથી જોડાયેલા કારીગર માટે બદલો દેખાય છે. બીજું મશીન પસંદ કરવાથી કારીગરનાં અન્ય મશીન સાથેનાં જોડાણો દૂર થતાં નથી.'],
+            picker: ['મશીન પસંદ કરો', 'પસંદ કરો દબાવતાં જ જોડાણ સેવ થાય છે. વર્તમાન આ કારીગર સાથે જોડાયેલ મશીન છે. સક્રિય કામ વગર મશીન પસંદ કરી શકાતું નથી. અન્ય કારીગર હોય તો નામ દેખાય છે અને બદલતાં પહેલાં પુષ્ટિ માગે છે. બંધ કરો પસંદગી વગર બહાર નીકળે છે.'],
+            drag: ['અથવા કનેક્ટર ખેંચો', 'ડેસ્કટોપ પર કારીગરનો ગોળ કનેક્ટર મશીન પર ખેંચો. રેખા પોઇન્ટર સાથે ચાલે છે અને યોગ્ય મશીન ઊભરે છે. મશીન પર છોડો તો સેવ, બહાર છોડો તો રદ. કીબોર્ડ અથવા ફોન પર સોંપો વાપરો.'],
+            connected: ['સેવ થયેલું જોડાણ જુઓ', 'નમૂનો હવે જોડાયેલો છે: ડેસ્કટોપ પર રંગીન રેખા, કારીગર પર મશીનનું નામ અને મશીન પર કારીગરનું નામ. રંગો જોડાણ ઓળખવામાં મદદ કરે છે. સાચા સેવ પર પુષ્ટિ અને પાછું લો દેખાય છે; પસંદ શિફ્ટની ગણતરી અપડેટ થાય છે.'],
+            replace: ['મુખ્ય કારીગર બદલવો', 'એ જ શિફ્ટમાં મશીન પર બીજો કારીગર સોંપો. બદલવાની પુષ્ટિ કરો અથવા રદ કરીને જૂનું જોડાણ રાખો. હાલની સોંપણી બદલાય છે; અગાઉ સેવ કરેલા પ્રોડક્શન અને પગાર રેકોર્ડની વિગતો જળવાય છે.'],
+            remove: ['કારીગરનું જોડાણ દૂર કરો', 'કારીગર પાસેનું અનલિંક બટન પસંદ શિફ્ટમાં આ મશીનનું હાલનું જોડાણ દૂર કરે છે. કારીગર કે મશીન કાઢી નાખતું નથી. ફરી જોડવા સોંપો વાપરો. સેવ કરેલા પ્રોડક્શન રેકોર્ડ જળવાય છે.'],
+            inactive: ['નિષ્ક્રિય રેકોર્ડ બતાવો', 'નિષ્ક્રિય બતાવો દ્વારા નિષ્ક્રિય કારીગરો અને મશીનો સંદર્ભ માટે દેખાય છે. તેમને નવી સોંપણી આપી શકાતી નથી. શિફ્ટ ઉપલબ્ધતા, શોધ અને પ્રકારનાં ફિલ્ટર લાગુ રહે છે. સેટઅપમાં સક્રિય કરો અથવા વિગતો બદલો.'],
+            addWorker: ['સેટઅપમાં કારીગર ઉમેરો', 'આ શૉર્ટકટ સેટઅપમાં કારીગર ઉમેરો ફોર્મ ખોલે છે. નામ, પીસ-રેટ કે માસિક પગાર પસંદ કરો અને પીસ-રેટ કારીગરની શિફ્ટ ઉપલબ્ધતા નક્કી કરો. પછી અહીં જોડો. પગારનો પ્રકાર પછી બદલી શકાતો નથી.'],
+            addMachine: ['સેટઅપમાં મશીન ઉમેરો', 'આ શૉર્ટકટ મશીન ઉમેરો ફોર્મ ખોલે છે. પ્રકાર પસંદ કરો અને ઇચ્છો તો નામ કે કસ્ટમ લેબલ આપો. પછી પ્રોડક્શન → કામમાં મશીનનું કામ પસંદ કરો અને અહીં કારીગર જોડો.'],
+            setup: ['રેકોર્ડ જુઓ અને સંપાદિત કરો', 'સેટઅપમાં બધું જુઓ દ્વારા કારીગર અને મશીન યાદીઓ ખૂલે છે. ત્યાં શોધો, વિગતો બદલો, પગારદાર સ્ટાફ સંભાળો અથવા સક્રિય સ્થિતિ બદલો. કન્ફિગરેશન સોંપણીઓ માટે છે. નાની સ્ક્રીન પર શૉર્ટકટ બોર્ડની નીચે છે.'],
+            finish: ['તમારી શિફ્ટ તૈયાર કરો', 'સેટઅપમાં કારીગર અને મશીનો ઉમેરો, પ્રોડક્શનમાં મશીનનાં કામ પસંદ કરો, પછી અહીં દરેક શિફ્ટના કારીગર જોડો. દૈનિક પ્રોડક્શન આ જોડાણ વાપરે છે. પૂર્ણ કરો અથવા ટૂર છોડો દ્વારા બધા નમૂના હટી જૂનો દેખાવ પાછો આવે છે. ડાબી રેલથી ગમે ત્યારે ટૂર ફરી જુઓ.'],
+        },
+    },
+}
