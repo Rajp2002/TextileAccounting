@@ -118,6 +118,18 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
       // Only disabled when busy or when explicitly not eligible
       expect(card).toContain('disabled={busy || !freeAvailable}')
     })
+
+    it('STATE-03: onboarding users with pre-provisioned free plan see Continue with Free instead of disabled current plan', () => {
+      const card = read('components/plans/PlanCard.tsx')
+      const page = read('app/(plan-selection)/plans/page.tsx')
+
+      // isCurrent excludes onboarding so Free tier is not marked as disabled current plan during onboarding
+      expect(card).toContain('const isCurrent = currentPlan === planTier && !isOnboarding')
+      expect(card).toContain('id="continue-free-btn"')
+
+      // Plans page detects onboarding from both app_metadata and URL searchParams
+      expect(page).toContain("isOnboarding = user.app_metadata.plan_selection_pending === true || from === 'onboarding'")
+    })
   })
 
   describe('PAY: Pricing & Commercial Terms Disclosure', () => {

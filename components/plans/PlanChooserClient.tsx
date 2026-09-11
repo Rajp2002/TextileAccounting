@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
 import { ShieldCheck, Calendar, Receipt, Sparkles, CheckCircle2 } from 'lucide-react'
 import { PlanCard } from './PlanCard'
 import { PlanPreviewModal } from './PlanPreviewModal'
@@ -38,7 +37,6 @@ export function PlanChooserClient({
   })
 
   const { language, tx } = useTranslation()
-  const router = useRouter()
 
   const finish = useCallback(async (plan: 'free' | 'paid') => {
     setBusy(true)

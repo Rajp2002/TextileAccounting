@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Check, Eye, Lock, Sparkles, X } from 'lucide-react'
+import { Check, Eye, Loader2, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
-import { BILLING_PLANS, type PurchasablePlanTier } from '@/lib/billing-constants'
+import { BILLING_PLANS } from '@/lib/billing-constants'
 import {
   UPGRADE_FEATURE_IMAGES,
   upgradeText,
@@ -55,7 +55,7 @@ export function PlanCard({
       maximumFractionDigits: 0,
     }).format(paise / 100)
 
-  const isCurrent = currentPlan === planTier
+  const isCurrent = currentPlan === planTier && !isOnboarding
   const isLite = planTier === 'lite'
   const isBase = planTier === 'base'
   const isFree = planTier === 'free'
@@ -311,12 +311,14 @@ export function PlanCard({
             ) : (
               <Button
                 type="button"
+                id="continue-free-btn"
                 disabled={busy || !freeAvailable}
                 onClick={onSelectFree}
-                className="w-full font-semibold"
+                className="w-full font-semibold gap-2"
                 size="lg"
               >
-                {busy ? tx('Opening your workspace…') : upgradeText(language, 'continueFree')}
+                {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                <span>{busy ? tx('Opening your workspace…') : upgradeText(language, 'continueFree')}</span>
               </Button>
             )}
             {!freeAvailable && !isCurrent && (

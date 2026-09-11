@@ -14,13 +14,24 @@ export const metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function PlansPage() {
+interface PlansPageProps {
+  searchParams?: Promise<{ from?: string | string[] }>
+}
+
+export default async function PlansPage(props: PlansPageProps) {
   const { user, profile } = await requireRole(['owner'], { allowFreeAccount: true })
   await assertOrgWritable(profile.org_id)
 
+  const searchParams = props.searchParams ? await props.searchParams : undefined
+  const from = typeof searchParams?.from === 'string'
+    ? searchParams.from
+    : Array.isArray(searchParams?.from)
+      ? searchParams.from[0]
+      : undefined
+
   const access = await getOrgPlanAccess(profile.org_id)
   const paid = ['lite', 'base', 'premium', 'trial'].includes(access.effectiveTier)
-  const isOnboarding = user.app_metadata.plan_selection_pending === true
+  const isOnboarding = user.app_metadata.plan_selection_pending === true || from === 'onboarding'
 
   let currentPlan: UpgradePlan | 'unassigned' = 'unassigned'
   if (access.effectiveTier === 'lite') currentPlan = 'lite'
