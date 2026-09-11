@@ -1,6 +1,11 @@
 import type { TourDefinition, TourId } from './tour-types'
 
 export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
+    configuration: {
+        id: 'configuration', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'configurationBenefit', replayTitle: 'replayConfiguration' },
+    },
     'cost-estimate': {
         id: 'cost-estimate',
         contentVersion: 'v1',
@@ -40,7 +45,7 @@ export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
 }
 
 export const tourRegistry = TOUR_REGISTRY
-export const supportedTours: TourId[] = ['cost-estimate', 'rate-book', 'saved-costings']
+export const supportedTours: TourId[] = ['cost-estimate', 'rate-book', 'saved-costings', 'configuration']
 
 export function getTourDefinition(tourId: TourId): TourDefinition {
     return TOUR_REGISTRY[tourId]

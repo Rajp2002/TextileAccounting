@@ -1,6 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { TourInvitation } from '@/components/tours/TourInvitation'
+import { useTranslation } from '@/lib/i18n/context'
+import { configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
+import { configurationTourSteps, configurationTourView, makeConfigurationTourExample, type ConfigurationTourStep } from '@/lib/configuration-tour'
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -18,6 +23,8 @@ import {
 } from './actions'
 import type { BaseProductionInitialData } from './loaders'
 import { buildWorkerColorMap, DEFAULT_PALETTE } from './worker-colors'
+
+const ConfigurationTutorial = dynamic(() => import('@/components/tours/ConfigurationTutorial'), { ssr: false })
 
 function formatMachineType(value: string) {
     return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -56,27 +63,48 @@ function connectorPath(from: ConnectorPoint, to: ConnectorPoint, lane: number) {
 }
 
 export default function BaseAssignmentWorkspace({
-    initialData,
+    initialData: liveData,
+    tourMetadata,
     focusWorkerId,
     initialShift,
 }: {
     initialData: BaseProductionInitialData
+    tourMetadata?: Record<string, unknown>
     focusWorkerId?: string
     initialShift?: BaseProductionShift
 }) {
     const router = useRouter()
-    const [shift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
-    const [workerSearch, setWorkerSearch] = useState(() => initialData.workers.find(worker => worker.id === focusWorkerId)?.name ?? '')
-    const [selectedMachineTypes, setSelectedMachineTypes] = useState<string[]>([])
-    const [showInactive, setShowInactive] = useState(false)
+    const { language } = useTranslation()
+    const [tourStep, setTourStep] = useState<ConfigurationTourStep | null>(null)
+    const tourLauncher = useRef<HTMLDivElement>(null)
+    const tourView = tourStep ? configurationTourView(tourStep) : null
+    const initialData = useMemo(() => {
+        if (!tourStep) return liveData
+        const example = makeConfigurationTourExample(liveData.today, tourStep)
+        const copy = configurationTutorialCopy[language]
+        example.workers[0].name = copy.worker
+        example.machines[0].name = copy.machine
+        if (example.machines[1]) example.machines[1].name = copy.inactiveMachine
+        return { ...liveData, ...example }
+    }, [liveData, tourStep, language])
+    const [selectedShift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
+    const [search, setWorkerSearch] = useState(() => initialData.workers.find(worker => worker.id === focusWorkerId)?.name ?? '')
+    const [machineTypeFilter, setSelectedMachineTypes] = useState<string[]>([])
+    const [includeInactive, setShowInactive] = useState(false)
     const [draggingWorkerId, setDraggingWorkerId] = useState<string | null>(null)
     const [dragPoint, setDragPoint] = useState<ConnectorPoint | null>(null)
     const [hoveredWorkerId, setHoveredWorkerId] = useState<string | null>(null)
     const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null)
     const [connectorPositions, setConnectorPositions] = useState<ConnectorPositions>({ workers: {}, machines: {} })
-    const [pickerWorkerId, setPickerWorkerId] = useState<string | null>(null)
+    const [selectedPickerWorkerId, setPickerWorkerId] = useState<string | null>(null)
     const [pendingKey, setPendingKey] = useState<string | null>(null)
-    const [mobileView, setMobileView] = useState<'workers' | 'machines'>('workers')
+    const [selectedMobileView, setMobileView] = useState<'workers' | 'machines'>('workers')
+    const shift = tourView?.shift ?? selectedShift
+    const workerSearch = tourStep ? '' : search
+    const selectedMachineTypes = useMemo(() => tourStep ? [] : machineTypeFilter, [tourStep, machineTypeFilter])
+    const showInactive = tourView?.showInactive ?? includeInactive
+    const pickerWorkerId = tourView ? tourView.pickerWorkerId : selectedPickerWorkerId
+    const mobileView = tourView?.mobileView ?? selectedMobileView
     const boardRef = useRef<HTMLDivElement>(null)
     const configurationParams = new URLSearchParams({ shift })
     if (focusWorkerId) configurationParams.set('worker', focusWorkerId)
@@ -200,7 +228,7 @@ export default function BaseAssignmentWorkspace({
     }
 
     function handleConnectorPointerDown(event: ReactPointerEvent<HTMLElement>, workerId: string) {
-        if (pendingKey || !workerById.get(workerId)?.is_active) return
+        if (tourStep || pendingKey || !workerById.get(workerId)?.is_active) return
         event.preventDefault()
         event.currentTarget.setPointerCapture(event.pointerId)
         setDraggingWorkerId(workerId)
@@ -231,6 +259,7 @@ export default function BaseAssignmentWorkspace({
     }
 
     async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
+        if (tourStep) return
         if (!currentJobByMachine.has(machineId)) {
             toast.error('This machine has no active production job. Create or select one before assigning a worker.')
             return
@@ -289,7 +318,7 @@ export default function BaseAssignmentWorkspace({
         assignmentId: string,
         previousAssignment: BaseWorkerMachineAssignment | undefined,
     ) {
-        if (pendingKey) return
+        if (tourStep || pendingKey) return
         setPendingKey(`undo-${assignmentId}`)
         try {
             const removeResult = await removeBaseWorkerMachineAssignment({ assignmentId })
@@ -324,6 +353,7 @@ export default function BaseAssignmentWorkspace({
     }
 
     async function handleRemove(assignmentId: string) {
+        if (tourStep) return
         if (pendingKey) return
         setPendingKey(`remove-${assignmentId}`)
         try {
@@ -343,27 +373,36 @@ export default function BaseAssignmentWorkspace({
     }
 
     return (
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_168px]">
+        <div className="configuration-workspace" inert={tourStep !== null}>
+            <aside className="configuration-guide-rail" aria-label="Configuration guide">
+                <div ref={tourLauncher}>
+                    <TourInvitation tourId="configuration" userId={liveData.actorId} orgId={liveData.orgId} userMetadata={tourMetadata} align="full" onLaunch={() => {
+                        if (pendingKey) return
+                        setPickerWorkerId(null)
+                        setTourStep(configurationTourSteps[0])
+                    }} />
+                </div>
+            </aside>
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
+                    <div data-configuration-tour="shift" role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
                         <Button type="button" size="sm" variant={shift === 'day' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'day'} disabled={pendingKey !== null} onClick={() => setShift('day')}><Sun className="h-4 w-4" /> Day shift</Button>
                         <Button type="button" size="sm" variant={shift === 'night' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'night'} disabled={pendingKey !== null} onClick={() => setShift('night')}><Moon className="h-4 w-4" /> Night shift</Button>
                     </div>
-                    <span className="text-xs text-muted-foreground" aria-live="polite">{currentAssignments.length} assignment{currentAssignments.length === 1 ? '' : 's'} · {shift === 'day' ? 'Day' : 'Night'} shift</span>
+                    <span data-configuration-tour="count" className="text-xs text-muted-foreground" aria-live="polite">{currentAssignments.length} assignment{currentAssignments.length === 1 ? '' : 's'} · {shift === 'day' ? 'Day' : 'Night'} shift</span>
                 </div>
 
-            <Card className="hidden overflow-hidden md:block">
+            <Card data-configuration-tour="board" className="hidden overflow-hidden md:block">
                 <CardHeader className="border-b border-hairline/70">
                     <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Connect workers to machines</CardTitle>
                     <CardDescription>Drag a connector or choose Assign. Each machine has one worker per shift.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4">
                     <div className="mb-3 grid grid-cols-2 gap-4">
-                        <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
+                        <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input data-configuration-tour="search" value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
                     </div>
-                    <div ref={boardRef} className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-16 ${draggingWorkerId ? 'select-none' : ''}`}>
+                    <div ref={boardRef} data-configuration-tour-connections className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-16 ${draggingWorkerId ? 'select-none' : ''}`}>
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
                             {visibleWorkers.flatMap((worker) => {
                                 const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
@@ -413,6 +452,7 @@ export default function BaseAssignmentWorkspace({
                                 return (
                                     <div
                                         key={worker.id}
+                                        data-configuration-tour="worker"
                                         onMouseEnter={() => !draggingWorkerId && setHoveredWorkerId(worker.id)}
                                         onMouseLeave={() => !draggingWorkerId && setHoveredWorkerId(null)}
                                         className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3 py-3 shadow-xs transition-colors ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
@@ -437,11 +477,11 @@ export default function BaseAssignmentWorkspace({
                                             </div>
                                         </div>
                                         <div className="flex shrink-0 items-center gap-1.5">
-                                            <Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>Assign</Button>
+                                            <Button data-configuration-tour="assign" size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>Assign</Button>
                                             <span
                                                 role="button"
                                                 tabIndex={-1}
-                                                data-worker-handle={worker.id}
+                                                data-configuration-tour="drag" data-worker-handle={worker.id}
                                                 onPointerDown={(event) => handleConnectorPointerDown(event, worker.id)}
                                                 onPointerMove={handleConnectorPointerMove}
                                                 onPointerUp={finishConnectorDrag}
@@ -474,7 +514,7 @@ export default function BaseAssignmentWorkspace({
                                 return (
                                     <div
                                         key={machine.id}
-                                        data-machine-node={machine.id}
+                                        data-configuration-tour="machine" data-machine-node={machine.id}
                                         onMouseEnter={() => !draggingWorkerId && setHoveredMachineId(machine.id)}
                                         onMouseLeave={() => !draggingWorkerId && setHoveredMachineId(null)}
                                         className={`min-h-[76px] rounded-xl border bg-surface px-3 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
@@ -532,10 +572,10 @@ export default function BaseAssignmentWorkspace({
                                                 ) : (
                                                     <Badge variant="warning">Unassigned</Badge>
                                                 )}
-                                                {assignment && <Button variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
+                                                {assignment && <Button data-configuration-tour="remove" variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
                                             </div>
                                         </div>
-                                        {!hasActiveJob && machine.is_active && <Link href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
+                                        {!hasActiveJob && machine.is_active && <Link data-configuration-tour="job" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
                                     </div>
                                 )
                             })}
@@ -544,7 +584,7 @@ export default function BaseAssignmentWorkspace({
                 </CardContent>
             </Card>
 
-            <Card className="gap-3 md:hidden">
+            <Card data-configuration-tour="board" className="gap-3 md:hidden">
                 <CardHeader className="border-b border-hairline/70 pb-3">
                     <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Connect workers to machines</CardTitle>
                     <div className="grid grid-cols-2 rounded-lg bg-surface-soft p-1" role="group" aria-label="Assignment workspace view">
@@ -555,12 +595,12 @@ export default function BaseAssignmentWorkspace({
                 {mobileView === 'workers' ? (
                     <CardContent className="p-3 pt-0">
                         <p className="mb-3 text-xs text-body">Assign each worker to one or more machines.</p>
-                        <div className="relative mb-3"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
+                        <div className="relative mb-3"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input data-configuration-tour="search" value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
                         <div className="space-y-2">
                             {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
                                 const assignments = assignmentByWorker.get(worker.id) ?? []
                                 const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
-                                return <div key={worker.id} className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <span key={assignment.id} style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }} className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</span>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex shrink-0 items-center gap-1"><Button size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
+                                return <div key={worker.id} data-configuration-tour="worker" className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <span key={assignment.id} style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }} className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</span>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex shrink-0 items-center gap-1"><Button data-configuration-tour="assign" data-configuration-tour-drag-fallback size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
                             })}
                         </div>
                     </CardContent>
@@ -576,7 +616,7 @@ export default function BaseAssignmentWorkspace({
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
                                 const hasActiveJob = jobId !== 'none'
                                 return (
-                                    <div key={machine.id} className="rounded-xl border border-hairline px-3 py-3">
+                                    <div key={machine.id} data-configuration-tour="machine" data-configuration-tour-connections className="rounded-xl border border-hairline px-3 py-3">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
@@ -603,10 +643,10 @@ export default function BaseAssignmentWorkspace({
                                                 ) : (
                                                     <Badge variant="warning">Unassigned</Badge>
                                                 )}
-                                                {assignment && <Button variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
+                                                {assignment && <Button data-configuration-tour="remove" variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
                                             </div>
                                         </div>
-                                        {!hasActiveJob && machine.is_active && <Link href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
+                                        {!hasActiveJob && machine.is_active && <Link data-configuration-tour="job" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
                                     </div>
                                 )
                             })}
@@ -615,16 +655,16 @@ export default function BaseAssignmentWorkspace({
                 )}
             </Card>
 
-                <label className="flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} /> Show inactive</label>
+                <label data-configuration-tour="inactive" className="flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} /> Show inactive</label>
             </div>
-            <aside aria-label="Setup shortcuts" className="flex flex-wrap gap-2 xl:sticky xl:top-6 xl:flex-col xl:pt-14">
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link href={setupHref('worker')}><Plus className="h-4 w-4" /> Add worker</Link></Button>
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link href={setupHref('machine')}><Plus className="h-4 w-4" /> Add machine</Link></Button>
-                <Link href="/owner/setup" className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">View all in Setup <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+            <aside aria-label="Setup shortcuts" className="configuration-actions-rail flex flex-wrap gap-2">
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}><Plus className="h-4 w-4" /> Add worker</Link></Button>
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}><Plus className="h-4 w-4" /> Add machine</Link></Button>
+                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href="/owner/setup" className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">View all in Setup <ArrowUpRight className="h-3.5 w-3.5" /></Link>
             </aside>
 
-            <Sheet open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open) setPickerWorkerId(null) }}>
-                <SheetContent side="bottom" className="max-h-[82dvh] rounded-t-[28px] pb-6">
+            <Sheet modal={!tourStep} open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open && !tourStep) setPickerWorkerId(null) }}>
+                <SheetContent data-configuration-tour="picker" data-tour-floating={tourStep ? '' : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-[28px] pb-6">
                     <SheetHeader><SheetTitle>Assign {pickerWorker?.name ?? 'worker'}</SheetTitle><SheetDescription>Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription></SheetHeader>
                     <div className="space-y-3 overflow-y-auto px-4">
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
@@ -670,6 +710,7 @@ export default function BaseAssignmentWorkspace({
                     <SheetFooter><Button variant="outline" onClick={() => setPickerWorkerId(null)}>Close</Button></SheetFooter>
                 </SheetContent>
             </Sheet>
+            {tourStep && <ConfigurationTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={liveData.actorId} />}
         </div>
     )
 }
@@ -692,7 +733,7 @@ function MachineTypeFilters({
     if (machineTypes.length === 0) return null
 
     return (
-        <div className="flex min-h-10 flex-wrap items-center gap-2" aria-label="Filter by machine type">
+        <div className="flex min-h-10 flex-wrap items-center gap-2" data-configuration-tour="types" aria-label="Filter by machine type">
             <Button type="button" size="sm" variant={selected.length === 0 ? 'default' : 'outline'} onClick={onShowAll} aria-pressed={selected.length === 0}>All</Button>
             {machineTypes.map((machineType) => {
                 const isSelected = selected.includes(machineType)

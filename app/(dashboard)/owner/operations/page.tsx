@@ -8,5 +8,5 @@ export default async function OperationsPage() {
     const { user, profile } = await requireRole(['owner'])
     const initialData = await loadBaseProductionInitialData(profile.org_id, getSuratTodayString())
 
-    return <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} view="operations" />
+    return <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} view="operations" tourMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }} />
 }

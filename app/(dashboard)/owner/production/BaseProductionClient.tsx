@@ -181,10 +181,12 @@ export default function BaseProductionClient({
     initialData,
     initialCostingId = null,
     view = 'production',
+    tourMetadata,
 }: {
     initialData: BaseProductionInitialData
     initialCostingId?: string | null
     view?: 'production' | 'operations' | 'setup' | 'payroll'
+    tourMetadata?: Record<string, unknown>
 }) {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -515,7 +517,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className="space-y-5 pb-8">
+        <div className={`space-y-5 pb-8 ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             {navigation.returnTo && <Button asChild variant="outline" size="sm"><Link href={navigation.returnTo}>Back to previous workspace</Link></Button>}
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div>
@@ -561,7 +563,7 @@ export default function BaseProductionClient({
                 </>}
             </div>}
 
-            {view === 'operations' && <BaseAssignmentWorkspace key={`${navigation.worker ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={navigation.worker} initialShift={navigation.shift} />}
+            {view === 'operations' && <BaseAssignmentWorkspace key={`${navigation.worker ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={navigation.worker} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
             {view === 'setup' && <BaseSetupWorkspace initialData={initialData} initialSection={searchParams.get('section') === 'machines' ? 'machines' : 'workers'} focusWorkerId={navigation.worker} onAddWorker={openNewWorker} onAddMachine={openNewMachine} onEditWorker={openEditWorker} onEditMachine={openEditMachine} />}
 
             {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
