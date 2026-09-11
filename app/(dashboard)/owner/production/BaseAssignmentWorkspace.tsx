@@ -66,15 +66,17 @@ export default function BaseAssignmentWorkspace({
     initialData: liveData,
     tourMetadata,
     focusWorkerId,
+    focusMachineId,
     initialShift,
 }: {
     initialData: BaseProductionInitialData
     tourMetadata?: Record<string, unknown>
+    focusMachineId?: string
     focusWorkerId?: string
     initialShift?: BaseProductionShift
 }) {
     const router = useRouter()
-    const { language } = useTranslation()
+    const { language, tx } = useTranslation()
     const [tourStep, setTourStep] = useState<ConfigurationTourStep | null>(null)
     const tourLauncher = useRef<HTMLDivElement>(null)
     const tourView = tourStep ? configurationTourView(tourStep) : null
@@ -88,7 +90,7 @@ export default function BaseAssignmentWorkspace({
         return { ...liveData, ...example }
     }, [liveData, tourStep, language])
     const [selectedShift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
-    const [search, setWorkerSearch] = useState(() => initialData.workers.find(worker => worker.id === focusWorkerId)?.name ?? '')
+    const [search, setWorkerSearch] = useState('')
     const [machineTypeFilter, setSelectedMachineTypes] = useState<string[]>([])
     const [includeInactive, setShowInactive] = useState(false)
     const [draggingWorkerId, setDraggingWorkerId] = useState<string | null>(null)
@@ -108,8 +110,9 @@ export default function BaseAssignmentWorkspace({
     const boardRef = useRef<HTMLDivElement>(null)
     const configurationParams = new URLSearchParams({ shift })
     if (focusWorkerId) configurationParams.set('worker', focusWorkerId)
-    const configurationReturnTo = `/owner/operations?${configurationParams}`
-    const setupHref = (add: 'worker' | 'machine') => `/owner/setup?${new URLSearchParams({ section: add === 'worker' ? 'workers' : 'machines', add, returnTo: configurationReturnTo })}`
+    if (focusMachineId) configurationParams.set('machine', focusMachineId)
+    const configurationReturnTo = `/owner/assignments?${configurationParams}`
+    const setupHref = (add: 'worker' | 'machine') => `/owner/${add === 'worker' ? 'workers' : 'machines'}?${new URLSearchParams({ ...(add === 'machine' ? { register: 'base' } : {}), add, returnTo: configurationReturnTo })}`
 
     const workerById = useMemo(
         () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
@@ -147,6 +150,8 @@ export default function BaseAssignmentWorkspace({
         )),
         [currentJobByMachine, initialData.assignments, initialData.today, shift],
     )
+    // Context filters narrow the summary; all candidates remain available for explicit reassignment.
+    const contextAssignmentCount = currentAssignments.filter(assignment => (tourStep || !focusWorkerId || assignment.worker_id === focusWorkerId) && (tourStep || !focusMachineId || assignment.machine_id === focusMachineId)).length
     const assignmentByWorker = useMemo(() => {
         const result = new Map<string, typeof currentAssignments>()
         for (const assignment of currentAssignments) {
@@ -160,21 +165,23 @@ export default function BaseAssignmentWorkspace({
     )
 
     const visibleWorkers = useMemo(() => initialData.workers.filter((worker) => {
+        if (!tourStep && focusWorkerId && worker.id !== focusWorkerId) return false
         if (worker.pay_type === 'fixed_monthly') return false
         if (!showInactive && !worker.is_active) return false
         const isAvailable = worker.shift_availability === 'both' || worker.shift_availability === shift
         if (!isAvailable && !assignmentByWorker.has(worker.id)) return false
         return worker.name.toLowerCase().includes(workerSearch.trim().toLowerCase())
-    }), [assignmentByWorker, initialData.workers, shift, showInactive, workerSearch])
+    }), [assignmentByWorker, initialData.workers, shift, showInactive, workerSearch, focusWorkerId, tourStep])
     const machineTypes = useMemo(() => Array.from(new Set(
         initialData.machines
             .filter((machine) => showInactive || machine.is_active)
             .map((machine) => machine.machine_type),
     )).sort((left, right) => formatMachineType(left).localeCompare(formatMachineType(right))), [initialData.machines, showInactive])
     const visibleMachines = useMemo(() => initialData.machines.filter((machine) => {
+        if (!tourStep && focusMachineId && machine.id !== focusMachineId) return false
         if (!showInactive && !machine.is_active) return false
         return selectedMachineTypes.length === 0 || selectedMachineTypes.includes(machine.machine_type)
-    }), [initialData.machines, selectedMachineTypes, showInactive])
+    }), [initialData.machines, selectedMachineTypes, showInactive, focusMachineId, tourStep])
     const selectableMachines = useMemo(
         () => initialData.machines.filter((machine) => machine.is_active && (selectedMachineTypes.length === 0 || selectedMachineTypes.includes(machine.machine_type))),
         [initialData.machines, selectedMachineTypes],
@@ -374,7 +381,8 @@ export default function BaseAssignmentWorkspace({
 
     return (
         <div className="configuration-workspace" inert={tourStep !== null}>
-            <aside className="configuration-guide-rail" aria-label="Configuration guide">
+            {(focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
+            <aside className="configuration-guide-rail" aria-label="Machine Assignments guide">
                 <div ref={tourLauncher}>
                     <TourInvitation tourId="configuration" userId={liveData.actorId} orgId={liveData.orgId} userMetadata={tourMetadata} align="full" onLaunch={() => {
                         if (pendingKey) return
@@ -389,7 +397,7 @@ export default function BaseAssignmentWorkspace({
                         <Button type="button" size="sm" variant={shift === 'day' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'day'} disabled={pendingKey !== null} onClick={() => setShift('day')}><Sun className="h-4 w-4" /> Day shift</Button>
                         <Button type="button" size="sm" variant={shift === 'night' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'night'} disabled={pendingKey !== null} onClick={() => setShift('night')}><Moon className="h-4 w-4" /> Night shift</Button>
                     </div>
-                    <span data-configuration-tour="count" className="text-xs text-muted-foreground" aria-live="polite">{currentAssignments.length} assignment{currentAssignments.length === 1 ? '' : 's'} · {shift === 'day' ? 'Day' : 'Night'} shift</span>
+                    <span data-configuration-tour="count" className="text-xs text-muted-foreground" aria-live="polite">{tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}</span>
                 </div>
 
             <Card data-configuration-tour="board" className="hidden overflow-hidden md:block">
@@ -657,10 +665,11 @@ export default function BaseAssignmentWorkspace({
 
                 <label data-configuration-tour="inactive" className="flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} /> Show inactive</label>
             </div>
-            <aside aria-label="Setup shortcuts" className="configuration-actions-rail flex flex-wrap gap-2">
+            <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2">
                 <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}><Plus className="h-4 w-4" /> Add worker</Link></Button>
                 <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}><Plus className="h-4 w-4" /> Add machine</Link></Button>
-                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href="/owner/setup" className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">View all in Setup <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">Manage workers <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+                <Link  onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">Manage machines <ArrowUpRight className="h-3.5 w-3.5" /></Link>
             </aside>
 
             <Sheet modal={!tourStep} open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open && !tourStep) setPickerWorkerId(null) }}>

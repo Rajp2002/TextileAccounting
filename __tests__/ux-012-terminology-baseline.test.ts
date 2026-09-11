@@ -62,7 +62,7 @@ describe('UX-012 terminology baseline', () => {
 
         expect(en).not.toContain('"mtrs"')
         expect(gu).not.toContain('"mtrs"')
-        expect(gu).not.toContain('"machines": "મશીનો"')
+        expect(gu).toContain('"machines": "મશીનો"') // Dedicated Machines navigation; existing loom terminology remains below.
         expect(gu).toContain('shiftProduction: "આ પાળીમાં ઉત્પાદિત મીટર"')
         expect(gu).toContain('saveHelper: "સાચવવા માટે આ પાળીમાં ઉત્પાદિત મીટર')
     })

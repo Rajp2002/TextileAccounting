@@ -178,7 +178,7 @@ export default function BaseDailyProductionSheet({
         if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
         const params = new URLSearchParams({ shift, returnTo: baseProductionHref({ ...navigation, date: productionDate, shift }) })
         if (focusedWorker) params.set('worker', focusedWorker)
-        router.push(`/owner/operations?${params}`)
+        router.push(`/owner/assignments?${params}`)
     }
 
     function openMachineJobs() {
@@ -632,7 +632,7 @@ export default function BaseDailyProductionSheet({
 
     return (
         <div ref={sheetRef} className="space-y-4 pb-28">
-            {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Configuration or discard the local draft before saving; no metres have been silently removed.</p>}
+            {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
             <div className="flex items-start justify-between gap-3">
@@ -705,7 +705,7 @@ export default function BaseDailyProductionSheet({
                         <Users className="h-8 w-8 text-saffron-deep" />
                         <div>
                             <p className="font-bold text-ink">Add a worker to record production</p>
-                            <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Add workers in Setup and choose which shift they are available for.</p>
+                            <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Add workers in Workers and choose which shift they are available for.</p>
                         </div>
                         <div className="flex flex-wrap justify-center gap-2"><Button onClick={onAddWorker}><Plus className="h-4 w-4" /> Add worker</Button><Button variant="outline" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>
                     </CardContent>
@@ -731,7 +731,7 @@ export default function BaseDailyProductionSheet({
                                     if (!context.workerId) return (
                                         <div key={context.machineId} className="flex flex-wrap items-center justify-between gap-3 bg-warning/5 px-4 py-3 text-sm">
                                             <div><p className="font-semibold text-ink">{context.machineLabel}</p><p className="text-body">Pending · assign a worker before entering production.</p></div>
-                                            <Button variant="outline" size="sm" onClick={openConfiguration}>Assign worker in Configuration</Button>
+                                            <Button variant="outline" size="sm" onClick={openConfiguration}>Assign worker in Machine Assignments</Button>
                                         </div>
                                     )
                                     const row = getRow(context.workerId!)

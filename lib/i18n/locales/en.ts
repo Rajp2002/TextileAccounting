@@ -1,4 +1,32 @@
 export const en = {
+ navigation: {
+  "estimate": "Cost Estimate",
+  "costings": "Saved Costings",
+  "rates": "Yarn Rate Book",
+  "production": "Production",
+  "assignments": "Machine Assignments",
+  "stock": "Godown Stock",
+  "dispatches": "Dispatches",
+  "machines": "Machines",
+  "workers": "Workers",
+  "payroll": "Payroll",
+  "today": "Factory Today",
+  "orders": "Party Orders",
+  "market_runs": "Market Runs",
+  "analytics": "Analytics",
+  "legacy_workers": "Legacy workers",
+  "advances": "Upaad",
+  "commercials": "Party Ledger",
+  "archive": "Archive",
+  "settings": "Settings",
+  "billing": "Plan & Billing",
+  "sections": {
+    "costing": "Costing",
+    "production_stock": "Production & Stock",
+    "workforce": "Workforce",
+    "utilities": "Account"
+  }
+},
     challan: {
         payment_due_date: "Full payment due date",
         payment_terms: "Agreed payment terms",

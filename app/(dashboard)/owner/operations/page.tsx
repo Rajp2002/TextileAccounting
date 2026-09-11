@@ -1,12 +1,13 @@
+import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth'
-import { getSuratTodayString } from '@/lib/time'
-
-import BaseProductionClient from '../production/BaseProductionClient'
-import { loadBaseProductionInitialData } from '../production/loaders'
-
-export default async function OperationsPage() {
-    const { user, profile } = await requireRole(['owner'])
-    const initialData = await loadBaseProductionInitialData(profile.org_id, getSuratTodayString())
-
-    return <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} view="operations" tourMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }} />
+import { getCachedOrgPlanAccess } from '@/lib/subscription'
+import { hasCapability } from '@/lib/subscription-access'
+import { legacyManagementHref } from '@/lib/management-navigation'
+export default async function LegacyPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+ const { profile } = await requireRole(['owner'])
+ const access = await getCachedOrgPlanAccess(profile.org_id)
+ if (!hasCapability(access.effectiveTier, 'production_management')) return null
+ const params = new URLSearchParams()
+ for (const [key, value] of Object.entries(await searchParams)) if (typeof value === 'string') params.set(key, value)
+ redirect(legacyManagementHref('operations', params))
 }

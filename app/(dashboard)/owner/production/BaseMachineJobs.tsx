@@ -44,10 +44,10 @@ export default function BaseMachineJobs({ initialData }: { initialData: BaseProd
         <Card id="machine-jobs" className="scroll-mt-6">
             <CardHeader>
                 <CardTitle className="text-base">Machine jobs</CardTitle>
-                <CardDescription>Choose the job each machine is running. Then connect its worker in <Link href="/owner/operations" className="font-medium text-saffron-deep underline underline-offset-2">Configuration</Link>.</CardDescription>
+                <CardDescription>Choose the job each machine is running. Then connect its worker in <Link href="/owner/assignments" className="font-medium text-saffron-deep underline underline-offset-2">Machine Assignments</Link>.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-                {machines.length === 0 && <p className="text-sm text-body">Add your machines in <Link href="/owner/setup?section=machines" className="font-medium text-saffron-deep underline underline-offset-2">Setup</Link> to link them to a job.</p>}
+                {machines.length === 0 && <p className="text-sm text-body">Add your machines in <Link href="/owner/machines?register=base" className="font-medium text-saffron-deep underline underline-offset-2">Machines</Link> to link them to a job.</p>}
                 {machines.map(machine => (
                     <div key={machine.id} className="flex flex-col justify-between gap-2 border-t border-hairline/70 pt-3 sm:flex-row sm:items-center">
                         <span className="text-sm font-medium text-ink">{machine.custom_label || machine.name}</span>

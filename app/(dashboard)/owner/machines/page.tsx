@@ -1,34 +1,15 @@
-import { MachineManagement } from '@/components/MachineManagement'
+import LegacyMachinesPage from './LegacyMachinesPage'
 import { requireRole } from '@/lib/auth'
-import { createPerfTimer } from '@/lib/perf'
-import { loadOwnerMachinesInitialData } from './loaders'
-
-export default async function MachinesPage() {
-    const perf = createPerfTimer('/owner/machines')
-    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
-    const initialData = await perf.measure(
-        'businessData',
-        () => loadOwnerMachinesInitialData(profile.org_id),
-        7
-    )
-
-    perf.log({
-        note: 'business includes machines, workers, fixed workers, production targets, and assignments',
-    })
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Looms</h1>
-                <p className="mt-0.5 text-sm text-gray-500">Manage machines and worker shift assignments</p>
-            </div>
-
-            <MachineManagement
-                orgId={profile.org_id}
-                userRole="owner"
-                initialData={initialData}
-                perfRouteName="/owner/machines"
-            />
-        </div>
-    )
+import { getCachedOrgPlanAccess } from '@/lib/subscription'
+import { hasCapability } from '@/lib/subscription-access'
+import { getSuratTodayString } from '@/lib/time'
+import { loadMachinesRegister } from '../production/registers/loaders'
+import MachinesRegister from '../production/registers/MachinesRegister'
+export default async function MachinesPage({ searchParams }: { searchParams: Promise<{ register?: string }> }) {
+ const { profile } = await requireRole(['owner'])
+ const access = await getCachedOrgPlanAccess(profile.org_id)
+ if ((await searchParams).register !== 'base' && hasCapability(access.effectiveTier, 'legacy_full_suite')) return <LegacyMachinesPage />
+ const data = await loadMachinesRegister()
+ if (!data) return null
+ return <MachinesRegister key={data.orgId} machines={data.machines} today={getSuratTodayString()} />
 }

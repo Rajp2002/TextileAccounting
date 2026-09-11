@@ -12,6 +12,11 @@ import { getSuratTodayString } from '@/lib/time'
 
 function revalidatePath(path: string) {
     revalidateNextPath(path)
+    if (path === '/owner/operations' || path === '/owner/production') {
+        revalidateNextPath('/owner/assignments')
+        revalidateNextPath('/owner/workers')
+        revalidateNextPath('/owner/machines')
+    }
     if (path === '/owner/production') {
         revalidateNextPath('/owner/stock')
         revalidateNextPath('/owner/operations')
