@@ -528,8 +528,35 @@
     display: none;
   }
 
-  /* The estimator keeps its full canvas width. On wide desktop the reference
-     rail uses the spare viewport margin instead of becoming a second column. */
+  /* Desktop Adaptive Proportional Scaling:
+     Ensures the ideal visual interface (sidebar + fixed left rail + centered canvas + fixed right rail)
+     scales down gracefully on laptops and smaller desktop viewports without cramping or collision. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    :root {
+      zoom: 0.74;
+    }
+  }
+
+  @media (min-width: 1280px) and (max-width: 1439px) {
+    :root {
+      zoom: 0.80;
+    }
+  }
+
+  @media (min-width: 1440px) and (max-width: 1659px) {
+    :root {
+      zoom: 0.88;
+    }
+  }
+
+  @media (min-width: 1660px) and (max-width: 1799px) {
+    :root {
+      zoom: 0.94;
+    }
+  }
+
+  /* The estimator keeps its full canvas width on mobile. On desktop the reference
+     and guide rails use dedicated viewport gutters with reserved margins. */
   .estimator-workspace-shell {
     width: 100%;
   }
@@ -545,6 +572,109 @@
 
   .configuration-actions-rail {
     margin-top: 1.25rem;
+  }
+
+  /* Desktop Rails & Gutter Reservation:
+     Pins the Guided Tour pill to the left rail and reference tools to the right rail
+     across all desktop viewports (from 1024px upwards), with bounded workspace width
+     so center cards never collide with the rails or Live Cost pill. */
+  @media (min-width: 1024px) {
+    .estimator-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .estimator-left-rail {
+      position: fixed;
+      top: 6rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .estimator-reference-rail {
+      position: fixed;
+      top: 6rem;
+      right: 1rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+      margin-top: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .rates-left-rail-desktop {
+      display: block;
+      position: fixed;
+      top: 6.5rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7.5rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .saved-costings-left-rail {
+      position: fixed;
+      top: 6.5rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7.5rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .saved-costings-tour-launcher {
+      position: fixed;
+      top: 6.5rem;
+      left: calc(248px + 1rem);
+      width: 14rem;
+      z-index: 30;
+    }
+
+    .configuration-page-frame {
+      width: min(100%, calc(100vw - 248px - 33rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .configuration-guide-rail,
+    .configuration-actions-rail {
+      position: fixed;
+      top: 6.5rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100dvh - 7.5rem);
+      overflow-y: auto;
+      margin: 0;
+      scrollbar-width: thin;
+    }
+
+    .configuration-guide-rail {
+      left: calc(248px + 1rem);
+    }
+
+    .configuration-actions-rail {
+      right: 1rem;
+      flex-direction: column;
+    }
   }
 
   /* Use the margins beside the centered board, just like the estimator rails.

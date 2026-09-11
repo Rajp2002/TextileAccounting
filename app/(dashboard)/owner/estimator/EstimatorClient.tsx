@@ -1485,7 +1485,7 @@ function MobileLiveEstimateShortcut({
         <>
             {visible && !keyboardVisible && !open && (
                 <div
-                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-7 md:right-7 min-[1660px]:right-[16rem]"
+                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8"
                     data-testid="mobile-live-estimate-shortcut"
                     data-tour-floating="true"
                 >

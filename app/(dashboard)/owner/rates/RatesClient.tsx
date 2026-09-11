@@ -1581,7 +1581,7 @@ export default function RatesClient({
                     )}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <div className="min-[1660px]:hidden">
+                            <div className="lg:hidden min-[1660px]:hidden">
                                 <RateBookTutorialLauncher
                                     onClick={handleLaunchTutorial}
                                     disabled={isPending}
