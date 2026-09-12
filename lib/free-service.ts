@@ -52,10 +52,10 @@ export async function freeStatus() {
   if ((clockError || !clock) && process.env.NODE_ENV === 'production') throw new Error('FREE_TEMPORARY_ERROR')
   const serverTime = clock && !clockError ? new Date(clock as string) : new Date()
   const window = freeQuotaWindow(serverTime)
-  const { data: usage, error } = await admin.from('free_weekly_usage').select('*').eq('subject_id', context.grant.subjectId).eq('period_start', window.start).maybeSingle()
+  const { data: usage, error } = await admin.from('free_monthly_usage').select('*').eq('subject_id', context.grant.subjectId).eq('period_start', window.start).maybeSingle()
   const { data: subject, error: subjectError } = await admin.from('free_account_subjects').select('tour_state').eq('id',context.grant.subjectId).maybeSingle()
   if (error || (subjectError && subjectError.code !== 'PGRST116')) throw new Error('FREE_TEMPORARY_ERROR')
-  const limit = usage?.allowance ?? rollout.policy.weekly_limit
+  const limit = usage?.allowance ?? rollout.policy.monthly_limit
   const used = usage?.used ?? 0
   const active = context.access.effectiveTier === 'free' && context.grant.state === 'active'
   const token = active && !context.paid && rollout.estimation_enabled ? issueFreeRequest({ subjectId:context.grant.subjectId, engineVersion:COSTING_CALCULATION_VERSION, ...signing(), serverTime, lifetimeMs:rollout.policy.receipt_retention_days*86400000 }) : null

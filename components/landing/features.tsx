@@ -68,7 +68,7 @@ const trustItems = [
     },
     {
         title: 'Choose the operational layer you need',
-        copy: 'Free covers two costings per week with saved records and exports. Lite adds unlimited costings, reusable qualities, and Rate Book. Base connects costing with owner-led production and worker settlement.',
+        copy: 'Free covers two costings per month with saved records and exports. Lite adds unlimited costings, reusable qualities, and Rate Book. Base connects costing with owner-led production and worker settlement.',
         icon: MessageCircle,
     },
 ]

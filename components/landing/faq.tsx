@@ -7,11 +7,11 @@ const faqs = [
     },
     {
         question: 'What can I do on Free?',
-        answer: 'Create two costings per week with no subscription fee or card required. Successful calculations are saved automatically so you can return to their breakdowns and export Cost Sheets. Reusable saved qualities, Rate Book, production, and worker settlement are available on the paid plans described above.',
+        answer: 'Create two costings per month with no subscription fee or card required. Successful calculations are saved automatically so you can return to their breakdowns and export Cost Sheets. Reusable saved qualities, Rate Book, production, and worker settlement are available on the paid plans described above.',
     },
     {
-        question: 'How does the Free weekly allowance work?',
-        answer: 'The allowance resets every Monday at 12:00 am IST, with no rollover. Each successful new calculation uses one costing, including a new calculation after changing inputs. Viewing saved costings and exporting their Cost Sheets use no allowance. When you reach the limit, you can wait for the reset or choose Lite or Base.',
+        question: 'How does the Free monthly allowance work?',
+        answer: 'The allowance resets on the first day of every month at 12:00 am IST, with no rollover. Each successful new calculation uses one costing, including a new calculation after changing inputs. Viewing saved costings and exporting their Cost Sheets use no allowance. When you reach the limit, you can wait for the reset or choose Lite or Base.',
     },
     {
         question: 'Are GST and renewals included in the prices?',
@@ -19,7 +19,7 @@ const faqs = [
     },
     {
         question: 'Can I start on Free and upgrade later?',
-        answer: 'Yes. Compare plans from your account and choose Lite or Base when you need more. Your existing Free costing records remain in your account. Lite removes the weekly limit; Base also unlocks the production and piece-rate settlement workflow.',
+        answer: 'Yes. Compare plans from your account and choose Lite or Base when you need more. Your existing Free costing records remain in your account. Lite removes the monthly limit; Base also unlocks the production and piece-rate settlement workflow.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',

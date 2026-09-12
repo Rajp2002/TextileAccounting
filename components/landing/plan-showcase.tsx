@@ -17,7 +17,7 @@ const planPaths = [
     {
         name: 'Weavly Free',
         eyebrow: 'Occasional costings',
-        summary: 'Calculate two costings each week, keep the completed records, and export Cost Sheets with no subscription fee.',
+        summary: 'Calculate two costings each month, keep the completed records, and export Cost Sheets with no subscription fee.',
         outcome: 'Start with the next fabric enquiry.',
         href: '#pricing-free',
         icon: FileDown,
@@ -121,7 +121,7 @@ export default function LandingPlanShowcase() {
                         </div>
                         <div className="lg:pb-1">
                             <p className="text-lg leading-8 text-zinc-700">
-                                Lite removes the weekly costing limit and adds reusable qualities, Rate Book, and costing defaults. Keep original costing records and reuse their inputs for the next enquiry.
+                                Lite removes the monthly costing limit and adds reusable qualities, Rate Book, and costing defaults. Keep original costing records and reuse their inputs for the next enquiry.
                             </p>
                             <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold text-zinc-950">
                                 {['Unlimited costings', 'Reusable qualities + Rate Book', 'Upgrade to Base when ready'].map((item) => (

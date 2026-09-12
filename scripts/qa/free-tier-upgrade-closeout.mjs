@@ -7,7 +7,7 @@ assert.match(e.API_URL,/^http:\/\/127\.0\.0\.1:\d+$/)
 async function rows(table,scope='org_id',id=f.orgId){const r=await fetch(`${e.API_URL}/rest/v1/${table}?select=*&${scope}=eq.${id}`,{headers:{apikey:e.ANON_KEY,Authorization:`Bearer ${e.SERVICE_ROLE_KEY}`}});assert.equal(r.status,200);return r.json()}
 assert.equal((await rows('free_saved_costings')).length,1)
 assert.equal((await rows('free_saved_costings'))[0].estimate.profitPct,20)
-assert.equal((await rows('free_weekly_usage','subject_id',f.userId))[0].used,1)
+assert.equal((await rows('free_monthly_usage','subject_id',f.userId))[0].used,1)
 assert.equal((await rows('estimator_quotes')).length,1)
 assert.equal((await rows('estimator_templates')).length,1)
 assert((await rows('cost_rate_book')).every(r=>r.review_interval_days!==null))

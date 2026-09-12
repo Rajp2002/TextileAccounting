@@ -66,7 +66,7 @@ export default function FreeBillingClient({
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-subtle">Plan Type</p>
-                <p className="text-xs font-semibold text-ink">Free Tier · 2 costings / week</p>
+                <p className="text-xs font-semibold text-ink">Free Tier · 2 costings / month</p>
               </div>
             </div>
           </div>
@@ -75,13 +75,13 @@ export default function FreeBillingClient({
               <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
                 <div className="flex items-center gap-2 text-xs font-bold text-ink">
                   <Clock className="h-4 w-4 text-saffron" />
-                  <span>Weekly Allowance</span>
+                  <span>Monthly Allowance</span>
                 </div>
                 <p className="mt-2 text-2xl font-black text-ink">
-                  2 <span className="text-xs font-normal text-subtle">costings / wk</span>
+                  2 <span className="text-xs font-normal text-subtle">costings / mo</span>
                 </p>
                 <p className="mt-1 text-xs text-subtle">
-                  Resets weekly. Calculations save automatically as permanent snapshots.
+                  Resets on the first of every month. Calculations save automatically as permanent snapshots.
                 </p>
               </div>
               <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">

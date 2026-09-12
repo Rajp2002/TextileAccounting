@@ -177,13 +177,13 @@ export function FreeUsageCard({
                 {remaining} / {limit}
               </span>
               <span className="text-xs font-medium text-stone-600">
-                {t('leftThisWeek')}
+                {t('leftThisMonth')}
               </span>
             </div>
 
             {isExhausted && (
               <span className="inline-flex rounded bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
-                {t('weeklyLimitReached')}
+                {t('monthlyLimitReached')}
               </span>
             )}
           </div>
@@ -244,7 +244,7 @@ export function FreeUsageCard({
           className="mt-3 pt-2.5 border-t border-stone-200/80 space-y-2 text-xs"
         >
           <div className="font-semibold text-stone-900">
-            {t('yourWeeklyAllowance')}
+            {t('yourMonthlyAllowance')}
           </div>
           <div className="text-stone-600">
             {t('remainingOfLimit', { remaining: remaining ?? 0, limit })}.

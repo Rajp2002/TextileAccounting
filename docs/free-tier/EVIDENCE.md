@@ -7,7 +7,7 @@ The user's 9 September clarification supersedes the original brief's no-storage/
 | Capability | Free |
 |---|---|
 | Cost Estimator | Same component, inputs, engine and breakdown as Lite |
-| New completed calculations | Two per Monday 00:00 Asia/Kolkata week; no carryover |
+| New completed calculations | Two per Asia/Kolkata calendar month beginning on the first at 00:00; no carryover |
 | Saved Costings | Every completed calculation creates an immutable saved snapshot |
 | Reopen / breakdown / PDF export | Available without consuming allowance, including at zero allowance |
 | Saved qualities / reusable recipes | Unavailable |

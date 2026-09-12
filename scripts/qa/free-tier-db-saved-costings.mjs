@@ -11,7 +11,7 @@ const result=async(...args)=>JSON.parse((await sql(call(...args))).split('\n').a
 try{
  await sql(`INSERT INTO auth.users(id,email) VALUES('${user}','${user}@free.test'); INSERT INTO public.organizations(id,name,owner_id,product_experience,onboarding_complete) VALUES('${org}','FREE-SAVED-TEST','${user}','base',true); INSERT INTO public.profiles(id,org_id,role) VALUES('${user}','${org}','owner'); INSERT INTO public.free_account_subjects(id,beta_allowed,verified_at) VALUES('${user}',true,now()); INSERT INTO public.free_account_grants(org_id,subject_id) VALUES('${org}','${user}'); UPDATE public.free_rollout SET estimation_enabled=true;`)
  await assert.rejects(sql(call(randomUUID(),'')),e=>String(e.stderr).includes('check constraint'))
- assert.equal(Number(await sql(`SELECT count(*) FROM public.free_weekly_usage WHERE subject_id='${user}'`)),0)
+ assert.equal(Number(await sql(`SELECT count(*) FROM public.free_monthly_usage WHERE subject_id='${user}'`)),0)
  assert.equal(Number(await sql(`SELECT count(*) FROM public.free_calculation_receipts WHERE subject_id='${user}'`)),0)
  console.log('PASS: snapshot constraint failure rolls back both quota and receipt')
  const id=randomUUID(),duplicates=await Promise.all(Array.from({length:10},()=>result(id)))
@@ -23,7 +23,7 @@ try{
  const raced=await Promise.allSettled(Array.from({length:20},()=>result(randomUUID())))
  assert.equal(raced.filter(r=>r.status==='fulfilled').length,1)
  assert.equal(Number(await sql(`SELECT count(*) FROM public.free_saved_costings WHERE subject_id='${user}'`)),2)
- assert.equal(Number(await sql(`SELECT used FROM public.free_weekly_usage WHERE subject_id='${user}'`)),2)
+ assert.equal(Number(await sql(`SELECT used FROM public.free_monthly_usage WHERE subject_id='${user}'`)),2)
  for(const table of ['estimator_quotes','estimator_templates','cost_rate_book'])assert.equal(Number(await sql(`SELECT count(*) FROM public.${table} WHERE org_id='${org}'`)),0)
  console.log('PASS: one remaining allowance admits one of 20 concurrent requests; no paid costing/quality/Rate Book propagation')
  for(const role of ['anon','authenticated']){

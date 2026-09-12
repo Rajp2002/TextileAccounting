@@ -48,7 +48,7 @@ export default function Home() {
                 <span className="text-orange-600">Make the next price conversation clearer.</span>
               </h2>
               <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-700 sm:text-lg">
-                Start with two free costings per week, saved records, and Cost Sheet exports. Move to Lite for unlimited costing management or Base for connected production and worker settlement.
+                Start with two free costings per month, saved records, and Cost Sheet exports. Move to Lite for unlimited costing management or Base for connected production and worker settlement.
               </p>
               <div className="mt-9 flex items-center gap-x-6">
                 <Link href="/signup?plan=free">

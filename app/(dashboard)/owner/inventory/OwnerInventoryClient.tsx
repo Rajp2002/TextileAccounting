@@ -52,7 +52,7 @@ export default function OwnerInventoryClient({
                 </TabsList>
 
                 {activeTab === 'yarn' ? (
-                    <InventoryClient initialData={inventoryData} activeView="yarn" />
+                    <Button asChild><Link href="/owner/stock/yarn">{t('inventory.tabs.yarn')}</Link></Button>
                 ) : null}
 
                 {activeTab === 'beams' ? (

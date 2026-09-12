@@ -111,7 +111,7 @@ export function PlanCard({
                 </span>
               </div>
               <p className="text-xs font-medium text-body">
-                {upgradeText(language, 'twoEstimatesPerWeek')}
+                {upgradeText(language, 'twoEstimatesPerMonth')}
               </p>
               <p className="text-[11px] text-subtle">{upgradeText(language, 'freePrice')}</p>
             </>

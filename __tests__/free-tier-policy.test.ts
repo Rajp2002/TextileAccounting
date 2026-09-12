@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { hasCapability, hasEstablishedPaidHistory, resolveEffectiveSubscription, resolveOrgPlanAccess, tierSatisfies } from '../lib/subscription-access'
 import { freeQuotaWindow } from '../lib/free-tier-policy'
 
@@ -41,16 +43,27 @@ describe('Free entitlement foundation', () => {
   })
 })
 
-describe('India Monday quota window reference', () => {
-  it('resets exactly at Sunday 18:30 UTC, independently of device timezone', () => {
-    const before = freeQuotaWindow(new Date('2026-09-13T18:29:59.999Z'))
-    const after = freeQuotaWindow(new Date('2026-09-13T18:30:00.000Z'))
-    expect(before).toEqual({ start: '2026-09-06T18:30:00.000Z', end: '2026-09-13T18:30:00.000Z' })
-    expect(after).toEqual({ start: before.end, end: '2026-09-20T18:30:00.000Z' })
+describe('India monthly quota window reference', () => {
+  it('resets exactly at the first of the month at 00:00 IST, independently of device timezone', () => {
+    const before = freeQuotaWindow(new Date('2026-09-30T18:29:59.999Z'))
+    const after = freeQuotaWindow(new Date('2026-09-30T18:30:00.000Z'))
+    expect(before).toEqual({ start: '2026-08-31T18:30:00.000Z', end: '2026-09-30T18:30:00.000Z' })
+    expect(after).toEqual({ start: before.end, end: '2026-10-31T18:30:00.000Z' })
   })
   it('handles year and leap-day boundaries', () => {
-    expect(freeQuotaWindow(new Date('2027-01-01T00:00:00Z')).start).toBe('2026-12-27T18:30:00.000Z')
-    expect(freeQuotaWindow(new Date('2028-02-29T00:00:00Z')).start).toBe('2028-02-27T18:30:00.000Z')
+    expect(freeQuotaWindow(new Date('2027-01-01T00:00:00Z'))).toEqual({ start: '2026-12-31T18:30:00.000Z', end: '2027-01-31T18:30:00.000Z' })
+    expect(freeQuotaWindow(new Date('2028-02-29T00:00:00Z'))).toEqual({ start: '2028-01-31T18:30:00.000Z', end: '2028-02-29T18:30:00.000Z' })
     expect(() => freeQuotaWindow(new Date('invalid'))).toThrow('INVALID_SERVER_TIME')
+  })
+  it('ships the database policy and debit function with monthly semantics', () => {
+    const migration = readFileSync(join(process.cwd(), 'supabase/migrations/20260912130854_free_monthly_allowance.sql'), 'utf8')
+    expect(migration).toContain('RENAME COLUMN weekly_limit TO monthly_limit')
+    expect(migration).toContain('RENAME TO free_monthly_usage')
+    expect(migration).toContain("period_unit, receipt_retention_days")
+    expect(migration).toContain("'month', receipt_retention_days")
+    expect(migration).toContain("date_trunc('month', v_now AT TIME ZONE v_policy.time_zone)")
+    expect(migration).toContain("v_start + interval '1 month'")
+    expect(migration).toContain('v_policy.monthly_limit')
+    expect(migration).toContain("date_trunc('month',now() AT TIME ZONE 'Asia/Kolkata')")
   })
 })

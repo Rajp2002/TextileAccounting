@@ -73,14 +73,14 @@ export default function TermsOfServicePage() {
             <PolicySection id="base-plan" title="2. Free, Lite, and Base Plan Scope">
                 <p>Weavly offers three current plans for one Customer organization or factory workspace:</p>
                 <ul>
-                    <li><strong>Weavly Free:</strong> two successful costings per week, automatic saving of completed costings, viewing their breakdowns, and Cost Sheet export. Reusable qualities, Rate Book, costing defaults, and production management are not included.</li>
+                    <li><strong>Weavly Free:</strong> two successful costings per month, automatic saving of completed costings, viewing their breakdowns, and Cost Sheet export. Reusable qualities, Rate Book, costing defaults, and production management are not included.</li>
                     <li><strong>Weavly Lite:</strong> the complete textile estimator, unlimited costings, live costing calculations, saved costings and history, reusable qualities, Rate Book references, costing tools, and hosted account data.</li>
                     <li><strong>Weavly Base:</strong> all Lite functionality plus production jobs created from saved costings, planned/produced/remaining metres, machine or loom allocation where enabled, owner production updates, piece-rate worker records, advances, and production settlement records.</li>
                     <li>Cost Sheets, exports, costing breakdowns, and other costing-management workflows where enabled in the selected workspace</li>
                     <li>Owner-accessible organization data export and billing history</li>
                 </ul>
                 <p>
-                    Each plan covers one Customer organization or factory workspace. Individual user credentials may not be shared. All three plans use the same underlying costing engine. Free applies a weekly calculation allowance; Lite and Base do not have that weekly limit. Free requires an internet connection for calculations and does not provide recoverable unfinished drafts.
+                    Each plan covers one Customer organization or factory workspace. Individual user credentials may not be shared. All three plans use the same underlying costing engine. Free applies a monthly calculation allowance; Lite and Base do not have that monthly limit. Free requires an internet connection for calculations and does not provide recoverable unfinished drafts.
                 </p>
                 <PolicyCallout tone="neutral" title="Choose the workflow you need">
                     <p>
@@ -91,9 +91,9 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="free-allowance" title="2.1 Free Plan Allowance">
                 <ul>
-                    <li>The current Free allowance is two successful new calculations per week for the verified owner. It resets every Monday at 12:00 am India Standard Time (Asia/Kolkata). Unused allowance does not roll over; switching devices or workspaces does not create an extra allowance.</li>
+                    <li>The current Free allowance is two successful new calculations per month for the verified owner. It resets on the first day of every month at 12:00 am India Standard Time (Asia/Kolkata). Unused allowance does not roll over; switching devices or workspaces does not create an extra allowance.</li>
                     <li>A successful calculation saves its inputs and result to your account and uses one allowance. A new calculation after changing inputs uses another allowance. Validation failures and retries of the same completed request do not use an additional allowance.</li>
-                    <li>Viewing saved costings, exporting their Cost Sheets, and using the example-data walkthrough do not use the weekly allowance.</li>
+                    <li>Viewing saved costings, exporting their Cost Sheets, and using the example-data walkthrough do not use the monthly allowance.</li>
                     <li>Free has no subscription fee, card requirement, or paid trial expiry. Enrollment and continued use are subject to account verification, availability, and these Terms. Changes to the Free offer will be disclosed in the product and these Terms.</li>
                     <li>When the allowance is exhausted, wait for the next reset or choose Lite or Base. A paid upgrade requires your explicit purchase; reaching the Free limit never triggers a charge.</li>
                 </ul>

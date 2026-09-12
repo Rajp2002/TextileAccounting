@@ -1555,7 +1555,7 @@ function MobileLiveEstimateShortcut({
                         <SheetDescription className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
                             {activeName}{versionLabel ? ` · ${versionLabel}` : ''}
                         </SheetDescription>
-                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? 'Shows your last completed costing. Updating the result uses one weekly costing.' : 'Updates live as you edit the estimate.'}</p>
+                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? 'Shows your last completed costing. Updating the result uses one monthly costing.' : 'Updates live as you edit the estimate.'}</p>
                     </SheetHeader>
 
                     <div data-estimator-field="liveCostReadiness" className={`mx-5 mt-4 flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityClassName}`} role="status" aria-live="polite">
@@ -5388,7 +5388,7 @@ export default function EstimatorClient({
                             : requiresCommercialContext && !costingResult.quoteIsValid
                                 ? 'Review the quotation assumptions before saving.'
                                 : null
-    const validityStatus = freeMode && freeMeter.stale ? { label: 'Inputs changed', description: 'Showing your last saved result. Calculate and save to update it using one weekly costing.', icon: AlertTriangle, className: 'border-amber-300 bg-amber-50 text-amber-900' } : costingReadiness.status === 'ready'
+    const validityStatus = freeMode && freeMeter.stale ? { label: 'Inputs changed', description: 'Showing your last saved result. Calculate and save to update it using one monthly costing.', icon: AlertTriangle, className: 'border-amber-300 bg-amber-50 text-amber-900' } : costingReadiness.status === 'ready'
         ? {
             label: 'Costing valid',
             description: 'Price and break-even are calculated from the current inputs.',
@@ -6192,7 +6192,7 @@ export default function EstimatorClient({
                                 </p>
                             )}
                             <p className="text-[11px] font-medium leading-relaxed text-[var(--color-muted)]">
-                                {freeMode ? tx('Calculate & save uses one weekly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.') : isStandaloneCostingSession
+                                {freeMode ? tx('Calculate & save uses one monthly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.') : isStandaloneCostingSession
                                         ? sourceQuoteId
                                         ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
                                         : tx('Save Costing creates the reusable quality and its first immutable costing version.')

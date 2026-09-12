@@ -44,7 +44,7 @@ export function FreeBillingAction({
                     <span className="text-3xl font-bold tracking-tight text-ink">₹0</span>
                     <span className="ml-2 text-sm text-subtle">/ free forever</span>
                 </p>
-                <p className="text-sm text-body">2 cost estimates / week</p>
+                <p className="text-sm text-body">2 cost estimates / month</p>
                 <p className="text-xs text-subtle">Single-loom costing · No payment required</p>
             </div>
             {isCurrent ? (

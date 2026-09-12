@@ -224,7 +224,7 @@ export default function SavedFreeCostings() {
         <PageHeader
           icon={History}
           title={freeText(language, 'savedCostings')}
-          description={tx('View and export your completed costings without using your weekly allowance. These are fixed snapshots, not reusable saved qualities.')}
+          description={tx('View and export your completed costings without using your monthly allowance. These are fixed snapshots, not reusable saved qualities.')}
           actions={(
             <Button variant="saffron" onClick={() => router.push('/free')}>
               <Plus className="h-4 w-4" /> {tx('New Costing')}
@@ -640,7 +640,7 @@ export default function SavedFreeCostings() {
 
                   <div className="mt-4 rounded-lg bg-surface-soft p-3 text-xs text-subtle">
                     <p>
-                      {tx('This is an immutable costing snapshot. Viewing and exporting do not deduct from your weekly calculation quota.')}
+                      {tx('This is an immutable costing snapshot. Viewing and exporting do not deduct from your monthly calculation quota.')}
                     </p>
                   </div>
                 </section>

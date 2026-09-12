@@ -27,7 +27,7 @@ export default function LandingHero() {
                         </h1>
 
                         <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-700 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
-                            Start with two free costings per week. Choose Lite for unlimited costings, saved qualities, and yarn rates, or Base to connect costing with production and worker pay.
+                            Start with two free costings per month. Choose Lite for unlimited costings, saved qualities, and yarn rates, or Base to connect costing with production and worker pay.
                         </p>
 
                         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

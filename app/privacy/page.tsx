@@ -78,7 +78,7 @@ export default function PrivacyPolicyPage() {
                 <h3>Free costing records and allowance data</h3>
                 <ul>
                     <li>Completed Free costings are saved to your account with their label, fabric and yarn inputs, cost assumptions, calculated results, totals, and creation time so you can view and export them later.</li>
-                    <li>We keep your Free enrollment and verification status, weekly allowance and usage, reset period, and walkthrough completion state.</li>
+                    <li>We keep your Free enrollment and verification status, monthly allowance and usage, reset period, and walkthrough completion state.</li>
                     <li>Calculation request identifiers, timestamps, engine versions, and a cryptographic binding of the submitted inputs help prevent duplicate charges against your allowance. These operational receipts are separate from your saved business costings.</li>
                     <li>Limited Free usage events record walkthrough progress, result views, allowance limits, and upgrade actions with language and entry-point labels. These events do not contain costing inputs or calculated results.</li>
                 </ul>
@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
                     <li>Calculate, save, restore, and export costing work requested by the account owner</li>
                     <li>Record owner-run production jobs and metres, calculate piece-rate pay from saved rate snapshots, and record basic advance recovery and settlement information</li>
                     <li>Process subscriptions, payments, renewals, receipts, refunds, and billing support</li>
-                    <li>Apply the Free weekly allowance and prevent duplicate counting</li>
+                    <li>Apply the Free monthly allowance and prevent duplicate counting</li>
                     <li>Measure usage across Free, Lite, and Base, understand upgrades, and improve the costing-to-production workflow</li>
                     <li>Provide support, respond to privacy requests and grievances, and maintain request and resolution records</li>
                     <li>Detect abuse, enforce rate limits, investigate errors, maintain availability, and respond to security incidents</li>
@@ -166,8 +166,8 @@ export default function PrivacyPolicyPage() {
             <PolicySection id="retention" title="7. Retention and Deletion">
                 <ul>
                     <li><strong>Active account and costing data</strong> — kept while the account remains active and as needed to provide the requested service. An owner may permanently delete the workspace through Settings.</li>
-                    <li><strong>Completed Free costings</strong> — kept as account records independently of weekly resets and operational-receipt expiry. Reaching the allowance or upgrading does not by itself delete them. Unfinished Free inputs are held in page memory and are not saved as recoverable drafts.</li>
-                    <li><strong>Free allowance and usage records</strong> — operational calculation receipts have a configured lifetime of up to 30 days. Routine cleanup targets Free usage events older than 90 days and completed weekly-usage periods older than 90 days once no related receipt remains. This cleanup does not delete saved Free costings.</li>
+                    <li><strong>Completed Free costings</strong> — kept as account records independently of monthly resets and operational-receipt expiry. Reaching the allowance or upgrading does not by itself delete them. Unfinished Free inputs are held in page memory and are not saved as recoverable drafts.</li>
+                    <li><strong>Free allowance and usage records</strong> — operational calculation receipts have a configured lifetime of up to 30 days. Routine cleanup targets Free usage events older than 90 days and completed monthly-usage periods older than 90 days once no related receipt remains. This cleanup does not delete saved Free costings.</li>
                     <li><strong>Production data after plan change</strong> — retained when Base expires or an organization is placed in Lite; Base-only creation and mutation actions remain restricted until an eligible Base renewal is activated.</li>
                     <li><strong>Plan usage events</strong> — retained only as long as reasonably needed for product analytics, billing support, security, and commercial measurement, subject to deletion and legal-retention requirements.</li>
                     <li><strong>After owner-initiated deletion</strong> — organization and account records are removed from the active product database. Residual encrypted backup copies, provider logs, or cached copies may remain temporarily until the applicable provider&apos;s normal protection and deletion cycle completes.</li>

@@ -71,8 +71,8 @@ export default function LandingPricing() {
                             <p className="mt-2 text-sm text-zinc-600">No card required. No paid trial countdown.</p>
                         </div>
                         <div className="mt-3 border border-zinc-200 p-5 lg:min-h-40">
-                            <p className="text-sm font-bold text-zinc-950">2 costings per week</p>
-                            <p className="mt-2 text-sm leading-6 text-zinc-600">Resets every Monday at 12:00 am IST. Unused costings do not roll over.</p>
+                            <p className="text-sm font-bold text-zinc-950">2 costings per month</p>
+                            <p className="mt-2 text-sm leading-6 text-zinc-600">Resets on the first day of every month at 12:00 am IST. Unused costings do not roll over.</p>
                         </div>
                         <Button asChild variant="outline" className="mt-6 w-full rounded-md border-zinc-300 bg-white py-6 font-bold text-zinc-950 hover:bg-zinc-100">
                             <Link href="/signup?plan=free">Start with Free</Link>
@@ -82,7 +82,7 @@ export default function LandingPricing() {
                                 'Complete fabric cost and selling-price calculation',
                                 'Successful costings saved automatically',
                                 'View saved breakdowns and export Cost Sheets',
-                                'Viewing and export use no weekly allowance',
+                                'Viewing and export use no monthly allowance',
                                 'Guided walkthrough with example data',
                             ].map((feature) => (
                                 <li key={feature} className="flex gap-3">

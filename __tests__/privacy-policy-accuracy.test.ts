@@ -11,15 +11,15 @@ describe('Free, Lite, and Base privacy policy accuracy', () => {
     const privacy = source('app/privacy/page.tsx')
 
     it('publishes a new version for the corrected privacy notice', () => {
-        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-09-11')
-        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-09-11')
+        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-09-12')
+        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-09-12')
         expect(privacy).toContain('LEGAL_DOCUMENTS.privacy.displayDate')
     })
 
     it('discloses saved Free costings separately from temporary inputs and allowance records', () => {
         expect(privacy).toContain('Completed Free costings are saved to your account')
         expect(privacy).toContain('Unfinished Free inputs are held in page memory')
-        expect(privacy).toContain('weekly allowance and usage')
+        expect(privacy).toContain('monthly allowance and usage')
         expect(privacy).toContain('This cleanup does not delete saved Free costings')
         expect(privacy).toContain('These events do not contain costing inputs or calculated results')
     })

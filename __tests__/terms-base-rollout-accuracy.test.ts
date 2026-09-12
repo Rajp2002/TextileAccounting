@@ -22,8 +22,8 @@ describe('Free, Lite, and Base commercial policy accuracy', () => {
     )
 
     it('publishes a new version that identifies the pre-incorporation operator', () => {
-        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-09-11')
-        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-09-11')
+        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-09-12')
+        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-09-12')
         expect(LEGAL_OPERATOR.displayName).toBe('Raj Patel, operating under the Weavly name')
         expect(terms).toContain('LEGAL_DOCUMENTS.terms.displayDate')
         expect(terms).toContain('LEGAL_OPERATOR.displayName')
@@ -70,8 +70,8 @@ describe('Free, Lite, and Base commercial policy accuracy', () => {
     })
 
     it('covers Free allowance and distinguishes expiry from a Free downgrade', () => {
-        expect(terms).toContain('two successful costings per week')
-        expect(terms).toContain('every Monday at 12:00 am India Standard Time')
+        expect(terms).toContain('two successful costings per month')
+        expect(terms).toContain('first day of every month at 12:00 am India Standard Time')
         expect(terms).toContain('Unused allowance does not roll over')
         expect(terms).toContain('automatically revert to Free')
         expect(refunds).toContain('Free has no subscription payment to cancel or refund')

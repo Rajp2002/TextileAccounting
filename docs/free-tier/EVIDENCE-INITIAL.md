@@ -1,5 +1,7 @@
 # Historical evidence — superseded product contract
 
+> The weekly allowance documented here has been superseded. The current policy is two costings per Asia/Kolkata calendar month, resetting on the first at 00:00, as implemented by the monthly allowance migration.
+
 The report below describes the initial implementation before the user clarified saved costings, exports, and reuse of the actual Lite estimator UI. Its no-storage/no-export statements and screenshots are obsolete. See EVIDENCE.md for current acceptance evidence.
 
 # Weavly Free — consolidated sprint evidence
@@ -131,4 +133,3 @@ Owner-session protocol is ready for five real participants (at least one Gujarat
 | Sentry | `instrumentation-client.ts`: replay-on-error sampling 0.1, input/text masking, logs enabled. `lib/sentry-redaction.ts` redacts PII patterns but is not a costing-content allowlist | Exclude Free form/replay and raw request/response/exception bodies; masking alone does not establish no persistence |
 
 This inventory guided the implementation. Executed browser and server checks are reported below; live Sentry delivery and physical-device behavior remain separate gates.
-

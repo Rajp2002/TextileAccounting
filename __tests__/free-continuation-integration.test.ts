@@ -115,7 +115,7 @@ beforeEach(() => {
         enrollment_enabled: true,
         estimation_enabled: true,
         tour_enabled: false,
-        policy: { weekly_limit: 2, version: 'v1', receipt_retention_days: 30 },
+        policy: { monthly_limit: 2, version: 'v2', receipt_retention_days: 30 },
     })
 
     mocks.checkAuthRateLimit.mockResolvedValue(null)
@@ -259,7 +259,7 @@ describe('F01–F09: Canonical Free Continuation Scenarios', () => {
 
         // Continuation never calls quota debit RPC or writes to usage tables
         expect(mocks.rpc).not.toHaveBeenCalledWith('complete_free_saved_costing', expect.anything())
-        expect(mocks.from).not.toHaveBeenCalledWith('free_weekly_usage')
+        expect(mocks.from).not.toHaveBeenCalledWith('free_monthly_usage')
     })
 
     it('F08: Stale Free request after paid activation — controlled in-flight interleaving honors confirmed paid access and never downgrades', async () => {

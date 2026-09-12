@@ -75,7 +75,7 @@ export default function SecurityIncidentPage() {
                             ))}
                         </ul>
                         <p className="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                            Weavly Free stores account details, completed costings, and weekly-allowance records. Weavly Lite stores costing records, qualities, rates, and account data. Weavly Base additionally stores owner-run production records, piece-rate workers, advances, and basic settlement data. Report incidents affecting any of these workspaces through this channel.
+                            Weavly Free stores account details, completed costings, and monthly-allowance records. Weavly Lite stores costing records, qualities, rates, and account data. Weavly Base additionally stores owner-run production records, piece-rate workers, advances, and basic settlement data. Report incidents affecting any of these workspaces through this channel.
                         </p>
                     </section>
 

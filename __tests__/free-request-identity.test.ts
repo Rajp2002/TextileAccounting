@@ -22,7 +22,7 @@ describe('Free in-memory request identities', () => {
     expect(() => verifyFreeRequest(token, { ...expected, engineVersion: 'different-engine' })).toThrow()
     expect(() => verifyFreeRequest(token, { ...expected, keys: {} })).toThrow()
   })
-  it('supports original-key retries across a week boundary, but not past expiry', () => {
+  it('supports original-key retries across a month boundary, but not past expiry', () => {
     const token = issue()
     expect(verifyFreeRequest(token, { ...expected, serverTime: new Date('2026-09-14T00:00:00Z'), keys: { ...keys, rotated: 'another-test-only-key-at-least-thirty-two-bytes' } }).subjectId).toBe(subjectId)
     expect(() => verifyFreeRequest(token, { ...expected, serverTime: new Date('2026-10-08T18:00:00Z') })).toThrow()

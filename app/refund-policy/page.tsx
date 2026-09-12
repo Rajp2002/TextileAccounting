@@ -43,7 +43,7 @@ export default function RefundPolicyPage() {
 
             <PolicySection id="scope" title="1. Scope and Plan Boundary">
                 <p>
-                    Weavly Free includes two costings per week, saved completed costings, and Cost Sheet exports at no subscription fee. Weavly Lite covers the complete textile costing-management product with unlimited costings: estimator calculations, saved costings, qualities, Rate Book, costing history, and hosted account data. Weavly Base includes all Lite functionality and adds the current Base Production Core, including production records linked to costing/quality data where supported. Other operational modules outside the current catalog are not included in these plans, and their absence is not grounds for a refund.
+                    Weavly Free includes two costings per month, saved completed costings, and Cost Sheet exports at no subscription fee. Weavly Lite covers the complete textile costing-management product with unlimited costings: estimator calculations, saved costings, qualities, Rate Book, costing history, and hosted account data. Weavly Base includes all Lite functionality and adds the current Base Production Core, including production records linked to costing/quality data where supported. Other operational modules outside the current catalog are not included in these plans, and their absence is not grounds for a refund.
                 </p>
                 <PolicyCallout tone="blue" title="Current catalog">
                     <ul>

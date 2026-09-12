@@ -35,7 +35,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
   const futureDate = '2026-09-14T00:00:00.000Z'
 
   describe('UI: Segmented Allowance Presentation & States', () => {
-    it('UI-01: 2 of 2 remaining shows both segments filled and "2 / 2 left this week"', () => {
+    it('UI-01: 2 of 2 remaining shows both segments filled and "2 / 2 left this month"', () => {
       const html = renderWithLang(
         React.createElement(FreeUsageCard, {
           quota: { limit: 2, remaining: 2, resetsAt: futureDate },
@@ -43,13 +43,13 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       )
 
       expect(html).toContain('2 / 2')
-      expect(html).toContain('left this week')
+      expect(html).toContain('left this month')
       expect(html).toContain('Free costings')
       // Both segments filled (bg-stone-800)
       const filledCount = (html.match(/bg-stone-800/g) || []).length
       expect(filledCount).toBe(2)
       // No exhausted warning
-      expect(html).not.toContain('Weekly limit reached')
+      expect(html).not.toContain('Monthly limit reached')
       // Semantic meter
       expect(html).toContain('value="2"')
       expect(html).toContain('min="0"')
@@ -64,18 +64,18 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       )
 
       expect(html).toContain('1 / 2')
-      expect(html).toContain('left this week')
+      expect(html).toContain('left this month')
       // Exactly 1 filled segment and 1 track segment
       const filledCount = (html.match(/bg-stone-800/g) || []).length
       const trackCount = (html.match(/bg-stone-200/g) || []).length
       expect(filledCount).toBe(1)
       expect(trackCount).toBe(1)
       // Still positive state, not exhausted
-      expect(html).not.toContain('Weekly limit reached')
+      expect(html).not.toContain('Monthly limit reached')
       expect(html).toContain('value="1"')
     })
 
-    it('UI-03: 0 of 2 remaining shows 0 filled segments, "Weekly limit reached", reset note, and plans link', () => {
+    it('UI-03: 0 of 2 remaining shows 0 filled segments, "Monthly limit reached", reset note, and plans link', () => {
       const html = renderWithLang(
         React.createElement(FreeUsageCard, {
           quota: { limit: 2, remaining: 0, resetsAt: futureDate },
@@ -83,7 +83,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       )
 
       expect(html).toContain('0 / 2')
-      expect(html).toContain('Weekly limit reached')
+      expect(html).toContain('Monthly limit reached')
       expect(html).toContain('View plans →')
       expect(html).toContain('/plans?from=estimator')
       expect(html).toContain('Resets')
@@ -107,7 +107,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('– / –')
       expect(html).not.toContain('0 / 2')
       expect(html).not.toContain('2 / 2')
-      expect(html).not.toContain('Weekly limit reached')
+      expect(html).not.toContain('Monthly limit reached')
       expect(html).toContain('aria-busy="true"')
     })
 
@@ -122,7 +122,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
 
       expect(html).toContain('Usage unavailable')
       expect(html).toContain('Check again')
-      expect(html).not.toContain('Weekly limit reached')
+      expect(html).not.toContain('Monthly limit reached')
     })
 
     it('UI-06: cached/stale balance with offline or prior state shows "Last confirmed"', () => {
@@ -156,7 +156,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
         })
       )
 
-      expect(html).toContain('Your weekly allowance')
+      expect(html).toContain('Your monthly allowance')
       expect(html).toContain('1 of 2 free costings remaining')
       expect(html).toContain('Each completed fabric costing uses one costing')
       expect(html).toContain('same-request retries do not consume allowance')
@@ -267,11 +267,11 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
   describe('I18N: 3-Language Completeness (EN, GU, HI)', () => {
     const requiredKeys = [
       'freeCostings',
-      'leftThisWeek',
-      'weeklyLimitReached',
+      'leftThisMonth',
+      'monthlyLimitReached',
       'viewPlans',
       'explorePlansArrow',
-      'yourWeeklyAllowance',
+      'yourMonthlyAllowance',
       'costingConsumptionExplanation',
       'checkingUsage',
       'confirmingCosting',
@@ -308,7 +308,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
         }),
         'gu'
       )
-      expect(guHtml).toContain('સાપ્તાહિક મર્યાદા પૂરી થઈ')
+      expect(guHtml).toContain('માસિક મર્યાદા પૂરી થઈ')
       expect(guHtml).toContain('પ્લાન જુઓ →')
 
       const hiHtml = renderWithLang(
@@ -318,7 +318,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
         }),
         'hi'
       )
-      expect(hiHtml).toContain('साप्ताहिक सीमा पूरी हुई')
+      expect(hiHtml).toContain('मासिक सीमा पूरी हुई')
       expect(hiHtml).toContain('प्लान देखें →')
     })
   })

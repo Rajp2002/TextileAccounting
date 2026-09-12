@@ -200,9 +200,13 @@ try {
         }
         assert.equal(seen.size,(await admin.query('select count(*)::int n from quality_stock_movements where org_id=$1',[org])).rows[0].n)
     })
-    if (process.env.CHALLAN_TEST === '1') {
+    if (process.env.CHALLAN_TEST === '1' || process.env.YARN_TEST === '1') {
         const { testChallans } = await import('./challan-db-scenarios.mjs')
         await testChallans({ admin, a, b, outsider, floor, org, test })
+    }
+    if (process.env.YARN_TEST === '1') {
+        const { testYarnStock } = await import('./yarn-stock-db-scenarios.mjs')
+        await testYarnStock({ admin, a, b, outsider, floor, org, test, saveProduction: () => save(a, dates[7], 12.5) })
     }
     console.log(`PASS ${checks} database scenarios on PostgreSQL ${(await admin.query('show server_version')).rows[0].server_version}`)
 } finally {
