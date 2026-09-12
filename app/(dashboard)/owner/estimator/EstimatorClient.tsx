@@ -2015,7 +2015,7 @@ function EstimatorLiveCostActions({
                             id="btn-start-party-order"
                             type="button"
                             size="sm"
-                            className="h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)]"
+                            className="h-12 rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98]"
                             onClick={() => runAction(onStartPartyOrder)}
                             disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totalProductionCostPerM <= 0 || !quoteIsValid}
                             aria-busy={savingQuote}
@@ -2031,7 +2031,7 @@ function EstimatorLiveCostActions({
                             type="button"
                             size="sm"
                             variant="default"
-                            className="h-12 w-full rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55"
+                            className="h-12 w-full rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
                             onClick={() => runAction(isStandaloneCostingSession ? onSaveCosting : onSaveAccepted)}
                             disabled={saveCostingDisabled}
                             aria-busy={savingQuote}
@@ -2049,7 +2049,7 @@ function EstimatorLiveCostActions({
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-12 rounded-[10px] border-[var(--color-hairline)] bg-white px-4 text-[13px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                            className="h-12 rounded-xl border border-hairline bg-surface px-4 text-[13px] font-semibold text-body hover:bg-surface-soft"
                             onClick={() => runAction(onSaveDraft)}
                             disabled={savingQuote || !quoteIsValid}
                             aria-busy={savingQuote}
@@ -2059,7 +2059,7 @@ function EstimatorLiveCostActions({
                         </Button>
                     )}
                     {canUseProduction && !isStandaloneCostingSession && !allowsPartyOrders && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => runAction(onSwitchMarket)} disabled={savingQuote} className="h-12 rounded-[10px]">
+                        <Button type="button" variant="outline" size="sm" onClick={() => runAction(onSwitchMarket)} disabled={savingQuote} className="h-12 rounded-xl">
                             <Gauge className="h-3.5 w-3.5" /> Market Run
                         </Button>
                     )}
@@ -2070,7 +2070,7 @@ function EstimatorLiveCostActions({
                         id="btn-start-market-run"
                         type="button"
                         size="sm"
-                        className="h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-55"
+                        className="h-12 rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
                         onClick={() => runAction(onStartMarketRun)}
                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totalProductionCostPerM <= 0 || !quoteIsValid}
                         aria-busy={savingQuote}
@@ -6012,7 +6012,7 @@ export default function EstimatorClient({
                                     {canUseProduction && !isStandaloneCostingSession && <Button
                                         id="legacy-btn-start-party-order"
                                         size="sm"
-                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        className="col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1"
                                         onClick={() => void handleStartPartyOrder()}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
@@ -6033,8 +6033,8 @@ export default function EstimatorClient({
                                         size="sm"
                                         variant={isStandaloneCostingSession ? 'default' : 'outline'}
                                         className={isStandaloneCostingSession
-                                            ? 'col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1'
-                                            : 'h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]'}
+                                            ? 'col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1'
+                                            : 'h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft'}
                                         onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
                                         disabled={freeMode ? !freeCanCalculate : savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid)}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
@@ -6057,7 +6057,7 @@ export default function EstimatorClient({
                                             id="legacy-btn-export-cost-sheet"
                                             size="sm"
                                             variant="outline"
-                                            className="h-12 rounded-[10px] border border-[var(--color-yarn-orange)] bg-white px-5 text-[14px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]"
+                                            className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-ink shadow-xs hover:bg-surface-soft"
                                             onClick={() => setShowExportDialog(true)}
                                             disabled={!exportModel}
                                             aria-describedby={!exportModel ? 'export-cost-sheet-hint' : undefined}
@@ -6073,7 +6073,7 @@ export default function EstimatorClient({
                                         id="legacy-btn-save-quote"
                                         size="sm"
                                         variant="outline"
-                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                                        className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft"
                                         onClick={() => handleSaveQuote('quote', 'draft')}
                                         disabled={savingQuote || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
@@ -6089,7 +6089,7 @@ export default function EstimatorClient({
                                             id="legacy-btn-switch-market"
                                             size="sm"
                                             variant="ghost"
-                                            className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
+                                            className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft"
                                             onClick={() => setMode('market')}
                                         >
                                             <Gauge className="h-3.5 w-3.5 shrink-0" />
@@ -6103,7 +6103,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="legacy-btn-start-market-run"
                                         size="sm"
-                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        className="col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1"
                                         onClick={() => handleSaveQuote('market')}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
                                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}

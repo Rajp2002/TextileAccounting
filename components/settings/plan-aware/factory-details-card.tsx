@@ -103,12 +103,14 @@ export function FactoryDetailsCard({
     return (
         <section
             aria-labelledby="factory-details-heading"
-            className="rounded-2xl border border-hairline bg-[#FCFCFC] p-6 shadow-sm dark:bg-[#1A1A1A] sm:p-8"
+            className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
         >
             <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <Factory className="h-5 w-5 text-saffron" aria-hidden="true" />
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                            <Factory className="h-4 w-4" aria-hidden="true" />
+                        </span>
                         <h2 id="factory-details-heading" className="text-lg font-bold tracking-tight text-ink">
                             {tx('Factory details')}
                         </h2>
@@ -140,7 +142,7 @@ export function FactoryDetailsCard({
                                     disabled={isSubmitting}
                                     aria-invalid={!!fieldError}
                                     aria-describedby={fieldError ? factoryErrorId : undefined}
-                                    className="h-11 border-hairline bg-surface/90 text-sm focus-visible:border-saffron"
+                                    className="h-11 rounded-xl border-hairline bg-surface text-sm focus-visible:border-loom"
                                     placeholder={tx('Enter factory or business name')}
                                 />
                                 {fieldError && (
@@ -150,7 +152,7 @@ export function FactoryDetailsCard({
                                 )}
                             </>
                         ) : (
-                            <div className="flex min-h-11 items-center rounded-lg border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink select-all">
+                            <div className="flex min-h-11 items-center rounded-xl border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink select-all">
                                 {factoryName || tx('Weavly')}
                             </div>
                         )}
@@ -167,8 +169,8 @@ export function FactoryDetailsCard({
                             <Label className="text-sm font-semibold text-ink">
                                 {tx('Factory join code')}
                             </Label>
-                            <div className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-hairline bg-surface-soft/60 px-3.5 py-1.5">
-                                <span className="font-mono text-base font-bold tracking-widest text-ink select-all">
+                            <div className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-info/20 bg-info-soft/40 px-3.5 py-1.5">
+                                <span className="font-mono text-base font-bold tracking-widest text-info select-all">
                                     {joinCode}
                                 </span>
                                 <Button
@@ -176,7 +178,7 @@ export function FactoryDetailsCard({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleCopyJoinCode}
-                                    className="min-h-9 gap-1.5 text-xs font-medium"
+                                    className="min-h-9 rounded-lg gap-1.5 border-info/30 bg-surface text-xs font-semibold text-info hover:bg-info-soft"
                                     aria-label={tx('Copy factory join code')}
                                 >
                                     {copied ? (
@@ -208,16 +210,15 @@ export function FactoryDetailsCard({
                                 variant="outline"
                                 onClick={handleDiscard}
                                 disabled={isSubmitting}
-                                className="min-h-11 px-4"
+                                className="min-h-11 rounded-xl px-4 font-medium"
                             >
                                 {tx('Discard changes')}
                             </Button>
                         )}
                         <Button
                             type="submit"
-                            variant="saffron"
                             disabled={!isDirty || isSubmitting}
-                            className="min-h-11 px-5 font-semibold"
+                            className="min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors"
                         >
                             {isSubmitting ? (
                                 <>

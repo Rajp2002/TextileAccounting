@@ -22,16 +22,16 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
     const hasIssues = readiness.issueCount > 0
 
     return (
-        <Card className={hasIssues ? 'border-warning/35 bg-warning/5' : 'border-success/25 bg-success/5'}>
-            <CardHeader className="pb-3 sm:pb-5">
+        <Card className={hasIssues ? 'rounded-2xl border border-amber-200 bg-amber-50/40 shadow-xs overflow-hidden' : 'rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden'}>
+            <CardHeader className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-2.5">
-                        <div className={`rounded-lg p-2 ${hasIssues ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
+                    <div className="flex min-w-0 items-start gap-3">
+                        <div className={`rounded-xl p-2.5 shadow-xs ${hasIssues ? 'border border-amber-200 bg-surface text-amber-800' : 'border border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
                             {hasIssues ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                         </div>
                         <div>
-                            <CardTitle className="text-base">Payroll readiness</CardTitle>
-                            <CardDescription className="mt-1">
+                            <CardTitle className="text-base font-bold text-ink">Payroll readiness</CardTitle>
+                            <CardDescription className="mt-1 text-xs sm:text-sm text-muted-foreground">
                                 {hasIssues
                                     ? `${readiness.issueCount} production ${readiness.issueCount === 1 ? 'issue needs' : 'issues need'} attention before payment.`
                                     : hasProduction
@@ -40,35 +40,35 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                             </CardDescription>
                         </div>
                     </div>
-                    <Badge variant={hasIssues ? 'warning' : 'success'} className="shrink-0">
+                    <Badge variant={hasIssues ? 'warning' : 'success'} className="shrink-0 font-bold text-[10px]">
                         {hasIssues ? 'Review required' : hasProduction ? 'Reconciled' : 'Up to date'}
                     </Badge>
                 </div>
             </CardHeader>
 
             {hasProduction && (
-                <CardContent className="space-y-3 border-t border-current/10 pt-4">
-                    <div className="grid grid-cols-3 divide-x divide-hairline rounded-lg border border-hairline bg-surface/75 py-2 text-center">
+                <CardContent className="space-y-4 border-t border-hairline bg-surface-soft/20 p-4 sm:p-5">
+                    <div className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface py-2.5 text-center shadow-xs">
                         <Metric label="Verified earnings" value={readiness.verifiedLineCount + readiness.salaryLineCount} />
                         <Metric label="Machine lines" value={readiness.machineLineCount} />
                         <Metric label="Ready workers" value={readiness.readyWorkerCount} />
                     </div>
 
-                    {readiness.salaryLineCount > 0 && <p className="text-xs text-body">{readiness.salaryLineCount} salary {readiness.salaryLineCount === 1 ? 'segment' : 'segments'} included. Fixed staff do not need production entries.</p>}
+                    {readiness.salaryLineCount > 0 && <p className="text-xs text-body font-medium">{readiness.salaryLineCount} salary {readiness.salaryLineCount === 1 ? 'segment' : 'segments'} included. Fixed staff do not need production entries.</p>}
 
                     {readiness.legacyLineCount > 0 && (
-                        <div className="flex items-start gap-2 rounded-lg border border-hairline bg-surface/70 px-3 py-2.5 text-xs text-body">
+                        <div className="flex items-start gap-2.5 rounded-xl border border-hairline bg-surface p-3 text-xs leading-relaxed text-body shadow-xs">
                             <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-deep" />
-                            <p><strong className="text-ink">{readiness.legacyLineCount} legacy worker {readiness.legacyLineCount === 1 ? 'total is' : 'totals are'} included.</strong> Pay uses the saved worker rate; the original machine breakdown was not captured.</p>
+                            <p><strong className="font-bold text-ink">{readiness.legacyLineCount} legacy worker {readiness.legacyLineCount === 1 ? 'total is' : 'totals are'} included.</strong> Pay uses the saved worker rate; the original machine breakdown was not captured.</p>
                         </div>
                     )}
 
                     {hasIssues && (
                         <div className="space-y-2">
                             {readiness.workers.flatMap((worker) => worker.issues).map((item) => (
-                                <div key={`${item.entryId}:${item.code}`} className="flex items-start justify-between gap-3 rounded-lg border border-warning/25 bg-surface px-3 py-2.5 text-xs">
-                                    <div><p className="font-semibold text-ink">{item.message}</p><p className="mt-0.5 text-body">{formatDateOnly(item.productionDate)}{item.shift ? ` · ${item.shift} shift` : ''}</p></div>
-                                    <Button asChild variant="outline" size="xs" className="shrink-0"><Link href={baseProductionHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
+                                <div key={`${item.entryId}:${item.code}`} className="flex items-start justify-between gap-3 rounded-xl border border-amber-200 bg-surface p-3 text-xs shadow-xs">
+                                    <div><p className="font-bold text-ink">{item.message}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDateOnly(item.productionDate)}{item.shift ? ` · ${item.shift} shift` : ''}</p></div>
+                                    <Button asChild variant="outline" size="xs" className="shrink-0 h-7 rounded-lg border-amber-300 bg-surface text-xs font-bold text-amber-900 hover:bg-amber-50 shadow-xs"><Link href={baseProductionHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
                                 </div>
                             ))}
                         </div>
@@ -80,5 +80,5 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
-    return <div className="px-2"><p className="text-base font-black text-ink">{value}</p><p className="text-[11px] text-muted-foreground">{label}</p></div>
+    return <div className="px-2"><p className="text-base sm:text-lg font-black text-ink">{value}</p><p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p></div>
 }

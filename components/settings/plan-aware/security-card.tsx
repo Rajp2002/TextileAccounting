@@ -46,12 +46,14 @@ export function SecurityCard({ email }: SecurityCardProps) {
     return (
         <section
             aria-labelledby="security-heading"
-            className="rounded-2xl border border-hairline bg-[#FCFCFC] p-6 shadow-sm dark:bg-[#1A1A1A] sm:p-8"
+            className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
         >
             <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-saffron" aria-hidden="true" />
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                        </span>
                         <h2 id="security-heading" className="text-lg font-bold tracking-tight text-ink">
                             {tx('Security')}
                         </h2>
@@ -66,7 +68,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
             </div>
 
             <div className="mt-6 space-y-4">
-                <div className="flex flex-col gap-4 rounded-xl border border-hairline bg-surface/80 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-4 rounded-xl border border-hairline bg-surface-soft/40 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">
                         <h3 className="text-sm font-semibold text-ink">
                             {tx('Password & sign-in')}
@@ -85,7 +87,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
                         variant="outline"
                         onClick={handleSendReset}
                         disabled={isSending || !email}
-                        className="min-h-11 shrink-0 gap-2 font-medium"
+                        className="min-h-11 shrink-0 rounded-xl gap-2 font-semibold shadow-xs"
                     >
                         {isSending ? (
                             <>
@@ -102,14 +104,14 @@ export function SecurityCard({ email }: SecurityCardProps) {
                 </div>
 
                 {sentStatus && (
-                    <div className="flex items-start gap-2.5 rounded-lg border border-success/30 bg-success-soft/60 p-3.5 text-xs text-success" role="status">
+                    <div className="flex items-start gap-2.5 rounded-xl border border-success/30 bg-success-soft/60 p-3.5 text-xs text-success" role="status">
                         <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                         <p>{sentStatus}</p>
                     </div>
                 )}
 
                 {errorMessage && (
-                    <div className="flex items-start gap-2.5 rounded-lg border border-risk/30 bg-risk/10 p-3.5 text-xs text-risk" role="alert">
+                    <div className="flex items-start gap-2.5 rounded-xl border border-risk/30 bg-risk-soft p-3.5 text-xs text-risk" role="alert">
                         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                         <p>{errorMessage}</p>
                     </div>

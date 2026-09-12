@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
 import type { BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
 import {
     removeBaseWorkerMachineAssignment,
@@ -394,20 +395,69 @@ export default function BaseAssignmentWorkspace({
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div data-configuration-tour="shift" role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
-                        <Button type="button" size="sm" variant={shift === 'day' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'day'} disabled={pendingKey !== null} onClick={() => setShift('day')}><Sun className="h-4 w-4" /> Day shift</Button>
-                        <Button type="button" size="sm" variant={shift === 'night' ? 'default' : 'ghost'} className="rounded-full px-4" aria-pressed={shift === 'night'} disabled={pendingKey !== null} onClick={() => setShift('night')}><Moon className="h-4 w-4" /> Night shift</Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                                "h-8 rounded-full px-4 text-xs font-semibold transition-all",
+                                shift === 'day'
+                                    ? "bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
+                                    : "text-muted-foreground hover:bg-surface-soft hover:text-ink"
+                            )}
+                            aria-pressed={shift === 'day'}
+                            disabled={pendingKey !== null}
+                            onClick={() => setShift('day')}
+                        >
+                            <Sun className="h-3.5 w-3.5" /> Day shift
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                                "h-8 rounded-full px-4 text-xs font-semibold transition-all",
+                                shift === 'night'
+                                    ? "bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
+                                    : "text-muted-foreground hover:bg-surface-soft hover:text-ink"
+                            )}
+                            aria-pressed={shift === 'night'}
+                            disabled={pendingKey !== null}
+                            onClick={() => setShift('night')}
+                        >
+                            <Moon className="h-3.5 w-3.5" /> Night shift
+                        </Button>
                     </div>
-                    <span data-configuration-tour="count" className="text-xs text-muted-foreground" aria-live="polite">{tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}</span>
+                    <span data-configuration-tour="count" className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1 text-xs font-medium text-body shadow-xs" aria-live="polite">
+                        {tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}
+                    </span>
                 </div>
 
-            <Card data-configuration-tour="board" className="hidden overflow-hidden md:block">
-                <CardHeader className="border-b border-hairline/70">
-                    <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Connect workers to machines</CardTitle>
-                    <CardDescription>Drag a connector or choose Assign. Each machine has one worker per shift.</CardDescription>
+            <Card data-configuration-tour="board" className="hidden overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs md:block">
+                <CardHeader className="border-b border-hairline/80 px-6 py-4">
+                    <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
+                            <Link2 className="h-4 w-4" />
+                        </span>
+                        Connect workers to machines
+                    </CardTitle>
+                    <CardDescription className="mt-1 text-xs text-body">
+                        Drag a connector or choose Assign. Each machine has one worker per shift.
+                    </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4">
-                    <div className="mb-3 grid grid-cols-2 gap-4">
-                        <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input data-configuration-tour="search" value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
+                <CardContent className="p-6">
+                    <div className="mb-5 grid grid-cols-2 gap-4">
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                data-configuration-tour="search"
+                                value={workerSearch}
+                                onChange={(event) => setWorkerSearch(event.target.value)}
+                                aria-label="Search workers"
+                                placeholder="Search workers"
+                                className="h-10 sm:h-11 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
+                            />
+                        </div>
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
                     </div>
                     <div ref={boardRef} data-configuration-tour-connections className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-16 ${draggingWorkerId ? 'select-none' : ''}`}>
@@ -463,12 +513,12 @@ export default function BaseAssignmentWorkspace({
                                         data-configuration-tour="worker"
                                         onMouseEnter={() => !draggingWorkerId && setHoveredWorkerId(worker.id)}
                                         onMouseLeave={() => !draggingWorkerId && setHoveredWorkerId(null)}
-                                        className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3 py-3 shadow-xs transition-colors ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
+                                        className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
                                     >
                                         <div className="min-w-0">
                                             <p className="truncate font-semibold text-ink">{worker.name}</p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}{worker.is_active ? '' : ' · inactive'}</p>
-                                            <div className="mt-1 flex flex-wrap gap-1">
+                                            <div className="mt-1.5 flex flex-wrap gap-1">
                                                 {assignments.map((assignment) => (
                                                     <span
                                                         key={assignment.id}
@@ -477,19 +527,29 @@ export default function BaseAssignmentWorkspace({
                                                             borderColor: palette.border,
                                                             color: palette.text,
                                                         }}
-                                                        className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap"
+                                                        className="inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap"
                                                     >
                                                         {machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="flex shrink-0 items-center gap-1.5">
-                                            <Button data-configuration-tour="assign" size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>Assign</Button>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            <Button
+                                                data-configuration-tour="assign"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 rounded-lg border-hairline px-3 text-xs font-medium text-body shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
+                                                onClick={() => setPickerWorkerId(worker.id)}
+                                                disabled={!worker.is_active}
+                                            >
+                                                Assign
+                                            </Button>
                                             <span
                                                 role="button"
                                                 tabIndex={-1}
-                                                data-configuration-tour="drag" data-worker-handle={worker.id}
+                                                data-configuration-tour="drag"
+                                                data-worker-handle={worker.id}
                                                 onPointerDown={(event) => handleConnectorPointerDown(event, worker.id)}
                                                 onPointerMove={handleConnectorPointerMove}
                                                 onPointerUp={finishConnectorDrag}
@@ -499,7 +559,7 @@ export default function BaseAssignmentWorkspace({
                                                     backgroundColor: palette.bg,
                                                     color: palette.text,
                                                 }}
-                                                className="flex h-9 w-9 touch-none cursor-grab items-center justify-center rounded-full border-2 shadow-sm transition-transform hover:scale-105 active:cursor-grabbing"
+                                                className="flex h-9 w-9 touch-none cursor-grab items-center justify-center rounded-full border-2 shadow-xs transition-transform hover:scale-110 active:cursor-grabbing active:scale-95"
                                                 title={worker.is_active ? `Drag ${worker.name} to a machine` : 'Inactive workers cannot be assigned'}
                                                 aria-label={worker.is_active ? `Drag ${worker.name} to a machine` : `${worker.name} is inactive`}
                                             >
@@ -522,10 +582,11 @@ export default function BaseAssignmentWorkspace({
                                 return (
                                     <div
                                         key={machine.id}
-                                        data-configuration-tour="machine" data-machine-node={machine.id}
+                                        data-configuration-tour="machine"
+                                        data-machine-node={machine.id}
                                         onMouseEnter={() => !draggingWorkerId && setHoveredMachineId(machine.id)}
                                         onMouseLeave={() => !draggingWorkerId && setHoveredMachineId(null)}
-                                        className={`min-h-[76px] rounded-xl border bg-surface px-3 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
+                                        className={`min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <span
@@ -571,19 +632,41 @@ export default function BaseAssignmentWorkspace({
                                                                 }
                                                                 : undefined
                                                         }
-                                                        className="inline-flex items-center justify-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35]"
+                                                        className="inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35]"
                                                     >
                                                         <Check className="h-3 w-3" /> {worker.name}
                                                     </span>
                                                 ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No production job</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs">No production job</Badge>
                                                 ) : (
-                                                    <Badge variant="warning">Unassigned</Badge>
+                                                    <Badge variant="warning" className="text-xs">Unassigned</Badge>
                                                 )}
-                                                {assignment && <Button data-configuration-tour="remove" variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
+                                                {assignment && (
+                                                    <Button
+                                                        data-configuration-tour="remove"
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
+                                                        onClick={() => void handleRemove(assignment.id)}
+                                                        disabled={pendingKey !== null}
+                                                        className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
+                                                    >
+                                                        <Unlink className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
-                                        {!hasActiveJob && machine.is_active && <Link data-configuration-tour="job" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
+                                        {!hasActiveJob && machine.is_active && (
+                                            <Link
+                                                data-configuration-tour="job"
+                                                onClick={event => { if (tourStep) event.preventDefault() }}
+                                                prefetch={tourStep ? false : undefined}
+                                                href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
+                                                className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
+                                            >
+                                                Set job in Production <ArrowUpRight className="h-3 w-3" />
+                                            </Link>
+                                        )}
                                     </div>
                                 )
                             })}
@@ -592,30 +675,110 @@ export default function BaseAssignmentWorkspace({
                 </CardContent>
             </Card>
 
-            <Card data-configuration-tour="board" className="gap-3 md:hidden">
-                <CardHeader className="border-b border-hairline/70 pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base"><Link2 className="h-4 w-4 text-saffron-deep" /> Connect workers to machines</CardTitle>
-                    <div className="grid grid-cols-2 rounded-lg bg-surface-soft p-1" role="group" aria-label="Assignment workspace view">
-                        <Button type="button" size="sm" variant={mobileView === 'workers' ? 'secondary' : 'ghost'} aria-pressed={mobileView === 'workers'} onClick={() => setMobileView('workers')}><Users className="h-4 w-4" /> Workers</Button>
-                        <Button type="button" size="sm" variant={mobileView === 'machines' ? 'secondary' : 'ghost'} aria-pressed={mobileView === 'machines'} onClick={() => setMobileView('machines')}><Wrench className="h-4 w-4" /> Machines</Button>
+            <Card data-configuration-tour="board" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden">
+                <CardHeader className="border-b border-hairline/70 p-4 pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
+                            <Link2 className="h-4 w-4" />
+                        </span>
+                        Connect workers to machines
+                    </CardTitle>
+                    <div className="grid grid-cols-2 rounded-xl bg-surface-soft p-1 border border-hairline/60" role="group" aria-label="Assignment workspace view">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                                "h-8 rounded-lg text-xs font-semibold transition-all",
+                                mobileView === 'workers'
+                                    ? "bg-surface text-ink shadow-xs border border-hairline"
+                                    : "text-muted-foreground hover:text-ink"
+                            )}
+                            aria-pressed={mobileView === 'workers'}
+                            onClick={() => setMobileView('workers')}
+                        >
+                            <Users className="h-3.5 w-3.5" /> Workers
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                                "h-8 rounded-lg text-xs font-semibold transition-all",
+                                mobileView === 'machines'
+                                    ? "bg-surface text-ink shadow-xs border border-hairline"
+                                    : "text-muted-foreground hover:text-ink"
+                            )}
+                            aria-pressed={mobileView === 'machines'}
+                            onClick={() => setMobileView('machines')}
+                        >
+                            <Wrench className="h-3.5 w-3.5" /> Machines
+                        </Button>
                     </div>
                 </CardHeader>
                 {mobileView === 'workers' ? (
-                    <CardContent className="p-3 pt-0">
+                    <CardContent className="p-4 pt-3">
                         <p className="mb-3 text-xs text-body">Assign each worker to one or more machines.</p>
-                        <div className="relative mb-3"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input data-configuration-tour="search" value={workerSearch} onChange={(event) => setWorkerSearch(event.target.value)} aria-label="Search workers" placeholder="Search workers" className="pl-9" /></div>
+                        <div className="relative mb-3">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                data-configuration-tour="search"
+                                value={workerSearch}
+                                onChange={(event) => setWorkerSearch(event.target.value)}
+                                aria-label="Search workers"
+                                placeholder="Search workers"
+                                className="h-10 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
+                            />
+                        </div>
                         <div className="space-y-2">
                             {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
                                 const assignments = assignmentByWorker.get(worker.id) ?? []
                                 const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
-                                return <div key={worker.id} data-configuration-tour="worker" className="rounded-xl border border-hairline px-3 py-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-ink">{worker.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p><div className="mt-1 flex flex-wrap gap-1">{assignments.length ? assignments.map((assignment) => <span key={assignment.id} style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }} className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap">{machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}</span>) : <Badge variant="warning">Unassigned</Badge>}</div></div><div className="flex shrink-0 items-center gap-1"><Button data-configuration-tour="assign" data-configuration-tour-drag-fallback size="sm" variant="outline" onClick={() => setPickerWorkerId(worker.id)} disabled={!worker.is_active}>{assignments.length ? 'Change' : 'Assign'} <ChevronIcon /></Button></div></div></div>
+                                return (
+                                    <div key={worker.id} data-configuration-tour="worker" className="rounded-xl border border-hairline bg-surface p-3 shadow-xs">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="truncate font-semibold text-ink">{worker.name}</p>
+                                                <p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}</p>
+                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                    {assignments.length ? assignments.map((assignment) => (
+                                                        <span
+                                                            key={assignment.id}
+                                                            style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }}
+                                                            className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap"
+                                                        >
+                                                            {machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}
+                                                        </span>
+                                                    )) : (
+                                                        <Badge variant="warning" className="text-xs">Unassigned</Badge>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex shrink-0 items-center gap-1">
+                                                <Button
+                                                    data-configuration-tour="assign"
+                                                    data-configuration-tour-drag-fallback
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 rounded-lg border-hairline px-3 text-xs font-medium text-body shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
+                                                    onClick={() => setPickerWorkerId(worker.id)}
+                                                    disabled={!worker.is_active}
+                                                >
+                                                    {assignments.length ? 'Change' : 'Assign'} <ChevronIcon />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
                             })}
                         </div>
                     </CardContent>
                 ) : (
-                    <CardContent className="p-3 pt-0">
+                    <CardContent className="p-4 pt-3">
                         <p className="mb-3 text-xs text-body">View the worker connected to each machine for this shift.</p>
-                        <div className="mb-3"><MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} /></div>
+                        <div className="mb-3">
+                            <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                        </div>
                         <div className="space-y-2">
                             {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
                                 const assignment = assignmentByMachine.get(machine.id)
@@ -624,13 +787,13 @@ export default function BaseAssignmentWorkspace({
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
                                 const hasActiveJob = jobId !== 'none'
                                 return (
-                                    <div key={machine.id} data-configuration-tour="machine" data-configuration-tour-connections className="rounded-xl border border-hairline px-3 py-3">
+                                    <div key={machine.id} data-configuration-tour="machine" data-configuration-tour-connections className="rounded-xl border border-hairline bg-surface p-3 shadow-xs">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
                                                 <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}</p>
                                             </div>
-                                            <div className="flex shrink-0 items-center gap-1">
+                                            <div className="flex shrink-0 items-center gap-1.5">
                                                 {worker ? (
                                                     <span
                                                         style={
@@ -642,19 +805,41 @@ export default function BaseAssignmentWorkspace({
                                                                 }
                                                                 : undefined
                                                         }
-                                                        className="inline-flex items-center justify-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold leading-[1.35]"
+                                                        className="inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35]"
                                                     >
                                                         <Check className="h-3 w-3" /> {worker.name}
                                                     </span>
                                                 ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground">No production job</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs">No production job</Badge>
                                                 ) : (
-                                                    <Badge variant="warning">Unassigned</Badge>
+                                                    <Badge variant="warning" className="text-xs">Unassigned</Badge>
                                                 )}
-                                                {assignment && <Button data-configuration-tour="remove" variant="ghost" size="icon-sm" aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`} onClick={() => void handleRemove(assignment.id)} disabled={pendingKey !== null}><Unlink className="h-4 w-4" /></Button>}
+                                                {assignment && (
+                                                    <Button
+                                                        data-configuration-tour="remove"
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
+                                                        onClick={() => void handleRemove(assignment.id)}
+                                                        disabled={pendingKey !== null}
+                                                        className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
+                                                    >
+                                                        <Unlink className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
-                                        {!hasActiveJob && machine.is_active && <Link data-configuration-tour="job" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2">Set job in Production <ArrowUpRight className="h-3 w-3" /></Link>}
+                                        {!hasActiveJob && machine.is_active && (
+                                            <Link
+                                                data-configuration-tour="job"
+                                                onClick={event => { if (tourStep) event.preventDefault() }}
+                                                prefetch={tourStep ? false : undefined}
+                                                href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
+                                                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
+                                            >
+                                                Set job in Production <ArrowUpRight className="h-3 w-3" />
+                                            </Link>
+                                        )}
                                     </div>
                                 )
                             })}
@@ -663,19 +848,42 @@ export default function BaseAssignmentWorkspace({
                 )}
             </Card>
 
-                <label data-configuration-tour="inactive" className="flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="h-4 w-4 accent-saffron" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} /> Show inactive</label>
+                <label data-configuration-tour="inactive" className="inline-flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs font-medium text-body hover:text-ink">
+                    <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-hairline text-loom focus:ring-loom/20 accent-loom cursor-pointer"
+                        checked={showInactive}
+                        onChange={event => setShowInactive(event.target.checked)}
+                    />
+                    Show inactive
+                </label>
             </div>
             <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}><Plus className="h-4 w-4" /> Add worker</Link></Button>
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-full"><Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}><Plus className="h-4 w-4" /> Add machine</Link></Button>
-                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">Manage workers <ArrowUpRight className="h-3.5 w-3.5" /></Link>
-                <Link  onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">Manage machines <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft">
+                    <Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
+                        <Plus className="h-4 w-4" /> Add worker
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft">
+                    <Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}>
+                        <Plus className="h-4 w-4" /> Add machine
+                    </Link>
+                </Button>
+                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">
+                    Manage workers <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">
+                    Manage machines <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
             </aside>
 
             <Sheet modal={!tourStep} open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open && !tourStep) setPickerWorkerId(null) }}>
-                <SheetContent data-configuration-tour="picker" data-tour-floating={tourStep ? '' : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-[28px] pb-6">
-                    <SheetHeader><SheetTitle>Assign {pickerWorker?.name ?? 'worker'}</SheetTitle><SheetDescription>Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription></SheetHeader>
-                    <div className="space-y-3 overflow-y-auto px-4">
+                <SheetContent data-configuration-tour="picker" data-tour-floating={tourStep ? '' : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-2xl border-t border-hairline bg-surface pb-6 shadow-xl">
+                    <SheetHeader className="pb-3 border-b border-hairline/60">
+                        <SheetTitle className="text-lg font-bold text-ink">Assign {pickerWorker?.name ?? 'worker'}</SheetTitle>
+                        <SheetDescription className="text-xs text-body">Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription>
+                    </SheetHeader>
+                    <div className="space-y-3 overflow-y-auto px-4 pt-3">
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
                         {selectableMachines.length === 0 ? <EmptyInline label="No active machines found." /> : selectableMachines.map((machine) => {
                             const assignment = assignmentByMachine.get(machine.id)
@@ -688,7 +896,7 @@ export default function BaseAssignmentWorkspace({
                                 <button
                                     key={machine.id}
                                     type="button"
-                                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-3 py-3 text-left transition-colors hover:border-saffron hover:bg-saffron-soft/30 disabled:opacity-50 disabled:pointer-events-none"
+                                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-3.5 text-left transition-all hover:border-hairline-strong hover:bg-surface-soft disabled:opacity-50 disabled:pointer-events-none shadow-xs"
                                     onClick={() => pickerWorkerId && void handleAssign(pickerWorkerId, machine.id)}
                                     disabled={isOptionDisabled}
                                 >
@@ -704,19 +912,21 @@ export default function BaseAssignmentWorkspace({
                                         </span>
                                     </span>
                                     {pending ? (
-                                        <Loader2 className="h-4 w-4 animate-spin text-saffron-deep" />
+                                        <Loader2 className="h-4 w-4 animate-spin text-loom" />
                                     ) : isCurrent ? (
-                                        <Badge variant="success"><Check className="h-3 w-3" /> Current</Badge>
+                                        <Badge variant="success" className="text-xs"><Check className="h-3 w-3 mr-1" /> Current</Badge>
                                     ) : !hasActiveJob ? (
                                         <span className="text-xs font-semibold text-muted-foreground">No production job</span>
                                     ) : (
-                                        <span className="text-xs font-bold text-saffron-deep">Choose</span>
+                                        <span className="inline-flex items-center justify-center rounded-lg bg-loom px-3 py-1 text-xs font-semibold text-white shadow-xs hover:bg-loom-elevated">Choose</span>
                                     )}
                                 </button>
                             )
                         })}
                     </div>
-                    <SheetFooter><Button variant="outline" onClick={() => setPickerWorkerId(null)}>Close</Button></SheetFooter>
+                    <SheetFooter className="pt-3 border-t border-hairline/60">
+                        <Button variant="outline" className="rounded-xl border-hairline" onClick={() => setPickerWorkerId(null)}>Close</Button>
+                    </SheetFooter>
                 </SheetContent>
             </Sheet>
             {tourStep && <ConfigurationTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={liveData.actorId} />}
@@ -742,11 +952,42 @@ function MachineTypeFilters({
     if (machineTypes.length === 0) return null
 
     return (
-        <div className="flex min-h-10 flex-wrap items-center gap-2" data-configuration-tour="types" aria-label="Filter by machine type">
-            <Button type="button" size="sm" variant={selected.length === 0 ? 'default' : 'outline'} onClick={onShowAll} aria-pressed={selected.length === 0}>All</Button>
+        <div className="flex min-h-10 flex-wrap items-center gap-1.5" data-configuration-tour="types" aria-label="Filter by machine type">
+            <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={onShowAll}
+                aria-pressed={selected.length === 0}
+                className={cn(
+                    "h-8 rounded-full px-3 text-xs font-semibold transition-all border",
+                    selected.length === 0
+                        ? "border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
+                        : "border-hairline bg-surface text-body hover:border-hairline-strong hover:text-ink hover:bg-surface-soft"
+                )}
+            >
+                All
+            </Button>
             {machineTypes.map((machineType) => {
                 const isSelected = selected.includes(machineType)
-                return <Button key={machineType} type="button" size="sm" variant={isSelected ? 'default' : 'outline'} onClick={() => onToggle(machineType)} aria-pressed={isSelected}>{formatMachineType(machineType)}</Button>
+                return (
+                    <Button
+                        key={machineType}
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onToggle(machineType)}
+                        aria-pressed={isSelected}
+                        className={cn(
+                            "h-8 rounded-full px-3 text-xs font-semibold transition-all border",
+                            isSelected
+                                ? "border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
+                                : "border-hairline bg-surface text-body hover:border-hairline-strong hover:text-ink hover:bg-surface-soft"
+                        )}
+                    >
+                        {formatMachineType(machineType)}
+                    </Button>
+                )
             })}
         </div>
     )

@@ -1022,32 +1022,32 @@ function MeterWorkerRow({
     return (
         <div className={cn(
             'border rounded-2xl overflow-hidden transition-all duration-300',
-            isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-saffron-soft'
+            isPaid ? 'border-emerald-200/80 bg-emerald-50/20 shadow-xs' : 'border-hairline bg-surface hover:border-hairline-strong shadow-xs'
         )}>
             <div className="flex flex-col sm:flex-row sm:items-center p-4 sm:py-3.5 gap-3">
                 <button
                     onClick={() => setExpanded(e => !e)}
                     className="flex items-center gap-3 text-left flex-1 min-w-0 group w-full"
                 >
-                    <div className="w-10 h-10 rounded-full bg-saffron-soft text-saffron-deep flex items-center justify-center font-bold text-base flex-shrink-0 group-hover:bg-saffron-soft/80 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-surface-soft border border-hairline text-ink flex items-center justify-center font-bold text-base flex-shrink-0 group-hover:border-loom/30 transition-colors">
                         {tl(worker.name)[0]}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="font-bold text-gray-900 truncate flex items-center gap-2">
+                        <div className="font-bold text-ink truncate flex items-center gap-2">
                             {tl(worker.name)}
-                            {isPaid && <Check className="h-3.5 w-3.5 text-green-500" />}
+                            {isPaid && <Check className="h-3.5 w-3.5 text-emerald-600" />}
                         </div>
-                        <div className="text-[11px] sm:text-xs text-gray-500 flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                        <div className="text-[11px] sm:text-xs text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
                             <span>{worker.totalMeters.toFixed(1)}m</span>
-                            <span className="hidden sm:inline w-1 h-1 rounded-full bg-gray-300" />
+                            <span className="hidden sm:inline w-1 h-1 rounded-full bg-hairline-strong" />
                             <span>{worker.machines.length} {worker.machines.length === 1 ? 'machine' : 'machines'}</span>
                         </div>
                         {!isPaid && (
-                            <div className="mt-1 text-[10px] font-bold text-gray-500">
+                            <div className="mt-1 text-[10px] font-bold text-muted-foreground">
                                 Gross {formatINR(worker.totalPay, { hideDecimals: true })}
                                 {displayDeduction > 0 && <> - Advance {formatINR(displayDeduction, { hideDecimals: true })}</>}
                                 {' = '}
-                                <span className="text-green-700">Net {formatINR(displayNet, { hideDecimals: true })}</span>
+                                <span className="text-emerald-700 font-bold">Net {formatINR(displayNet, { hideDecimals: true })}</span>
                             </div>
                         )}
                         {(hasAdvances || isCapped) && (
@@ -1063,9 +1063,9 @@ function MeterWorkerRow({
                         )}
                     </div>
                 </button>
-                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:mr-1 sm:p-0 border-t sm:border-0 border-gray-100">
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-surface-soft/60 sm:bg-transparent -mx-4 px-4 py-3 sm:mr-1 sm:p-0 border-t sm:border-0 border-hairline">
                     <div className="text-left sm:text-right flex-1 sm:flex-none flex flex-col justify-center gap-1.5 sm:gap-1">
-                        <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-green-700" : "text-gray-900")}>
+                        <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-emerald-700" : "text-ink")}>
                             {formatINR(displayNet)}
                         </div>
                         <div className="flex items-center justify-start sm:justify-end gap-1.5">
@@ -1083,10 +1083,10 @@ function MeterWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-11 lg:h-9 w-[108px] px-3 text-sm lg:text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
+                            'h-10 px-4 rounded-xl text-xs sm:text-sm font-bold leading-none transition-all whitespace-nowrap shadow-xs',
                             isPaid
-                                ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600'
-                                : 'bg-saffron hover:bg-saffron-deep text-white shadow-sm hover:shadow-md active:scale-95'
+                                ? 'border-hairline bg-surface text-body hover:bg-red-50/50 hover:border-red-200 hover:text-red-700'
+                                : 'bg-loom hover:bg-loom-elevated text-white'
                         )}
                         onClick={() => onToggle(false)}
                         disabled={isMutating || (!isPaid && !canSettle)}
@@ -1376,7 +1376,7 @@ function FixedWorkerRow({
     return (
         <div className={cn(
             'border rounded-2xl overflow-hidden transition-all duration-300',
-            isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-saffron-soft'
+            isPaid ? 'border-emerald-200/80 bg-emerald-50/20 shadow-xs' : 'border-hairline bg-surface hover:border-hairline-strong shadow-xs'
         )}>
             <div className="flex flex-col sm:flex-row sm:items-center p-4 sm:py-3.5 gap-3">
                 <button
@@ -1385,7 +1385,7 @@ function FixedWorkerRow({
                 >
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className={cn('text-xs px-2 py-0.5 rounded-full font-black uppercase tracking-wider', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
+                            <span className={cn('text-xs px-2 py-0.5 rounded-full font-black uppercase tracking-wider', ROLE_COLORS[worker.role] || 'bg-surface-soft text-body border border-hairline')}>
                                 {t(`workers.roles.${worker.role}`) || worker.role}
                             </span>
                             {worker.isMachineOperator && (
@@ -1393,15 +1393,15 @@ function FixedWorkerRow({
                                     Loom Worker
                                 </Badge>
                             )}
-                            {isPaid && <Check className="h-3 w-3 text-green-500" />}
+                            {isPaid && <Check className="h-3 w-3 text-emerald-600" />}
                         </div>
-                        <span className="font-bold text-gray-900 truncate block text-base">{tl(worker.name)}</span>
+                        <span className="font-bold text-ink truncate block text-base">{tl(worker.name)}</span>
                         {!isPaid && (
-                            <div className="mt-1 text-[10px] font-bold text-gray-500">
+                            <div className="mt-1 text-[10px] font-bold text-muted-foreground">
                                 Gross {formatINR(worker.earnedPay, { hideDecimals: true })}
                                 {displayDeduction > 0 && <> - Advance {formatINR(displayDeduction, { hideDecimals: true })}</>}
                                 {' = '}
-                                <span className="text-green-700">Net {formatINR(displayNet, { hideDecimals: true })}</span>
+                                <span className="text-emerald-700 font-bold">Net {formatINR(displayNet, { hideDecimals: true })}</span>
                             </div>
                         )}
                         {(hasAdvances || isCapped) && (
@@ -1417,9 +1417,9 @@ function FixedWorkerRow({
                         )}
                     </div>
                 </button>
-                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:mr-1 sm:p-0 border-t sm:border-0 border-gray-100">
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-surface-soft/60 sm:bg-transparent -mx-4 px-4 py-3 sm:mr-1 sm:p-0 border-t sm:border-0 border-hairline">
                     <div className="text-left sm:text-right flex-1 sm:flex-none flex flex-col justify-center gap-1.5 sm:gap-1">
-                        <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-green-700" : "text-gray-900")}>
+                        <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-emerald-700" : "text-ink")}>
                             {formatINR(displayNet)}
                         </div>
                         <div className="flex items-center justify-start sm:justify-end gap-1.5">
@@ -1437,10 +1437,10 @@ function FixedWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-11 lg:h-9 w-[108px] px-3 text-sm lg:text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
+                            'h-10 px-4 rounded-xl text-xs sm:text-sm font-bold leading-none transition-all whitespace-nowrap shadow-xs',
                             isPaid
-                                ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600'
-                                : 'bg-saffron hover:bg-saffron-deep text-white shadow-sm hover:shadow-md active:scale-95'
+                                ? 'border-hairline bg-surface text-body hover:bg-red-50/50 hover:border-red-200 hover:text-red-700'
+                                : 'bg-loom hover:bg-loom-elevated text-white'
                         )}
                         onClick={() => onToggle(false)}
                         disabled={isMutating || (!isPaid && !canSettle)}
@@ -1851,13 +1851,15 @@ function SettlementDialog({
     return (
         <>
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[96dvh] sm:max-h-[90vh]">
-                <div className="bg-saffron p-4 sm:p-6 text-white shrink-0 relative">
-                    <DialogTitle className="text-lg sm:text-xl font-black uppercase tracking-tight flex items-center gap-3 pr-8">
-                        <HandCoins className="h-5 w-5 sm:h-6 sm:w-6" />
+            <DialogContent className="sm:max-w-lg p-0 overflow-hidden border border-hairline rounded-2xl bg-surface shadow-2xl flex flex-col max-h-[96dvh] sm:max-h-[90vh]">
+                <div className="border-b border-hairline bg-surface p-4 sm:p-5 text-ink shrink-0 relative">
+                    <DialogTitle className="text-lg sm:text-xl font-bold tracking-tight flex items-center gap-3 pr-8 text-ink">
+                        <div className="h-9 w-9 rounded-xl bg-loom text-white flex items-center justify-center shrink-0 shadow-xs">
+                            <HandCoins className="h-5 w-5" />
+                        </div>
                         <span className="truncate">{tl(worker.name)}</span>
                     </DialogTitle>
-                    <DialogDescription className="text-white/80 mt-1 text-xs sm:text-sm font-medium italic opacity-90">
+                    <DialogDescription className="text-muted-foreground mt-1 text-xs sm:text-sm font-medium">
                         Finalizing payroll for {monthLabel(selectedMonth)} cycle
                     </DialogDescription>
                 </div>
@@ -1958,7 +1960,7 @@ function SettlementDialog({
                             <Button
                                 type="button"
                                 size="sm"
-                                className="h-10 self-start bg-saffron px-4 text-xs font-black uppercase tracking-widest text-white hover:bg-saffron-deep"
+                                className="h-10 self-start rounded-xl bg-surface border border-hairline px-4 text-xs font-bold text-ink hover:bg-surface-soft shadow-xs"
                                 onClick={handleAddAdjustment}
                             >
                                 <Plus className="h-4 w-4" />
@@ -2131,11 +2133,11 @@ function SettlementDialog({
                     </div>
 
                     <div className="flex gap-2 sm:gap-3">
-                        <Button variant="outline" className="flex-1 h-10 sm:h-12 text-xs sm:text-sm font-bold border-gray-300 hover:bg-gray-100 transition-colors" onClick={() => onOpenChange(false)}>
+                        <Button variant="outline" className="flex-1 h-10 sm:h-12 rounded-xl text-xs sm:text-sm font-bold border-hairline hover:bg-surface-soft transition-colors" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
                         <Button
-                            className="flex-[2] h-10 sm:h-12 text-xs sm:text-sm bg-saffron hover:bg-saffron-deep text-white font-black uppercase tracking-widest shadow-lg shadow-saffron-soft disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
+                            className="flex-[2] h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs disabled:bg-surface-soft disabled:text-muted-foreground disabled:cursor-not-allowed transition-all"
                             disabled={!confirmed || isMutating || netPayout < 0 || !paymentMode}
                             onClick={() => {
                                 if (shouldConfirmAdvanceAdjustment) {
@@ -2237,11 +2239,11 @@ function PayrollRulesDialog({
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" className="rounded-xl border-hairline" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
                     <Button
-                        className="bg-saffron font-bold text-white hover:bg-saffron-deep"
+                        className="rounded-xl bg-loom font-bold text-white shadow-xs hover:bg-loom-elevated"
                         disabled={isSaving}
                         onClick={() => onSave({
                             cycleStartDay: draftCycleStartDay,
@@ -2372,28 +2374,28 @@ function PayDateOverview({
     })()
 
     return (
-        <div className="overflow-hidden rounded-xl border border-saffron-soft bg-white shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-saffron-soft/70 bg-saffron-soft/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+            <div className="flex flex-col gap-3 border-b border-hairline bg-surface-soft/60 p-4 sm:p-4.5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-saffron-deep shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-hairline bg-surface text-ink shadow-xs">
                         <CalendarClock className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-black uppercase tracking-widest text-saffron-deep">Pay date hisaab</p>
+                            <p className="text-sm font-bold uppercase tracking-wider text-ink">Pay date hisaab</p>
                             <Badge
                                 variant="outline"
                                 className={cn(
-                                    "bg-white/70 text-[10px] font-black uppercase tracking-widest",
+                                    "bg-surface text-[10px] font-bold uppercase tracking-wider",
                                     isCompleted
-                                        ? "border-green-200 text-green-700"
-                                        : "border-saffron-soft text-saffron-deep"
+                                        ? "border-emerald-200 text-emerald-700"
+                                        : "border-hairline text-muted-foreground"
                                 )}
                             >
                                 {statusLabel}
                             </Badge>
                         </div>
-                        <p className="mt-1 text-xs text-gray-600">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             {monthLabel(month)} cycle · {cycleLabel}
                         </p>
                     </div>
@@ -2402,7 +2404,7 @@ function PayDateOverview({
                     <Button
                         type="button"
                         size="sm"
-                        className="h-9 bg-saffron text-xs font-bold text-white hover:bg-saffron-deep"
+                        className="h-9 rounded-xl bg-loom text-xs font-bold text-white shadow-xs hover:bg-loom-elevated"
                         onClick={onOpenMonth}
                     >
                         Open payroll
@@ -2410,43 +2412,43 @@ function PayDateOverview({
                 )}
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-saffron-soft/60 border-b border-saffron-soft/60">
+            <div className="grid grid-cols-3 divide-x divide-hairline border-b border-hairline bg-surface">
                 <div className="p-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Owed</p>
-                    <p className="mt-1 text-xl font-black text-gray-900">{formatINR(owedTotal)}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Owed</p>
+                    <p className="mt-1 text-xl font-black text-ink">{formatINR(owedTotal)}</p>
                 </div>
                 <div className="p-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pending</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pending</p>
                     <p className="mt-1 text-xl font-black text-amber-700">{pendingItems.length}</p>
                 </div>
                 <div className="p-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Paid</p>
-                    <p className="mt-1 text-xl font-black text-green-700">{paidCount}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Paid</p>
+                    <p className="mt-1 text-xl font-black text-emerald-700">{paidCount}</p>
                 </div>
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-hairline">
                 {isLoading ? (
                     [1, 2, 3].map((item) => (
                         <div key={item} className="flex items-center justify-between gap-3 p-4">
                             <div className="min-w-0 flex-1 space-y-2">
-                                <div className="h-4 w-32 animate-pulse rounded bg-gray-100" />
-                                <div className="h-3 w-44 animate-pulse rounded bg-gray-50" />
+                                <div className="h-4 w-32 animate-pulse rounded bg-surface-soft" />
+                                <div className="h-3 w-44 animate-pulse rounded bg-surface-soft/60" />
                             </div>
-                            <div className="h-9 w-24 animate-pulse rounded bg-gray-100" />
+                            <div className="h-9 w-24 animate-pulse rounded bg-surface-soft" />
                         </div>
                     ))
                 ) : pendingItems.length === 0 ? (
                     <div className="flex items-center justify-between gap-3 p-4">
                         <div className="flex items-center gap-3">
-                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                             <div>
-                                <p className="text-sm font-bold text-gray-900">All workers are marked paid</p>
-                                <p className="text-xs text-gray-500">This pay-date cycle is clear.</p>
+                                <p className="text-sm font-bold text-ink">All workers are marked paid</p>
+                                <p className="text-xs text-muted-foreground">This pay-date cycle is clear.</p>
                             </div>
                         </div>
                         {!isSelected && (
-                            <Button type="button" variant="outline" size="sm" className="h-9 text-xs font-bold" onClick={onOpenMonth}>
+                            <Button type="button" variant="outline" size="sm" className="h-9 rounded-xl border-hairline text-xs font-bold" onClick={onOpenMonth}>
                                 View details
                             </Button>
                         )}
@@ -2458,25 +2460,25 @@ function PayDateOverview({
                             <div key={item.key} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <p className="truncate text-sm font-bold text-gray-900">{tl(item.name)}</p>
-                                        <Badge variant="outline" className="h-5 border-gray-200 bg-gray-50 px-1.5 text-[9px] font-black uppercase tracking-wider text-gray-600">
+                                        <p className="truncate text-sm font-bold text-ink">{tl(item.name)}</p>
+                                        <Badge variant="outline" className="h-5 border-hairline bg-surface-soft px-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                                             {item.workerType === 'meter' ? 'Meter' : 'Fixed'}
                                         </Badge>
                                     </div>
-                                    <p className="mt-1 text-xs text-gray-500">
+                                    <p className="mt-1 text-xs text-muted-foreground">
                                         {item.detail} · Gross {formatINR(item.gross, { hideDecimals: true })}
                                         {item.advanceDeducted > 0 && ` · advance ${formatINR(item.advanceDeducted, { hideDecimals: true })}`}
                                     </p>
                                 </div>
                                 <div className="flex items-center justify-between gap-3 sm:justify-end">
                                     <div className="text-right">
-                                        <p className="text-base font-black text-gray-900">{formatINR(item.netPayout)}</p>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">net payout</p>
+                                        <p className="text-base font-black text-ink">{formatINR(item.netPayout)}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">net payout</p>
                                     </div>
                                     <Button
                                         type="button"
                                         size="sm"
-                                        className="h-9 w-[100px] bg-saffron text-xs font-bold text-white hover:bg-saffron-deep disabled:bg-gray-200 disabled:text-gray-500"
+                                        className="h-9 w-[100px] rounded-xl bg-loom text-xs font-bold text-white shadow-xs hover:bg-loom-elevated disabled:bg-surface-soft disabled:text-muted-foreground"
                                         disabled={!canSettle || mutating}
                                         title={!canSettle ? 'Payroll opens near the configured pay date.' : undefined}
                                         onClick={() => onMarkPaid(item)}
@@ -2668,7 +2670,7 @@ function SettlementHistoryDialog({
                             </div>
                             <Button
                                 type="button"
-                                className="h-10 bg-saffron text-xs font-black uppercase tracking-widest text-white hover:bg-saffron-deep"
+                                className="h-10 rounded-xl bg-loom text-xs font-bold text-white shadow-xs hover:bg-loom-elevated"
                                 disabled={isLoading || filteredSettlements.length === 0}
                                 onClick={handleDownloadCsv}
                             >
@@ -2677,48 +2679,48 @@ function SettlementHistoryDialog({
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-white">
+                        <div className="grid grid-cols-3 divide-x divide-hairline border-b border-hairline bg-surface">
                             <div className="p-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Paid · {exportLabel}</p>
-                                <p className="mt-1 text-lg font-black text-green-700">{formatINR(totals.net)}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Paid · {exportLabel}</p>
+                                <p className="mt-1 text-lg font-black text-emerald-700">{formatINR(totals.net)}</p>
                             </div>
                             <div className="p-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Gross</p>
-                                <p className="mt-1 text-lg font-black text-gray-900">{formatINR(totals.gross)}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gross</p>
+                                <p className="mt-1 text-lg font-black text-ink">{formatINR(totals.gross)}</p>
                             </div>
                             <div className="p-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recovered</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recovered</p>
                                 <p className="mt-1 text-lg font-black text-amber-700">{formatINR(totals.recovered)}</p>
                             </div>
                         </div>
 
                         <div className="min-h-0 flex-1 overflow-y-auto">
                             {isLoading ? (
-                                <div className="space-y-0 divide-y divide-gray-100">
+                                <div className="space-y-0 divide-y divide-hairline">
                                     {[1, 2, 3, 4].map((item) => (
                                         <div key={item} className="flex items-center justify-between gap-3 p-4">
                                             <div className="space-y-2">
-                                                <div className="h-4 w-36 animate-pulse rounded bg-gray-100" />
-                                                <div className="h-3 w-48 animate-pulse rounded bg-gray-50" />
+                                                <div className="h-4 w-36 animate-pulse rounded bg-surface-soft" />
+                                                <div className="h-3 w-48 animate-pulse rounded bg-surface-soft/60" />
                                             </div>
-                                            <div className="h-8 w-24 animate-pulse rounded bg-gray-100" />
+                                            <div className="h-8 w-24 animate-pulse rounded bg-surface-soft" />
                                         </div>
                                     ))}
                                 </div>
                             ) : error ? (
                                 <div className="p-8 text-center">
-                                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-red-300" />
-                                    <p className="text-sm font-bold text-gray-900">Could not load settlement history</p>
-                                    <p className="mt-1 text-xs text-gray-500">{error.message}</p>
+                                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-red-400" />
+                                    <p className="text-sm font-bold text-ink">Could not load settlement history</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">{error.message}</p>
                                 </div>
                             ) : filteredSettlements.length === 0 ? (
                                 <div className="p-8 text-center">
-                                    <ReceiptText className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-                                    <p className="text-sm font-bold text-gray-900">No paid settlements found</p>
-                                    <p className="mt-1 text-xs text-gray-500">Paid workers will appear here after payroll is settled.</p>
+                                    <ReceiptText className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+                                    <p className="text-sm font-bold text-ink">No paid settlements found</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">Paid workers will appear here after payroll is settled.</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100">
+                                <div className="divide-y divide-hairline">
                                     {filteredSettlements.map((settlement) => {
                                         const isSelected = selectedSettlement?.id === settlement.id
                                         return (
@@ -2726,8 +2728,8 @@ function SettlementHistoryDialog({
                                                 key={settlement.id}
                                                 type="button"
                                                 className={cn(
-                                                    'flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-gray-50',
-                                                    isSelected && 'bg-saffron-soft/30'
+                                                    'flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-surface-soft/60',
+                                                    isSelected && 'bg-surface-soft'
                                                 )}
                                                 onClick={() => setSelectedId(settlement.id)}
                                             >
@@ -3487,14 +3489,14 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
 
     const payWindowCopy = getPayWindowCopy(selectedCycleStatus, payReminderDays)
     const payWindowToneClasses = {
-        red: 'border-red-200 bg-red-50 text-red-800',
-        amber: 'border-amber-200 bg-amber-50 text-amber-800',
-        slate: 'border-slate-200 bg-slate-50 text-slate-700',
+        red: 'border-red-200 bg-red-50/60 text-red-900',
+        amber: 'border-amber-200 bg-amber-50/60 text-amber-900',
+        slate: 'border-hairline bg-surface-soft/60 text-ink',
     }[payWindowCopy.tone]
     const payWindowIconClasses = {
         red: 'text-red-600',
         amber: 'text-amber-600',
-        slate: 'text-slate-500',
+        slate: 'text-muted-foreground',
     }[payWindowCopy.tone]
     const settleDisabledReason = selectedCycleStatus.is_payroll_window_open
         ? undefined
@@ -3506,32 +3508,32 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('payroll.monthly_payroll')}</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">{t('payroll.track_settle')}</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-ink">{t('payroll.monthly_payroll')}</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">{t('payroll.track_settle')}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto sm:justify-end">
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-10 gap-2 bg-white text-xs font-bold"
+                        className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-xs font-bold text-ink shadow-xs hover:bg-surface-soft gap-2"
                         onClick={() => setShowSettlementHistory(true)}
                     >
-                        <History className="h-4 w-4" />
+                        <History className="h-4 w-4 text-muted-foreground" />
                         Past Worker Hisaab
                     </Button>
                     {/* Month navigator */}
-                    <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5">
+                    <div className="flex items-center gap-1 sm:gap-2 rounded-xl border border-hairline bg-surface px-2 sm:px-3 py-1 sm:h-11 shadow-xs">
                         <button
                             onClick={() => {
                                 setHasManualCycleSelection(true)
                                 setSelectedMonth(prevMonth(selectedMonth))
                             }}
-                            className="p-1 hover:bg-gray-100 rounded"
+                            className="p-1.5 hover:bg-surface-soft rounded-lg text-muted-foreground hover:text-ink transition-colors"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>
-                        <span className="text-sm font-semibold text-gray-700 min-w-[140px] text-center">
+                        <span className="text-sm font-bold text-ink min-w-[140px] text-center">
                             {monthLabel(selectedMonth)}
                         </span>
                         <button
@@ -3540,7 +3542,7 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                                 setSelectedMonth(nextMonth(selectedMonth))
                             }}
                             disabled={selectedMonth >= currentMonth}
-                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                            className="p-1.5 hover:bg-surface-soft rounded-lg text-muted-foreground hover:text-ink transition-colors disabled:opacity-30"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </button>
@@ -3558,23 +3560,23 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                 </div>
             )}
 
-            <div className={cn('flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between', payWindowToneClasses)}>
+            <div className={cn('flex flex-col gap-3 rounded-2xl border p-4 sm:p-4.5 sm:flex-row sm:items-center sm:justify-between shadow-xs', payWindowToneClasses)}>
                 <div className="flex min-w-0 items-start gap-3">
                     <CalendarClock className={cn('mt-0.5 h-5 w-5 shrink-0', payWindowIconClasses)} />
                     <div className="min-w-0">
-                        <p className="text-sm font-black">{payWindowCopy.title}</p>
+                        <p className="text-sm font-bold">{payWindowCopy.title}</p>
                         <p className="mt-0.5 text-xs leading-relaxed opacity-85">{payWindowCopy.description}</p>
                     </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                    <Badge variant="outline" className="w-fit border-current/20 bg-white/60 text-[10px] font-black uppercase tracking-widest">
+                    <Badge variant="outline" className="w-fit border-current/20 bg-surface/70 text-[10px] font-bold uppercase tracking-wider">
                         Pay day {payDateDay}
                     </Badge>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-8 border-current/20 bg-white/70 text-xs font-bold hover:bg-white"
+                        className="h-8 sm:h-9 rounded-xl border border-current/20 bg-surface/80 text-xs font-bold hover:bg-surface shadow-xs"
                         onClick={() => setShowRulesDialog(true)}
                     >
                         Edit rules
@@ -3628,64 +3630,62 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
 
             {/* Summary Cards */}
             {selectedCycleStatus.status !== 'not_started' && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Card className="border-none shadow-sm bg-saffron-soft/50">
-                    <CardContent className="pt-4 pb-3">
-                        <div className="text-xs font-black text-saffron-deep uppercase tracking-widest mb-1">{t('payroll_ext.gross_target')}</div>
-                        <div className="text-xl font-black text-saffron-deep tracking-tight">{formatINR(summary.totalGross)}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm bg-green-50/50">
-                    <CardContent className="pt-4 pb-3">
-                        <div className="text-xs font-black text-green-600 uppercase tracking-widest mb-1">{t('payroll_ext.net_paid')}</div>
-                        <div className="text-xl font-black text-green-700 tracking-tight">{formatINR(summary.totalPaidNet)}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm bg-amber-50/50">
-                    <CardContent className="pt-4 pb-3">
-                        <div className="text-xs font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1">
-                            <HandCoins className="h-3 w-3" />
-                            {t('payroll_ext.recovered')}
+            <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                <div className="grid grid-cols-2 divide-y sm:divide-y-0 sm:grid-cols-4 sm:divide-x divide-hairline">
+                    <div className="p-4 sm:p-5">
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('payroll_ext.gross_target')}</div>
+                        <div className="text-xl sm:text-2xl font-black text-ink tracking-tight">{formatINR(summary.totalGross)}</div>
+                    </div>
+                    <div className="p-4 sm:p-5">
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('payroll_ext.net_paid')}</div>
+                        <div className="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">{formatINR(summary.totalPaidNet)}</div>
+                    </div>
+                    <div className="p-4 sm:p-5">
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                            <HandCoins className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span>{t('payroll_ext.recovered')}</span>
                         </div>
-                        <div className="text-xl font-black text-amber-700 tracking-tight">{formatINR(summary.totalDeducted)}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm bg-red-50/50">
-                    <CardContent className="pt-4 pb-3">
-                        <div className="text-xs font-black text-red-600 uppercase tracking-widest mb-1">{t('payroll_ext.outstanding')}</div>
-                        <div className="text-xl font-black text-red-700 tracking-tight">{formatINR(summary.outstanding)}</div>
-                    </CardContent>
-                </Card>
-            </div>
+                        <div className="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">{formatINR(summary.totalDeducted)}</div>
+                    </div>
+                    <div className="p-4 sm:p-5">
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('payroll_ext.outstanding')}</div>
+                        <div className="text-xl sm:text-2xl font-black text-ink tracking-tight">{formatINR(summary.outstanding)}</div>
+                    </div>
+                </div>
+            </Card>
             )}
 
             {/* Search & Tabs Header */}
             {selectedCycleStatus.status !== 'not_started' && (
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
                 <div className="relative w-full md:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder={t('payroll_ext.search_placeholder')}
-                        className="pl-9 bg-white border-gray-200"
+                        className="h-10 sm:h-11 rounded-xl border border-hairline bg-surface pl-9 text-ink shadow-xs placeholder:text-muted-foreground focus:border-loom focus:ring-1 focus:ring-loom"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="flex bg-white p-1 rounded-xl border border-gray-200 w-full md:w-auto">
+                <div className="flex bg-surface-soft p-1 rounded-xl border border-hairline w-full md:w-auto shadow-xs">
                     <button
                         className={cn(
-                            'flex-1 md:min-w-[200px] px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-black uppercase tracking-tighter sm:tracking-widest flex items-center justify-center gap-1 sm:gap-3 transition-all rounded-lg min-w-0',
-                            activeTab === 'meter' ? 'bg-saffron text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'
+                            'flex-1 md:min-w-[190px] px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold tracking-tight flex items-center justify-center gap-1.5 sm:gap-2.5 transition-all rounded-lg min-w-0',
+                            activeTab === 'meter'
+                                ? 'bg-loom text-white shadow-xs'
+                                : 'text-muted-foreground hover:text-ink hover:bg-surface/60'
                         )}
                         onClick={() => setActiveTab('meter')}
                     >
-                        <HardHat className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+                        <HardHat className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t('payroll_ext.piece_rate_tab')}</span>
                         {meterWorkers && (
                             <span className={cn(
-                                'text-xs px-2 py-0.5 rounded-full font-bold ml-2 shrink-0',
-                                activeTab === 'meter' ? 'bg-white/25' : 'bg-gray-100'
+                                'text-xs px-2 py-0.5 rounded-full font-bold ml-1.5 shrink-0',
+                                activeTab === 'meter'
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-surface text-muted-foreground border border-hairline'
                             )}>
                                 {meterWorkers.filter((w: MeterWorkerPayroll) => !w.settlement).length}
                             </span>
@@ -3693,17 +3693,21 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
                     </button>
                     <button
                         className={cn(
-                            'flex-1 md:min-w-[200px] px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-black uppercase tracking-tighter sm:tracking-widest flex items-center justify-center gap-1 sm:gap-3 transition-all rounded-lg min-w-0',
-                            activeTab === 'fixed' ? 'bg-saffron text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'
+                            'flex-1 md:min-w-[190px] px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold tracking-tight flex items-center justify-center gap-1.5 sm:gap-2.5 transition-all rounded-lg min-w-0',
+                            activeTab === 'fixed'
+                                ? 'bg-loom text-white shadow-xs'
+                                : 'text-muted-foreground hover:text-ink hover:bg-surface/60'
                         )}
                         onClick={() => setActiveTab('fixed')}
                     >
-                        <Briefcase className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+                        <Briefcase className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t('payroll_ext.monthly_daily_tab')}</span>
                         {fixedWorkers && (
                             <span className={cn(
-                                'text-xs px-2 py-0.5 rounded-full font-bold ml-2 shrink-0',
-                                activeTab === 'fixed' ? 'bg-white/25' : 'bg-gray-100'
+                                'text-xs px-2 py-0.5 rounded-full font-bold ml-1.5 shrink-0',
+                                activeTab === 'fixed'
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-surface text-muted-foreground border border-hairline'
                             )}>
                                 {fixedWorkers.filter((w: FixedWorkerPayroll) => !w.settlement).length}
                             </span>
@@ -3716,13 +3720,13 @@ export default function PayrollClient({ initialData }: { initialData: PayrollCli
             {/* Progress bar */}
             {selectedCycleStatus.status !== 'not_started' && summary.totalGross > 0 && (
                 <div className="space-y-1.5">
-                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-2 rounded-full bg-surface-soft border border-hairline overflow-hidden">
                         <div
-                            className="h-full rounded-full bg-green-500 transition-all duration-500"
+                            className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                             style={{ width: `${Math.min(100, ((summary.totalPaidNet + summary.totalDeducted) / summary.totalGross) * 100)}%` }}
                         />
                     </div>
-                    <p className="text-[10px] font-black text-gray-400 text-right uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-muted-foreground text-right uppercase tracking-wider">
                         {Math.round(((summary.totalPaidNet + summary.totalDeducted) / summary.totalGross) * 100)}{t('payroll_ext.settled_pct')}
                     </p>
                 </div>

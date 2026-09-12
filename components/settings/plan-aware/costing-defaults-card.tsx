@@ -140,12 +140,14 @@ export function CostingDefaultsCard({
     return (
         <section
             aria-labelledby="costing-defaults-heading"
-            className="rounded-2xl border border-hairline bg-[#FCFCFC] p-6 shadow-sm dark:bg-[#1A1A1A] sm:p-8"
+            className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
         >
             <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <Calculator className="h-5 w-5 text-saffron" aria-hidden="true" />
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                            <Calculator className="h-4 w-4" aria-hidden="true" />
+                        </span>
                         <h2 id="costing-defaults-heading" className="text-lg font-bold tracking-tight text-ink">
                             {tx('Costing defaults')}
                         </h2>
@@ -160,7 +162,7 @@ export function CostingDefaultsCard({
             </div>
 
             {staleError && (
-                <div className="mt-4 flex items-center gap-2.5 rounded-lg border border-warning/30 bg-warning/10 p-3.5 text-sm text-ink" role="alert">
+                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning-soft p-3.5 text-sm text-ink" role="alert">
                     <AlertCircle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
                     <p>{staleError}</p>
                 </div>
@@ -184,7 +186,7 @@ export function CostingDefaultsCard({
                                 onChange={e => updateField('yarnShortagePct', Number(e.target.value))}
                                 disabled={isSubmitting}
                                 aria-invalid={!!fieldErrors.yarnShortagePct}
-                                className="h-11 border-hairline bg-surface/90 pr-10 font-mono text-sm focus-visible:border-saffron"
+                                className="h-11 rounded-xl border-hairline bg-surface pr-10 font-mono tabular-nums text-sm focus-visible:border-loom"
                                 placeholder="0"
                             />
                             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -218,7 +220,7 @@ export function CostingDefaultsCard({
                                 onChange={e => updateField('defaultMarginPct', Number(e.target.value))}
                                 disabled={isSubmitting}
                                 aria-invalid={!!fieldErrors.defaultMarginPct}
-                                className="h-11 border-hairline bg-surface/90 pr-10 font-mono text-sm focus-visible:border-saffron"
+                                className="h-11 rounded-xl border-hairline bg-surface pr-10 font-mono tabular-nums text-sm focus-visible:border-loom"
                                 placeholder="10"
                             />
                             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -248,10 +250,10 @@ export function CostingDefaultsCard({
                                 aria-checked={formState.overheadMode === 'direct'}
                                 onClick={() => updateField('overheadMode', 'direct')}
                                 disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                     formState.overheadMode === 'direct'
-                                        ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                        : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                        ? 'border-loom bg-loom text-white shadow-xs'
+                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                 }`}
                             >
                                 {tx('Direct (₹/m)')}
@@ -262,10 +264,10 @@ export function CostingDefaultsCard({
                                 aria-checked={formState.overheadMode === 'monthly_expenses'}
                                 onClick={() => updateField('overheadMode', 'monthly_expenses')}
                                 disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                     formState.overheadMode === 'monthly_expenses'
-                                        ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                        : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                        ? 'border-loom bg-loom text-white shadow-xs'
+                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                 }`}
                             >
                                 {tx('Monthly Expenses')}
@@ -288,10 +290,10 @@ export function CostingDefaultsCard({
                                 aria-checked={formState.warpingMode === 'in_house'}
                                 onClick={() => updateField('warpingMode', 'in_house')}
                                 disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                     formState.warpingMode === 'in_house'
-                                        ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                        : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                        ? 'border-loom bg-loom text-white shadow-xs'
+                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                 }`}
                             >
                                 {tx('In-house')}
@@ -302,10 +304,10 @@ export function CostingDefaultsCard({
                                 aria-checked={formState.warpingMode === 'outsourced'}
                                 onClick={() => updateField('warpingMode', 'outsourced')}
                                 disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                     formState.warpingMode === 'outsourced'
-                                        ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                        : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                        ? 'border-loom bg-loom text-white shadow-xs'
+                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                 }`}
                             >
                                 {tx('Outsourced')}
@@ -328,10 +330,10 @@ export function CostingDefaultsCard({
                                 aria-checked={formState.sizingMode === 'in_house'}
                                 onClick={() => updateField('sizingMode', 'in_house')}
                                 disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                     formState.sizingMode === 'in_house'
-                                        ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                        : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                        ? 'border-loom bg-loom text-white shadow-xs'
+                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                 }`}
                             >
                                 {tx('In-house')}
@@ -342,10 +344,10 @@ export function CostingDefaultsCard({
                                 aria-checked={formState.sizingMode === 'outsourced'}
                                 onClick={() => updateField('sizingMode', 'outsourced')}
                                 disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                     formState.sizingMode === 'outsourced'
-                                        ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                        : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                        ? 'border-loom bg-loom text-white shadow-xs'
+                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                 }`}
                             >
                                 {tx('Outsourced')}
@@ -369,16 +371,15 @@ export function CostingDefaultsCard({
                                 variant="outline"
                                 onClick={handleDiscard}
                                 disabled={isSubmitting}
-                                className="min-h-11 px-4"
+                                className="min-h-11 rounded-xl px-4 font-medium"
                             >
                                 {tx('Discard changes')}
                             </Button>
                         )}
                         <Button
                             type="submit"
-                            variant="saffron"
                             disabled={!isDirty || isSubmitting}
-                            className="min-h-11 px-5 font-semibold"
+                            className="min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors"
                         >
                             {isSubmitting ? (
                                 <>

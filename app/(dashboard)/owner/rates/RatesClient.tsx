@@ -1591,11 +1591,11 @@ export default function RatesClient({
                             </div>
                             <Button
                                 data-ratebook-field="addRateAction"
-                                variant="saffron"
                                 onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
-                                className="w-full sm:w-auto"
+                                className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron"
                             >
-                                <Plus className="h-4 w-4" /> {tx('Add Yarn Rate')}
+                                <Plus className="h-4 w-4" aria-hidden="true" />
+                                <span>{tx('Add Yarn Rate')}</span>
                             </Button>
                         </div>
                     )}
@@ -1666,28 +1666,26 @@ export default function RatesClient({
                 </div>
             )}
 
-            <Card className="premium-surface">
-                <CardContent className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-5">
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CircleDollarSign className="h-4 w-4 text-info" aria-hidden="true" /><span><span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}</span></div>
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-body"><CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /><span>{tx('Last reviewed')} <span className="font-bold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span></span></div>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-subtle">
-                        <span><span className="font-semibold text-ink">{warpRatesCount}</span> {tx('Warp')}</span>
+            {/* Primary Register Surface (Principle 3: One Primary Surface Per Workflow) */}
+            <div className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden" data-ratebook-section={2} data-ratebook-section-card="true" data-ratebook-field="rateTableCard">
+                <div className="flex flex-col gap-3 border-b border-hairline px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-ink">
+                            {tx('Yarn rates')} · <span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}
+                        </h2>
+                        <span className="text-xs text-subtle">
+                            ({warpRatesCount} {tx('Warp')} · {weftRatesCount} {tx('Weft')})
+                        </span>
                         <span className="text-hairline-strong">•</span>
-                        <span><span className="font-semibold text-ink">{weftRatesCount}</span> {tx('Weft')}</span>
+                        <span className="text-xs text-subtle">
+                            {tx('Last reviewed')}{' '}
+                            <span className="font-semibold text-ink">
+                                {mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}
+                            </span>
+                        </span>
                     </div>
-                </CardContent>
-            </Card>
-
-            <Card className="gap-0 overflow-hidden p-0" data-ratebook-section={2} data-ratebook-section-card="true" data-ratebook-field="rateTableCard">
-                <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
-                    <div>
-                        <p className="font-semibold text-ink">{tx('Yarn rates')}</p>
-                        <p className="mt-1 hidden text-xs leading-relaxed text-body sm:block">{tx('Discovered rates stay marked for review until you confirm the displayed value.')}</p>
-                    </div>
-                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start px-2.5 text-xs text-subtle hover:text-ink">
-                        {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}
+                    <Button variant={showArchived ? 'secondary' : 'ghost'} onClick={() => setShowArchived(current => !current)} className="h-9 shrink-0 self-start sm:self-auto px-3 text-xs font-medium text-subtle hover:text-ink rounded-lg">
+                        {showArchived ? <ArchiveRestore className="mr-1.5 h-3.5 w-3.5" /> : <Archive className="mr-1.5 h-3.5 w-3.5" />} {tx(showArchived ? 'Active rates' : 'Archived rates')}
                     </Button>
                 </div>
 
@@ -2172,7 +2170,7 @@ export default function RatesClient({
                         </div>
                     </>
                 )}
-            </Card>
+            </div>
 
             <DueForReviewDialog
                 open={showDueReviews}
@@ -2256,7 +2254,7 @@ export default function RatesClient({
                         <div className="space-y-1.5"><Label>Notes</Label><Textarea value={draftHasFabricUsage ? getCostRateDisplayNotes(draftRate ?? { notes: draft.notes ?? null, fabric_names: [] }) ?? draft.notes : draft.notes} onChange={event => updateDraft('notes', event.target.value)} placeholder="Why this rate changed or how it should be used" maxLength={500} disabled={draftHasFabricUsage} />{draftHasFabricUsage ? <p className="text-xs leading-relaxed text-subtle">Automatically lists every saved fabric that currently uses this yarn.</p> : <p className="text-right text-xs text-subtle">{draft.notes?.length ?? 0}/500</p>}</div>
                         <div className="space-y-1.5"><Label>Review every</Label><select value={draft.reviewIntervalDays} onChange={event => updateDraft('reviewIntervalDays', Number(event.target.value))} className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-sm"><option value="30">30 days</option><option value="60">60 days</option><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option></select></div>
                     </div>}
-                    <SheetFooter className="border-t border-hairline p-6 sm:flex-row"><Button variant="outline" onClick={() => setDraft(null)} className="flex-1" disabled={isPending}>{tx('Cancel')}</Button><Button variant="saffron" onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined} className="flex-1">{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {isPending ? tx('Saving…') : tx('Save current rate')}</Button></SheetFooter>
+                    <SheetFooter className="border-t border-hairline p-6 sm:flex-row"><Button variant="outline" onClick={() => setDraft(null)} className="flex-1" disabled={isPending}>{tx('Cancel')}</Button><Button onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined} className="flex-1 rounded-xl bg-loom font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white">{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {isPending ? tx('Saving…') : tx('Save current rate')}</Button></SheetFooter>
                     {draft && !draft.name.trim() && <p id="cost-rate-save-hint" className="px-6 pb-5 text-xs font-medium text-warning">{tx('Enter a yarn name before saving this rate.')}</p>}
                 </SheetContent>
             </Sheet>

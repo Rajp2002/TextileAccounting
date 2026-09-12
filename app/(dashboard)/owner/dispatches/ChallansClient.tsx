@@ -1,6 +1,22 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import {
+    Plus,
+    Search,
+    Truck,
+    Printer,
+    RefreshCw,
+    AlertTriangle,
+    CheckCircle2,
+    Clock,
+    ArrowUpRight,
+    FileText,
+    History,
+    RotateCcw,
+    Edit3,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -183,9 +199,8 @@ export default function ChallansClient({
         setError('')
     }
     const field = (key: string, type = 'text', required = false) => (
-        <label key={key} className="grid gap-1 text-sm">
-            {tx(key === 'evidence' ? 'evidenceLink' : key)}
-            {required ? ' *' : ''}
+        <label key={key} className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <span>{tx(key === 'evidence' ? 'evidenceLink' : key)}{required ? ' *' : ''}</span>
             <Input
                 type={type}
                 step={type === 'number' ? '0.01' : undefined}
@@ -195,133 +210,154 @@ export default function ChallansClient({
                 onChange={(e) =>
                     setFields({ ...fields, [key]: e.target.value })
                 }
+                className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink text-sm font-normal normal-case shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
             />
         </label>
     )
     return (
         <div
             data-i18n-skip="true"
-            className="mx-auto max-w-6xl space-y-5 p-4 md:p-8"
+            className="mx-auto max-w-6xl space-y-6 p-4 md:p-8"
         >
-            <div className="flex flex-wrap justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold">{tx('title')}</h1>
-                    <p className="text-sm text-muted-foreground">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">{tx('title')}</h1>
+                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         {tx('intro')}
                     </p>
                 </div>
-                <Button
-                    disabled={busy || !!pending}
-                    onClick={() => {
-                        setSelected(null)
-                        setDraft(blank())
-                        draftId.current = crypto.randomUUID()
-                        setError('')
-                    }}
-                >
-                    {tx('new')}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        disabled={busy || !!pending}
+                        onClick={() => {
+                            setSelected(null)
+                            setDraft(blank())
+                            draftId.current = crypto.randomUUID()
+                            setError('')
+                        }}
+                        className="h-10 px-4 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated transition-all"
+                    >
+                        <Plus className="h-4 w-4" /> {tx('new')}
+                    </Button>
+                </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-                <Button
-                    variant={history ? 'outline' : 'default'}
-                    onClick={() => load(false)}
-                    disabled={busy}
-                >
-                    {tx('active')}
-                </Button>
-                <Button
-                    variant={history ? 'default' : 'outline'}
-                    onClick={() => load(true)}
-                    disabled={busy}
-                >
-                    {tx('history')}
-                </Button>
-                <Input
-                    className="max-w-xs"
-                    aria-label={tx('search')}
-                    placeholder={tx('search')}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-                <Button
-                    variant="outline"
-                    onClick={() => load()}
-                    disabled={busy}
-                >
-                    {tx('searchButton')}
-                </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="flex h-10 items-center rounded-xl border border-hairline bg-surface-soft p-1 shadow-xs">
+                        <button
+                            type="button"
+                            onClick={() => load(false)}
+                            disabled={busy}
+                            className={`rounded-lg px-3.5 py-1 text-xs sm:text-sm font-bold transition-all ${!history ? 'bg-loom text-white shadow-xs' : 'text-muted-foreground hover:text-ink'}`}
+                        >
+                            {tx('active')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => load(true)}
+                            disabled={busy}
+                            className={`rounded-lg px-3.5 py-1 text-xs sm:text-sm font-bold transition-all ${history ? 'bg-loom text-white shadow-xs' : 'text-muted-foreground hover:text-ink'}`}
+                        >
+                            {tx('history')}
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Input
+                            className="h-10 w-48 sm:w-64 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom text-xs sm:text-sm"
+                            aria-label={tx('search')}
+                            placeholder={tx('search')}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <Button
+                            variant="outline"
+                            onClick={() => load()}
+                            disabled={busy}
+                            className="h-10 rounded-xl border-hairline bg-surface hover:bg-surface-soft font-semibold text-xs shadow-xs px-3"
+                        >
+                            <Search className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">{tx('searchButton')}</span>
+                        </Button>
+                    </div>
+                </div>
                 <Link
-                    className="text-sm underline"
+                    className="text-xs font-bold text-loom hover:underline flex items-center gap-1.5"
                     href="/owner/dispatches/legacy"
                 >
+                    <Truck className="h-3.5 w-3.5" />
                     {tx('legacy')}
                 </Link>
             </div>
             {error && (
                 <p
                     role="alert"
-                    className="rounded border border-red-300 p-3 text-red-700"
+                    className="rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-xs sm:text-sm font-medium text-rose-800"
                 >
                     {error}
                 </p>
             )}
             {pending && !busy && (
-                <Button onClick={() => save(pending.action, pending.payload)}>
+                <Button onClick={() => save(pending.action, pending.payload)} className="rounded-xl bg-loom text-white font-bold text-xs shadow-xs">
                     {tx('retryButton')}
                 </Button>
             )}
             <div className="grid gap-3">
-                {rows.map((d) => (
-                    <button
-                        key={d.id}
-                        className="flex flex-wrap justify-between gap-3 rounded-xl border bg-card p-4 text-left hover:bg-muted"
-                        onClick={() => view(d.id)}
-                        disabled={busy || !!pending}
-                    >
-                        <div>
-                            <strong>
-                                {d.number} · {d.document.customer_name}
-                            </strong>
-                            <p>
-                                {d.quality_label} · {d.sent_meters} m ·{' '}
-                                {d.document.date}
-                            </p>
-                        </div>
-                        <div>
-                            <p>
-                                {tx(d.delivery_status)} · {tx(paymentStatus(d))}
-                            </p>
-                            <p>
-                                {Number(d.balance) < 0
-                                    ? tx('credit')
-                                    : tx('balance')}
-                                : Rs {money(Math.abs(d.balance))}
-                            </p>
-                            <p>
-                                {dueLabel(d)}
-                                {d.payment_due_date
-                                    ? `${dueLabel(d) ? ' · ' : ''}${d.payment_due_date}`
-                                    : ''}
-                            </p>
-                            {['review', 'disputed'].includes(
-                                d.difference_status,
-                            ) && (
-                                <p className="text-amber-700">
-                                    {tx(d.difference_status)}
-                                </p>
+                {rows.map((d) => {
+                    const isDisputed = ['review', 'disputed'].includes(d.difference_status)
+                    return (
+                        <button
+                            key={d.id}
+                            className={`w-full rounded-2xl border text-left p-4 sm:p-5 shadow-xs transition-all ${selected?.id === d.id ? 'border-loom ring-1 ring-loom bg-surface' : 'border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-soft/40'}`}
+                            onClick={() => view(d.id)}
+                            disabled={busy || !!pending}
+                        >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-mono text-xs font-bold tracking-tight text-ink/70">{d.number}</span>
+                                        <span className="font-bold text-ink text-base truncate">{d.document.customer_name}</span>
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        <span className="font-semibold text-ink/80">{d.quality_label}</span> · <span className="font-bold tabular-nums text-ink">{d.sent_meters} m</span> · {d.document.date}
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap sm:flex-col sm:items-end gap-1.5 shrink-0 text-xs">
+                                    <div className="flex items-center gap-1.5">
+                                        <Badge variant={d.delivery_status === 'sent' ? 'warning' : d.delivery_status === 'received' ? 'success' : 'outline'} className="text-[10px] font-bold">
+                                            {tx(d.delivery_status)}
+                                        </Badge>
+                                        <Badge variant={paymentStatus(d) === 'settled' ? 'success' : paymentStatus(d) === 'partial' ? 'warning' : 'outline'} className="text-[10px] font-bold">
+                                            {tx(paymentStatus(d))}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-xs font-bold tabular-nums text-ink">
+                                        <span className="font-medium text-muted-foreground">{Number(d.balance) < 0 ? tx('credit') : tx('balance')}:</span> ₹{money(Math.abs(d.balance))}
+                                    </p>
+                                    {(dueLabel(d) || d.payment_due_date) && (
+                                        <p className="text-[11px] text-muted-foreground font-medium">
+                                            {dueLabel(d)}
+                                            {d.payment_due_date ? `${dueLabel(d) ? ' · ' : ''}${d.payment_due_date}` : ''}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            {isDisputed && (
+                                <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-1.5 text-xs font-semibold text-amber-900">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                                    <span>{tx(d.difference_status)}</span>
+                                </div>
                             )}
-                        </div>
-                    </button>
-                ))}
+                        </button>
+                    )
+                })}
             </div>
             {!rows.length && (
-                <p className="rounded-xl border p-10 text-center text-muted-foreground">
-                    {tx('empty')}
-                </p>
+                <div className="rounded-2xl border border-dashed border-hairline bg-surface-soft/40 p-10 text-center text-muted-foreground">
+                    <p className="text-sm font-semibold text-body">{tx('empty')}</p>
+                </div>
             )}
             {rows.length > 0 && rows.length % 50 === 0 && (
-                <Button onClick={() => load(history, true)} disabled={busy}>
+                <Button onClick={() => load(history, true)} disabled={busy} className="rounded-xl border-hairline bg-surface hover:bg-surface-soft font-semibold text-xs shadow-xs">
                     {tx('more')}
                 </Button>
             )}
@@ -352,6 +388,8 @@ export default function ChallansClient({
                     )}
                     {pending && !busy && (
                         <Button
+                            variant="outline"
+                            className="mt-3 w-full h-10 rounded-xl border-hairline font-semibold shadow-xs"
                             onClick={() =>
                                 save(pending.action, pending.payload)
                             }
@@ -362,76 +400,210 @@ export default function ChallansClient({
                 </DialogContent>
             </Dialog>
             {selected && !draft && (
-                <section className="space-y-4 rounded-xl border bg-card p-5">
-                    <div className="flex flex-wrap justify-between gap-2">
-                        <Button
-                            variant="outline"
-                            disabled={busy || !!pending}
-                            onClick={() => view(selected.id)}
-                        >
-                            {tx('refresh')}
-                        </Button>
-                        <h2 className="text-xl font-semibold">
-                            {selected.number} ·{' '}
-                            {selected.document.customer_name}
-                        </h2>
-                        <Link
-                            className="underline"
-                            target="_blank"
-                            href={`/owner/dispatches/${selected.id}/print`}
-                        >
-                            {tx('print')}
-                        </Link>
+                <section className="space-y-6 rounded-2xl border border-hairline bg-surface p-5 sm:p-7 shadow-xs">
+                    {/* Header bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-hairline">
+                        <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-surface-soft border border-hairline text-ink">
+                                    {selected.number}
+                                </span>
+                                <Badge
+                                    variant={
+                                        selected.delivery_status === 'received'
+                                            ? 'success'
+                                            : selected.delivery_status === 'sent'
+                                              ? 'brand'
+                                              : 'outline'
+                                    }
+                                    className="font-bold text-xs capitalize"
+                                >
+                                    {tx(selected.delivery_status)}
+                                </Badge>
+                                <Badge
+                                    variant={
+                                        selected.difference_status === 'accepted'
+                                            ? 'success'
+                                            : selected.difference_status === 'none'
+                                              ? 'outline'
+                                              : 'warning'
+                                    }
+                                    className="font-bold text-xs capitalize"
+                                >
+                                    {tx(selected.difference_status)}
+                                </Badge>
+                                <Badge
+                                    variant={
+                                        paymentStatus(selected) === 'settled'
+                                            ? 'success'
+                                            : paymentStatus(selected) === 'unpaid'
+                                              ? 'warning'
+                                              : 'brand'
+                                    }
+                                    className="font-bold text-xs capitalize"
+                                >
+                                    {tx(paymentStatus(selected))}
+                                </Badge>
+                                {selected.archived_at && (
+                                    <Badge variant="outline" className="text-muted-foreground text-xs font-semibold">
+                                        {tx('archived')}
+                                    </Badge>
+                                )}
+                            </div>
+                            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink">
+                                {selected.document.customer_name}
+                            </h2>
+                            <p className="text-xs sm:text-sm font-medium text-body flex flex-wrap items-center gap-2">
+                                <span className="font-bold text-ink">{selected.quality_label}</span>
+                                {selected.document.date && (
+                                    <>
+                                        <span className="text-muted-foreground/50">·</span>
+                                        <span>{selected.document.date}</span>
+                                    </>
+                                )}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3.5 rounded-xl border-hairline bg-surface hover:bg-surface-soft text-ink font-semibold gap-1.5 shadow-xs"
+                                disabled={busy || !!pending}
+                                onClick={() => view(selected.id)}
+                            >
+                                <RefreshCw className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} />
+                                {tx('refresh')}
+                            </Button>
+                            <Link
+                                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-hairline bg-surface hover:bg-surface-soft text-ink font-semibold shadow-xs transition-colors hover:text-loom"
+                                target="_blank"
+                                href={`/owner/dispatches/${selected.id}/print`}
+                            >
+                                <Printer className="h-3.5 w-3.5 text-muted-foreground" />
+                                {tx('print')}
+                            </Link>
+                        </div>
                     </div>
-                    <p>
-                        {selected.quality_label} · {tx('sentMeters')}:{' '}
-                        {selected.sent_meters} m · {tx('acknowledged')}:{' '}
-                        {selected.acknowledged_meters ?? '—'} m ·{' '}
-                        {tx('chargeable')}: {selected.chargeable_meters} m
-                        {selected.acknowledged_meters !== null && (
-                            <>
-                                {' '}
-                                · {tx('differenceMeters')}:{' '}
-                                {(
-                                    Number(selected.sent_meters) -
-                                    Number(selected.acknowledged_meters)
-                                ).toFixed(2)}{' '}
-                                m
-                            </>
-                        )}
-                    </p>
-                    <p>
-                        {tx('sellingRate')}: Rs {money(selected.selling_rate)} ·{' '}
-                        {tx('adjustments')}: Rs{' '}
-                        {money(selected.adjustment_amount)} · {tx('paid')}: Rs{' '}
-                        {money(selected.paid_amount)} ·{' '}
-                        {Number(selected.balance) < 0
-                            ? tx('credit')
-                            : tx('balance')}
-                        : Rs {money(Math.abs(selected.balance))}
-                    </p>
-                    <p>
-                        {tx(selected.delivery_status)} ·{' '}
-                        {tx(selected.difference_status)} ·{' '}
-                        {tx(paymentStatus(selected))}
-                        {selected.archived_at ? ` · ${tx('archived')}` : ''}
-                    </p>
-                    <p>
-                        {tx('payment_due_date')}:{' '}
-                        {selected.payment_due_date || tx('dueDateNotSet')}
-                        {dueLabel(selected) && selected.payment_due_date
-                            ? ` · ${dueLabel(selected)}`
-                            : ''}
-                    </p>
-                    {selected.payment_terms && (
-                        <p className="break-words">
-                            {tx('payment_terms')}: {selected.payment_terms}
-                        </p>
-                    )}
-                    <div className="flex flex-wrap gap-2">
+
+                    {/* Metrics Overview Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Metres Card */}
+                        <div className="p-4 rounded-xl border border-hairline bg-surface-soft/30 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    Metres Breakdown
+                                </span>
+                                <Truck className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('sentMeters')}</span>
+                                    <span className="font-bold text-ink tabular-nums">{selected.sent_meters} m</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('acknowledged')}</span>
+                                    <span className="font-bold text-ink tabular-nums">{selected.acknowledged_meters ?? '—'} m</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('chargeable')}</span>
+                                    <span className="font-bold text-ink tabular-nums">{selected.chargeable_meters} m</span>
+                                </div>
+                                {selected.acknowledged_meters !== null && (
+                                    <div>
+                                        <span className="text-xs text-muted-foreground block">{tx('differenceMeters')}</span>
+                                        <span className="font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                                            {(
+                                                Number(selected.sent_meters) -
+                                                Number(selected.acknowledged_meters)
+                                            ).toFixed(2)}{' '}
+                                            m
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Financial Card */}
+                        <div className="p-4 rounded-xl border border-hairline bg-surface-soft/30 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    Financial Summary
+                                </span>
+                                <span className="text-xs font-bold text-muted-foreground">₹</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('sellingRate')}</span>
+                                    <span className="font-bold text-ink tabular-nums">Rs {money(selected.selling_rate)}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('paid')}</span>
+                                    <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">Rs {money(selected.paid_amount)}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('adjustments')}</span>
+                                    <span className="font-bold text-ink tabular-nums">Rs {money(selected.adjustment_amount)}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">
+                                        {Number(selected.balance) < 0
+                                            ? tx('credit')
+                                            : tx('balance')}
+                                    </span>
+                                    <span
+                                        className={`font-black tabular-nums ${
+                                            Number(selected.balance) > 0
+                                                ? 'text-rose-600 dark:text-rose-400'
+                                                : 'text-emerald-600 dark:text-emerald-400'
+                                        }`}
+                                    >
+                                        Rs {money(Math.abs(selected.balance))}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Terms & Due Card */}
+                        <div className="p-4 rounded-xl border border-hairline bg-surface-soft/30 space-y-3 sm:col-span-2 lg:col-span-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    Payment Terms
+                                </span>
+                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                            <div className="space-y-2 text-sm">
+                                <div>
+                                    <span className="text-xs text-muted-foreground block">{tx('payment_due_date')}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="font-bold text-ink">
+                                            {selected.payment_due_date || tx('dueDateNotSet')}
+                                        </span>
+                                        {dueLabel(selected) && selected.payment_due_date && (
+                                            <Badge variant="warning" className="text-2xs font-bold px-1.5 py-0">
+                                                {dueLabel(selected)}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                                {selected.payment_terms && (
+                                    <div>
+                                        <span className="text-xs text-muted-foreground block">{tx('payment_terms')}</span>
+                                        <p className="font-medium text-ink text-xs break-words line-clamp-2 mt-0.5">
+                                            {selected.payment_terms}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Action Toolbar */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-hairline">
                         {selected.delivery_status === 'draft' ? (
                             <>
                                 <Button
+                                    variant="outline"
+                                    className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
                                     disabled={busy || !!pending}
                                     onClick={() =>
                                         setDraft({
@@ -442,12 +614,15 @@ export default function ChallansClient({
                                         })
                                     }
                                 >
+                                    <Edit3 className="h-4 w-4" />
                                     {tx('edit')}
                                 </Button>
                                 <Button
+                                    className="h-10 px-5 rounded-xl bg-loom text-white font-bold hover:bg-loom-elevated shadow-xs gap-1.5"
                                     disabled={busy || !!pending}
                                     onClick={() => start('confirm')}
                                 >
+                                    <CheckCircle2 className="h-4 w-4" />
                                     {tx('confirm')}
                                 </Button>
                             </>
@@ -456,6 +631,7 @@ export default function ChallansClient({
                                 <>
                                     {selected.delivery_status === 'sent' && (
                                         <Button
+                                            className="h-10 px-5 rounded-xl bg-loom text-white font-bold hover:bg-loom-elevated shadow-xs gap-1.5"
                                             disabled={busy || !!pending}
                                             onClick={() =>
                                                 save('receipt', {
@@ -463,14 +639,17 @@ export default function ChallansClient({
                                                 })
                                             }
                                         >
+                                            <CheckCircle2 className="h-4 w-4" />
                                             {tx('receivedAsSent')}
                                         </Button>
                                     )}
                                     <Button
                                         variant="outline"
+                                        className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
                                         disabled={busy || !!pending}
                                         onClick={() => start('receipt')}
                                     >
+                                        <Truck className="h-4 w-4" />
                                         {tx('receipt')}
                                     </Button>
                                     {selected.acknowledged_meters !== null &&
@@ -478,9 +657,11 @@ export default function ChallansClient({
                                             Number(selected.sent_meters) && (
                                             <Button
                                                 variant="outline"
+                                                className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
                                                 disabled={busy || !!pending}
                                                 onClick={() => start('resolve')}
                                             >
+                                                <AlertTriangle className="h-4 w-4 text-amber-600" />
                                                 {tx('resolve')}
                                             </Button>
                                         )}
@@ -497,6 +678,7 @@ export default function ChallansClient({
                                         <Button
                                             key={a}
                                             variant="outline"
+                                            className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft"
                                             disabled={busy || !!pending}
                                             onClick={() => start(a)}
                                         >
@@ -517,11 +699,13 @@ export default function ChallansClient({
                                         ) && (
                                             <Button
                                                 variant="outline"
+                                                className="h-10 px-4 rounded-xl border-hairline font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-xs gap-1.5"
                                                 disabled={busy || !!pending}
                                                 onClick={() =>
                                                     start('reverse_dispatch')
                                                 }
                                             >
+                                                <RotateCcw className="h-4 w-4" />
                                                 {tx('reverse_dispatch')}
                                             </Button>
                                         )}
@@ -529,28 +713,37 @@ export default function ChallansClient({
                             )
                         )}
                     </div>
-                    <details>
-                        <summary className="cursor-pointer font-medium">
-                            {tx('details')}
+
+                    {/* Document Details Disclosure */}
+                    <details className="group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
+                        <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
+                            <span className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-ink">
+                                <FileText className="h-4 w-4 text-loom" />
+                                {tx('details')}
+                            </span>
+                            <span className="text-xs font-semibold text-muted-foreground group-open:rotate-180 transition-transform">
+                                ▼
+                            </span>
                         </summary>
-                        <dl className="grid gap-2 pt-3 sm:grid-cols-2">
+                        <dl className="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-3 border-t border-hairline mt-3">
                             {Object.entries(selected.document)
                                 .filter(([, v]) => v)
                                 .map(([k, v]) => (
-                                    <div key={k}>
-                                        <dt className="text-sm text-muted-foreground">
+                                    <div key={k} className="p-3 rounded-xl bg-surface border border-hairline/60">
+                                        <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                             {tx(k)}
                                         </dt>
-                                        <dd className="break-words">
+                                        <dd className="mt-1 font-semibold text-ink break-words text-sm">
                                             {k === 'external_attachment' &&
                                             safeEvidenceUrl(v) ? (
                                                 <a
-                                                    className="underline"
+                                                    className="text-loom font-bold underline inline-flex items-center gap-1"
                                                     href={safeEvidenceUrl(v)!}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
                                                     {tx('evidence')}
+                                                    <ArrowUpRight className="h-3.5 w-3.5" />
                                                 </a>
                                             ) : (
                                                 v
@@ -559,32 +752,55 @@ export default function ChallansClient({
                                     </div>
                                 ))}
                         </dl>
-                        <p className="mt-3">
-                            {selected.lines
-                                .map((l) => `${l.lot}: ${l.meters} m`)
-                                .join(' · ')}
-                        </p>
+                        <div className="mt-4 pt-3 border-t border-hairline">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                                Lot Breakdown ({selected.lines.length} lots)
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                                {selected.lines.map((l, i) => (
+                                    <span
+                                        key={i}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface border border-hairline text-xs font-semibold text-ink"
+                                    >
+                                        <span className="font-mono font-bold text-muted-foreground">{l.lot || `Lot ${i + 1}`}</span>
+                                        <span className="font-bold text-ink tabular-nums">{l.meters} m</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
                     </details>
-                    <details open>
-                        <summary className="cursor-pointer font-medium">
-                            {tx('audit')}
+
+                    {/* Audit Trail Disclosure */}
+                    <details open className="group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
+                        <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
+                            <span className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-ink">
+                                <History className="h-4 w-4 text-loom" />
+                                {tx('audit')}
+                            </span>
+                            <span className="text-xs font-semibold text-muted-foreground group-open:rotate-180 transition-transform">
+                                ▼
+                            </span>
                         </summary>
-                        <ol className="mt-3 space-y-3">
+                        <ol className="mt-4 space-y-3 border-t border-hairline pt-3">
                             {events.map((e) => (
                                 <li
                                     key={e.id}
-                                    className="border-t pt-3 text-sm"
+                                    className="p-3.5 rounded-xl bg-surface border border-hairline text-sm space-y-2"
                                 >
-                                    <div className="flex flex-wrap justify-between gap-2">
-                                        <span>
-                                            {tx(e.action)} ·{' '}
-                                            {new Date(
-                                                e.created_at,
-                                            ).toLocaleString()}
-                                            {e.amount !== null
-                                                ? ` · Rs ${money(e.amount)}`
-                                                : ''}
-                                        </span>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="font-bold text-xs uppercase tracking-wider">
+                                                {tx(e.action)}
+                                            </Badge>
+                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                {new Date(e.created_at).toLocaleString()}
+                                            </span>
+                                            {e.amount !== null && (
+                                                <span className="font-extrabold text-ink tabular-nums text-sm">
+                                                    Rs {money(e.amount)}
+                                                </span>
+                                            )}
+                                        </div>
                                         {[
                                             'payment',
                                             'refund',
@@ -596,6 +812,7 @@ export default function ChallansClient({
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
+                                                    className="h-8 px-2.5 rounded-lg border-hairline text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                                                     disabled={busy || !!pending}
                                                     onClick={() => {
                                                         start('reverse_entry')
@@ -604,74 +821,54 @@ export default function ChallansClient({
                                                         })
                                                     }}
                                                 >
+                                                    <RotateCcw className="h-3 w-3 mr-1" />
                                                     {tx('reverse_entry')}
                                                 </Button>
                                             )}
                                     </div>
                                     {e.action === 'payment_terms' && (
-                                        <div className="break-words">
+                                        <div className="text-xs text-body bg-surface-soft p-2.5 rounded-lg space-y-1">
                                             <p>
-                                                {tx('previousTerms')}:{' '}
-                                                {e.previous_terms
-                                                    ?.payment_due_date ||
-                                                    tx('dueDateNotSet')}{' '}
-                                                ·{' '}
-                                                {e.previous_terms
-                                                    ?.payment_terms || '—'}
+                                                <span className="font-bold">{tx('previousTerms')}:</span>{' '}
+                                                {e.previous_terms?.payment_due_date || tx('dueDateNotSet')}{' '}
+                                                · {e.previous_terms?.payment_terms || '—'}
                                             </p>
                                             <p>
-                                                {tx('updatedTerms')}:{' '}
-                                                {String(
-                                                    e.payload.data
-                                                        .payment_due_date ||
-                                                        tx('dueDateNotSet'),
-                                                )}{' '}
-                                                ·{' '}
-                                                {String(
-                                                    e.payload.data
-                                                        .payment_terms || '—',
-                                                )}
+                                                <span className="font-bold">{tx('updatedTerms')}:</span>{' '}
+                                                {String(e.payload.data.payment_due_date || tx('dueDateNotSet'))}{' '}
+                                                · {String(e.payload.data.payment_terms || '—')}
                                             </p>
                                         </div>
                                     )}
                                     {e.action === 'receipt' && (
-                                        <p>
-                                            {tx('acknowledged')}:{' '}
-                                            {String(e.payload.data.meters)} m
+                                        <p className="text-xs font-semibold text-body">
+                                            {tx('acknowledged')}: <span className="text-ink font-bold tabular-nums">{String(e.payload.data.meters)} m</span>
                                         </p>
                                     )}
                                     {e.action === 'resolve' && (
-                                        <p>
-                                            {tx(
-                                                String(e.payload.data.decision),
-                                            )}
+                                        <p className="text-xs font-semibold text-body">
+                                            {tx(String(e.payload.data.decision))}
                                         </p>
                                     )}
-                                    <p>
-                                        {String(e.payload.data.reason ?? '')}{' '}
-                                        {String(e.payload.data.date ?? '')}{' '}
-                                        {String(e.payload.data.method ?? '')}
-                                    </p>
-                                    {typeof e.payload.data.evidence ===
-                                        'string' &&
-                                        safeEvidenceUrl(
-                                            e.payload.data.evidence,
-                                        ) && (
+                                    {Boolean(e.payload.data.reason || e.payload.data.date || e.payload.data.method) && (
+                                        <p className="text-xs text-muted-foreground">
+                                            {[e.payload.data.reason, e.payload.data.date, e.payload.data.method].filter(Boolean).map(String).join(' · ')}
+                                        </p>
+                                    )}
+                                    {typeof e.payload.data.evidence === 'string' &&
+                                        safeEvidenceUrl(e.payload.data.evidence) && (
                                             <a
-                                                className="underline"
-                                                href={
-                                                    safeEvidenceUrl(
-                                                        e.payload.data.evidence,
-                                                    )!
-                                                }
+                                                className="text-xs text-loom font-bold underline inline-flex items-center gap-1"
+                                                href={safeEvidenceUrl(e.payload.data.evidence)!}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
                                                 {tx('evidence')}
+                                                <ArrowUpRight className="h-3 w-3" />
                                             </a>
                                         )}
                                     {e.reverses_id && (
-                                        <p>
+                                        <p className="text-xs text-muted-foreground font-mono">
                                             {tx('reverses')}: {e.reverses_id}
                                         </p>
                                     )}
@@ -687,9 +884,9 @@ export default function ChallansClient({
                     if (!open && !busy && !pending) setOperation(null)
                 }}
             >
-                <DialogContent data-i18n-skip="true">
+                <DialogContent data-i18n-skip="true" className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle>
+                        <DialogTitle className="text-lg font-extrabold tracking-tight text-ink">
                             {operation
                                 ? tx(
                                       operation === 'payment_terms'
@@ -698,7 +895,7 @@ export default function ChallansClient({
                                   )
                                 : ''}
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-xs text-muted-foreground">
                             {operation === 'confirm'
                                 ? tx('confirmHelp')
                                 : operation === 'reverse_dispatch'
@@ -709,7 +906,7 @@ export default function ChallansClient({
                         </DialogDescription>
                     </DialogHeader>
                     <form
-                        className="space-y-3"
+                        className="space-y-4 pt-2"
                         onSubmit={(e) => {
                             e.preventDefault()
                             if (!operation) return
@@ -732,7 +929,7 @@ export default function ChallansClient({
                     >
                         <fieldset
                             disabled={busy || !!pending}
-                            className="space-y-3"
+                            className="space-y-4"
                         >
                             {operation === 'payment_terms' && (
                                 <>
@@ -747,10 +944,12 @@ export default function ChallansClient({
                                 </>
                             )}
                             {operation === 'resolve' && (
-                                <label className="grid gap-1">
-                                    {tx('decision')}
+                                <label className="grid gap-1.5">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                        {tx('decision')}
+                                    </span>
                                     <select
-                                        className="rounded border bg-background p-2"
+                                        className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                         value={fields.decision}
                                         onChange={(e) =>
                                             setFields({
@@ -789,10 +988,11 @@ export default function ChallansClient({
                                             'received',
                                 )}
                             {operation === 'reverse_dispatch' && (
-                                <label className="flex gap-2">
+                                <label className="flex items-center gap-2.5 p-3 rounded-xl border border-hairline bg-surface-soft/40 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         required
+                                        className="h-4 w-4 rounded border-hairline text-loom focus:ring-loom"
                                         checked={
                                             fields.stock_present === 'true'
                                         }
@@ -805,19 +1005,36 @@ export default function ChallansClient({
                                             })
                                         }
                                     />
-                                    {tx('stockPresent')}
+                                    <span className="text-sm font-semibold text-ink">
+                                        {tx('stockPresent')}
+                                    </span>
                                 </label>
                             )}
-                            <Button type="submit">{tx('save')}</Button>
+                            <Button
+                                type="submit"
+                                className="w-full h-11 rounded-xl bg-loom text-white font-bold hover:bg-loom-elevated shadow-xs"
+                                disabled={busy || !!pending}
+                            >
+                                {busy ? (
+                                    <span className="inline-flex items-center gap-2">
+                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                        {tx('save')}
+                                    </span>
+                                ) : (
+                                    tx('save')
+                                )}
+                            </Button>
                         </fieldset>
                         {error && (
-                            <p role="alert" className="text-red-700">
+                            <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60">
                                 {error}
                             </p>
                         )}
                         {pending && !busy && (
                             <Button
                                 type="button"
+                                variant="outline"
+                                className="w-full h-10 rounded-xl border-hairline font-semibold shadow-xs"
                                 onClick={() =>
                                     save(pending.action, pending.payload)
                                 }

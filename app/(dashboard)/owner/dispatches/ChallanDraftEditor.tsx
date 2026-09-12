@@ -1,6 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { Plus, Trash2, Eye } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
@@ -191,7 +192,7 @@ export default function ChallanDraftEditor({
                 key={key}
                 className={`grid gap-1.5 text-sm ${key.endsWith('_address') ? 'sm:col-span-2' : ''}`}
             >
-                <span className="font-medium">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     {tx(key)}
                     {required.includes(key) ? ' *' : ''}
                 </span>
@@ -205,6 +206,7 @@ export default function ChallanDraftEditor({
                                 ? 'tel'
                                 : 'text'
                     }
+                    className="h-10 rounded-xl border-hairline bg-surface px-3 font-semibold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                     required={required.includes(key)}
                     maxLength={1000}
                     autoComplete="off"
@@ -238,18 +240,21 @@ export default function ChallanDraftEditor({
                     disabled={disabled}
                     className={`${showPreview ? 'hidden' : 'block'} min-w-0 space-y-6 overflow-y-auto px-1 pb-6 pr-3 lg:block lg:pr-6`}
                 >
-                    <section className="space-y-3 rounded-xl border bg-card p-4">
-                        <h3 className="font-semibold">
-                            1 · {tx('fabricAndRate')}
-                        </h3>
+                    <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-loom text-white text-xs font-bold">1</span>
+                            <h3 className="font-extrabold text-ink text-sm sm:text-base">
+                                {tx('fabricAndRate')}
+                            </h3>
+                        </div>
                         <div className="grid gap-3 sm:grid-cols-2">
                             <label className="grid gap-1.5 text-sm">
-                                <span className="font-medium">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     {tx('quality')} *
                                 </span>
                                 <select
                                     required
-                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3"
+                                    className="h-10 w-full min-w-0 rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                     value={draft.quality_id}
                                     onChange={(e) =>
                                         onChange({
@@ -271,7 +276,7 @@ export default function ChallanDraftEditor({
                                 </select>
                             </label>
                             <label className="grid gap-1.5 text-sm">
-                                <span className="font-medium">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     {tx('sellingRate')} *
                                 </span>
                                 <Input
@@ -283,6 +288,7 @@ export default function ChallanDraftEditor({
                                     step="0.01"
                                     required
                                     placeholder="0.00"
+                                    className="h-10 rounded-xl border-hairline bg-surface px-3 font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                     value={draft.selling_rate || ''}
                                     onChange={(e) =>
                                         onChange({
@@ -295,7 +301,7 @@ export default function ChallanDraftEditor({
                                 />
                             </label>
                         </div>
-                        <div className="grid gap-3 border-t pt-3 sm:grid-cols-2">
+                        <div className="grid gap-3 border-t border-hairline pt-3 sm:grid-cols-2">
                             {documentField('payment_due_date')}
                             {documentField('payment_terms')}
                         </div>
@@ -303,27 +309,38 @@ export default function ChallanDraftEditor({
                             {tx('paymentTermsHelp')}
                         </p>
                     </section>
-                    <section className="space-y-3 rounded-xl border bg-card p-4">
-                        <h3 className="font-semibold">
-                            2 · {tx('senderAndDelivery')}
-                        </h3>
+                    <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-loom text-white text-xs font-bold">2</span>
+                            <h3 className="font-extrabold text-ink text-sm sm:text-base">
+                                {tx('senderAndDelivery')}
+                            </h3>
+                        </div>
                         <div className="grid gap-3 sm:grid-cols-2">
                             {required.map(documentField)}
                         </div>
                     </section>
-                    <section className="space-y-3 rounded-xl border bg-card p-4">
-                        <h3 className="font-semibold">3 · {tx('lotEntry')}</h3>
-                        <p
+                    <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-loom text-white text-xs font-bold">3</span>
+                                <h3 className="font-extrabold text-ink text-sm sm:text-base">{tx('lotEntry')}</h3>
+                            </div>
+                            <span className="text-xs font-bold text-muted-foreground tabular-nums">
+                                {draft.lines.length} rows
+                            </span>
+                        </div>
+                        <div
                             id="challan-keyboard-help"
-                            className="text-xs leading-relaxed text-muted-foreground"
+                            className="text-xs leading-relaxed text-muted-foreground bg-surface-soft p-3 rounded-xl border border-hairline/60"
                         >
                             {tx('keyboardHelp')}
-                        </p>
+                        </div>
                         <div
-                            className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_2.25rem] gap-2 text-xs font-semibold text-muted-foreground"
+                            className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_2.25rem] gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
                             aria-hidden="true"
                         >
-                            <span>{tx('rowNo')}</span>
+                            <span className="text-center">{tx('rowNo')}</span>
                             <span>{tx('lot')}</span>
                             <span>{tx('sentMeters')} (m)</span>
                             <span />
@@ -334,9 +351,9 @@ export default function ChallanDraftEditor({
                                 return (
                                     <div
                                         key={index}
-                                        className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_2.25rem] items-start gap-2"
+                                        className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_2.25rem] items-center gap-2"
                                     >
-                                        <span className="pt-2.5 text-center text-sm tabular-nums text-muted-foreground">
+                                        <span className="text-center text-xs font-bold tabular-nums text-muted-foreground">
                                             {index + 1}
                                         </span>
                                         <Input
@@ -345,6 +362,7 @@ export default function ChallanDraftEditor({
                                             aria-describedby="challan-keyboard-help"
                                             autoComplete="off"
                                             enterKeyHint="next"
+                                            className="h-10 rounded-xl border-hairline bg-surface px-3 font-mono font-bold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                             placeholder={
                                                 index === 0
                                                     ? '89895'
@@ -376,6 +394,7 @@ export default function ChallanDraftEditor({
                                             max="100000000"
                                             step="0.01"
                                             placeholder="0.00"
+                                            className="h-10 rounded-xl border-hairline bg-surface px-3 font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                             required={
                                                 touched ||
                                                 draft.lines.length === 1
@@ -397,6 +416,7 @@ export default function ChallanDraftEditor({
                                             size="icon"
                                             variant="ghost"
                                             aria-label={`${tx('remove')} ${index + 1}`}
+                                            className="h-10 w-10 rounded-xl text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                                             disabled={draft.lines.length === 1}
                                             onClick={() =>
                                                 onChange({
@@ -407,7 +427,7 @@ export default function ChallanDraftEditor({
                                                 })
                                             }
                                         >
-                                            ×
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 )
@@ -416,22 +436,29 @@ export default function ChallanDraftEditor({
                         <Button
                             type="button"
                             variant="outline"
+                            className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
                             disabled={draft.lines.length >= 500}
                             onClick={addLine}
                         >
+                            <Plus className="h-4 w-4" />
                             {tx('addLine')}
                         </Button>
                         {progress.incomplete > 0 && (
-                            <p className="text-xs text-amber-700">
+                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/50">
                                 {tx('incompleteRows')}
                             </p>
                         )}
                     </section>
-                    <details className="rounded-xl border bg-card p-4">
-                        <summary className="cursor-pointer font-medium">
-                            {tx('optionalDetails')}
+                    <details className="group rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs transition-all">
+                        <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
+                            <span className="text-sm font-extrabold uppercase tracking-wider text-ink">
+                                4 · {tx('optionalDetails')}
+                            </span>
+                            <span className="text-xs font-semibold text-muted-foreground group-open:rotate-180 transition-transform">
+                                ▼
+                            </span>
                         </summary>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 border-t border-hairline pt-3">
                             {optional.map(documentField)}
                         </div>
                         <p className="mt-3 text-xs text-muted-foreground">
@@ -441,182 +468,191 @@ export default function ChallanDraftEditor({
                 </fieldset>
                 <aside
                     aria-label={tx('livePreview')}
-                    className={`${showPreview ? 'block' : 'hidden'} min-w-0 overflow-y-auto bg-muted/30 p-3 lg:block lg:border-l lg:p-5`}
+                    className={`${showPreview ? 'block' : 'hidden'} min-w-0 overflow-y-auto bg-surface-soft/40 p-3 lg:block lg:border-l lg:border-hairline lg:p-6`}
                 >
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Eye className="h-3.5 w-3.5 text-loom" />
                         {tx('livePreview')}
                     </p>
-                    <div className="space-y-4 rounded-lg border bg-white p-5 text-slate-900 shadow-sm">
-                        <header className="flex flex-wrap justify-between gap-2 border-b pb-3">
+                    <div className="space-y-4 rounded-2xl border border-hairline bg-surface p-5 sm:p-6 text-ink shadow-sm">
+                        <header className="flex flex-wrap justify-between gap-2 border-b border-hairline pb-3">
                             <div>
-                                <h3 className="text-lg font-bold">
+                                <h3 className="text-lg font-extrabold tracking-tight text-ink">
                                     {tx('title')}
                                 </h3>
-                                <span className="text-xs text-amber-700">
+                                <span className="inline-block mt-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md">
                                     {tx('draft')}
                                 </span>
                             </div>
-                            <div className="text-right text-xs">
-                                <p>{number ?? tx('numberOnSave')}</p>
+                            <div className="text-right text-xs font-medium text-body">
+                                <p className="font-mono font-bold text-ink">{number ?? tx('numberOnSave')}</p>
                                 <p>{draft.document.date}</p>
                             </div>
                         </header>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <p className="text-xs text-slate-500">
+                            <div className="space-y-0.5">
+                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     {tx('sender_name')}
                                 </p>
-                                <p className="break-words font-medium">
+                                <p className="break-words font-bold text-ink">
                                     {draft.document.sender_name || '—'}
                                 </p>
-                                <p className="break-words whitespace-pre-wrap">
+                                <p className="break-words whitespace-pre-wrap text-xs text-body">
                                     {draft.document.sender_address || '—'}
                                 </p>
                             </div>
-                            <div>
-                                <p className="text-xs text-slate-500">
+                            <div className="space-y-0.5">
+                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     {tx('customer_name')}
                                 </p>
-                                <p className="break-words font-medium">
+                                <p className="break-words font-bold text-ink">
                                     {draft.document.customer_name || '—'}
                                 </p>
-                                <p className="break-words whitespace-pre-wrap">
+                                <p className="break-words whitespace-pre-wrap text-xs text-body">
                                     {draft.document.customer_address || '—'}
                                 </p>
                             </div>
                         </div>
-                        <p className="break-words text-xs">
-                            <strong>{tx('delivery_address')}:</strong>{' '}
+                        <p className="break-words text-xs text-body">
+                            <strong className="text-ink font-semibold">{tx('delivery_address')}:</strong>{' '}
                             {draft.document.delivery_address || '—'}
                         </p>
                         <p className="text-sm">
-                            <strong>{tx('quality')}:</strong>{' '}
-                            {quality?.quality_label || '—'}
+                            <strong className="text-ink font-semibold">{tx('quality')}:</strong>{' '}
+                            <span className="font-bold text-ink">{quality?.quality_label || '—'}</span>
                         </p>
-                        <table className="w-full table-fixed border-collapse text-left text-sm">
-                            <thead className="bg-slate-50 text-xs">
-                                <tr>
-                                    <th className="w-10 border p-2">
-                                        {tx('rowNo')}
-                                    </th>
-                                    <th className="border p-2">{tx('lot')}</th>
-                                    <th className="w-24 border p-2 text-right">
-                                        {tx('sentMeters')}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {draft.lines
-                                    .filter((line) => !isEmptyChallanLine(line))
-                                    .map((line, i) => (
-                                        <tr key={i}>
-                                            <td className="border p-2">
-                                                {i + 1}
-                                            </td>
-                                            <td className="break-words border p-2">
-                                                {line.lot || '—'}
-                                            </td>
-                                            <td className="border p-2 text-right tabular-nums">
-                                                {line.meters > 0 &&
-                                                Number.isFinite(line.meters)
-                                                    ? format(line.meters)
-                                                    : '—'}
+                        <div className="rounded-xl border border-hairline overflow-hidden">
+                            <table className="w-full table-fixed border-collapse text-left text-sm">
+                                <thead className="bg-surface-soft text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-hairline">
+                                    <tr>
+                                        <th className="w-10 p-2.5">
+                                            {tx('rowNo')}
+                                        </th>
+                                        <th className="p-2.5">{tx('lot')}</th>
+                                        <th className="w-24 p-2.5 text-right">
+                                            {tx('sentMeters')}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-hairline">
+                                    {draft.lines
+                                        .filter((line) => !isEmptyChallanLine(line))
+                                        .map((line, i) => (
+                                            <tr key={i} className="hover:bg-surface-soft/40 transition-colors">
+                                                <td className="p-2.5 text-xs text-muted-foreground tabular-nums">
+                                                    {i + 1}
+                                                </td>
+                                                <td className="break-words p-2.5 font-mono text-xs font-semibold text-ink">
+                                                    {line.lot || '—'}
+                                                </td>
+                                                <td className="p-2.5 text-right font-bold text-ink tabular-nums text-xs">
+                                                    {line.meters > 0 &&
+                                                    Number.isFinite(line.meters)
+                                                        ? format(line.meters)
+                                                        : '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    {!draft.lines.some(
+                                        (line) => !isEmptyChallanLine(line),
+                                    ) && (
+                                        <tr>
+                                            <td
+                                                colSpan={3}
+                                                className="p-6 text-center text-xs text-muted-foreground"
+                                            >
+                                                {tx('previewEmpty')}
                                             </td>
                                         </tr>
-                                    ))}
-                                {!draft.lines.some(
-                                    (line) => !isEmptyChallanLine(line),
-                                ) && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="border p-6 text-center text-xs text-slate-500"
-                                        >
-                                            {tx('previewEmpty')}
+                                    )}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="bg-surface-soft font-bold border-t border-hairline text-ink">
+                                        <td colSpan={2} className="p-2.5 text-xs">
+                                            {progress.count} {tx('lots')} —{' '}
+                                            {tx('totalSent')}
+                                        </td>
+                                        <td className="p-2.5 text-right tabular-nums text-xs font-black">
+                                            {format(progress.meters)} m
                                         </td>
                                     </tr>
-                                )}
-                            </tbody>
-                            <tfoot>
-                                <tr className="bg-slate-50 font-semibold">
-                                    <td colSpan={2} className="border p-2">
-                                        {progress.count} {tx('lots')} —{' '}
-                                        {tx('totalSent')}
-                                    </td>
-                                    <td className="border p-2 text-right tabular-nums">
-                                        {format(progress.meters)} m
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <p className="text-xs">
-                            {tx('sellingRate')}: Rs {format(draft.selling_rate)}{' '}
-                            / m
-                        </p>
-                        <p className="flex justify-between font-semibold">
-                            <span>{tx('fabricValue')}</span>
-                            <span>Rs {format(progress.value)}</span>
-                        </p>
-                        <p className="text-xs text-slate-500">
-                            {tx('beforeCharges')}
-                        </p>
-                        <p className="text-xs">
-                            <strong>{tx('payment_due_date')}:</strong>{' '}
-                            {draft.document.payment_due_date ||
-                                tx('dueDateNotSet')}
-                        </p>
-                        {draft.document.payment_terms && (
-                            <p className="break-words text-xs">
-                                <strong>{tx('payment_terms')}:</strong>{' '}
-                                {draft.document.payment_terms}
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                            <p className="text-body">
+                                <span className="font-semibold text-ink">{tx('sellingRate')}:</span> Rs {format(draft.selling_rate)}{' '}
+                                / m
                             </p>
-                        )}
-                        {optional
-                            .filter((key) => draft.document[key])
-                            .map((key) => (
-                                <p key={key} className="break-words text-xs">
-                                    <strong>{tx(key)}:</strong>{' '}
-                                    {draft.document[key]}
+                            <p className="flex justify-between font-extrabold text-sm text-ink pt-1 border-t border-hairline">
+                                <span>{tx('fabricValue')}</span>
+                                <span className="tabular-nums">Rs {format(progress.value)}</span>
+                            </p>
+                            <p className="text-2xs text-muted-foreground">
+                                {tx('beforeCharges')}
+                            </p>
+                        </div>
+                        <div className="space-y-1 text-xs pt-2 border-t border-hairline text-body">
+                            <p>
+                                <strong className="text-ink">{tx('payment_due_date')}:</strong>{' '}
+                                {draft.document.payment_due_date ||
+                                    tx('dueDateNotSet')}
+                            </p>
+                            {draft.document.payment_terms && (
+                                <p className="break-words">
+                                    <strong className="text-ink">{tx('payment_terms')}:</strong>{' '}
+                                    {draft.document.payment_terms}
                                 </p>
-                            ))}
-                        <div className="grid grid-cols-2 gap-5 border-t pt-8 text-xs text-slate-500">
+                            )}
+                            {optional
+                                .filter((key) => draft.document[key])
+                                .map((key) => (
+                                    <p key={key} className="break-words">
+                                        <strong className="text-ink">{tx(key)}:</strong>{' '}
+                                        {draft.document[key]}
+                                    </p>
+                                ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-5 border-t border-hairline pt-8 text-xs text-muted-foreground">
                             <span>{tx('recipientSignature')}</span>
                             <span>{tx('senderSignature')}</span>
                         </div>
                     </div>
                 </aside>
             </div>
-            <footer className="z-10 flex flex-wrap items-center justify-between gap-3 border-t bg-background py-3">
+            <footer className="z-10 flex flex-wrap items-center justify-between gap-3 border-t border-hairline bg-surface/95 backdrop-blur-md px-4 py-3.5 shadow-xs">
                 <div aria-live="polite" aria-atomic="true" className="min-w-0">
-                    <p className="font-semibold tabular-nums">
+                    <p className="font-extrabold text-ink tabular-nums text-sm sm:text-base">
                         {progress.count} {tx('lots')} — {tx('totalSent')}:{' '}
                         {format(progress.meters)} m
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs font-semibold text-muted-foreground">
                         Rs {format(progress.value)} · {tx('beforeCharges')}
                     </p>
                 </div>
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="lg:hidden"
-                    aria-pressed={showPreview}
-                    onClick={() => setShowPreview(!showPreview)}
-                >
-                    {tx(showPreview ? 'backToEntry' : 'livePreview')}
-                </Button>
-                <Button
-                    ref={saveButton}
-                    className={
-                        showPreview ? 'hidden lg:inline-flex' : undefined
-                    }
-                    type="submit"
-                    disabled={disabled}
-                >
-                    {tx('saveDraft')}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="lg:hidden h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft"
+                        aria-pressed={showPreview}
+                        onClick={() => setShowPreview(!showPreview)}
+                    >
+                        {tx(showPreview ? 'backToEntry' : 'livePreview')}
+                    </Button>
+                    <Button
+                        ref={saveButton}
+                        className={`${
+                            showPreview ? 'hidden lg:inline-flex' : ''
+                        } h-11 px-6 rounded-xl bg-loom text-white font-bold hover:bg-loom-elevated shadow-xs`}
+                        type="submit"
+                        disabled={disabled}
+                    >
+                        {tx('saveDraft')}
+                    </Button>
+                </div>
                 {error && (
-                    <p role="alert" className="w-full text-sm text-red-700">
+                    <p role="alert" className="w-full text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60">
                         {error}
                     </p>
                 )}
