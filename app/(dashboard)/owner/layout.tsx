@@ -152,7 +152,7 @@ async function OwnerSidebarBoundary() {
 
     return (
         <OwnerSidebar
-            key={`${profile.org_id}:${profile.id}:${planAccess.effectiveTier}`}
+            key={`${profile.org_id}:${user.id}:${planAccess.effectiveTier}`}
             factoryName={organization.name || 'Weavly'}
             userName={profile.full_name || undefined}
             productionMode={normalizeProductionMode(organization.production_mode)}

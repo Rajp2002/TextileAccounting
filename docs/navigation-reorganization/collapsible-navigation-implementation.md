@@ -76,3 +76,7 @@ Revert this focused navigation patch, including its Stock presentation wrappers 
 - Repository ESLint: `node node_modules/eslint/bin/eslint.js --max-warnings=0`, bounded to 90 seconds, **timed out** without a completed result.
 - Additional fixture browser checks: Rate Book selection opens its Costing destination; browser Back restores Saved Costings with all groups collapsed. A middle-click leaves the originating route/group unchanged; creation of a second tab was not confirmed.
 - Temporary browser viewport overrides were reset; the fixture server was stopped after verification.
+
+## Cloud validation follow-up
+
+PR #117 cloud validation passed 1,767 tests (17 skipped) and compiled successfully, then caught an owner-layout key using `profile.id` instead of the authenticated `user.id`. The key was corrected before merge. Production migration history was checked against all 291 repository migrations; none are pending.
