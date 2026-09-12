@@ -61,6 +61,7 @@ function SheetContent({
       {!hideOverlay && <SheetOverlay />}
       <SheetPrimitive.Content
         data-slot="sheet-content"
+        data-side={side}
         className={cn(
           "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-[var(--shadow-panel)] transition ease-in-out data-[state=closed]:duration-200 data-[state=open]:duration-200",
           "pt-safe pl-safe pr-safe", // [MOBILE FIX]: Ensure safe area awareness for iPhone notch/status bar
@@ -79,7 +80,8 @@ function SheetContent({
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close 
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-[calc(env(safe-area-inset-top,0px)+0.5rem)] right-2 z-50 rounded-lg p-3 opacity-70 transition-opacity hover:bg-surface-soft hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none sm:top-4 sm:right-4"
+            data-slot="sheet-close"
+            className="ring-offset-background focus:ring-ring absolute top-[calc(env(safe-area-inset-top,0px)+0.5rem)] right-2 z-50 flex size-11 items-center justify-center rounded-full text-current opacity-80 transition-opacity hover:bg-current/10 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none sm:top-4 sm:right-4"
           >
             <XIcon className="size-5" />
             <span className="sr-only">Close</span>

@@ -44,7 +44,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
     signInTelemetry.log('success', { route: '/supervisor/*' })
 
     return (
-        <div className="relative isolate min-h-screen overflow-x-hidden bg-background">
+        <div className="relative isolate min-h-svh overflow-x-hidden bg-background">
             <BrandBackground />
 
             <SupervisorSidebar
@@ -52,21 +52,9 @@ export default async function SupervisorLayout({ children }: { children: React.R
                 userName={userFullName || undefined}
             />
 
-            {/*
-             * Content area
-             *
-             * md:pl-[248px]  — push content right of the persistent sidebar on desktop
-             *
-             * pb-[...]:      — bottom padding clears the mobile bottom nav bar.
-             *   calc(72px + env(safe-area-inset-bottom)) accounts for the iPhone
-             *   home indicator / Android gesture bar so no content is obscured.
-             *   On desktop (md:) this collapses to 0.
-             *
-             * px-safe        — side clearance for iPhone landscape where the
-             *   rounded screen corners / Dynamic Island eat into the sides.
-             */}
-            <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
-                <main className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 py-4 xs:px-3 md:px-6 md:py-6 lg:px-8">
+            {/* Shared measured clearance follows mobile navigation and safe areas. */}
+            <div className="mobile-workspace-content relative z-10 min-w-0 px-safe">
+                <main id="supervisor-main" tabIndex={-1} className="dashboard-main mx-auto min-h-svh w-full min-w-0 max-w-7xl px-3 py-4 xs:px-4 md:px-6 md:py-6 lg:px-8">
                     <QueryProvider scope={cacheScope}>
                         <AuthBoundaryCleanup scope={cacheScope} />
                         <OfflineSyncProvider scope={cacheScope}>

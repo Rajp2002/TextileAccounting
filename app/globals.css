@@ -2,6 +2,7 @@
 @plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./mobile.css";
 
 .estimator-touch-target {
   min-height: 44px;
@@ -271,6 +272,10 @@
   @media (max-width: 767px) {
     /* Prevent iOS auto-zoom on factory inputs without enlarging desktop forms. */
     input[type="number"],
+    input:not([type]),
+    input[type="password"],
+    input[type="search"],
+    input[type="url"],
     input[type="text"],
     input[type="date"],
     input[type="tel"],

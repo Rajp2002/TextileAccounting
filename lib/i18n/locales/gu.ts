@@ -208,6 +208,7 @@ export const gu = {
 },
 
   nav: {
+    install_app: "Weavly ઇન્સ્ટોલ કરો",
     "production": "ઉત્પાદન",
     "assignments": "કામગીરી",
     "workers": "કારીગરો",
@@ -253,6 +254,11 @@ export const gu = {
     already_saved: "આ કારીગરની હાજરી પહેલેથી જ સેવ થઈ ગઈ છે. ભૂલથી સેવ થયું હોય તો બદલવા માટે માલિકનો કોડ લો."
   },
   common: {
+    input_navigation: "ફીલ્ડ નેવિગેશન",
+    previous_field: "પાછળ",
+    next_field: "આગળ",
+    keyboard_done: "થઈ ગયું",
+
     supervisor: "સુપરવાઇઝર",
     owner: "માલિક",
     menu: "મેનુ",

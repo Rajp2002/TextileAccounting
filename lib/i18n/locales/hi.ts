@@ -208,6 +208,7 @@ export const hi = {
 },
 
   nav: {
+    install_app: "Weavly इंस्टॉल करें",
     "production": "उत्पादन",
     "assignments": "कार्य",
     "workers": "कर्मचारी",
@@ -253,6 +254,11 @@ export const hi = {
     already_saved: "इस कारीगर की उपस्थिति पहले ही दर्ज हो चुकी है। अगर गलती से दर्ज हो गया है, तो बदलने के लिए ओनर (Owner) का कोड लें।"
   },
   common: {
+    input_navigation: "फ़ील्ड नेविगेशन",
+    previous_field: "पिछला",
+    next_field: "अगला",
+    keyboard_done: "हो गया",
+
     supervisor: "सुपरवाइज़र",
     owner: "मालिक",
     menu: "मेनू",

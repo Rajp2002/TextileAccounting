@@ -208,6 +208,7 @@ export const en = {
 },
 
   nav: {
+    install_app: "Install Weavly",
     "production": "Production",
     "assignments": "Assignments",
     "workers": "Workers",
@@ -253,6 +254,11 @@ export const en = {
     already_saved: "Entry for this worker has already been saved. To modify in case of accidental entry, please get the owner's access code."
   },
   common: {
+    input_navigation: "Input navigation",
+    previous_field: "Previous",
+    next_field: "Next",
+    keyboard_done: "Done",
+
     supervisor: "Supervisor",
     owner: "Owner",
     menu: "Menu",

@@ -78,7 +78,7 @@ export function PwaInstallNudge() {
     if (!workspace || !visible) return null
 
     return (
-        <aside aria-labelledby="pwa-nudge-title" data-i18n-skip="true" className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] z-40 max-h-[60svh] overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-6 sm:w-96 md:bottom-6">
+        <aside aria-labelledby="pwa-nudge-title" data-mobile-install-nudge="true" data-i18n-skip="true" className="fixed inset-x-3 bottom-[calc(var(--mobile-nav-height,80px)+12px)] z-40 max-h-[60svh] overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-6 sm:w-96 md:bottom-6">
             <button type="button" onClick={() => setVisible(false)} aria-label={text.later} className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted">
                 <X className="h-4 w-4" aria-hidden="true" />
             </button>
