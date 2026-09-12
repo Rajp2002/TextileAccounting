@@ -1,6 +1,6 @@
 export const yarnStockText = {
     en: {
-        fabric: 'Fabric', yarn: 'Yarn', title: 'Yarn inventory',
+        fabric: 'Fabric', yarn: 'Yarn', title: 'Yarn Stock',
         help: 'Includes unused yarn and yarn used in fabric that has not been dispatched. Production does not reduce this balance. Confirmed dispatch deducts the linked costing weight.',
         total: 'Yarn remaining', opening: 'Opening weight', receipt: 'Add yarn', correction: 'Correct balance',
         openingHelp: 'Enter the yarn you already own, including yarn in fabric awaiting dispatch. Enter this once per yarn. Exclude yarn already covered by recorded receipts and legacy pending dispatches.',

@@ -1,11 +1,14 @@
 export const en = {
  navigation: {
-  "estimate": "Cost Estimate",
+  "estimate": "Cost Estimator",
   "costings": "Saved Costings",
   "rates": "Yarn Rate Book",
   "production": "Production",
   "assignments": "Machine Assignments",
-  "stock": "Godown Stock",
+  "stock": "Stock",
+  "fabric": "Fabric",
+  "yarn": "Yarn",
+  "yarnStock": "Yarn Stock",
   "dispatches": "Dispatches",
   "machines": "Machines",
   "workers": "Workers",
@@ -160,7 +163,7 @@ export const en = {
     staleSave: "Stock or this request changed. Close this form, refresh stock and review before saving again.",
 
     legacyCommitted: "Exclude fabric already committed to historical pending dispatches from opening stock.",
-    "title": "Quality Stock",
+    "title": "Fabric Stock",
     "subtitle": "Saved production automatically adds metres to its fabric quality.",
     "refresh": "Refresh",
     "opening": "Opening stock",
